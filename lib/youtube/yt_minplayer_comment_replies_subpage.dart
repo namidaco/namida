@@ -105,6 +105,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
       details: ExecuteDetails.kForceRequest,
     );
     if (val != null) {
+      _currentReplies.value?.transferLocalItemsTo(val);
       _currentReplies.value = val;
     } else {
       _lastFetchWasCached.value = true;

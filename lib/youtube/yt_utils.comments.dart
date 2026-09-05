@@ -95,27 +95,45 @@ class _YTUtilsCommentActions {
     required String videoId,
     required CommentInfoItemBase mainComment,
     required CommentInfoItemBase replyingTo,
-    required RxBaseCore<YoutiPieCommentReplyResult?>? mainList,
+    required Rxn<YoutiPieCommentReplyResult>? mainList,
   }) async {
-    final authorHandler = mainComment.author?.displayName;
+    final authorHandler = replyingTo.author?.displayName;
+    final mainCommentId = mainComment.commentId;
     return _createEditCommentOrReply(
       isEdit: false,
       isReply: true,
       subtitle: authorHandler ?? '?',
       initialComment: authorHandler == null ? null : '$authorHandler ',
       onButtonConfirm: (replyText) async {
-        final newComment = await YoutubeInfoController.commentAction.createReply(
-          mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
+        final currentList = mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainCommentId).read();
+        final newReply = await YoutubeInfoController.commentAction.createReply(
+          mainList: currentList,
           createReplyParams: replyingTo.engagement.createReplyParams,
           content: replyText,
         );
 
-        if (newComment != null) {
-          mainList?.refresh();
-          return true;
+        if (newReply == null) {
+          _showError();
+          return false;
         }
-        _showError();
-        return false;
+
+        if (mainList != null) {
+          if (mainList.value == null) {
+            // -- replies list was never fetched (ex. comment had no replies), so we build one locally.
+            // -- not written to cache, since it would be read later as if it was a complete list.
+            mainList.value =
+                currentList ??
+                YoutiPieCommentReplyResult(
+                  commentId: mainCommentId,
+                  cacheKey: mainCommentId,
+                  items: [newReply],
+                  continuation: mainComment is CommentInfoItem ? mainComment.replyContinuation : null,
+                );
+          } else {
+            mainList.refresh();
+          }
+        }
+        return true;
       },
     );
   }

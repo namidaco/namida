@@ -328,6 +328,7 @@ class _YoutubeCurrentInfoController {
         );
         if (newRes != null && _canSafelyModifyMetadata(videoId)) {
           fetchedSuccessfully = true;
+          commentRes.transferLocalItemsTo(newRes);
           _currentComments.value = newRes;
           _isCurrentCommentsFromCache.value = false;
         }

@@ -36,7 +36,7 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
   final W Function()? mainList;
 
   final CommentInfoItem Function()? mainCommentForReplies;
-  final RxBaseCore<YoutiPieCommentReplyResult?>? mainRepliesList;
+  final Rxn<YoutiPieCommentReplyResult>? mainRepliesList;
   final void Function(CommentInfoItem editedComment) Function()? onCommentEdited;
   final void Function() Function()? onCommentDeleted;
 
@@ -210,7 +210,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
           if (comment == null) return;
           YTUtils.comments.createReply(
             videoId: widget.videoId ?? '',
-            mainComment: comment,
+            mainComment: widget.mainCommentForReplies?.call() ?? comment,
             replyingTo: comment,
             mainList: widget.mainRepliesList,
           );
