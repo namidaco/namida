@@ -150,6 +150,19 @@ class NamidaMainActivity : FlutterActivity() {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId"), call.argument<String?>("package")))
         }
 
+        "openHomeWidgetSettings" -> {
+          try {
+            startActivity(
+              Intent(this, com.msob7y.namida.glance.SchwarzConfigActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+              }
+            )
+            result.success(true)
+          } catch (_: Exception) {
+            result.success(false)
+          }
+        }
+
         "openNamidaSync" -> {
           val backupPath = call.argument<String>("backupPath")
           val musicFolders = call.argument<String>("musicFolders")
@@ -173,9 +186,9 @@ class NamidaMainActivity : FlutterActivity() {
           val nativeIcon = when (key) {
             "namida" -> LauncherIcon.DEFAULT
             "cutsie" -> LauncherIcon.CUTSIE
+            "jellyda" -> LauncherIcon.JELLYDA
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
-            "jellyda" -> LauncherIcon.JELLYDA
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI
@@ -203,9 +216,9 @@ class NamidaMainActivity : FlutterActivity() {
           val nativeIcon = when (key) {
             "namida" -> LauncherIcon.DEFAULT
             "cutsie" -> LauncherIcon.CUTSIE
+            "jellyda" -> LauncherIcon.JELLYDA
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
-            "jellyda" -> LauncherIcon.JELLYDA
             "space" -> LauncherIcon.SPACE
             "retro" -> LauncherIcon.RETRO
             "ookami" -> LauncherIcon.OOKAMI

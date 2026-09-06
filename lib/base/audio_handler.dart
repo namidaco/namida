@@ -96,6 +96,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     settings.player.repeatMode.addListener(resetGaplessPlaybackData);
 
+    final homeWidget = HomeWidgetController.instance;
+    if (homeWidget != null) {
+      settings.player.repeatMode.addListener(
+        () => homeWidget.updateRepeatMode(settings.player.repeatMode.value, numberOfRepeats.value),
+      );
+    }
+
     final smtc = SMTCController.instance;
     if (smtc != null) {
       void listener() {
@@ -331,6 +338,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       media.artUri,
       isPlaying,
       isFavourite,
+      playerRepeatMode,
+      numberOfRepeats.value,
     );
     _refreshWindowsTaskbar(isPlaying, isFavourite);
     _refreshTrayService(isPlaying, isFavourite);
@@ -2427,6 +2436,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> rewind() async => await onRewind();
+
+  @override
+  Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
+    switch (name) {
+      case HomeWidgetController.actionShuffle:
+        await shuffleNextItems();
+      case HomeWidgetController.actionCycleRepeat:
+        settings.player.save(repeatMode: settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values));
+      default:
+        return super.customAction(name, extras);
+    }
+  }
 
   Future<Duration?> setSource(
     UriSource source, {

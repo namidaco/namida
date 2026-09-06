@@ -106,6 +106,12 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<bool> openHomeWidgetSettings() async {
+    final res = await _channel.invokeMethod<bool?>('openHomeWidgetSettings');
+    return res ?? false;
+  }
+
+  @override
   Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined) async {
     try {
       final res = await _channel.invokeMethod(

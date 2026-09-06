@@ -24,13 +24,24 @@ class _HomeWidgetsMobile extends HomeWidgets {
   }
 
   @override
-  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite) async {
+  Future<void> updateRepeatMode(PlayerRepeatMode repeatMode, int repeatCount) async {
+    await Future.wait([
+      HomeWidget.saveWidgetData<String>(_HomeWidgetKey.repeat.name, repeatMode.name),
+      HomeWidget.saveWidgetData<int>(_HomeWidgetKey.repeatCount.name, repeatCount),
+    ]);
+    await _refresh();
+  }
+
+  @override
+  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite, PlayerRepeatMode repeatMode, int repeatCount) async {
     await Future.wait([
       HomeWidget.saveWidgetData<String>(_HomeWidgetKey.title.name, title),
       HomeWidget.saveWidgetData<String>(_HomeWidgetKey.message.name, message),
       HomeWidget.saveWidgetData<String>(_HomeWidgetKey.image.name, imageFileUri?.toString()),
       HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.playing.name, isPlaying),
       HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.favourite.name, isFavourite),
+      HomeWidget.saveWidgetData<String>(_HomeWidgetKey.repeat.name, repeatMode.name),
+      HomeWidget.saveWidgetData<int>(_HomeWidgetKey.repeatCount.name, repeatCount),
     ]);
     await _refresh();
   }

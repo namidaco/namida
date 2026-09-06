@@ -13,7 +13,8 @@ abstract class HomeWidgets {
   Future<bool?> init();
   Future<void> updateIsPlaying(bool isPlaying);
   Future<void> updateIsFavourite(bool isFavourite);
-  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite);
+  Future<void> updateRepeatMode(PlayerRepeatMode repeatMode, int repeatCount);
+  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite, PlayerRepeatMode repeatMode, int repeatCount);
 }
 
 enum _HomeWidgetKey {
@@ -22,4 +23,6 @@ enum _HomeWidgetKey {
   image,
   playing,
   favourite,
+  repeat,
+  repeatCount,
 }

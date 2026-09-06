@@ -35,6 +35,7 @@ enum _CustomizationSettingsKeys with SettingKeysBase {
   fontScale,
   hourFormat12,
   dateTimeFormat,
+  homeWidget(NamidaFeaturesAvailablity.android),
   // -----------
   ALBUMTILECUSTOMIZATION,
   trackNumberInAlbumPage,
@@ -98,6 +99,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.fontScale: [lang.fontScale],
     _CustomizationSettingsKeys.hourFormat12: [lang.hourFormat12],
     _CustomizationSettingsKeys.dateTimeFormat: [lang.dateTimeFormat],
+    _CustomizationSettingsKeys.homeWidget: [lang.homeScreenWidget],
     // -----------
     _CustomizationSettingsKeys.ALBUMTILECUSTOMIZATION: [lang.albumTileCustomization],
     _CustomizationSettingsKeys.trackNumberInAlbumPage: [lang.displayTrackNumberInAlbumPage, lang.displayTrackNumberInAlbumPageSubtitle],
@@ -323,6 +325,19 @@ class CustomizationSettings extends SettingSubpageProvider {
                 onChanged: (isTrue) => settings.player.save(displayActualPositionWhenSeeking: !isTrue),
                 value: settings.player.displayActualPositionWhenSeeking.valueR,
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.homeWidget,
+            child: CustomListTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.homeWidget),
+              icon: Broken.element_4,
+              title: lang.homeScreenWidget,
+              trailingRaw: const Icon(
+                Broken.arrow_right_3,
+                size: 20.0,
+              ),
+              onTap: () => NamidaChannel.inst.openHomeWidgetSettings(),
             ),
           ),
           _getAlbumCustomizationsTile(),

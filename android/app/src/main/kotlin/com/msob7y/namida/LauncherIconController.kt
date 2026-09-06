@@ -54,9 +54,9 @@ enum class LauncherIcon(
 ) {
   DEFAULT("DefaultIcon", R.mipmap.ic_launcher),
   CUTSIE("CutsieIcon", R.mipmap.ic_launcher_cutsie),
+  JELLYDA("JellydaIcon", R.mipmap.ic_launcher_jellyda),
   EDDY("EddyIcon", R.mipmap.ic_launcher_eddy),
   NAMICHIN("NamichinIcon", R.mipmap.ic_launcher_namichin),
-  JELLYDA("JellydaIcon", R.mipmap.ic_launcher_jellyda),
   SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
   RETRO("RetroIcon", R.mipmap.ic_launcher_retro),
   OOKAMI("OokamiIcon", R.mipmap.ic_launcher_ookami),

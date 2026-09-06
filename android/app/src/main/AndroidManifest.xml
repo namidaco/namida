@@ -68,6 +68,21 @@
 
         <activity-alias
             android:enabled="false"
+            android:name="com.msob7y.namida.JellydaIcon"
+            android:targetActivity=".NamidaMainActivity"
+            android:icon="@mipmap/ic_launcher_jellyda"
+            android:roundIcon="@mipmap/ic_launcher_jellyda"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:enabled="false"
             android:name="com.msob7y.namida.EddyIcon"
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_eddy"
@@ -87,21 +102,6 @@
             android:targetActivity=".NamidaMainActivity"
             android:icon="@mipmap/ic_launcher_namichin"
             android:roundIcon="@mipmap/ic_launcher_namichin"
-            android:exported="true">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
-            </intent-filter>
-        </activity-alias>
-
-        <activity-alias
-            android:enabled="false"
-            android:name="com.msob7y.namida.JellydaIcon"
-            android:targetActivity=".NamidaMainActivity"
-            android:icon="@mipmap/ic_launcher_jellyda"
-            android:roundIcon="@mipmap/ic_launcher_jellyda"
             android:exported="true">
 
             <intent-filter>
@@ -430,6 +430,7 @@
         </receiver>
 
         <receiver android:name=".glance.SchwarzReceiver"
+          android:label="@string/widget_label"
           android:exported="true">
           <intent-filter>
             <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -438,6 +439,16 @@
             android:name="android.appwidget.provider"
             android:resource="@xml/schwarz" />
         </receiver>
+        <activity
+            android:name=".glance.SchwarzConfigActivity"
+            android:label="@string/widget_config_label"
+            android:theme="@style/WidgetConfigTheme"
+            android:excludeFromRecents="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
         <service
             android:name="NamidaQuickSettingsTile"
             android:exported="true"

@@ -45,3 +45,9 @@
 # Just Audio
 -keep class com.ryanheise.just_audio.** { *; }
 -dontwarn com.ryanheise.just_audio.**
+
+# audio_service: `instance` is read reflectively from kotlin
+# (quick settings tile + home widget shuffle/repeat controls)
+-keepclassmembers class com.ryanheise.audioservice.AudioService {
+    static com.ryanheise.audioservice.AudioService instance;
+}

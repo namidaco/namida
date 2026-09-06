@@ -21,4 +21,8 @@
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+    <style name="WidgetConfigTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#121110</item>
+        <item name="android:colorAccent">#C9B296</item>
+    </style>
 </resources>

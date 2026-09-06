@@ -57,6 +57,8 @@ abstract class NamidaChannel {
 
   Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined);
 
+  Future<bool> openHomeWidgetSettings() async => false;
+
   /// wether the media command (play, next, etc) that woke the app was sent by us (home widget/quick settings tile).
   /// external commands (bluetooth, system media resumption, etc) can be sent without user intention,
   /// so they shouldn't start playback on a cold start.
@@ -116,9 +118,9 @@ extension NamidaAppIconsUtils on NamidaAppIcons {
 enum NamidaAppIcons {
   namida("assets/namida_icon.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null), AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, null)]),
   cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
+  jellyda("assets/namida_icon_jellyda.webp", [AuthorInfo("Tsuune", "TsunekiHouse", AuthorPlatform.telegram, null), AuthorInfo("Tsuune", "tsuuneki", AuthorPlatform.discord, null)]),
   eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
   namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
-  jellyda("assets/namida_icon_jellyda.webp", [AuthorInfo("Tsuune", "TsunekiHouse", AuthorPlatform.telegram, null), AuthorInfo("Tsuune", "tsuuneki", AuthorPlatform.discord, null)]),
   space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
   retro("assets/namida_icon_retro.png", [AuthorInfo("sgfreak", null, AuthorPlatform.discord, null)]),
   ookami("assets/namida_icon_ookami.webp", [AuthorInfo("神 ᴛᴀᴋᴜᴍɪ", null, AuthorPlatform.discord, AuthorAIModel.unknown)]),
