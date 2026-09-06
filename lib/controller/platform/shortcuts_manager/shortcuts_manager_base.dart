@@ -23,6 +23,19 @@ abstract class ShortcutsManager {
   );
 
   @protected
+  late final Map<LogicalKeyboardKey, List<ShortcutKeyActivator>> triggersIndex = _buildTriggersIndex(_keysToRegister);
+
+  static Map<LogicalKeyboardKey, List<ShortcutKeyActivator>> _buildTriggersIndex(List<ShortcutKeyActivator> activators) {
+    final map = <LogicalKeyboardKey, List<ShortcutKeyActivator>>{};
+    for (final activator in activators) {
+      (map[activator.key] ??= <ShortcutKeyActivator>[]).add(activator);
+    }
+    return map;
+  }
+
+  Map<ShortcutActivator, Intent>? get appShortcuts;
+
+  @protected
   List<ShortcutKeyActivator> get _keysToRegister;
   void init();
   void initUserShortcutsFromSettings();

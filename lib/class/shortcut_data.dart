@@ -129,6 +129,7 @@ class ShortcutKeyActivator extends SingleActivator {
   final String Function() title;
   final LogicalKeyboardKey key;
   final void Function() callback;
+  final bool skipInTextFields;
 
   const ShortcutKeyActivator({
     this.action,
@@ -139,6 +140,13 @@ class ShortcutKeyActivator extends SingleActivator {
     super.meta = false,
     super.alt = false,
     super.includeRepeats = false,
+    this.skipInTextFields = false,
     required this.callback,
   }) : super(key);
+
+  /// better alternative to [SingleActivator.accepts]. the main key itself should be matched outside
+  bool acceptsMatchedTrigger(KeyEvent event, HardwareKeyboard state) {
+    if (event is! KeyDownEvent && !(includeRepeats && event is KeyRepeatEvent)) return false;
+    return control == state.isControlPressed && shift == state.isShiftPressed && alt == state.isAltPressed && meta == state.isMetaPressed;
+  }
 }

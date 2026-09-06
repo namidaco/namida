@@ -11,6 +11,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ShortcutKeyActivator(
       action: HotkeyAction.play_pause,
       key: LogicalKeyboardKey.space,
+      skipInTextFields: true,
       callback: Player.inst.togglePlayPause,
       title: () => "${lang.play}/${lang.pause}",
     ),
@@ -298,14 +299,51 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
 
   FocusAttachment? _attachment;
 
+  /// arrow keys are mapped to [DirectionalFocusIntent]/[ScrollIntent] by [WidgetsApp.defaultShortcuts],
+  /// and since those are dispatched from the focused node upwards, they get consumed before ever
+  /// reaching our root scope handler. text fields are unaffected, they consume arrows earlier
+  /// through [DefaultTextEditingShortcuts].
+  static bool _isStrippedDefault(ShortcutActivator activator, Intent intent) {
+    if (activator is! SingleActivator) return false;
+
+    final trigger = activator.trigger;
+    final isArrow = trigger == LogicalKeyboardKey.arrowLeft || //
+        trigger == LogicalKeyboardKey.arrowRight ||
+        trigger == LogicalKeyboardKey.arrowUp ||
+        trigger == LogicalKeyboardKey.arrowDown;
+    if (!isArrow) return false;
+
+    return intent is DirectionalFocusIntent || (intent is ScrollIntent && activator.control);
+  }
+
+  @override
+  late final Map<ShortcutActivator, Intent> appShortcuts = Map<ShortcutActivator, Intent>.fromEntries(
+    WidgetsApp.defaultShortcuts.entries.where(
+      (e) => !_isStrippedDefault(e.key, e.value),
+    ),
+  );
+
+  static bool _isTextFieldFocused() {
+    final context = FocusManager.instance.primaryFocus?.context;
+    return context != null && context.findAncestorStateOfType<EditableTextState>() != null;
+  }
+
   @override
   void init() {
     _attachment = FocusManager.instance.rootScope.attach(
       null,
       onKeyEvent: (node, event) {
-        for (final ShortcutActivator activator in bindings.keys) {
-          if (activator.accepts(event, HardwareKeyboard.instance)) {
-            bindings[activator]!.call();
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+
+        final candidates = triggersIndex[event.logicalKey];
+        if (candidates == null) return KeyEventResult.ignored;
+
+        final keyboard = HardwareKeyboard.instance;
+        for (int i = 0; i < candidates.length; i++) {
+          final activator = candidates[i];
+          if (activator.acceptsMatchedTrigger(event, keyboard)) {
+            if (activator.skipInTextFields && _isTextFieldFocused()) return KeyEventResult.ignored;
+            activator.callback();
             return KeyEventResult.handled;
           }
         }

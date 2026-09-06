@@ -646,6 +646,7 @@ class _NamidaState extends State<Namida> {
                         debugShowCheckedModeBanner: false,
                         navigatorKey: namida.rootNavigatorKey,
                         title: 'Namida',
+                        shortcuts: ShortcutsController.instance?.appShortcuts,
                         // restorationScopeId: 'Namida',
                         // -- we use custom logic to avoid context based translations
                         // locale: currentLanguage?.locale,
