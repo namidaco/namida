@@ -1151,72 +1151,78 @@ class SoundControlPageState extends State<SoundControlPage> {
                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 color: theme.cardColor,
               ),
-              child: SmoothSingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    verticalInBetweenPadding,
-                    verticalInBetweenPadding,
-                    Row(
-                      children: [
-                        const SizedBox(width: 6.0),
-                        NamidaIconButton(
-                          verticalPadding: 6.0,
-                          horizontalPadding: 12.0,
-                          icon: Broken.arrow_left_1,
-                          iconSize: 24.0,
-                          onPressed: NamidaNavigator.inst.popRoot,
+              child: Column(
+                children: [
+                  verticalInBetweenPadding,
+                  verticalInBetweenPadding,
+                  Row(
+                    children: [
+                      const SizedBox(width: 6.0),
+                      NamidaIconButton(
+                        verticalPadding: 6.0,
+                        horizontalPadding: 12.0,
+                        icon: Broken.arrow_left_1,
+                        iconSize: 24.0,
+                        onPressed: NamidaNavigator.inst.popRoot,
+                      ),
+                      const SizedBox(width: 6.0),
+                      const Icon(Broken.sound),
+                      const SizedBox(width: 12.0),
+                      Expanded(
+                        child: Text(
+                          "${lang.configure} (${lang.beta})",
+                          style: textTheme.displayMedium,
                         ),
-                        const SizedBox(width: 6.0),
-                        const Icon(Broken.sound),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: Text(
-                            "${lang.configure} (${lang.beta})",
-                            style: textTheme.displayMedium,
+                      ),
+                      NamidaIconButton(
+                        horizontalPadding: 8.0,
+                        tooltip: () => lang.tapToSeek,
+                        icon: null,
+                        iconSize: 24.0,
+                        onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
+                        child: ObxO(
+                          rx: settings.equalizer.uiTapToUpdate,
+                          builder: (context, val) => StackedIcon(
+                            baseIcon: Broken.mouse_1,
+                            secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
+                            secondaryIconSize: 12.0,
+                            iconSize: 24.0,
                           ),
                         ),
-                        NamidaIconButton(
-                          horizontalPadding: 8.0,
-                          tooltip: () => lang.tapToSeek,
-                          icon: null,
-                          iconSize: 24.0,
-                          onPressed: () => settings.equalizer.save(uiTapToUpdate: !settings.equalizer.uiTapToUpdate.value),
-                          child: ObxO(
-                            rx: settings.equalizer.uiTapToUpdate,
-                            builder: (context, val) => StackedIcon(
-                              baseIcon: Broken.mouse_1,
-                              secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
-                              secondaryIconSize: 12.0,
-                              iconSize: 24.0,
+                      ),
+                      const SizedBox(width: 12.0),
+
+                      const SizedBox(width: 8.0),
+                    ],
+                  ),
+                  const SizedBox(height: 6.0),
+                  Expanded(
+                    child: SmoothSingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const PlaybackSettings().getNormalizeAudioWidget(isInEQPage: true),
+                          NamidaContainerDivider(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: verticalInBetweenPaddingH / 2,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12.0),
-
-                        const SizedBox(width: 8.0),
-                      ],
-                    ),
-                    const SizedBox(height: 6.0),
-                    const PlaybackSettings().getNormalizeAudioWidget(isInEQPage: true),
-                    NamidaContainerDivider(
-                      margin: EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: verticalInBetweenPaddingH / 2,
+                          ObxO(
+                            rx: settings.equalizer.uiTapToUpdate,
+                            builder: (context, uiTapToUpdate) => SoundControlMainSlidersColumn(
+                              verticalInBetweenPadding: verticalInBetweenPaddingH,
+                              tapToUpdate: uiTapToUpdate,
+                              isInDialog: false,
+                            ),
+                          ),
+                          verticalInBetweenPadding,
+                        ],
                       ),
                     ),
-                    ObxO(
-                      rx: settings.equalizer.uiTapToUpdate,
-                      builder: (context, uiTapToUpdate) => SoundControlMainSlidersColumn(
-                        verticalInBetweenPadding: verticalInBetweenPaddingH,
-                        tapToUpdate: uiTapToUpdate,
-                        isInDialog: false,
-                      ),
-                    ),
-                    verticalInBetweenPadding,
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

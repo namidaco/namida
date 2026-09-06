@@ -22,9 +22,8 @@ class SendPortWithCachedMessage {
 abstract class SearchPortsProvider {
   final _ports = <MediaType, PortsComm?>{};
   final _sendPorts = <MediaType, SendPortWithCachedMessage?>{};
-  final _sendPortsStreamSubs = <MediaType, StreamSubscription?>{};
 
-  Future<SendPortWithCachedMessage> Function() mediaTypeToPrepareFn(MediaType type);
+  Future<SendPortWithCachedMessage?> Function() mediaTypeToPrepareFn(MediaType type);
 
   @protected
   Future<void> disposeAll() async {
@@ -32,63 +31,41 @@ abstract class SearchPortsProvider {
   }
 
   Future<void> closePorts(MediaType type) async {
-    _sendPortsStreamSubs[type]?.cancel();
-    _sendPortsStreamSubs[type] = null;
-
     _sendPorts[type] = null;
 
     final port = _ports[type];
     if (port != null) {
       _ports[type] = null;
-      await _closePortAndRemoveListener(port);
+      await port.close();
     }
   }
 
-  Future<void> _closePortAndRemoveListener(PortsComm port) async {
-    port.items.close();
-    final sendPort = await port.search.future;
-    PortsProvider.sendDisposeMessage(sendPort);
-  }
-
-  Future<SendPortWithCachedMessage> preparePorts({
+  /// null means the port was closed before it became usable, the search has to be sent again.
+  Future<SendPortWithCachedMessage?> preparePorts({
     required MediaType type,
     required void Function(dynamic result) onResult,
     required Future<void> Function(SendPort itemsSendPort) isolateFunction,
-    bool force = false,
   }) async {
-    final sendPort = await preparePortBase(
-      type: type,
-      portN: _ports[type],
-      onPortNull: () {
-        closePorts(type);
-        return _ports[type] ??= (items: ReceivePort(), search: Completer<SendPort>());
-      },
-      onResult: onResult,
-      isolateFunction: isolateFunction,
-    );
+    final existingPort = _ports[type];
+    if (existingPort != null) return _wrapSendPort(type, await existingPort.sendPort);
+
+    final port = _ports[type] = PortsComm();
+    port.listen(onResult);
+
+    try {
+      await isolateFunction(port.items.sendPort);
+    } catch (_) {
+      port.abort();
+      await closePorts(type);
+      rethrow;
+    }
+
+    return _wrapSendPort(type, await port.sendPort);
+  }
+
+  SendPortWithCachedMessage? _wrapSendPort(MediaType type, SendPort? sendPort) {
+    if (sendPort == null) return null;
     return _sendPorts[type] ??= SendPortWithCachedMessage(sendPort);
-  }
-
-  Future<SendPort> preparePortBase({
-    required MediaType type,
-    required PortsComm? portN,
-    required PortsComm Function() onPortNull,
-    required void Function(dynamic result) onResult,
-    required Future<void> Function(SendPort itemsSendPort) isolateFunction,
-    bool force = false,
-  }) async {
-    if (portN != null && !force) return await portN.search.future;
-
-    final port = onPortNull();
-    _sendPortsStreamSubs[type] = port.items.listen((result) {
-      if (result is SendPort) {
-        port.search.completeIfWasnt(result);
-      } else {
-        onResult(result);
-      }
-    });
-    await isolateFunction(port.items.sendPort);
-    return await port.search.future;
   }
 
   Future<void> refreshPortIfNecessary(MediaType type) async {

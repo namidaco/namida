@@ -156,8 +156,8 @@ class EditDeleteController {
   }
 
   Future<void> updateTrackPathInEveryPartOfNamidaBulk<T extends Track>(Map<String, String> oldNewPathPre, {bool removeOldTracksFromLibrary = false}) async {
-    final newtrlist = await Indexer.inst.convertPathsToTracksAndAddToLists(oldNewPathPre.values);
-    if (newtrlist.isEmpty) return;
+    // -- paths should still be remapped even if new ones not found
+    await Indexer.inst.convertPathsToTracksAndAddToLists(oldNewPathPre.values);
     final oldNewTrack = <T, T>{};
     for (final on in oldNewPathPre.entries) {
       final oldTr = Track.orVideo(on.key);

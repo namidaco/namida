@@ -13,6 +13,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/core/enum.dart';
+import 'package:youtipie/core/playlist_id_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
@@ -549,8 +550,9 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       ),
       if (userPlaylist != null &&
           playlistToFetch is YoutiPiePlaylistResult &&
-          (playlistToFetch.info.id.length == 34 || playlistToFetch.info.id.length == 36) && // exludes mixes & defaults (WL & LL)
-          playlistToFetch.info.uploader?.id == YoutubeAccountController.current.activeAccountChannel.value?.id)
+          YTPlaylistIdUtils.isUserCreated(playlistToFetch.info.id) && // excludes mixes, uploads, albums & defaults (WL & LL)
+          // playlistToFetch.info.uploader?.id == YoutubeAccountController.current.activeAccountChannel.value?.id && // can be different if account is a sub profile
+          playlistToFetch.info.uploader?.handler == YoutubeAccountController.current.activeAccountChannel.value?.handler)
         NamidaPopupItem(
           icon: Broken.edit_2,
           title: lang.edit,

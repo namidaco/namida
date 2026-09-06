@@ -379,7 +379,7 @@ Future<void> showTrackInfoDialog(
                                 TrackInfoListTile(
                                   title: trackExt.moodList.length == 1 ? lang.mood : lang.moods,
                                   value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
-                                  icon: Broken.happyemoji,
+                                  icon: Broken.emoji_happy,
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownComposer))

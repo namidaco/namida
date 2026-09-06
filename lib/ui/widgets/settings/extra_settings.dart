@@ -1226,15 +1226,38 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   value: settings.extra.jellysInvasion ?? false,
                   onChanged: (isTrue) {
                     final newEnabled = !isTrue;
-                    setState(() => settings.extra.save(jellysInvasion: newEnabled));
+                    final alsoModifyPalette = true;
+                    setState(
+                      () => settings.extra.save(
+                        jellysInvasion: newEnabled,
+                        // ignore: dead_code
+                        jellysPalette: alsoModifyPalette ? newEnabled : null,
+                      ),
+                    );
+                    if (alsoModifyPalette) {
+                      if (newEnabled) {
+                        _applyJellydaPalette();
+                      } else {
+                        _resetJellydaPalette();
+                      }
+                    }
+                  },
+                  title: 'jellys_invasion'.toUpperCase(),
+                  subtitle: "Lets jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}",
+                ),
+                CustomSwitchListTile(
+                  icon: Broken.color_swatch,
+                  value: settings.extra.jellysPalette ?? false,
+                  onChanged: (isTrue) {
+                    final newEnabled = !isTrue;
+                    setState(() => settings.extra.save(jellysPalette: newEnabled));
                     if (newEnabled) {
                       _applyJellydaPalette();
                     } else {
                       _resetJellydaPalette();
                     }
                   },
-                  title: 'jellys_invasion'.toUpperCase(),
-                  subtitle: "Lets jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}",
+                  title: 'jellys_color_palette'.toUpperCase(),
                 ),
               ],
               if (NamidaFeaturesVisibility.mediaWaveHaptic)

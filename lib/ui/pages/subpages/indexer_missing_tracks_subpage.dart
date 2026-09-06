@@ -236,25 +236,32 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
   Future<void> _onUpdating() async {
     if (_selectedTracksToUpdate.isEmpty) return;
     setState(() => _isUpdatingPaths = true);
-    try {
-      final newPaths = <String, String>{};
-      for (final e in _selectedTracksToUpdate.entries) {
-        if (e.value) {
-          final sugg = _missingTracksSuggestions[e.key];
-          if (sugg != null) newPaths[e.key] = sugg;
-        }
+
+    final newPaths = <String, String>{};
+    for (final e in _selectedTracksToUpdate.entries) {
+      if (e.value) {
+        final sugg = _missingTracksSuggestions[e.key];
+        if (sugg != null) newPaths[e.key] = sugg;
       }
-      await EditDeleteController.inst.updateTrackPathInEveryPartOfNamidaBulk(newPaths);
+    }
+
+    bool didUpdate = false;
+    try {
+      await EditDeleteController.inst.updateTrackPathInEveryPartOfNamidaBulk(newPaths, removeOldTracksFromLibrary: true);
+      didUpdate = true;
       snackyy(title: lang.note, message: "${lang.done}: ${newPaths.length.displayTrackKeyword}", top: false);
     } catch (e) {
       snackyy(title: lang.error, message: '$e', top: false, isError: true);
     }
 
-    for (final k in _selectedTracksToUpdate.keys) {
-      _missingTracksPaths.remove(k);
-      _missingTracksSuggestions.remove(k);
+    if (didUpdate) {
+      // -- only clearing what was actually updated
+      for (final k in newPaths.keys) {
+        _missingTracksPaths.remove(k);
+        _missingTracksSuggestions.remove(k);
+        _selectedTracksToUpdate.remove(k);
+      }
     }
-    _selectedTracksToUpdate.clear();
     setState(() => _isUpdatingPaths = false);
   }
 

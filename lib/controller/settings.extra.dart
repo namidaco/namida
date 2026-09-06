@@ -21,6 +21,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? floatingArtworkEffect;
   bool? tiltingCardsEffect;
   bool? jellysInvasion;
+  bool? jellysPalette;
   bool? mediaWaveHaptic;
   bool? artistAlbumsExpanded;
   bool? artistSinglesExpanded;
@@ -50,6 +51,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? floatingArtworkEffect,
     bool? tiltingCardsEffect,
     bool? jellysInvasion,
+    bool? jellysPalette,
     bool? mediaWaveHaptic,
     bool? artistAlbumsExpanded,
     bool? artistSinglesExpanded,
@@ -75,6 +77,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (floatingArtworkEffect != null) this.floatingArtworkEffect = floatingArtworkEffect;
     if (tiltingCardsEffect != null) this.tiltingCardsEffect = tiltingCardsEffect;
     if (jellysInvasion != null) this.jellysInvasion = jellysInvasion;
+    if (jellysPalette != null) this.jellysPalette = jellysPalette;
     if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
     if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
@@ -117,6 +120,7 @@ class _ExtraSettings with SettingsFileWriter {
       floatingArtworkEffect = json['floatingArtworkEffect'] ?? floatingArtworkEffect;
       tiltingCardsEffect = json['tiltingCardsEffect'] ?? tiltingCardsEffect;
       jellysInvasion = json['jellysInvasion'] ?? jellysInvasion;
+      jellysPalette = json['jellysPalette'] ?? jellysPalette;
       mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
       artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
@@ -167,6 +171,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (floatingArtworkEffect != null) 'floatingArtworkEffect': floatingArtworkEffect,
     if (tiltingCardsEffect != null) 'tiltingCardsEffect': tiltingCardsEffect,
     if (jellysInvasion != null) 'jellysInvasion': jellysInvasion,
+    if (jellysPalette != null) 'jellysPalette': jellysPalette,
     if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
     if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,

@@ -13,6 +13,7 @@ import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
@@ -447,6 +448,7 @@ class BackupController {
     PlaylistController.inst.prepareAllPlaylists();
     HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());
     await PlaylistController.inst.prepareDefaultPlaylistsFileAsync();
+    await SmartPlaylistsController.inst.reloadFromStorage();
     // await QueueController.inst.prepareLatestQueueSync();
 
     YoutubePlaylistController.inst.prepareAllPlaylists();

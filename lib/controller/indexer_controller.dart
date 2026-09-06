@@ -2070,6 +2070,9 @@ class Indexer<T extends Track> {
   //   printy("All Tracks Length From File: ${tracksInfoList.length}");
   // }
 
+  static final _featArtistRegex = RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false);
+  static final _closingBracketRegex = RegExp(r'\)|\]');
+
   static List<String> splitArtist({
     required String? title,
     required String? originalArtist,
@@ -2081,9 +2084,9 @@ class Indexer<T extends Track> {
     allArtists.addAll(artistsOrg);
 
     if (config.addFeatArtist) {
-      final List<String>? moreArtists = title?.split(RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false));
+      final List<String>? moreArtists = title?.split(_featArtistRegex);
       if (moreArtists != null && moreArtists.length > 1) {
-        final extractedFeatArtists = moreArtists[1].split(RegExp(r'\)|\]')).first;
+        final extractedFeatArtists = moreArtists[1].split(_closingBracketRegex).first;
         final artists = config.splitText(extractedFeatArtists, fallback: null);
         allArtists.addAll(artists);
       }

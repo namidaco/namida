@@ -41,6 +41,12 @@ class SmartPlaylistsController {
     config: const DBConfig(createIfNotExist: true),
   );
 
+  Future<void> reloadFromStorage() async {
+    await _dBManager.close();
+    smartPlaylistsMap.value.clear();
+    await prepareAll();
+  }
+
   Future<void> prepareAll() async {
     final res = await _dBManager.loadEverythingKeyedResult();
     for (final entry in res.entries) {

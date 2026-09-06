@@ -4,7 +4,6 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -234,9 +233,8 @@ class _JellyTracksEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final tint = CurrentColor.inst.color;
+    return Builder(
+      builder: (context) {
         // if (Indexer.inst.isIndexing.valueR) {
         //   final total = Indexer.inst.allAudioFiles.valueR.length;
         //   final done = Indexer.inst.tracksInfoList.valueR.length;
@@ -248,9 +246,8 @@ class _JellyTracksEmptyState extends StatelessWidget {
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FloatingJelly(
+            const FloatingJelly(
               height: 170.0,
-              tint: tint,
               opacity: 0.9,
             ),
             const SizedBox(height: 8.0),

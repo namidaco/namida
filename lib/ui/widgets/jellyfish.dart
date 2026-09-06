@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:namida/class/color_m.dart';
-import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -265,8 +264,10 @@ class _JellySwarm extends ChangeNotifier {
 class JellyField extends StatefulWidget {
   final int count;
 
-  /// Recolors the jellies toward this, usually the current track color. Null keeps the original blue.
+  /// Recolors the jellies toward this, defaults to the theme secondary.
   final Color? tint;
+
+  /// How far the original blue is pushed into [tint], `1.0` leaves none of it, `0.0` keeps the artwork as drawn.
   final double tintStrength;
   final double opacity;
 
@@ -290,7 +291,7 @@ class JellyField extends StatefulWidget {
     super.key,
     this.count = 5,
     this.tint,
-    this.tintStrength = 0.45,
+    this.tintStrength = kJellyDefaultTintStrength,
     this.opacity = 0.5,
     this.minHeight = 80.0,
     this.maxHeight = 220.0,
@@ -360,7 +361,7 @@ class _JellyFieldState extends State<JellyField> {
         isComplex: true,
         painter: _JellyFieldPainter(
           swarm: _swarm!,
-          tint: widget.tint,
+          tint: widget.tint ?? context.theme.colorScheme.primary,
           tintStrength: widget.tintStrength,
           opacity: widget.opacity,
           minHeight: widget.minHeight,
@@ -394,7 +395,7 @@ class _JellyFieldPainter extends CustomPainter {
     final time = NamidaFloatClock.instance.seconds;
     final fadeBand = math.min(size.width, size.height) * 0.22;
     final tint = this.tint;
-    final colorFilter = tint == null ? null : ColorFilter.mode(tint.withValues(alpha: tintStrength), BlendMode.srcATop);
+    final colorFilter = tint == null || tintStrength <= 0 ? null : NamidaJellys.tintFilter(tint, tintStrength);
     final paint = Paint()
       ..filterQuality = FilterQuality.low
       ..colorFilter = colorFilter;
@@ -495,17 +496,14 @@ class NamidaJellyBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     if (!NamidaJellys.enabled) return const SizedBox();
     return IgnorePointer(
-      child: Obx(
-        (context) => JellyField(
-          count: count,
-          tint: CurrentColor.inst.color,
-          opacity: opacity,
-          minHeight: minHeight,
-          maxHeight: maxHeight,
-          reactToPlayback: reactToPlayback,
-          enabled: enabled,
-          seed: seed,
-        ),
+      child: JellyField(
+        count: count,
+        opacity: opacity,
+        minHeight: minHeight,
+        maxHeight: maxHeight,
+        reactToPlayback: reactToPlayback,
+        enabled: enabled,
+        seed: seed,
       ),
     );
   }
@@ -528,7 +526,7 @@ class FloatingJelly extends StatelessWidget {
     this.jelly = NamidaJelly.jelly170d,
     this.height = 160.0,
     this.tint,
-    this.tintStrength = 0.45,
+    this.tintStrength = kJellyDefaultTintStrength,
     this.opacity = 1.0,
     this.mirrored = false,
     this.amplitude = 6.0,
@@ -538,14 +536,15 @@ class FloatingJelly extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = this.tint;
-    Widget image = Image.asset(
-      jelly.assetPath,
-      height: height,
-      cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).round(),
-      opacity: opacity == 1.0 ? null : AlwaysStoppedAnimation(opacity),
-      color: tint?.withValues(alpha: tintStrength),
-      colorBlendMode: tint == null ? null : BlendMode.srcATop,
+    final tint = this.tint ?? context.theme.colorScheme.primary;
+    Widget image = ColorFiltered(
+      colorFilter: NamidaJellys.tintFilter(tint, tintStrength),
+      child: Image.asset(
+        jelly.assetPath,
+        height: height,
+        cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).round(),
+        opacity: opacity == 1.0 ? null : AlwaysStoppedAnimation(opacity),
+      ),
     );
     if (mirrored) {
       image = Transform.flip(flipX: true, child: image);
@@ -601,9 +600,9 @@ class _JellyListEndState extends State<JellyListEnd> {
     if (!NamidaJellys.enabled) return const SizedBox();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32.0),
-      child: Obx(
-        (context) {
-          final tint = CurrentColor.inst.color;
+      child: Builder(
+        builder: (context) {
+          final tint = context.theme.colorScheme.primary;
           return Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: _jellies.map(
@@ -670,7 +669,7 @@ class JellyLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     const art = NamidaJelly.jelly100d;
     final percentage = this.percentage;
-    final tint = this.tint;
+    final tint = this.tint ?? context.theme.colorScheme.primary;
     return SizedBox(
       height: height,
       child: FloatingImage(
@@ -682,12 +681,13 @@ class JellyLoader extends StatelessWidget {
         child: Stack(
           alignment: art.bellAlignment,
           children: [
-            Image.asset(
-              art.assetPath,
-              height: height,
-              cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).round(),
-              color: tint?.withValues(alpha: 0.45),
-              colorBlendMode: tint == null ? null : BlendMode.srcATop,
+            ColorFiltered(
+              colorFilter: NamidaJellys.tintFilter(tint, kJellyDefaultTintStrength),
+              child: Image.asset(
+                art.assetPath,
+                height: height,
+                cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).round(),
+              ),
             ),
             if (percentage != null && percentage.isFinite)
               Text(
@@ -886,6 +886,7 @@ enum NamidaJellyArt {
 abstract class NamidaJellys {
   /// Whether jellyfishes are allowed to invade the ui.
   static bool get enabled => kAllowJellysInvasion && settings.extra.jellysInvasion == true;
+  static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette == true;
 
   /// Sampled off the artworks, abyss blue through to bell-glow cyan.
   static const palette = <Color>[
@@ -935,6 +936,45 @@ abstract class NamidaJellys {
     return hash;
   }
 
+  // -- luminance weights, so the recolor keeps the artwork's own shading
+  static const _lumR = 0.2126, _lumG = 0.7152, _lumB = 0.0722;
+
+  static final _tintFilters = <(int, double), ColorFilter>{};
+
+  /// Recolors the blue-ish artwork into a [tint]-toned duotone.
+  ///
+  /// Luminance is mapped between a darkened and a lightened [tint], so the bell keeps
+  /// glowing brighter than the body instead of the whole sprite turning one flat color.
+  /// [strength] blends back toward the original blue, `1.0` leaves none of it.
+  static ColorFilter tintFilter(Color tint, [double strength = kJellyDefaultTintStrength]) {
+    final key = (tint.intValue, strength);
+    final cached = _tintFilters[key];
+    if (cached != null) return cached;
+    if (_tintFilters.length >= 16) _tintFilters.clear(); // -- themes change, the map shouldn't grow forever
+    return _tintFilters[key] = _buildTintFilter(tint, strength);
+  }
+
+  static ColorFilter _buildTintFilter(Color tint, double strength) {
+    final dark = Color.lerp(tint, Colors.black, 0.5)!;
+    final light = Color.lerp(tint, Colors.white, 0.72)!;
+    final s = strength.clampDouble(0.0, 1.0);
+    final identity = 1 - s;
+
+    List<double> row(double darkChannel, double lightChannel, int channelIndex) {
+      final span = (lightChannel - darkChannel) * s;
+      final values = [_lumR * span, _lumG * span, _lumB * span, 0.0, darkChannel * 255 * s];
+      values[channelIndex] += identity;
+      return values;
+    }
+
+    return ColorFilter.matrix([
+      ...row(dark.r, light.r, 0),
+      ...row(dark.g, light.g, 1),
+      ...row(dark.b, light.b, 2),
+      0.0, 0.0, 0.0, 1.0, 0.0, //
+    ]);
+  }
+
   static const _decodeWidth = 400;
 
   static final _images = <NamidaJelly, ui.Image>{};
@@ -958,6 +998,9 @@ abstract class NamidaJellys {
     ).then((_) => _loading = null);
   }
 }
+
+/// How far the jelly artwork is pushed into the theme color by default.
+const kJellyDefaultTintStrength = 0.85;
 
 /// How far an art may be rotated away from how it was drawn, in radians.
 const kJellyMaxArtRotation = 35 * math.pi / 180;

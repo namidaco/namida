@@ -147,7 +147,7 @@ final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
 const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
-const kEnableFancyAnimations = true;
+const kEnableFancyAnimations = isKuru;
 
 const kAllowJellysInvasion = true;
 
@@ -1241,6 +1241,7 @@ class NamidaFeaturesVisibility {
   static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isAndroid;
+  static final deviceOrientationSensorAvailable = _isAndroid;
   static final floatingArtworkEffect = _isAndroid;
   static final mediaWaveHaptic = _isAndroid;
 

@@ -35,13 +35,13 @@ Color get playerStaticColor => namida.isDarkMode ? playerStaticColorDark : playe
 Color get playerStaticColorLight {
   final cInt = settings.staticColor.value;
   if (cInt != null) return Color(cInt);
-  return NamidaJellys.enabled ? NamidaJellys.paletteLight : kMainColorLight;
+  return NamidaJellys.enableColorPaletteHijack ? NamidaJellys.paletteLight : kMainColorLight;
 }
 
 Color get playerStaticColorDark {
   final cInt = settings.staticColorDark.value;
   if (cInt != null) return Color(cInt);
-  return NamidaJellys.enabled ? NamidaJellys.paletteDark : kMainColorDark;
+  return NamidaJellys.enableColorPaletteHijack ? NamidaJellys.paletteDark : kMainColorDark;
 }
 
 Color get playerStaticColorR => namida.isDarkMode ? playerStaticColorDark : playerStaticColorLight;
@@ -49,13 +49,13 @@ Color get playerStaticColorR => namida.isDarkMode ? playerStaticColorDark : play
 Color get playerStaticColorLightR {
   final cInt = settings.staticColor.valueR;
   if (cInt != null) return Color(cInt);
-  return NamidaJellys.enabled ? NamidaJellys.paletteLight : kMainColorLight;
+  return NamidaJellys.enableColorPaletteHijack ? NamidaJellys.paletteLight : kMainColorLight;
 }
 
 Color get playerStaticColorDarkR {
   final cInt = settings.staticColorDark.valueR;
   if (cInt != null) return Color(cInt);
-  return NamidaJellys.enabled ? NamidaJellys.paletteDark : kMainColorDark;
+  return NamidaJellys.enableColorPaletteHijack ? NamidaJellys.paletteDark : kMainColorDark;
 }
 
 class CurrentColor {
@@ -260,7 +260,7 @@ class CurrentColor {
   }) async {
     if (!_canAutoUpdateColor) return;
 
-    if (NamidaJellys.enabled) {
+    if (NamidaJellys.enableColorPaletteHijack) {
       final jellyColor = _jellyColorFor(itemKey);
       if (jellyColor != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = jellyColor;
       if (settings.autoColor.value && jellyColor != _namidaColor.value) {
@@ -325,7 +325,7 @@ class CurrentColor {
     bool delightnedAndAlpha = true,
     bool useIsolate = _defaultUseIsolate,
   }) {
-    if (NamidaJellys.enabled) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
+    if (NamidaJellys.enableColorPaletteHijack) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
 
     final filename = networkArtworkInfo?.toArtworkIfExistsAndEnabled()?.path ?? track.cacheKeyForImage(_defaultPaletteDirectory.path);
 
@@ -375,7 +375,7 @@ class CurrentColor {
     bool useIsolate = _defaultUseIsolate,
     bool forceReCheck = false,
   }) async {
-    if (NamidaJellys.enabled) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
+    if (NamidaJellys.enableColorPaletteHijack) return _jellyColorFor(track.path, delightnedAndAlpha: delightnedAndAlpha);
 
     if (!forceReCheck) {
       final cached = getTrackColorsSync(track, networkArtworkInfo: networkArtworkInfo);

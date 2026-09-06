@@ -5,7 +5,58 @@ import 'package:flutter/foundation.dart';
 
 import 'package:namida/core/extensions.dart';
 
-typedef PortsComm = ({ReceivePort items, Completer<SendPort> search});
+/// A [ReceivePort] paired with the [SendPort] its isolate reports back on startup.
+// by claude
+class PortsComm {
+  final items = ReceivePort();
+
+  final _sendPortCompleter = Completer<SendPort?>();
+  StreamSubscription? _subscription;
+  bool _closed = false;
+
+  /// Resolves to null if [close] was called before the isolate reported back.
+  Future<SendPort?> get sendPort => _sendPortCompleter.future;
+
+  void listen(void Function(dynamic result) onResult) {
+    _subscription = items.listen((result) {
+      if (result is SendPort) {
+        if (_closed) {
+          // -- closed while the isolate was still starting up, it can finally be disposed
+          _disposeWith(result);
+        } else {
+          _sendPortCompleter.completeIfWasnt(result);
+        }
+      } else if (!_closed) {
+        onResult(result);
+      }
+    });
+  }
+
+  Future<void> close() async {
+    if (_closed) return;
+    _closed = true;
+
+    if (_sendPortCompleter.isCompleted) return _disposeWith(await sendPort);
+
+    // -- the isolate hasn't reported back yet, so keep listening to be able to dispose it later,
+    // -- but release whoever is waiting on it right away instead of leaving them hanging forever.
+    _sendPortCompleter.complete(null);
+  }
+
+  /// The isolate failed to start, so nothing will ever report back on this port.
+  void abort() {
+    _closed = true;
+    _sendPortCompleter.completeIfWasnt(null);
+    _disposeWith(null);
+  }
+
+  void _disposeWith(SendPort? sendPort) {
+    _subscription?.cancel();
+    _subscription = null;
+    items.close();
+    if (sendPort != null) PortsProvider.sendDisposeMessage(sendPort);
+  }
+}
 
 abstract class _PortsProviderDisposeMessage {}
 
