@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart';
@@ -7,7 +9,13 @@ import 'package:media_kit_video/media_kit_video.dart';
 
 import 'package:namida/core/extensions.dart';
 
+// Missing features: quick settings tile, picture in picture
+// `isPlaying()`, `hasVideo()`, `getVideoRational()`.
 class CustomMPVPlayer implements AVPlayer {
+  // features: skip silence, looping animations, equalizer, equalizer presets, loudness enhancer
+  // by claude
+  static const _enableExperimentalFeatures = true;
+
   CustomMPVPlayer({bool disableVideo = false}) {
     if (!disableVideo) _videoController;
     _playerHeightStreamSub = _player.stream.height.listen((event) {
@@ -49,12 +57,19 @@ class CustomMPVPlayer implements AVPlayer {
     _playerAudioTracksStreamSub = _player.stream.tracks.listen((tracks) {
       _updateAudioTracks(_toAudioTracks(tracks.audio));
     });
+
+    _playerLogStreamSub = _player.stream.log.listen((log) {
+      final missingFilter = _MPVMissingFilters.register(log.text);
+      if (missingFilter == null) return;
+      _audioFilters.onMissingFilter(missingFilter);
+    });
   }
 
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
 
   final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, bufferSize: 64 * 1024 * 1024));
+  late final _audioFilters = _MPVAudioFilters(_player);
   VideoController? _videoControllerRaw;
   VideoController get _videoController {
     return _videoControllerRaw ??= _createVideoControllerAndListen();
@@ -78,6 +93,7 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerBufferingStreamSub;
   StreamSubscription? _playerPositionStreamSub;
   StreamSubscription? _playerAudioTracksStreamSub;
+  StreamSubscription? _playerLogStreamSub;
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
   final _playerPositionStreamController = StreamController<Duration>();
 
@@ -178,7 +194,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Stream<Duration?> get durationStream => _player.stream.duration;
   @override
-  Stream<double> get volumeStream => _player.stream.volume.map((event) => event / 100);
+  Stream<double> get volumeStream => _player.stream.volume.map((event) => event / 100 / _loudnessMultiplier);
   @override
   Stream<double> get speedStream => _player.stream.rate;
   @override
@@ -197,7 +213,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Duration? get duration => _player.state.duration;
   @override
-  double get volume => _player.state.volume / 100;
+  double get volume => _volume;
   @override
   double get speed => _player.state.rate;
   @override
@@ -241,6 +257,8 @@ class CustomMPVPlayer implements AVPlayer {
 
     try {
       final videoOptions = _videoOptions;
+      _loopingVideoApplied = false;
+
       if (videoOptions == null) {
         await _tryOpen(
           mk.Media(
@@ -262,7 +280,7 @@ class CustomMPVPlayer implements AVPlayer {
         );
 
         await _tryOpen(mainMedia).then((_) async {
-          final videoTrack = mk.VideoTrack((videoOptions.source as UriSource).uri.toString(), null, null);
+          final videoTrack = mk.VideoTrack(_resolveVideoTrackSource(videoOptions), null, null);
           await _setVideoTrack(videoTrack);
           _updateAudioTracks();
         });
@@ -337,6 +355,43 @@ class CustomMPVPlayer implements AVPlayer {
   //     _latestSetVideoTrack = null;
   //   }
   // }
+
+  // -- mpv can't loop a single external video track, so the animation is turned into an `edl://`
+  // -- timeline that repeats it enough times to outlast the audio. it stays a normal track, so seeking still works.
+  bool _loopingVideoApplied = false;
+
+  static const _kMaxLoopingVideoRepeats = 1000;
+  static const _kFallbackLoopingVideoDuration = Duration(minutes: 30);
+
+  /// Returns the source to add as a video track, an `edl://` looping timeline when the animation asks for it.
+  String _resolveVideoTrackSource(VideoSourceOptions videoOptions) {
+    final source = videoOptions.source as UriSource;
+    final loopingSource = _enableExperimentalFeatures && videoOptions.loop ? _buildLoopingVideoSource(source, videoOptions.durationMS) : null;
+    _loopingVideoApplied = loopingSource != null;
+    return loopingSource ?? source.uri.toString();
+  }
+
+  String? _buildLoopingVideoSource(UriSource source, int? sourceDurationMS) {
+    if (sourceDurationMS == null || sourceDurationMS <= 0) return null;
+
+    final audioDuration = _player.state.duration;
+    final targetMS = (audioDuration > Duration.zero ? audioDuration : _kFallbackLoopingVideoDuration).inMilliseconds;
+
+    final repeats = (targetMS / sourceDurationMS).ceil() + 1;
+    if (repeats <= 1) return null;
+
+    // -- byte length prefixed, that way the path needs no escaping at all
+    final path = source.uri.isScheme('file') ? source.uri.toFilePath() : source.uri.toString();
+    final segment = '%${utf8.encode(path).length}%$path';
+    final repeatsClamped = repeats.clampInt(2, _kMaxLoopingVideoRepeats);
+    final buffer = StringBuffer();
+    buffer.write('edl://');
+    for (int i = 0; i < repeatsClamped; i++) {
+      buffer.write(segment);
+      buffer.write(';');
+    }
+    return buffer.toString();
+  }
 
   // modified version of setAudioTrack
   // source: package:media_kit/src/player/native/player/real.dart
@@ -437,7 +492,8 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Future<void> seek(Duration? position) async {
-    if (_videoOptions?.loop == true) return;
+    // -- when the video is a non-looped external track, seeking past its end leaves a frozen frame.
+    if (!_loopingVideoApplied && _videoOptions?.loop == true) return;
     return _player.seek(position ?? Duration.zero);
   }
 
@@ -464,6 +520,7 @@ class CustomMPVPlayer implements AVPlayer {
       _playerBufferingStreamSub?.cancel(),
       _playerPositionStreamSub?.cancel(),
       _playerAudioTracksStreamSub?.cancel(),
+      _playerLogStreamSub?.cancel(),
       _videoInfoStreamController.close(),
       _playerProcessingStateStreamController.close(),
       _playerPositionStreamController.close(),
@@ -472,28 +529,92 @@ class CustomMPVPlayer implements AVPlayer {
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
     _videoControllerRaw?.rect.removeListener(_videoControllerListener);
+    _audioFilters.dispose();
 
     return _player.dispose();
   }
 
   @override
   Future<void> setSkipSilenceEnabled(bool enabled) async {
-    // await (_player.platform as NativePlayer).setProperty();
+    if (!_enableExperimentalFeatures) return;
+    _audioFilters.setSkipSilenceEnabled(enabled);
   }
+
+  @override
+  Future<void> setEqualizerEnabled(bool enabled) async {
+    _audioFilters.setEqualizerEnabled(enabled);
+  }
+
+  @override
+  Future<void> setEqualizerBandGains(Map<double, double> gains) async {
+    _audioFilters.setEqualizerBandGains(gains);
+  }
+
+  // -- the `volume` filter is absent from most mpv builds, mpv's own volume can go past 100% instead.
+  bool _loudnessEnhancerEnabled = false;
+  double _loudnessEnhancerGain = 0.0;
+  double _loudnessMultiplier = 1.0;
+  double _volume = 1.0;
+  String? _originalVolumeMax;
+
+  @override
+  Future<void> setLoudnessEnhancerEnabled(bool enabled) async {
+    if (_loudnessEnhancerEnabled == enabled) return;
+    _loudnessEnhancerEnabled = enabled;
+    await _refreshLoudnessMultiplier();
+  }
+
+  @override
+  Future<void> setLoudnessEnhancerGain(double gainDb) async {
+    if (_loudnessEnhancerGain == gainDb) return;
+    _loudnessEnhancerGain = gainDb;
+    if (_loudnessEnhancerEnabled) await _refreshLoudnessMultiplier();
+  }
+
+  Future<void> _refreshLoudnessMultiplier() async {
+    final multiplier = _loudnessEnhancerEnabled && _loudnessEnhancerGain != 0.0 ? math.pow(10, _loudnessEnhancerGain / 20).toDouble() : 1.0;
+    if (_loudnessMultiplier == multiplier) return;
+    _loudnessMultiplier = multiplier;
+
+    final player = _player.platform as mk.NativePlayer;
+    if (multiplier > 1.0) {
+      // -- mpv refuses anything above 130% by default, the original cap has to come back with us
+      // -- otherwise it would keep uncapping volumes that aren't ours, like replay gain.
+      if (_originalVolumeMax == null) {
+        final currentMax = await player.getProperty(_kVolumeMaxProperty);
+        if (currentMax.isNotEmpty) _originalVolumeMax = currentMax;
+      }
+      await player.setProperty(_kVolumeMaxProperty, '$_kBoostedVolumeMaxPercentage');
+    } else if (_originalVolumeMax != null) {
+      await player.setProperty(_kVolumeMaxProperty, _originalVolumeMax!);
+      _originalVolumeMax = null;
+    }
+    await _applyVolume();
+  }
+
+  static const _kVolumeMaxProperty = 'volume-max';
+  static const _kBoostedVolumeMaxPercentage = 1000;
 
   @override
   Future<void> setVolume(double volume) {
-    return _player.setVolume(volume * 100);
+    _volume = volume;
+    return _applyVolume();
+  }
+
+  Future<void> _applyVolume() {
+    return _player.setVolume((_volume * _loudnessMultiplier * 100).clampDouble(0, _kBoostedVolumeMaxPercentage.toDouble()));
   }
 
   @override
-  Future<void> setPitch(double pitch) {
-    return _player.setPitch(pitch);
+  Future<void> setPitch(double pitch) async {
+    await _player.setPitch(pitch);
+    _audioFilters.refresh(); // -- media_kit overwrites the whole filter chain when pitch changes
   }
 
   @override
-  Future<void> setSpeed(double speed) {
-    return _player.setRate(speed);
+  Future<void> setSpeed(double speed) async {
+    await _player.setRate(speed);
+    _audioFilters.refresh(); // -- media_kit overwrites the whole filter chain when rate changes
   }
 
   @override
@@ -543,10 +664,152 @@ class CustomMPVPlayer implements AVPlayer {
       await pl.remove(i);
     }
   }
+}
 
-  // Features missing: skip silence, looping animations, equalizer, equalizer presets, loudness enhancer
-  // quick settings tile, picture in picture
-  // `isPlaying()`, `hasVideo()`, `getVideoRational()`.
+/// Filters missing from the mpv build in use, a single unknown filter takes the whole graph down with it.
+/// media_kit ships a stripped ffmpeg, so what exists is only known once mpv complains about it.
+// by claude
+abstract class _MPVMissingFilters {
+  static final _names = <String>{};
+  static final _regex = RegExp("No such filter: '([^']+)'");
+
+  static bool contains(String filter) => _names.contains(filter);
+
+  /// Returns the filter name if this log reported one that wasn't known to be missing yet.
+  static String? register(String logText) {
+    final match = _regex.firstMatch(logText);
+    if (match == null) return null;
+    final name = match.group(1)!;
+    return _names.add(name) ? name : null;
+  }
+}
+
+/// Owns mpv's `af` chain entirely, media_kit overwrites the property whenever rate or pitch change,
+/// so the scaletempo filter it relies on is rebuilt here along with our own filters.
+class _MPVAudioFilters {
+  _MPVAudioFilters(this._player);
+
+  final mk.Player _player;
+
+  static const _kEqualizerLabel = 'nmeq';
+  static const _kSkipSilenceLabel = 'nmss';
+
+  static const _kEqualizerFilterName = 'equalizer';
+  static const _kSkipSilenceFilterName = 'silenceremove';
+  static const _kSkipSilenceParams =
+      'start_periods=1:start_duration=0.15:start_threshold=-50dB:start_silence=0.05'
+      ':stop_periods=-1:stop_duration=0.15:stop_threshold=-50dB:stop_silence=0.05:detection=peak';
+
+  /// Rebuilding the chain reinitializes the filters, dragging a slider would do it on every frame.
+  static const _kApplyThrottleMS = 100;
+
+  bool _skipSilenceEnabled = false;
+  bool _equalizerEnabled = false;
+  var _equalizerGains = <double, double>{}; // -- sorted by frequency
+
+  Timer? _throttleTimer;
+  final _sinceLastApply = Stopwatch();
+
+  bool get _hasCustomFilters => _equalizerEnabled || _skipSilenceEnabled;
+
+  /// media_kit already wrote a chain holding nothing but its own scaletempo filter, only ours need to be restored.
+  void refresh() {
+    if (_hasCustomFilters) _requestApply();
+  }
+
+  void setSkipSilenceEnabled(bool enabled) {
+    if (_skipSilenceEnabled == enabled) return;
+    _skipSilenceEnabled = enabled;
+    _requestApply();
+  }
+
+  void setEqualizerEnabled(bool enabled) {
+    if (_equalizerEnabled == enabled) return;
+    _equalizerEnabled = enabled;
+    _requestApply();
+  }
+
+  void setEqualizerBandGains(Map<double, double> gains) {
+    final entries = gains.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    _equalizerGains = Map.fromEntries(entries);
+    if (_equalizerEnabled) _requestApply();
+  }
+
+  void onMissingFilter(String filter) {
+    if (filter != _kEqualizerFilterName && filter != _kSkipSilenceFilterName) return;
+    if (_hasCustomFilters) _applyChain(); // -- the chain is down, restoring it without the missing filter
+  }
+
+  void dispose() {
+    _throttleTimer?.cancel();
+    _throttleTimer = null;
+  }
+
+  void _requestApply() {
+    if (_throttleTimer != null) return; // -- a trailing apply is already scheduled
+
+    final remaining = _sinceLastApply.isRunning ? _kApplyThrottleMS - _sinceLastApply.elapsedMilliseconds : 0;
+    if (remaining <= 0) {
+      _applyChain();
+    } else {
+      _throttleTimer = Timer(Duration(milliseconds: remaining), () {
+        _throttleTimer = null;
+        _applyChain();
+      });
+    }
+  }
+
+  void _applyChain() {
+    _sinceLastApply
+      ..reset()
+      ..start();
+
+    final filters = <String>[];
+
+    // -- lavfi filters go first, a stripped ffmpeg can't convert the format scaletempo hands them and gets disabled.
+    if (_equalizerEnabled && _equalizerGains.isNotEmpty && !_MPVMissingFilters.contains(_kEqualizerFilterName)) {
+      final frequencies = _equalizerGains.keys.toList();
+      final bands = <String>[];
+      for (int i = 0; i < frequencies.length; i++) {
+        final frequency = frequencies[i];
+        final gain = _equalizerGains[frequency]!;
+        if (gain == 0.0) continue; // -- a flat band is a biquad computed for nothing
+        final width = _bandWidthInOctaves(frequencies, i);
+        bands.add('$_kEqualizerFilterName=f=${_formatDouble(frequency)}:t=o:w=${_formatDouble(width)}:g=${_formatDouble(gain)}');
+      }
+      if (bands.isNotEmpty) filters.add('@$_kEqualizerLabel:lavfi=[${bands.join(',')}]');
+    }
+
+    if (_skipSilenceEnabled && !_MPVMissingFilters.contains(_kSkipSilenceFilterName)) {
+      filters.add('@$_kSkipSilenceLabel:lavfi=[$_kSkipSilenceFilterName=$_kSkipSilenceParams]');
+    }
+
+    // -- the filter media_kit sets on its own for rate & pitch, rebuilt since we own the property now.
+    final rate = _player.state.rate;
+    final pitch = _player.state.pitch;
+    if (rate != 1.0 || pitch != 1.0) filters.add('scaletempo:scale=${(rate / pitch).toStringAsFixed(8)}');
+
+    _setProperty('af', filters.join(','));
+  }
+
+  /// Width that covers the gap to the closest neighbour band, so bands blend instead of leaving holes.
+  static double _bandWidthInOctaves(List<double> frequencies, int index) {
+    const fallback = 2.0;
+    if (frequencies.length < 2) return fallback;
+    final current = frequencies[index];
+    final neighbour = index == 0 ? frequencies[1] : frequencies[index - 1];
+    final ratio = index == 0 ? neighbour / current : current / neighbour;
+    if (!(ratio > 1)) return fallback;
+    return math.log(ratio) / math.ln2;
+  }
+
+  static String _formatDouble(double value) => value.toStringAsFixed(4);
+
+  Future<void> _setProperty(String name, String value) async {
+    try {
+      await (_player.platform as mk.NativePlayer).setProperty(name, value);
+    } catch (_) {}
+  }
 }
 
 class _VideoDetails {

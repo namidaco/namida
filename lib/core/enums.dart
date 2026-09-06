@@ -1,6 +1,7 @@
 // ignore_for_file: constant_identifier_names
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
@@ -1029,7 +1030,7 @@ enum ReplayGainType {
   final bool _isValidMode;
   const ReplayGainType(this._isValidMode);
 
-  static ReplayGainType getPlatformDefault() => NamidaFeaturesVisibility.loudnessEnhancerAvailable ? loudness_enhancer : volume;
+  static ReplayGainType getPlatformDefault() => NamidaFeaturesVisibility.loudnessEnhancerAvailable && (!Platform.isWindows && !Platform.isLinux) ? loudness_enhancer : volume;
 
   bool get isLoudnessEnhancerEnabled => this == loudness_enhancer || (this == platform_default && getPlatformDefault() == loudness_enhancer);
   bool get isVolumeEnabled => this == volume || (this == platform_default && getPlatformDefault() == volume);

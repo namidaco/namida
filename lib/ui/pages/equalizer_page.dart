@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
-import 'package:just_audio/just_audio.dart';
 
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -174,11 +173,11 @@ class _SoundControlMainSlidersColumnUpdateConfig {
   final Future<void> Function(double val) setSpeed;
   final Future<void> Function(double val) setPitch;
   final Future<void> Function(bool enabled) setSkipSilenceEnabled;
-  final Future<void> Function(AndroidLoudnessEnhancerExtended? loudnessEnhancer, bool enabled) setLoudnessEnhancerEnabled;
-  final Future<void> Function(AndroidLoudnessEnhancerExtended? loudnessEnhancer, double val) setLoudnessEnhancer;
-  final Future<void> Function(AndroidEqualizerExtended? equalizer, bool enabled) setEqualizerEnabled;
-  final Future<void> Function(AndroidEqualizerExtended? equalizer, AndroidEqualizerBand band, MapEntry<double, double> entry) setEqualizer;
-  final Future<void> Function(AndroidEqualizerExtended? equalizer, EqualizerPreset? preset) setPreset;
+  final Future<void> Function(LoudnessEnhancerExtended? loudnessEnhancer, bool enabled) setLoudnessEnhancerEnabled;
+  final Future<void> Function(LoudnessEnhancerExtended? loudnessEnhancer, double val) setLoudnessEnhancer;
+  final Future<void> Function(EqualizerExtended? equalizer, bool enabled) setEqualizerEnabled;
+  final Future<void> Function(EqualizerExtended? equalizer, EqualizerBandBase band, MapEntry<double, double> entry) setEqualizer;
+  final Future<void> Function(EqualizerExtended? equalizer, EqualizerPreset? preset) setPreset;
 
   const _SoundControlMainSlidersColumnUpdateConfig._({
     required this.skipSilenceEnabledRx,
@@ -384,7 +383,7 @@ class _SoundControlMainSlidersColumnBase extends StatefulWidget {
 }
 
 class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSlidersColumnBase> {
-  AndroidLoudnessEnhancerExtended? get _loudnessEnhancerExtended => Player.inst.loudnessEnhancerExtended;
+  LoudnessEnhancerExtended? get _loudnessEnhancerExtended => Player.inst.loudnessEnhancerExtended;
   final _loudnessKey = GlobalKey<_CuteSliderState>();
 
   final pitchKey = GlobalKey<_CuteSliderState>();
@@ -460,21 +459,21 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
     await widget.updateConfig.setEqualizerEnabled(_equalizer, enabled);
   }
 
-  Future<void> _setEqualizer(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) async {
+  Future<void> _setEqualizer(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) async {
     final newVal = newValue.clampDouble(parameters.minDecibels, parameters.maxDecibels).roundDecimals(4);
     await widget.updateConfig.setEqualizer(_equalizer, band, MapEntry(band.centerFrequency, newVal));
     _resetPreset();
   }
 
-  Future<void> _setEqualizerNoClamp(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) async {
+  Future<void> _setEqualizerNoClamp(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) async {
     final newVal = newValue.roundDecimals(4);
     await widget.updateConfig.setEqualizer(_equalizer, band, MapEntry(band.centerFrequency, newVal));
     _resetPreset();
   }
 
-  AndroidEqualizerExtended? get _equalizer => Player.inst.equalizerExtended;
+  EqualizerExtended? get _equalizer => Player.inst.equalizerExtended;
 
-  final _equalizerParameters = Rxn<AndroidEqualizerParameters>();
+  final _equalizerParameters = Rxn<EqualizerParametersBase>();
   StreamSubscription? _equalizerParamsSub;
 
   @override
@@ -504,11 +503,11 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
     _setPreset(null);
   }
 
-  void _onGainSet(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
+  void _onGainSet(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) {
     _setEqualizer(band, parameters, newValue);
   }
 
-  void _onGainSetNoClamp(AndroidEqualizerBand band, AndroidEqualizerParameters parameters, double newValue) {
+  void _onGainSetNoClamp(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) {
     _setEqualizerNoClamp(band, parameters, newValue);
   }
 
@@ -871,8 +870,8 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                     icon: targetGainUser > 0 ? Broken.volume_high : Broken.volume_low_1,
                                     title: '${lang.loudnessEnhancer} (PreAmp)',
                                     value: targetGainUser,
-                                    min: AndroidLoudnessEnhancerExtended.kMinGain,
-                                    max: AndroidLoudnessEnhancerExtended.kMaxGain,
+                                    min: LoudnessEnhancerExtended.kMinGain,
+                                    max: LoudnessEnhancerExtended.kMaxGain,
                                     valToText: (val) => '${_SliderTextWidget.toDecibelMultiplier(val)}$replayGainText',
                                     onManualChange: (newVal) {
                                       _loudnessKey.currentState?.updateValNoRoundExternal(newVal);
@@ -890,8 +889,8 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                 builder: (context, uiTapToUpdate) => _CuteSlider(
                                   key: _loudnessKey,
                                   valueListenable: widget.updateConfig.loudnessEnhancerRx,
-                                  min: AndroidLoudnessEnhancerExtended.kMinGain,
-                                  max: AndroidLoudnessEnhancerExtended.kMaxGain,
+                                  min: LoudnessEnhancerExtended.kMinGain,
+                                  max: LoudnessEnhancerExtended.kMaxGain,
                                   valToText: _SliderTextWidget.toDecibelMultiplier,
                                   onChanged: (newVal) {
                                     widget.updateConfig.setLoudnessEnhancer(_loudnessEnhancerExtended, newVal);

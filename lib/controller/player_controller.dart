@@ -76,8 +76,8 @@ class Player {
   RxBaseCore<List<AudioTrack>?> get audioTracks => _audioHandler.audioTracks;
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
 
-  AndroidEqualizerExtended? get equalizerExtended => _audioHandler.equalizerExtended;
-  AndroidLoudnessEnhancerExtended? get loudnessEnhancerExtended => _audioHandler.loudnessEnhancerExtended;
+  EqualizerExtended? get equalizerExtended => _audioHandler.equalizerExtended;
+  LoudnessEnhancerExtended? get loudnessEnhancerExtended => _audioHandler.loudnessEnhancerExtended;
   int? get androidSessionId => _audioHandler.androidSessionId;
   Future<void> executeWithPausedOutput(Future<void> Function() fn) => _audioHandler.executeWithPausedOutput(fn);
   Rx<double> get replayGainLinearVolumeMultiplierRx => _audioHandler.replayGainLinearVolumeMultiplierRx;
@@ -831,8 +831,20 @@ class Player {
     return _audioHandler.tryGenerateWaveform(video);
   }
 
-  Future<void> setVideo({required AudioVideoSource source, bool loopingAnimation = false, required bool isFile, bool videoOnly = false}) async {
-    await _audioHandler.setVideoSource(source: source, loopingAnimation: loopingAnimation, isFile: isFile, videoOnly: videoOnly);
+  Future<void> setVideo({
+    required AudioVideoSource source,
+    bool loopingAnimation = false,
+    int? sourceDurationMS,
+    required bool isFile,
+    bool videoOnly = false,
+  }) async {
+    await _audioHandler.setVideoSource(
+      source: source,
+      loopingAnimation: loopingAnimation,
+      sourceDurationMS: sourceDurationMS,
+      isFile: isFile,
+      videoOnly: videoOnly,
+    );
   }
 
   Future<void> disposeVideo() async {

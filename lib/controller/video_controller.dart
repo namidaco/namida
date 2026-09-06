@@ -433,6 +433,7 @@ class VideoController {
       await Player.inst.setVideo(
         source: AudioVideoSource.file(v.path),
         loopingAnimation: canLoopVideo(v, track.durationMS),
+        sourceDurationMS: v.durationMS,
         isFile: true,
         videoOnly: track is Video,
       );

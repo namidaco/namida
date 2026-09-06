@@ -753,9 +753,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return await item.execute(
           selectable: (finalItem) async {
             final qs = finalItem.trackWithDate?.queueSource;
-              if (qs != null && qs.supportResuming) {
-                QueueController.latestPlayedForSourceManager.update(qs, finalItem);
-              }
+            if (qs != null && qs.supportResuming) {
+              QueueController.latestPlayedForSourceManager.update(qs, finalItem);
+            }
             if (QueueSourceEnum.queuePage.supportResuming) {
               QueueController.inst.updateLatestPlayedForCurrentQueue(finalItem, alreadyUpdatedSource: qs);
             }
@@ -822,6 +822,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             source: AudioVideoSource.file(initialVideo.path),
             loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
             videoOnly: isVideo,
+            durationMS: initialVideo.durationMS,
           );
     return ItemPrepareConfigSelectable(
       await tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
@@ -2508,12 +2509,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   // ------- video -------
 
-  Future<void> setVideoSource({required AudioVideoSource source, bool loopingAnimation = false, bool isFile = false, bool videoOnly = false}) async {
+  Future<void> setVideoSource({
+    required AudioVideoSource source,
+    bool loopingAnimation = false,
+    int? sourceDurationMS,
+    bool isFile = false,
+    bool videoOnly = false,
+  }) async {
     if (isFile) _setLastAccessedForSourceIfFileTry(source);
     final videoOptions = VideoSourceOptions(
       source: source,
       loop: loopingAnimation,
       videoOnly: videoOnly,
+      durationMS: sourceDurationMS,
     );
     _latestVideoOptions = videoOptions;
     await super.setVideo(videoOptions);
@@ -2619,8 +2627,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       audioLoadConfiguration: defaultAndroidLoadConfig,
       audioPipeline: AudioPipeline(
         androidAudioEffects: [
-          ?equalizerExtended?.equalizer,
-          ?loudnessEnhancerExtended?.loudnessEnhancer,
+          ?equalizerExtended?.androidAudioEffect,
+          ?loudnessEnhancerExtended?.androidAudioEffect,
         ],
       ),
       preferSWDecoders: preferSWDecoders,
