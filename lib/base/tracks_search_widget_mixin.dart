@@ -36,17 +36,14 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
     return null;
   }
 
-  bool shouldHideIndex(int index) {
-    final searchRes = this.searchResults;
-    return searchRes != null && !searchRes.contains(index);
-  }
-
   ScrollController get scrollController => _scrollController;
   FocusNode? get focusNode => _focusNode;
-  Set<int>? get searchResults => _searchResults;
+
+  /// original indices of the matching tracks.
+  List<int>? get searchResults => _searchResults;
   bool get isSearching => _searchResults != null;
 
-  Set<int>? _searchResults;
+  List<int>? _searchResults;
   late ScrollController _scrollController;
   late TextEditingController _textEditingController;
   FocusNode? _focusNode;
@@ -149,7 +146,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
         return;
       }
       final text = p as String;
-      final result = searchWrapper.filterIndicesAsSet(text);
+      final result = searchWrapper.filterIndicesAsList(text);
       sendPort.send((result, text));
     });
 
@@ -159,7 +156,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   @override
   void onResult(dynamic result) {
     if (!mounted) return;
-    result as (Set<int>, String);
+    result as (List<int>, String);
     final text = result.$2;
     if (_currentSearch == text) {
       // try {

@@ -92,6 +92,7 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
   @override
   Widget build(BuildContext context) {
     final tracks = widget.tracks;
+    final searchResults = this.searchResults;
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -126,23 +127,17 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
               ),
               tracksFn: () => tracks,
             ),
-            itemCount: tracks.length,
-            itemExtent: null,
-            itemExtentBuilder: (i, dimensions) {
-              if (shouldHideIndex(i)) return 0;
-              return Dimensions.inst.trackTileItemExtent;
-            },
+            itemCount: searchResults?.length ?? tracks.length,
+            itemExtent: Dimensions.inst.trackTileItemExtent,
             itemBuilder: (context, i) {
-              if (shouldHideIndex(i)) {
-                return const SizedBox();
-              }
-              final track = tracks[i];
+              final index = searchResults == null ? i : searchResults[i];
+              final track = tracks[index];
               return AnimatingTile(
-                key: ValueKey(i),
+                key: ValueKey(index),
                 position: i,
                 child: TrackTile(
                   properties: properties,
-                  index: i,
+                  index: index,
                   trackOrTwd: track,
                   tracks: tracks,
                 ),

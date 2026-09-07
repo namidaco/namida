@@ -76,6 +76,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
         ? QueueSource.composer(name)
         : QueueSource.artist(name);
     final tracks = widget.tracks;
+    final searchResults = this.searchResults;
     final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded ?? true;
     final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded ?? false; // cuz no space
     final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
@@ -180,23 +181,17 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   },
                   tracksFn: () => tracks,
                 ),
-                itemCount: tracks.length,
-                itemExtent: null,
-                itemExtentBuilder: (i, dimensions) {
-                  if (shouldHideIndex(i)) return 0;
-                  return Dimensions.inst.trackTileItemExtent;
-                },
+                itemCount: searchResults?.length ?? tracks.length,
+                itemExtent: Dimensions.inst.trackTileItemExtent,
                 itemBuilder: (context, i) {
-                  if (shouldHideIndex(i)) {
-                    return const SizedBox();
-                  }
-                  final track = tracks[i];
+                  final index = searchResults == null ? i : searchResults[i];
+                  final track = tracks[index];
                   return AnimatingTile(
-                    key: ValueKey(i),
+                    key: ValueKey(index),
                     position: i,
                     child: TrackTile(
                       properties: properties,
-                      index: i,
+                      index: index,
                       trackOrTwd: track,
                       tracks: tracks,
                     ),

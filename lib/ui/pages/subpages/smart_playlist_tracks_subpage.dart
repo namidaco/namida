@@ -79,6 +79,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
   Widget build(BuildContext context) {
     final name = widget.name;
     final queueSource = QueueSource.smartPlaylist(name);
+    final searchResults = this.searchResults;
     return BackgroundWrapper(
       child: AnimationLimiter(
         child: TrackTilePropertiesProvider(
@@ -143,25 +144,17 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         smartPlaylist.copyWith(sortReverse: newSortReverse),
                       ),
                     ),
-                    itemCount: _tracks.length,
-                    itemExtent: null,
-                    itemExtentBuilder: (i, dimensions) {
-                      if (shouldHideIndex(i)) return 0;
-                      return Dimensions.inst.trackTileItemExtent;
-                    },
+                    itemCount: searchResults?.length ?? _tracks.length,
+                    itemExtent: Dimensions.inst.trackTileItemExtent,
                     itemBuilder: (context, i) {
-                      final track = _tracks[i];
-
-                      if (shouldHideIndex(i)) {
-                        return SizedBox();
-                      }
-
+                      final index = searchResults == null ? i : searchResults[i];
+                      final track = _tracks[index];
                       return AnimatingTile(
-                        key: ValueKey(i),
+                        key: ValueKey(index),
                         position: i,
                         child: TrackTile(
                           properties: properties,
-                          index: i,
+                          index: index,
                           trackOrTwd: track,
                           tracks: _tracks,
                         ),

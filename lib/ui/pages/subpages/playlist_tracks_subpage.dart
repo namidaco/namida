@@ -553,6 +553,8 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
           final tracksWithDate = playlist.tracks;
           if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
 
+          final searchResults = this.searchResults;
+
           final sort = playlist.sortsType?.firstOrNull;
           final sortReverse = playlist.sortReverse;
           final heroTag = 'playlist_${playlist.name}';
@@ -571,7 +573,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
               ),
               builder: (properties) => NamidaListView(
                 scrollController: scrollController,
-                itemCount: tracksWithDate.length,
+                itemCount: searchResults?.length ?? tracksWithDate.length,
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   bottomPadding: 0.0,
                   maxWidth: maxWidth,
@@ -591,7 +593,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                 ),
                 onReorderStart: (index) => super.enablePullToRefresh = false,
                 onReorderEnd: (index) => super.enablePullToRefresh = true,
-                onReorder: isSearching || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+                onReorder: searchResults != null || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
                 stickyHeader: TracksSearchWidgetBoxBase(
                   state: this,
                   leftText: [
@@ -612,21 +614,12 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                     PlaylistController.inst.resetCanReorder();
                   },
                 ),
-                itemExtent: null,
-                itemExtentBuilder: (i, dimensions) {
-                  if (shouldHideIndex(i)) return 0;
-                  return Dimensions.inst.trackTileItemExtent;
-                },
+                itemExtent: Dimensions.inst.trackTileItemExtent,
                 itemBuilder: (context, i) {
-                  final trackWithDate = tracksWithDate[i];
-                  final key = Key("Diss_$i$trackWithDate");
-
-                  if (shouldHideIndex(i)) {
-                    return SizedBox(key: key);
-                  }
-
+                  final index = searchResults == null ? i : searchResults[i];
+                  final trackWithDate = tracksWithDate[index];
                   return FadeDismissible(
-                    key: key,
+                    key: Key("Diss_$index$trackWithDate"),
                     draggableRx: PlaylistController.inst.canReorderItems,
                     onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
                     onTopWidget: Positioned(
@@ -636,12 +629,12 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                       child: threeC,
                     ),
                     child: AnimatingTile(
-                      key: ValueKey(i),
+                      key: ValueKey(index),
                       position: i,
                       shouldAnimate: !(reorderable || widget.disableAnimation),
                       child: TrackTile(
                         properties: properties,
-                        index: i,
+                        index: index,
                         trackOrTwd: trackWithDate,
                         tracks: tracksWithDate,
                       ),

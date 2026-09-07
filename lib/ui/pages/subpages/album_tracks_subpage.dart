@@ -61,6 +61,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
     final queueSource = QueueSource.album(widget.albumIdentifier, name);
     final heroTag = 'album_${widget.albumIdentifier}';
+    final searchResults = this.searchResults;
 
     return BackgroundWrapper(
       child: AnimationLimiter(
@@ -79,7 +80,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                   rx: settings.mediaItemsTrackSorting,
                   builder: (context, sortingModes) {
                     final firstSort = sortingModes[MediaType.album]?.firstOrNull;
-                    final shouldSplitToDiscSections = firstSort == SortType.discNo;
+                    final shouldSplitToDiscSections = firstSort == SortType.discNo && searchResults == null;
                     Map<int, List<Track>>? tracksMappedWithDisc;
                     Map<int, int>? tracksIndicesIncrement;
                     if (shouldSplitToDiscSections) {
@@ -237,20 +238,12 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                               ),
                                             ),
                                           ),
-                                          SliverVariedExtentList.builder(
+                                          SliverFixedExtentList.builder(
                                             itemCount: discEntry.value.length,
-                                            itemExtentBuilder: (i, _) {
-                                              final trackEffectiveIndex = i + indicesToIncrement;
-                                              if (shouldHideIndex(trackEffectiveIndex)) return 0;
-                                              return Dimensions.inst.trackTileItemExtent;
-                                            },
+                                            itemExtent: Dimensions.inst.trackTileItemExtent,
                                             itemBuilder: (context, i) {
                                               final track = discEntry.value[i];
                                               final trackEffectiveIndex = i + indicesToIncrement;
-
-                                              if (shouldHideIndex(trackEffectiveIndex)) {
-                                                return const SizedBox();
-                                              }
                                               return AnimatingTile(
                                                 key: ValueKey(i),
                                                 position: trackEffectiveIndex,
@@ -273,23 +266,18 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Ma
                                     ),
                                   )
                             else
-                              SliverVariedExtentList.builder(
-                                itemCount: tracks.length,
-                                itemExtentBuilder: (i, _) {
-                                  if (shouldHideIndex(i)) return 0;
-                                  return Dimensions.inst.trackTileItemExtent;
-                                },
+                              SliverFixedExtentList.builder(
+                                itemCount: searchResults?.length ?? tracks.length,
+                                itemExtent: Dimensions.inst.trackTileItemExtent,
                                 itemBuilder: (context, i) {
-                                  if (shouldHideIndex(i)) {
-                                    return const SizedBox();
-                                  }
-                                  final track = tracks[i];
+                                  final index = searchResults == null ? i : searchResults[i];
+                                  final track = tracks[index];
                                   return AnimatingTile(
-                                    key: ValueKey(i),
+                                    key: ValueKey(index),
                                     position: i,
                                     child: TrackTile(
                                       properties: properties,
-                                      index: i,
+                                      index: index,
                                       trackOrTwd: track,
                                       tracks: tracks, // all tracks even if in disc section
                                     ),

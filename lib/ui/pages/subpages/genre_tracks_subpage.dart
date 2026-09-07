@@ -47,6 +47,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
   Widget build(BuildContext context) {
     final name = widget.name;
     final tracks = widget.tracks;
+    final searchResults = this.searchResults;
     final isStyle = widget.type == MediaType.style;
     final queueSource = isStyle ? QueueSource.style(name) : QueueSource.genre(name);
     final heroTag = isStyle ? 'style_$name' : 'genre_$name';
@@ -82,23 +83,17 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Ma
                   ),
                   tracksFn: () => tracks,
                 ),
-                itemCount: tracks.length,
-                itemExtent: null,
-                itemExtentBuilder: (i, dimensions) {
-                  if (shouldHideIndex(i)) return 0;
-                  return Dimensions.inst.trackTileItemExtent;
-                },
+                itemCount: searchResults?.length ?? tracks.length,
+                itemExtent: Dimensions.inst.trackTileItemExtent,
                 itemBuilder: (context, i) {
-                  if (shouldHideIndex(i)) {
-                    return const SizedBox();
-                  }
-                  final track = tracks[i];
+                  final index = searchResults == null ? i : searchResults[i];
+                  final track = tracks[index];
                   return AnimatingTile(
-                    key: ValueKey(i),
+                    key: ValueKey(index),
                     position: i,
                     child: TrackTile(
                       properties: properties,
-                      index: i,
+                      index: index,
                       trackOrTwd: track,
                       tracks: tracks,
                     ),
