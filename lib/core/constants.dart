@@ -863,6 +863,7 @@ class AppDirs {
   static final VIDEOS_CACHE_TEMP = _join(USER_DATA, 'Videos', 'Temp');
   static final THUMBNAILS = _join(USER_DATA, 'Thumbnails'); // extracted video thumbnails
   static final LYRICS = _join(USER_DATA, 'Lyrics');
+  static final SUBTITLES = _join(USER_DATA, 'Subtitles');
   static final M3UBackup = _join(USER_DATA, 'M3U Backup'); // backups m3u on first found
   static final RECENTLY_DELETED = _join(USER_DATA, 'Recently Deleted'); // stores files that was deleted recently
   static String get LOGS_DIRECTORY => _join(USER_DATA, 'Logs');
@@ -911,6 +912,7 @@ class AppDirs {
     AUDIOS_CACHE,
     THUMBNAILS,
     LYRICS,
+    SUBTITLES,
     M3UBackup,
     RECENTLY_DELETED,
     LOGS_DIRECTORY,

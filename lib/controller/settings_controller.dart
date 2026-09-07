@@ -159,6 +159,8 @@ class _SettingsController with SettingsFileWriter {
   final enableVideoPlayback = true.obs;
   final enableLyrics = false.obs;
   final enableSimpleLyricsLine = false.obs;
+  final enableSubtitles = false.obs;
+  final RxList<String> subtitlesLanguages = <String>[].obs;
   final lyricsSource = LyricsSource.auto.obs;
   final videoPlaybackSource = VideoPlaybackSource.auto.obs;
   final RxList<String> youtubeVideoQualities = ['480p', '360p', '240p', '144p'].obs;
@@ -612,6 +614,8 @@ class _SettingsController with SettingsFileWriter {
       enableVideoPlayback.value = json['enableVideoPlayback'] ?? enableVideoPlayback.value;
       enableLyrics.value = json['enableLyrics'] ?? enableLyrics.value;
       enableSimpleLyricsLine.value = json['enableSimpleLyricsLine'] ?? enableSimpleLyricsLine.value;
+      enableSubtitles.value = json['enableSubtitles'] ?? enableSubtitles.value;
+      if (json['subtitlesLanguages'] is List) subtitlesLanguages.value = (json['subtitlesLanguages'] as List).cast<String>();
       lyricsSource.value = LyricsSource.values.getEnum(json['lyricsSource']) ?? lyricsSource.value;
       videoPlaybackSource.value = VideoPlaybackSource.values.getEnum(json['videoPlaybackSource']) ?? videoPlaybackSource.value;
       if (json['youtubeVideoQualities'] is List) youtubeVideoQualities.value = (json['youtubeVideoQualities'] as List).cast<String>();
@@ -865,6 +869,8 @@ class _SettingsController with SettingsFileWriter {
     'enableVideoPlayback': enableVideoPlayback.value,
     'enableLyrics': enableLyrics.value,
     'enableSimpleLyricsLine': enableSimpleLyricsLine.value,
+    'enableSubtitles': enableSubtitles.value,
+    'subtitlesLanguages': subtitlesLanguages.value,
     'lyricsSource': lyricsSource.value.name,
     'videoPlaybackSource': videoPlaybackSource.value.name,
     'youtubeVideoQualities': youtubeVideoQualities.value,
@@ -1054,6 +1060,8 @@ class _SettingsController with SettingsFileWriter {
     bool? enableVideoPlayback,
     bool? enableLyrics,
     bool? enableSimpleLyricsLine,
+    bool? enableSubtitles,
+    List<String>? subtitlesLanguages,
     LyricsSource? lyricsSource,
     VideoPlaybackSource? videoPlaybackSource,
     List<String>? youtubeVideoQualities,
@@ -1309,6 +1317,8 @@ class _SettingsController with SettingsFileWriter {
     if (enableVideoPlayback != null) this.enableVideoPlayback.value = enableVideoPlayback;
     if (enableLyrics != null) this.enableLyrics.value = enableLyrics;
     if (enableSimpleLyricsLine != null) this.enableSimpleLyricsLine.value = enableSimpleLyricsLine;
+    if (enableSubtitles != null) this.enableSubtitles.value = enableSubtitles;
+    if (subtitlesLanguages != null) this.subtitlesLanguages.value = subtitlesLanguages;
     if (lyricsSource != null) this.lyricsSource.value = lyricsSource;
     if (videoPlaybackSource != null) this.videoPlaybackSource.value = videoPlaybackSource;
     if (animatingThumbnailScaleMultiplier != null) this.animatingThumbnailScaleMultiplier.value = animatingThumbnailScaleMultiplier;

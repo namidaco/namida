@@ -74,6 +74,9 @@ class Player {
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
   RxBaseCore<List<AudioTrack>?> get audioTracks => _audioHandler.audioTracks;
+  RxBaseCore<List<TextTrack>?> get textTracks => _audioHandler.textTracks;
+  RxBaseCore<String?> get subtitleText => _audioHandler.subtitleText;
+  bool get rendersSubtitlesInternally => _audioHandler.rendersSubtitlesInternally;
   RxBaseCore<VideoInfoData?> get videoPlayerInfo => _audioHandler.videoPlayerInfo;
 
   EqualizerExtended? get equalizerExtended => _audioHandler.equalizerExtended;
@@ -825,6 +828,9 @@ class Player {
     );
     await _audioHandler.setAudioTrack(trackId);
   }
+
+  Future<void> setTextTrack(String? trackId) => _audioHandler.setTextTrack(trackId);
+  Future<bool> setExternalSubtitle(String? uri) => _audioHandler.setExternalSubtitle(uri);
 
   // ------- video -------
 

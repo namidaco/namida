@@ -28,6 +28,7 @@ import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -869,6 +870,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       );
     }
     Lyrics.inst.updateLyrics(pi).ignoreError();
+    Subtitles.inst.onItemChange(pi).ignoreError();
 
     Duration? duration = tr.durationMS.milliseconds;
     bool checkInterrupted() {
@@ -1851,6 +1853,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     }
 
     Lyrics.inst.updateLyrics(pi).ignoreError();
+    Subtitles.inst.onItemChange(pi).ignoreError();
     generateWaveform();
 
     Future<void> fetchFullVideoPage() async {

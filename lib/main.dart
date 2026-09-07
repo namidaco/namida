@@ -49,6 +49,7 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
@@ -290,6 +291,7 @@ Future<bool> _mainAppInitialization() async {
 
     NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
     ScrollSearchController.inst.initialize();
+    Subtitles.inst.initialize();
   } catch (e, st) {
     logger.error('_mainAppInitialization 2', e: e, st: st);
   }

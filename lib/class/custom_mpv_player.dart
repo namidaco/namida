@@ -18,6 +18,10 @@ class CustomMPVPlayer implements AVPlayer {
 
   CustomMPVPlayer({bool disableVideo = false}) {
     if (!disableVideo) _videoController;
+    // -- subtitles are only ever selected through [setTextTrack]/[setExternalSubtitle],
+    // -- sidecar files are discovered by us so mpv must not auto load them.
+    _setMpvProperty('sid', 'no');
+    _setMpvProperty('sub-auto', 'no');
     _playerHeightStreamSub = _player.stream.height.listen((event) {
       final resolved = _dimensionResolver(event, null);
       if (resolved != null) _videoControllerListener(height: resolved);
@@ -56,6 +60,7 @@ class CustomMPVPlayer implements AVPlayer {
 
     _playerAudioTracksStreamSub = _player.stream.tracks.listen((tracks) {
       _updateAudioTracks(_toAudioTracks(tracks.audio));
+      _updateTextTracks(_toTextTracks(tracks.subtitle));
     });
 
     _playerLogStreamSub = _player.stream.log.listen((log) {
@@ -68,7 +73,7 @@ class CustomMPVPlayer implements AVPlayer {
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
 
-  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, bufferSize: 64 * 1024 * 1024));
+  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, libass: true, bufferSize: 64 * 1024 * 1024));
   late final _audioFilters = _MPVAudioFilters(_player);
   VideoController? _videoControllerRaw;
   VideoController get _videoController {
@@ -98,6 +103,7 @@ class CustomMPVPlayer implements AVPlayer {
   final _playerPositionStreamController = StreamController<Duration>();
 
   final _audioTracksStreamController = StreamController<List<AudioTrack>>();
+  final _textTracksStreamController = StreamController<List<TextTrack>?>();
 
   final _videoInfoStreamController = StreamController<_VideoDetails>();
   // _VideoDetails? _videoInfo;
@@ -160,11 +166,25 @@ class CustomMPVPlayer implements AVPlayer {
     _audioTracksStreamController.add(tracks ?? _getPlayerCurrentAudioTracksConverted());
   }
 
+  void _updateTextTracks([List<TextTrack>? tracks]) {
+    _textTracksStreamController.add(tracks ?? _toTextTracks(_player.state.tracks.subtitle));
+  }
+
   @override
   Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
 
   @override
   Stream<List<AudioTrack>?> get audioTracksStream => _audioTracksStreamController.stream;
+
+  @override
+  Stream<List<TextTrack>?> get textTracksStream => _textTracksStreamController.stream;
+
+  /// mpv draws the subtitles itself, so their text is never reported back.
+  @override
+  Stream<String?> get subtitleTextStream => const Stream.empty();
+
+  @override
+  bool get rendersSubtitlesInternally => true;
 
   @override
   Stream<VideoInfoData> get videoInfoStream => _videoInfoStreamController.stream.map(
@@ -238,6 +258,8 @@ class CustomMPVPlayer implements AVPlayer {
     _processingState = ProcessingState.loading;
     _updateProcessingState();
 
+    await _prepareSubtitlesForNewSource();
+
     final durationCompleter = Completer<Duration?>();
     StreamSubscription? durationSub;
     Timer? durationTimer;
@@ -289,6 +311,8 @@ class CustomMPVPlayer implements AVPlayer {
       completeDuration(null);
       rethrow;
     }
+
+    _restoreExternalSubtitle();
 
     if (_checkIsSourceLive(config.source) || _checkIsSourceLive(config.videoOptions?.source)) {
       // -- not waiting for duration
@@ -480,6 +504,135 @@ class CustomMPVPlayer implements AVPlayer {
     _updateAudioTracks();
   }
 
+  bool _isSubtitleTrackDummy(mk.SubtitleTrack track) => track == mk.SubtitleTrack.auto() || track == mk.SubtitleTrack.no();
+
+  /// the embedded track wanted by the app.
+  String? _wantedSubtitleTrackId;
+
+  /// the external file wanted by the app, mpv drops external tracks on file change so it is re-added after opening.
+  String? _wantedExternalSubtitle;
+
+  /// mpv id of the external track added for [_wantedExternalSubtitle], hidden from the reported list.
+  String? _externalSubtitleId;
+
+  /// mpv keeps `sid` across files, a stale numeric id would select a random track of the next file.
+  bool _sidIsNo = true;
+
+  List<TextTrack> _toTextTracks(List<mk.SubtitleTrack> tracks) {
+    final textTracks = <TextTrack>[];
+    final selectedId = _wantedExternalSubtitle == null ? _wantedSubtitleTrackId : null;
+    final externalId = _externalSubtitleId;
+    int index = 0;
+    for (final track in tracks) {
+      if (_isSubtitleTrackDummy(track)) continue;
+      if (track.id == externalId) continue;
+      textTracks.add(
+        TextTrack(
+          groupIndex: 0,
+          trackIndex: index,
+          isSelected: track.id == selectedId,
+          id: track.id,
+          label: track.title,
+          language: track.language,
+          mimeType: track.codec,
+        ),
+      );
+      index++;
+    }
+    return textTracks;
+  }
+
+  Future<void> _setMpvProperty(String name, String value) async {
+    try {
+      await (_player.platform as mk.NativePlayer).setProperty(name, value);
+    } catch (_) {}
+  }
+
+  /// embedded selections never survive a new file, the external one is re-added after opening.
+  Future<void> _prepareSubtitlesForNewSource() async {
+    _wantedSubtitleTrackId = null;
+    _externalSubtitleId = null;
+    _textTracksStreamController.add(null);
+    if (!_sidIsNo) await _setSubtitleNo();
+  }
+
+  Future<void> _setSubtitleNo() async {
+    _sidIsNo = true;
+    await _player.setSubtitleTrack(mk.SubtitleTrack.no());
+  }
+
+  Future<void> _removeExternalSubtitle() async {
+    final id = _externalSubtitleId;
+    if (id == null) return;
+    _externalSubtitleId = null;
+    try {
+      await (_player.platform as mk.NativePlayer).command(['sub-remove', id]);
+    } catch (_) {}
+  }
+
+  /// mpv reports nothing back for `sub-add`, but a loaded file always ends up as the selected
+  /// external track. anything else means it couldn't be loaded, which is the case for srt/ass on
+  /// builds with a stripped ffmpeg (windows), the embedded selection is dropped then so the caller
+  /// can draw the file itself.
+  Future<bool> _addExternalSubtitle(String uri) async {
+    final player = _player.platform as mk.NativePlayer;
+    _sidIsNo = false;
+    await _player.setSubtitleTrack(mk.SubtitleTrack.uri(uri));
+
+    String external = '';
+    String sid = '';
+    try {
+      external = await player.getProperty('current-tracks/sub/external');
+      sid = await player.getProperty('current-tracks/sub/id');
+    } catch (_) {}
+
+    if (external == 'yes' && sid.isNotEmpty) {
+      _externalSubtitleId = sid;
+      return true;
+    }
+
+    _wantedExternalSubtitle = null;
+    await _setSubtitleNo();
+    return false;
+  }
+
+  void _restoreExternalSubtitle() {
+    final uri = _wantedExternalSubtitle;
+    if (uri == null) return;
+    _addExternalSubtitle(uri).then((_) => _updateTextTracks()).ignoreError();
+  }
+
+  @override
+  Future<void> setTextTrack(String? trackId) async {
+    _wantedSubtitleTrackId = trackId;
+    _wantedExternalSubtitle = null;
+    await _removeExternalSubtitle();
+
+    if (trackId == null) {
+      await _setSubtitleNo();
+    } else {
+      _sidIsNo = false;
+      await _player.setSubtitleTrack(mk.SubtitleTrack(trackId, null, null));
+    }
+    _updateTextTracks();
+  }
+
+  @override
+  Future<bool> setExternalSubtitle(String? uri) async {
+    _wantedSubtitleTrackId = null;
+    _wantedExternalSubtitle = uri;
+    await _removeExternalSubtitle();
+
+    bool loaded = false;
+    if (uri == null) {
+      await _setSubtitleNo();
+    } else {
+      loaded = await _addExternalSubtitle(uri);
+    }
+    _updateTextTracks();
+    return loaded;
+  }
+
   @override
   Future<void> play() {
     return _player.play();
@@ -525,6 +678,7 @@ class CustomMPVPlayer implements AVPlayer {
       _playerProcessingStateStreamController.close(),
       _playerPositionStreamController.close(),
       _audioTracksStreamController.close(),
+      _textTracksStreamController.close(),
     ].execute();
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);

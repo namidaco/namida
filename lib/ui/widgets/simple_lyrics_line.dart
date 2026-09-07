@@ -13,6 +13,8 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   final TextAlign textAlign;
   final int maxLines;
   final bool softWrap;
+  final Rxn<Lrc>? customSourceRx;
+  final bool respectEndTimestamps;
 
   const SimpleLyricsLineWidget({
     super.key,
@@ -20,6 +22,8 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     this.textAlign = TextAlign.center,
     this.maxLines = 1,
     this.softWrap = false,
+    this.customSourceRx,
+    this.respectEndTimestamps = false,
   });
 
   @override
@@ -32,24 +36,26 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   var _highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
   int _lastScanIndex = -1;
 
+  late final Rxn<Lrc> _source = widget.customSourceRx ?? Lyrics.inst.currentLyricsLRC;
+
   @override
   void initState() {
     super.initState();
     _fillLines();
-    Lyrics.inst.currentLyricsLRC.addListener(_fillLines);
+    _source.addListener(_fillLines);
     Player.inst.nowPlayingPosition.addListener(_updateLine);
   }
 
   @override
   void dispose() {
-    Lyrics.inst.currentLyricsLRC.removeListener(_fillLines);
+    _source.removeListener(_fillLines);
     Player.inst.nowPlayingPosition.removeListener(_updateLine);
     _currentLine.close();
     super.dispose();
   }
 
   void _fillLines() {
-    final lrc = Lyrics.inst.currentLyricsLRC.value;
+    final lrc = _source.value;
     if (lrc == null) {
       _lines = [];
       _highlightTimestampsMap = {};
@@ -67,6 +73,13 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     _highlightTimestampsMap = uiInfo.highlightTimestampsMap;
     _lastScanIndex = -1;
     _updateLine();
+  }
+
+  static Duration? _lineEndTimestamp(LrcLine line) {
+    final parts = line.parts;
+    if (parts == null || parts.isEmpty) return null;
+    final shift = line.timestamp - parts.first.startTimestamp;
+    return parts.last.endTimestamp + shift;
   }
 
   void _updateLine() {
@@ -93,7 +106,11 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       lineIndex = _highlightTimestampsMap[lines[lineIndex].timestamp]?.firstOrNull ?? lineIndex;
     }
 
-    final newLine = lineIndex < 0 ? null : lines[lineIndex];
+    var newLine = lineIndex < 0 ? null : lines[lineIndex];
+    if (newLine != null && widget.respectEndTimestamps) {
+      final end = _lineEndTimestamp(newLine);
+      if (end != null && end <= position) newLine = null;
+    }
     if (!identical(_currentLine.value, newLine)) _currentLine.value = newLine;
   }
 
