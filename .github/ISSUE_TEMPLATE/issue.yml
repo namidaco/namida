@@ -9,6 +9,16 @@ body:
     attributes:
       value: |
         **this template is **ONLY** used for reporting small issues, use other templates for other stuff**
+  - type: checkboxes
+    attributes:
+      label: Before reporting
+      options:
+        - label: I have searched the existing issues
+          required: true
+        - label: I have checked the [documentation](https://docs.namida.app)
+          required: true
+        - label: I have tried the latest [beta version](https://github.com/namidaco/namida-snapshots/releases), the issue still happens there
+          required: true
   - type: textarea
     attributes:
       label: WHAT EXACTLY HAPPENED
@@ -31,7 +41,7 @@ body:
       label: Logs
       description: |
         Go to **Settings > About > Share Logs** and put it here.
-        Issues without logs may not receive support.
+        Logs help a lot in figuring out what went wrong, please include them if you can.
       value: |
         <details>
         <summary>Logs</summary>
@@ -44,6 +54,12 @@ body:
 
     validations:
       required: true
+  - type: checkboxes
+    attributes:
+      label: Can't share logs?
+      options:
+        - label: I can't open the app to get the logs (crash on startup, app won't launch, etc)
+          required: false
   - type: textarea
     attributes:
       label: Possible Solution

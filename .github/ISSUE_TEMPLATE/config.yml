@@ -1,0 +1,7 @@
+contact_links:
+  - name: 📚 Documentation
+    url: https://docs.namida.app
+    about: Most questions are already answered here, please check before opening an issue.
+  - name: 🧪 Beta Version
+    url: https://github.com/namidaco/namida-snapshots/releases
+    about: Your problem may already be fixed in the latest beta, please try it first.

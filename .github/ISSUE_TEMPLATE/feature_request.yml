@@ -9,6 +9,16 @@ body:
     attributes:
       value: |
         **this template is **ONLY** used for requesting features, use other templates for other stuff**
+  - type: checkboxes
+    attributes:
+      label: Before requesting
+      options:
+        - label: I have searched the existing issues
+          required: true
+        - label: I have checked the [documentation](https://docs.namida.app), the feature doesn't already exist
+          required: true
+        - label: I have tried the latest [beta version](https://github.com/namidaco/namida-snapshots/releases), it may already be there
+          required: true
   - type: textarea
     attributes:
       label: Is your feature request related to a problem? Please describe.

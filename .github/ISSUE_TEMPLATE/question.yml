@@ -9,6 +9,14 @@ body:
     attributes:
       value: |
         **this template is **ONLY** used for asking questions, use other templates for other stuff**
+  - type: checkboxes
+    attributes:
+      label: Before asking
+      options:
+        - label: I have checked the [documentation](https://docs.namida.app) for an answer
+          required: true
+        - label: I have tried the latest [beta version](https://github.com/namidaco/namida-snapshots/releases), it may already be answered/fixed there
+          required: false
   - type: textarea
     attributes:
       label: what is it cutie
