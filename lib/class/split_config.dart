@@ -121,14 +121,18 @@ class GeneralSplitConfig extends SplitterConfig {
   });
 
   factory GeneralSplitConfig() {
+    return GeneralSplitConfig._(
+      separators: buildSeparatorsSet().toList(),
+      separatorsBlacklist: [],
+    );
+  }
+
+  static Set<String> buildSeparatorsSet() {
     final finalSplitters = <String>{};
     finalSplitters.addAll(settings.trackArtistsSeparators.value);
     finalSplitters.addAll(settings.trackGenresSeparators.value);
     finalSplitters.addAll({';', ',', '//', r'\\'});
-    return GeneralSplitConfig._(
-      separators: finalSplitters.toList(),
-      separatorsBlacklist: [],
-    );
+    return finalSplitters;
   }
 }
 

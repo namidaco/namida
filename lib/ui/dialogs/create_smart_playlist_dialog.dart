@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
+import 'package:namida/controller/text_suggestions_provider.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
@@ -15,6 +16,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/text_suggestions.dart';
 
 class CreateSmartPlaylistDialog extends StatefulWidget {
   final SmartPlaylistWrapper? initialSmartPlaylistWrapper;
@@ -1598,8 +1600,15 @@ class _TextDataTokensEditor extends StatefulWidget {
 
 class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
   late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.rule.data ?? <SmartPlaylistTextDataToken>[]);
-  late final Set<String> _allLibraryMoods = Indexer.inst.getAllLibraryMoods();
-  late final Set<String> _allLibraryTags = Indexer.inst.getAllLibraryTags();
+  final _suggestionsProvider = TextSuggestionsProvider();
+
+  Set<String>? _buildAlreadyAddedLiterals() {
+    Set<String>? literals;
+    for (final token in _tokensCopy) {
+      if (token is SmartPlaylistTextDataTokenLiteral) (literals ??= <String>{}).add(token.text.toLowerCase());
+    }
+    return literals;
+  }
 
   void _refreshTokens() {
     widget.onChanged(
@@ -1683,11 +1692,7 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
     final filter = widget.rule.filter;
     final isRegex = filter.isRegex();
 
-    final Set<String>? librarySearchableItems = switch (widget.rule.source) {
-      SmartPlaylistRuleFilterTextSource.moods => _allLibraryMoods,
-      SmartPlaylistRuleFilterTextSource.tags => _allLibraryTags,
-      _ => null,
-    };
+    final suggestionsSource = widget.rule.source.toSuggestionsSource();
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -1797,41 +1802,20 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                 ),
               ],
             ),
-            if (librarySearchableItems != null && librarySearchableItems.isNotEmpty)
+            if (suggestionsSource != null)
               ValueListenableBuilder(
                 valueListenable: widget.controller,
                 builder: (context, value, child) {
-                  final search = value.text.toLowerCase();
-                  final results = librarySearchableItems.where(
-                    (item) {
-                      if (search.isNotEmpty && !item.toLowerCase().contains(search)) return false;
-                      return !tokens.any((t) => t is SmartPlaylistTextDataTokenLiteral && t.text == item);
-                    },
+                  final results = TextSuggestionsMatcher.filter(
+                    values: _suggestionsProvider.valuesFor(suggestionsSource),
+                    query: value.text,
+                    excludeLowercased: _buildAlreadyAddedLiterals(),
                   );
                   if (results.isEmpty) return const SizedBox();
-                  return Padding(
+                  return TextSuggestionsChipsRow(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: SmoothSingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: results
-                            .map(
-                              (item) => NamidaInkWell(
-                                margin: const EdgeInsets.only(right: 6.0),
-                                borderRadius: 99.0,
-                                bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
-                                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                                onTap: () => _addLiteralFromSuggestion(item),
-                                child: Text(
-                                  item,
-                                  style: context.textTheme.displaySmall,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                    ),
+                    suggestions: results,
+                    onTap: _addLiteralFromSuggestion,
                   );
                 },
               ),

@@ -15,6 +15,7 @@ import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/text_suggestions_provider.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -29,6 +30,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/text_suggestions.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
 final _editingInProgress = <String, bool>{}.obs;
@@ -336,19 +338,17 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
 
   final editedTags = <TagField, String>{};
 
-  Widget getTagTextField(TagField tag, {FormFieldValidator? validator}) {
-    return CustomTagTextField(
+  final suggestionsProvider = TextSuggestionsProvider();
+
+  Widget getTagTextField(TagField tag) {
+    return _TagTextField(
+      tag: tag,
       controller: tagsControllers[tag]!,
-      labelText: tag.toText(),
-      hintText: tagsControllers[tag]!.text,
-      icon: tag.toIcon(),
+      suggestionsProvider: suggestionsProvider,
       onChanged: (value) {
         editedTags[tag] = value;
         canEditTags.value = true;
       },
-      validator: tag == TagField.rating ? _ratingsValidator : null,
-      isNumeric: tag.isNumeric,
-      maxLines: tag == TagField.comment || tag == TagField.description || tag == TagField.synopsis ? 4 : null,
     );
   }
 
@@ -698,20 +698,18 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
     hasEmptyDumbValues.value = editedTags.values.any((element) => element.cleanUpForComparison == '');
   }
 
+  final suggestionsProvider = TextSuggestionsProvider();
+
   Widget getTagTextField(TagField tag) {
-    return CustomTagTextField(
+    return _TagTextField(
+      tag: tag,
       controller: tagsControllers[tag]!,
-      labelText: tag.toText(),
-      hintText: tagsControllers[tag]!.text,
-      icon: tag.toIcon(),
+      suggestionsProvider: suggestionsProvider,
       onChanged: (value) {
         editedTags[tag] = value;
         checkEmptyValues();
         canEditTags.value = true;
       },
-      validator: tag == TagField.rating ? _ratingsValidator : null,
-      isNumeric: tag.isNumeric,
-      maxLines: tag == TagField.comment || tag == TagField.description || tag == TagField.synopsis ? 4 : null,
     );
   }
 
@@ -1143,6 +1141,47 @@ class _KeepDatesToggleWidget extends StatelessWidget {
   }
 }
 
+class _TagTextField extends StatelessWidget {
+  final TagField tag;
+  final TextEditingController controller;
+  final TextSuggestionsProvider suggestionsProvider;
+  final void Function(String value) onChanged;
+
+  const _TagTextField({
+    required this.tag,
+    required this.controller,
+    required this.suggestionsProvider,
+    required this.onChanged,
+  });
+
+  Widget _buildField(FocusNode? focusNode) {
+    return CustomTagTextField(
+      controller: controller,
+      focusNode: focusNode,
+      labelText: tag.toText(),
+      hintText: controller.text,
+      icon: tag.toIcon(),
+      onChanged: onChanged,
+      validator: tag == TagField.rating ? _ratingsValidator : null,
+      isNumeric: tag.isNumeric,
+      maxLines: tag == TagField.comment || tag == TagField.description || tag == TagField.synopsis ? 4 : null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final suggestionsSource = tag.toSuggestionsSource();
+    if (suggestionsSource == null) return _buildField(null);
+    return TextFieldSuggestionsDropdown(
+      provider: suggestionsProvider,
+      source: suggestionsSource,
+      controller: controller,
+      onChanged: onChanged,
+      builder: (context, focusNode) => _buildField(focusNode),
+    );
+  }
+}
+
 class CustomTagTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
@@ -1195,6 +1234,30 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
   void initState() {
     super.initState();
     initialText = widget.controller.text;
+    widget.controller.addListener(_onControllerTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomTagTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onControllerTextChanged);
+      widget.controller.addListener(_onControllerTextChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerTextChanged);
+    super.dispose();
+  }
+
+  /// listening to the controller instead of `onChanged` to catch programmatic changes too.
+  void _onControllerTextChanged() {
+    final isDifferent = initialText != widget.controller.text;
+    if (isDifferent != didChange) {
+      setState(() => didChange = isDifferent);
+    }
   }
 
   @override
@@ -1216,13 +1279,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
       style: textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
       // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
-      onChanged: (value) {
-        if (widget.onChanged != null) widget.onChanged!(value);
-        final isDifferent = initialText != value;
-        if (isDifferent != didChange) {
-          setState(() => didChange = isDifferent);
-        }
-      },
+      onChanged: widget.onChanged,
       onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(
         label: widget.labelText != '' ? Text('${widget.labelText} ${didChange ? '(${lang.changed})' : ''}') : null,
