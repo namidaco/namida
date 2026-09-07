@@ -40,7 +40,7 @@ class VideoCardInfoFetcherWrapper {
     return _isEmpty(title) || title!.isYTTitleFaulty();
   }
 
-  bool get isViewsAndDateMissing => viewsCount == null && _isEmpty(viewsText) && publishedDate == null;
+  bool get isViewsOrDateMissing => (viewsCount == null && _isEmpty(viewsText)) || publishedDate == null;
 
   static bool _isEmpty(String? text) => text == null || text.trim().isEmpty;
 
@@ -191,7 +191,7 @@ class VideoCardInfoFetcherWrapper {
     }
 
     final titleMissing = _isEmpty(videoTitle);
-    final detailsMissing = fetchExtraDetails && isViewsAndDateMissing;
+    final detailsMissing = fetchExtraDetails && isViewsOrDateMissing;
     if (_state.mounted && (titleMissing || detailsMissing)) {
       // -- if only title is missing then most likely video is deleted/etc so no need to refetch (unless enforced),
       // -- but missing details for an available video are worth a network request.

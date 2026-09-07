@@ -14,7 +14,10 @@ class MediaInfo {
   });
 
   MIStream? getAudioStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.audio) ?? streams?.firstOrNull;
-  MIStream? getVideoStream() => streams?.firstWhereEff((e) => e.streamType == StreamType.video) ?? streams?.firstOrNull;
+  MIStream? getVideoStream() =>
+      streams?.firstWhereEff((e) => e.streamType == StreamType.video && !e.isCoverArt) ?? //
+      streams?.firstWhereEff((e) => e.streamType == StreamType.video) ??
+      streams?.firstOrNull;
   static const _losslessFormats = {'flac', 'alac', 'wav', 'pcm_s16le', 'pcm_s24le', 'pcm_s32le', 'ape'};
 
   bool? isLossless([MIStream? audioStream]) {
@@ -498,6 +501,12 @@ extension StringToDuration on String? {
 
 extension SreamTypeDetector on MIStream {
   StreamType? get streamType => _streamTypes[codecType];
+
+  /// cover arts are reported as video streams, with the artwork dimensions & a timebase as framerate.
+  bool get isCoverArt =>
+      disposition?['attached_pic'] == 1 || //
+      disposition?['ATTACHED_PIC'] == 1 ||
+      _coverArtCodecs.contains(codecName?.toLowerCase());
 }
 
 extension _MapValueGetter on Map<String, dynamic> {
@@ -514,6 +523,8 @@ extension _MapValueGetter on Map<String, dynamic> {
     return null;
   }
 }
+
+const _coverArtCodecs = {'mjpeg', 'png', 'bmp', 'gif', 'webp'};
 
 final _streamTypes = <String, StreamType>{
   "video": StreamType.video,

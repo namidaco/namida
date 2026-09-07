@@ -13,7 +13,6 @@ import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
@@ -151,17 +150,15 @@ internal fun NamidaWidgetContent(
   val decoded = ArtworkStore.decode(context, payload.imagePath, artSize.toPxInt(context))
 
   val colors =
-    remember(decoded?.mainColor, decoded?.accentColor, isDark, config.artworkColors) {
-      if (config.artworkColors) {
-        NamidaWidgetColors.buildColors(decoded?.mainColor, decoded?.accentColor, isDark)
-      } else {
-        NamidaWidgetColors.getDefault(isDark)
-      }
+    if (config.artworkColors) {
+      NamidaWidgetColors.buildColors(decoded?.mainColor, decoded?.accentColor, isDark)
+    } else {
+      NamidaWidgetColors.getDefault(isDark)
     }
 
   val artwork =
     if (config.showArtwork) ArtworkStore.artwork(context, decoded, artSize, config, colors) else null
-  val backdrop = ArtworkStore.backdrop(context, decoded?.bitmap, w, h, config, colors)
+  val backdrop = ArtworkStore.backdrop(context, decoded, w, h, config, colors)
 
   var rootModifier =
     GlanceModifier.fillMaxSize().appWidgetBackground().cornerRadius(config.cornerRadius.dp)
@@ -342,7 +339,8 @@ private fun Artwork(
   interactive: Boolean,
 ) {
   // -- the bitmap reserves a transparent margin for the glow, the touch shape follows the art
-  val inset = if (config.artworkEffect == ArtworkEffect.NONE) 0.dp else artSize * 0.085f
+  val inset =
+    if (config.artworkEffect == ArtworkEffect.NONE) 0.dp else artSize * ImageWrapper.kEffectInset
   val visibleSize = artSize - inset * 2
   Box(contentAlignment = Alignment.Center, modifier = GlanceModifier.size(artSize)) {
     Image(
@@ -511,9 +509,9 @@ private fun MediaControls(
   // -- `availableWidth` comes from LocalSize, which some launchers under-report. it is only
   // -- used to decide how many buttons fit; the real widths come from weights below.
   fun widthFor(count: Int): Dp = (availableWidth - spacing * (count - 1)) / count
-  var dropIndex = 0
-  while (enabled.size > 1 && widthFor(enabled.size) < kMinButtonSize && dropIndex < kControlsDropOrder.size) {
-    if (enabled.remove(kControlsDropOrder[dropIndex])) continue else dropIndex++
+  for (ctrl in kControlsDropOrder) {
+    if (enabled.size <= 1 || widthFor(enabled.size) >= kMinButtonSize) break
+    enabled.remove(ctrl)
   }
   if (enabled.isEmpty()) return
 
@@ -688,7 +686,12 @@ private fun GlanceModifier.tapAction(
 
 // ================================ artwork ================================
 
-internal class DecodedArtwork(val bitmap: Bitmap, val mainColor: Int?, val accentColor: Int?)
+internal class DecodedArtwork(
+  val key: String,
+  val bitmap: Bitmap,
+  val mainColor: Int?,
+  val accentColor: Int?,
+)
 
 internal object ArtworkStore {
   /**
@@ -738,7 +741,7 @@ internal object ArtworkStore {
           ?: it.getDarkVibrantColor(0).nullIfZero()
       } ?: main
 
-    return DecodedArtwork(bitmap, main, accent).also { decodedCache[key] = it }
+    return DecodedArtwork(key, bitmap, main, accent).also { decodedCache[key] = it }
   }
 
   fun artwork(
@@ -752,7 +755,7 @@ internal object ArtworkStore {
     val effectColor = colors.accentColor.toArgb()
     val placeholder = colors.imageColor.toArgb()
     val key =
-      "${decoded?.bitmap?.hashCode()}|$sizePx|${config.artworkRounding}|${config.artworkEffect}|$effectColor|$placeholder"
+      "${decoded?.key}|$sizePx|${config.artworkRounding}|${config.artworkEffect}|$effectColor|$placeholder"
     artworkCache[key]?.let { return it }
 
     return ImageWrapper.buildArtwork(
@@ -768,12 +771,13 @@ internal object ArtworkStore {
 
   fun backdrop(
     context: Context,
-    source: Bitmap?,
+    decoded: DecodedArtwork?,
     w: Dp,
     h: Dp,
     config: NamidaWidgetConfig,
     colors: NamidaWidgetColors,
   ): Bitmap? {
+    val source = decoded?.bitmap
     val kind =
       if (config.backdrop == WidgetBackdrop.BLURRED_ARTWORK && source == null) WidgetBackdrop.SOLID
       else config.backdrop
@@ -785,7 +789,7 @@ internal object ArtworkStore {
     val base = colors.boxColor.toArgb()
     val accent = colors.accentColor.toArgb()
     val key =
-      "${source?.hashCode()}|$bw|$bh|$kind|$base|$accent|${config.cornerRadius}|${config.backgroundOpacity}"
+      "${decoded?.key}|$bw|$bh|$kind|$base|$accent|${config.cornerRadius}|${config.backgroundOpacity}"
     backdropCache[key]?.let { return it }
 
     return ImageWrapper.buildBackdrop(

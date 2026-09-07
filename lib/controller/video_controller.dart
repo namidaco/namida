@@ -440,6 +440,43 @@ class VideoController {
     }
   }
 
+  final _playerFilledVideoPaths = <String>{};
+
+  void fillCurrentVideoInfoFromPlayer(VideoInfoData info) {
+    if (info.width <= 0 || info.height <= 0) return;
+    final nv = currentVideo.value;
+    if (nv == null || nv.ytID != null) return;
+    if (nv.width > 0 && nv.height > 0 && !_playerFilledVideoPaths.contains(nv.path)) return;
+    if (nv.width == info.width && nv.height == info.height) return;
+
+    final track = Player.inst.currentTrack?.track;
+    if (track == null) return;
+    if (track is Video ? track.path != nv.path : nv.width > 0) return;
+
+    final updated = NamidaVideo(
+      path: nv.path,
+      ytID: nv.ytID,
+      nameInCache: nv.nameInCache,
+      height: info.height,
+      width: info.width,
+      sizeInBytes: nv.sizeInBytes,
+      frameratePrecise: info.frameRate > 0 ? info.frameRate : nv.frameratePrecise,
+      creationTimeMS: nv.creationTimeMS,
+      durationMS: nv.durationMS > 0 ? nv.durationMS : track.durationMS,
+      bitrate: info.bitrate > 0 ? info.bitrate : nv.bitrate,
+    );
+    _playerFilledVideoPaths.add(nv.path);
+    _videoPathsInfoMap[nv.path] = updated;
+    unawaited(_videoLocalMapDB.put(nv.path, updated.toJson()));
+    currentVideo.value = updated;
+    final possible = currentVideoConfig.currentPossibleLocalVideos.value;
+    final index = possible.indexWhere((e) => e.path == nv.path);
+    if (index >= 0) {
+      possible[index] = updated;
+      currentVideoConfig.currentPossibleLocalVideos.refresh();
+    }
+  }
+
   /// loop only if video duration is less than [p] of audio.
   bool canLoopVideo(NamidaVideo video, int trackDurationMS, {double p = 0.6}) {
     if (video.durationMS <= 0 || trackDurationMS <= 0) return false;
@@ -756,7 +793,8 @@ class VideoController {
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
     final possibleLocal = <NamidaVideo>[];
     for (final l in local) {
-      if (_videoPathsInfoMap[l] == null) {
+      final infoInMap = _videoPathsInfoMap[l];
+      if (infoInMap == null || !infoInMap.hasSaneFramerate) {
         try {
           final v = await NamidaFFMPEG.inst.ffmpegExtractMetadata(l);
           if (v != null) {
@@ -906,16 +944,20 @@ class VideoController {
     );
   }
 
+  double? _parseFramerate(String? field) {
+    final parts = field?.split('/');
+    if (parts == null || parts.length != 2) return null;
+    final frp1 = int.tryParse(parts.first);
+    final frp2 = int.tryParse(parts.last) ?? 1000;
+    if (frp1 == null || frp2 <= 0) return null;
+    final framerate = frp1 / frp2;
+    return framerate > 0 && framerate <= NamidaVideoUtils.maxSaneFramerate ? framerate : null;
+  }
+
   NamidaVideo _getNVFromFFMPEGMap({required String path, MediaInfo? mediaInfo, required FileStat stats, String? ytID}) {
     final videoStream = mediaInfo?.getVideoStream();
 
-    double? frameratePrecise;
-    final framerateField = videoStream?.rFrameRate?.split('/');
-    if (framerateField != null && framerateField.length == 2) {
-      final frp1 = int.tryParse(framerateField.first);
-      final frp2 = int.tryParse(framerateField.last) ?? 1000;
-      if (frp1 != null) frameratePrecise = frp1 / frp2;
-    }
+    final frameratePrecise = _parseFramerate(videoStream?.avgFrameRate) ?? _parseFramerate(videoStream?.rFrameRate);
 
     return NamidaVideo(
       path: path,
@@ -1045,7 +1087,7 @@ class _VideoControllerIsolateFunctions {
           if (file.existsSync()) {
             final stats = file.statSync();
             // -- Video Exists, and already updated.
-            if (v.sizeInBytes == stats.size) {
+            if (v.sizeInBytes == stats.size && v.hasSaneFramerate) {
               validMap.addForce(id, v);
             }
             // -- Video exists but needs to be updated.

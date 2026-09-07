@@ -195,6 +195,7 @@ class Player {
       } else {
         WakelockController.inst.updateVideoStatus(true);
         NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
+        VideoController.inst.fillCurrentVideoInfoFromPlayer(info);
       }
     }
 

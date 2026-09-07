@@ -15,6 +15,9 @@ import androidx.core.graphics.ColorUtils
 
 class ImageWrapper {
   companion object {
+    /** transparent margin reserved around the artwork for the glow/shadow, per side. */
+    const val kEffectInset = 0.085f
+
     /**
      * composes the artwork into a [sizePx] square, optionally surrounded by a glow/shadow.
      * the effect is baked into the same bitmap so the layout doesn't have to reserve extra space.
@@ -31,7 +34,7 @@ class ImageWrapper {
       val canvas = Canvas(output)
       val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
 
-      val padding = if (effect == ArtworkEffect.NONE) 0f else sizePx * 0.085f
+      val padding = if (effect == ArtworkEffect.NONE) 0f else sizePx * kEffectInset
       val artRect = RectF(padding, padding, sizePx - padding, sizePx - padding)
       val radius = artRect.width() * roundingFraction
 
@@ -100,8 +103,9 @@ class ImageWrapper {
       val paint = Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG)
       val fullRect = RectF(0f, 0f, widthPx.toFloat(), heightPx.toFloat())
 
+      // -- an offscreen layer only when there is alpha to apply, the default path draws direct
       val alpha = (opacityPercent.coerceIn(0, 100) * 255) / 100
-      val layer = canvas.saveLayerAlpha(fullRect, alpha)
+      val layer = if (alpha < 255) canvas.saveLayerAlpha(fullRect, alpha) else -1
 
       when {
         kind == WidgetBackdrop.BLURRED_ARTWORK && artwork != null -> {
@@ -130,7 +134,7 @@ class ImageWrapper {
       }
 
       canvas.punchOutsideRoundRect(fullRect, cornerPx, paint)
-      canvas.restoreToCount(layer)
+      if (layer >= 0) canvas.restoreToCount(layer)
 
       return output
     }

@@ -116,18 +116,19 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          if (NamidaJellys.enabled)
-            const Positioned.fill(
-              child: IgnorePointer(
-                child: JellyField(
-                  count: 4,
-                  opacity: 0.3,
-                  minHeight: 90.0,
-                  maxHeight: 240.0,
-                  seed: 3,
-                ),
+          // always enable for a sneak peak?
+          // if (NamidaJellys.enabled)
+          const Positioned.fill(
+            child: IgnorePointer(
+              child: JellyField(
+                count: 4,
+                opacity: 0.3,
+                minHeight: 90.0,
+                maxHeight: 240.0,
+                seed: 3,
               ),
             ),
+          ),
 
           SizedBox(
             height: context.height * 0.78,

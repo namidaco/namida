@@ -28,7 +28,6 @@ import android.widget.TextView
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceRemoteViews
 import es.antonborri.home_widget.HomeWidgetGlanceState
 import es.antonborri.home_widget.HomeWidgetPlugin
@@ -423,34 +422,23 @@ class SchwarzConfigActivity : Activity() {
       // -- also the fallback for widgets that never got configured individually
       NamidaWidgetConfig.save(this, NamidaWidgetConfig.DEFAULTS_ID, config)
     }
-    scope.launch {
-      try {
-        val manager = GlanceAppWidgetManager(this@SchwarzConfigActivity)
-        val widget = SchwarzSechsPrototypeMkII()
-        targetWidgetIds.forEach { id ->
-          try {
-            widget.update(this@SchwarzConfigActivity, manager.getGlanceIdBy(id))
-          } catch (_: Throwable) {}
-        }
-      } catch (_: Throwable) {
-        // -- the broadcast below is the fallback
-      }
-      requestWidgetUpdate()
-      finish()
-    }
+    requestWidgetUpdate()
+    finish()
   }
 
-  /** glance's own update can be throttled by the launcher, this nudges the receiver directly. */
+  /**
+   * same path the dart side uses on every track change, so there's one refresh mechanism to
+   * reason about. unknown ids are ignored by the framework, which covers a first placement
+   * where the host hasn't bound the widget yet.
+   */
   private fun requestWidgetUpdate() {
     if (targetWidgetIds.isEmpty()) return
-    try {
-      sendBroadcast(
-        Intent(this, SchwarzReceiver::class.java).apply {
-          action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-          putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, targetWidgetIds)
-        }
-      )
-    } catch (_: Throwable) {}
+    sendBroadcast(
+      Intent(this, SchwarzReceiver::class.java).apply {
+        action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, targetWidgetIds)
+      }
+    )
   }
 
   private fun resultIntent() =

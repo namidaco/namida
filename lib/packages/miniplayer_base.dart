@@ -2253,7 +2253,7 @@ class _MPQualityButton extends StatelessWidget {
     final textTheme = context.textTheme;
     final progress = this.progress?.clampDouble(0.0, 1.0);
     final color = CurrentColor.inst.miniplayerColor;
-    final bgColor = selected ? color.withOpacityExt(0.7) : null;
+    final bgColor = selected ? color.withOpacityExt(0.4) : null;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: 36.0.spaceY),
       child: NamidaInkWell(
@@ -2270,10 +2270,10 @@ class _MPQualityButton extends StatelessWidget {
                   begin: AlignmentDirectional.centerStart,
                   end: AlignmentDirectional.centerEnd,
                   colors: [
-                    color.withOpacityExt(0.7),
-                    color.withOpacityExt(0.7),
-                    color.withOpacityExt(0.3),
-                    color.withOpacityExt(0.3),
+                    color.withOpacityExt(0.4),
+                    color.withOpacityExt(0.4),
+                    color.withOpacityExt(0.2),
+                    color.withOpacityExt(0.2),
                   ],
                   stops: [0.0, progress, progress, 1.0],
                 ),

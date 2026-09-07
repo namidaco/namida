@@ -21,14 +21,12 @@ class TracksSearchWrapper {
   final List<_CustomTrackExtended> _tracksExtended;
   final String Function(String) textCleanedForSearch;
   final String Function(String)? textCleanedMinorForSearch;
-  final int maxListensCount;
 
   const TracksSearchWrapper._(
     this.cleanup,
     this._tracksExtended,
     this.textCleanedForSearch,
     this.textCleanedMinorForSearch,
-    this.maxListensCount,
   );
 
   static Map<String, dynamic> generateParams(SendPort sendPort, Iterable<TrackExtended> tracks, ListensSortedMap<Track> topTracksMapListens) {
@@ -120,6 +118,7 @@ class TracksSearchWrapper {
       final track = Track.decide(path, isVideo);
 
       final listensCount = trMap['lc'] as int?;
+      final listensScore = maxListensCount > 0 ? (((listensCount ?? 0) / maxListensCount).roundDecimals(1) * 100).round() : 0;
 
       tracksExtended.add(
         _CustomTrackExtended(
@@ -204,6 +203,7 @@ class TracksSearchWrapper {
                   lyricsCacheDirectory,
                 ),
           listensCount: listensCount,
+          listensScore: listensScore,
         ),
       );
     }
@@ -216,7 +216,6 @@ class TracksSearchWrapper {
       tracksExtended,
       textCleanedForSearch,
       textCleanedMinorForSearch,
-      maxListensCount,
     );
   }
 
@@ -382,15 +381,10 @@ class TracksSearchWrapper {
     final scored = <int, List<_CustomTrackExtended>>{};
 
     for (final trExt in _tracksExtended) {
-      int score = calculator.calculate(trExt);
-      if (score > 0 && maxListensCount > 0) {
-        // -- score must be > 0, otherwise would always show results with high listen counts
-        final listensPercentage = (trExt.listensCount ?? 0) / maxListensCount;
-        final listensScore = (listensPercentage.roundDecimals(1) * 100).round();
-        score += listensScore;
-      }
+      final score = calculator.calculate(trExt);
+      // -- score must be > 0, otherwise would always show results with high listen counts
       if (score > 0) {
-        (scored[score] ??= []).add(trExt);
+        (scored[score + trExt.listensScore] ??= []).add(trExt);
       }
     }
 
@@ -427,6 +421,7 @@ class _CustomTrackExtended {
   final _PropertySimple? year;
   final _PropertySimple? lyrics;
   final int? listensCount;
+  final int listensScore;
 
   const _CustomTrackExtended({
     required this.ogIndex,
@@ -447,6 +442,7 @@ class _CustomTrackExtended {
     required this.year,
     required this.lyrics,
     required this.listensCount,
+    required this.listensScore,
   });
 }
 

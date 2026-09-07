@@ -178,9 +178,14 @@ class NamidaVideo {
 }
 
 extension NamidaVideoUtils on NamidaVideo {
+  /// ffprobe can report a stream timebase (ex: 90000) instead of an actual framerate.
+  static const maxSaneFramerate = 480;
+
+  bool get hasSaneFramerate => framerate <= maxSaneFramerate;
+
   String framerateText([int displayAbove = 30]) {
     final videoFramerate = framerate;
-    return videoFramerate > displayAbove ? videoFramerate.toString() : '';
+    return videoFramerate > displayAbove && videoFramerate <= maxSaneFramerate ? videoFramerate.toString() : '';
   }
 
   int get framerate => frameratePrecise.round();

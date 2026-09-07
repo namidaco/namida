@@ -125,12 +125,12 @@ abstract final class TextSuggestionsMatcher {
   }
 
   /// the value being typed at the cursor, alongside the other values already in the field.
-  static _TextSuggestionsQuery parse(TextEditingValue value, RegExp? separatorsRegex) {
+  static TextSuggestionsQuery parse(TextEditingValue value, RegExp? separatorsRegex) {
     final text = value.text;
-    if (separatorsRegex == null) return _TextSuggestionsQuery(text.trim(), null);
+    if (separatorsRegex == null) return TextSuggestionsQuery(text.trim(), null);
 
     final ranges = _partsRanges(text, separatorsRegex);
-    if (ranges.length == 1) return _TextSuggestionsQuery(text.trim(), null);
+    if (ranges.length == 1) return TextSuggestionsQuery(text.trim(), null);
 
     final activeIndex = _activeRangeIndex(ranges, value);
 
@@ -145,7 +145,7 @@ abstract final class TextSuggestionsMatcher {
         (exclude ??= <String>{}).add(part.toLowerCase());
       }
     }
-    return _TextSuggestionsQuery(query, exclude);
+    return TextSuggestionsQuery(query, exclude);
   }
 
   /// Replaces the value at the cursor (the same one [parse] used as the query) with [suggestion].
@@ -204,11 +204,11 @@ abstract final class TextSuggestionsMatcher {
 }
 
 /// the query & the already-used values of a text field, at the current cursor position.
-class _TextSuggestionsQuery {
+class TextSuggestionsQuery {
   final String query;
   final Set<String>? excludeLowercased;
 
-  const _TextSuggestionsQuery(this.query, this.excludeLowercased);
+  const TextSuggestionsQuery(this.query, this.excludeLowercased);
 }
 
 class TextSuggestionsValues {

@@ -175,10 +175,35 @@ class FileMatcher {
     final title = titleAndArtist.length >= 2 ? titleAndArtist[1].trimAll() : filenameWOEx;
     final artist = titleAndArtist.length >= 2 ? titleAndArtist[0].trimAll() : UnknownTags.ARTIST;
 
-    // TODO: split by ( and ) too, but retain Remixes and feat.
-    final cleanedUpTitle = title.splitFirst('[').trimAll();
-    final cleanedUpArtist = artist.splitLast(']').trimAll();
+    final cleanedUpTitle = _stripParenGroups(_stripBracketGroups(title, fallback: title.splitFirst('[').trimAll()));
+    final cleanedUpArtist = _stripParenGroups(_stripBracketGroups(artist, fallback: artist.splitLast(']').trimAll()));
 
-    return (cleanedUpTitle, cleanedUpArtist);
+    return (cleanedUpTitle.isEmpty ? filenameWOEx.trimAll() : cleanedUpTitle, cleanedUpArtist.isEmpty ? UnknownTags.ARTIST : cleanedUpArtist);
+  }
+
+  static final _bracketGroupRegex = RegExp(r'\[[^\]]*\]');
+  static final _parenGroupRegex = RegExp(r'\([^)]*\)');
+
+  /// groups that carry actual identity of the track, ex: `(feat. X)`, `(Slowed Remix)`.
+  static final _meaningfulParenGroupRegex = RegExp(
+    r'\b(?:feat|ft|featuring|remix|rmx|remixed|mix|bootleg|mashup|cover|edit|flip|vip|acoustic|instrumental|version|sped|slowed|nightcore|reverb)\b',
+    caseSensitive: false,
+  );
+
+  /// `[Group] Title [1080p]` => `Title`, keeps the middle when the name starts with a tag.
+  static String _stripBracketGroups(String text, {required String fallback}) {
+    if (!text.contains('[')) return text.trimAll();
+    final stripped = text.replaceAll(_bracketGroupRegex, ' ').trimAll();
+    return stripped.isEmpty ? fallback : stripped;
+  }
+
+  /// `Title (Official Video) (Remix)` => `Title (Remix)`.
+  static String _stripParenGroups(String text) {
+    if (!text.contains('(')) return text;
+    final stripped = text.replaceAllMapped(_parenGroupRegex, (m) {
+      final group = m[0]!;
+      return _meaningfulParenGroupRegex.hasMatch(group) ? group : ' ';
+    }).trimAll();
+    return stripped.isEmpty ? text.trimAll() : stripped;
   }
 }

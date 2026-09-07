@@ -90,7 +90,7 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
 
   void _initInfo() {
     _infoFetcher.assign(widget.video);
-    if (_infoFetcher.isTitleMissing || _infoFetcher.isViewsAndDateMissing) {
+    if (_infoFetcher.isTitleMissing || _infoFetcher.isViewsOrDateMissing) {
       _infoFetcher.fetchMissing(preferFetchNewInfo: false);
     }
   }

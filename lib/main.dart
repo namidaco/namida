@@ -569,6 +569,10 @@ class _NamidaState extends State<Namida> {
 
   bool? _shouldShowOnBoarding;
 
+  static const _timeAwareRecheckInterval = Duration(hours: 24);
+  late DateTime _lastTimeAwareRecheck;
+  Timer? _timeAwareRecheckTimer;
+
   @override
   void initState() {
     super.initState();
@@ -597,10 +601,26 @@ class _NamidaState extends State<Namida> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _refreshSystemBarsColors());
     settings.themeMode.addListener(_refreshSystemBarsColors);
 
-    Timer.periodic(
-      const Duration(hours: 24),
-      (_) => _recheckTimeAwareEssentials(),
+    _lastTimeAwareRecheck = DateTime.now();
+    _timeAwareRecheckTimer = Timer.periodic(
+      const Duration(minutes: 30),
+      (_) => _recheckTimeAwareEssentialsIfDue(),
     );
+    NamidaChannel.inst.addOnResume(_recheckTimeAwareEssentialsIfDue);
+  }
+
+  @override
+  void dispose() {
+    _timeAwareRecheckTimer?.cancel();
+    NamidaChannel.inst.removeOnResume(_recheckTimeAwareEssentialsIfDue);
+    super.dispose();
+  }
+
+  void _recheckTimeAwareEssentialsIfDue() {
+    final now = DateTime.now();
+    if (now.difference(_lastTimeAwareRecheck) < _timeAwareRecheckInterval) return;
+    _lastTimeAwareRecheck = now;
+    _recheckTimeAwareEssentials();
   }
 
   static void refreshSystemBarsColors(BuildContext context, {bool forceRefresh = false}) {
