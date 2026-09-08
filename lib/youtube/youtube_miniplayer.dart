@@ -239,13 +239,13 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage) return;
             _mpState?.setDragExternally(true);
             _mpState?.saveDragHeightStart();
-            _velocity.addPosition(event.timeStamp, event.position);
+            _velocity.addPosition(event.timeStamp, event.localPosition);
           },
           onPointerMove: (event) {
             if (NamidaNavigator.inst.isInYTCommentsSubpage || NamidaNavigator.inst.isInYTCommentRepliesSubpage) return;
             if (!_canScrollQueue) {
-              _mpState?.onVerticalDragUpdate(event.delta.dy);
-              _velocity.addPosition(event.timeStamp, event.position);
+              _mpState?.onVerticalDragUpdate(event.localDelta.dy);
+              _velocity.addPosition(event.timeStamp, event.localPosition);
             }
           },
           onPointerCancel: (event) {

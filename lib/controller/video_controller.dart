@@ -98,14 +98,14 @@ class _NamidaVideoWidgetState extends State<NamidaVideoWidget> {
       onPointerMove: !widget.swipeUpToFullscreen
           ? null
           : (details) {
-              final drag = details.delta.dy;
+              final drag = details.localDelta.dy;
 
               if (_startedZoomSession == false) return;
               if (_startedZoomSession == null) {
                 if (_zoomStartSuccessCount < 0) {
                   _startedZoomSession = false;
                 } else if (_zoomStartSuccessCount < 3) {
-                  final success = details.delta.dy <= 1.0 && details.delta.dx.abs() <= 1.0;
+                  final success = details.localDelta.dy <= 1.0 && details.localDelta.dx.abs() <= 1.0;
                   _zoomStartSuccessCount += (success ? 1 : -1);
                 } else {
                   _startedZoomSession = true;

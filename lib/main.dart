@@ -67,6 +67,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/fallback_delegates.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -767,11 +768,9 @@ class _NamidaState extends State<Namida> {
         ),
       ),
     );
-    return NamidaFeaturesVisibility.recieveDragAndDrop
-        ? _NamidaDropRegion(
-            child: finalApp,
-          )
-        : finalApp;
+    if (NamidaFeaturesVisibility.recieveDragAndDrop) finalApp = _NamidaDropRegion(child: finalApp);
+
+    return NamidaUIScaleWrapper(child: finalApp);
   }
 }
 

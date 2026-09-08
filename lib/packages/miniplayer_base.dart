@@ -2202,7 +2202,7 @@ class WaveformMiniplayer extends StatelessWidget {
                     _canDragToSeekLatest = false;
                     VibratorController.veryhigh();
                   } else {
-                    _dragUpToCancel -= event.delta.dy * 0.1;
+                    _dragUpToCancel -= event.localDelta.dy * 0.1;
                   }
                 },
                 onPointerUp: (_) => _canDragToSeekLatest = true,

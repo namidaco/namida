@@ -18,6 +18,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -93,7 +94,7 @@ class MiniPlayerController {
 
   void updateScreenValuesInitial() {
     final view = WidgetsBinding.instance.platformDispatcher.views.first;
-    final devicePixelRatio = view.devicePixelRatio;
+    final devicePixelRatio = view.devicePixelRatioWithScale;
     final viewPadding = EdgeInsets.fromViewPadding(view.padding, devicePixelRatio);
     return _updateScreenValuesInternal(view.physicalSize / devicePixelRatio, viewPadding);
   }
@@ -304,9 +305,9 @@ class MiniPlayerController {
 
   void onPointerDown(PointerDownEvent event) {
     if (_isModifyingQueue) return;
-    if (event.position.dy >= screenSize.height - _deadSpace) return;
+    if (NamidaUIScale.fromRoot(event.position.dy) >= screenSize.height - _deadSpace) return;
 
-    _velocity.addPosition(event.timeStamp, event.position);
+    _velocity.addPosition(event.timeStamp, NamidaUIScale.fromRootOffset(event.position));
 
     _prevOffset = _offset;
 
@@ -326,11 +327,11 @@ class MiniPlayerController {
 
   void onPointerMove(PointerMoveEvent event) {
     if (_isModifyingQueue) return;
-    if (event.position.dy >= screenSize.height - _deadSpace) return;
+    if (NamidaUIScale.fromRoot(event.position.dy) >= screenSize.height - _deadSpace) return;
 
-    if (!_canMinimizeMiniplayer(event.delta.dy)) return;
+    if (!_canMinimizeMiniplayer(event.localDelta.dy)) return;
 
-    _velocity.addPosition(event.timeStamp, event.position);
+    _velocity.addPosition(event.timeStamp, NamidaUIScale.fromRootOffset(event.position));
 
     if (_offset <= maxOffset) return;
 
@@ -342,12 +343,13 @@ class MiniPlayerController {
 
     if (_isInsideQueue()) {
       // a rough estimation of the top area when inside queue.
-      if (event.position.dy > ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
+      if (NamidaUIScale.fromRoot(event.position.dy) >
+          ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
         return;
       }
     }
 
-    _offset -= event.delta.dy;
+    _offset -= event.localDelta.dy;
     _offset = _offset.clampDouble(-_headRoom, maxOffset * 2);
 
     animateMiniplayer(_offset / maxOffset);
@@ -368,7 +370,7 @@ class MiniPlayerController {
 
   void gestureDetectorOnVerticalDragUpdate(DragUpdateDetails details) {
     if (_isModifyingQueue) return;
-    if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
+    if (NamidaUIScale.fromRoot(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
     if (!_canMinimizeMiniplayer(details.delta.dy)) return;
 
@@ -395,7 +397,7 @@ class MiniPlayerController {
 
   void gestureDetectorOnHorizontalDragUpdate(DragUpdateDetails details) {
     if (_offset > maxOffset) return;
-    if (details.globalPosition.dy > screenSize.height - _deadSpace) return;
+    if (NamidaUIScale.fromRoot(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
 
     _sOffset -= details.primaryDelta ?? 0.0;
     _sOffset = _sOffset.clampDouble(-sMaxOffset, sMaxOffset);

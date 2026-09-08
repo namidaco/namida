@@ -62,7 +62,7 @@ class NamidaScrollController {
   }) {
     final view = WidgetsBinding.instance.platformDispatcher.implicitView;
     if (view == null) return null;
-    final size = view.physicalSize / view.devicePixelRatio;
+    final size = view.physicalSize / (view.devicePixelRatioWithScale);
     if (size.isEmpty) return null;
 
     for (final fraction in _probeFractions) {

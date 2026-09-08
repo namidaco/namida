@@ -524,7 +524,7 @@ class _PopupRoute extends PopupRoute<void> {
 abstract class Screen {
   static MediaQueryData get mediaQuery => MediaQueryData.fromView(
     PlatformDispatcher.instance.views.first,
-  );
+  ).scaledForUI(NamidaUIScale.value);
 
   /// screen width
   static double get width => mediaQuery.size.width;

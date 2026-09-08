@@ -245,54 +245,76 @@ class NamidaDrawer extends StatelessWidget {
     );
   }
 
+  /// height the footer needs before it starts eating into the tabs list.
+  static const _footerComfortableHeight = 620.0;
+
   @override
   Widget build(BuildContext context) {
     final showLogoInDrawer = WindowController.instance?.usingCustomWindowTitleBar != true;
     return SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: SuperSmoothListView(
-              children: [
-                if (showLogoInDrawer)
-                  NamidaLogoContainer(
-                    afterTap: NamidaNavigator.inst.toggleDrawer,
-                  ),
-                const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-                ...LibraryTab.values
-                    .where((element) => element != LibraryTab.search)
-                    .map(
-                      (e) => ObxO(
-                        rx: settings.extra.selectedLibraryTab,
-                        builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
-                          enabled: selectedLibraryTab == e,
-                          title: e.toText(),
-                          icon: e.toIcon(),
-                          onTap: () async {
-                            ScrollSearchController.inst.animatePageController(e);
-                            toggleDrawer();
-                          },
-                        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = (constraints.maxHeight / _footerComfortableHeight).clampDouble(0.5, 1.0);
+          final foldSleepTimerIntoRow = compact < 0.8;
+          return _buildInternal(context, showLogoInDrawer, compact, foldSleepTimerIntoRow);
+        },
+      ),
+    );
+  }
+
+  Widget _buildInternal(BuildContext context, bool showLogoInDrawer, double compact, bool foldSleepTimerIntoRow) {
+    // -- whole pixels only, fractional paddings round up into 1px overflows.
+    final gap12 = (12.0 * compact).roundToDouble();
+    final gap6 = (6.0 * compact).roundToDouble();
+    final tilePadding = EdgeInsets.symmetric(horizontal: 10.0, vertical: (11.0 * compact).roundToDouble());
+    final iconTilePadding = EdgeInsets.symmetric(horizontal: 6.0, vertical: (10.0 * compact).roundToDouble());
+    return Column(
+      children: [
+        Expanded(
+          child: SuperSmoothListView(
+            children: [
+              if (showLogoInDrawer)
+                NamidaLogoContainer(
+                  afterTap: NamidaNavigator.inst.toggleDrawer,
+                ),
+              const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
+              ...LibraryTab.values
+                  .where((element) => element != LibraryTab.search)
+                  .map(
+                    (e) => ObxO(
+                      rx: settings.extra.selectedLibraryTab,
+                      builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
+                        enabled: selectedLibraryTab == e,
+                        title: e.toText(),
+                        icon: e.toIcon(),
+                        onTap: () async {
+                          ScrollSearchController.inst.animatePageController(e);
+                          toggleDrawer();
+                        },
                       ),
                     ),
-              ],
-            ),
+                  ),
+            ],
           ),
-          const SizedBox(height: 12.0),
-          Material(
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return ToggleThemeModeContainer(
-                  maxWidth: constraints.maxWidth * 0.9,
-                  blurRadius: 3.0,
-                );
-              },
-            ),
+        ),
+        SizedBox(height: gap12),
+        Material(
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return ToggleThemeModeContainer(
+                // -- floored, it gets divided by 3 internally & fractions overflow by a pixel.
+                maxWidth: (constraints.maxWidth * 0.9).floorToDouble(),
+                blurRadius: 3.0,
+              );
+            },
           ),
-          const SizedBox(height: 6.0),
+        ),
+        SizedBox(height: gap6),
+        if (!foldSleepTimerIntoRow) ...[
           NamidaDrawerListTile(
             margin: const EdgeInsets.symmetric(horizontal: 12.0),
+            padding: tilePadding,
             enabled: false,
             title: lang.sleepTimer,
             icon: Broken.timer_1,
@@ -301,53 +323,68 @@ class NamidaDrawer extends StatelessWidget {
               openSleepTimerDialog(context);
             },
           ),
-          const SizedBox(height: 6.0),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: NamidaDrawerListTile(
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                  enabled: false,
-                  isCentered: true,
-                  iconSize: 24.0,
-                  title: '',
-                  icon: Broken.brush_1,
-                  onTap: () {
-                    SettingsSubPage(
-                      title: () => lang.customizations,
-                      child: const CustomizationSettings(),
-                    ).navigate();
-
-                    toggleDrawer();
-                  },
-                ),
-              ),
-              const SizedBox(width: 6.0),
-              Expanded(
-                child: NamidaDrawerListTile(
-                  margin: EdgeInsets.zero,
-                  padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 6.0),
-                  enabled: false,
-                  isCentered: true,
-                  iconSize: 24.0,
-                  title: '',
-                  icon: Broken.setting,
-                  onTap: () {
-                    const SettingsPage().navigate();
-                    toggleDrawer();
-                  },
-                ),
-              ),
-              const SizedBox(width: 12.0),
-            ],
-          ),
-          const SizedBox(height: 6.0),
-          const SizedBox(height: 8.0),
+          SizedBox(height: gap6),
         ],
-      ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final buttons = <({IconData icon, void Function() onTap})>[
+              if (foldSleepTimerIntoRow)
+                (
+                  icon: Broken.timer_1,
+                  onTap: () {
+                    toggleDrawer();
+                    openSleepTimerDialog(context);
+                  },
+                ),
+              (
+                icon: Broken.brush_1,
+                onTap: () {
+                  SettingsSubPage(
+                    title: () => lang.customizations,
+                    child: const CustomizationSettings(),
+                  ).navigate();
+                  toggleDrawer();
+                },
+              ),
+              (
+                icon: Broken.setting,
+                onTap: () {
+                  const SettingsPage().navigate();
+                  toggleDrawer();
+                },
+              ),
+            ];
+            // -- explicit floored widths, [Expanded] leaves fractions that overflow by a pixel.
+            const horizontalPadding = 4.0;
+            final totalGaps = 12.0 * 2 + 6.0 * (buttons.length - 1);
+            final tileWidth = ((constraints.maxWidth - totalGaps) / buttons.length).floorToDouble();
+            // -- narrow drawers cant fit a full size icon once folded, shrink instead of overflowing.
+            final iconSize = (tileWidth - horizontalPadding * 2).clampDouble(14.0, 24.0);
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (int i = 0; i < buttons.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 6.0),
+                  SizedBox(
+                    width: tileWidth,
+                    child: NamidaDrawerListTile(
+                      margin: EdgeInsets.only(top: 4.0),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: iconTilePadding.vertical / 2),
+                      enabled: false,
+                      isCentered: true,
+                      iconSize: iconSize,
+                      title: '',
+                      icon: buttons[i].icon,
+                      onTap: buttons[i].onTap,
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+        SizedBox(height: gap6 + (8.0 * compact).roundToDouble()),
+      ],
     );
   }
 }

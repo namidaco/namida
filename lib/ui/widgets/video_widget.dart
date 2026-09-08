@@ -34,6 +34,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -602,7 +603,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view, {double max = 1.0}) {
     final textTheme = context.textTheme;
-    final totalHeight = view.physicalSize.shortestSide / view.devicePixelRatio * 0.75;
+    final totalHeight = view.physicalSize.shortestSide / (view.devicePixelRatioWithScale) * 0.75;
     return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
       child: perc == null || _isDraggingSeekBar
@@ -1678,13 +1679,13 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       enabled: !_isLocked,
       behavior: HitTestBehavior.translucent,
       onPointerDown: (event) {
-        _pointerDownedOnRight = event.position.dx > maxWidth / 2;
+        _pointerDownedOnRight = event.localPosition.dx > maxWidth / 2;
         _isPointerDown = true;
         if (_shouldSeekOnTap) {
-          _onDoubleTap(event.position);
+          _onDoubleTap(event.localPosition);
           _startTimer();
         }
-        _disableSliders = !_canSlideVolume(context, event.position.dy);
+        _disableSliders = !_canSlideVolume(context, event.localPosition.dy);
         _isEndCardsVisibleTimer = Timer(Duration(milliseconds: 200), () {
           _isEndCardsVisible.value = false;
         });
@@ -1908,7 +1909,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                 opaque: false,
                                 onHover: (event) {
                                   // final dx = event.position.dx;
-                                  final dy = event.position.dy;
+                                  final dy = event.localPosition.dy;
                                   final allowVertical = (dy < topPortion || (allowBottom && dy > bottomPortion));
                                   const allowHorizontal = false;
                                   // final allowHorizontal = (dx < leftPortion || dx > rightPortion);

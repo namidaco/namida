@@ -9,7 +9,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -166,22 +165,20 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                 ],
                               ),
                             ),
-                            if (kEnableFancyAnimations) ...[
-                              const SizedBox(width: 6.0),
-                              NamidaInkWell(
-                                borderRadius: 6.0,
-                                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-                                onTap: const DiscoverPage().navigate,
-                                child: NamidaTooltip(
-                                  message: () => lang.discover,
-                                  child: Icon(
-                                    Broken.hierarchy_3,
-                                    size: 14.0,
-                                    color: artistTypeColor,
-                                  ),
+                            const SizedBox(width: 4.0),
+                            NamidaInkWell(
+                              borderRadius: 6.0,
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+                              onTap: const DiscoverPage().navigate,
+                              child: NamidaTooltip(
+                                message: () => lang.discover,
+                                child: Icon(
+                                  Broken.hierarchy_3,
+                                  size: 14.0,
+                                  color: artistTypeColor,
                                 ),
                               ),
-                            ],
+                            ),
                           ],
                     onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),

@@ -109,9 +109,9 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
     if (!enablePullToRefresh) return;
     if (FadeDismissible.isDismissing) return;
-    final dy = event.delta.dy;
+    final dy = event.localDelta.dy;
     if (_isDraggingVertically == null) {
-      final dxabs = event.delta.dx.abs();
+      final dxabs = event.localDelta.dx.abs();
       if (dxabs >= 0 && dy < 1) return;
 
       try {
