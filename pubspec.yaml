@@ -36,7 +36,7 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/dart_extensions
   path: ^1.9.0
-  rhttp: <=0.16.0 # v0.17.0 has a bug for android
+  rhttp: ^0.18.0 # v0.17.0 has a bug for android
   path_provider: ^2.1.3
   permission_handler:
     git:

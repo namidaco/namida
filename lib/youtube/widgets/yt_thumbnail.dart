@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/color_m.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
@@ -101,11 +102,15 @@ class YoutubeThumbnail extends StatefulWidget {
 }
 
 class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDelayMixin {
+  static const _maxRetries = 3;
+
   String? imagePath = ArtworkWidget.kImagePathInitialValue;
   NamidaColor? imageColors;
   Color? smallBoxDynamicColor;
 
-  Timer? _dontTouchMeImFetchingThumbnail;
+  Timer? _retryTimer;
+  int _retryCount = 0;
+  bool _waitingForConnection = false;
 
   bool? requestedThumbnailTemp;
   bool? requestedThumbnailNonTemp;
@@ -118,6 +123,9 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
 
   @override
   void dispose() {
+    _retryTimer?.cancel();
+    _retryTimer = null;
+    _unregisterConnectionListener();
     if (widget.videoId?.isNotEmpty == true) {
       if (requestedThumbnailTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, true);
       if (requestedThumbnailNonTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.videoId!, false);
@@ -126,95 +134,86 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       if (requestedThumbnailTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!, true);
       if (requestedThumbnailNonTemp == true) ThumbnailManager.inst.closeThumbnailClients(widget.customUrl!, false);
     }
-    _dontTouchMeImFetchingThumbnail?.cancel();
-    _dontTouchMeImFetchingThumbnail = null;
     super.dispose();
   }
 
   Future<void> _getThumbnail() async {
-    if (_dontTouchMeImFetchingThumbnail?.isActive == true) return;
-    if (imagePath != ArtworkWidget.kImagePathInitialValue && imageColors != null) return;
+    if (imagePath == ArtworkWidget.kImagePathInitialValue && widget.reduceInitialFlashes) {
+      imagePath =
+          ThumbnailManager.inst
+              .imageUrlToCacheFile(
+                id: widget.videoId,
+                url: widget.customUrl,
+                isTemp: !widget.isImportantInCache,
+                type: widget.type,
+              )
+              ?.path ??
+          ArtworkWidget.kImagePathInitialValue;
+    }
 
-    if (imagePath == ArtworkWidget.kImagePathInitialValue) {
-      // -- basic init
-      if (widget.reduceInitialFlashes) {
-        imagePath =
-            ThumbnailManager.inst
-                .imageUrlToCacheFile(
-                  id: widget.videoId,
-                  url: widget.customUrl,
-                  isTemp: !widget.isImportantInCache,
-                  type: widget.type,
-                )
-                ?.path ??
-            ArtworkWidget.kImagePathInitialValue;
-      }
+    String? videoId = widget.videoId;
+    if (videoId != null && videoId.isEmpty) {
+      videoId = null;
+    }
 
-      String? videoId = widget.videoId;
-      if (videoId != null && videoId.isEmpty) {
-        videoId = null;
-      }
-
-      File? res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+    File? res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
+      id: videoId,
+      customUrl: widget.customUrl,
+      isTemp: false,
+      type: widget.type,
+    );
+    if (res == null && (!widget.isImportantInCache || widget.preferLowerRes)) {
+      res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
         id: videoId,
         customUrl: widget.customUrl,
-        isTemp: false,
+        isTemp: true,
         type: widget.type,
       );
-      if (res == null && (!widget.isImportantInCache || widget.preferLowerRes)) {
-        res = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(
-          id: videoId,
-          customUrl: widget.customUrl,
-          isTemp: true,
-          type: widget.type,
-        );
-      }
+    }
 
-      if (res == null) {
-        widget.onImageFetchStart?.call();
+    if (res == null) {
+      widget.onImageFetchStart?.call();
 
-        _dontTouchMeImFetchingThumbnail?.cancel();
-        _dontTouchMeImFetchingThumbnail = Timer(const Duration(seconds: 8), () {});
-        await Future.delayed(Duration.zero);
-        if (!await canStartLoadingItems()) return;
-        if (videoId != null) {
-          // -- for video:
-          // --- isImportantInCache -> fetch to file
-          // --- !isImportantInCache -> fetch lowres temp file only
-          if (widget.isImportantInCache && !widget.preferLowerRes) {
-            requestedThumbnailNonTemp = true;
-            res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-              id: videoId,
-              isImportantInCache: true,
-              type: widget.type,
-            );
-          } else {
-            res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId);
-          }
-        } else {
-          // for channels/playlists -> default
-          widget.isImportantInCache ? requestedThumbnailNonTemp = true : requestedThumbnailTemp = true;
+      await Future.delayed(Duration.zero);
+      if (!await canStartLoadingItems()) return;
+      if (videoId != null) {
+        // -- for video:
+        // --- isImportantInCache -> fetch to file
+        // --- !isImportantInCache -> fetch lowres temp file only
+        if (widget.isImportantInCache && !widget.preferLowerRes) {
+          requestedThumbnailNonTemp = true;
           res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
-            customUrl: widget.customUrl,
-            symlinkId: widget.urlSymLinkId,
-            isImportantInCache: widget.isImportantInCache,
+            id: videoId,
+            isImportantInCache: true,
             type: widget.type,
           );
+        } else {
+          res = await ThumbnailManager.inst.getLowResYoutubeVideoThumbnail(videoId);
         }
+      } else {
+        // for channels/playlists -> default
+        widget.isImportantInCache ? requestedThumbnailNonTemp = true : requestedThumbnailTemp = true;
+        res = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(
+          customUrl: widget.customUrl,
+          symlinkId: widget.urlSymLinkId,
+          isImportantInCache: widget.isImportantInCache,
+          type: widget.type,
+        );
       }
 
       if (res == null && widget.fetchMissingIfRequired == true && videoId != null) {
         res = await YoutubeInfoController.missingInfo.fetchMissingThumbnail(videoId);
       }
 
-      widget.onImageReady?.call(res);
+      if (res == null && mounted) _scheduleRetry(videoId);
+    }
 
-      // -- only put the image if bytes are NOT valid, or if specified by parent
-      String? newPath = res?.path;
-      newPath ??= ArtworkWidget.kImagePathInitialValue;
-      if (imagePath != newPath) {
-        refreshState(() => imagePath = newPath);
-      }
+    widget.onImageReady?.call(res);
+
+    String? newPath = res?.path;
+    newPath ??= ArtworkWidget.kImagePathInitialValue;
+    if (imagePath != newPath) {
+      refreshState(() => imagePath = newPath);
     }
 
     if (imageColors == null && widget.extractColor && imagePath != null && imagePath != ArtworkWidget.kImagePathInitialValue) {
@@ -231,6 +230,38 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (imagePath == ArtworkWidget.kImagePathInitialValue && widget.displayFallbackIcon) {
       if (mounted) setState(() => imagePath = null);
     }
+  }
+
+  void _scheduleRetry(String? videoId) {
+    if (_retryCount >= _maxRetries) return;
+    if (videoId != null && ThumbnailManager.inst.isThumbnailNotFound(videoId)) return;
+    if (ConnectivityController.inst.hasConnection) {
+      _retryTimer = Timer(Duration(seconds: 2 << _retryCount), _retry);
+    } else if (!_waitingForConnection) {
+      _waitingForConnection = true;
+      ConnectivityController.inst.registerOnConnectionRestored(_onConnectionRestored);
+    }
+  }
+
+  void _onConnectionRestored() {
+    // -- deferred, the controller is iterating its listeners
+    _retryTimer?.cancel();
+    _retryTimer = Timer(Duration.zero, _retry);
+  }
+
+  void _retry() {
+    _retryTimer = null;
+    _unregisterConnectionListener();
+    if (!mounted) return;
+    _retryCount++;
+    imagePath ??= ArtworkWidget.kImagePathInitialValue;
+    _getThumbnail();
+  }
+
+  void _unregisterConnectionListener() {
+    if (!_waitingForConnection) return;
+    _waitingForConnection = false;
+    ConnectivityController.inst.removeOnConnectionRestored(_onConnectionRestored);
   }
 
   Key get thumbKey => Key("$smallBoxDynamicColor${widget.videoId}${widget.customUrl}${widget.urlSymLinkId}$imagePath${widget.smallBoxText}");

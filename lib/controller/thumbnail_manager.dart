@@ -181,7 +181,6 @@ class ThumbnailManager {
       destinationFile: file,
       symlinkId: symlinkId,
       isTemp: isTemp,
-      forceRequest: false,
       lowerResYTID: false,
     );
 
@@ -216,12 +215,13 @@ class ThumbnailManager {
       destinationFile: file,
       symlinkId: symlinkId,
       isTemp: isTemp,
-      forceRequest: false,
       lowerResYTID: lowerResYTID,
     );
 
     return downloaded;
   }
+
+  bool isThumbnailNotFound(String itemId) => _thumbnailDownloader.isNotFound(itemId);
 
   void closeThumbnailClients(String itemId, bool isTemp) {
     _thumbnailDownloader.stopDownload(id: itemId, isTemp: isTemp);
@@ -233,14 +233,10 @@ class ThumbnailManager {
     required bool isVideo,
     required bool lowerResYTID,
     required bool isTemp,
-    required bool forceRequest,
     required bool isImportantInCache,
     required File destinationFile,
     required String? symlinkId,
   }) async {
-    final activeRequest = _thumbnailDownloader.resultForId(itemId, isTemp);
-    if (activeRequest != null) return activeRequest;
-
     final links = <String>[];
     if (urls != null) links.addAll(urls);
     if (isVideo) {
@@ -252,7 +248,6 @@ class ThumbnailManager {
     return _thumbnailDownloader.download(
       urls: links,
       id: itemId,
-      forceRequest: forceRequest,
       isImportantInCache: isImportantInCache,
       destinationFile: destinationFile,
       symlinkId: symlinkId,
@@ -281,63 +276,67 @@ class _VideoIdAndTemp {
   int get hashCode => videoId.hashCode ^ isTemp.hashCode;
 }
 
-class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
-  final _downloadCompleters = <_VideoIdAndTemp, Completer<File?>?>{}; // item id
-  final _requestsCountForId = <String, int>{}; // item id
-  final _shouldRetry = <String, bool>{}; // item id
-  final _notFoundThumbnails = <String, bool?>{}; // item id
+class _ActiveDownload {
+  final int token;
+  final Completer<File?> completer = Completer<File?>();
+  int waiters = 1;
 
-  Future<File?>? resultForId(String id, bool temp) => _downloadCompleters[_VideoIdAndTemp(videoId: id, isTemp: temp)]?.future;
+  _ActiveDownload(this.token);
+}
+
+class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
+  final _activeDownloads = <_VideoIdAndTemp, _ActiveDownload>{};
+  final _notFoundThumbnails = <String>{}; // item id
+  final _tokens = IsolateMessageTokenWrapper.create();
+
+  bool isNotFound(String id) => _notFoundThumbnails.contains(id);
 
   Future<File?> download({
     required List<String> urls,
     required String id,
-    bool forceRequest = false,
     required bool isTemp,
     required bool isImportantInCache,
     required File destinationFile,
     required String? symlinkId,
   }) async {
+    if (_notFoundThumbnails.contains(id)) return null;
+
     final mapKey = _VideoIdAndTemp(videoId: id, isTemp: isTemp);
-    if (_notFoundThumbnails[id] == true) return null;
-
-    _requestsCountForId.update(id, (value) => value + 1, ifAbsent: () => 1);
-
-    if (forceRequest == false && _downloadCompleters[mapKey] != null) {
-      final res = await _downloadCompleters[mapKey]!.future;
-      _requestsCountForId.update(id, (value) => value - 1, ifAbsent: () => 0);
-      if (res != null || _shouldRetry[id] != true) {
-        return res;
-      }
+    var active = _activeDownloads[mapKey];
+    if (active != null) {
+      active.waiters++;
+      final res = await active.completer.future;
+      active.waiters--;
+      return res;
     }
-    _downloadCompleters[mapKey]?.completeIfWasnt(null);
-    _downloadCompleters[mapKey] = Completer<File?>();
 
+    active = _activeDownloads[mapKey] = _ActiveDownload(_tokens.getToken());
     final p = {
+      'token': active.token,
       'urls': urls,
       'id': id,
-      if (forceRequest) 'forceRequest': forceRequest,
       'isImportantInCache': isImportantInCache,
       'isTemp': isTemp,
       'destinationFile': destinationFile,
       'symlinkId': ?symlinkId,
     };
-    if (!isInitialized) await initialize();
-    await sendPort(p);
-    final res = await _downloadCompleters[mapKey]?.future;
-
-    _requestsCountForId.update(id, (value) => value - 1, ifAbsent: () => 0);
+    try {
+      if (!isInitialized) await initialize();
+      await sendPort(p);
+    } catch (_) {
+      _onFileFinish(mapKey, active.token, null, false);
+    }
+    final res = await active.completer.future;
+    active.waiters--;
     return res;
   }
 
-  Future<void> stopDownload({required String id, required bool isTemp}) async {
-    final otherActiveRequests = _requestsCountForId[id];
-    if (otherActiveRequests == null || otherActiveRequests <= 1) {
-      // -- only close if active requests only 1
-      _onFileFinish(id, null, null, true, isTemp);
-      final p = {'id': id, 'stop': true};
-      await sendPort(p);
-    }
+  void stopDownload({required String id, required bool isTemp}) {
+    final mapKey = _VideoIdAndTemp(videoId: id, isTemp: isTemp);
+    final active = _activeDownloads[mapKey];
+    if (active == null || active.waiters > 1) return;
+    _onFileFinish(mapKey, active.token, null, false);
+    sendPort({'id': id, 'isTemp': isTemp, 'token': active.token, 'stop': true});
   }
 
   static Future<void> _prepareDownloadResources(SendPort sendPort) async {
@@ -347,7 +346,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);
 
-    final cancelTokensMap = <String, Map<String, CancelToken>?>{}; // itemId: {urlPath: CancelToken}
+    final activeRequests = <int, _IsolateThumbRequest>{}; // token
 
     const bool deleteOldExtracted = true;
     final sep = Platform.pathSeparator;
@@ -359,151 +358,91 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     }
 
     Future<void> onThumbRequest(Map p) async {
-      final stop = p['stop'] as bool?;
-      final id = p['id'] as String;
+      final token = p['token'] as int;
 
-      if (stop == true) {
-        final cancelTokensForId = cancelTokensMap[id]?.values;
-        if (cancelTokensForId != null) {
-          for (final cancelToken in cancelTokensForId) {
-            cancelToken.cancel();
-          }
-          cancelTokensMap[id] = null;
-        }
-      } else {
-        final urls = p['urls'] as List<String>;
-        final forceRequest = p['forceRequest'] as bool? ?? false;
-        final isImportantInCache = p['isImportantInCache'] as bool? ?? false;
-        final isTemp = p['isTemp'] as bool? ?? false;
-        final destinationFile = p['destinationFile'] as File;
-        final symlinkId = p['symlinkId'] as String?;
-
-        if (forceRequest == false && destinationFile.existsSync()) {
-          final res = _YTThumbnailDownloadResult(
-            url: null,
-            urlPath: null,
-            itemId: id,
-            file: destinationFile,
-            isTempFile: isTemp,
-            aborted: false,
-            notfound: false,
-            isTemp: isTemp,
-          );
-          if (isImportantInCache) updateLastAccessed(destinationFile);
-          return sendPort.send(res);
-        }
-
-        cancelTokensMap[id] ??= {};
-        bool? notfound;
-        _YTThumbnailDownloadResult? downloadedRes;
-        final destinationFileTemp = File("${destinationFile.path}.temp");
-        destinationFileTemp.createSync(recursive: true);
-        final fileStream = destinationFileTemp.openWrite(mode: FileMode.writeOnly);
-
-        Future<void> diposeIdRequestResources() async {
-          if (cancelTokensMap[id] != null) {
-            for (final r in cancelTokensMap[id]!.values) {
-              r.cancel();
-            }
-            cancelTokensMap[id] = null;
-          }
-          try {
-            await fileStream.flush();
-            await fileStream.close(); // closing file.
-          } catch (_) {}
-          destinationFileTemp.delete().catchError((_) => File(''));
-        }
-
-        for (final url in urls) {
-          final urlPath = url.substring(url.lastIndexOf('/') + 1);
-          cancelTokensMap[id]?[urlPath] = CancelToken();
-
-          downloadedRes = await httpManager.executeQueued((requester) async {
-            final cancelToken = cancelTokensMap[id]?[urlPath];
-
-            if (cancelToken == null || cancelToken.isCancelled) {
-              // -- client closed, return true to break the loop
-              final res = _YTThumbnailDownloadResult(
-                url: url,
-                urlPath: urlPath,
-                itemId: id,
-                file: destinationFile,
-                isTempFile: isTemp,
-                aborted: true,
-                notfound: null,
-                isTemp: isTemp,
-              );
-              return res;
-            }
-
-            try {
-              final response = await requester.getStream(url);
-              notfound = response.statusCode == 404;
-              if (notfound == true) throw Exception('not found'); // as if request failed.
-
-              File? newFile;
-
-              final downloadStream = response.body;
-              await fileStream.addStream(downloadStream); // this should throw if connection closed unexpectedly
-              await fileStream.flush();
-              await fileStream.close(); // this is already done by diposeIdRequestResources() but we do here bcz renaming can require that no processes are using the file
-
-              newFile = destinationFileTemp.renameSync(destinationFile.path); // rename .temp
-              if (symlinkId != null) {
-                Link("${newFile.parent.path}$sep$symlinkId").create(newFile.path).catchError((_) => Link(''));
-              }
-              if (deleteOldExtracted) {
-                File("${destinationFile.parent.path}${sep}EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
-              }
-
-              final res = _YTThumbnailDownloadResult(
-                url: url,
-                urlPath: urlPath,
-                itemId: id,
-                file: newFile,
-                isTempFile: isTemp,
-                aborted: false,
-                notfound: false,
-                isTemp: isTemp,
-              );
-              return res;
-            } catch (_) {
-              return null;
-            }
-          });
-
-          if (downloadedRes != null) break; // break loop
-        }
-
-        diposeIdRequestResources();
-
-        downloadedRes ??= _YTThumbnailDownloadResult(
-          url: null,
-          urlPath: null,
-          itemId: id,
-          file: null,
-          isTempFile: isTemp,
-          aborted: true,
-          notfound: notfound,
-          isTemp: isTemp,
-        );
-
-        sendPort.send(downloadedRes);
+      if (p['stop'] == true) {
+        activeRequests[token]?.cancel();
+        return;
       }
+
+      final id = p['id'] as String;
+      final urls = p['urls'] as List<String>;
+      final isImportantInCache = p['isImportantInCache'] as bool;
+      final isTemp = p['isTemp'] as bool;
+      final destinationFile = p['destinationFile'] as File;
+      final symlinkId = p['symlinkId'] as String?;
+
+      if (destinationFile.existsSync()) {
+        if (isImportantInCache) updateLastAccessed(destinationFile);
+        return sendPort.send(_YTThumbnailDownloadResult(itemId: id, isTemp: isTemp, token: token, file: destinationFile, notfound: false));
+      }
+
+      final request = _IsolateThumbRequest();
+      activeRequests[token] = request;
+
+      final tempFile = File("${destinationFile.path}.$token.temp");
+      File? downloaded;
+      int notFoundCount = 0;
+
+      try {
+        tempFile.createSync(recursive: true);
+        for (final url in urls) {
+          if (request.cancelled) break;
+          downloaded = await httpManager.executeQueued((requester) async {
+            if (request.cancelled) return null;
+            IOSink? sink;
+            try {
+              final response = await requester.getStream(url, cancelToken: request.cancelToken);
+              sink = tempFile.openWrite(mode: FileMode.writeOnly);
+              await sink.addStream(response.body);
+              await sink.close();
+              sink = null;
+              return tempFile.renameSync(destinationFile.path);
+            } on RhttpStatusCodeException catch (e) {
+              if (e.statusCode == 404) notFoundCount++;
+            } catch (_) {}
+            if (sink != null) {
+              try {
+                await sink.close();
+              } catch (_) {}
+            }
+            return null;
+          });
+          if (downloaded != null) break;
+        }
+      } catch (_) {}
+
+      activeRequests.remove(token);
+
+      if (downloaded == null) {
+        tempFile.delete().catchError((_) => File(''));
+      } else {
+        if (symlinkId != null) {
+          Link("${downloaded.parent.path}$sep$symlinkId").create(downloaded.path).catchError((_) => Link(''));
+        }
+        if (deleteOldExtracted) {
+          File("${destinationFile.parent.path}${sep}EXT_${destinationFile.path.getFilename}").delete().catchError((_) => File(''));
+        }
+      }
+
+      sendPort.send(
+        _YTThumbnailDownloadResult(
+          itemId: id,
+          isTemp: isTemp,
+          token: token,
+          file: downloaded,
+          notfound: downloaded == null && urls.isNotEmpty && notFoundCount == urls.length,
+        ),
+      );
     }
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
       if (PortsProvider.isDisposeMessage(p)) {
-        for (final tokensMap in cancelTokensMap.values) {
-          final tokensToCancel = tokensMap?.values;
-          if (tokensToCancel != null) {
-            for (final requester in tokensToCancel) {
-              requester.cancel();
-            }
-          }
+        for (final request in activeRequests.values) {
+          request.cancel();
         }
-        cancelTokensMap.clear();
+        activeRequests.clear();
         httpManager.closeClients();
         recievePort.close();
         streamSub?.cancel();
@@ -519,7 +458,8 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   @override
   void onResult(dynamic result) {
     if (result is _YTThumbnailDownloadResult) {
-      _onFileFinish(result.itemId, result.file, result.notfound, result.aborted, result.isTemp);
+      final mapKey = _VideoIdAndTemp(videoId: result.itemId, isTemp: result.isTemp);
+      _onFileFinish(mapKey, result.token, result.file, result.notfound);
     }
   }
 
@@ -528,32 +468,38 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
   }
 
-  void _onFileFinish(String itemId, File? downloadedFile, bool? notfound, bool aborted, bool isTemp) {
-    if (notfound != null) _notFoundThumbnails[itemId] = notfound;
-    _shouldRetry[itemId] = aborted;
-    final mapKey = _VideoIdAndTemp(videoId: itemId, isTemp: isTemp);
-    _downloadCompleters[mapKey]?.completeIfWasnt(downloadedFile);
+  void _onFileFinish(_VideoIdAndTemp mapKey, int token, File? downloadedFile, bool notfound) {
+    final active = _activeDownloads[mapKey];
+    if (active == null || active.token != token) return;
+    if (notfound) _notFoundThumbnails.add(mapKey.videoId);
+    _activeDownloads.remove(mapKey);
+    active.completer.completeIfWasnt(downloadedFile);
+  }
+}
+
+class _IsolateThumbRequest {
+  final cancelToken = CancelToken();
+  bool cancelled = false;
+
+  void cancel() {
+    if (cancelled) return;
+    cancelled = true;
+    cancelToken.cancel();
   }
 }
 
 class _YTThumbnailDownloadResult {
-  final String? url;
-  final String? urlPath;
   final String itemId;
-  final File? file;
-  final bool isTempFile;
-  final bool aborted;
-  final bool? notfound;
   final bool isTemp;
+  final int token;
+  final File? file;
+  final bool notfound;
 
   const _YTThumbnailDownloadResult({
-    required this.url,
-    required this.urlPath,
     required this.itemId,
-    required this.file,
-    required this.isTempFile,
-    required this.aborted,
-    required this.notfound,
     required this.isTemp,
+    required this.token,
+    required this.file,
+    required this.notfound,
   });
 }

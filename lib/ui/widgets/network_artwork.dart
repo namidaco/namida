@@ -193,14 +193,15 @@ class NetworkArtwork extends StatefulWidget {
 class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayMixin {
   String? imagePath = ArtworkWidget.kImagePathInitialValue;
 
-  static final _requestCompleters = <NetworkArtworkInfo, Completer<String?>>{};
-  static final _requestCount = <NetworkArtworkInfo, int>{}; // cancel request only if all requesters gone
+  static final _requests = <NetworkArtworkInfo, _NetworkArtworkRequest>{};
 
   static final _queue = Queue(parallel: 12);
 
-  CancelToken? _cancelToken;
+  static const _pageTimeout = Duration(seconds: 12);
+  static const _imageTimeout = Duration(seconds: 30);
+
+  _NetworkArtworkRequest? _joinedRequest;
   static final _defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
-  late final _cachedFilePath = widget.info.toArtworkLocation();
 
   @override
   void initState() {
@@ -210,9 +211,16 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
 
   @override
   void dispose() {
-    final requestersCount = _requestCount[widget.info] ?? 0;
-    if (requestersCount <= 1) _cancelToken?.cancel();
+    _leaveRequest();
     super.dispose();
+  }
+
+  void _leaveRequest() {
+    final request = _joinedRequest;
+    if (request == null) return;
+    _joinedRequest = null;
+    request.requesters--;
+    if (request.requesters <= 0 && !request.completer.isCompleted) request.cancel();
   }
 
   String? _getFallbackArtworkPathExisting() {
@@ -221,7 +229,8 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
     return path;
   }
 
-  Future<String?> _fetchNetworkArtworkUrlLastFm(NetworkArtworkInfo info) async {
+  /// returns `null` on transient failures (should retry later), and empty string when no image exists.
+  static Future<String?> _fetchNetworkArtworkUrlLastFm(NetworkArtworkInfo info, CancelToken cancelToken) async {
     if (!ConnectivityController.inst.hasConnection) return null;
 
     final url = info.toLastfmUrl();
@@ -229,8 +238,8 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
 
     HttpTextResponse response;
     try {
-      response = await Rhttp.get(url, headers: _defaultHeaders, cancelToken: _cancelToken);
-    } on RhttpCancelException catch (_) {
+      response = await Rhttp.get(url, headers: _defaultHeaders, cancelToken: cancelToken).timeout(_pageTimeout);
+    } catch (_) {
       return null;
     }
 
@@ -254,12 +263,11 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
     return '';
   }
 
-  Future<String?> _fetchNetworkArtwork(NetworkArtworkInfo info) async {
-    if (_cancelToken?.isCancelled ?? true) _cancelToken = CancelToken();
+  static Future<String?> _fetchNetworkArtwork(NetworkArtworkInfo info, _NetworkArtworkRequest request) async {
+    if (request.cancelled) return null;
 
-    final url = await _fetchNetworkArtworkUrlLastFm(info).timeout(const Duration(seconds: 8), onTimeout: () => '').catchError((_) => '');
+    final url = await _fetchNetworkArtworkUrlLastFm(info, request.cancelToken);
     if (url == null) return null;
-    if (!mounted) return null;
 
     Uint8List newBytes;
 
@@ -268,20 +276,41 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       newBytes = Uint8List.fromList([]); // write empty bytes
     } else {
       try {
-        final body = await Rhttp.getBytes(url, headers: _defaultHeaders, cancelToken: _cancelToken);
+        final body = await Rhttp.getBytes(url, headers: _defaultHeaders, cancelToken: request.cancelToken).timeout(_imageTimeout);
         newBytes = body.body;
-      } on RhttpCancelException catch (_) {
+      } catch (_) {
         return null;
       }
+      if (newBytes.isEmpty) return null;
     }
 
-    await _cachedFilePath.writeAsBytes(newBytes); // its better to use file itself as bytes can cause issues especially with gifs
-    return newBytes.isEmpty ? null : _cachedFilePath.path;
+    final cachedFilePath = info.toArtworkLocation();
+    await cachedFilePath.writeAsBytes(newBytes); // its better to use file itself as bytes can cause issues especially with gifs
+    return newBytes.isEmpty ? null : cachedFilePath.path;
+  }
+
+  Future<String?> _requestNetworkArtwork() async {
+    final info = widget.info;
+    var request = _requests[info];
+    final joinedExisting = request != null;
+    if (request == null) {
+      final newRequest = request = _requests[info] = _NetworkArtworkRequest();
+      _queue.add(() => _fetchNetworkArtwork(info, newRequest)).ignoreError().then((path) {
+        _requests.remove(info);
+        newRequest.completer.completeIfWasnt(path);
+      });
+    }
+    request.requesters++;
+    _joinedRequest = request;
+    final path = await request.completer.future;
+    _leaveRequest();
+
+    // -- the request we joined got cancelled by its owner before we could keep it alive, start our own.
+    if (path == null && joinedExisting && request.cancelled && mounted) return _requestNetworkArtwork();
+    return path;
   }
 
   Future<void> _getThumbnail() async {
-    if (_requestCompleters.containsKey(widget.info)) return;
-
     final cachedFile = widget.info.toArtworkIfExists();
     imagePath = cachedFile?.path;
     imagePath ??= ArtworkWidget.kImagePathInitialValue;
@@ -293,19 +322,10 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       if (imagePath == null || imagePath == ArtworkWidget.kImagePathInitialValue) {
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems(delayMS: 800)) return;
+        if (!mounted) return;
 
-        _requestCount.update(widget.info, (value) => value + 1, ifAbsent: () => 1);
-        Completer<String?>? completer = _requestCompleters[widget.info];
-        if (completer == null) {
-          completer = _requestCompleters[widget.info] = Completer<String?>();
-          completer.completeIfWasnt(_queue.add(() => _fetchNetworkArtwork(widget.info).ignoreError()));
-        }
-
-        imagePath = await completer.future;
+        imagePath = await _requestNetworkArtwork();
         imagePath ??= ArtworkWidget.kImagePathInitialValue;
-        _requestCompleters[widget.info]?.completeIfWasnt(imagePath);
-        _requestCompleters.remove(widget.info); // no longer needed, next should read cache file directly
-        _requestCount.update(widget.info, (value) => value - 1, ifAbsent: () => 0);
       }
     }
 
@@ -507,4 +527,16 @@ sealed class NetworkArtworkInfo {
 
   /// returns file location, even if it doesn't exist
   static File _getCustomArtworkLocation(String dir, String name) => FileParts.join(dir, '${DownloadTaskFilename.cleanupFilename(name, parentDirPath: dir)}.png');
+}
+
+class _NetworkArtworkRequest {
+  final completer = Completer<String?>();
+  final cancelToken = CancelToken();
+  int requesters = 0;
+  bool cancelled = false;
+
+  void cancel() {
+    cancelled = true;
+    cancelToken.cancel();
+  }
 }
