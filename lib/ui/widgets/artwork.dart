@@ -34,6 +34,7 @@ class ArtworkWidget extends StatefulWidget {
   final double thumbnailSize;
   final bool forceSquared;
   final bool staggered;
+  final Object? staggeredCacheKey;
   final bool compressed;
   final int fadeMilliSeconds;
   final int? cacheHeight;
@@ -80,6 +81,7 @@ class ArtworkWidget extends StatefulWidget {
     this.bgcolor,
     this.iconSize,
     this.staggered = false,
+    this.staggeredCacheKey,
     this.boxShadow,
     this.onTopWidgets,
     this.displayIcon = true,
@@ -109,6 +111,25 @@ class ArtworkWidget extends StatefulWidget {
 
 class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMixin {
   static final _latestInvalidImagePath = <String?, bool>{};
+  static final _staggeredAspectRatios = <Object, double>{};
+
+  Object? get _staggeredCacheKey {
+    final key = widget.staggeredCacheKey;
+    if (key != null) return key;
+    final path = widget.path;
+    return path == null || path.isEmpty ? null : path;
+  }
+
+  double _staggeredHeight(ImageInfo? info, double boxWidth, double boxHeight) {
+    final cacheKey = _staggeredCacheKey;
+    if (info != null) {
+      final ratio = info.image.width / info.image.height;
+      if (cacheKey != null) _staggeredAspectRatios[cacheKey] = ratio;
+      return boxWidth / ratio;
+    }
+    final cached = cacheKey == null ? null : _staggeredAspectRatios[cacheKey];
+    return cached == null ? boxHeight : boxWidth / cached;
+  }
 
   late final String? _imagePathInitialValue = _latestInvalidImagePath[widget.path] == true ? null : ArtworkWidget.kImagePathInitialValue;
 
@@ -292,10 +313,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       final box = SizedBox(
         key: key,
         width: boxWidth,
-        height: boxHeight,
-        // -- below will cause fallback square to not exist, making staggered image look bad before loading and once loaded (jumps)
-        // width: widget.staggered ? null : boxWidth,
-        // height: widget.staggered ? null : boxHeight,
+        height: widget.staggered ? _staggeredHeight(null, boxWidth, boxHeight) : boxHeight,
       );
       final child = widget.onTopWidgets?.isEmpty ?? true
           ? box
@@ -372,12 +390,13 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           // -- but medium also causes delayed rendering especially while animating
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: (info) {
-                            if (widget.forceSquared || widget.staggered || info == null) return realWidthAndHeight;
+                            if (widget.staggered) return boxWidth;
+                            if (widget.forceSquared || info == null) return realWidthAndHeight;
                             final aspectRatio = info.image.width / info.image.height;
                             final fittedWidth = (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
                             return fittedWidth;
                           },
-                          height: (_) => realWidthAndHeight,
+                          height: (info) => widget.staggered ? _staggeredHeight(info, boxWidth, boxHeight) : realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded || frame == null) return child;
                             if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;

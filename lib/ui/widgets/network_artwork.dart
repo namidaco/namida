@@ -347,6 +347,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
         iconSize: widget.iconSize ?? widget.thumbnailSize * 0.3,
         forceSquared: widget.forceSquared,
         staggered: widget.staggered,
+        staggeredCacheKey: widget.info,
         // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
         onTopWidgets: widget.onTopWidgets,
 
