@@ -11,6 +11,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -70,6 +71,11 @@ class SchwarzSechsPrototypeMkII : GlanceAppWidget() {
 
   override val sizeMode = SizeMode.Exact
 
+  override fun onCompositionError(context: Context, glanceId: GlanceId, appWidgetId: Int, throwable: Throwable) {
+    Log.e(kLogTag, "widget composition failed for id=$appWidgetId", throwable)
+    super.onCompositionError(context, glanceId, appWidgetId, throwable)
+  }
+
   override suspend fun provideGlance(context: Context, id: GlanceId) {
     val appWidgetId =
       try {
@@ -117,7 +123,8 @@ internal enum class WidgetRepeat(val drawableRes: Int, val secondaryRes: Int?) {
   ONE(R.drawable.repeate_one, null),
   FOR_N_TIMES(R.drawable.status, null),
   ALL(R.drawable.repeat, null),
-  ALL_SHUFFLE(R.drawable.repeat, R.drawable.shuffle);
+  ALL_SHUFFLE(R.drawable.repeat, R.drawable.shuffle),
+  SHUFFLE(R.drawable.shuffle, null);
 
   companion object {
     fun parse(name: String?): WidgetRepeat =
@@ -126,6 +133,7 @@ internal enum class WidgetRepeat(val drawableRes: Int, val secondaryRes: Int?) {
         "forNtimes" -> FOR_N_TIMES
         "all" -> ALL
         "allShuffle" -> ALL_SHUFFLE
+        "shuffle" -> SHUFFLE
         else -> NONE
       }
   }
@@ -532,10 +540,13 @@ private fun MediaControls(
       else GlanceModifier,
   ) {
     enabled.forEachIndexed { index, ctrl ->
-      if (index > 0) Spacer(GlanceModifier.width(spacing))
-      // -- each button takes an equal share of whatever width the row actually got
-      val sizing =
-        if (fillWidth) GlanceModifier.defaultWeight() else GlanceModifier.width(estimatedWidth)
+      // -- the gap lives inside each cell rather than as a Spacer sibling: glance only has
+      // -- generated layouts for up to 10 children per container, and 6 buttons + 5 spacers
+      // -- silently kills the whole composition, leaving the widget stuck on its initial layout
+      val gap = if (index > 0) spacing else 0.dp
+      val cell =
+        if (fillWidth) GlanceModifier.defaultWeight()
+        else GlanceModifier.width(estimatedWidth + gap)
       MediaControlButton(
         color =
           if (ctrl.isDimmed(payload)) colors.iconsColor.copy(alpha = colors.iconsColor.alpha * 0.4f)
@@ -545,7 +556,7 @@ private fun MediaControls(
         badgeText = ctrl.badgeText(payload),
         contentDescription = ctrl.contentDescription(payload),
         action = ctrl.action(payload),
-        sizing = sizing.height(buttonHeight),
+        cell = cell.height(buttonHeight).padding(start = gap),
         buttonHeight = buttonHeight,
         iconPadding = iconPadding * ctrl.iconPaddingScale(),
         interactive = interactive,
@@ -562,12 +573,14 @@ private fun MediaControlButton(
   badgeText: String?,
   contentDescription: String,
   action: CtrlAction,
-  sizing: GlanceModifier,
+  cell: GlanceModifier,
   buttonHeight: Dp,
   iconPadding: Dp,
   interactive: Boolean,
 ) {
-  var modifier = sizing.cornerRadius((buttonHeight * 0.28f).clampDp(6.dp, 16.dp))
+  // -- the clickable surface sits inside the cell so the ripple stops at the gap
+  var modifier =
+    GlanceModifier.fillMaxSize().cornerRadius((buttonHeight * 0.28f).clampDp(6.dp, 16.dp))
   if (interactive) {
     val parameters =
       when (action) {
@@ -581,41 +594,45 @@ private fun MediaControlButton(
       )
   }
   val tint = ColorProvider(color)
-  Box(contentAlignment = Alignment.Center, modifier = modifier) {
-    // -- fills whatever the box ended up being, so it never depends on a reported width
-    Image(
-      provider = ImageProvider(drawableRes),
-      colorFilter = ColorFilter.tint(tint),
-      contentDescription = contentDescription,
-      contentScale = ContentScale.Fit,
-      modifier = GlanceModifier.fillMaxSize().padding(iconPadding),
-    )
-    if (badgeText != null) {
-      Text(
-        badgeText,
-        style =
-          TextStyle(
-            fontSize = (buttonHeight.value * 0.30f).sp,
-            fontWeight = FontWeight.Bold,
-            color = tint,
-            textAlign = TextAlign.Center,
-          ),
-        maxLines = 1,
+  Box(modifier = cell) {
+    Box(contentAlignment = Alignment.Center, modifier = modifier) {
+      // -- fills whatever the box ended up being, so it never depends on a reported width
+      Image(
+        provider = ImageProvider(drawableRes),
+        colorFilter = ColorFilter.tint(tint),
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Fit,
+        modifier = GlanceModifier.fillMaxSize().padding(iconPadding),
       )
-    }
-    if (secondaryRes != null) {
-      Box(contentAlignment = Alignment.BottomEnd, modifier = GlanceModifier.fillMaxSize()) {
-        Image(
-          provider = ImageProvider(secondaryRes),
-          colorFilter = ColorFilter.tint(tint),
-          contentDescription = null,
-          contentScale = ContentScale.Fit,
-          modifier = GlanceModifier.size(buttonHeight * 0.34f),
+      if (badgeText != null) {
+        Text(
+          badgeText,
+          style =
+            TextStyle(
+              fontSize = (buttonHeight.value * 0.30f).sp,
+              fontWeight = FontWeight.Bold,
+              color = tint,
+              textAlign = TextAlign.Center,
+            ),
+          maxLines = 1,
         )
+      }
+      if (secondaryRes != null) {
+        Box(contentAlignment = Alignment.BottomEnd, modifier = GlanceModifier.fillMaxSize()) {
+          Image(
+            provider = ImageProvider(secondaryRes),
+            colorFilter = ColorFilter.tint(tint),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = GlanceModifier.size(buttonHeight * 0.34f),
+          )
+        }
       }
     }
   }
 }
+
+internal const val kLogTag = "NamidaWidget"
 
 private val kMediaActionParam = ActionParameters.Key<Int>("t")
 private val kCustomActionParam = ActionParameters.Key<String>("c")

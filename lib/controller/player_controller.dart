@@ -154,8 +154,35 @@ class Player {
 
   RxBaseCore<SleepTimerConfig> get sleepTimerConfig => _audioHandler.sleepTimerConfig;
 
-  bool get canJumpToNext => !_audioHandler.isLastItem || settings.player.infiniyQueueOnNextPrevious.value;
-  bool get canJumpToPrevious => currentIndex.value != 0 || settings.player.infiniyQueueOnNextPrevious.value;
+  bool get canJumpToNext => _audioHandler.isShuffleEnabled || !_audioHandler.isLastItem || settings.player.infiniyQueueOnNextPrevious.value;
+  bool get canJumpToPrevious => currentIndex.value != 0 || settings.player.infiniyQueueOnNextPrevious.value || _audioHandler.shufflePeekPreviousIndex() != null;
+
+  /// wraps around on both ends.
+  int refineIndex(int index) {
+    final length = currentQueue.value.length;
+    if (length <= 0) return 0;
+    if (index <= -1) return length - 1;
+    if (index >= length) return 0;
+    return index;
+  }
+
+  /// index the player would jump to on next, shuffle aware only when [current] is the playing index.
+  int nextIndexFor(int current) {
+    if (current == currentIndex.value) {
+      final shuffleIndex = _audioHandler.shuffleNextIndex();
+      if (shuffleIndex != null) return shuffleIndex;
+    }
+    return refineIndex(current + 1);
+  }
+
+  /// index the player would jump to on previous, shuffle aware only when [current] is the playing index.
+  int previousIndexFor(int current) {
+    if (current == currentIndex.value) {
+      final shuffleIndex = _audioHandler.shufflePeekPreviousIndex();
+      if (shuffleIndex != null) return shuffleIndex;
+    }
+    return refineIndex(current - 1);
+  }
 
   RxMap<String, int>? get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 

@@ -97,6 +97,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     settings.player.repeatMode.addListener(resetGaplessPlaybackData);
 
+    void updateShuffleMode() => setShuffleEnabled(settings.player.repeatMode.value == PlayerRepeatMode.shuffle);
+    settings.player.repeatMode.addListener(updateShuffleMode);
+    updateShuffleMode();
+
     final homeWidget = HomeWidgetController.instance;
     if (homeWidget != null) {
       settings.player.repeatMode.addListener(

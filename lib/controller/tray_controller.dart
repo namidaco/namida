@@ -30,6 +30,7 @@ class TrayIcons {
   final String repeatForNTimes;
   final String repeatAll;
   final String repeatAllShuffle;
+  final String repeatShuffle;
 
   const TrayIcons({
     required this.appIcon,
@@ -47,6 +48,7 @@ class TrayIcons {
     required this.repeatForNTimes,
     required this.repeatAll,
     required this.repeatAllShuffle,
+    required this.repeatShuffle,
   });
 
   static TrayIcons? platform() {
@@ -108,6 +110,7 @@ class TrayIcons {
     repeatForNTimes: _getWindowsIco('status'),
     repeatAll: _getWindowsIco('repeat'),
     repeatAllShuffle: _getWindowsIco('shuffle'),
+    repeatShuffle: _getWindowsIco('shuffle'),
   );
 
   static const linux = TrayIcons(
@@ -126,6 +129,7 @@ class TrayIcons {
     repeatForNTimes: '#',
     repeatAll: '🔁',
     repeatAllShuffle: '🔀',
+    repeatShuffle: '🔀',
   );
 
   String forRepeatMode(PlayerRepeatMode repeat) {
@@ -135,6 +139,7 @@ class TrayIcons {
       PlayerRepeatMode.forNtimes => repeatForNTimes,
       PlayerRepeatMode.all => repeatAll,
       PlayerRepeatMode.allShuffle => repeatAllShuffle,
+      PlayerRepeatMode.shuffle => repeatShuffle,
     };
   }
 }

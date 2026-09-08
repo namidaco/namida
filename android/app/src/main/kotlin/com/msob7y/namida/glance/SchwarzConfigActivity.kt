@@ -14,6 +14,7 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -335,7 +336,8 @@ class SchwarzConfigActivity : Activity() {
             }
             .remoteViews
         }
-      } catch (_: Throwable) {
+      } catch (e: Throwable) {
+        Log.e(kLogTag, "widget preview failed", e)
         return
       }
 

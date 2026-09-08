@@ -565,6 +565,7 @@ extension PlayerRepeatModeUtils on PlayerRepeatMode {
     PlayerRepeatMode.one => lang.repeatModeOne,
     PlayerRepeatMode.all => lang.repeatModeAll,
     PlayerRepeatMode.allShuffle => "${lang.repeatModeAll} (${lang.shuffle})",
+    PlayerRepeatMode.shuffle => lang.shuffle,
     PlayerRepeatMode.forNtimes => lang.repeatForNTimes(number: numberOfRepeats ?? Player.inst.numberOfRepeats.value),
   };
 }
@@ -2635,6 +2636,7 @@ extension PlayerRepeatModeL10n on PlayerRepeatMode {
     PlayerRepeatMode.one => Broken.repeate_one,
     PlayerRepeatMode.all => Broken.repeat,
     PlayerRepeatMode.allShuffle => Broken.repeat,
+    PlayerRepeatMode.shuffle => Broken.shuffle,
     PlayerRepeatMode.forNtimes => Broken.status,
   };
 
@@ -2643,6 +2645,7 @@ extension PlayerRepeatModeL10n on PlayerRepeatMode {
     PlayerRepeatMode.one => null,
     PlayerRepeatMode.all => null,
     PlayerRepeatMode.allShuffle => Broken.shuffle,
+    PlayerRepeatMode.shuffle => null,
     PlayerRepeatMode.forNtimes => null,
   };
 }

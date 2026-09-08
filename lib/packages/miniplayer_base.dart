@@ -314,16 +314,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     }
   }
 
-  int refine(int index) {
-    if (index <= -1) {
-      return Player.inst.currentQueue.value.length - 1;
-    } else if (index >= Player.inst.currentQueue.value.length) {
-      return 0;
-    } else {
-      return index;
-    }
-  }
-
   Widget _queueItemBuilder(
     BuildContext context,
     int i,
@@ -738,10 +728,20 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             // -- animation index is for items animating, they use frozen index until animation is done
             // -- real index is to update text instantly, use for parts that has no swipe animation
             final currentIndexReal = Player.inst.currentIndex.valueR;
-            int currentIndexAnimationUI = MiniPlayerController.inst.displayIndexOverride.valueR ?? currentIndexReal;
-            if (currentIndexAnimationUI >= queue.length) currentIndexAnimationUI = currentIndexReal; // -- queue changed while frozen
-            final indminusAnimationUI = refine(currentIndexAnimationUI - 1);
-            final indplusAnimationUI = refine(currentIndexAnimationUI + 1);
+            final int currentIndexAnimationUI;
+            final int indminusAnimationUI;
+            final int indplusAnimationUI;
+            final override = MiniPlayerController.inst.displayIndicesOverride.valueR;
+            if (override != null && override.isValidFor(queue.length)) {
+              currentIndexAnimationUI = override.current;
+              indminusAnimationUI = override.prev;
+              indplusAnimationUI = override.next;
+            } else {
+              // -- queue changed while frozen, or nothing in flight
+              currentIndexAnimationUI = currentIndexReal;
+              indminusAnimationUI = Player.inst.previousIndexFor(currentIndexReal);
+              indplusAnimationUI = Player.inst.nextIndexFor(currentIndexReal);
+            }
             final currentItem = queue[currentIndexReal];
             final currentItemAnimationUI = queue[currentIndexAnimationUI];
             final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;

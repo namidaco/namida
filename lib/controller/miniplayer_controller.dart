@@ -258,7 +258,8 @@ class MiniPlayerController {
   /// swipe reaches the bounds before the finger crosses the whole screen.
   static const double _kSDragOvershoot = 1.25;
 
-  final displayIndexOverride = Rxn<int>();
+  /// frozen prev/current/next indices while a horizontal transition is in flight.
+  final displayIndicesOverride = Rxn<MiniplayerDisplayIndices>();
   int _snapGeneration = 0;
   int? _pendingSnapDir;
   Future<void>? _pendingIndexChange;
@@ -595,20 +596,17 @@ class MiniPlayerController {
 
   Future<void> snapToNext() => _snapToAdjacent(forward: true);
 
-  /// mirrors `refine()` in the miniplayer, the queue wraps around on both ends.
-  int _refineIndex(int index) {
-    final length = Player.inst.currentQueue.value.length;
-    if (length <= 0) return 0;
-    if (index <= -1) return length - 1;
-    if (index >= length) return 0;
-    return index;
-  }
+  MiniplayerDisplayIndices _indicesAround(int current) => (
+    prev: Player.inst.previousIndexFor(current),
+    current: current,
+    next: Player.inst.nextIndexFor(current),
+  );
 
   void _resetIndexAnimation() {
     sAnim.stop();
     sAnim.value = 0.0;
     _sOffset = 0; // -- keep it in sync with [sAnim], otherwise the next drag would jump
-    displayIndexOverride.value = null;
+    displayIndicesOverride.value = null;
     _pendingSnapDir = null;
     _pendingIndexChange = null;
   }
@@ -620,9 +618,9 @@ class MiniPlayerController {
     if (gen != _snapGeneration) return;
 
     final dir = _pendingSnapDir;
-    final base = displayIndexOverride.value;
+    final indices = displayIndicesOverride.value;
     final pendingIndexChange = _pendingIndexChange;
-    if (dir == null || base == null || pendingIndexChange == null || Player.inst.currentIndex.value == _refineIndex(base + dir)) {
+    if (dir == null || indices == null || pendingIndexChange == null || Player.inst.currentIndex.value == indices.towards(dir)) {
       _resetIndexAnimation();
       return;
     }
@@ -647,13 +645,13 @@ class MiniPlayerController {
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
 
     final pendingDir = _pendingSnapDir;
-    final base = displayIndexOverride.value;
+    final pendingIndices = displayIndicesOverride.value;
     sAnim.stop();
-    if (pendingDir != null && base != null) {
-      displayIndexOverride.value = _refineIndex(base + pendingDir);
+    if (pendingDir != null && pendingIndices != null) {
+      displayIndicesOverride.value = _indicesAround(pendingIndices.towards(pendingDir));
       sAnim.value = (sAnim.value - pendingDir).clampDouble(-1.0, 1.0);
     } else {
-      displayIndexOverride.value = Player.inst.currentIndex.value;
+      displayIndicesOverride.value = _indicesAround(Player.inst.currentIndex.value);
     }
     _pendingSnapDir = dir;
 
@@ -670,4 +668,11 @@ class MiniPlayerController {
       _settleIndexAnimation(gen);
     }
   }
+}
+
+typedef MiniplayerDisplayIndices = ({int prev, int current, int next});
+
+extension MiniplayerDisplayIndicesUtils on MiniplayerDisplayIndices {
+  int towards(int dir) => dir > 0 ? next : prev;
+  bool isValidFor(int queueLength) => prev < queueLength && current < queueLength && next < queueLength;
 }
