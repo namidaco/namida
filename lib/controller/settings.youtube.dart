@@ -48,6 +48,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
   final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
   final dragToSeek = YTSeekActionMode.all.obs;
+  final horizontalDrag = YTHorizontalDragMode.fullscreen.obs;
   final downloadFilenameBuilder = _defaultFilenameBuilder.obs;
   final initialDefaultMetadataTags = <String, String>{};
 
@@ -93,6 +94,7 @@ class _YoutubeSettings with SettingsFileWriter {
     OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
     YTSeekActionMode? tapToSeek,
     YTSeekActionMode? dragToSeek,
+    YTHorizontalDragMode? horizontalDrag,
     String? downloadFilenameBuilder,
     DownloadNotifications? downloadNotifications,
     SponsorBlockSettings? sponsorBlockSettings,
@@ -134,6 +136,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
     if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
+    if (horizontalDrag != null) this.horizontalDrag.value = horizontalDrag;
     if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
     if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
     if (sponsorBlockSettings != null) this.sponsorBlockSettings.value = sponsorBlockSettings;
@@ -211,6 +214,7 @@ class _YoutubeSettings with SettingsFileWriter {
       onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
       tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
       dragToSeek.value = YTSeekActionMode.values.getEnum(json['dragToSeek']) ?? dragToSeek.value;
+      horizontalDrag.value = YTHorizontalDragMode.values.getEnum(json['horizontalDrag']) ?? horizontalDrag.value;
 
       final ytHomePageItemsFromStorage = json['ytHomePageItems'];
       if (ytHomePageItemsFromStorage is List) ytHomePageItems.value = ytHomePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();
@@ -270,6 +274,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'onYoutubeLinkOpen': onYoutubeLinkOpen.value.name,
     'tapToSeek': tapToSeek.value.name,
     'dragToSeek': dragToSeek.value.name,
+    'horizontalDrag': horizontalDrag.value.name,
     'ytHomePageItems': ytHomePageItems.value.map((element) => element.name).toFixedList(),
     'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
     'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),

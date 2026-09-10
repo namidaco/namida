@@ -40,6 +40,7 @@ class MiniPlayerController {
 
   bool get isInQueue => animation.value > 1.0;
   bool get isMinimized => animation.value < 1.0;
+  bool get isExpanded => animation.value >= 0.95;
 
   /// Used to temporarily hold the seek value.
   final seekValue = Rxn<int>();

@@ -263,13 +263,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   /// disables controls entirely when specified. for example when minplayer is minimized & controls should't be there.
-  void _disableControlsListener() {
+  ///
+  /// and updates [_isMiniplayerExpanded] for [YTHorizontalDragMode].
+  void _miniplayerAnimationListener() {
     if (!mounted) return;
     final value = MiniPlayerController.inst.animation.value;
-    final hideUnder = widget.disableControlsUnderPercentage!;
-    final shouldHide = value < hideUnder;
-    if (shouldHide != _isLocked) {
-      setState(() => _isLocked = shouldHide);
+    final hideUnder = widget.disableControlsUnderPercentage;
+    final shouldHide = hideUnder != null && value < hideUnder;
+    final isExpanded = MiniPlayerController.inst.isExpanded;
+    if (shouldHide != _isLocked || isExpanded != _isMiniplayerExpanded) {
+      setState(() {
+        _isLocked = shouldHide;
+        _isMiniplayerExpanded = isExpanded;
+      });
     }
   }
 
@@ -315,10 +321,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       );
     }
 
-    if (widget.disableControlsUnderPercentage != null) {
-      _disableControlsListener();
-      MiniPlayerController.inst.animation.addListener(_disableControlsListener);
+    if (!widget.isFullScreen) {
+      _miniplayerAnimationListener();
+      MiniPlayerController.inst.animation.addListener(_miniplayerAnimationListener);
     }
+
+    settings.youtube.horizontalDrag.addListener(_horizontalDragModeListener);
 
     if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
       ScreenBrightness.instance.system.then((value) => _currentBrigthnessDim.value = 1.0 + value);
@@ -356,7 +364,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _seekSecondsRx.close();
     _isEndCardsVisible.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
-    MiniPlayerController.inst.animation.removeListener(_disableControlsListener);
+    MiniPlayerController.inst.animation.removeListener(_miniplayerAnimationListener);
+    settings.youtube.horizontalDrag.removeListener(_horizontalDragModeListener);
     _systemBrightnessStreamSub?.cancel();
     if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
       ScreenBrightness.instance.resetApplicationScreenBrightness();
@@ -715,6 +724,14 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   }
 
   bool _isLocked = false;
+  bool _isMiniplayerExpanded = false;
+
+  late YTHorizontalDragMode _horizontalDragMode = settings.youtube.horizontalDrag.value;
+  void _horizontalDragModeListener() {
+    final mode = settings.youtube.horizontalDrag.value;
+    if (mode != _horizontalDragMode && mounted) setState(() => _horizontalDragMode = mode);
+  }
+
   void _toggleLocked() {
     setState(() {
       _isLocked = !_isLocked;
@@ -1675,6 +1692,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
     );
 
+    final canHorizontalSeek = !_isLocked && _horizontalDragMode.resolve(fullscreen: isFullScreen, miniplayerExpanded: _isMiniplayerExpanded);
+
     Widget videoControlsWidget = _ListenerEnabled(
       enabled: !_isLocked,
       behavior: HitTestBehavior.translucent,
@@ -1698,10 +1717,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       },
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onHorizontalDragStart: _isLocked ? null : (details) => _seekReady?.onHorizontalDragStartSimple(),
-        onHorizontalDragUpdate: _isLocked ? null : (event) => _seekReady?.onHorizontalDragUpdateSimple(event),
-        onHorizontalDragEnd: _isLocked ? null : (event) => _seekReady?.onHorizontalDragEnd(allowMagnet: false),
-        onHorizontalDragCancel: _isLocked ? null : _seekReady?.onHorizontalDragCancel,
+        onHorizontalDragStart: canHorizontalSeek ? (details) => _seekReady?.onHorizontalDragStartSimple() : null,
+        onHorizontalDragUpdate: canHorizontalSeek ? (event) => _seekReady?.onHorizontalDragUpdateSimple(event) : null,
+        onHorizontalDragEnd: canHorizontalSeek ? (event) => _seekReady?.onHorizontalDragEnd(allowMagnet: false) : null,
+        onHorizontalDragCancel: canHorizontalSeek ? _seekReady?.onHorizontalDragCancel : null,
         onVerticalDragUpdate: !shouldShowSliders
             ? null
             : (event) async {

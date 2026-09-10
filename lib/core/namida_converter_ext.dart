@@ -2565,6 +2565,15 @@ extension YTSeekActionModeL10n on YTSeekActionMode {
   };
 }
 
+extension YTHorizontalDragModeL10n on YTHorizontalDragMode {
+  String toText() => switch (this) {
+    YTHorizontalDragMode.never => lang.never,
+    YTHorizontalDragMode.expandedMiniplayer => lang.expandedMiniplayer,
+    YTHorizontalDragMode.fullscreen => lang.fullscreen,
+    YTHorizontalDragMode.always => lang.always,
+  };
+}
+
 extension CommentsSortTypeL10n on CommentsSortType {
   String toText() => switch (this) {
     CommentsSortType.top => lang.top,

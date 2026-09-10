@@ -864,6 +864,21 @@ enum YTSeekActionMode {
   all,
 }
 
+enum YTHorizontalDragMode {
+  never,
+  expandedMiniplayer,
+  fullscreen,
+  always,
+  ;
+
+  bool resolve({required bool fullscreen, required bool miniplayerExpanded}) => switch (this) {
+    YTHorizontalDragMode.never => false,
+    YTHorizontalDragMode.expandedMiniplayer => !fullscreen && miniplayerExpanded,
+    YTHorizontalDragMode.fullscreen => fullscreen,
+    YTHorizontalDragMode.always => true,
+  };
+}
+
 enum YTVisibleShortPlaces {
   homeFeed,
   search,

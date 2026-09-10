@@ -90,7 +90,7 @@ class YoutubeSettings extends SettingSubpageProvider {
     _YoutubeSettingKeys.searchCleanup: [lang.enableSearchCleanup],
     _YoutubeSettingKeys.dimMiniplayerAfter: [lang.dimMiniplayerAfterSeconds(seconds: 0)],
     _YoutubeSettingKeys.dimIntensity: [lang.dimIntensity],
-    _YoutubeSettingKeys.seekbar: [lang.seekbar, lang.tapToSeek, lang.dragToSeek],
+    _YoutubeSettingKeys.seekbar: [lang.seekbar, lang.tapToSeek, lang.dragToSeek, "${lang.dragToSeek} (${lang.video})"],
     _YoutubeSettingKeys.downloadsMetadataTags: [lang.downloadsMetadataTags, lang.downloadsMetadataTagsSubtitle],
     _YoutubeSettingKeys.downloadLocation: [lang.defaultDownloadLocation],
     _YoutubeSettingKeys.downloadNotifications: [lang.notifications, lang.downloads],
@@ -624,6 +624,28 @@ class YoutubeSettings extends SettingSubpageProvider {
                     child: Obx(
                       (context) => Text(
                         settings.youtube.dragToSeek.valueR.toText(),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                ),
+                CustomListTile(
+                  icon: Broken.video_horizontal,
+                  title: "${lang.dragToSeek} (${lang.video})",
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: () => YTHorizontalDragMode.values.map(
+                      (e) => NamidaPopupItem(
+                        icon: Broken.external_drive,
+                        title: e.toText(),
+                        selected: e == settings.youtube.horizontalDrag.value,
+                        onTap: () {
+                          settings.youtube.save(horizontalDrag: e);
+                        },
+                      ),
+                    ),
+                    child: Obx(
+                      (context) => Text(
+                        settings.youtube.horizontalDrag.valueR.toText(),
                         textAlign: TextAlign.end,
                       ),
                     ),
