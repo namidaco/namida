@@ -5,16 +5,16 @@ abstract class NamidaChannel {
 
   static NamidaChannel _platform() {
     return NamidaPlatformBuilder.init(
-      android: () => _NamidaChannelAndroid._init(),
-      windows: () => _NamidaChannelWindows._internal(),
-      linux: () => _NamidaChannelLinux._internal(),
+      android: _NamidaChannelAndroid._init,
+      windows: _NamidaChannelWindows._internal,
+      linux: _NamidaChannelLinux._internal,
     );
   }
 
-  static final defaultAppIconForPlatform = NamidaPlatformBuilder.init(
+  static NamidaAppIcons get defaultAppIconForPlatform => NamidaPlatformBuilder.init(
     android: () => NamidaAppIcons.namida,
-    windows: () => NamidaAppIcons.namida,
-    linux: () => NamidaAppIcons.namida,
+    windows: () => NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
+    linux: () => NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
   );
   static final defaultLayerIconForPlatform = 'assets/namida.png';
 
