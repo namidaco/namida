@@ -7995,7 +7995,8 @@ class NamidaPopScope extends StatelessWidget {
 }
 
 class CustomIconButtonTonal extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final double? iconSize;
   final String? tooltip;
   final bool dense;
@@ -8004,13 +8005,17 @@ class CustomIconButtonTonal extends StatelessWidget {
 
   const CustomIconButtonTonal({
     super.key,
-    required this.icon,
+    this.icon,
+    this.iconWidget,
     this.iconSize,
     this.tooltip,
     this.dense = true,
     this.colorScheme,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconWidget != null);
+
+  static Color? getIconColor(BuildContext context, [Color? colorScheme]) =>
+      context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor(colorScheme).withOpacityExt(0.75);
 
   @override
   Widget build(BuildContext context) {
@@ -8022,11 +8027,13 @@ class CustomIconButtonTonal extends StatelessWidget {
         backgroundColor: WidgetStatePropertyAll((colorScheme ?? context.theme.colorScheme.secondary).withOpacityExt(0.18)),
       ),
       onPressed: onTap,
-      icon: Icon(
-        icon,
-        size: iconSize,
-        color: context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor(colorScheme).withOpacityExt(0.75),
-      ),
+      icon:
+          iconWidget ??
+          Icon(
+            icon,
+            size: iconSize,
+            color: getIconColor(context, colorScheme),
+          ),
       tooltip: tooltip,
     );
   }

@@ -517,14 +517,22 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
 class LocalQueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
-  const LocalQueueChipHeaderRow({super.key, required this.addLeftMargin});
+  final bool showPlaybackActions;
+  final void Function()? onArrowDownPressed;
+  const LocalQueueChipHeaderRow({
+    super.key,
+    required this.addLeftMargin,
+    this.showPlaybackActions = false,
+    required this.onArrowDownPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return QueueChipHeaderRow(
       isLocal: true,
       addLeftMargin: addLeftMargin,
-      onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
+      showPlaybackActions: showPlaybackActions,
+      onArrowDownPressed: onArrowDownPressed,
       durationFormatter: (items) => items.map((e) => e as Selectable).totalDurationFormatted,
     );
   }
@@ -532,15 +540,22 @@ class LocalQueueChipHeaderRow extends StatelessWidget {
 
 class YTQueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
+  final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
-  const YTQueueChipHeaderRow({super.key, this.addLeftMargin = false, this.onArrowDownPressed});
+  const YTQueueChipHeaderRow({
+    super.key,
+    this.addLeftMargin = false,
+    this.showPlaybackActions = false,
+    required this.onArrowDownPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return QueueChipHeaderRow(
       isLocal: false,
       addLeftMargin: addLeftMargin,
-      onArrowDownPressed: onArrowDownPressed ?? MiniPlayerController.inst.snapToExpanded,
+      showPlaybackActions: showPlaybackActions,
+      onArrowDownPressed: onArrowDownPressed,
       durationFormatter: null,
     );
   }
@@ -549,13 +564,15 @@ class YTQueueChipHeaderRow extends StatelessWidget {
 class QueueChipHeaderRow extends StatelessWidget {
   final bool isLocal;
   final bool addLeftMargin;
-  final void Function() onArrowDownPressed;
+  final bool showPlaybackActions;
+  final void Function()? onArrowDownPressed;
   final String Function(Iterable<Playable> items)? durationFormatter;
 
   const QueueChipHeaderRow({
     super.key,
     required this.isLocal,
     required this.addLeftMargin,
+    this.showPlaybackActions = false,
     required this.onArrowDownPressed,
     required this.durationFormatter,
   });
@@ -610,6 +627,7 @@ class QueueChipHeaderRow extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final textStyle = textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600);
+    final playbackActionsIconColor = showPlaybackActions ? CustomIconButtonTonal.getIconColor(context) : null;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: 42.0, maxHeight: (context.height * 0.15).withMinimum(42.0)),
       child: Padding(
@@ -685,6 +703,51 @@ class QueueChipHeaderRow extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           const SizedBox(width: 6.0),
+                          if (showPlaybackActions) ...[
+                            RepeatModeIconButton(
+                              iconSize: _ActionItem.iconSize,
+                              color: playbackActionsIconColor,
+                              builder: (child, tooltipCallback, onTap) => _ActionItem(
+                                tooltip: tooltipCallback?.call(),
+                                onTap: onTap,
+                                iconWidget: child,
+                              ),
+                            ),
+                            const SizedBox(width: 6.0),
+                            SoundControlButton(
+                              iconSize: _ActionItem.iconSize,
+                              color: playbackActionsIconColor,
+                              builder: (child, tooltipCallback, onTap) => _ActionItem(
+                                tooltip: tooltipCallback(),
+                                onTap: onTap,
+                                iconWidget: child,
+                              ),
+                            ),
+                            const SizedBox(width: 6.0),
+                            // LongPressDetector(
+                            //   enableSecondaryTap: true,
+                            //   onLongPress: () {
+                            //     final currentItem = Player.inst.currentItem.value;
+                            //     if (currentItem == null) return;
+                            //     showLRCSetDialog(currentItem, CurrentColor.inst.miniplayerColor);
+                            //   },
+                            //   child: _ActionItem(
+                            //     tooltip: lang.lyrics,
+                            //     onTap: () {
+                            //       final currentItem = Player.inst.currentItem.value;
+                            //       if (currentItem == null) return;
+                            //       settings.save(enableLyrics: !settings.enableLyrics.value);
+                            //       Lyrics.inst.updateLyrics(currentItem);
+                            //     },
+                            //     iconWidget: NamidaMiniPlayerBase.getLrcButton(
+                            //       theme,
+                            //       color: playbackActionsIconColor,
+                            //       iconSize: _ActionItem.iconSize,
+                            //     ),
+                            //   ),
+                            // ),
+                            // const SizedBox(width: 6.0),
+                          ],
                           _ActionItem(
                             icon: Broken.music_playlist,
                             tooltip: lang.addToPlaylist,
@@ -728,20 +791,22 @@ class QueueChipHeaderRow extends StatelessWidget {
                             tooltip: lang.configure,
                             onTap: () => _onConfigureTap(),
                           ),
-                          const SizedBox(width: 6.0),
                           if (isLocal) ...[
+                            const SizedBox(width: 6.0),
                             _ActionItem(
                               icon: Broken.more,
                               tooltip: lang.more,
                               onTap: _onMoreTap,
                             ),
-                            const SizedBox(width: 4.0),
                           ],
-                          NamidaIconButton(
-                            iconColor: context.defaultIconColor().withOpacityExt(0.95),
-                            icon: Broken.arrow_down_2,
-                            onPressed: onArrowDownPressed,
-                          ),
+                          if (onArrowDownPressed != null) ...[
+                            SizedBox(width: isLocal ? 4.0 : 6.0),
+                            NamidaIconButton(
+                              iconColor: context.defaultIconColor().withOpacityExt(0.95),
+                              icon: Broken.arrow_down_2,
+                              onPressed: onArrowDownPressed,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -757,22 +822,27 @@ class QueueChipHeaderRow extends StatelessWidget {
 }
 
 class _ActionItem extends StatelessWidget {
-  final String tooltip;
+  final String? tooltip;
   final VoidCallback? onTap;
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
 
   const _ActionItem({
     required this.tooltip,
     this.onTap,
-    required this.icon,
+    this.icon,
+    this.iconWidget,
   });
+
+  static const iconSize = 20.0;
 
   @override
   Widget build(BuildContext context) {
     return CustomIconButtonTonal(
       onTap: onTap,
       icon: icon,
-      iconSize: 20.0,
+      iconWidget: iconWidget,
+      iconSize: iconSize,
       tooltip: tooltip,
     );
   }

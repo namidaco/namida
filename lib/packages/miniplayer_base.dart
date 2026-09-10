@@ -612,8 +612,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                   ],
                 ),
               ),
-              child: const LocalQueueChipHeaderRow(
+              child: LocalQueueChipHeaderRow(
                 addLeftMargin: true,
+                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
               ),
             ),
             Expanded(
@@ -645,6 +646,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               ),
               child: YTQueueChipHeaderRow(
                 addLeftMargin: true,
+                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
               ),
             ),
             Expanded(
