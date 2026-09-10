@@ -6,6 +6,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/search_result.dart';
+import 'package:youtipie/class/search_filters.dart';
 import 'package:youtipie/class/search_suggestion_info.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
@@ -20,10 +21,12 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -54,6 +57,15 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
   static bool? _loadingFirstResults;
   static bool? _cachedSearchResults;
 
+  static YoutiPieSearchFilters _filters = YoutiPieSearchFilters.defaults;
+  static YoutiPieSearchFilters? _latestSearchedFilters;
+  static bool _dateRangeFromText = false;
+
+  static void setFilters(YoutiPieSearchFilters filters) {
+    _filters = filters;
+    _dateRangeFromText = false;
+  }
+
   final _offlineSearchPageKey = GlobalKey<YTLocalSearchResultsState>();
 
   @override
@@ -61,7 +73,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     super.initState();
     YTLocalSearchController.inst.initialize();
     // -- must be asap and before [fetchSearch], will execute once internal initialization ends
-    YTLocalSearchController.inst.search(currentSearchText ?? '');
+    YTLocalSearchController.inst.search(currentSearchText ?? '', after: _filters.after, before: _filters.before);
     fetchSearch();
     _onTextFieldChanged();
     ScrollSearchController.inst.searchTextEditingController.addListener(_onTextFieldChanged);
@@ -98,17 +110,51 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     }
   }
 
+  void _syncDateRangeFromText(String text) {
+    final parsed = YoutiPieSearchFilters.parseDateOperators(text);
+    if (parsed != null) {
+      _filters = _filters.copyWith(
+        after: parsed.after,
+        before: parsed.before,
+        clearAfter: parsed.after == null,
+        clearBefore: parsed.before == null,
+      );
+      _dateRangeFromText = true;
+    } else if (_dateRangeFromText) {
+      _filters = _filters.copyWith(clearAfter: true, clearBefore: true);
+      _dateRangeFromText = false;
+    }
+  }
+
+  void _onFiltersChanged(YoutiPieSearchFilters newFilters, {bool dateRangeChanged = false}) {
+    if (newFilters == _filters) return;
+    if (dateRangeChanged) {
+      _dateRangeFromText = false;
+      if (widget.searchTextCallback == null) {
+        final textController = ScrollSearchController.inst.searchTextEditingController;
+        final stripped = YoutiPieSearchFilters.stripDateOperators(textController.text);
+        if (stripped != textController.text) textController.text = stripped;
+      }
+    }
+    _filters = newFilters;
+    refreshState();
+    fetchSearch();
+  }
+
   Future<void> fetchSearch({String customText = ''}) async {
     _debouncerTimer?.cancel();
 
     final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? ScrollSearchController.inst.searchTextEditingController.text : customText;
-    if (_latestSearched == newSearch && _searchResult != null) {
-      YTLocalSearchController.inst.search(newSearch); // has its own latest search checks
+    _syncDateRangeFromText(newSearch);
+    final filters = _filters;
+    if (_latestSearched == newSearch && _latestSearchedFilters == filters && _searchResult != null) {
+      YTLocalSearchController.inst.search(newSearch, after: filters.after, before: filters.before); // has its own latest search checks
       return;
     }
     _latestSearched = newSearch;
+    _latestSearchedFilters = filters;
 
-    YTLocalSearchController.inst.search(newSearch);
+    YTLocalSearchController.inst.search(newSearch, after: filters.after, before: filters.before);
     if (_searchResult != null) refreshState(() => _searchResult = null);
     if (newSearch == '') return;
     if (NamidaNavigator.inst.isytLocalSearchInFullPage) return;
@@ -117,12 +163,14 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
     YoutiPieSearchResult? result;
     if (ConnectivityController.inst.hasConnection) {
-      result = await YoutubeInfoController.search.search(newSearch, details: ExecuteDetails.kForceRequest);
+      result = await YoutubeInfoController.search.search(newSearch, filters: filters, details: ExecuteDetails.kForceRequest);
       _cachedSearchResults = false;
     } else {
-      result = await YoutubeInfoController.search.search(newSearch);
+      result = await YoutubeInfoController.search.search(newSearch, filters: filters);
       _cachedSearchResults = result != null;
     }
+
+    if (_latestSearched != newSearch || _latestSearchedFilters != filters) return; // -- a newer search was started
 
     _searchResult = result;
     _loadingFirstResults = false;
@@ -314,6 +362,14 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                           vertical: 4.0,
                           horizontal: 12.0,
                         ),
+                      ),
+                    ),
+
+                    // -- yt (filters)
+                    SliverToBoxAdapter(
+                      child: _YTSearchFiltersRow(
+                        filters: _filters,
+                        onChanged: _onFiltersChanged,
                       ),
                     ),
 
@@ -602,4 +658,294 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
       ),
     );
   }
+}
+
+// by claude
+class _YTSearchFiltersRow extends StatelessWidget {
+  final YoutiPieSearchFilters filters;
+  final void Function(YoutiPieSearchFilters newFilters, {bool dateRangeChanged}) onChanged;
+
+  const _YTSearchFiltersRow({required this.filters, required this.onChanged});
+
+  static String _typeToText(YoutiPieSearchType type) => switch (type) {
+    YoutiPieSearchType.all => lang.all,
+    YoutiPieSearchType.video => lang.videos,
+    YoutiPieSearchType.channel => lang.channels,
+    YoutiPieSearchType.playlist => lang.playlists,
+    YoutiPieSearchType.movie => lang.movies,
+  };
+
+  static IconData _typeToIcon(YoutiPieSearchType type) => switch (type) {
+    YoutiPieSearchType.all => Broken.category,
+    YoutiPieSearchType.video => Broken.video,
+    YoutiPieSearchType.channel => Broken.user,
+    YoutiPieSearchType.playlist => Broken.music_playlist,
+    YoutiPieSearchType.movie => Broken.video_play,
+  };
+
+  static String _sortToText(YoutiPieSearchSort sort) => switch (sort) {
+    YoutiPieSearchSort.relevance => lang.relevance,
+    YoutiPieSearchSort.rating => lang.rating,
+    YoutiPieSearchSort.date => lang.uploadDate,
+    YoutiPieSearchSort.views => lang.views,
+  };
+
+  static IconData _sortToIcon(YoutiPieSearchSort sort) => switch (sort) {
+    YoutiPieSearchSort.relevance => Broken.award,
+    YoutiPieSearchSort.rating => Broken.star,
+    YoutiPieSearchSort.date => Broken.calendar_1,
+    YoutiPieSearchSort.views => Broken.eye,
+  };
+
+  static String _uploadDateToText(YoutiPieSearchUploadDate uploadDate) => switch (uploadDate) {
+    YoutiPieSearchUploadDate.none => lang.all,
+    YoutiPieSearchUploadDate.lastHour => lang.lastHour,
+    YoutiPieSearchUploadDate.today => lang.today,
+    YoutiPieSearchUploadDate.thisWeek => lang.thisWeek,
+    YoutiPieSearchUploadDate.thisMonth => lang.thisMonth,
+    YoutiPieSearchUploadDate.thisYear => lang.thisYear,
+  };
+
+  static String _dateRangeToText(YoutiPieSearchFilters filters) {
+    final after = filters.after;
+    final before = filters.before;
+    if (after != null && before != null) return '$after - $before';
+    if (after != null) return '${lang.isAfter} $after';
+    return '${lang.isBefore} $before';
+  }
+
+  Future<void> _pickDate({required bool isAfter}) async {
+    final initial = isAfter ? filters.after : filters.before;
+    final date = await showYTSearchDateDialog(
+      title: isAfter ? lang.isAfter : lang.isBefore,
+      initial: initial,
+    );
+    if (date == null) return;
+    onChanged(
+      isAfter ? filters.copyWith(after: date, uploadDate: YoutiPieSearchUploadDate.none) : filters.copyWith(before: date, uploadDate: YoutiPieSearchUploadDate.none),
+      dateRangeChanged: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filters = this.filters;
+    final hasDateRange = filters.hasDateRange;
+    final isDateActive = hasDateRange || filters.uploadDate != YoutiPieSearchUploadDate.none;
+    return SizedBox(
+      height: 40.0,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        children: [
+          _YTSearchFilterChip(
+            icon: _typeToIcon(filters.type),
+            title: filters.type == YoutiPieSearchType.all ? lang.type : _typeToText(filters.type),
+            isActive: filters.type != YoutiPieSearchType.all,
+            onClear: () => onChanged(filters.copyWith(type: YoutiPieSearchType.all)),
+            items: () => YoutiPieSearchType.values.map(
+              (e) => NamidaPopupItem(
+                icon: _typeToIcon(e),
+                title: _typeToText(e),
+                selected: e == filters.type,
+                onTap: () => onChanged(filters.copyWith(type: e)),
+              ),
+            ),
+          ),
+          _YTSearchFilterChip(
+            icon: _sortToIcon(filters.sort),
+            title: filters.sort == YoutiPieSearchSort.relevance ? lang.sortBy : _sortToText(filters.sort),
+            isActive: filters.sort != YoutiPieSearchSort.relevance,
+            onClear: () => onChanged(filters.copyWith(sort: YoutiPieSearchSort.relevance)),
+            items: () => YoutiPieSearchSort.values.map(
+              (e) => NamidaPopupItem(
+                icon: _sortToIcon(e),
+                title: _sortToText(e),
+                selected: e == filters.sort,
+                onTap: () => onChanged(filters.copyWith(sort: e)),
+              ),
+            ),
+          ),
+          _YTSearchFilterChip(
+            icon: Broken.calendar,
+            title: hasDateRange
+                ? _dateRangeToText(filters)
+                : filters.uploadDate == YoutiPieSearchUploadDate.none
+                ? lang.date
+                : _uploadDateToText(filters.uploadDate),
+            isActive: isDateActive,
+            onClear: () => onChanged(
+              filters.copyWith(uploadDate: YoutiPieSearchUploadDate.none, clearAfter: true, clearBefore: true),
+              dateRangeChanged: hasDateRange,
+            ),
+            items: () => [
+              ...YoutiPieSearchUploadDate.values.map(
+                (e) => NamidaPopupItem(
+                  icon: e == YoutiPieSearchUploadDate.none ? Broken.calendar : Broken.clock,
+                  title: _uploadDateToText(e),
+                  selected: !hasDateRange && e == filters.uploadDate,
+                  onTap: () => onChanged(
+                    filters.copyWith(uploadDate: e, clearAfter: true, clearBefore: true),
+                    dateRangeChanged: hasDateRange,
+                  ),
+                ),
+              ),
+              NamidaPopupItem(
+                icon: Broken.calendar_search,
+                title: '${lang.isAfter}...',
+                subtitle: filters.after?.toString() ?? '',
+                selected: filters.after != null,
+                onTap: () => _pickDate(isAfter: true),
+              ),
+              NamidaPopupItem(
+                icon: Broken.calendar_search,
+                title: '${lang.isBefore}...',
+                subtitle: filters.before?.toString() ?? '',
+                selected: filters.before != null,
+                onTap: () => _pickDate(isAfter: false),
+              ),
+            ],
+          ),
+          if (!filters.isDefault)
+            _YTSearchFilterChip(
+              icon: Broken.close_circle,
+              title: lang.clear,
+              isActive: false,
+              onTap: () => onChanged(YoutiPieSearchFilters.defaults, dateRangeChanged: hasDateRange),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _YTSearchFilterChip extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isActive;
+  final VoidCallback? onClear;
+  final VoidCallback? onTap;
+  final Iterable<NamidaPopupItem> Function()? items;
+
+  const _YTSearchFilterChip({
+    required this.icon,
+    required this.title,
+    required this.isActive,
+    this.onClear,
+    this.onTap,
+    this.items,
+  });
+
+  void _showMenu(BuildContext context) {
+    final items = this.items;
+    if (items == null) return;
+    NamidaPopupWrapper(childrenDefault: items).showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final color = isActive ? Colors.white.withOpacityExt(0.8) : null;
+    return NamidaInkWell(
+      bgColor: isActive ? CurrentColor.inst.color : theme.cardColor,
+      borderRadius: 8.0,
+      margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 6.0),
+      padding: const EdgeInsets.only(left: 10.0, right: 6.0),
+      animationDurationMS: 200,
+      onTap: onTap ?? () => _showMenu(context),
+      onLongPress: isActive ? onClear : null,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16.0, color: color),
+          const SizedBox(width: 6.0),
+          Text(
+            title,
+            style: context.textTheme.displaySmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+          ),
+          if (isActive && onClear != null)
+            NamidaIconButton(
+              horizontalPadding: 4.0,
+              verticalPadding: 4.0,
+              icon: Broken.close_circle,
+              iconSize: 16.0,
+              iconColor: color,
+              onPressed: onClear,
+            )
+          else
+            const SizedBox(width: 4.0),
+        ],
+      ),
+    );
+  }
+}
+
+Future<YoutiPieSearchDate?> showYTSearchDateDialog({required String title, YoutiPieSearchDate? initial}) async {
+  final controller = TextEditingController(text: initial?.toString() ?? '');
+  final formKey = GlobalKey<FormState>();
+  YoutiPieSearchDate? result;
+
+  void submit() {
+    final parsed = YoutiPieSearchDate.parse(controller.text);
+    if (parsed == null) {
+      formKey.currentState?.validate();
+      return;
+    }
+    result = parsed;
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: controller.dispose,
+    dialog: CustomBlurryDialog(
+      title: title,
+      icon: Broken.calendar_search,
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.confirm,
+          onTap: submit,
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12.0),
+        child: Form(
+          key: formKey,
+          child: Row(
+            children: [
+              Expanded(
+                child: CustomTagTextField(
+                  controller: controller,
+                  hintText: 'YYYY-MM-DD',
+                  labelText: title,
+                  keyboardType: TextInputType.datetime,
+                  validator: (value) => YoutiPieSearchDate.parse(value ?? '') == null ? 'YYYY | YYYY-MM | YYYY-MM-DD' : null,
+                  onFieldSubmitted: (_) => submit(),
+                ),
+              ),
+              const SizedBox(width: 8.0),
+              NamidaIconButton(
+                icon: Broken.calendar,
+                onPressed: () {
+                  showCalendarDialog(
+                    title: title,
+                    buttonText: lang.confirm,
+                    useHistoryDates: false,
+                    calendarType: NamidaCalendarDatePickerType.single,
+                    initialDate: initial?.toDateTime(),
+                    onGenerate: (dates) {
+                      if (dates.isNotEmpty) controller.text = YoutiPieSearchDate.fromDateTime(dates.first).toString();
+                      NamidaNavigator.inst.closeDialog();
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+  return result;
 }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:youtipie/class/search_filters.dart';
+
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -42,6 +44,26 @@ class ScrollSearchController {
   final tabViewKey = GlobalKey<NamidaTabViewState>();
 
   late final searchBarWidget = NamidaSearchBar(searchBarKey: searchBarKey);
+
+  void openYoutubeSearch(String text, {YoutiPieSearchFilters? filters}) {
+    MiniPlayerController.inst.snapToMini();
+    MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false); // -- useless really
+    // -- all these steps are important..
+    if (filters != null) YoutubeSearchResultsPageState.setFilters(filters);
+    currentSearchType.value = SearchType.youtube;
+    searchTextEditingController.text = text;
+    latestSubmittedYTSearch.value = text;
+    SearchSortController.inst.lastSearchText = text;
+    showSearchMenu();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        // post frame, since preferred tab can be localTracks so let the widget does what it wants and then jump
+        tabViewKey.currentState?.jumpToTab(SearchType.youtube.index);
+      },
+    );
+    searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+    ytSearchKey.currentState?.fetchSearch(customText: text);
+  }
 
   void toggleSearch({bool forceOpen = false, bool instant = false}) async {
     MiniPlayerController.inst.snapToMini();

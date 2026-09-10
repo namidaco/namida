@@ -29,7 +29,6 @@ import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -914,23 +913,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
           },
         );
         if (text != null && text.isNotEmpty) {
-          MiniPlayerController.inst.snapToMini();
-          MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false); // -- useless really
-          // -- all these steps are important..
-          final searchController = ScrollSearchController.inst;
-          searchController.currentSearchType.value = SearchType.youtube;
-          searchController.searchTextEditingController.text = text;
-          searchController.latestSubmittedYTSearch.value = text;
-          SearchSortController.inst.lastSearchText = text;
-          searchController.showSearchMenu();
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) {
-              // post frame, since preferred tab can be localTracks so let the widget does what it wants and then jump
-              searchController.tabViewKey.currentState?.jumpToTab(SearchType.youtube.index);
-            },
-          );
-          searchController.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
-          searchController.ytSearchKey.currentState?.fetchSearch(customText: text);
+          ScrollSearchController.inst.openYoutubeSearch(text);
         }
       case TrackExecuteActions.delete:
         item.execute(

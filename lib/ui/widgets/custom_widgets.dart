@@ -5257,6 +5257,7 @@ class NamidaTabView extends StatefulWidget {
   final bool isScrollable;
   final bool compact;
   final bool reportIndexChangedOnInit;
+  final Widget? trailing;
 
   const NamidaTabView({
     super.key,
@@ -5268,6 +5269,7 @@ class NamidaTabView extends StatefulWidget {
     this.isScrollable = false,
     this.compact = false,
     this.reportIndexChangedOnInit = true,
+    this.trailing,
   });
 
   @override
@@ -5317,33 +5319,45 @@ class NamidaTabViewState extends State<NamidaTabView> with SingleTickerProviderS
   @override
   Widget build(BuildContext context) {
     final itemsPadding = widget.compact ? const EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0) : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 10.0);
+    final trailing = widget.trailing;
+    Widget tabBar = TabBar(
+      indicatorWeight: widget.compact ? 1.0 : 3.0,
+      controller: controller,
+      isScrollable: widget.isScrollable,
+      tabs:
+          widget.tabs
+              ?.map(
+                (e) => Padding(
+                  padding: itemsPadding,
+                  child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList() ??
+          widget.tabWidgets ??
+          widget.children
+              .map(
+                (e) => Padding(
+                  padding: itemsPadding,
+                  child: Text(e.toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
+              )
+              .toList(),
+      splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
+      indicatorSize: TabBarIndicatorSize.label,
+    );
+    if (trailing != null) {
+      tabBar = Row(
+        children: [
+          Expanded(
+            child: tabBar,
+          ),
+          trailing,
+        ],
+      );
+    }
     return Column(
       children: [
-        TabBar(
-          indicatorWeight: widget.compact ? 1.0 : 3.0,
-          controller: controller,
-          isScrollable: widget.isScrollable,
-          tabs:
-              widget.tabs
-                  ?.map(
-                    (e) => Padding(
-                      padding: itemsPadding,
-                      child: Text(e, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                  )
-                  .toList() ??
-              widget.tabWidgets ??
-              widget.children
-                  .map(
-                    (e) => Padding(
-                      padding: itemsPadding,
-                      child: Text(e.toString(), maxLines: 1, overflow: TextOverflow.ellipsis),
-                    ),
-                  )
-                  .toList(),
-          splashBorderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          indicatorSize: TabBarIndicatorSize.label,
-        ),
+        tabBar,
         Expanded(
           child: TabBarView(
             physics: isDesktop ? const NeverScrollableScrollPhysics() : null,

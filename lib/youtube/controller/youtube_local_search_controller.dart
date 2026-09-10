@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/publish_time.dart';
+import 'package:youtipie/class/search_filters.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/videos/missing_video_info.dart';
@@ -38,6 +39,8 @@ class YTLocalSearchController with PortsProvider<Map> {
   ScrollController? scrollController;
 
   String _latestSearch = '';
+  YoutiPieSearchDate? _latestAfter;
+  YoutiPieSearchDate? _latestBefore;
 
   YTLocalSearchSortType _sortType = YTLocalSearchSortType.mostPlayed;
   YTLocalSearchSortType get sortType => _sortType;
@@ -66,13 +69,22 @@ class YTLocalSearchController with PortsProvider<Map> {
   /// empty means no search request or empty search results.
   final searchResults = Rxn<List<StreamInfoItem>>(const []);
 
-  void search(String text) async {
-    if (text == _latestSearch) {
+  void search(String text, {YoutiPieSearchDate? after, YoutiPieSearchDate? before}) async {
+    final parsedDates = YoutiPieSearchFilters.parseDateOperators(text);
+    if (parsedDates != null) {
+      text = YoutiPieSearchFilters.stripDateOperators(text);
+      after ??= parsedDates.after;
+      before ??= parsedDates.before;
+    }
+
+    if (text == _latestSearch && after == _latestAfter && before == _latestBefore) {
       if (searchResults.value == null) searchResults.value = const [];
       return;
     }
 
     _latestSearch = text;
+    _latestAfter = after;
+    _latestBefore = before;
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
     if (text == '') {
       if (searchResults.value == null) searchResults.value = const [];
@@ -82,7 +94,12 @@ class YTLocalSearchController with PortsProvider<Map> {
     if (isInitialized) searchResults.value = null; // display as loading only if initialized
 
     final possibleID = text.length == 11 ? text : null;
-    final p = {'text': text, 'possibleID': possibleID};
+    final p = {
+      'text': text,
+      'possibleID': possibleID,
+      'afterMs': ?after?.toDateTimeUtc().millisecondsSinceEpoch,
+      'beforeMs': ?before?.toDateTimeUtc().millisecondsSinceEpoch,
+    };
     await sendPort(p);
   }
 

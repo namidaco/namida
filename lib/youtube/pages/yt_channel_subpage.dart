@@ -16,6 +16,7 @@ import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/items_sort.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
+import 'package:youtipie/class/search_filters.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_short.dart';
 import 'package:youtipie/class/thumbnail.dart';
@@ -30,6 +31,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -38,6 +40,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -48,6 +51,7 @@ import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
+import 'package:namida/youtube/pages/yt_search_results_page.dart';
 import 'package:namida/youtube/widgets/yt_channel_card.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_playlist_card.dart';
@@ -443,6 +447,53 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
       mainChannelInfo: _channelInfoSubButton,
     );
 
+    Future<void> searchUploadsByDate({required bool isAfter}) async {
+      final date = await showYTSearchDateDialog(title: isAfter ? lang.isAfter : lang.isBefore);
+      if (date == null) return;
+      ScrollSearchController.inst.openYoutubeSearch(
+        '"${channelInfo?.title ?? ch.title}"',
+        filters: YoutiPieSearchFilters(
+          type: YoutiPieSearchType.video,
+          sort: YoutiPieSearchSort.date,
+          after: isAfter ? date : null,
+          before: isAfter ? null : date,
+        ),
+      );
+    }
+
+    final searchByDateWidget = Builder(
+      builder: (context) {
+        // context needed here
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: NamidaIconButton(
+            icon: Broken.calendar_search,
+            iconSize: 22.0,
+            horizontalPadding: 8.0,
+            tooltip: () => lang.generateFromDates,
+            iconColor: context.defaultIconColor(),
+            onPressed: () {
+              final menu = NamidaPopupWrapper(
+                childrenDefault: () => [
+                  NamidaPopupItem(
+                    icon: Broken.calendar_search,
+                    title: '${lang.isAfter}...',
+                    onTap: () => searchUploadsByDate(isAfter: true),
+                  ),
+                  NamidaPopupItem(
+                    icon: Broken.calendar_search,
+                    title: '${lang.isBefore}...',
+                    onTap: () => searchUploadsByDate(isAfter: false),
+                  ),
+                ],
+              );
+              menu.showPopupMenu(context);
+            },
+          ),
+        );
+      },
+    );
+
     late final header = AnimatedBuilder(
       animation: _scrollAnimation,
       builder: (context, _) {
@@ -499,6 +550,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
                   reportIndexChangedOnInit: false,
                   isScrollable: true,
                   compact: true,
+                  trailing: searchByDateWidget,
                   tabs: [
                     if (channelInfo != null) ...channelInfo.tabs.map((e) => e.title) else lang.videos,
                     lang.about,

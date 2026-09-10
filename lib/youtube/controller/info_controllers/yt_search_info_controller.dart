@@ -13,10 +13,12 @@ class _SearchInfoController {
 
   Future<YoutiPieSearchResult?> search(
     String query, {
+    YoutiPieSearchFilters filters = YoutiPieSearchFilters.defaults,
     ExecuteDetails? details,
     bool peopleAlsoWatched = true,
   }) => YoutiPie.search.search(
     query,
+    filters: filters,
     details: details,
     peopleAlsoWatched: peopleAlsoWatched,
   );
