@@ -28,7 +28,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -751,7 +750,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     final isFullScreen = widget.isFullScreen;
 
-    final maxWidth = _maxWidth = isFullScreen ? context.width : context.width.withMaximum(Dimensions.inst.miniplayerMaxWidth);
+    // -- no clamp with miniplayerMaxWidth, we use custom ui scale
+    final maxWidth = _maxWidth = context.width;
     final maxHeight = _maxHeight = context.height;
 
     final inLandscape = NamidaNavigator.inst.isInLanscape;
@@ -1170,7 +1170,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         if (tracks.isEmpty) {
           return [
             _getQualityChip(
-              title: lang.emptyValue,
+              title: lang.none,
               icon: Broken.subtitle,
               onPlay: (_) {},
               selected: false,
@@ -1848,31 +1848,36 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               right: 0,
               bottom: 0,
               child: IgnorePointer(
-                child: ObxO(
-                  rx: settings.enableSubtitles,
-                  builder: (context, enableSubtitles) => !enableSubtitles
-                      ? const SizedBox()
-                      : AnimatedPadding(
-                          duration: transitionDuration,
-                          curve: Curves.easeOutQuart,
-                          padding: EdgeInsets.only(bottom: bottomPadding + (_isVisible ? subtitlesControlsOffset : 12.0)),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                            child: SubtitleOverlay(
-                              style: textTheme.displayMedium?.copyWith(
-                                fontSize: subtitlesFontSize,
-                                fontWeight: FontWeight.w600,
-                                color: const ui.Color.fromARGB(255, 222, 222, 222),
-                                shadows: const <Shadow>[
-                                  Shadow(offset: Offset(-1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                  Shadow(offset: Offset(1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                  Shadow(offset: Offset(1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                  Shadow(offset: Offset(-1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                ],
+                child: AnimatedOpacity(
+                  duration: transitionDuration,
+                  opacity: _canShowControls ? 1.0 : 0.0,
+                  child: ObxO(
+                    rx: settings.enableSubtitles,
+                    builder: (context, enableSubtitles) => !enableSubtitles
+                        ? const SizedBox()
+                        : AnimatedPadding(
+                            key: const ValueKey('subtitles'),
+                            duration: transitionDuration,
+                            curve: Curves.easeOutQuart,
+                            padding: EdgeInsets.only(bottom: bottomPadding + (_isVisible ? subtitlesControlsOffset : 12.0)),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              child: SubtitleOverlay(
+                                style: textTheme.displayMedium?.copyWith(
+                                  fontSize: subtitlesFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: const ui.Color.fromARGB(255, 222, 222, 222),
+                                  shadows: const <Shadow>[
+                                    Shadow(offset: Offset(-1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                    Shadow(offset: Offset(1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                    Shadow(offset: Offset(1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                    Shadow(offset: Offset(-1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                  ),
                 ),
               ),
             ),
@@ -1986,10 +1991,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                     return Row(
                                       children: [
                                         ...topRowLeading,
-                                        speedChip,
-                                        audioTracksChip,
-                                        audioLanguageChip,
                                         if (canHaveSubtitles) subtitleChip,
+                                        audioLanguageChip,
+                                        audioTracksChip,
+                                        speedChip,
                                         qualityChip,
                                         ?configChip,
                                       ],
@@ -2557,12 +2562,12 @@ class _ListenerEnabled extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled) return child;
+    // -- keep Listener always in tree, otherwise animations are lost when toggling enabled
     return Listener(
-      onPointerDown: onPointerDown,
-      onPointerUp: onPointerUp,
-      onPointerCancel: onPointerCancel,
-      behavior: behavior,
+      onPointerDown: enabled ? onPointerDown : null,
+      onPointerUp: enabled ? onPointerUp : null,
+      onPointerCancel: enabled ? onPointerCancel : null,
+      behavior: enabled ? behavior : HitTestBehavior.deferToChild,
       child: child,
     );
   }

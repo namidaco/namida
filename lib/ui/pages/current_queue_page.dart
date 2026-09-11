@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/queue_item_keys.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -86,7 +85,7 @@ class _QueueListBase extends StatefulWidget {
   final bool addPageBottomPadding;
   final Widget? header;
   final Widget Function(Widget scrollQueueWidget)? utilsRowBuilder;
-  final Widget Function(BuildContext context, int index, List<Playable> queue, QueueItemKeys keys) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue) itemBuilder;
 
   const _QueueListBase({
     required this.itemExtent,
@@ -153,7 +152,6 @@ class _QueueListBaseState extends State<_QueueListBase> {
       builder: (context, queue) {
         final queueLength = queue.length;
         if (queueLength == 0) return const _EmptyQueue();
-        final keys = QueueItemKeys(queue);
         final header = widget.header;
         final utilsRowBuilder = widget.utilsRowBuilder;
         Widget listChild = NamidaScrollbar(
@@ -169,7 +167,7 @@ class _QueueListBaseState extends State<_QueueListBase> {
                 onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
                 onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
                 onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                itemBuilder: (context, i) => widget.itemBuilder(context, i, queue, keys),
+                itemBuilder: (context, i) => widget.itemBuilder(context, i, queue),
               ),
               if (widget.addPageBottomPadding) kBottomPaddingWidgetSliver else const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
             ],
@@ -215,11 +213,12 @@ class _QueueListBaseState extends State<_QueueListBase> {
 
 Widget _dismissibleWrapper({
   required int index,
-  required QueueItemKeys keys,
+  required Key childKey,
+  required int queueLength,
   required Widget child,
 }) {
   return FadeDismissible(
-    key: keys.keyOf(index),
+    key: Key("Diss_${index}_${childKey}_$queueLength"), // queue length only for when removing current item and next is the same.
     onDismissed: (direction) async {
       await Player.inst.removeFromQueueWithUndo(index);
       Player.inst.invokeQueueModifyLockRelease();
@@ -261,21 +260,25 @@ class _LocalQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue, keys) {
+        itemBuilder: (context, i, queue) {
           final track = queue[i] as Selectable;
+          final key = Key("${i}_${track.track.path}");
           return _dismissibleWrapper(
             index: i,
-            keys: keys,
+            childKey: key,
+            queueLength: queue.length,
             child: ObxOSelect(
               rx: Player.inst.currentIndex,
               selector: (currentIndex) => i < currentIndex,
               builder: (context, isPlayed) => TrackTile(
                 properties: properties,
+                key: key,
                 index: i,
                 trackOrTwd: track,
                 tracks: queue,
                 fadeOpacity: isPlayed ? 0.3 : 0.0,
                 onPlaying: () {
+                  // -- to improve performance, skipping process of checking new queues, etc..
                   if (i == Player.inst.currentIndex.value) {
                     Player.inst.togglePlayPause();
                   } else {
@@ -325,15 +328,19 @@ class _YoutubeQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue, keys) {
+        itemBuilder: (context, i, queue) {
+          final video = queue[i] as YoutubeID;
+          final key = Key("${i}_${video.id}");
           return _dismissibleWrapper(
             index: i,
-            keys: keys,
+            childKey: key,
+            queueLength: queue.length,
             child: ObxOSelect(
               rx: Player.inst.currentIndex,
               selector: (currentIndex) => i < currentIndex,
               builder: (context, isPlayed) => YTHistoryVideoCard(
                 properties: properties,
+                key: key,
                 videos: queue,
                 index: i,
                 day: null,

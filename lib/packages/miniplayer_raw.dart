@@ -7,6 +7,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ui_scale.dart';
 
 typedef MiniplayerBuilderCallback =
     Widget Function(
@@ -105,23 +106,26 @@ class MiniplayerRaw extends StatelessWidget {
         );
       },
     );
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: MiniPlayerController.inst.onPointerDown,
-      onPointerMove: MiniPlayerController.inst.onPointerMove,
-      onPointerUp: MiniPlayerController.inst.onPointerUp,
-      child: enableHorizontalGestures
-          ? GestureDetector(
-              behavior: HitTestBehavior.deferToChild,
-              onTap: MiniPlayerController.inst.gestureDetectorOnTap,
-              onVerticalDragUpdate: MiniPlayerController.inst.gestureDetectorOnVerticalDragUpdate,
-              onVerticalDragEnd: (_) => MiniPlayerController.inst.verticalSnapping(),
-              onHorizontalDragStart: MiniPlayerController.inst.gestureDetectorOnHorizontalDragStart,
-              onHorizontalDragUpdate: MiniPlayerController.inst.gestureDetectorOnHorizontalDragUpdate,
-              onHorizontalDragEnd: MiniPlayerController.inst.gestureDetectorOnHorizontalDragEnd,
-              child: child,
-            )
-          : child,
+    return NamidaUiScaleBox(
+      scale: MiniPlayerController.inst.panelScale,
+      child: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: MiniPlayerController.inst.onPointerDown,
+        onPointerMove: MiniPlayerController.inst.onPointerMove,
+        onPointerUp: MiniPlayerController.inst.onPointerUp,
+        child: enableHorizontalGestures
+            ? GestureDetector(
+                behavior: HitTestBehavior.deferToChild,
+                onTap: MiniPlayerController.inst.gestureDetectorOnTap,
+                onVerticalDragUpdate: MiniPlayerController.inst.gestureDetectorOnVerticalDragUpdate,
+                onVerticalDragEnd: (_) => MiniPlayerController.inst.verticalSnapping(),
+                onHorizontalDragStart: MiniPlayerController.inst.gestureDetectorOnHorizontalDragStart,
+                onHorizontalDragUpdate: MiniPlayerController.inst.gestureDetectorOnHorizontalDragUpdate,
+                onHorizontalDragEnd: MiniPlayerController.inst.gestureDetectorOnHorizontalDragEnd,
+                child: child,
+              )
+            : child,
+      ),
     );
   }
 }

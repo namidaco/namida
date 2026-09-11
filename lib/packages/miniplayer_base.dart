@@ -9,6 +9,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' hide Selectable;
 
 import 'package:playlist_manager/class/favourite_playlist.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -16,6 +17,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart' show StreamFilterVideoUtils, CodecInfoUtils;
 
+import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -43,7 +45,9 @@ import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
+import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
@@ -53,6 +57,7 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/simple_lyrics_line.dart';
 import 'package:namida/ui/widgets/waveform.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -61,7 +66,7 @@ import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 class FocusedMenuOptions {
   final void Function(Playable currentItem) onPressed;
   final Widget Function(Playable currentItem, double size, Color color) videoIconBuilder;
-  final Widget Function(Playable currentItem, double Function(double value) fontSizeMultiplier, double Function(double value) sizeMultiplier) builder;
+  final Widget Function(Playable currentItem) builder;
   final RxList<NamidaVideo> localVideos;
   final String? Function(Playable item) currentId;
   final Rxn<VideoStreamsResult> streams;
@@ -90,7 +95,19 @@ class FocusedMenuOptions {
   });
 }
 
-typedef MiniplayerImageSize = ({double? maxHeight, double maxWidth});
+abstract class MiniplayerThumbnailScale {
+  static const _base = 1.13;
+  static const _baseInversed = 1.22;
+
+  static double resolve({required double additional, required bool isInversed, required double userScaleMultiplier}) {
+    return (isInversed ? _baseInversed - additional : _base + additional) * userScaleMultiplier;
+  }
+
+  /// the constant part of [resolve], for layouts that need to reserve room for it.
+  static double resolveBase({required bool isInversed, required double userScaleMultiplier}) {
+    return (isInversed ? _baseInversed : _base) * userScaleMultiplier;
+  }
+}
 
 class MiniplayerInfoData<E, S> {
   final String firstLine;
@@ -129,8 +146,7 @@ class MiniplayerInfoData<E, S> {
 class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final (Widget, Key) Function(BuildContext context, int index, int currentIndex, List<Playable> queue, TrackTileProperties? properties, VideoTileProperties? videoTileProperties)
-  itemBuilder;
+  final (Widget, Key) Function(BuildContext context, int index, List<Playable> queue, TrackTileProperties? properties, VideoTileProperties? videoTileProperties) itemBuilder;
   final int Function(Playable currentItem)? getDurationMS;
   final String Function(int number, Playable item) itemsKeyword;
   final void Function(Playable currentItem) onAddItemsTap;
@@ -138,8 +154,8 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem) onTopTextTap;
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
-  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier) imageBuilder;
-  final Widget Function(Playable item, double Function(double borderRadius) brMultiplier, ValueListenable<MiniplayerImageSize> size) currentImageBuilder;
+  final Widget Function(Playable item) imageBuilder;
+  final Widget Function(Playable item, ValueListenable<double> maxWidth) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
@@ -236,7 +252,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     );
   }
 
-  static Widget getLrcButton(ThemeData theme, {Color? color}) {
+  static Widget getLrcButton(ThemeData theme, {required double iconSize, Color? color}) {
     color ??= theme.colorScheme.onSecondaryContainer;
     return Obx(
       (context) => settings.enableLyrics.valueR
@@ -245,19 +261,19 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
                     margin: 0.0,
                     baseIcon: Broken.document,
                     secondaryText: !Lyrics.inst.lyricsCanBeAvailable.valueR ? 'x' : '?',
-                    iconSize: _CustomIconButton.defaultIconSize.size,
+                    iconSize: iconSize,
                     blurRadius: 6.0,
                     baseIconColor: color,
                     secondaryIconColor: color,
                   )
                 : Icon(
                     Broken.document,
-                    size: 20.0.size,
+                    size: iconSize,
                     color: color,
                   )
           : Icon(
               Broken.card_slash,
-              size: 20.0.size,
+              size: iconSize,
               color: color,
             ),
     );
@@ -268,22 +284,29 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   final isMenuOpened = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
 
-  double? _imageHeightMultiplier;
-  double? _imageHeightActual;
-
-  final _currentImageSize = ValueNotifier<MiniplayerImageSize>((maxHeight: null, maxWidth: 0.0));
+  final _currentImageMaxWidth = ValueNotifier<double>(0.0);
 
   /// used to skip implicit decoration animations while the miniplayer itself is animating.
   double _lastAnimationP = 0.0;
 
   Playable<Object> get _getcurrentItem => Player.inst.currentQueue.value[Player.inst.currentIndex.value];
 
+  /// what the last build used, the cache listener only rebuilds when it changes.
+  double? _lastArtworkAspectRatio;
+
+  void _artworkAspectRatiosListener() {
+    final item = Player.inst.currentItem.value;
+    if (item == null) return;
+    final ratio = ArtworkWidget.aspectRatioOf(playableArtworkCacheKey(item));
+    if (ratio == null || ratio == _lastArtworkAspectRatio) return;
+    refreshState();
+  }
+
   @override
   void initState() {
     super.initState();
-    _videoInfoListener();
-    Player.inst.videoPlayerInfo.addListener(_videoInfoListener);
     MiniPlayerController.inst.screenValuesVersion.addListener(_screenValuesListener);
+    ArtworkWidget.aspectRatiosVersion.addListener(_artworkAspectRatiosListener);
 
     // -- fix screen touch absorb when minimized, usually happens when switching from yt style to this
     MiniPlayerController.inst.verticalSnapping();
@@ -292,9 +315,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   @override
   void dispose() {
     isMenuOpened.close();
-    _currentImageSize.dispose();
-    Player.inst.videoPlayerInfo.removeListener(_videoInfoListener);
+    _currentImageMaxWidth.dispose();
     MiniPlayerController.inst.screenValuesVersion.removeListener(_screenValuesListener);
+    ArtworkWidget.aspectRatiosVersion.removeListener(_artworkAspectRatiosListener);
     super.dispose();
   }
 
@@ -302,27 +325,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     refreshState();
   }
 
-  void _videoInfoListener() {
-    final info = Player.inst.videoPlayerInfo.value;
-    final newImageHeightMultiplier = info?.aspectRatio;
-    if (newImageHeightMultiplier != _imageHeightMultiplier) {
-      final heightActual = info?.height.toDouble() ?? 0;
-      refreshState(() {
-        _imageHeightMultiplier = newImageHeightMultiplier;
-        _imageHeightActual = heightActual <= 0 ? null : heightActual;
-      });
-    }
-  }
-
   Widget _queueItemBuilder(
     BuildContext context,
     int i,
-    int currentIndex,
     List<Playable> queue, {
     TrackTileProperties? trackTileProperties,
     VideoTileProperties? videoTileProperties,
   }) {
-    final childWK = widget.itemBuilder(context, i, currentIndex, queue, trackTileProperties, videoTileProperties);
+    final childWK = widget.itemBuilder(context, i, queue, trackTileProperties, videoTileProperties);
     return FadeDismissible(
       key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
       onDismissed: (direction) async {
@@ -379,11 +389,26 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     (cp) => 1 - cp,
   );
 
-  final queueOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
-    (_, qcp) => qcp,
-  );
   final queueInverseOpacityAnimation = NamidaMiniPlayerBase._createOpacityAnimationV3(
     (_, qcp) => 1.0 - qcp,
+  );
+
+  late final simpleLyricsOpacityAnimation = _AnimationProduct(fastOpacityAnimation, centerItemFadeAnimation);
+
+  final playPauseBoxScaleAnimation = MiniPlayerController.inst.animation.drive(
+    Animatable.fromCallback(
+      (p) => _PlayPauseMetrics.boxSize(_PlayPauseMetrics.iconSize(p)) / _PlayPauseMetrics.maxBoxSize,
+    ),
+  );
+
+  final playPauseIconScaleAnimation = MiniPlayerController.inst.animation.drive(
+    Animatable.fromCallback(
+      (p) {
+        final iconSize = _PlayPauseMetrics.iconSize(p);
+        final boxScale = _PlayPauseMetrics.boxSize(iconSize) / _PlayPauseMetrics.maxBoxSize;
+        return iconSize / (_PlayPauseMetrics.maxIconSize * boxScale);
+      },
+    ),
   );
 
   @override
@@ -406,7 +431,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       useReducedProgressColor: true,
     );
 
-    final topBottomMargin = 8.0.spaceY;
+    final topBottomMargin = 8.0;
 
     final topRightButton = _TopActionButton(
       icon: Broken.more,
@@ -418,6 +443,16 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final topLeftButton = _TopActionButton(
       icon: Broken.arrow_down_2,
       onTapUp: (_) => MiniPlayerController.inst.snapToMini(),
+      iconColor: onSecondary,
+      bgColor: null,
+    );
+
+    late final topWideScreenButton = _TopActionButton(
+      icon: Broken.maximize_3,
+      onTapUp: (_) => NamidaNavigator.inst.navigateToRoot(
+        const WideScreenPlayerPage(),
+        transition: Transition.fade,
+      ),
       iconColor: onSecondary,
       bgColor: null,
     );
@@ -475,7 +510,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               }
               return Text(
                 finalText,
-                style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+                style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
               );
             },
           ),
@@ -487,14 +522,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       ),
     );
 
-    final positionTextChild = _SeekBackwardsDetectorWidget(
+    final positionTextChild = SeekBackwardsDetectorWidget(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
+        padding: EdgeInsets.symmetric(horizontal: 12.0),
         child: ObxO(
           rx: Player.inst.nowPlayingPosition,
           builder: (context, nowPlayingPosition) => Text(
             nowPlayingPosition.milliSecondsLabel,
-            style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+            style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
           ),
         ),
       ),
@@ -503,16 +538,16 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final positionDurationSeekerBoxesRowChild = Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _SeekBackwardsDetectorWidget(
+        SeekBackwardsDetectorWidget(
           child: SizedBox(
-            width: 54.0.spaceX,
-            height: 48.0.spaceY,
+            width: 54.0,
+            height: 48.0,
           ),
         ),
-        _SeekForwardDetectorWidget(
+        SeekForwardDetectorWidget(
           child: SizedBox(
-            width: 54.0.spaceX,
-            height: 48.0.spaceY,
+            width: 54.0,
+            height: 48.0,
           ),
         ),
       ],
@@ -523,7 +558,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       mainAxisSize: MainAxisSize.max,
       children: [
         if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher == true)
-          _CustomIconButton(
+          MPCustomIconButton(
             tooltipCallback: () => lang.youtubeStyleMiniplayer,
             onPressed: () {
               MiniPlayerController.inst.snapToMini(haptic: false);
@@ -542,21 +577,21 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             sizeRaw: 19.0,
             icon: Icon(
               Broken.video_octagon,
-              size: 19.0.size,
+              size: 19.0,
               color: theme.colorScheme.onSecondaryContainer,
             ),
           ),
         RepeatModeIconButton(
-          iconSize: _CustomIconButton.defaultIconSize.size,
-          builder: (child, tooltipCallback, onTap) => _CustomIconButton(
+          iconSize: MPCustomIconButton.defaultIconSize,
+          builder: (child, tooltipCallback, onTap) => MPCustomIconButton(
             icon: child,
             tooltipCallback: tooltipCallback,
             onPressed: onTap,
           ),
         ),
         SoundControlButton(
-          iconSize: 21.0.size,
-          builder: (child, tooltipCallback, onTap) => _CustomIconButton(
+          iconSize: 21.0,
+          builder: (child, tooltipCallback, onTap) => MPCustomIconButton(
             icon: child,
             tooltipCallback: tooltipCallback,
             onPressed: onTap,
@@ -567,22 +602,25 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           onLongPress: () {
             showLRCSetDialog(_getcurrentItem, CurrentColor.inst.miniplayerColor);
           },
-          child: _CustomIconButton(
+          child: MPCustomIconButton(
             tooltipCallback: null,
             onPressed: <T extends Playable>() {
               settings.save(enableLyrics: !settings.enableLyrics.value);
               Lyrics.inst.updateLyrics(_getcurrentItem);
             },
-            icon: NamidaMiniPlayerBase.getLrcButton(theme),
+            icon: NamidaMiniPlayerBase.getLrcButton(
+              theme,
+              iconSize: MPCustomIconButton.defaultIconSize,
+            ),
           ),
         ),
-        _CustomIconButton(
+        MPCustomIconButton(
           tooltipCallback: () => lang.queue,
           onPressed: MiniPlayerController.inst.snapToQueue,
           sizeRaw: 19.0,
           icon: Icon(
             Broken.row_vertical,
-            size: 19.0.size,
+            size: 19.0,
             color: theme.colorScheme.onSecondaryContainer,
           ),
         ),
@@ -621,8 +659,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               child: _QueueListChildWrapper(
                 queueItemExtent: widget.queueItemExtent,
                 queueItemExtentBuilder: widget.queueItemExtentBuilder,
-                itemBuilder: (context, index, currentIndex, queue) =>
-                    _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: properties, videoTileProperties: null),
+                itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: properties, videoTileProperties: null),
               ),
             ),
           ],
@@ -653,8 +690,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               child: _QueueListChildWrapper(
                 queueItemExtent: widget.queueItemExtent,
                 queueItemExtentBuilder: widget.queueItemExtentBuilder,
-                itemBuilder: (context, index, currentIndex, queue) =>
-                    _queueItemBuilder(context, index, currentIndex, queue, trackTileProperties: null, videoTileProperties: properties),
+                itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: null, videoTileProperties: properties),
               ),
             ),
           ],
@@ -670,9 +706,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final queueChild = RepaintBoundary(
       child: SafeArea(
         bottom: false,
-        child: SizedBox(
-          height: context.height,
-          width: context.width,
+        // -- built here but rendered inside the scale box, so it has to be sized by the
+        // -- player's own virtual space, this context's MediaQuery is the real panel.
+        child: SizedBox.fromSize(
+          size: MiniPlayerController.inst.screenSize,
           child: Stack(
             fit: StackFit.loose,
             alignment: Alignment.bottomCenter,
@@ -681,19 +718,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                 height: maxQueueHeight,
                 child: BorderRadiusClip(
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(32.0.multipliedRadius.br),
-                    topRight: Radius.circular(32.0.multipliedRadius.br),
+                    topLeft: Radius.circular(32.0.multipliedRadius),
+                    topRight: Radius.circular(32.0.multipliedRadius),
                   ),
                   child: queueListChild,
                 ),
               ),
               Container(
-                width: context.width,
+                width: MiniPlayerController.inst.screenSize.width,
                 height: kQueueBottomRowHeight + MediaQuery.paddingOf(context).bottom,
                 decoration: BoxDecoration(
                   color: theme.scaffoldBackgroundColor,
                   borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(12.0.multipliedRadius.br),
+                    top: Radius.circular(12.0.multipliedRadius),
                   ),
                 ),
                 child: Padding(
@@ -748,6 +785,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             final currentItemAnimationUI = queue[currentIndexAnimationUI];
             final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;
 
+            final videoInfo = Player.inst.videoPlayerInfo.valueR;
+            final imageAspectRatio = resolvePlayableImageAspectRatio(currentItem, videoInfo != null && videoInfo.isInitialized ? videoInfo.aspectRatio : null);
+            _lastArtworkAspectRatio = ArtworkWidget.aspectRatioOf(playableArtworkCacheKey(currentItem));
+
             Widget? previousImageWidget;
             Widget? nextImageWidget;
             MiniplayerInfoData? prevText;
@@ -760,16 +801,15 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               prevText = widget.textBuilder(prevItem);
               nextText = widget.textBuilder(nextItem);
 
-              previousImageWidget = widget.imageBuilder(prevItem, (borderRadius) => borderRadius.br);
-              nextImageWidget = widget.imageBuilder(nextItem, (borderRadius) => borderRadius.br);
+              previousImageWidget = widget.imageBuilder(prevItem);
+              nextImageWidget = widget.imageBuilder(nextItem);
             }
 
             final currentText = widget.textBuilder(currentItemAnimationUI);
 
             Widget currentImage = widget.currentImageBuilder(
               currentItemAnimationUI,
-              (borderRadius) => borderRadius.br,
-              _currentImageSize,
+              _currentImageMaxWidth,
             );
 
             if (settings.artworkTapAction.valueR != TrackExecuteActions.none) {
@@ -796,25 +836,23 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             final topText = widget.topText(currentItem);
             final focusedMenuOptions = widget.focusedMenuOptions(currentItem);
-            final videoIconBuilder = focusedMenuOptions.videoIconBuilder(currentItem, 18.0.size, onSecondary);
-            final focusedMenuBuilder = focusedMenuOptions.builder(currentItem, (value) => value.fontSize, (value) => value.size);
+
+            final playPauseButton = _PlayPauseButton(
+              canShowBuffering: widget.canShowBuffering(currentItem),
+              iconScaleAnimation: playPauseIconScaleAnimation,
+              tapInitializer: _playPauseTapInitializer,
+            );
 
             final topRowChild = Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.0.spaceX, vertical: topBottomMargin),
+              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: topBottomMargin),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Visibility(
-                    maintainState: true,
-                    maintainAnimation: true,
-                    maintainSize: true,
-                    visible: !Dimensions.inst.miniplayerIsWideScreen,
-                    child: topLeftButton,
-                  ),
+                  Dimensions.inst.miniplayerIsWideScreen ? topWideScreenButton : topLeftButton,
                   Expanded(
                     child: NamidaInkWell(
-                      borderRadius: 14.0.br,
-                      padding: EdgeInsets.symmetric(horizontal: 8.0.spaceX),
+                      borderRadius: 14.0,
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
                       onTap: () => widget.onTopTextTap(_getcurrentItem),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -823,7 +861,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                             "${currentIndexReal + 1}/${queue.length}",
                             style: TextStyle(
                               color: onSecondary.withOpacityExt(.8),
-                              fontSize: 12.0.fontSize,
+                              fontSize: 12.0,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -834,7 +872,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                             overflow: TextOverflow.fade,
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 16.0.fontSize,
+                              fontSize: 16.0,
                               color: onSecondary.withOpacityExt(.9),
                             ),
                           ),
@@ -851,9 +889,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 positionTextChild,
-                _SeekForwardDetectorWidget(
+                SeekForwardDetectorWidget(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12.0.spaceX),
+                    padding: EdgeInsets.symmetric(horizontal: 12.0),
                     child: NamidaHero(
                       tag: 'MINIPLAYER_DURATION',
                       child: Obx(
@@ -868,7 +906,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                           final msToDisplay = currentDurationInMS - toSubtract;
                           return Text(
                             "$prefix ${msToDisplay.milliSecondsLabel}",
-                            style: textTheme.displaySmall?.copyWith(fontSize: 13.0.fontSize),
+                            style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
                           );
                         },
                       ),
@@ -879,334 +917,16 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             );
 
             final bottomLeftButton = Expanded(
-              child: Stack(
-                alignment: Alignment.centerLeft,
-                children: [
-                  FocusedMenuHolder(
-                    options: (containerKey) {
-                      return FocusedMenuDetails(
-                        containerKey: containerKey,
-                        menuOpenAlignment: Alignment.bottomLeft,
-                        bottomOffsetHeight: 12.0,
-                        leftOffsetHeight: 4.0,
-                        onMenuOpen: () {
-                          // ScrollSearchController.inst.unfocusKeyboard(); // the miniplayer should have alr done that.
-                          isMenuOpened.value = true;
-                          if (focusedMenuOptions.loadQualities != null) {
-                            final currentId = focusedMenuOptions.currentId(currentItem);
-                            // auto load if possible
-                            if (currentId != null &&
-                                currentId.isNotEmpty &&
-                                (focusedMenuOptions.streams.value?.videoStreams
-                                        .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs)
-                                        .isEmpty ??
-                                    true)) {
-                              focusedMenuOptions.loadQualities!(currentItem);
-                            }
-                          }
-                          return true;
-                        },
-                        onMenuClose: () => isMenuOpened.value = false,
-                        blurSize: 2.0,
-                        duration: animationDuration,
-                        animateMenuItems: false,
-                        menuWidth: (_) => Dimensions.inst.miniplayerMaxWidth * 0.5,
-                        menuBoxDecoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
-                        ),
-                        menuWidget: Obx(
-                          (context) {
-                            final currentId = focusedMenuOptions.currentId(currentItem);
-                            final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
-                              allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
-                            );
-                            final availableVideos = List<NamidaVideo>.from(focusedMenuOptions.localVideos.valueR);
-                            YoutubeController.removeDuplicateCachedQualities(availableVideos, ytVideos, currentId);
-
-                            final audioTracks = Player.inst.audioTracks.valueR;
-                            final downloadingStream = focusedMenuOptions.downloadingStream?.valueR;
-
-                            final currentVideoConfig = VideoController.inst.currentVideoConfig;
-                            return SuperSmoothListView(
-                              padding: const EdgeInsets.symmetric(vertical: 12.0),
-                              children: [
-                                _MPQualityButton(
-                                  icon: Broken.play_cricle,
-                                  title: lang.playbackSetting,
-                                  onTap: () => NamidaNavigator.inst.navigateDialog(
-                                    dialog: Dialog(
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
-                                        child: PlaybackSettings(isInDialog: true),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Obx(
-                                  (context) {
-                                    final hasHighConnection = ConnectivityController.inst.hasHighConnection;
-                                    final rx = hasHighConnection ? settings.youtube.dataSaverMode : settings.youtube.dataSaverModeMobile;
-                                    final value = rx.valueR;
-                                    final isOff = value == DataSaverMode.off;
-                                    return _MPQualityButton(
-                                      title: lang.dataSaver,
-                                      onTap: () => YoutubeSettings.openDataSaverConfigureDialog(),
-                                      subtitle: isOff ? '' : value.toText(),
-                                      icon: Broken.blur,
-                                    );
-                                  },
-                                ),
-                                if (currentId == null || currentId.isEmpty)
-                                  _MPQualityButton(
-                                    title: lang.search,
-                                    icon: Broken.search_normal,
-                                    onTap: () {
-                                      focusedMenuOptions.onSearch?.call(currentItem);
-                                    },
-                                  )
-                                else if (focusedMenuOptions.loadQualities != null)
-                                  _MPQualityButton(
-                                    title: lang.checkForMore,
-                                    icon: Broken.chart,
-                                    trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
-                                    onTap: () => focusedMenuOptions.loadQualities!(currentItem),
-                                  ),
-
-                                if (audioTracks != null && audioTracks.length > 1) ...[
-                                  const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-                                  _MPQualityButton(
-                                    onTap: () => Player.inst.setAudioTrackAndSave(null),
-                                    icon: Broken.audio_square,
-                                    title: lang.auto,
-                                  ),
-                                  ...audioTracks.map(
-                                    (e) {
-                                      final isCurrent = e.isSelected;
-                                      final title = e.displayName;
-                                      return _MPQualityButton(
-                                        onTap: () => Player.inst.setAudioTrackAndSave(e.id),
-                                        selected: isCurrent,
-                                        icon: Broken.audio_square,
-                                        title: [
-                                          title.capitalizeFirst(),
-                                          if (e.label != title) e.label?.capitalizeFirst(),
-                                          ?e.mimeType?.toUpperCase(),
-                                        ].joinText(separator: ' • '),
-                                        subtitle: [
-                                          if (e.sampleRate != null) '${e.sampleRate! / 1000} kHz',
-                                          if (e.bitrate != null) "${e.bitrate! ~/ 1000} kb/s",
-                                          if (e.channelCount != null) "${e.channelCount!} ch",
-                                        ].joinText(separator: ' • '),
-                                        trailing: NamidaCheckMark(
-                                          active: isCurrent,
-                                          size: 12.0.size,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ],
-
-                                const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
-
-                                ...availableVideos.map(
-                                  (element) {
-                                    final localOrCache = element.ytID == null ? lang.local : lang.cache;
-                                    return Obx(
-                                      (context) {
-                                        final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
-                                        return _MPQualityButton(
-                                          onTap: () => focusedMenuOptions.onLocalVideoTap(currentItem, element),
-                                          selected: isCurrent,
-                                          icon: Broken.video,
-                                          title: [
-                                            "${element.resolution}p${element.framerateText()}",
-                                            localOrCache,
-                                          ].join(' • '),
-                                          subtitle: [
-                                            element.sizeInBytes.fileSizeFormatted,
-                                            "${element.bitrate ~/ 1000} kb/s",
-                                          ].join(' • '),
-                                          trailing: NamidaCheckMark(
-                                            active: isCurrent,
-                                            size: 12.0.size,
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                                ...?ytVideos?.map(
-                                  (element) {
-                                    final cacheFile = currentId == null ? null : element.getCachedFileSync(currentId);
-                                    final cacheExists = cacheFile != null;
-                                    var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
-                                    var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
-                                    final title = "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}";
-                                    final subtitle = "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText";
-
-                                    void onTap() => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value);
-
-                                    final isCurrent = focusedMenuOptions.isStreamSelected(element, cacheFile);
-
-                                    final downloadedBytesRx = focusedMenuOptions.downloadedBytes;
-                                    if (downloadedBytesRx != null && YoutubeController.isSameVideoStream(downloadingStream, element)) {
-                                      final totalBytes = element.sizeInBytes;
-                                      return ObxO(
-                                        rx: downloadedBytesRx,
-                                        builder: (context, downloadedBytes) => _MPQualityButton(
-                                          onTap: onTap,
-                                          selected: isCurrent,
-                                          icon: Broken.import,
-                                          title: title,
-                                          subtitle: subtitle,
-                                          progress: totalBytes <= 0 ? null : (downloadedBytes ?? 0) / totalBytes,
-                                          trailing: totalBytes <= 0 ? const LoadingIndicator() : null,
-                                        ),
-                                      );
-                                    }
-
-                                    return _MPQualityButton(
-                                      onTap: onTap,
-                                      selected: isCurrent,
-                                      icon: cacheExists ? Broken.tick_circle : Broken.import,
-                                      title: title,
-                                      subtitle: subtitle,
-                                      trailing: isCurrent
-                                          ? NamidaCheckMark(
-                                              active: true,
-                                              size: 12.0.size,
-                                            )
-                                          : null,
-                                    );
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      );
-                    },
-                    child: Stack(
-                      alignment: Alignment.centerLeft,
-                      children: [
-                        Obx(
-                          (context) {
-                            return AnimatedDecoration(
-                              duration: animationDuration,
-                              decoration: isMenuOpened.valueR
-                                  ? BoxDecoration(
-                                      color: theme.scaffoldBackgroundColor,
-                                      borderRadius: BorderRadius.circular(24.0.multipliedRadius.br),
-                                    )
-                                  : BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
-                                    ),
-                              child: TextButton(
-                                onPressed: () => focusedMenuOptions.onPressed(_getcurrentItem),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 3.0.spaceY),
-                                      child: DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          color: theme.colorScheme.secondaryContainer,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: NamidaIconButton(
-                                          padding: EdgeInsets.all(6.0.space),
-                                          icon: null,
-                                          child: videoIconBuilder,
-                                          onPressed: () {
-                                            String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
-
-                                            Widget getTextWidget(IconData icon, String title, double value) {
-                                              return Row(
-                                                children: [
-                                                  Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
-                                                  const SizedBox(width: 12.0),
-                                                  NamidaButtonText(
-                                                    title,
-                                                    style: textTheme.displayLarge,
-                                                  ),
-                                                  const SizedBox(width: 8.0),
-                                                  NamidaButtonText(
-                                                    toPercentage(value),
-                                                    style: textTheme.displayMedium,
-                                                  ),
-                                                ],
-                                              );
-                                            }
-
-                                            Widget getSlider({
-                                              double min = 0.0,
-                                              double max = 2.0,
-                                              required double value,
-                                              required void Function(double newValue)? onChanged,
-                                            }) {
-                                              return Slider.adaptive(
-                                                min: min,
-                                                max: max,
-                                                value: value.clampDouble(min, max),
-                                                onChanged: onChanged,
-                                                divisions: (max * 100).round(),
-                                                label: "${(value * 100).toStringAsFixed(0)}%",
-                                              );
-                                            }
-
-                                            NamidaNavigator.inst.navigateDialog(
-                                              dialog: CustomBlurryDialog(
-                                                title: lang.configure,
-                                                horizontalInset: 38.0,
-                                                contentPadding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
-                                                actions: [
-                                                  NamidaIconButton(
-                                                    icon: Broken.refresh,
-                                                    onPressed: () {
-                                                      const val = 1.0;
-                                                      Player.inst.setPitch(val);
-                                                      Player.inst.setSpeed(val);
-                                                      Player.inst.setVolume(val);
-                                                      settings.player.save(
-                                                        pitch: val,
-                                                        speed: val,
-                                                        volume: val,
-                                                      );
-                                                    },
-                                                  ),
-                                                  const DoneButton(),
-                                                ],
-                                                child: const SoundControlMainSlidersColumn(
-                                                  verticalInBetweenPadding: 6.0,
-                                                  tapToUpdate: false,
-                                                  isInDialog: true,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(width: 8.0.spaceX),
-                                    Flexible(
-                                      child: focusedMenuBuilder,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              child: PlayerVideoAudioChip(
+                focusedMenuOptions: focusedMenuOptions,
+                currentItem: currentItem,
+                isMenuOpened: isMenuOpened,
+                animationDuration: animationDuration,
               ),
             );
 
             final bottomRowChild = Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.0.spaceX, vertical: topBottomMargin),
+              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: topBottomMargin),
               child: Row(
                 children: [
                   bottomLeftButton,
@@ -1254,9 +974,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     navBarHeight,
                   ) {
                     final BorderRadius borderRadius = BorderRadius.vertical(
-                      top: Radius.circular(20.0.multipliedRadius.br + 6.0.br * p),
-                      bottom: Radius.circular(20.0.multipliedRadius.br * (1 - p * 10 + 9).clampDouble(0, 1)),
+                      top: Radius.circular(20.0.multipliedRadius + 6.0 * p),
+                      bottom: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clampDouble(0, 1)),
                     );
+                    final shadowBorderRadius = BorderRadius.circular(20.0.multipliedRadius);
 
                     final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;
 
@@ -1265,60 +986,58 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     // final panelExtra = panelH; // -- use if u want to hide it while expanded, looks cool
                     final panelFinal = panelH - (panelExtra * (1 - qcp));
 
-                    final iconSize = ((velpy(a: 60.0.size * 0.5, b: 80.0.size * 0.5, c: rp) - 8) + 8 * cp * rcp);
-                    final iconButtonExtraPadding = (iconSize * 0.5).withMaximum(14.0);
+                    final iconSize = _PlayPauseMetrics.iconSize(p);
+                    final iconButtonExtraPadding = _PlayPauseMetrics.extraPadding(iconSize);
                     final iconBoxSize = iconSize + iconButtonExtraPadding * 2;
 
                     final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
-                    final nextPrevIconSize = (21.0 + 11.0 * nextprevmultiplier).size;
-                    final nextPrevIconPadding = (8.0 + 4.0 * cp + 6.0 * nextprevmultiplier).space;
+                    final nextPrevIconSize = (21.0 + 11.0 * nextprevmultiplier);
+                    final nextPrevIconPadding = (8.0 + 4.0 * cp + 6.0 * nextprevmultiplier);
 
                     final totalButtonsSize = (iconSize + iconButtonExtraPadding * 2) + (nextPrevIconSize + nextPrevIconPadding * 2) * 2;
                     final buttonsRightPadding = (cp * rcp * ((screenSize.width - totalButtonsSize) / 2)) - rightInset;
 
-                    final topRowHeight = 1.25 * (32.0.spaceYForce + topBottomMargin * 2) * cp;
+                    // -- the vertical layout is designed at [_perfectHeight] and stretches with the panel,
+                    // -- shrinking is covered by the scale box but taller panels still spread these out.
+                    final heightFactor = _lerpDouble(1.0, maxOffset / _perfectHeight, rp);
+
+                    final topRowHeight = 1.25 * (32.0 * heightFactor + topBottomMargin * 2) * cp;
                     final bottomRowHeight = topRowHeight;
-                    final imageWidth = velpy(a: 82.0.size, b: 92.0.size, c: qp);
+                    final imageWidth = velpy(a: 82.0, b: 92.0, c: qp);
 
                     final vOffsetExtras = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 + 12.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
                     final vOffsetExtrasAlt = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 - 8.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
-                    final trackInfoBoxHeight = velpy(a: 58.0.spaceY, b: 82.0.spaceY, c: bcp);
-                    double vOffsetControls = vOffsetExtrasAlt - bottomRowHeight * bp /* ?? vOffsetExtras + (-bottomRowHeight - 4.0.spaceYForce * bp) * (1 - qp) */;
+                    final trackInfoBoxHeight = velpy(a: 58.0, b: 82.0, c: bcp);
+                    double vOffsetControls = vOffsetExtrasAlt - bottomRowHeight * bp /* ?? vOffsetExtras + (-bottomRowHeight - 4.0 * bp) * (1 - qp) */;
                     double vOffsetWaveform = vOffsetControls - iconSize - (64.0 * waveformYScale) / 2 - (panelFinal * 0.026);
                     vOffsetWaveform = vOffsetWaveform.withMaximum(-(maxOffset - bottomInset - topInset) * 0.2 * (1 - bcp));
 
                     double vOffsetTrackInfo = _lerpDouble(
                       _lerpDouble(
                         vOffsetExtras,
-                        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0.spaceYForce, // idk bro this the only way it matches :/
+                        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0 * heightFactor, // idk bro this the only way it matches :/
                         qp,
                       ),
                       (vOffsetWaveform - 64.0 * waveformYScale).withMaximum(-(maxOffset - bottomInset - topInset) * 0.3), // don't ask why topInset.. it works like that idk
                       bcp,
                     );
-                    double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0.spaceYForce * bcp) + (6.0.spaceYForce * qp);
+                    double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0 * heightFactor * bcp) + (6.0 * heightFactor * qp);
 
-                    double imageMaxWidthPre = sMaxOffset - 76.0.spaceX;
-                    double imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 24.0.spaceYForce;
+                    // -- the picture is painted 1.13x past its box, so the side margin has to grow with the
+                    // -- width, a fixed one only holds the overshoot inside the panel up to ~380 wide.
+                    final imageMaxWidthPre = sMaxOffset - (sMaxOffset * 0.2).withMinimum(76.0);
+                    final imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 24.0 * heightFactor;
+                    // -- the box follows the picture's ratio, so wide videos/thumbnails use the width
+                    // -- instead of shrinking to whatever square fits the height.
+                    final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre * imageAspectRatio);
+                    final imageHeightBig = imageWidthBig / imageAspectRatio;
 
-                    // --special treatment for horizontal videos, there will be space wasted so we account for it ^^
-                    final imageHeightMultiplier = _imageHeightMultiplier;
-                    final shouldApplyImageHeightMultiplier = imageHeightMultiplier != null && imageHeightMultiplier > 1.0;
-                    if (shouldApplyImageHeightMultiplier) {
-                      imageMaxHeightPre *= imageHeightMultiplier * bcp;
-                    }
-                    final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre);
-
-                    final imageSize = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
+                    // -- collapsed thumbnail stays square, the ratio only kicks in while expanding.
+                    final imageBoxWidth = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
+                    final imageBoxHeight = velpy(a: imageWidth, b: imageHeightBig, c: bcp);
                     final trackInfoLeftMargin = imageWidth * (1 - bcp);
 
-                    if (shouldApplyImageHeightMultiplier) {
-                      // -- send it back to exactly above track info
-                      final height = (_imageHeightActual?.withMaximum(imageSize) ?? imageSize);
-                      vOffsetImage += (height / imageHeightMultiplier / 8) * bcp;
-                    }
-
-                    double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageSize - topInset - topRowHeight;
+                    double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageBoxHeight - topInset - topRowHeight;
                     if (spaceLeftAboveImage > 0) {
                       final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
                       final valueToRemove = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
@@ -1328,20 +1047,17 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     }
 
                     // -- image related
-                    final imagePaddingAll = 12.0.space * (1 - bcp);
+                    final imagePaddingAll = 12.0 * (1 - bcp);
                     final imagePadding = EdgeInsets.fromLTRB(
-                      imagePaddingAll + 42.0.spaceX * bcp,
+                      imagePaddingAll + 42.0 * bcp,
                       imagePaddingAll,
                       imagePaddingAll,
                       imagePaddingAll,
                     );
-                    final imageEmptyRightSpace = screenSize.width - imageSize;
+                    final imageEmptyRightSpace = screenSize.width - imageBoxWidth;
                     final imageLeftOffset = (((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp);
 
-                    _currentImageSize.value = (
-                      maxHeight: _imageHeightActual == null ? null : (imageMaxHeightPre * 0.7),
-                      maxWidth: imageWidthBig,
-                    );
+                    _currentImageMaxWidth.value = imageWidthBig;
 
                     final animateDecoration = p == _lastAnimationP;
                     _lastAnimationP = p;
@@ -1358,16 +1074,15 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                               child: ColoredBox(
                                 color: Colors.transparent, // prevents scrolling gap
                                 child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 6.0.spaceY * (1 - cp * 10 + 9).clampDouble(0, 1), vertical: 12.0.spaceY * icp),
+                                  padding: EdgeInsets.symmetric(horizontal: 6.0 * (1 - cp * 10 + 9).clampDouble(0, 1), vertical: 12.0 * icp),
                                   child: SizedBox(
                                     height: velpy(a: 82.0, b: panelFinal, c: cp),
                                     width: double.infinity,
-                                    child: _AnimatedDecorationOrDecoration(
-                                      animate: animateDecoration,
-                                      duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                    // -- shadow kept apart with a fixed uniform radius: skia caches the blur as a nine-patch keyed
+                                    // -- by (radius, sigma) so resizing the panel per frame stays a cache hit, an animated radius wouldn't.
+                                    child: DecoratedBox(
                                       decoration: BoxDecoration(
-                                        color: theme.scaffoldBackgroundColor,
-                                        borderRadius: borderRadius,
+                                        borderRadius: shadowBorderRadius,
                                         boxShadow: [
                                           BoxShadow(
                                             color: theme.shadowColor.withOpacityExt(0.2 + 0.1 * cp),
@@ -1375,44 +1090,49 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                           ),
                                         ],
                                       ),
-                                      child: Stack(
-                                        alignment: Alignment.bottomLeft,
-                                        children: [
-                                          Positioned.fill(
-                                            child: _AnimatedDecorationOrDecoration(
-                                              animate: animateDecoration,
-                                              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                              // clipBehavior: Clip.antiAlias,
-                                              decoration: BoxDecoration(
-                                                color: CurrentColor.inst.miniplayerColor,
-                                                borderRadius: borderRadius,
-                                                gradient: LinearGradient(
-                                                  begin: Alignment.topCenter,
-                                                  end: Alignment.bottomCenter,
-                                                  colors: [
-                                                    Color.alphaBlend(
-                                                      theme.colorScheme.onSurface.withAlpha(100),
-                                                      CurrentColor.inst.miniplayerColor,
-                                                    ).withOpacityExt(velpy(a: .38, b: .28, c: icp)),
-                                                    Color.alphaBlend(
-                                                      theme.colorScheme.onSurface.withAlpha(40),
-                                                      CurrentColor.inst.miniplayerColor,
-                                                    ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
-                                                  ],
+                                      child: _AnimatedDecorationOrDecoration(
+                                        animate: animateDecoration,
+                                        duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                        decoration: BoxDecoration(
+                                          color: theme.scaffoldBackgroundColor,
+                                          borderRadius: borderRadius,
+                                        ),
+                                        child: Stack(
+                                          alignment: Alignment.bottomLeft,
+                                          children: [
+                                            Positioned.fill(
+                                              child: _AnimatedDecorationOrDecoration(
+                                                animate: animateDecoration,
+                                                duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                                // clipBehavior: Clip.antiAlias,
+                                                decoration: BoxDecoration(
+                                                  color: CurrentColor.inst.miniplayerColor,
+                                                  borderRadius: borderRadius,
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [
+                                                      Color.alphaBlend(
+                                                        theme.colorScheme.onSurface.withAlpha(100),
+                                                        CurrentColor.inst.miniplayerColor,
+                                                      ).withOpacityExt(velpy(a: .38, b: .28, c: icp)),
+                                                      Color.alphaBlend(
+                                                        theme.colorScheme.onSurface.withAlpha(40),
+                                                        CurrentColor.inst.miniplayerColor,
+                                                      ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
 
-                                          if (NamidaJellys.enabled)
-                                            Positioned.fill(
-                                              child: ClipRRect(
-                                                borderRadius: borderRadius,
-                                                child: Opacity(
-                                                  opacity: cp,
+                                            if (NamidaJellys.enabled)
+                                              Positioned.fill(
+                                                child: ClipRRect(
+                                                  borderRadius: borderRadius,
                                                   child: NamidaJellyBackground(
                                                     count: 4,
-                                                    opacity: 0.3,
+                                                    opacity: 0.3 * cp,
                                                     minHeight: 70.0,
                                                     maxHeight: 210.0,
                                                     reactToPlayback: true,
@@ -1421,23 +1141,23 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                   ),
                                                 ),
                                               ),
-                                            ),
 
-                                          /// Smol progress bar
-                                          // Obx(
-                                          //   (context) {
-                                          //     final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
-                                          //     final currentDurationInMS =
-                                          //         currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
-                                          //     final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
-                                          //     return SizedBox(
-                                          //       height: 2 * (1 - cp),
-                                          //       width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
-                                          //       child: smolProgressBarDecoratedBox,
-                                          //     );
-                                          //   },
-                                          // ),
-                                        ],
+                                            /// Smol progress bar
+                                            // Obx(
+                                            //   (context) {
+                                            //     final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
+                                            //     final currentDurationInMS =
+                                            //         currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
+                                            //     final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
+                                            //     return SizedBox(
+                                            //       height: 2 * (1 - cp),
+                                            //       width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
+                                            //       child: smolProgressBarDecoratedBox,
+                                            //     );
+                                            //   },
+                                            // ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1517,7 +1237,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                           child: Transform.translate(
                             offset: Offset(0, vOffsetControls),
                             child: Padding(
-                              padding: EdgeInsets.all(12.0.space * icp),
+                              padding: EdgeInsets.all(12.0 * icp),
                               child: Align(
                                 alignment: Alignment.bottomRight,
                                 child: Stack(
@@ -1526,19 +1246,18 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                     FadeIgnoreTransition(
                                       opacity: fastOpacityAnimation,
                                       child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
-                                        child: positionDurationRowChild,
-                                      ),
-                                    ),
-                                    FadeIgnoreTransition(
-                                      opacity: fastOpacityAnimation,
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: (24.0.spaceX * (16.0.spaceX * icp + 1))),
-                                        child: positionDurationSeekerBoxesRowChild,
+                                        padding: EdgeInsets.symmetric(horizontal: (24.0 * (16.0 * icp + 1))),
+                                        child: Stack(
+                                          alignment: Alignment.centerRight,
+                                          children: [
+                                            positionDurationRowChild,
+                                            positionDurationSeekerBoxesRowChild,
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.only(right: buttonsRightPadding).add(EdgeInsets.symmetric(vertical: 20.0.spaceY * icp)),
+                                      padding: EdgeInsets.only(right: buttonsRightPadding).add(EdgeInsets.symmetric(vertical: 20.0 * icp)),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1561,96 +1280,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                             key: const Key("playpause"),
                                             height: iconBoxSize,
                                             width: iconBoxSize,
-                                            child: Center(
-                                              child: Obx(
-                                                (context) {
-                                                  final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
-                                                  Widget playPauseButtonChild = AnimatedScale(
-                                                    duration: const Duration(milliseconds: 400),
-                                                    scale: isButtonHighlighed ? 0.97 : 1.0,
-                                                    child: AnimatedDecoration(
-                                                      duration: const Duration(milliseconds: 400),
-                                                      decoration: BoxDecoration(
-                                                        color: isButtonHighlighed
-                                                            ? Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(233), Colors.white)
-                                                            : CurrentColor.inst.miniplayerColor,
-                                                        gradient: LinearGradient(
-                                                          begin: Alignment.topLeft,
-                                                          end: Alignment.bottomRight,
-                                                          colors: [
-                                                            CurrentColor.inst.miniplayerColor,
-                                                            Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(200), Colors.grey),
-                                                          ],
-                                                          stops: const [0, 0.7],
-                                                        ),
-                                                        shape: BoxShape.circle,
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: CurrentColor.inst.miniplayerColor.withAlpha(160),
-                                                            blurRadius: 8.0,
-                                                            spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
-                                                            offset: const Offset(0.0, 2.0),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      child: Stack(
-                                                        alignment: Alignment.center,
-                                                        children: [
-                                                          Padding(
-                                                            padding: EdgeInsets.all(iconButtonExtraPadding),
-                                                            child: ObxO(
-                                                              rx: Player.inst.playWhenReady,
-                                                              builder: (context, playWhenReady) => CustomAnimatedSwitcher(
-                                                                duration: const Duration(milliseconds: 200),
-                                                                child: playWhenReady
-                                                                    ? Icon(
-                                                                        Broken.pause,
-                                                                        size: iconSize,
-                                                                        key: const Key("pauseicon"),
-                                                                        color: Colors.white.withAlpha(180),
-                                                                      )
-                                                                    : Icon(
-                                                                        Broken.play,
-                                                                        size: iconSize,
-                                                                        key: const Key("playicon"),
-                                                                        color: Colors.white.withAlpha(180),
-                                                                      ),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                          if (widget.canShowBuffering(currentItem))
-                                                            IgnorePointer(
-                                                              child: Obx(
-                                                                (context) => Player.inst.shouldShowLoadingIndicatorR
-                                                                    ? ThreeArchedCircle(
-                                                                        color: Colors.white.withAlpha(120),
-                                                                        size: iconSize * 1.4,
-                                                                      )
-                                                                    : const SizedBox(),
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  );
-                                                  if (kEnableFancyAnimations) {
-                                                    playPauseButtonChild = CAMagneticButton(
-                                                      radius: iconBoxSize,
-                                                      pullFactor: 0.08,
-                                                      maxSkewRadians: 0.08,
-                                                      pressScale: 0.98,
-                                                      child: playPauseButtonChild,
-                                                    );
-                                                  }
-                                                  return NamidaMouseRegion(
-                                                    child: TapDetector(
-                                                      onTap: null,
-                                                      initializer: _playPauseTapInitializer,
-                                                      child: playPauseButtonChild,
-                                                    ),
-                                                  );
-                                                },
-                                              ),
+                                            child: _ScaleLayoutBox(
+                                              scaleAnimation: playPauseBoxScaleAnimation,
+                                              child: playPauseButton,
                                             ),
                                           ),
                                           FadeIgnoreTransition(
@@ -1713,6 +1345,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                           offset: Offset(0.0, vOffsetTrackInfo),
                                           child: _TrackInfo(
                                             textData: prevText,
+                                            isCurrent: false,
                                             p: bp,
                                             qp: qp,
                                             bcp: bcp,
@@ -1736,6 +1369,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         offset: Offset(0.0, vOffsetTrackInfo),
                                         child: _TrackInfo(
                                           textData: currentText,
+                                          isCurrent: true,
                                           p: bp,
                                           qp: qp,
                                           bcp: bcp,
@@ -1760,6 +1394,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                           offset: Offset(0.0, vOffsetTrackInfo),
                                           child: _TrackInfo(
                                             textData: nextText,
+                                            isCurrent: false,
                                             p: bp,
                                             qp: qp,
                                             bcp: bcp,
@@ -1800,7 +1435,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                           child: Transform.translate(
                                             offset: Offset(0.0, vOffsetImage),
                                             child: _RawImageContainer(
-                                              size: imageSize,
+                                              width: imageBoxWidth,
+                                              height: imageBoxHeight,
                                               padding: imagePadding,
                                               child: Padding(
                                                 padding: EdgeInsets.all(12.0 * (1 - bcp)),
@@ -1821,7 +1457,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         child: Transform.translate(
                                           offset: Offset(0.0, vOffsetImage),
                                           child: _RawImageContainer(
-                                            size: imageSize,
+                                            width: imageBoxWidth,
+                                            height: imageBoxHeight,
                                             padding: imagePadding,
                                             child: Padding(
                                               padding: EdgeInsets.all(12.0 * (1 - bcp)),
@@ -1865,7 +1502,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                           child: Transform.translate(
                                             offset: Offset(0.0, vOffsetImage),
                                             child: _RawImageContainer(
-                                              size: imageSize,
+                                              width: imageBoxWidth,
+                                              height: imageBoxHeight,
                                               padding: imagePadding,
                                               child: Padding(
                                                 padding: EdgeInsets.all(12.0 * (1 - bcp)),
@@ -1893,21 +1531,17 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                       padding: EdgeInsets.only(bottom: navBarHeight * cp),
                                       child: FadeIgnoreTransition(
                                         completelyKillWhenPossible: true,
-                                        opacity: fastOpacityAnimation,
-                                        child: FadeIgnoreTransition(
-                                          completelyKillWhenPossible: true,
-                                          opacity: centerItemFadeAnimation,
-                                          child: Transform.translate(
-                                            offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0.spaceYForce * bcp),
-                                            child: Align(
-                                              alignment: Alignment.bottomCenter,
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(horizontal: 32.0.spaceX),
-                                                child: SimpleLyricsLineWidget(
-                                                  style: textTheme.displayMedium?.copyWith(
-                                                    fontSize: 14.0.fontSize,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
+                                        opacity: simpleLyricsOpacityAnimation,
+                                        child: Transform.translate(
+                                          offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0 * heightFactor * bcp),
+                                          child: Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(horizontal: 32.0),
+                                              child: SimpleLyricsLineWidget(
+                                                style: textTheme.displayMedium?.copyWith(
+                                                  fontSize: 14.0,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                               ),
                                             ),
@@ -1921,7 +1555,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         ),
 
                         Positioned(
-                          bottom: -bottomOffset + (12.0.spaceY * icp) + (-(SeekReadyDimensions.barHeight / 2) + (SeekReadyDimensions.progressBarHeight / 2)),
+                          bottom: -bottomOffset + (12.0 * icp) + (-(SeekReadyDimensions.barHeight / 2) + (SeekReadyDimensions.progressBarHeight / 2)),
                           left: borderRadius.bottomLeft.x + 4.0,
                           right: borderRadius.bottomRight.x + 4.0,
                           child: FadeIgnoreTransition(
@@ -1933,12 +1567,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         Visibility(
                           maintainState: true, // cuz rebuilding from scratch almost kills raster
                           visible: qp > 0 && !bounceUp,
-                          child: FadeIgnoreTransition(
-                            opacity: queueOpacityAnimation,
-                            child: Transform.translate(
-                              offset: Offset(0, (1 - qp) * maxQueueHeight),
-                              child: queueChild,
-                            ),
+                          child: Transform.translate(
+                            offset: Offset(0, (1 - qp) * maxQueueHeight),
+                            child: queueChild,
                           ),
                         ),
                       ],
@@ -1955,12 +1586,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 class _RawImageContainer extends StatelessWidget {
   const _RawImageContainer({
     super.key,
-    required this.size,
+    required this.width,
+    required this.height,
     required this.padding,
     required this.child,
   });
 
-  final double size;
+  final double width;
+  final double height;
   final EdgeInsetsGeometry padding;
   final Widget child;
 
@@ -1971,8 +1604,8 @@ class _RawImageContainer extends StatelessWidget {
       child: Padding(
         padding: padding,
         child: SizedBox(
-          height: size,
-          width: size,
+          height: height,
+          width: width,
           child: child,
         ),
       ),
@@ -1982,6 +1615,7 @@ class _RawImageContainer extends StatelessWidget {
 
 class _TrackInfo<E, S> extends StatelessWidget {
   final MiniplayerInfoData<E, S> textData;
+  final bool isCurrent;
   final double bcp;
   final double qp;
   final double qcp;
@@ -1996,6 +1630,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
   const _TrackInfo({
     super.key,
     required this.textData,
+    required this.isCurrent,
     required this.bcp,
     required this.qp,
     required this.qcp,
@@ -2014,11 +1649,14 @@ class _TrackInfo<E, S> extends StatelessWidget {
     final textTheme = theme.textTheme;
     final ytLikeManager = textData.ytLikeManager;
 
-    final paddingAll = 12.0.space * (1 - bcp);
-    final paddingAllHorizontal = (paddingAll + 24.0.spaceX * bcp) * (1 - qcp);
+    final paddingAll = 12.0 * (1 - bcp);
+    final paddingAllHorizontal = (paddingAll + 24.0 * bcp) * (1 - qcp);
+
+    // -- fade needs an offscreen layer per line, adjacent items are only glimpsed mid-swipe.
+    final overflow = isCurrent ? TextOverflow.fade : TextOverflow.ellipsis;
 
     final padding = EdgeInsets.fromLTRB(
-      paddingAllHorizontal + 4.0.spaceX * qp,
+      paddingAllHorizontal + 4.0 * qp,
       paddingAll,
       paddingAllHorizontal,
       paddingAll * 2,
@@ -2039,37 +1677,43 @@ class _TrackInfo<E, S> extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Padding(
-                        padding: EdgeInsets.only(right: (32.0.spaceX + (82.0.spaceX * (1 - bcp) * (1 - qp)) + (60.0.spaceX * qp))),
+                        padding: EdgeInsets.only(right: (32.0 + (82.0 * (1 - bcp) * (1 - qp)) + (60.0 * qp))),
                         child: InkWell(
                           onTapUp: bcp == 1 ? textData.onMenuOpen : null,
                           onLongPress: textData.enableTextLongTap && bcp == 1 ? textData.onTextLongTap : null,
                           highlightColor: Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor),
-                          borderRadius: BorderRadius.circular(12.0.multipliedRadius.br),
+                          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                           child: Padding(
-                            padding: EdgeInsets.only(left: 8.0.spaceX * bcp),
+                            padding: EdgeInsets.only(left: 8.0 * bcp),
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (textData.firstLineGood)
-                                  Text(
-                                    textData.firstLine,
-                                    maxLines: textData.secondLine == '' ? 2 : 1,
-                                    overflow: TextOverflow.fade,
-                                    softWrap: textData.secondLine.isEmpty,
-                                    style: textTheme.displayMedium?.copyWith(
-                                      fontSize: velpy(a: 14.5.fontSize, b: 20.0.fontSize, c: p),
+                                  _ScaleLayoutBox(
+                                    scale: velpy(a: 14.5, b: 20.0, c: p) / 20.0,
+                                    child: Text(
+                                      textData.firstLine,
+                                      maxLines: textData.secondLineGood ? 1 : 2,
+                                      overflow: overflow,
+                                      softWrap: !textData.secondLineGood,
+                                      style: textTheme.displayMedium?.copyWith(
+                                        fontSize: 20.0,
+                                      ),
                                     ),
                                   ),
                                 if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
                                 if (textData.secondLineGood)
-                                  Text(
-                                    textData.secondLine,
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                    style: textTheme.displayMedium?.copyWith(
-                                      fontSize: velpy(a: 12.5.fontSize, b: 15.0.fontSize, c: p),
+                                  _ScaleLayoutBox(
+                                    scale: velpy(a: 12.5, b: 15.0, c: p) / 15.0,
+                                    child: Text(
+                                      textData.secondLine,
+                                      softWrap: false,
+                                      overflow: overflow,
+                                      style: textTheme.displayMedium?.copyWith(
+                                        fontSize: 15.0,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -2092,9 +1736,9 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                   builder: (context, currentLikeStatus) {
                                     final isUserLiked = currentLikeStatus == LikeStatus.liked;
                                     return NamidaLoadingSwitcher(
-                                      size: 32.0.size,
+                                      size: 32.0,
                                       builder: (loadingController) => NamidaRawLikeButton(
-                                        size: 32.0.size,
+                                        size: 32.0,
                                         enableGradient: true,
                                         likedIcon: textData.likedIcon,
                                         normalIcon: textData.normalIcon,
@@ -2119,7 +1763,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                               : ObxOClass(
                                   rx: textData.favouritePlaylist,
                                   builder: (context, favouritePlaylist) => NamidaRawLikeButton(
-                                    size: 32.0.size,
+                                    size: 32.0,
                                     enableGradient: true,
                                     likedIcon: textData.likedIcon,
                                     normalIcon: textData.normalIcon,
@@ -2146,7 +1790,9 @@ class _TrackInfo<E, S> extends StatelessWidget {
 
 class WaveformMiniplayer extends StatelessWidget {
   final bool fixPadding;
-  const WaveformMiniplayer({super.key, this.fixPadding = false});
+  final double height;
+  final bool enableHero;
+  const WaveformMiniplayer({super.key, this.fixPadding = false, this.height = 64.0, this.enableHero = true});
 
   int get _currentDurationInMS {
     final totalDur = Player.inst.currentItemDuration.value;
@@ -2189,12 +1835,13 @@ class WaveformMiniplayer extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaHero(
       tag: 'MINIPLAYER_WAVEFORM',
+      enabled: enableHero,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SizedBox(
-            height: 64.0,
+            height: height,
             child: Padding(
-              padding: fixPadding ? EdgeInsets.symmetric(horizontal: (16.0 / 2).spaceX) : EdgeInsets.zero,
+              padding: fixPadding ? EdgeInsets.symmetric(horizontal: (16.0 / 2)) : EdgeInsets.zero,
               child: Listener(
                 behavior: HitTestBehavior.translucent,
                 onPointerMove: (event) {
@@ -2257,12 +1904,12 @@ class _MPQualityButton extends StatelessWidget {
     final color = CurrentColor.inst.miniplayerColor;
     final bgColor = selected ? color.withOpacityExt(0.4) : null;
     return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: 36.0.spaceY),
+      constraints: BoxConstraints(minHeight: 36.0),
       child: NamidaInkWell(
-        margin: EdgeInsets.symmetric(horizontal: 8.0.spaceX, vertical: 2.0.spaceY),
+        margin: EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
         padding: EdgeInsets.all(padding),
         onTap: onTap,
-        borderRadius: 8.0.br,
+        borderRadius: 8.0,
         width: double.infinity,
         decoration: BoxDecoration(
           color: progress != null ? null : bgColor,
@@ -2282,26 +1929,26 @@ class _MPQualityButton extends StatelessWidget {
         ),
         child: Row(
           children: [
-            SizedBox(width: 4.0.spaceX),
+            SizedBox(width: 4.0),
             progress == null
                 ? Icon(
                     icon,
-                    size: 18.0.size,
+                    size: 18.0,
                   )
                 : SizedBox(
-                    width: 18.0.size,
+                    width: 18.0,
                     child: FittedBox(
                       fit: .scaleDown,
                       child: Text(
                         "${(progress * 100).toStringAsFixed(0)}%",
                         textAlign: TextAlign.center,
                         style: textTheme.displaySmall?.copyWith(
-                          fontSize: 12.0.fontSize,
+                          fontSize: 12.0,
                         ),
                       ),
                     ),
                   ),
-            SizedBox(width: 6.0.spaceX),
+            SizedBox(width: 6.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -2309,25 +1956,25 @@ class _MPQualityButton extends StatelessWidget {
                   Text(
                     title,
                     style: textTheme.displayMedium?.copyWith(
-                      fontSize: 13.0.fontSize,
+                      fontSize: 13.0,
                     ),
                   ),
                   if (subtitle != '')
                     Text(
                       subtitle,
                       style: textTheme.displaySmall?.copyWith(
-                        fontSize: 13.0.fontSize,
+                        fontSize: 13.0,
                       ),
                     ),
                 ],
               ),
             ),
             if (trailing != null) ...[
-              SizedBox(width: 4.0.spaceX),
+              SizedBox(width: 4.0),
               trailing!,
-              SizedBox(width: 4.0.spaceX),
+              SizedBox(width: 4.0),
             ],
-            SizedBox(width: 4.0.spaceX),
+            SizedBox(width: 4.0),
           ],
         ),
       ),
@@ -2338,7 +1985,7 @@ class _MPQualityButton extends StatelessWidget {
 class _QueueListChildWrapper extends StatelessWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final Widget Function(BuildContext context, int index, int currentIndex, List<Playable> queue) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue) itemBuilder;
 
   const _QueueListChildWrapper({
     super.key,
@@ -2359,31 +2006,29 @@ class _QueueListChildWrapper extends StatelessWidget {
           builder: (context, queue) {
             final queueLength = queue.length;
             if (queueLength == 0) return const SizedBox();
-            return ObxO(
-              rx: Player.inst.currentIndex,
-              builder: (context, currentIndex) => NamidaScrollbar(
+            // -- tiles observe the current index themselves, so a track change never rebuilds the whole list.
+            return NamidaScrollbar(
+              controller: MiniPlayerController.inst.queueScrollController,
+              child: SmoothCustomScrollView(
                 controller: MiniPlayerController.inst.queueScrollController,
-                child: SmoothCustomScrollView(
-                  controller: MiniPlayerController.inst.queueScrollController,
-                  slivers: [
-                    SliverPadding(
-                      padding: EdgeInsets.only(top: 2.0),
-                    ),
-                    NamidaSliverReorderableList(
-                      itemCount: queueLength,
-                      itemExtent: queueItemExtent,
-                      itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
-                      onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                      onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                      onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                      onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                      itemBuilder: (context, i) => itemBuilder(context, i, currentIndex, queue),
-                    ),
-                    SliverPadding(
-                      padding: padding,
-                    ),
-                  ],
-                ),
+                slivers: [
+                  SliverPadding(
+                    padding: EdgeInsets.only(top: 2.0),
+                  ),
+                  NamidaSliverReorderableList(
+                    itemCount: queueLength,
+                    itemExtent: queueItemExtent,
+                    itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
+                    onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                    onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                    onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                    itemBuilder: (context, i) => itemBuilder(context, i, queue),
+                  ),
+                  SliverPadding(
+                    padding: padding,
+                  ),
+                ],
               ),
             );
           },
@@ -2393,9 +2038,10 @@ class _QueueListChildWrapper extends StatelessWidget {
   }
 }
 
-class _SeekBackwardsDetectorWidget extends StatelessWidget {
+/// Tap seeks backwards, long press rewinds.
+class SeekBackwardsDetectorWidget extends StatelessWidget {
   final Widget child;
-  const _SeekBackwardsDetectorWidget({super.key, required this.child});
+  const SeekBackwardsDetectorWidget({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -2418,9 +2064,10 @@ class _SeekBackwardsDetectorWidget extends StatelessWidget {
   }
 }
 
-class _SeekForwardDetectorWidget extends StatelessWidget {
+/// Tap seeks forward, long press fast forwards.
+class SeekForwardDetectorWidget extends StatelessWidget {
   final Widget child;
-  const _SeekForwardDetectorWidget({super.key, required this.child});
+  const SeekForwardDetectorWidget({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -2458,26 +2105,305 @@ class _AnimatedDecorationOrDecoration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return animate && settings.animatedTheme.value
-        ? AnimatedDecoration(
-            decoration: decoration,
-            duration: duration,
-            child: child,
-          )
-        : DecoratedBox(
-            decoration: decoration,
-            child: child,
-          );
+    // -- same widget type either way, swapping to a plain [DecoratedBox] would remount the whole subtree.
+    return AnimatedDecoration(
+      decoration: decoration,
+      duration: animate && settings.animatedTheme.value ? duration : Duration.zero,
+      child: child,
+    );
   }
 }
 
-class _CustomIconButton extends StatelessWidget {
+/// Lays [child] out as if it had `1 / scale` of the available space, then paints it scaled by [scale].
+///
+/// Unlike [Transform.scale], the box reports the scaled size to its parent, and unlike changing
+/// font sizes or paddings, [child] keeps its constraints so text is never re-shaped per frame.
+class _ScaleLayoutBox extends SingleChildRenderObjectWidget {
+  final double scale;
+  final Animation<double>? scaleAnimation;
+
+  const _ScaleLayoutBox({
+    super.key,
+    this.scale = 1.0,
+    this.scaleAnimation,
+    required super.child,
+  });
+
+  @override
+  _RenderScaleLayoutBox createRenderObject(BuildContext context) => _RenderScaleLayoutBox(scale, scaleAnimation);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderScaleLayoutBox renderObject) {
+    renderObject
+      ..scale = scale
+      ..scaleAnimation = scaleAnimation;
+  }
+}
+
+class _RenderScaleLayoutBox extends RenderBox with RenderObjectWithChildMixin<RenderBox> {
+  _RenderScaleLayoutBox(this._scale, this._scaleAnimation);
+
+  double _scale;
+  set scale(double value) {
+    if (_scale == value) return;
+    _scale = value;
+    if (_scaleAnimation == null) markNeedsLayout();
+  }
+
+  Animation<double>? _scaleAnimation;
+  set scaleAnimation(Animation<double>? value) {
+    if (_scaleAnimation == value) return;
+    if (attached) {
+      _scaleAnimation?.removeListener(markNeedsLayout);
+      value?.addListener(markNeedsLayout);
+    }
+    _scaleAnimation = value;
+    markNeedsLayout();
+  }
+
+  double get _effectiveScale => _scaleAnimation?.value ?? _scale;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _scaleAnimation?.addListener(markNeedsLayout);
+  }
+
+  @override
+  void detach() {
+    _scaleAnimation?.removeListener(markNeedsLayout);
+    super.detach();
+  }
+
+  BoxConstraints _childConstraints(BoxConstraints constraints, double scale) {
+    return BoxConstraints(
+      maxWidth: constraints.maxWidth / scale,
+      maxHeight: constraints.maxHeight / scale,
+    );
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    final scale = _effectiveScale;
+    child.layout(_childConstraints(constraints, scale), parentUsesSize: true);
+    size = constraints.constrain(child.size * scale);
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) return constraints.smallest;
+    final scale = _effectiveScale;
+    return constraints.constrain(child.getDryLayout(_childConstraints(constraints, scale)) * scale);
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) => (child?.getMinIntrinsicWidth(height / _effectiveScale) ?? 0.0) * _effectiveScale;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => (child?.getMaxIntrinsicWidth(height / _effectiveScale) ?? 0.0) * _effectiveScale;
+
+  @override
+  double computeMinIntrinsicHeight(double width) => (child?.getMinIntrinsicHeight(width / _effectiveScale) ?? 0.0) * _effectiveScale;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => (child?.getMaxIntrinsicHeight(width / _effectiveScale) ?? 0.0) * _effectiveScale;
+
+  Matrix4 get _transform {
+    final scale = _effectiveScale;
+    return Matrix4.diagonal3Values(scale, scale, 1.0);
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(_transform);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null) return false;
+    return result.addWithPaintTransform(
+      transform: _transform,
+      position: position,
+      hitTest: (result, position) => child.hitTest(result, position: position),
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    if (_effectiveScale == 1.0) {
+      layer = null;
+      context.paintChild(child, offset);
+      return;
+    }
+    layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      _transform,
+      (context, offset) => context.paintChild(child, offset),
+      oldLayer: layer as TransformLayer?,
+    );
+  }
+}
+
+/// Play/pause button geometry as a function of the miniplayer animation value.
+abstract class _PlayPauseMetrics {
+  static double iconSize(double p) {
+    final cp = p.clampDouble(0.0, 1.0);
+    final rp = inverseAboveOne(p);
+    final rcp = rp.clampDouble(0, 1);
+    return ((velpy(a: 60.0 * 0.5, b: 80.0 * 0.5, c: rp) - 8) + 8 * cp * rcp);
+  }
+
+  static double extraPadding(double iconSize) => (iconSize * 0.5).withMaximum(14.0);
+
+  static double boxSize(double iconSize) => iconSize + extraPadding(iconSize) * 2;
+
+  /// at `p == 1`, the button is laid out at this size and scaled down from there.
+  static double get maxIconSize => 40.0;
+  static double get maxBoxSize => boxSize(maxIconSize);
+}
+
+/// Laid out once at its largest size, the miniplayer scales it per frame without rebuilding it.
+class _PlayPauseButton extends StatelessWidget {
+  final bool canShowBuffering;
+  final Animation<double> iconScaleAnimation;
+  final void Function(TapGestureRecognizer instance) tapInitializer;
+
+  const _PlayPauseButton({
+    super.key,
+    required this.canShowBuffering,
+    required this.iconScaleAnimation,
+    required this.tapInitializer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final iconSize = _PlayPauseMetrics.maxIconSize;
+    final boxSize = _PlayPauseMetrics.boxSize(iconSize);
+    final iconStack = Stack(
+      alignment: Alignment.center,
+      children: [
+        ObxO(
+          rx: Player.inst.playWhenReady,
+          builder: (context, playWhenReady) => CustomAnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: playWhenReady
+                ? Icon(
+                    Broken.pause,
+                    size: iconSize,
+                    key: const Key("pauseicon"),
+                    color: Colors.white.withAlpha(180),
+                  )
+                : Icon(
+                    Broken.play,
+                    size: iconSize,
+                    key: const Key("playicon"),
+                    color: Colors.white.withAlpha(180),
+                  ),
+          ),
+        ),
+        if (canShowBuffering)
+          IgnorePointer(
+            child: Obx(
+              (context) => Player.inst.shouldShowLoadingIndicatorR
+                  ? ThreeArchedCircle(
+                      color: Colors.white.withAlpha(120),
+                      size: iconSize * 1.4,
+                    )
+                  : const SizedBox(),
+            ),
+          ),
+      ],
+    );
+    return SizedBox(
+      width: boxSize,
+      height: boxSize,
+      child: RepaintBoundary(
+        child: Obx(
+          (context) {
+            final isButtonHighlighed = MiniPlayerController.inst.isPlayPauseButtonHighlighted.valueR;
+            final color = CurrentColor.inst.miniplayerColor;
+            Widget playPauseButtonChild = AnimatedScale(
+              duration: const Duration(milliseconds: 400),
+              scale: isButtonHighlighed ? 0.97 : 1.0,
+              child: AnimatedDecoration(
+                duration: const Duration(milliseconds: 400),
+                decoration: BoxDecoration(
+                  color: isButtonHighlighed ? Color.alphaBlend(color.withAlpha(233), Colors.white) : color,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color,
+                      Color.alphaBlend(color.withAlpha(200), Colors.grey),
+                    ],
+                    stops: const [0, 0.7],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withAlpha(160),
+                      blurRadius: 8.0,
+                      spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
+                      offset: const Offset(0.0, 2.0),
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: _ScaleLayoutBox(
+                    scaleAnimation: iconScaleAnimation,
+                    child: iconStack,
+                  ),
+                ),
+              ),
+            );
+            if (kEnableFancyAnimations) {
+              playPauseButtonChild = CAMagneticButton(
+                radius: boxSize,
+                pullFactor: 0.08,
+                maxSkewRadians: 0.08,
+                pressScale: 0.98,
+                child: playPauseButtonChild,
+              );
+            }
+            return NamidaMouseRegion(
+              child: TapDetector(
+                onTap: null,
+                initializer: tapInitializer,
+                child: playPauseButtonChild,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// [first] × [next], so two fades stack into one opacity layer instead of two.
+class _AnimationProduct extends CompoundAnimation<double> {
+  _AnimationProduct(Animation<double> first, Animation<double> next) : super(first: first, next: next);
+
+  @override
+  double get value => first.value * next.value;
+}
+
+class MPCustomIconButton extends StatelessWidget {
   final Widget icon;
   final double sizeRaw;
   final void Function() onPressed;
   final String Function()? tooltipCallback;
 
-  const _CustomIconButton({
+  const MPCustomIconButton({
     super.key,
     required this.icon,
     this.sizeRaw = defaultIconSize,
@@ -2489,7 +2415,7 @@ class _CustomIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final finalSize = sizeRaw.size;
+    final finalSize = sizeRaw;
     Widget child = IconButton(
       visualDensity: VisualDensity.compact,
       style: ButtonStyle(
@@ -2498,7 +2424,7 @@ class _CustomIconButton extends StatelessWidget {
           Size(finalSize, finalSize) * 1.8,
         ),
       ),
-      padding: EdgeInsets.symmetric(vertical: 4.0.spaceY, horizontal: 6.0.spaceX),
+      padding: EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
       onPressed: onPressed,
       icon: icon,
     );
@@ -2529,7 +2455,7 @@ class _TopActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      padding: EdgeInsets.all(8.0.space),
+      padding: EdgeInsets.all(8.0),
       style: ButtonStyle(
         minimumSize: WidgetStatePropertyAll(
           Size(12.0, 12.0),
@@ -2552,7 +2478,7 @@ class _TopActionButton extends StatelessWidget {
             ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
         },
         child: Container(
-          padding: EdgeInsets.all(4.0.size),
+          padding: EdgeInsets.all(4.0),
           decoration: BoxDecoration(
             color: bgColor,
             shape: BoxShape.circle,
@@ -2563,7 +2489,7 @@ class _TopActionButton extends StatelessWidget {
           ),
         ),
       ),
-      iconSize: 22.0.size,
+      iconSize: 22.0,
     );
   }
 }
@@ -2616,56 +2542,361 @@ class _ScaleYIfNeeded extends StatelessWidget {
   }
 }
 
-// ========= UI UTILS =========
-const _perfectHeight = 540.0;
-const _perfectWidth = 360.0;
+class PlayerVideoAudioChip extends StatelessWidget {
+  final FocusedMenuOptions focusedMenuOptions;
+  final Playable currentItem;
+  final Rx<bool> isMenuOpened;
+  final Duration animationDuration;
+  final double Function(BuildContext context)? menuWidth;
+  final double scale;
 
-double get _maxHeight => MiniPlayerController.inst.maxOffset;
-double get _maxWidth => MiniPlayerController.inst.sMaxOffset;
-double get _mpExpandedPercentage => inverseAboveOne(MiniPlayerController.inst.animation.value);
+  const PlayerVideoAudioChip({
+    super.key,
+    required this.focusedMenuOptions,
+    required this.currentItem,
+    required this.isMenuOpened,
+    this.animationDuration = const Duration(milliseconds: 150),
+    this.menuWidth,
+    this.scale = 1.0,
+  });
 
-// rip performance
-extension _MaxValueResolver on double {
-  double get fontSize => _resolveDiagonal;
-  double get space => _resolveDiagonal;
-  double get spaceX => _resolveWidth;
-  double get spaceY => _resolveHeight;
-  double get spaceYForce => _resolveHeightForce;
-  double get size => _resolveDiagonal;
-  double get br => _resolveDiagonal;
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final onSecondary = theme.colorScheme.onSecondaryContainer;
+    final videoIconBuilder = focusedMenuOptions.videoIconBuilder(currentItem, 18.0, onSecondary);
+    final focusedMenuBuilder = focusedMenuOptions.builder(currentItem);
+    final chip = Stack(
+      alignment: Alignment.centerLeft,
+      children: [
+        FocusedMenuHolder(
+          options: (containerKey) {
+            return FocusedMenuDetails(
+              containerKey: containerKey,
+              menuOpenAlignment: Alignment.bottomLeft,
+              bottomOffsetHeight: 12.0,
+              leftOffsetHeight: 4.0,
+              onMenuOpen: () {
+                // ScrollSearchController.inst.unfocusKeyboard(); // the miniplayer should have alr done that.
+                isMenuOpened.value = true;
+                if (focusedMenuOptions.loadQualities != null) {
+                  final currentId = focusedMenuOptions.currentId(currentItem);
+                  // auto load if possible
+                  if (currentId != null &&
+                      currentId.isNotEmpty &&
+                      (focusedMenuOptions.streams.value?.videoStreams
+                              .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs)
+                              .isEmpty ??
+                          true)) {
+                    focusedMenuOptions.loadQualities!(currentItem);
+                  }
+                }
+                return true;
+              },
+              onMenuClose: () => isMenuOpened.value = false,
+              blurSize: 2.0,
+              duration: animationDuration,
+              animateMenuItems: false,
+              menuWidth: (context) => menuWidth?.call(context) ?? Dimensions.inst.miniplayerMaxWidth * 0.5,
+              menuBoxDecoration: BoxDecoration(
+                color: theme.scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+              ),
+              menuWidget: Obx(
+                (context) {
+                  final currentId = focusedMenuOptions.currentId(currentItem);
+                  final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
+                    allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
+                  );
+                  final availableVideos = List<NamidaVideo>.from(focusedMenuOptions.localVideos.valueR);
+                  YoutubeController.removeDuplicateCachedQualities(availableVideos, ytVideos, currentId);
 
-  double get _resolveHeight {
-    if (_maxHeight > _perfectHeight) return this; // just little performance improvement, skips calculation when mp is already nice and big
-    return _resolveHeightForce;
-  }
+                  final audioTracks = Player.inst.audioTracks.valueR;
+                  final downloadingStream = focusedMenuOptions.downloadingStream?.valueR;
 
-  double get _resolveHeightForce {
-    final value = this;
-    final maxHeight = _maxHeight;
-    final perfectPercentage = value / _perfectHeight;
-    final computed = maxHeight * perfectPercentage;
-    // final computed = value.withMaximum(maxHeight * perfectPercentage);
-    return _lerpDouble(value, computed, _mpExpandedPercentage);
-  }
+                  final currentVideoConfig = VideoController.inst.currentVideoConfig;
+                  return SuperSmoothListView(
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    children: [
+                      _MPQualityButton(
+                        icon: Broken.play_cricle,
+                        title: lang.playbackSetting,
+                        onTap: () => NamidaNavigator.inst.navigateDialog(
+                          dialog: Dialog(
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+                              child: PlaybackSettings(isInDialog: true),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Obx(
+                        (context) {
+                          final hasHighConnection = ConnectivityController.inst.hasHighConnection;
+                          final rx = hasHighConnection ? settings.youtube.dataSaverMode : settings.youtube.dataSaverModeMobile;
+                          final value = rx.valueR;
+                          final isOff = value == DataSaverMode.off;
+                          return _MPQualityButton(
+                            title: lang.dataSaver,
+                            onTap: () => YoutubeSettings.openDataSaverConfigureDialog(),
+                            subtitle: isOff ? '' : value.toText(),
+                            icon: Broken.blur,
+                          );
+                        },
+                      ),
+                      if (currentId == null || currentId.isEmpty)
+                        _MPQualityButton(
+                          title: lang.search,
+                          icon: Broken.search_normal,
+                          onTap: () {
+                            focusedMenuOptions.onSearch?.call(currentItem);
+                          },
+                        )
+                      else if (focusedMenuOptions.loadQualities != null)
+                        _MPQualityButton(
+                          title: lang.checkForMore,
+                          icon: Broken.chart,
+                          trailing: currentVideoConfig.isLoadingCurrentYTStreams.valueR ? const LoadingIndicator() : null,
+                          onTap: () => focusedMenuOptions.loadQualities!(currentItem),
+                        ),
 
-  double get _resolveWidth {
-    if (_maxWidth > _perfectWidth) return this;
-    return _resolveWidthForce;
-  }
+                      if (audioTracks != null && audioTracks.length > 1) ...[
+                        const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
+                        _MPQualityButton(
+                          onTap: () => Player.inst.setAudioTrackAndSave(null),
+                          icon: Broken.audio_square,
+                          title: lang.auto,
+                        ),
+                        ...audioTracks.map(
+                          (e) {
+                            final isCurrent = e.isSelected;
+                            final title = e.displayName;
+                            return _MPQualityButton(
+                              onTap: () => Player.inst.setAudioTrackAndSave(e.id),
+                              selected: isCurrent,
+                              icon: Broken.audio_square,
+                              title: [
+                                title.capitalizeFirst(),
+                                if (e.label != title) e.label?.capitalizeFirst(),
+                                ?e.mimeType?.toUpperCase(),
+                              ].joinText(separator: ' • '),
+                              subtitle: [
+                                if (e.sampleRate != null) '${e.sampleRate! / 1000} kHz',
+                                if (e.bitrate != null) "${e.bitrate! ~/ 1000} kb/s",
+                                if (e.channelCount != null) "${e.channelCount!} ch",
+                              ].joinText(separator: ' • '),
+                              trailing: NamidaCheckMark(
+                                active: isCurrent,
+                                size: 12.0,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
 
-  double get _resolveWidthForce {
-    final value = this;
-    final maxWidth = _maxWidth;
-    final perfectPercentage = value / _perfectWidth;
-    final computed = maxWidth * perfectPercentage;
-    // final computed = value.withMaximum(maxWidth * perfectPercentage);
-    return _lerpDouble(value, computed, _mpExpandedPercentage);
-  }
+                      const NamidaContainerDivider(height: 2.0, margin: EdgeInsets.symmetric(vertical: 4.0)),
 
-  double get _resolveDiagonal {
-    return _resolveWidth.withMaximum(_resolveHeight);
+                      ...availableVideos.map(
+                        (element) {
+                          final localOrCache = element.ytID == null ? lang.local : lang.cache;
+                          return Obx(
+                            (context) {
+                              final isCurrent = element.path == (VideoController.inst.currentVideo.valueR?.path ?? Player.inst.currentCachedVideo.valueR?.path);
+                              return _MPQualityButton(
+                                onTap: () => focusedMenuOptions.onLocalVideoTap(currentItem, element),
+                                selected: isCurrent,
+                                icon: Broken.video,
+                                title: [
+                                  "${element.resolution}p${element.framerateText()}",
+                                  localOrCache,
+                                ].join(' • '),
+                                subtitle: [
+                                  element.sizeInBytes.fileSizeFormatted,
+                                  "${element.bitrate ~/ 1000} kb/s",
+                                ].join(' • '),
+                                trailing: NamidaCheckMark(
+                                  active: isCurrent,
+                                  size: 12.0,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      ...?ytVideos?.map(
+                        (element) {
+                          final cacheFile = currentId == null ? null : element.getCachedFileSync(currentId);
+                          final cacheExists = cacheFile != null;
+                          var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
+                          var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
+                          final title = "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}";
+                          final subtitle = "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText";
+
+                          void onTap() => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value);
+
+                          final isCurrent = focusedMenuOptions.isStreamSelected(element, cacheFile);
+
+                          final downloadedBytesRx = focusedMenuOptions.downloadedBytes;
+                          if (downloadedBytesRx != null && YoutubeController.isSameVideoStream(downloadingStream, element)) {
+                            final totalBytes = element.sizeInBytes;
+                            return ObxO(
+                              rx: downloadedBytesRx,
+                              builder: (context, downloadedBytes) => _MPQualityButton(
+                                onTap: onTap,
+                                selected: isCurrent,
+                                icon: Broken.import,
+                                title: title,
+                                subtitle: subtitle,
+                                progress: totalBytes <= 0 ? null : (downloadedBytes ?? 0) / totalBytes,
+                                trailing: totalBytes <= 0 ? const LoadingIndicator() : null,
+                              ),
+                            );
+                          }
+
+                          return _MPQualityButton(
+                            onTap: onTap,
+                            selected: isCurrent,
+                            icon: cacheExists ? Broken.tick_circle : Broken.import,
+                            title: title,
+                            subtitle: subtitle,
+                            trailing: isCurrent
+                                ? NamidaCheckMark(
+                                    active: true,
+                                    size: 12.0,
+                                  )
+                                : null,
+                          );
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            );
+          },
+          child: Stack(
+            alignment: Alignment.centerLeft,
+            children: [
+              Obx(
+                (context) {
+                  return AnimatedDecoration(
+                    duration: animationDuration,
+                    decoration: isMenuOpened.valueR
+                        ? BoxDecoration(
+                            color: theme.scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(24.0.multipliedRadius),
+                          )
+                        : BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                          ),
+                    child: TextButton(
+                      onPressed: () => focusedMenuOptions.onPressed(currentItem),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.symmetric(vertical: 3.0),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondaryContainer,
+                                shape: BoxShape.circle,
+                              ),
+                              child: NamidaIconButton(
+                                padding: EdgeInsets.all(6.0),
+                                icon: null,
+                                child: videoIconBuilder,
+                                onPressed: () {
+                                  String toPercentage(double val) => "${(val * 100).toStringAsFixed(0)}%";
+
+                                  Widget getTextWidget(IconData icon, String title, double value) {
+                                    return Row(
+                                      children: [
+                                        Icon(icon, color: context.defaultIconColor(CurrentColor.inst.miniplayerColor)),
+                                        const SizedBox(width: 12.0),
+                                        NamidaButtonText(
+                                          title,
+                                          style: textTheme.displayLarge,
+                                        ),
+                                        const SizedBox(width: 8.0),
+                                        NamidaButtonText(
+                                          toPercentage(value),
+                                          style: textTheme.displayMedium,
+                                        ),
+                                      ],
+                                    );
+                                  }
+
+                                  Widget getSlider({
+                                    double min = 0.0,
+                                    double max = 2.0,
+                                    required double value,
+                                    required void Function(double newValue)? onChanged,
+                                  }) {
+                                    return Slider.adaptive(
+                                      min: min,
+                                      max: max,
+                                      value: value.clampDouble(min, max),
+                                      onChanged: onChanged,
+                                      divisions: (max * 100).round(),
+                                      label: "${(value * 100).toStringAsFixed(0)}%",
+                                    );
+                                  }
+
+                                  NamidaNavigator.inst.navigateDialog(
+                                    dialog: CustomBlurryDialog(
+                                      title: lang.configure,
+                                      horizontalInset: 38.0,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 12.0),
+                                      actions: [
+                                        NamidaIconButton(
+                                          icon: Broken.refresh,
+                                          onPressed: () {
+                                            const val = 1.0;
+                                            Player.inst.setPitch(val);
+                                            Player.inst.setSpeed(val);
+                                            Player.inst.setVolume(val);
+                                            settings.player.save(
+                                              pitch: val,
+                                              speed: val,
+                                              volume: val,
+                                            );
+                                          },
+                                        ),
+                                        const DoneButton(),
+                                      ],
+                                      child: const SoundControlMainSlidersColumn(
+                                        verticalInBetweenPadding: 6.0,
+                                        tapToUpdate: false,
+                                        isInDialog: true,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.0),
+                          Flexible(
+                            child: focusedMenuBuilder,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    return scale == 1.0 ? chip : _ScaleLayoutBox(scale: scale, child: chip);
   }
 }
+
+// ========= UI UTILS =========
+const _perfectHeight = 540.0;
 
 double _lerpDouble(double a, double b, double t) {
   if (a == b || (a.isNaN && b.isNaN)) {
@@ -2675,3 +2906,23 @@ double _lerpDouble(double a, double b, double t) {
 }
 
 // ===========================
+
+/// The key [ArtworkWidget] caches an item's decoded artwork ratio under.
+Object? playableArtworkCacheKey(Playable item) => item.execute<Object?>(
+  selectable: (finalItem) => finalItem.track.pathToImage,
+  youtubeID: (finalItem) => null,
+);
+
+/// Aspect ratio the item's picture is going to render at, so its box can match it
+/// instead of letterboxing wide videos & thumbnails inside a square.
+///
+/// The video's own ratio once initialized, else the decoded artwork ratio (known after
+/// it resolved once), else the 16:9 youtube thumbnails always are, else square.
+double resolvePlayableImageAspectRatio(Playable item, double? videoAspectRatio) {
+  if (videoAspectRatio != null && videoAspectRatio > 0) return videoAspectRatio;
+  if (settings.forceSquaredTrackThumbnail.value) return 1.0;
+  final cached = ArtworkWidget.aspectRatioOf(playableArtworkCacheKey(item));
+  if (cached != null && cached > 0) return cached;
+  if (item is YoutubeID) return 16 / 9;
+  return 1.0;
+}

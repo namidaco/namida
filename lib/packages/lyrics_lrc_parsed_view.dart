@@ -36,7 +36,6 @@ class LyricsLRCParsedView extends StatefulWidget {
   final bool allowOverflow;
   final bool useSafeArea;
   final double blurColorMaskOpacity;
-  final double? maxHeight;
   final double? maxWidth;
   final double? verticalPadding;
   final Widget? bottomPadding;
@@ -50,7 +49,6 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.allowOverflow = true,
     this.useSafeArea = true,
     this.blurColorMaskOpacity = 0.6,
-    this.maxHeight,
     this.maxWidth,
     this.verticalPadding,
     this.bottomPadding,
@@ -1056,7 +1054,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         videoOrImageChild,
         ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: widget.maxHeight != null ? widget.maxHeight! * 0.75 : double.infinity,
             maxWidth: widget.maxWidth != null ? widget.maxWidth! : double.infinity,
           ),
           child: mainLyricsWidget,

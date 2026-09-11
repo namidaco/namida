@@ -68,18 +68,7 @@ class MiniPlayerController {
       lowerBound: -0.2,
       value: 0.0,
     );
-    if (!_listeningToPipChanges) {
-      _listeningToPipChanges = true;
-      NamidaChannel.inst.isInPip.addListener(_onPipStateChanged);
-    }
     return animation;
-  }
-
-  bool _listeningToPipChanges = false;
-
-  void _onPipStateChanged() {
-    // -- screen value updates are dropped while in pip, so they are re-read once it's over.
-    if (!NamidaChannel.inst.isInPip.value) updateScreenValuesInitial();
   }
 
   AnimationController initializeSAnim(TickerProvider ticker) {
@@ -123,7 +112,15 @@ class MiniPlayerController {
     double maxWidth = miniplayerDetails.maxWidth;
     if (isWidescreen) maxWidth += newRightInset;
 
-    final newScreenSize = Size(maxWidth, mediaSizeHeight);
+    // -- the player's own layout is laid out in a virtual box at least as big as the
+    // -- reference the size builders expect, then scaled down to fit the real panel.
+    // -- keeps [Dimensions.miniplayerMaxWidth] real, that one drives the layout padding.
+    // -- not gated to widescreen: the app wide scale already brings normal phones up to
+    // -- the reference, so this resolves to ~1.0 there and only bites where it's needed.
+    final newPanelScale = _resolvePanelScale(maxWidth, mediaSizeHeight);
+    panelScale = newPanelScale;
+
+    final newScreenSize = Size(maxWidth / newPanelScale, mediaSizeHeight / newPanelScale);
 
     final didChange =
         !_screenValuesInitialized || //
@@ -133,12 +130,12 @@ class MiniPlayerController {
         newRightInset != rightInset;
     _screenValuesInitialized = true;
 
-    topInset = newTopInset;
-    bottomInset = newBottomInset;
-    rightInset = newRightInset;
+    topInset = newTopInset / newPanelScale;
+    bottomInset = newBottomInset / newPanelScale;
+    rightInset = newRightInset / newPanelScale;
     screenSize = newScreenSize;
     maxOffset = newScreenSize.height;
-    sMaxOffset = maxWidth;
+    sMaxOffset = newScreenSize.width;
 
     if (didChange) screenValuesVersion.value++;
 
@@ -231,6 +228,20 @@ class MiniPlayerController {
   final screenValuesVersion = 0.obs;
   bool _screenValuesInitialized = false;
 
+  double panelScale = 1.0;
+
+  static const _panelReferenceWidth = 360.0;
+  static const _panelReferenceHeight = 540.0;
+
+  static double _resolvePanelScale(double width, double height) {
+    if (width <= 0 || height <= 0) return 1.0;
+    final scale = (width / _panelReferenceWidth).withMaximum(height / _panelReferenceHeight);
+    return scale.clampDouble(0.7, 1.0);
+  }
+
+  double fromRootToPanel(double value) => NamidaUIScale.fromRoot(value) / panelScale;
+  Offset fromRootToPanelOffset(Offset value) => NamidaUIScale.fromRootOffset(value) / panelScale;
+
   late Size screenSize;
   late double topInset;
   late double bottomInset;
@@ -307,9 +318,9 @@ class MiniPlayerController {
 
   void onPointerDown(PointerDownEvent event) {
     if (_isModifyingQueue) return;
-    if (NamidaUIScale.fromRoot(event.position.dy) >= screenSize.height - _deadSpace) return;
+    if (fromRootToPanel(event.position.dy) >= screenSize.height - _deadSpace) return;
 
-    _velocity.addPosition(event.timeStamp, NamidaUIScale.fromRootOffset(event.position));
+    _velocity.addPosition(event.timeStamp, fromRootToPanelOffset(event.position));
 
     _prevOffset = _offset;
 
@@ -329,11 +340,11 @@ class MiniPlayerController {
 
   void onPointerMove(PointerMoveEvent event) {
     if (_isModifyingQueue) return;
-    if (NamidaUIScale.fromRoot(event.position.dy) >= screenSize.height - _deadSpace) return;
+    if (fromRootToPanel(event.position.dy) >= screenSize.height - _deadSpace) return;
 
     if (!_canMinimizeMiniplayer(event.localDelta.dy)) return;
 
-    _velocity.addPosition(event.timeStamp, NamidaUIScale.fromRootOffset(event.position));
+    _velocity.addPosition(event.timeStamp, fromRootToPanelOffset(event.position));
 
     if (_offset <= maxOffset) return;
 
@@ -345,7 +356,7 @@ class MiniPlayerController {
 
     if (_isInsideQueue()) {
       // a rough estimation of the top area when inside queue.
-      if (NamidaUIScale.fromRoot(event.position.dy) >
+      if (fromRootToPanel(event.position.dy) >
           ((WindowController.instance?.windowTitleBarHeightIfActive ?? 0) + 100 + _deadSpace + topInset + 12.0 + QueueChipHeaderRow.minHeight)) {
         return;
       }
@@ -372,7 +383,7 @@ class MiniPlayerController {
 
   void gestureDetectorOnVerticalDragUpdate(DragUpdateDetails details) {
     if (_isModifyingQueue) return;
-    if (NamidaUIScale.fromRoot(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
+    if (fromRootToPanel(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
     if (_offset > maxOffset) return;
     if (!_canMinimizeMiniplayer(details.delta.dy)) return;
 
@@ -399,7 +410,7 @@ class MiniPlayerController {
 
   void gestureDetectorOnHorizontalDragUpdate(DragUpdateDetails details) {
     if (_offset > maxOffset) return;
-    if (NamidaUIScale.fromRoot(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
+    if (fromRootToPanel(details.globalPosition.dy) > screenSize.height - _deadSpace) return;
 
     _sOffset -= details.primaryDelta ?? 0.0;
     _sOffset = _sOffset.clampDouble(-sMaxOffset, sMaxOffset);

@@ -524,6 +524,15 @@ class Namida extends StatefulWidget {
   }
 
   static final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
+
+  static const _localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    FallbackMaterialLocalizationsDelegate(),
+    FallbackCupertinoLocalizationsDelegate(),
+    FallbackWidgetsLocalizationsDelegate(),
+  ];
 }
 
 class _NamidaState extends State<Namida> {
@@ -659,10 +668,6 @@ class _NamidaState extends State<Namida> {
                 Visibility(
                   maintainState: true,
                   visible: !showPipOnly,
-                  child: ObxO(
-                    rx: settings.fontScaleFactor,
-                    builder: (context, fontScaleFactor) => MediaQuery(
-                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
                       child: MaterialApp(
                         color: kDefaultIconLightColor,
                         key: const Key('namida_app'),
@@ -674,21 +679,17 @@ class _NamidaState extends State<Namida> {
                         // -- we use custom logic to avoid context based translations
                         // locale: currentLanguage?.locale,
                         // supportedLocales: AppLocalizations.supportedLocales,
-                        localizationsDelegates: [
-                          GlobalMaterialLocalizations.delegate,
-                          GlobalCupertinoLocalizations.delegate,
-                          GlobalWidgetsLocalizations.delegate,
-                          const FallbackMaterialLocalizationsDelegate(),
-                          const FallbackCupertinoLocalizationsDelegate(),
-                          const FallbackWidgetsLocalizationsDelegate(),
-                        ],
+                    localizationsDelegates: Namida._localizationsDelegates,
                         builder: (context, widget) {
                           Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
                           // overlay entries get rebuilt on any insertion/removal, so we create app here.
 
                           Widget mainApp = buildMainApp(widget!, platformBrightness);
 
-                          return Overlay(
+                      // -- text scaling is applied here rather than above [MaterialApp], so keyboard insets
+                      // -- & other media query changes dont recreate the app widget itself.
+                      return _ScaledTextMediaQuery(
+                        child: Overlay(
                             initialEntries: [
                               OverlayEntry(
                                 builder: (context) {
@@ -702,11 +703,10 @@ class _NamidaState extends State<Namida> {
                                 },
                               ),
                             ],
+                        ),
                           );
                         },
                         home: mainPageWrapper,
-                      ),
-                    ),
                   ),
                 ),
 
@@ -771,6 +771,22 @@ class _NamidaState extends State<Namida> {
     if (NamidaFeaturesVisibility.recieveDragAndDrop) finalApp = _NamidaDropRegion(child: finalApp);
 
     return NamidaUIScaleWrapper(child: finalApp);
+  }
+}
+
+class _ScaledTextMediaQuery extends StatelessWidget {
+  final Widget child;
+  const _ScaledTextMediaQuery({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.fontScaleFactor,
+      builder: (context, fontScaleFactor) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(fontScaleFactor)),
+        child: child,
+      ),
+    );
   }
 }
 

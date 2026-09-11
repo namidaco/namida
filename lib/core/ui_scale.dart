@@ -73,6 +73,41 @@ class NamidaUIScaleWrapper extends StatelessWidget {
   }
 }
 
+/// Lays its child out in a bigger virtual box then scales it down to fit, for subtrees
+/// whose absolute sizes would otherwise feel cramped in a narrow area.
+///
+/// Also hands the subtree a [MediaQuery] sized to the box, which panels otherwise lack,
+/// they inherit the whole screen's size through the layout padding.
+class NamidaUiScaleBox extends StatelessWidget {
+  final double scale;
+  final Widget child;
+
+  const NamidaUiScaleBox({super.key, required this.scale, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (scale == 1.0) return child;
+    final inverse = 1 / scale;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // -- whole pixels, fractional virtual sizes leave sub pixel overflows behind.
+        final virtualSize = Size((constraints.maxWidth * inverse).ceilToDouble(), (constraints.maxHeight * inverse).ceilToDouble());
+        return FittedBox(
+          fit: BoxFit.fill,
+          alignment: Alignment.topLeft,
+          child: SizedBox.fromSize(
+            size: virtualSize,
+            child: MediaQuery(
+              data: MediaQuery.of(context).scaledForUI(scale).copyWith(size: virtualSize),
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 extension NamidaMediaQueryUIScale on MediaQueryData {
   MediaQueryData scaledForUI(double scale) {
     if (scale == 1.0) return this;

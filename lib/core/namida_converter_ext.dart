@@ -59,6 +59,7 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
+import 'package:namida/ui/pages/current_queue_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
@@ -122,6 +123,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.search => null,
       LibraryTab.youtube => null,
       LibraryTab.queues => null,
+      LibraryTab.currentQueue => null,
       LibraryTab.favourites => null,
       LibraryTab.history => null,
       LibraryTab.mostPlayed => null,
@@ -164,6 +166,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.search => const NamidaDummyPage(),
       LibraryTab.queues => const QueuesPage(),
+      LibraryTab.currentQueue => const CurrentQueuePage(),
       LibraryTab.favourites => const NormalPlaylistTracksPage(
         playlistName: k_PLAYLIST_NAME_FAV,
         disableAnimation: true,
@@ -1843,6 +1846,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.search => lang.search,
     LibraryTab.youtube => lang.youtube,
     LibraryTab.queues => lang.queues,
+    LibraryTab.currentQueue => lang.queue,
     LibraryTab.favourites => lang.favourites,
     LibraryTab.history => lang.history,
     LibraryTab.mostPlayed => lang.mostPlayed,
@@ -1864,6 +1868,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.search => Broken.search_normal_1,
     LibraryTab.youtube => Broken.video_square,
     LibraryTab.queues => Broken.driver,
+    LibraryTab.currentQueue => Broken.row_vertical,
     LibraryTab.favourites => Broken.heart,
     LibraryTab.history => Broken.refresh,
     LibraryTab.mostPlayed => Broken.award,

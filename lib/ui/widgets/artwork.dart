@@ -105,6 +105,34 @@ class ArtworkWidget extends StatefulWidget {
 
   static const kImagePathInitialValue = '';
 
+  /// Decoded `width / height` per image, filled in as images resolve.
+  ///
+  /// Layout that wants to size a box to the artwork needs the ratio before the image
+  /// is in the tree, so it is kept here rather than handed upwards.
+  static final _aspectRatios = <Object, double>{};
+
+  /// bumped whenever a new ratio is learned, pair it with a selector so only the
+  /// widgets watching that one key rebuild.
+  static final aspectRatiosVersion = 0.obs;
+
+  static double? aspectRatioOf(Object? cacheKey) => cacheKey == null ? null : _aspectRatios[cacheKey];
+
+  static bool _aspectRatioNotifyScheduled = false;
+
+  static void _cacheAspectRatio(Object? cacheKey, double ratio) {
+    if (cacheKey == null || !ratio.isFinite || ratio <= 0) return;
+    if (_aspectRatios[cacheKey] == ratio) return;
+    _aspectRatios[cacheKey] = ratio;
+    // -- this runs from the image's layout callback, listeners rebuilding on it would
+    // -- be setState during build, so tell them after the frame, once for the batch.
+    if (_aspectRatioNotifyScheduled) return;
+    _aspectRatioNotifyScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _aspectRatioNotifyScheduled = false;
+      aspectRatiosVersion.value++;
+    });
+  }
+
   @override
   State<ArtworkWidget> createState() => _ArtworkWidgetState();
 }
@@ -125,6 +153,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     if (info != null) {
       final ratio = info.image.width / info.image.height;
       if (cacheKey != null) _staggeredAspectRatios[cacheKey] = ratio;
+      ArtworkWidget._cacheAspectRatio(cacheKey, ratio);
       return boxWidth / ratio;
     }
     final cached = cacheKey == null ? null : _staggeredAspectRatios[cacheKey];
@@ -391,8 +420,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
                           width: (info) {
                             if (widget.staggered) return boxWidth;
-                            if (widget.forceSquared || info == null) return realWidthAndHeight;
+                            if (info == null) return realWidthAndHeight;
                             final aspectRatio = info.image.width / info.image.height;
+                            ArtworkWidget._cacheAspectRatio(_staggeredCacheKey, aspectRatio);
+                            if (widget.forceSquared) return realWidthAndHeight;
                             final fittedWidth = (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
                             return fittedWidth;
                           },
