@@ -188,6 +188,16 @@ class Player {
 
   int sleepingItemIndex(int sleepAfterItems, int currentIndex) => sleepAfterItems + currentIndex - 1;
 
+  int? sleepAfterItemsForIndex(int index) {
+    final current = currentIndex.value;
+    return index >= current ? index - current + 1 : null;
+  }
+
+  bool isSleepingAfterItems(int itemsCount) {
+    final config = sleepTimerConfig.value;
+    return config.enableSleepAfterItems && config.sleepAfterItems == itemsCount;
+  }
+
   bool get isModifyingQueue => _audioHandler.isModifyingQueue;
 
   void refreshPlatformIcons() => _audioHandler.refreshPlatformIcons();

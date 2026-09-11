@@ -515,11 +515,15 @@ class YTUtils {
     Iterable<YoutubeID>? videosToPlayAll,
   }) async {
     final playAfterVid = await getPlayerAfterVideo();
-    final currentVideo = Player.inst.currentVideo;
-    final isCurrentlyPlaying = currentVideo != null && videoId == currentVideo.id;
     if (displayGoToChannel && (channelID == null || channelID.isEmpty)) channelID = await YoutubeInfoController.utils.getVideoChannelID(videoId);
 
     final isFromQueue = queueIndex != null && queueSource == QueueSourceYoutubeID.ytPlayerQueue;
+
+    final int? stopAfterItems = isFromQueue
+        ? Player.inst.sleepAfterItemsForIndex(queueIndex)
+        : videoId == Player.inst.currentVideo?.id
+            ? 1
+            : null;
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -584,13 +588,13 @@ class YTUtils {
           },
         ),
       if (videosToPlayAll != null && videosToPlayAll.length > 1) YTUtils._getPlayAllTile(queueSource: queueSource, videos: videosToPlayAll, showPlayAllReverse: true),
-      isCurrentlyPlaying
+      stopAfterItems != null
           ? NamidaPopupItem(
               icon: Broken.pause,
               title: lang.stopAfterThisVideo,
-              enabled: Player.inst.sleepTimerConfig.value.sleepAfterItems != 1,
+              enabled: !Player.inst.isSleepingAfterItems(stopAfterItems),
               onTap: () {
-                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
+                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems);
               },
             )
           : NamidaPopupItem(

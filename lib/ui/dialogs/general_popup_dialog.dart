@@ -95,6 +95,12 @@ Future<void> showGeneralPopupDialog(
   }
 
   final isSingleAndFromQueue = index != null && isSingle && source == QueueSource.playerQueue;
+  final isSingleAndCurrentTrack = isSingle && tracks.first == Player.inst.currentTrack?.track;
+  final int? stopAfterItems = isSingleAndFromQueue
+      ? Player.inst.sleepAfterItemsForIndex(index)
+      : isSingleAndCurrentTrack
+          ? 1
+          : null;
 
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
@@ -1324,7 +1330,7 @@ Future<void> showGeneralPopupDialog(
                                   );
                                 }(),
 
-                              if (isSingle && tracks.first == Player.inst.currentTrack?.track)
+                              if (isSingleAndCurrentTrack)
                                 ObxO(
                                   rx: numberOfRepeats,
                                   builder: (context, repeats) => SmallListTile(
@@ -1365,26 +1371,27 @@ Future<void> showGeneralPopupDialog(
                                     ),
                                     const SizedBox(width: 8.0),
                                     Expanded(
-                                      child: isSingle && tracks.first == Player.inst.currentTrack?.track
-                                          ? bigIcon(
-                                              Broken.pause_circle,
-                                              iconWidget: Opacity(
-                                                opacity: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1 ? 0.6 : 1.0,
-                                                child: IgnorePointer(
-                                                  ignoring: Player.inst.sleepTimerConfig.value.sleepAfterItems == 1,
+                                      child: stopAfterItems != null
+                                          ? () {
+                                              final alreadySleeping = Player.inst.isSleepingAfterItems(stopAfterItems);
+                                              return bigIcon(
+                                                Broken.pause_circle,
+                                                iconWidget: Opacity(
+                                                  opacity: alreadySleeping ? 0.6 : 1.0,
                                                   child: Icon(
                                                     Broken.pause_circle,
                                                     color: iconColor,
                                                   ),
                                                 ),
-                                              ),
-                                              () => lang.stopAfterThisTrack,
-                                              () {
-                                                if (Player.inst.sleepTimerConfig.value.sleepAfterItems == 1) return;
-                                                NamidaNavigator.inst.closeDialog();
-                                                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: 1);
-                                              },
-                                            )
+                                                () => lang.stopAfterThisTrack,
+                                                alreadySleeping
+                                                    ? null
+                                                    : () {
+                                                        NamidaNavigator.inst.closeDialog();
+                                                        Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems);
+                                                      },
+                                              );
+                                            }()
                                           : bigIcon(
                                               Broken.play_circle,
                                               () => isSingle ? lang.play : lang.playAll,
