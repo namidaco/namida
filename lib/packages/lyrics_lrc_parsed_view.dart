@@ -24,6 +24,7 @@ import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/player_transport_controls.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -475,6 +476,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             icon: NamidaMiniPlayerBase.getLrcButton(
                               theme,
                               color: context.defaultIconColor(),
+                              iconSize: 22.0,
                             ),
                           ),
                         ),
@@ -486,107 +488,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             },
           )
         : null;
-    final bottomControlsChildren = fullscreen
-        ? [
-            const WaveformMiniplayer(fixPadding: true),
-            const SizedBox(height: 12.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(),
-                NamidaHero(
-                  enabled: false,
-                  tag: 'MINIPLAYER_POSITION',
-                  child: ObxO(
-                    rx: Player.inst.nowPlayingPosition,
-                    builder: (context, currentMS) => Text(
-                      currentMS.milliSecondsLabel,
-                      style: textTheme.displaySmall,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                NamidaIconButton(
-                  icon: Broken.previous,
-                  iconSize: 24.0,
-                  onPressed: Player.inst.previous,
-                ),
-                ObxO(
-                  rx: Player.inst.playWhenReady,
-                  builder: (context, playWhenReady) => NamidaIconButton(
-                    horizontalPadding: 18.0,
-                    icon: playWhenReady ? Broken.pause : Broken.play,
-                    iconSize: 34.0,
-                    onPressed: Player.inst.togglePlayPause,
-                  ),
-                ),
-                NamidaIconButton(
-                  icon: Broken.next,
-                  iconSize: 24.0,
-                  onPressed: Player.inst.next,
-                ),
-                const Spacer(),
-                NamidaHero(
-                  enabled: false,
-                  tag: 'MINIPLAYER_DURATION',
-                  child: ObxO(
-                    rx: settings.player.displayRemainingDurInsteadOfTotal,
-                    builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
-                        ? ObxO(
-                            rx: _currentItemDurationMS,
-                            builder: (context, durMS) {
-                              int finalDurMS = durMS ?? 0;
-
-                              return ObxO(
-                                rx: Player.inst.currentItem,
-                                builder: (context, currentItem) {
-                                  if (finalDurMS == 0 && currentItem is Selectable) {
-                                    finalDurMS = currentItem.track.durationMS;
-                                  }
-                                  return ObxO(
-                                    rx: Player.inst.nowPlayingPosition,
-                                    builder: (context, toSubtract) {
-                                      final msToDisplay = finalDurMS - toSubtract;
-                                      return Text(
-                                        "- ${msToDisplay.milliSecondsLabel}",
-                                        style: textTheme.displaySmall,
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          )
-                        : ObxO(
-                            rx: _currentItemDurationMS,
-                            builder: (context, milliseconds) {
-                              if (milliseconds == null || milliseconds == 0) {
-                                return ObxO(
-                                  rx: Player.inst.currentItem,
-                                  builder: (context, currentItem) {
-                                    final milliseconds = currentItem is Selectable ? currentItem.track.durationMS : 0;
-                                    return Text(
-                                      milliseconds.milliSecondsLabel,
-                                      style: textTheme.displaySmall,
-                                    );
-                                  },
-                                );
-                              }
-                              return Text(
-                                milliseconds.milliSecondsLabel,
-                                style: textTheme.displaySmall,
-                              );
-                            },
-                          ),
-                  ),
-                ),
-                const Spacer(),
-              ],
-            ),
-            const SizedBox(height: 24.0),
-            SizedBox(height: MediaQuery.paddingOf(context).bottom),
-          ]
-        : null;
+    final bottomControlsChildren = fullscreen ? const [PlayerTransportControls()] : null;
 
     final pagePaddingHorizontal = fullscreen ? 0.0 : 24.0;
     late final mpAnimation = NamidaMiniPlayerBase.clampedAnimationBCP;

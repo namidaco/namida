@@ -34,6 +34,7 @@ class _ExtraSettings with SettingsFileWriter {
   int? ytChannelsPageIndex;
   int? ytHomePageIndex;
   int? audioConfigPageIndex;
+  int? widePlayerPageIndex;
 
   bool windowMaximized = false;
   Rect? windowBounds;
@@ -62,6 +63,7 @@ class _ExtraSettings with SettingsFileWriter {
     int? ytChannelsPageIndex,
     int? ytHomePageIndex,
     int? audioConfigPageIndex,
+    int? widePlayerPageIndex,
     Rect? windowBounds,
     bool? windowMaximized,
     Rect? miniLyricsWindowBounds,
@@ -88,6 +90,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (ytChannelsPageIndex != null) this.ytChannelsPageIndex = ytChannelsPageIndex;
     if (ytHomePageIndex != null) this.ytHomePageIndex = ytHomePageIndex;
     if (audioConfigPageIndex != null) this.audioConfigPageIndex = audioConfigPageIndex;
+    if (widePlayerPageIndex != null) this.widePlayerPageIndex = widePlayerPageIndex;
     if (windowBounds != null) this.windowBounds = windowBounds;
     if (windowMaximized != null) this.windowMaximized = windowMaximized;
     if (miniLyricsWindowBounds != null) this.miniLyricsWindowBounds = miniLyricsWindowBounds;
@@ -131,6 +134,7 @@ class _ExtraSettings with SettingsFileWriter {
       ytChannelsPageIndex = json['ytChannelsPageIndex'] ?? ytChannelsPageIndex;
       ytHomePageIndex = json['ytHomePageIndex'] ?? ytHomePageIndex;
       audioConfigPageIndex = json['audioConfigPageIndex'] ?? audioConfigPageIndex;
+      widePlayerPageIndex = json['widePlayerPageIndex'] ?? widePlayerPageIndex;
 
       final windowBoundsJson = json['windowBounds'];
       if (windowBoundsJson is Map) {
@@ -182,6 +186,7 @@ class _ExtraSettings with SettingsFileWriter {
     'ytChannelsPageIndex': ?ytChannelsPageIndex,
     'ytHomePageIndex': ?ytHomePageIndex,
     'audioConfigPageIndex': ?audioConfigPageIndex,
+    'widePlayerPageIndex': ?widePlayerPageIndex,
     if (windowBounds != null)
       'windowBounds': {
         'l': windowBounds!.left,

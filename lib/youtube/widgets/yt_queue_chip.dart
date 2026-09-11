@@ -294,6 +294,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 iconWidget: NamidaMiniPlayerBase.getLrcButton(
                                   theme,
                                   color: _ActionItemAlt.getIconColor(context),
+                                  iconSize: 22.0,
                                 ),
                               ),
                             ),

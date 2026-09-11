@@ -57,6 +57,7 @@ class NamidaNavigator {
   bool isInYTCommentsSubpage = false;
   bool isInYTCommentRepliesSubpage = false;
   bool isInSoundControlSubpage = false;
+  bool isInWideScreenPlayerPage = false;
   bool isQueueSheetOpen = false;
 
   final currentWidgetStack = <NamidaRoute>[].obs;
@@ -574,6 +575,16 @@ class NamidaNavigator {
   }
 
   Future<void> popPage({bool waitForAnimation = false}) async {
+    if (isInSoundControlSubpage) {
+      popRoot();
+      isInSoundControlSubpage = false;
+      return;
+    } else if (isInWideScreenPlayerPage) {
+      popRoot();
+      isInWideScreenPlayerPage = false;
+      return;
+    }
+
     if (innerDrawerKey.currentState?.isOpened == true) {
       innerDrawerKey.currentState?.close();
       return;
@@ -591,10 +602,6 @@ class NamidaNavigator {
       } else if (isInYTCommentsSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentsSubpage = false;
-        return;
-      } else if (isInSoundControlSubpage) {
-        popRoot();
-        isInSoundControlSubpage = false;
         return;
       } else if (!Dimensions.inst.miniplayerIsWideScreen) {
         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
