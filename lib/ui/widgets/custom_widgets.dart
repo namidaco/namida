@@ -1550,54 +1550,61 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
         ),
       ),
     );
+    Widget child = ExpansionTile(
+      collapsedShape: widget.borderless ? const Border() : null,
+      shape: widget.borderless ? const Border() : null,
+      visualDensity: widget.compact ? VisualDensity.compact : VisualDensity.comfortable,
+      controlAffinity: ListTileControlAffinity.trailing,
+      collapsedBackgroundColor: widget.bgColor,
+      backgroundColor: widget.bgColor,
+      initiallyExpanded: widget.initiallyExpanded,
+      onExpansionChanged: widget.onExpansionChanged == null ? _rotateTrailingIcon : _onExpansionChanged,
+      expandedAlignment: Alignment.centerLeft,
+      tilePadding: EdgeInsets.only(left: 16.0, right: widget.normalRightPadding ? 16.0 : 12.0),
+      leading:
+          widget.leading ??
+          Icon(
+            widget.icon,
+            color: widget.iconColor,
+          ),
+      trailing: widget.trailingBuilder?.call(trailingIconWidget) ?? trailingIconWidget,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.titleText,
+            style: textTheme.displayMedium?.copyWith(
+              color:
+                  widget.textColor ??
+                  (widget.textColorScheme == null
+                      ? null
+                      : Color.alphaBlend(
+                          widget.textColorScheme!.withAlpha(40),
+                          textTheme.displayMedium!.color!,
+                        )),
+            ),
+          ),
+          if (widget.subtitle != null)
+            widget.subtitle!
+          else if (widget.subtitleText != null)
+            Text(
+              widget.subtitleText!,
+              style: textTheme.displaySmall,
+            ),
+        ],
+      ),
+      childrenPadding: widget.childrenPadding,
+      children: widget.children,
+    );
+    if (widget.bgColor == null && !widget.borderless) {
+      child = Material(
+        type: MaterialType.transparency,
+        child: child,
+      );
+    }
     return ListTileTheme(
       dense: !widget.bigahh,
-      child: ExpansionTile(
-        collapsedShape: widget.borderless ? const Border() : null,
-        shape: widget.borderless ? const Border() : null,
-        visualDensity: widget.compact ? VisualDensity.compact : VisualDensity.comfortable,
-        controlAffinity: ListTileControlAffinity.trailing,
-        collapsedBackgroundColor: widget.bgColor,
-        backgroundColor: widget.bgColor,
-        initiallyExpanded: widget.initiallyExpanded,
-        onExpansionChanged: widget.onExpansionChanged == null ? _rotateTrailingIcon : _onExpansionChanged,
-        expandedAlignment: Alignment.centerLeft,
-        tilePadding: EdgeInsets.only(left: 16.0, right: widget.normalRightPadding ? 16.0 : 12.0),
-        leading:
-            widget.leading ??
-            Icon(
-              widget.icon,
-              color: widget.iconColor,
-            ),
-        trailing: widget.trailingBuilder?.call(trailingIconWidget) ?? trailingIconWidget,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.titleText,
-              style: textTheme.displayMedium?.copyWith(
-                color:
-                    widget.textColor ??
-                    (widget.textColorScheme == null
-                        ? null
-                        : Color.alphaBlend(
-                            widget.textColorScheme!.withAlpha(40),
-                            textTheme.displayMedium!.color!,
-                          )),
-              ),
-            ),
-            if (widget.subtitle != null)
-              widget.subtitle!
-            else if (widget.subtitleText != null)
-              Text(
-                widget.subtitleText!,
-                style: textTheme.displaySmall,
-              ),
-          ],
-        ),
-        childrenPadding: widget.childrenPadding,
-        children: widget.children,
-      ),
+      child: child,
     );
   }
 }

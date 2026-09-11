@@ -145,49 +145,58 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     ObxPrefer(
                       enabled: sort.requiresHistory,
                       rx: HistoryController.inst.topTracksMapListens,
-                      builder: (context, _) => SliverGrid.builder(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: countPerRowResolved,
-                          childAspectRatio: 0.8,
-                          mainAxisSpacing: 8.0,
-                        ),
-                        itemCount: SearchSortController.inst.genreSearchList.length,
-                        itemBuilder: (context, i) {
-                          final genre = SearchSortController.inst.genreSearchList[i];
-                          final tracks = genre.getGenresTracksFor(genreType);
-                          final topRightText = extraTextResolver?.call(tracks);
-                          return AnimatingGrid(
-                            countPerRowResolved: countPerRowResolved,
-                            columnCount: SearchSortController.inst.genreSearchList.length,
-                            position: i,
-                            shouldAnimate: _shouldAnimate,
-                            child: MultiArtworkCard(
-                              heroTag: genreType == MediaType.style ? 'style_$genre' : 'genre_$genre',
-                              tracks: tracks,
-                              name: genre,
-                              countPerRow: countPerRow,
-                              showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre, genreType),
-                              onTap: () => NamidaOnTaps.inst.onGenreTap(genre, genreType),
-                              widgetsInStack: topRightText == null
-                                  ? const []
-                                  : [
-                                      Positioned(
-                                        top: 0,
-                                        right: 0,
-                                        child: NamidaBlurryContainer(
-                                          child: Text(
-                                            topRightText,
-                                            style: textTheme.displaySmall?.copyWith(
-                                              fontSize: 12.0,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            softWrap: false,
-                                            overflow: TextOverflow.fade,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                      builder: (context, _) => SliverLayoutBuilder(
+                        builder: (context, constraints) {
+                          const childAspectRatio = 0.8;
+                          final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                          final cardHeight = cardWidth / childAspectRatio;
+                          return SliverGrid.builder(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: countPerRowResolved,
+                              childAspectRatio: childAspectRatio,
+                              mainAxisSpacing: 8.0,
                             ),
+                            itemCount: SearchSortController.inst.genreSearchList.length,
+                            itemBuilder: (context, i) {
+                              final genre = SearchSortController.inst.genreSearchList[i];
+                              final tracks = genre.getGenresTracksFor(genreType);
+                              final topRightText = extraTextResolver?.call(tracks);
+                              return AnimatingGrid(
+                                countPerRowResolved: countPerRowResolved,
+                                columnCount: SearchSortController.inst.genreSearchList.length,
+                                position: i,
+                                shouldAnimate: _shouldAnimate,
+                                child: MultiArtworkCard(
+                                  heroTag: genreType == MediaType.style ? 'style_$genre' : 'genre_$genre',
+                                  tracks: tracks,
+                                  name: genre,
+                                  countPerRow: countPerRow,
+                                  width: cardWidth,
+                                  height: cardHeight,
+                                  showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre, genreType),
+                                  onTap: () => NamidaOnTaps.inst.onGenreTap(genre, genreType),
+                                  widgetsInStack: topRightText == null
+                                      ? const []
+                                      : [
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: NamidaBlurryContainer(
+                                              child: Text(
+                                                topRightText,
+                                                style: textTheme.displaySmall?.copyWith(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                softWrap: false,
+                                                overflow: TextOverflow.fade,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                ),
+                              );
+                            },
                           );
                         },
                       ),

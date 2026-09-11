@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element_parameter
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/class/track.dart';
@@ -105,7 +107,7 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
               ),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: (constraints.maxWidth * 0.04).clampDouble(8.0, 32.0)),
-                child: const PlayPauseButton(),
+                child: const _PlayPauseButton(),
               ),
               NamidaIconButton(
                 icon: Broken.next,
@@ -177,11 +179,11 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
 }
 
 /// Play/pause with the same colored circle the main player uses.
-class PlayPauseButton extends StatelessWidget {
+class _PlayPauseButton extends StatelessWidget {
   final double iconSize;
   final double extraPadding;
 
-  const PlayPauseButton({super.key, this.iconSize = 32.0, this.extraPadding = 10.0});
+  const _PlayPauseButton({this.iconSize = 32.0, this.extraPadding = 12.0});
 
   void _setHighlighted(bool value) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = value;
 

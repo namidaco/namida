@@ -82,14 +82,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     NamidaNavigator.inst.popRoot();
   }
 
-  late final ListController _listController;
-  late final ScrollController _scrollController;
+  _LyricsListState? _list;
 
   late final double _paddingVertical = widget.verticalPadding ?? (widget.isFullScreenView ? 32 * 12.0 : 12 * 12.0);
   int? _currentIndex;
   String _currentLine = '';
 
-  static const _lrcJumpAnimationDuration = Duration(milliseconds: 300);
   static const int _lrcOpacityDurationMS = 500;
   late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView;
   bool _isCurrentLineEmpty = true;
@@ -108,8 +106,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   @override
   void initState() {
     super.initState();
-    _listController = ListController();
-    _scrollController = NamidaScrollController.create();
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -146,9 +142,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   }
 
   void fillLists(Lrc? lrc, LrcText? txt) {
-    try {
-      _scrollController.jumpTo(0);
-    } catch (_) {}
     currentLRC = lrc;
     if (lrc == null) {
       highlightTimestampsMap.clear();
@@ -237,21 +230,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       int newIndex = newIndexPre!;
       _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
 
-      if ((_canAnimateScroll.value || forceAnimate) && _listController.isAttached) {
+      final list = _list;
+      if ((_canAnimateScroll.value || forceAnimate) && list != null && list.canScroll) {
         _currentIndex = newIndex;
-        jump
-            ? _listController.jumpToItem(
-                scrollController: _scrollController,
-                alignment: 0.4,
-                index: newIndex,
-              )
-            : _listController.animateToItem(
-                scrollController: _scrollController,
-                alignment: 0.4,
-                index: newIndex,
-                duration: (d) => _lrcJumpAnimationDuration,
-                curve: (d) => Curves.easeOut,
-              );
+        list.scrollToIndex(newIndex, jump: jump);
         try {
           _currentLine = lyrics[newIndex].lyrics;
         } catch (_) {
@@ -289,6 +271,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     });
   }
 
+  void _onListInit(_LyricsListState state) => _list = state;
+
+  void _onListDispose(_LyricsListState state) {
+    if (identical(_list, state)) _list = null;
+  }
+
   Timer? _scrollTimer;
   final _canAnimateScroll = true.obs;
 
@@ -307,8 +295,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
     _latestUpdatedLineInfo.close();
     _currentItemDurationMS.close();
-    _listController.dispose();
-    _scrollController.dispose();
     _canAnimateScroll.close();
     super.dispose();
   }
@@ -695,18 +681,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           final selectedIndex = selectedInfo?.$2;
                           final selectedLineTimestamp = selectedInfo?.$1;
                           return CustomAnimatedSwitcher(
-                            duration: const Duration(milliseconds: 600),
+                            duration: const Duration(milliseconds: 800),
                             switchInCurve: Curves.easeInOutQuart,
                             switchOutCurve: Curves.easeInOutQuart,
                             child: lyrics.isEmpty
                                 ? const SizedBox(
                                     key: ValueKey('empty_lrc'),
                                   )
-                                : SuperSmoothListView.builder(
-                                    key: ValueKey('valid_lrc'),
-                                    padding: EdgeInsets.symmetric(vertical: _paddingVertical),
-                                    controller: _scrollController,
-                                    listController: _listController,
+                                : _LyricsList(
+                                    key: ObjectKey(currentLRC),
+                                    verticalPadding: _paddingVertical,
+                                    onInit: _onListInit,
+                                    onDispose: _onListDispose,
                                     itemCount: lyrics.length,
                                     itemBuilder: (context, index) {
                                       // -- usually not needed, but helps cuz sometimes gets called on stale index
@@ -1532,5 +1518,74 @@ class _KaraokeTextPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _KaraokeTextPainter old) {
     return old.dim != dim || old.full != full || old.total != total || old.textDirection != textDirection;
+  }
+}
+
+class _LyricsList extends StatefulWidget {
+  final double verticalPadding;
+  final int itemCount;
+  final IndexedWidgetBuilder itemBuilder;
+  final void Function(_LyricsListState state) onInit;
+  final void Function(_LyricsListState state) onDispose;
+
+  const _LyricsList({
+    super.key,
+    required this.verticalPadding,
+    required this.itemCount,
+    required this.itemBuilder,
+    required this.onInit,
+    required this.onDispose,
+  });
+
+  @override
+  State<_LyricsList> createState() => _LyricsListState();
+}
+
+class _LyricsListState extends State<_LyricsList> {
+  static const _alignment = 0.4;
+  static const _animationDuration = Duration(milliseconds: 300);
+
+  final _listController = ListController();
+  final _scrollController = NamidaScrollController.create();
+
+  bool get canScroll => _listController.isAttached && _scrollController.hasClients;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.onInit(this);
+  }
+
+  @override
+  void dispose() {
+    widget.onDispose(this);
+    _listController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // -- [ListController.animateToItem] spawns an animation that outlives the list, crashing on unmount.
+  // -- [ScrollPosition.animateTo] is cancelled when the position is disposed.
+  void scrollToIndex(int index, {required bool jump}) {
+    final position = _scrollController.position;
+    // ignore: invalid_use_of_visible_for_testing_member
+    final offset = _listController.getOffsetToReveal(index, _alignment).clampDouble(position.minScrollExtent, position.maxScrollExtent);
+    if (offset == position.pixels) return;
+    if (jump) {
+      position.jumpTo(offset);
+    } else {
+      position.animateTo(offset, duration: _animationDuration, curve: Curves.easeOut);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SuperSmoothListView.builder(
+      padding: EdgeInsets.symmetric(vertical: widget.verticalPadding),
+      controller: _scrollController,
+      listController: _listController,
+      itemCount: widget.itemCount,
+      itemBuilder: widget.itemBuilder,
+    );
   }
 }

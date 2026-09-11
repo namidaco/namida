@@ -942,7 +942,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       duration = await setPls();
     } catch (e, st) {
       if (checkInterrupted()) return;
-      final reallyError = !(duration != null && currentPositionMS.value > 0);
+      // -- a load that failed could leave the player idle, position/duration can still be the previous item's
+      final reallyError = currentState.value != ProcessingState.ready || !(duration != null && currentPositionMS.value > 0);
       if (reallyError) {
         printy(e, isError: true);
         // -- playing music from root folders still require `all_file_access`
@@ -1562,7 +1563,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     YoutubeID item,
     int index,
   ) async {
-    if (item.id == '' || item.id == 'null') return null;
+    if (item.id.isDummyVideoId) return null;
 
     VideoStreamsResult? streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(item.id);
 
@@ -1743,7 +1744,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetVideoCache = null;
     YoutubeInfoController.current.onVideoPageReset?.call();
 
-    if (item.id == '' || item.id == 'null') {
+    if (item.id.isDummyVideoId) {
       if (_willPlayWhenReady && currentQueue.value.length > 1) skipItem();
       return;
     }

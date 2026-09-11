@@ -177,13 +177,19 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         ),
                         const SizedBox(width: 8.0),
                         Expanded(
-                          child: Text(
-                            [
-                              lang.replies,
-                              if (repliesCount != null) repliesCount.formatDecimalShort(),
-                            ].join(' • '),
-                            style: textTheme.displayMedium,
-                            textAlign: TextAlign.start,
+                          child: ObxO(
+                            rx: _currentReplies,
+                            builder: (context, _) {
+                              final currentRepliesCount = _currentMainComment.value.repliesCount;
+                              return Text(
+                                [
+                                  lang.replies,
+                                  if (currentRepliesCount != null) currentRepliesCount.formatDecimalShort(),
+                                ].join(' • '),
+                                style: textTheme.displayMedium,
+                                textAlign: TextAlign.start,
+                              );
+                            },
                           ),
                         ),
                         NamidaInkWellButton(

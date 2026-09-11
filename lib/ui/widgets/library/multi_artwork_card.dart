@@ -20,6 +20,8 @@ class MultiArtworkCard extends StatelessWidget {
   final List<Widget> widgetsInStack;
   final bool enableHero;
   final File? artworkFile;
+  final double width;
+  final double height;
 
   const MultiArtworkCard({
     super.key,
@@ -32,12 +34,18 @@ class MultiArtworkCard extends StatelessWidget {
     this.widgetsInStack = const [],
     this.enableHero = true,
     this.artworkFile,
+    required this.width,
+    required this.height,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+    final remainingVerticalSpace = (height - imageSize).withMinimum(0.0);
+    final itemImagePercentageMultiplier = imageSize * 0.02;
+    double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);
     return Container(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
@@ -45,81 +53,73 @@ class MultiArtworkCard extends StatelessWidget {
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final imageSize = constraints.maxWidth;
-          final remainingVerticalSpace = constraints.maxHeight - imageSize;
-          final itemImagePercentageMultiplier = imageSize * 0.02;
-          double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);
-          return Stack(
-            children: [
-              MultiArtworks(
-                borderRadius: 12.0,
-                heroTag: heroTag,
-                disableHero: !enableHero,
-                tracks: tracks.toImageTracks(),
-                thumbnailSize: constraints.maxWidth,
-                iconSize: (12.0 * itemImagePercentageMultiplier).withMinimum(12.0),
-                artworkFile: artworkFile,
-              ),
-              Positioned(
-                left: 0.0,
-                bottom: 0.0,
-                child: SizedBox(
-                  width: imageSize,
-                  height: remainingVerticalSpace,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: remainingVerticalSpace * 0.1),
-                        if (name != '')
-                          NamidaHero(
-                            enabled: enableHero,
-                            tag: 'line1_$heroTag',
-                            child: Text(
-                              name,
-                              style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.38)),
-                              softWrap: false,
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                        NamidaHero(
-                          enabled: enableHero,
-                          tag: 'line2_$heroTag',
-                          child: Text(
-                            [
-                              tracks.displayTrackKeyword,
-                              tracks.totalDurationFormatted,
-                            ].join(' - '),
-                            style: textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w400,
-                              fontSize: getFontSize(0.28),
-                            ),
-                            softWrap: false,
-                            overflow: TextOverflow.fade,
-                          ),
+      child: Stack(
+        children: [
+          MultiArtworks(
+            borderRadius: 12.0,
+            heroTag: heroTag,
+            disableHero: !enableHero,
+            tracks: tracks.toImageTracks(),
+            thumbnailSize: imageSize,
+            iconSize: (12.0 * itemImagePercentageMultiplier).withMinimum(12.0),
+            artworkFile: artworkFile,
+          ),
+          Positioned(
+            left: 0.0,
+            bottom: 0.0,
+            child: SizedBox(
+              width: imageSize,
+              height: remainingVerticalSpace,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: remainingVerticalSpace * 0.1),
+                    if (name != '')
+                      NamidaHero(
+                        enabled: enableHero,
+                        tag: 'line1_$heroTag',
+                        child: Text(
+                          name,
+                          style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.38)),
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
                         ),
-                        SizedBox(height: remainingVerticalSpace * 0.1),
-                      ],
+                      ),
+                    NamidaHero(
+                      enabled: enableHero,
+                      tag: 'line2_$heroTag',
+                      child: Text(
+                        [
+                          tracks.displayTrackKeyword,
+                          tracks.totalDurationFormatted,
+                        ].join(' - '),
+                        style: textTheme.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w400,
+                          fontSize: getFontSize(0.28),
+                        ),
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
                     ),
-                  ),
+                    SizedBox(height: remainingVerticalSpace * 0.1),
+                  ],
                 ),
               ),
-              Positioned.fill(
-                child: NamidaInkWell(
-                  onTap: onTap,
-                  onLongPress: showMenuFunction,
-                  enableSecondaryTap: true,
-                ),
-              ),
-              ...widgetsInStack,
-            ],
-          );
-        },
+            ),
+          ),
+          Positioned.fill(
+            child: NamidaInkWell(
+              onTap: onTap,
+              onLongPress: showMenuFunction,
+              enableSecondaryTap: true,
+            ),
+          ),
+          ...widgetsInStack,
+        ],
       ),
     );
   }

@@ -20,6 +20,7 @@ class _YTUtilsCommentActions {
           mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
           createCommentParams: mainList?.value?.createParams ?? videoPage?.commentResult.createParams,
           content: commentText,
+          videoPage: videoPage,
         );
 
         if (newComment != null) {
@@ -76,6 +77,7 @@ class _YTUtilsCommentActions {
             final didDelete = await YoutubeInfoController.commentAction.deleteComment(
               comment: comment,
               mainList: mainList.value ?? await YoutiPie.cacheBuilder.forComments(videoId: videoId).read(),
+              videoPage: _currentVideoPageIfMatch(videoId),
             );
             if (didDelete == true) {
               mainList.refresh();
@@ -110,12 +112,17 @@ class _YTUtilsCommentActions {
           mainList: currentList,
           createReplyParams: replyingTo.engagement.createReplyParams,
           content: replyText,
+          mainComment: mainComment is CommentInfoItem ? mainComment : null,
+          commentsList: _currentCommentsIfMatch(videoId),
+          videoPage: _currentVideoPageIfMatch(videoId),
         );
 
         if (newReply == null) {
           _showError();
           return false;
         }
+
+        YoutubeInfoController.current.currentComments.refresh();
 
         if (mainList != null) {
           if (mainList.value == null) {
@@ -179,9 +186,13 @@ class _YTUtilsCommentActions {
             final didDelete = await YoutubeInfoController.commentAction.deleteReply(
               reply: reply,
               mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
+              mainComment: mainComment,
+              commentsList: _currentCommentsIfMatch(videoId),
+              videoPage: _currentVideoPageIfMatch(videoId),
             );
             if (didDelete == true) {
               mainList?.refresh();
+              YoutubeInfoController.current.currentComments.refresh();
               return true;
             } else {
               _showError();
@@ -225,6 +236,16 @@ class _YTUtilsCommentActions {
 
   void _showError() {
     snackyy(message: lang.failed, isError: true);
+  }
+
+  YoutiPieVideoPageResult? _currentVideoPageIfMatch(String videoId) {
+    final videoPage = YoutubeInfoController.current.currentVideoPage.value;
+    return videoPage?.videoId == videoId ? videoPage : null;
+  }
+
+  YoutiPieCommentResult? _currentCommentsIfMatch(String videoId) {
+    final comments = YoutubeInfoController.current.currentComments.value;
+    return comments?.videoId == videoId ? comments : null;
   }
 
   String? _getCurrentAutorIfActive() {

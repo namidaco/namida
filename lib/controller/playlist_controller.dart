@@ -331,6 +331,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
               convertItem: (e, dateAdded) => TrackWithDate(dateAdded: dateAdded, track: e),
               m3uPath: addAsM3U ? m3uPath : null,
               creationDate: creationDate,
+              tracksFromNewSource: true,
             );
           } else {
             this.addNewPlaylist(
@@ -484,7 +485,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         await removePlaylist(existing);
       }
 
-      final newPl = LocalPlaylist(
+      var newPl = LocalPlaylist(
         name: name,
         tracks: newTracks,
         creationDate: spl.createdMS ?? existing?.creationDate ?? currentTimeMS,
@@ -498,6 +499,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         remoteSource: PlaylistRemoteSource(sourceKey: serverKey, remoteId: spl.id),
       );
 
+      newPl = ensureNewSourceItemsSorted(newPl);
       await importPlaylistForce(newPl, sortPlaylists: false);
 
       anyChanged = true;

@@ -960,9 +960,12 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
               final queue = _recentsItemsList[i];
               return QueueCard(
                 queue: queue,
+                hero: 'queue_${queue.date}',
                 fullInfo: false,
                 homepageItem: element,
                 preferOpenOriginalSource: true,
+                width: 106.0,
+                height: 138.0,
               );
             },
           ),
@@ -1370,6 +1373,8 @@ class _AlbumsList extends StatelessWidget {
               extraInfo: listens == null ? null : "${listens!(albumId)}",
               forceExtraInfoAtTopRight: true,
               additionalHeroTag: "$title$index",
+              width: 106.0,
+              height: 138.0,
             );
           },
         ),
@@ -1423,6 +1428,8 @@ class _ArtistsList extends StatelessWidget {
               bottomCenterText: isLoading || listens == null ? null : "${listens!(a)}",
               additionalHeroTag: "$title$index",
               type: MediaType.artist,
+              width: 86.0,
+              height: 100.0,
             );
           },
         ),

@@ -448,9 +448,10 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                     final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
                     final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
                     final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
+                    final seekTextMaxOffset = (maxWidth - seekTextWidth - seekTextExtraMargin).withMinimum(seekTextExtraMargin);
                     return Transform.translate(
                       offset: Offset(
-                        (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, maxWidth - seekTextWidth - seekTextExtraMargin),
+                        (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, seekTextMaxOffset),
                         -(12.0.withMinimum(heatMapCurrentHeight)),
                       ),
                       child: AnimatedBuilder(

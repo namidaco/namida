@@ -153,13 +153,14 @@ class _SearchPageState extends State<SearchPage> {
         list: list,
         builder: (itemName) {
           final tracks = getTracks(itemName);
-          return Container(
-            width: 90.0,
-            margin: const EdgeInsets.only(left: 2.0),
+          return Padding(
+            padding: const EdgeInsets.only(left: 2.0),
             child: ArtistCard(
               name: itemName,
               artist: tracks,
               type: type,
+              width: 90.0,
+              height: 100.0,
             ),
           );
         },
@@ -375,13 +376,14 @@ class _SearchPageState extends State<SearchPage> {
                                             list: albumSearchTemp,
                                             builder: (item) {
                                               final albumId = item;
-                                              return Container(
-                                                width: 130.0,
-                                                margin: const EdgeInsets.only(left: 2.0),
+                                              return Padding(
+                                                padding: const EdgeInsets.only(left: 2.0),
                                                 child: AlbumCard(
                                                   identifier: albumId,
                                                   album: albumId.getAlbumTracks(),
                                                   staggered: false,
+                                                  width: 106.0,
+                                                  height: 138.0,
                                                 ),
                                               );
                                             },
@@ -435,9 +437,8 @@ class _SearchPageState extends State<SearchPage> {
                                             list: genreSearchTemp,
                                             builder: (item) {
                                               final genreName = item;
-                                              return Container(
-                                                width: 130.0,
-                                                margin: const EdgeInsets.only(left: 2.0),
+                                              return Padding(
+                                                padding: const EdgeInsets.only(left: 2.0),
                                                 child: MultiArtworkCard(
                                                   tracks: genreName.getGenresTracks(),
                                                   name: genreName,
@@ -445,6 +446,8 @@ class _SearchPageState extends State<SearchPage> {
                                                   heroTag: 'genre_$genreName',
                                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genreName),
                                                   onTap: () => NamidaOnTaps.inst.onGenreTap(genreName),
+                                                  width: 106.0,
+                                                  height: 138.0,
                                                 ),
                                               );
                                             },
@@ -465,9 +468,8 @@ class _SearchPageState extends State<SearchPage> {
                                             list: styleSearchTemp,
                                             builder: (item) {
                                               final styleName = item;
-                                              return Container(
-                                                width: 130.0,
-                                                margin: const EdgeInsets.only(left: 2.0),
+                                              return Padding(
+                                                padding: const EdgeInsets.only(left: 2.0),
                                                 child: MultiArtworkCard(
                                                   tracks: styleName.getStylesTracks(),
                                                   name: styleName,
@@ -475,6 +477,8 @@ class _SearchPageState extends State<SearchPage> {
                                                   heroTag: 'style_$styleName',
                                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(styleName, MediaType.style),
                                                   onTap: () => NamidaOnTaps.inst.onGenreTap(styleName, MediaType.style),
+                                                  width: 106.0,
+                                                  height: 138.0,
                                                 ),
                                               );
                                             },
@@ -497,9 +501,8 @@ class _SearchPageState extends State<SearchPage> {
                                               final playlistName = item;
                                               final playlist = PlaylistController.inst.getPlaylist(playlistName);
 
-                                              return Container(
-                                                width: 130.0,
-                                                margin: const EdgeInsets.only(left: 2.0),
+                                              return Padding(
+                                                padding: const EdgeInsets.only(left: 2.0),
                                                 child: MultiArtworkCard(
                                                   tracks: playlist?.tracks.toTracks() ?? [],
                                                   name: playlist?.name.translatePlaylistName() ?? playlistName,
@@ -507,6 +510,8 @@ class _SearchPageState extends State<SearchPage> {
                                                   heroTag: 'playlist_$playlistName',
                                                   showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
                                                   onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(playlistName),
+                                                  width: 106.0,
+                                                  height: 138.0,
                                                 ),
                                               );
                                             },

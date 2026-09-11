@@ -49,10 +49,10 @@ import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
+import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/tray_controller.dart';
@@ -668,74 +668,89 @@ class _NamidaState extends State<Namida> {
                 Visibility(
                   maintainState: true,
                   visible: !showPipOnly,
-                      child: MaterialApp(
-                        color: kDefaultIconLightColor,
-                        key: const Key('namida_app'),
-                        debugShowCheckedModeBanner: false,
-                        navigatorKey: namida.rootNavigatorKey,
-                        title: 'Namida',
-                        shortcuts: ShortcutsController.instance?.appShortcuts,
-                        // restorationScopeId: 'Namida',
-                        // -- we use custom logic to avoid context based translations
-                        // locale: currentLanguage?.locale,
-                        // supportedLocales: AppLocalizations.supportedLocales,
+                  child: MaterialApp(
+                    color: kDefaultIconLightColor,
+                    key: const Key('namida_app'),
+                    debugShowCheckedModeBanner: false,
+                    navigatorKey: namida.rootNavigatorKey,
+                    title: 'Namida',
+                    shortcuts: ShortcutsController.instance?.appShortcuts,
+                    // restorationScopeId: 'Namida',
+                    // -- we use custom logic to avoid context based translations
+                    // locale: currentLanguage?.locale,
+                    // supportedLocales: AppLocalizations.supportedLocales,
                     localizationsDelegates: Namida._localizationsDelegates,
-                        builder: (context, widget) {
-                          Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
-                          // overlay entries get rebuilt on any insertion/removal, so we create app here.
+                    builder: (context, widget) {
+                      Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
+                      // overlay entries get rebuilt on any insertion/removal, so we create app here.
 
-                          Widget mainApp = buildMainApp(widget!, platformBrightness);
+                      Widget mainApp = buildMainApp(widget!, platformBrightness);
 
                       // -- text scaling is applied here rather than above [MaterialApp], so keyboard insets
                       // -- & other media query changes dont recreate the app widget itself.
                       return _ScaledTextMediaQuery(
                         child: Overlay(
-                            initialEntries: [
-                              OverlayEntry(
-                                builder: (context) {
-                                  final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                                  if (newPlatformBrightness != platformBrightness) {
-                                    platformBrightness = newPlatformBrightness;
-                                    mainApp = buildMainApp(widget, platformBrightness);
-                                    YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
-                                  }
-                                  return mainApp;
-                                },
-                              ),
-                            ],
+                          initialEntries: [
+                            OverlayEntry(
+                              builder: (context) {
+                                final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                                if (newPlatformBrightness != platformBrightness) {
+                                  platformBrightness = newPlatformBrightness;
+                                  mainApp = buildMainApp(widget, platformBrightness);
+                                  YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                                }
+                                return mainApp;
+                              },
+                            ),
+                          ],
                         ),
-                          );
-                        },
-                        home: mainPageWrapper,
+                      );
+                    },
+                    home: mainPageWrapper,
                   ),
                 ),
 
                 // prevent accidental opening for drawer when performing back gesture
                 if (shouldAddEdgeAbsorbers)
-                  SizedBox(
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
                     width: 18.0,
-                    height: context.height * 0.8,
-                    child: HorizontalDragDetector(
-                      onUpdate: (_) {},
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: FractionallySizedBox(
+                        heightFactor: 0.8,
+                        child: HorizontalDragDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onUpdate: (_) {},
+                        ),
+                      ),
                     ),
                   ),
 
                 // prevent accidental miniplayer/queue swipe up when performing home scween gesture
                 if (shouldAddEdgeAbsorbers)
-                  SizedBox(
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     height: 18.0,
-                    width: context.width,
                     child: VerticalDragDetector(
+                      behavior: HitTestBehavior.translucent,
                       onUpdate: (_) {},
                     ),
                   ),
 
                 // prevent accidental miniplayer/queue swipe horizontal when performing home scween horizontal gesture
                 if (shouldAddEdgeAbsorbers)
-                  SizedBox(
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                     height: 18.0,
-                    width: context.width,
                     child: HorizontalDragDetector(
+                      behavior: HitTestBehavior.translucent,
                       onUpdate: (_) {},
                     ),
                   ),
@@ -744,12 +759,12 @@ class _NamidaState extends State<Namida> {
                 if (shouldAddEdgeAbsorbers)
                   Positioned(
                     right: 0,
-                    child: SizedBox(
-                      width: 12.0,
-                      height: context.height,
-                      child: HorizontalDragDetector(
-                        onUpdate: (_) {},
-                      ),
+                    top: 0,
+                    bottom: 0,
+                    width: 12.0,
+                    child: HorizontalDragDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onUpdate: (_) {},
                     ),
                   ),
 
@@ -768,6 +783,7 @@ class _NamidaState extends State<Namida> {
         ),
       ),
     );
+    if (!NamidaFeaturesVisibility.accessibilitySemantics) finalApp = ExcludeSemantics(child: finalApp);
     if (NamidaFeaturesVisibility.recieveDragAndDrop) finalApp = _NamidaDropRegion(child: finalApp);
 
     return NamidaUIScaleWrapper(child: finalApp);
@@ -842,6 +858,7 @@ class NamidaReceiveIntentManager {
       if (files.isNotEmpty) {
         final paths = <String>[];
         final m3uPaths = <String>{};
+        final unresolved = <String>[];
         for (var f in files) {
           final realPath = realPathCallback(f);
           if (realPath != null) {
@@ -852,11 +869,17 @@ class NamidaReceiveIntentManager {
               paths.add(path);
             }
           } else {
-            final results = valueCallback(f)?.split('\n');
-            if (results != null) {
-              for (var e in results) {
-                for (final line in e.split('https://')) {
-                  if (line.isNotEmpty) paths.add("https://$line");
+            final value = valueCallback(f);
+            if (value != null) {
+              if (value.startsWith('content://') || value.startsWith('file://')) {
+                unresolved.add(value);
+              } else {
+                for (final e in value.split('\n')) {
+                  final parts = e.split('https://');
+                  for (int i = 1; i < parts.length; i++) {
+                    final line = parts[i];
+                    if (line.isNotEmpty) paths.add("https://$line");
+                  }
                 }
               }
             }
@@ -884,16 +907,36 @@ class NamidaReceiveIntentManager {
             }
           } else {
             // -- this for sussy links
-            final existing = paths.where((element) {
-              final type = FileSystemEntity.typeSync(element);
-              return type == FileSystemEntityType.file || type == FileSystemEntityType.directory;
-            });
-            final err = await _extractAndPlayExternalFiles(existing);
-            if (err != null) showErrorPlayingFileSnackbar(error: err);
+            final existing = <String>[];
+            for (final path in paths) {
+              final type = FileSystemEntity.typeSync(path);
+              if (type == FileSystemEntityType.file || type == FileSystemEntityType.directory) {
+                existing.add(path);
+              } else {
+                unresolved.add(path);
+              }
+            }
+            if (existing.isEmpty) {
+              showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
+            } else {
+              final err = await _extractAndPlayExternalFiles(existing);
+              if (err != null) showErrorPlayingFileSnackbar(error: err);
+            }
           }
+        } else if (unresolved.isNotEmpty) {
+          showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
         }
       }
     });
+  }
+
+  static String _fileNotFoundError(List<String> paths) {
+    final buffer = StringBuffer('File not found or not accessible');
+    if (paths.isNotEmpty) {
+      buffer.write(': ');
+      buffer.writeAll(paths, ', ');
+    }
+    return buffer.toString();
   }
 
   static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths) async {

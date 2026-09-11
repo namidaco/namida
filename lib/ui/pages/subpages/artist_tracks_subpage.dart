@@ -267,14 +267,15 @@ class _AlbumsRow extends StatelessWidget {
                       itemCount: identifiers.length,
                       itemBuilder: (context, i) {
                         final albumId = identifiers[i];
-                        return Container(
-                          width: 100.0,
-                          margin: const EdgeInsets.only(left: 2.0),
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 2.0),
                           child: AlbumCard(
                             identifier: albumId,
                             album: albumId.getAlbumTracks(),
                             staggered: false,
                             compact: true,
+                            width: 98.0,
+                            height: 130.0,
                           ),
                         );
                       },

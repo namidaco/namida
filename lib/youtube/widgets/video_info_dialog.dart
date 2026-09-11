@@ -60,7 +60,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
   VideoPlayabilty? _playablity;
 
   late final videoId = widget.videoId.replaceFirst(' ', '');
-  late final isDummyVideoId = videoId.isEmpty || videoId == 'null';
+  late final isDummyVideoId = widget.videoId.isDummyVideoId;
 
   @override
   void initState() {

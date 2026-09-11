@@ -441,14 +441,12 @@ class Subtitles {
         .toList();
   }
 
-  static const _sidecarExtensions = ['srt', 'vtt', 'ass', 'ssa', 'sbv'];
-
   Future<List<SubtitleTrack>> _discoverSidecarFiles(Track track) async {
     final tracks = <SubtitleTrack>[];
     for (final mediaPath in _localMediaPaths(track)) {
       final dirPath = mediaPath.getDirectoryPath;
       final fwoe = mediaPath.getFilenameWOExt;
-      for (final ext in _sidecarExtensions) {
+      for (final ext in NamidaFileExtensionsWrapper.lrcOrTxt.extensions) {
         final file = FileParts.join(dirPath, '$fwoe.$ext');
         if (await file.existsAndValid()) tracks.add(SubtitleTrackFile(file));
       }

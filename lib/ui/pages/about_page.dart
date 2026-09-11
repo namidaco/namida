@@ -186,7 +186,7 @@ class _AboutPageState extends State<AboutPage> {
                           child: _EnabledAppIconBuilder(
                             builder: (enabledIcon) {
                               return GestureDetector(
-                                onLongPress: NamidaJellys.enabled && enabledIcon.isJelly ? JellydaGallery.show : null,
+                                onLongPress: NamidaJellys.enabled && enabledIcon.isJelly ? JellyFullArt.show : null,
                                 child: Image.asset(
                                   enabledIcon.assetPath,
                                 ),
@@ -834,6 +834,7 @@ class _JellydaBanner extends StatelessWidget {
               child: const JellyFullArt(
                 alignment: Alignment.topCenter,
                 opacity: 0.65,
+                handOpacity: 0.0,
               ),
               builder: (context, offset, child) => Transform.translate(
                 offset: Offset(0, -(offset * _parallaxFactor).clamp(0.0, maxParallax)),

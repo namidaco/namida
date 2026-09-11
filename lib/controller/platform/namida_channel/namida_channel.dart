@@ -7,6 +7,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 
 part 'namida_channel_android.dart';
 part 'namida_channel_base.dart';

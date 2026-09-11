@@ -316,8 +316,11 @@ class _PlayerActionsRow extends StatelessWidget {
               onPressed: <T extends Playable>() {
                 final currentItem = Player.inst.currentItem.value;
                 if (currentItem == null) return;
-                settings.save(enableLyrics: !settings.enableLyrics.value);
-                Lyrics.inst.updateLyrics(currentItem);
+                // -- we already in view that is for lyrics.. if they don't want then just select queue and disable lyrics outside
+                showLRCSetDialog(currentItem, CurrentColor.inst.miniplayerColor);
+
+                // settings.save(enableLyrics: !settings.enableLyrics.value);
+                // Lyrics.inst.updateLyrics(currentItem);
               },
               icon: NamidaMiniPlayerBase.getLrcButton(
                 context.theme,

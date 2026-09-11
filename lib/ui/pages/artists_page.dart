@@ -227,27 +227,36 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                           : ObxPrefer(
                               enabled: sort.requiresHistory,
                               rx: HistoryController.inst.topTracksMapListens,
-                              builder: (context, _) => SliverGrid.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: countPerRowResolved,
-                                  childAspectRatio: 0.88,
-                                  mainAxisSpacing: 8.0,
-                                ),
-                                itemCount: finalArtists.length,
-                                itemBuilder: (context, i) {
-                                  final artist = finalArtists[i];
-                                  final tracks = artist.getArtistTracksFor(artistType);
-                                  return AnimatingGrid(
-                                    countPerRowResolved: countPerRowResolved,
-                                    columnCount: finalArtists.length,
-                                    position: i,
-                                    shouldAnimate: _shouldAnimate,
-                                    child: ArtistCard(
-                                      name: artist,
-                                      artist: tracks,
-                                      type: artistType,
-                                      bottomCenterText: extraTextResolver?.call(tracks),
+                              builder: (context, _) => SliverLayoutBuilder(
+                                builder: (context, constraints) {
+                                  const childAspectRatio = 0.88;
+                                  final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                                  final cardHeight = cardWidth / childAspectRatio;
+                                  return SliverGrid.builder(
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: countPerRowResolved,
+                                      childAspectRatio: childAspectRatio,
+                                      mainAxisSpacing: 8.0,
                                     ),
+                                    itemCount: finalArtists.length,
+                                    itemBuilder: (context, i) {
+                                      final artist = finalArtists[i];
+                                      final tracks = artist.getArtistTracksFor(artistType);
+                                      return AnimatingGrid(
+                                        countPerRowResolved: countPerRowResolved,
+                                        columnCount: finalArtists.length,
+                                        position: i,
+                                        shouldAnimate: _shouldAnimate,
+                                        child: ArtistCard(
+                                          name: artist,
+                                          artist: tracks,
+                                          type: artistType,
+                                          bottomCenterText: extraTextResolver?.call(tracks),
+                                          width: cardWidth,
+                                          height: cardHeight,
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
                               ),

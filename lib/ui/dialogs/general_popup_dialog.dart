@@ -406,6 +406,7 @@ Future<void> showGeneralPopupDialog(
           track: e,
         ),
         m3uPath: m3uPath,
+        tracksFromNewSource: true,
       );
       finalPlaylist = plExisting;
     } else {

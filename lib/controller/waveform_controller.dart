@@ -127,7 +127,7 @@ class WaveformController {
   double _getCurrentAnimatingScaleGeneral(int positionInMs, int intensity) {
     if (intensity > 0) {
       final posInMap = positionInMs ~/ _positionDividorWithOffset;
-      final dynamicScale = posInMap > _currentScaleMaxIndex ? _defaultMinimumScale : _currentScaleLookup[posInMap];
+      final dynamicScale = posInMap < 0 || posInMap > _currentScaleMaxIndex ? _defaultMinimumScale : _currentScaleLookup[posInMap];
       final finalScale = dynamicScale * intensity * 0.00005;
       if (finalScale.isNaN || finalScale > 0.35) return _defaultMinimumScale;
 

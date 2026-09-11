@@ -2,7 +2,6 @@
 import 'dart:io';
 
 import 'package:history_manager/history_manager.dart';
-import 'package:intl/intl.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -343,7 +342,7 @@ class TrackExtended {
 
   List<AlbumIdentifierWrapper> albumsIdentifiersWrappersModifed(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modifyOnly(identifiers)).toList();
 
-  const TrackExtended({
+  TrackExtended({
     required this.title,
     required this.originalArtist,
     required this.artistsList,
@@ -392,9 +391,11 @@ class TrackExtended {
     required this.server,
   });
 
+  late final String yearPreferyyyyMMdd = _computeYearPreferyyyyMMdd();
+
   static String _padInt(int val) => val.toString().padLeft(2, '0');
   static String _padYear(int val) {
-    if (val < 100) return '20$val';
+    if (val < 100) return '20${_padInt(val)}'; // also pad cuz can be 5 not 05
     return val.toString();
   }
 
@@ -436,6 +437,14 @@ class TrackExtended {
     } catch (_) {}
 
     return null;
+  }
+
+  String _computeYearPreferyyyyMMdd() {
+    final yearString = year.toString();
+    if (yearString.length == 4) return '${yearString}0101';
+    final parsed = DateTime.tryParse(yearString);
+    if (parsed == null) return yearString;
+    return '${parsed.year.toString().padLeft(4, '0')}${_padInt(parsed.month)}${_padInt(parsed.day)}';
   }
 
   static final _trNmbrRegex = RegExp(r'[/\\|,-]');
@@ -714,15 +723,6 @@ extension TrackExtUtils on TrackExtended {
   }
 
   String get youtubeID => youtubeLink.getYoutubeID;
-
-  String get yearPreferyyyyMMdd {
-    final yearString = year.toString();
-    final parsed = yearAsDateTime(yearString: yearString);
-    if (parsed != null) {
-      return DateFormat('yyyyMMdd').format(parsed);
-    }
-    return yearString;
-  }
 
   DateTime? yearAsDateTime({String? yearString}) {
     yearString ??= year.toString();

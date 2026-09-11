@@ -735,79 +735,88 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 },
                                               )
                                             : countPerRowResolved > 1
-                                            ? SliverGrid.builder(
-                                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount: countPerRowResolved,
-                                                  childAspectRatio: 0.8,
-                                                  mainAxisSpacing: 8.0,
-                                                ),
-                                                itemCount: playlistSearchList.length,
-                                                itemBuilder: (context, i) {
-                                                  final key = playlistSearchList[i];
-                                                  final playlist = playlistsMap[key]!;
-                                                  final extraText = extraTextResolver?.call(playlist);
-                                                  final remoteInfo = playlist.getRemoteInfo();
-                                                  return AnimatingGrid(
-                                                    countPerRowResolved: countPerRowResolved,
-                                                    columnCount: playlistSearchList.length,
-                                                    position: i,
-                                                    shouldAnimate: _shouldAnimate,
-                                                    child: MultiArtworkCard(
-                                                      enableHero: enableHero,
-                                                      heroTag: 'playlist_${playlist.name}',
-                                                      tracks: playlist.tracks.toTracks(),
-                                                      name: playlist.name.translatePlaylistName(),
-                                                      countPerRow: widget.countPerRow,
-                                                      showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
-                                                      onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
-                                                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                                                      widgetsInStack: [
-                                                        if (playlist.m3uPath != null)
-                                                          Positioned(
-                                                            bottom: 8.0,
-                                                            right: 8.0,
-                                                            child: NamidaTooltip(
-                                                              message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
-                                                              child: const Icon(Broken.music_filter, size: 18.0),
-                                                            ),
-                                                          )
-                                                        else if (remoteInfo != null) ...[
-                                                          Positioned(
-                                                            bottom: 8.0,
-                                                            right: 8.0,
-                                                            child: NamidaTooltip(
-                                                              message: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
-                                                              child: remoteInfo.$2 != null
-                                                                  ? Image.asset(
-                                                                      remoteInfo.$2!,
-                                                                      height: 16.0,
-                                                                    )
-                                                                  : const Icon(
-                                                                      Broken.cloud,
-                                                                      size: 18.0,
-                                                                    ),
-                                                            ),
-                                                          ),
-                                                          const SizedBox(width: 2.0),
-                                                        ],
-                                                        if (extraText != null && extraText.isNotEmpty)
-                                                          Positioned(
-                                                            top: 0,
-                                                            right: 0,
-                                                            child: NamidaBlurryContainer(
-                                                              child: Text(
-                                                                extraText,
-                                                                style: textTheme.displaySmall?.copyWith(
-                                                                  fontSize: 12.0,
-                                                                  fontWeight: FontWeight.bold,
-                                                                ),
-                                                                softWrap: false,
-                                                                overflow: TextOverflow.fade,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                      ],
+                                            ? SliverLayoutBuilder(
+                                                builder: (context, constraints) {
+                                                  const childAspectRatio = 0.8;
+                                                  final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                                                  final cardHeight = cardWidth / childAspectRatio;
+                                                  return SliverGrid.builder(
+                                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                                      crossAxisCount: countPerRowResolved,
+                                                      childAspectRatio: childAspectRatio,
+                                                      mainAxisSpacing: 8.0,
                                                     ),
+                                                    itemCount: playlistSearchList.length,
+                                                    itemBuilder: (context, i) {
+                                                      final key = playlistSearchList[i];
+                                                      final playlist = playlistsMap[key]!;
+                                                      final extraText = extraTextResolver?.call(playlist);
+                                                      final remoteInfo = playlist.getRemoteInfo();
+                                                      return AnimatingGrid(
+                                                        countPerRowResolved: countPerRowResolved,
+                                                        columnCount: playlistSearchList.length,
+                                                        position: i,
+                                                        shouldAnimate: _shouldAnimate,
+                                                        child: MultiArtworkCard(
+                                                          enableHero: enableHero,
+                                                          heroTag: 'playlist_${playlist.name}',
+                                                          tracks: playlist.tracks.toTracks(),
+                                                          name: playlist.name.translatePlaylistName(),
+                                                          countPerRow: widget.countPerRow,
+                                                          width: cardWidth,
+                                                          height: cardHeight,
+                                                          showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(key),
+                                                          onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
+                                                          artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                                                          widgetsInStack: [
+                                                            if (playlist.m3uPath != null)
+                                                              Positioned(
+                                                                bottom: 8.0,
+                                                                right: 8.0,
+                                                                child: NamidaTooltip(
+                                                                  message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
+                                                                  child: const Icon(Broken.music_filter, size: 18.0),
+                                                                ),
+                                                              )
+                                                            else if (remoteInfo != null) ...[
+                                                              Positioned(
+                                                                bottom: 8.0,
+                                                                right: 8.0,
+                                                                child: NamidaTooltip(
+                                                                  message: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
+                                                                  child: remoteInfo.$2 != null
+                                                                      ? Image.asset(
+                                                                          remoteInfo.$2!,
+                                                                          height: 16.0,
+                                                                        )
+                                                                      : const Icon(
+                                                                          Broken.cloud,
+                                                                          size: 18.0,
+                                                                        ),
+                                                                ),
+                                                              ),
+                                                              const SizedBox(width: 2.0),
+                                                            ],
+                                                            if (extraText != null && extraText.isNotEmpty)
+                                                              Positioned(
+                                                                top: 0,
+                                                                right: 0,
+                                                                child: NamidaBlurryContainer(
+                                                                  child: Text(
+                                                                    extraText,
+                                                                    style: textTheme.displaySmall?.copyWith(
+                                                                      fontSize: 12.0,
+                                                                      fontWeight: FontWeight.bold,
+                                                                    ),
+                                                                    softWrap: false,
+                                                                    overflow: TextOverflow.fade,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
                                                   );
                                                 },
                                               )

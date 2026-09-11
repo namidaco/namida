@@ -969,6 +969,7 @@ class AppDocsLinks {
   static const _BASE_RAW = 'https://docs.namida.app';
   static const _SETTINGS_RAW = '$_BASE_RAW/settings/';
   static const _SETTINGS_YOUTUBE_RAW = '${_SETTINGS_RAW}5-youtube-settings/';
+  static const _SETTINGS_BACKUP_RESTORE_RAW = '${_SETTINGS_RAW}7-backup-restore-settings/';
   static const _FEATURES_RAW = '$_BASE_RAW/features/';
 
   static const BASE = AppDocsLinks._(_BASE_RAW);
@@ -988,12 +989,12 @@ class AppDocsLinks {
   static const SETTINGS_CUSTOMIZATION = AppDocsLinks._('${_SETTINGS_RAW}4-customization-settings/');
   static const SETTINGS_YOUTUBE = AppDocsLinks._('${_SETTINGS_RAW}5-youtube-settings/');
   static const SETTINGS_EXTRA = AppDocsLinks._('${_SETTINGS_RAW}6-extras-settings/');
-  static const SETTINGS_BACKUP_RESTORE = AppDocsLinks._('${_SETTINGS_RAW}7-backup-restore-settings/');
+  static const SETTINGS_BACKUP_RESTORE = AppDocsLinks._(_SETTINGS_BACKUP_RESTORE_RAW);
   static const SETTINGS_ADVANCED = AppDocsLinks._('${_SETTINGS_RAW}8-advanced-settings/');
 
   static const SETTINGS_SPONSORBLOCK = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sponsorblock');
   static const SETTINGS_RETURN_YOUTUBE_DISLIKE = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#return-youtube-dislike');
-  static const SETTINGS_SYNC = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#sync');
+  static const SETTINGS_SYNC = AppDocsLinks._('$_SETTINGS_BACKUP_RESTORE_RAW#sync');
 
   static const YT_CACHING = AppDocsLinks._('${_FEATURES_RAW}youtube/#caching');
 
@@ -1088,6 +1089,10 @@ class NamidaFileExtensionsWrapper {
     'zip', 'rar', '7z', //
   };
 
+  static const _lrcExtensions = {
+    'lrc', 'xml', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', //
+  };
+
   static const audio = NamidaFileExtensionsWrapper._(_audioExtensions);
   static const video = NamidaFileExtensionsWrapper._(_videoExtensions);
   static const audioAndVideo = NamidaFileExtensionsWrapper._({..._audioExtensions, ..._videoExtensions});
@@ -1104,15 +1109,15 @@ class NamidaFileExtensionsWrapper {
   static const jsonAndZip = NamidaFileExtensionsWrapper._({'json', ..._zipExtensions});
   static const jsonlAndZip = NamidaFileExtensionsWrapper._({'jsonl', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
-  static const lrcOrTxt = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'txt'});
-  static const lrc = NamidaFileExtensionsWrapper._({'lrc', 'xml', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass'});
+  static const lrcOrTxt = NamidaFileExtensionsWrapper._({..._lrcExtensions, 'txt'});
+  static const lrc = NamidaFileExtensionsWrapper._({..._lrcExtensions});
   static const txt = NamidaFileExtensionsWrapper._({'txt'});
 
   static const exe = NamidaFileExtensionsWrapper._({'exe'});
 }
 
 final kDummyTrack = Track.explicit('');
-const kDummyExtendedTrack = TrackExtended(
+final kDummyExtendedTrack = TrackExtended(
   title: "",
   originalArtist: "",
   artistsList: [],
@@ -1255,6 +1260,7 @@ class NamidaFeaturesVisibility {
   static final deviceOrientationSensorAvailable = _isAndroid;
   static final floatingArtworkEffect = _isAndroid;
   static final mediaWaveHaptic = _isAndroid;
+  static const accessibilitySemantics = true;
 
   static final methodSetCanEnterPip = _isAndroid;
   static final methodSetMonoAudio = _isAndroid;

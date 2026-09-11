@@ -24,14 +24,18 @@ class QueueCard extends StatelessWidget {
   final bool fullInfo;
   final HomePageItems? homepageItem;
   final bool preferOpenOriginalSource;
+  final double width;
+  final double? height;
 
   const QueueCard({
     super.key,
     required this.queue,
-    this.hero = '',
+    required this.hero,
     this.fullInfo = true,
     this.homepageItem,
     this.preferOpenOriginalSource = false,
+    required this.width,
+    required this.height,
   });
 
   bool _originalSourceOnTap() {
@@ -127,6 +131,11 @@ class QueueCard extends StatelessWidget {
       }
     }
 
+    final height = this.height;
+    final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+    final remainingVerticalSpace = height == null ? 48.0 : (height - imageSize).withMinimum(0.0);
+    double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
       child: BorderRadiusClip(
@@ -142,100 +151,87 @@ class QueueCard extends StatelessWidget {
               ),
             ],
           ),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final imageSize = constraints.maxWidth;
-              double remainingVerticalSpace;
-              if (constraints.maxHeight.isInfinite || constraints.maxHeight.isNaN) {
-                remainingVerticalSpace = 48.0;
-              } else {
-                remainingVerticalSpace = constraints.maxHeight - imageSize;
+          child: NamidaInkWell(
+            onTap: () {
+              if (queue == null) return;
+              if (preferOpenOriginalSource) {
+                if (_originalSourceOnTap()) return;
               }
-              double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
-
-              return NamidaInkWell(
-                onTap: () {
-                  if (queue == null) return;
-                  if (preferOpenOriginalSource) {
-                    if (_originalSourceOnTap()) return;
-                  }
-                  NamidaOnTaps.inst.onQueueTap(queue);
-                },
-                onLongPress: () {
-                  if (queue == null) return;
-                  if (preferOpenOriginalSource) {
-                    if (_originalSourceOnLongPress()) return;
-                  }
-                  NamidaDialogs.inst.showQueueDialog(queue.date);
-                },
-                enableSecondaryTap: true,
-                child: Column(
-                  mainAxisSize: .min,
-                  children: [
-                    MultiArtworks(
-                      heroTag: hero,
-                      borderRadius: 12.0,
-                      thumbnailSize: imageSize,
-                      artworkFile: artworkFile,
-                      tracks: queue?.tracks.toImageTracks() ?? [],
-                      reduceQuality: true,
-                    ),
-                    if (queue != null)
-                      SizedBox(
-                        width: imageSize,
-                        height: remainingVerticalSpace,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              NamidaHero(
-                                tag: 'line1_$hero',
-                                child: Text(
-                                  fullInfo
-                                      ? [
-                                          queue.source.toText(),
-                                          ?sourceText,
-                                        ].joinText(separator: ' - ')
-                                      : sourceText ?? queue.source.toText(),
-                                  style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
-                                  textAlign: TextAlign.start,
-                                  softWrap: false,
-                                  overflow: TextOverflow.fade,
-                                ),
-                              ),
-                              if (fullInfo)
-                                NamidaHero(
-                                  tag: 'line2_$hero',
-                                  child: Text(
-                                    [
-                                      queue.tracks.displayTrackKeyword,
-                                      queue.tracks.totalDurationFormatted,
-                                    ].joinText(separator: ' - '),
-                                    style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                ),
-                              NamidaHero(
-                                tag: 'line3_$hero',
-                                child: Text(
-                                  fullInfo ? queue.date.dateAndClockFormattedOriginal : TimeAgoController.dateMSSEFromNow(queue.date),
-                                  style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
-                                  softWrap: false,
-                                  overflow: TextOverflow.fade,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
+              NamidaOnTaps.inst.onQueueTap(queue);
             },
+            onLongPress: () {
+              if (queue == null) return;
+              if (preferOpenOriginalSource) {
+                if (_originalSourceOnLongPress()) return;
+              }
+              NamidaDialogs.inst.showQueueDialog(queue.date);
+            },
+            enableSecondaryTap: true,
+            child: Column(
+              mainAxisSize: .min,
+              children: [
+                MultiArtworks(
+                  heroTag: hero,
+                  borderRadius: 12.0,
+                  thumbnailSize: imageSize,
+                  artworkFile: artworkFile,
+                  tracks: queue?.tracks.toImageTracks() ?? [],
+                  reduceQuality: true,
+                ),
+                if (queue != null)
+                  SizedBox(
+                    width: imageSize,
+                    height: remainingVerticalSpace,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          NamidaHero(
+                            tag: 'line1_$hero',
+                            child: Text(
+                              fullInfo
+                                  ? [
+                                      queue.source.toText(),
+                                      ?sourceText,
+                                    ].joinText(separator: ' - ')
+                                  : sourceText ?? queue.source.toText(),
+                              style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                              textAlign: TextAlign.start,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
+                          ),
+                          if (fullInfo)
+                            NamidaHero(
+                              tag: 'line2_$hero',
+                              child: Text(
+                                [
+                                  queue.tracks.displayTrackKeyword,
+                                  queue.tracks.totalDurationFormatted,
+                                ].joinText(separator: ' - '),
+                                style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                                softWrap: false,
+                                overflow: TextOverflow.fade,
+                              ),
+                            ),
+                          NamidaHero(
+                            tag: 'line3_$hero',
+                            child: Text(
+                              fullInfo ? queue.date.dateAndClockFormattedOriginal : TimeAgoController.dateMSSEFromNow(queue.date),
+                              style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

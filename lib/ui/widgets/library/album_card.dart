@@ -24,6 +24,8 @@ class AlbumCard extends StatelessWidget {
   final String additionalHeroTag;
   final HomePageItems? homepageItem;
   final bool dummyCard;
+  final double width;
+  final double? height;
 
   const AlbumCard({
     super.key,
@@ -37,6 +39,8 @@ class AlbumCard extends StatelessWidget {
     this.additionalHeroTag = '',
     this.homepageItem,
     this.dummyCard = false,
+    required this.width,
+    required this.height,
   });
 
   @override
@@ -46,8 +50,16 @@ class AlbumCard extends StatelessWidget {
     final finalYear = album.year.yearFormatted;
     final name = identifier?.displayAlbumName ?? '';
     final albumArtist = album.albumArtist;
+    final imagePath = album.pathToImage;
 
     final hero = 'album_$identifier$additionalHeroTag';
+
+    final height = this.height;
+    final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+    final remainingVerticalSpace = height == null ? 48.0 : (height - imageSize).withMinimum(0.0);
+    final itemImagePercentageMultiplier = imageSize * 0.015;
+    double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
+    final playIconBgColor = theme.cardColor.withOpacityExt((imageSize / 200).clampDouble(0, 1));
 
     String? topRightLine;
     String? secondLine;
@@ -85,145 +97,130 @@ class AlbumCard extends StatelessWidget {
             ),
           ],
         ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final imageSize = constraints.maxWidth;
-            double remainingVerticalSpace;
-            if (constraints.maxHeight.isInfinite || constraints.maxHeight.isNaN) {
-              remainingVerticalSpace = 48.0;
-            } else {
-              remainingVerticalSpace = constraints.maxHeight - imageSize;
-            }
-            final itemImagePercentageMultiplier = imageSize * 0.015;
-            double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
-            final playIconBgColor = theme.cardColor.withOpacityExt((imageSize / 200).clampDouble(0, 1));
-
-            return NamidaInkWell(
-              onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
-              onLongPress: () => dummyCard ? null : NamidaDialogs.inst.showAlbumDialog(identifier),
-              enableSecondaryTap: true,
-              child: Column(
-                children: [
-                  NamidaHero(
-                    tag: hero,
-                    child: NetworkArtwork.orLocal(
-                      key: Key(album.pathToImage),
-                      track: album.trackOfImage,
-                      thumbnailSize: imageSize,
-                      path: album.pathToImage,
-                      borderRadius: 10.0,
-                      info: identifier == null ? null : NetworkArtworkInfo.albumAutoArtist(identifier!),
-                      blur: 8.0,
-                      // disableBlurBgSizeShrink: true,
-                      iconSize: 32.0,
-                      displayIcon: displayIcon,
-                      forceSquared: !staggered,
-                      staggered: staggered,
-                      onTopWidgets: dummyCard
-                          ? null
-                          : [
-                              if (topRightLine != null && topRightLine.isNotEmpty)
-                                Positioned(
-                                  top: 0,
-                                  right: 0,
-                                  child: NamidaBlurryContainer(
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: imageSize * 0.8),
-                                      child: FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Text(
-                                          topRightLine,
-                                          style: textTheme.displaySmall?.copyWith(
-                                            fontSize: getFontSize(0.18),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          softWrap: false,
-                                          overflow: TextOverflow.fade,
-                                        ),
+        child: NamidaInkWell(
+          onTap: () => dummyCard ? null : NamidaOnTaps.inst.onAlbumTap(identifier),
+          onLongPress: () => dummyCard ? null : NamidaDialogs.inst.showAlbumDialog(identifier),
+          enableSecondaryTap: true,
+          child: Column(
+            children: [
+              NamidaHero(
+                tag: hero,
+                child: NetworkArtwork.orLocal(
+                  key: Key(imagePath),
+                  track: album.trackOfImage,
+                  thumbnailSize: imageSize,
+                  path: imagePath,
+                  borderRadius: 10.0,
+                  info: identifier == null ? null : NetworkArtworkInfo.albumAutoArtist(identifier!),
+                  blur: 8.0,
+                  // disableBlurBgSizeShrink: true,
+                  iconSize: 32.0,
+                  displayIcon: displayIcon,
+                  forceSquared: !staggered,
+                  staggered: staggered,
+                  onTopWidgets: dummyCard
+                      ? null
+                      : [
+                          if (topRightLine != null && topRightLine.isNotEmpty)
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: NamidaBlurryContainer(
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(maxWidth: imageSize * 0.8),
+                                  child: FittedBox(
+                                    fit: BoxFit.fitWidth,
+                                    child: Text(
+                                      topRightLine,
+                                      style: textTheme.displaySmall?.copyWith(
+                                        fontSize: getFontSize(0.18),
+                                        fontWeight: FontWeight.bold,
                                       ),
+                                      softWrap: false,
+                                      overflow: TextOverflow.fade,
                                     ),
                                   ),
                                 ),
-                              if (album.isNotEmpty)
-                                Positioned(
-                                  bottom: 2.0 + itemImagePercentageMultiplier,
-                                  right: 2.0 + itemImagePercentageMultiplier,
-                                  child: NamidaInkWell(
-                                    decoration: BoxDecoration(
-                                      color: playIconBgColor,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          blurRadius: 6.0,
-                                          offset: const Offset(0.0, 2.0),
-                                          color: playIconBgColor.withOpacityExt(0.4),
-                                        ),
-                                      ],
+                              ),
+                            ),
+                          if (album.isNotEmpty)
+                            Positioned(
+                              bottom: 2.0 + itemImagePercentageMultiplier,
+                              right: 2.0 + itemImagePercentageMultiplier,
+                              child: NamidaInkWell(
+                                decoration: BoxDecoration(
+                                  color: playIconBgColor,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      blurRadius: 6.0,
+                                      offset: const Offset(0.0, 2.0),
+                                      color: playIconBgColor.withOpacityExt(0.4),
                                     ),
-                                    borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
-                                    padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
-                                    child: Icon(
-                                      Broken.play,
-                                      size: 8.5 + 3.0 * itemImagePercentageMultiplier,
-                                    ),
-                                  ),
+                                  ],
                                 ),
-                            ],
+                                borderRadius: 8.0.withMaximum(imageSize * 0.07),
+                                onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
+                                padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+                                child: Icon(
+                                  Broken.play,
+                                  size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                                ),
+                              ),
+                            ),
+                        ],
+                ),
+              ),
+              if (!dummyCard)
+                SizedBox(
+                  width: imageSize,
+                  height: remainingVerticalSpace,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (staggered && !compact) SizedBox(height: remainingVerticalSpace * 0.08),
+                        NamidaHero(
+                          tag: 'line1_$hero',
+                          child: Text(
+                            name,
+                            style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                            textAlign: TextAlign.start,
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        if (secondLine != null && secondLine.isNotEmpty)
+                          NamidaHero(
+                            tag: 'line2_$hero',
+                            child: Text(
+                              secondLine,
+                              style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
+                          ),
+                        NamidaHero(
+                          tag: 'line3_$hero',
+                          child: Text(
+                            [
+                              album.displayTrackKeyword,
+                              album.totalDurationFormatted,
+                            ].join(' • '),
+                            style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        if (staggered && !compact) SizedBox(height: remainingVerticalSpace * 0.08),
+                      ],
                     ),
                   ),
-                  if (!dummyCard)
-                    SizedBox(
-                      width: imageSize,
-                      height: remainingVerticalSpace,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (staggered && !compact) SizedBox(height: remainingVerticalSpace * 0.08),
-                            NamidaHero(
-                              tag: 'line1_$hero',
-                              child: Text(
-                                name,
-                                style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
-                                textAlign: TextAlign.start,
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
-                              ),
-                            ),
-                            if (secondLine != null && secondLine.isNotEmpty)
-                              NamidaHero(
-                                tag: 'line2_$hero',
-                                child: Text(
-                                  secondLine,
-                                  style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
-                                  softWrap: false,
-                                  overflow: TextOverflow.fade,
-                                ),
-                              ),
-                            NamidaHero(
-                              tag: 'line3_$hero',
-                              child: Text(
-                                [
-                                  album.displayTrackKeyword,
-                                  album.totalDurationFormatted,
-                                ].join(' • '),
-                                style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
-                                softWrap: false,
-                                overflow: TextOverflow.fade,
-                              ),
-                            ),
-                            if (staggered && !compact) SizedBox(height: remainingVerticalSpace * 0.08),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
+                ),
+            ],
+          ),
         ),
       ),
     );

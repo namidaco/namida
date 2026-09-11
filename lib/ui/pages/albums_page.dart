@@ -144,6 +144,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                           sort == GroupSortType.duration;
 
                       final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
+                      final useStaggeredGrid = settings.useAlbumStaggeredGridView.valueR;
 
                       return ObxPrefer(
                         enabled: sort.requiresHistory,
@@ -167,50 +168,62 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   );
                                 },
                               )
-                            : settings.useAlbumStaggeredGridView.valueR
-                            ? SliverMasonryGrid.count(
-                                crossAxisCount: countPerRowResolved,
-                                childCount: finalAlbums.length,
-                                mainAxisSpacing: 8.0,
-                                itemBuilder: (context, i) {
-                                  final albumId = finalAlbums[i];
-                                  final tracks = albumId.getAlbumTracks();
-                                  return AnimatingGrid(
-                                    isInOpenSpace: true,
-                                    countPerRowResolved: countPerRowResolved,
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    shouldAnimate: _shouldAnimate,
-                                    child: AlbumCard(
-                                      identifier: albumId,
-                                      album: tracks,
-                                      staggered: true,
-                                      extraInfo: extraTextResolver?.call(tracks),
+                            : SliverLayoutBuilder(
+                                builder: (context, constraints) {
+                                  final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                                  if (useStaggeredGrid) {
+                                    return SliverMasonryGrid.count(
+                                      crossAxisCount: countPerRowResolved,
+                                      childCount: finalAlbums.length,
+                                      mainAxisSpacing: 8.0,
+                                      itemBuilder: (context, i) {
+                                        final albumId = finalAlbums[i];
+                                        final tracks = albumId.getAlbumTracks();
+                                        return AnimatingGrid(
+                                          isInOpenSpace: true,
+                                          countPerRowResolved: countPerRowResolved,
+                                          columnCount: finalAlbums.length,
+                                          position: i,
+                                          shouldAnimate: _shouldAnimate,
+                                          child: AlbumCard(
+                                            identifier: albumId,
+                                            album: tracks,
+                                            staggered: true,
+                                            extraInfo: extraTextResolver?.call(tracks),
+                                            width: cardWidth,
+                                            height: null,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  }
+                                  const childAspectRatio = 0.75;
+                                  final cardHeight = cardWidth / childAspectRatio;
+                                  return SliverGrid.builder(
+                                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: countPerRowResolved,
+                                      childAspectRatio: childAspectRatio,
+                                      mainAxisSpacing: 8.0,
                                     ),
-                                  );
-                                },
-                              )
-                            : SliverGrid.builder(
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: countPerRowResolved,
-                                  childAspectRatio: 0.75,
-                                  mainAxisSpacing: 8.0,
-                                ),
-                                itemCount: finalAlbums.length,
-                                itemBuilder: (context, i) {
-                                  final albumId = finalAlbums[i];
-                                  final tracks = albumId.getAlbumTracks();
-                                  return AnimatingGrid(
-                                    countPerRowResolved: countPerRowResolved,
-                                    columnCount: finalAlbums.length,
-                                    position: i,
-                                    shouldAnimate: _shouldAnimate,
-                                    child: AlbumCard(
-                                      identifier: albumId,
-                                      album: tracks,
-                                      staggered: false,
-                                      extraInfo: extraTextResolver?.call(tracks),
-                                    ),
+                                    itemCount: finalAlbums.length,
+                                    itemBuilder: (context, i) {
+                                      final albumId = finalAlbums[i];
+                                      final tracks = albumId.getAlbumTracks();
+                                      return AnimatingGrid(
+                                        countPerRowResolved: countPerRowResolved,
+                                        columnCount: finalAlbums.length,
+                                        position: i,
+                                        shouldAnimate: _shouldAnimate,
+                                        child: AlbumCard(
+                                          identifier: albumId,
+                                          album: tracks,
+                                          staggered: false,
+                                          extraInfo: extraTextResolver?.call(tracks),
+                                          width: cardWidth,
+                                          height: cardHeight,
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
                               ),
