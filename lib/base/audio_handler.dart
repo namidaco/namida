@@ -27,8 +27,8 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
-import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -39,6 +39,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
+import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
@@ -2140,10 +2141,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) {
     final newSeconds = totalTimeInSeconds[key] ?? 0;
+    ListenTimeController.inst.onSecond(key);
 
     // saves the file each 20 seconds.
     if (newSeconds % 20 == 0) {
       File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds);
+      ListenTimeController.inst.flush();
     }
   }
 

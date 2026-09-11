@@ -22,6 +22,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -34,6 +35,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/queues_page.dart';
+import 'package:namida/ui/pages/subpages/your_year_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
@@ -75,7 +77,7 @@ class YTHomePageLocal extends StatefulWidget with NamidaRouteWidget {
 }
 
 abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulWidget> extends State<S> with TickerProviderStateMixin, PullToRefreshMixin {
-  bool get showStatsButton;
+  bool get isStatsTypeYT;
 
   HistoryManager<T, E> get historyManager;
   NamidaGeneratorBase<T, E> get generator;
@@ -118,6 +120,8 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   var _sameTimeYearAgo = <MapEntry<E, List<int>>>[];
 
   final _mixes = <MapEntry<String, List<E>>>[];
+
+  int? _yourYearSuggestion;
 
   var _lostMemoriesYears = <int>[];
   final _topRecentsDaysList = List<int>.generate(21, (index) => index == 0 ? 1 : index * 3);
@@ -192,8 +196,12 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       _updateTopRecents(3);
     }
 
+    final historyYears = historyManager.getHistoryYears();
+    final yearInReviewPre = StatsController.yearInReviewToShow();
+    _yourYearSuggestion = historyYears.contains(yearInReviewPre) ? yearInReviewPre : null;
+
     // -- Lost Memories --
-    _lostMemoriesYears = historyManager.getHistoryYears()..remove(timeNow.year);
+    _lostMemoriesYears = historyYears..remove(timeNow.year);
     final oldestYear = _lostMemoriesYears.lastOrNull ?? 0;
 
     final minusYearClamped = (timeNow.year - 1).withMinimum(oldestYear);
@@ -557,19 +565,26 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                                     style: textTheme.displayLarge?.copyWith(fontSize: 32.0),
                                   ),
                                 ),
-                                if (showStatsButton)
-                                  NamidaIconButton(
-                                    icon: Broken.chart_21,
-                                    onPressed: StatsPage().navigate,
-                                  ),
+                                NamidaIconButton(
+                                  icon: Broken.chart_21,
+                                  tooltip: () => lang.stats,
+                                  onPressed: StatsPage(isYoutube: isStatsTypeYT).navigate,
+                                ),
                                 NamidaIconButton(
                                   icon: Broken.setting_4,
+                                  tooltip: () => lang.configure,
                                   onPressed: showReorderHomeItemsDialog,
                                 ),
                               ],
                             ),
                           ),
                         ),
+                        if (_yourYearSuggestion != null)
+                          SliverToBoxAdapter(
+                            child: _YourYearBanner(
+                              year: _yourYearSuggestion!,
+                            ),
+                          ),
                         ...homePageItems
                             .map(
                               (element) {
@@ -632,7 +647,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
 
 class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, HomePageLocal> {
   @override
-  bool get showStatsButton => true;
+  bool get isStatsTypeYT => false;
 
   @override
   HistoryManager<TrackWithDate, Track> get historyManager => HistoryController.inst;
@@ -1006,7 +1021,7 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
 
 class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHomePageLocal> {
   @override
-  bool get showStatsButton => false;
+  bool get isStatsTypeYT => true;
 
   @override
   HistoryManager<YoutubeID, String> get historyManager => YoutubeHistoryController.inst;
@@ -2492,6 +2507,53 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
           }
           return '';
         },
+      ),
+    );
+  }
+}
+
+class _YourYearBanner extends StatelessWidget {
+  final int year;
+
+  const _YourYearBanner({required this.year});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final color = CurrentColor.inst.color;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 12.0),
+      child: NamidaInkWell(
+        borderRadius: 14.0,
+        bgColor: Color.alphaBlend(color.withOpacityExt(0.14), theme.cardColor),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        onTap: () => YourYearPage(year: year).navigate(),
+        child: Row(
+          children: [
+            Icon(Broken.magic_star, color: context.defaultIconColor()),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    lang.yourYear(year: year.toString()),
+                    style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    lang.statsSubtitle,
+                    style: textTheme.displaySmall?.copyWith(fontSize: 11.5),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Broken.arrow_right_3, size: 18.0),
+          ],
+        ),
       ),
     );
   }

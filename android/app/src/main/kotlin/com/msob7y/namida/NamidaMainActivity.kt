@@ -75,6 +75,43 @@ class NamidaMainActivity : FlutterActivity() {
     registerNamidaChannels(flutterEngine)
   }
 
+  /// opens the share chooser as a separate task, otherwise the new app could open replacing namida
+  private fun shareFilesExternally(paths: List<String>): Boolean {
+    if (paths.isEmpty()) return false
+    try {
+      val shareDir = File(cacheDir, "share_plus")
+      shareDir.mkdirs()
+      val authority = "$packageName.flutter.share_provider"
+      val uris = ArrayList<Uri>(paths.size)
+      for (path in paths) {
+        val source = File(path)
+        val target = File(shareDir, source.name)
+        source.copyTo(target, overwrite = true)
+        uris.add(androidx.core.content.FileProvider.getUriForFile(this, authority, target))
+      }
+      val mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(paths[0]).extension.lowercase()) ?: "*/*"
+      val intent = Intent().apply {
+        if (uris.size == 1) {
+          action = Intent.ACTION_SEND
+          putExtra(Intent.EXTRA_STREAM, uris[0])
+        } else {
+          action = Intent.ACTION_SEND_MULTIPLE
+          putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+        }
+        type = mime
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      val chooser = Intent.createChooser(intent, null).apply {
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+      }
+      startActivity(chooser)
+      return true
+    } catch (e: Exception) {
+      return false
+    }
+  }
+
   private fun registerNamidaChannels(@NonNull flutterEngine: FlutterEngine) {
     val messenger = flutterEngine.dartExecutor.binaryMessenger
     channel = MethodChannel(messenger, CHANNELNAME)
@@ -148,6 +185,11 @@ class NamidaMainActivity : FlutterActivity() {
 
         "openEqualizer" -> {
           result.success(openSystemEqualizer(call.argument<Int?>("sessionId"), call.argument<String?>("package")))
+        }
+
+        "shareFiles" -> {
+          val paths = call.argument<List<String>>("paths") ?: emptyList()
+          result.success(shareFilesExternally(paths))
         }
 
         "openHomeWidgetSettings" -> {

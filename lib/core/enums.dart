@@ -626,6 +626,7 @@ enum RouteType {
   PAGE_tags,
   PAGE_rating,
   PAGE_stats,
+  PAGE_yourYear,
   PAGE_about,
   PAGE_Sync,
 

@@ -106,6 +106,12 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<bool> shareFiles(List<String> paths) async {
+    final res = await _channel.invokeMethod<bool?>('shareFiles', {'paths': paths});
+    return res ?? false;
+  }
+
+  @override
   Future<bool> openHomeWidgetSettings() async {
     final res = await _channel.invokeMethod<bool?>('openHomeWidgetSettings');
     return res ?? false;

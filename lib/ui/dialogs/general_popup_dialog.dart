@@ -49,6 +49,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/ui/widgets/stats_widgets.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 
@@ -1265,6 +1266,18 @@ Future<void> showGeneralPopupDialog(
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
                                     showAddToPlaylistDialog(tracks);
+                                  },
+                                ),
+
+                              if (!isSingle)
+                                SmallListTile(
+                                  color: colorDelightened,
+                                  compact: false,
+                                  title: lang.stats,
+                                  icon: Broken.chart_2,
+                                  onTap: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    showTracksStatsCardDialog(tracks: tracks, title: title, subtitle: subtitle, isCircle: isCircle);
                                   },
                                 ),
 

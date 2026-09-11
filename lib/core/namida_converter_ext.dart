@@ -1475,6 +1475,7 @@ extension RouteUtils on NamidaRoute {
 
     final shouldShowInitialActions =
         route != RouteType.PAGE_stats &&
+        route != RouteType.PAGE_yourYear &&
         route != RouteType.SETTINGS_page &&
         route != RouteType.SETTINGS_subpage &&
         route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&

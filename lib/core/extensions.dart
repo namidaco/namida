@@ -565,6 +565,9 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
 extension YTLinkToID on String {
   String get getYoutubeID => NamidaLinkUtils.extractYoutubeId(this) ?? '';
+
+  /// empty, 'null', etc..
+  bool get isDummyVideoId => length < 11;
 }
 
 extension TitleAndArtistUtils on String {

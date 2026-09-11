@@ -187,6 +187,10 @@ class NamidaUtils {
       // -- sharing files is not supported on linux yet.
       return await NamidaChannel.inst.openFileInExplorer(paths.first);
     }
+    if (Platform.isAndroid) {
+      final shared = await NamidaChannel.inst.shareFiles(paths.toList());
+      if (shared) return;
+    }
     await Share.shareXFiles(paths.map((e) => XFile(e)).toList());
   }
 
@@ -343,6 +347,7 @@ enum AppPathsBackupEnum {
   // ---------
 
   TOTAL_LISTEN_TIME,
+  LISTEN_TIME_DAILY_DB_INFO,
   FAVOURITES_PLAYLIST,
 
   // ================= Youtube =================
@@ -408,6 +413,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.YT_SUBSCRIPTIONS ||
       AppPathsBackupEnum.YT_SUBSCRIPTIONS_GROUPS_ALL ||
       AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO ||
+      AppPathsBackupEnum.LISTEN_TIME_DAILY_DB_INFO ||
       AppPathsBackupEnum.CACHE_VIDEOS_PRIORITY ||
       AppPathsBackupEnum.HISTORY_PLAYLIST ||
       AppPathsBackupEnum.PLAYLISTS ||
@@ -480,6 +486,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.VIDEOS_LOCAL_OLD => AppPaths.VIDEOS_LOCAL_OLD,
       AppPathsBackupEnum.VIDEOS_CACHE_OLD => AppPaths.VIDEOS_CACHE_OLD,
       AppPathsBackupEnum.TOTAL_LISTEN_TIME => AppPaths.TOTAL_LISTEN_TIME,
+      AppPathsBackupEnum.LISTEN_TIME_DAILY_DB_INFO => AppPaths.LISTEN_TIME_DAILY_DB_INFO.file.path,
       AppPathsBackupEnum.FAVOURITES_PLAYLIST => AppPaths.FAVOURITES_PLAYLIST,
       AppPathsBackupEnum.YT_LIKES_PLAYLIST => AppPaths.YT_LIKES_PLAYLIST,
       AppPathsBackupEnum.YT_SUBSCRIPTIONS => AppPaths.YT_SUBSCRIPTIONS,
@@ -541,6 +548,7 @@ class AppPathsBackupEnumCategories {
     AppPathsBackupEnum.LATEST_PLAYED_FOR_SOURCE,
     AppPathsBackupEnum.AUDIO_CONFIGS,
     AppPathsBackupEnum.TOTAL_LISTEN_TIME,
+    AppPathsBackupEnum.LISTEN_TIME_DAILY_DB_INFO,
     AppPathsBackupEnum.VIDEOS_CACHE_OLD,
     AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO,
     AppPathsBackupEnum.VIDEOS_LOCAL_OLD,
@@ -823,6 +831,7 @@ class AppPaths {
   }
 
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');
+  static final LISTEN_TIME_DAILY_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'listen_time_daily');
   static final FAVOURITES_PLAYLIST = _join(_USER_DATA, 'favs.json');
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
   static final NAMIDA_LOGO_LAYER = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK_LAYER.PNG';
