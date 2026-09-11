@@ -12,6 +12,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/base/ports_provider.dart';
+import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
@@ -155,7 +156,12 @@ class Lyrics {
     }
   }
 
-  Future<List<LyricsModel>> searchLRCLyricsFromInternet({required LrcSearchUtils lrcUtils, String? customQuery}) async {
+  Future<List<LyricsModel>> searchLRCLyricsFromInternet({
+    required LrcSearchUtils lrcUtils,
+    String? customQuery,
+    bool allProviders = false,
+    void Function(List<LyricsModel> lyrics)? onPartial,
+  }) async {
     final searchTries = lrcUtils.searchDetailsQueries();
     if (searchTries.isEmpty) {
       customQuery ??= lrcUtils.initialSearchTextHint;
@@ -165,6 +171,9 @@ class Lyrics {
     return await _lrcSearchManager.search(
       queries: searchTries,
       customQuery: customQuery,
+      providers: LyricsProvider.values,
+      allProviders: allProviders,
+      onPartial: onPartial,
     );
   }
 
@@ -289,30 +298,80 @@ class Lyrics {
   }
 }
 
+class _LRCSearchRequest {
+  final int token;
+  final List<LRCSearchDetails> queries;
+  final String? customQuery;
+  final List<LyricsProvider> providers;
+  final bool allProviders;
+
+  const _LRCSearchRequest({
+    required this.token,
+    required this.queries,
+    required this.customQuery,
+    required this.providers,
+    required this.allProviders,
+  });
+}
+
+class _LRCSearchResult {
+  final int token;
+  final List<LyricsModel> lyrics;
+  final bool done;
+
+  const _LRCSearchResult({
+    required this.token,
+    required this.lyrics,
+    required this.done,
+  });
+}
+
 class _LRCSearchManager with PortsProvider<SendPort> {
   _LRCSearchManager();
 
+  int _latestToken = 0;
   Completer<List<LyricsModel>>? _completer;
+  void Function(List<LyricsModel> lyrics)? _onPartial;
 
   Future<List<LyricsModel>> search({
     required List<LRCSearchDetails> queries,
     String? customQuery,
+    required List<LyricsProvider> providers,
+    required bool allProviders,
+    void Function(List<LyricsModel> lyrics)? onPartial,
   }) async {
+    if (providers.isEmpty) return [];
+
+    final token = ++_latestToken;
     _completer?.completeIfWasnt([]);
-    _completer = Completer<List<LyricsModel>>();
+    final completer = _completer = Completer<List<LyricsModel>>();
+    _onPartial = onPartial;
 
     if (!isInitialized) await initialize();
-    final p = customQuery != null && customQuery.isNotEmpty ? customQuery : queries;
-    await sendPort(p);
-    final res = await _completer?.future ?? [];
-    _completer = null;
-    return res;
+    if (token != _latestToken) return [];
+
+    final request = _LRCSearchRequest(
+      token: token,
+      queries: queries,
+      customQuery: customQuery,
+      providers: providers,
+      allProviders: allProviders,
+    );
+    await sendPort(request);
+    return completer.future;
   }
 
   @override
   void onResult(dynamic result) {
-    _completer?.completeIfWasnt(result as List<LyricsModel>);
-    _completer = null;
+    result as _LRCSearchResult;
+    if (result.token != _latestToken) return;
+    if (result.done) {
+      _completer?.completeIfWasnt(result.lyrics);
+      _completer = null;
+      _onPartial = null;
+    } else {
+      _onPartial?.call(result.lyrics);
+    }
   }
 
   @override
@@ -337,151 +396,438 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       'User-Agent': 'namida $appVersion (${AppSocial.GITHUB})',
     };
 
-    String substringArtist(String artist) {
-      int maxIndex = -1;
-      maxIndex = artist.indexOf('(');
-      if (maxIndex <= 0) maxIndex = artist.indexOf('[');
-      return maxIndex <= 0 ? artist : artist.substring(0, maxIndex);
-    }
-
-    Future<List<LyricsModel>> fetchLRCBasedLyricsFromInternet({LRCSearchDetails? details, String customQuery = ''}) async {
-      if (customQuery == '' && details == null) return [];
-      String formatTime(int milliseconds) {
-        final duration = Duration(milliseconds: milliseconds);
-        final min = duration.inMinutes.remainder(60);
-        final sec = duration.inSeconds.remainder(60);
-        final ms = milliseconds;
-        String pad(int n) => n.toString().padLeft(2, '0');
-        final formattedTime = '${pad(min)}:${pad(sec)}.${pad(ms)}';
-        return formattedTime;
-      }
-
-      String tail = '';
-      if (customQuery != '') {
-        tail = 'q=$customQuery';
-      } else if (details != null) {
-        final params = [
-          if (details.title != '') 'track_name=${details.title}',
-          if (details.artist != '') 'artist_name=${substringArtist(details.artist)}',
-          if (details.album != '') 'album_name=${details.album}',
-        ].join('&');
-        tail = params;
-      }
-
-      if (tail != '') {
-        final urlPre = "https://lrclib.net/api/search?$tail";
-        final url = Uri.encodeFull(urlPre);
-
-        try {
-          final response = await mainRequester.getUrl(
-            url,
-            headers: defaultHeaders,
-            cancelToken: null,
-          );
-          final jsonLists = (jsonDecode(response.body) as List<dynamic>?) ?? [];
-          final fetched = <LyricsModel>[];
-
-          final mainDuration = details?.durationMS ?? 0;
-          final isDurationModified = details?.isDurationModified ?? false;
-          if (mainDuration > 0 && !isDurationModified) {
-            // -- prefer lyrics with closer duration (if info the same)
-            jsonLists.sort(
-              (a, b) {
-                final sameInfo =
-                    (a['trackName'] is String && a['trackName'] == b['trackName']) && //
-                    (a['artistName'] is String && a['artistName'] == b['artistName']);
-                if (sameInfo) {
-                  try {
-                    final aDurMS = ((a['duration'] as num) * 1000).round(); // ex: 30
-                    final bDurMS = ((b['duration'] as num) * 1000).round(); // ex: 20
-                    final aDiff = (mainDuration - aDurMS).abs(); // ex: 0 (30-30)
-                    final bDiff = (mainDuration - bDurMS).abs(); // ex: 10 (30-20)
-                    if (aDiff < bDiff) {
-                      return -1;
-                    } else if (aDiff > bDiff) {
-                      return 1;
-                    } else if (aDiff == bDiff) {
-                      return 0;
-                    }
-                  } catch (_) {}
-                }
-                return 0;
-              },
-            );
-          }
-
-          for (var jsonRes in jsonLists) {
-            final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
-            final plain = jsonRes?["plainLyrics"] as String? ?? '';
-            if (syncedLyrics != '') {
-              // lrc
-              final lrcBuffer = StringBuffer();
-              final artist = jsonRes['artistName'] ?? details?.artist ?? '';
-              final album = jsonRes['albumName'] ?? details?.album ?? '';
-              final title = jsonRes['trackName'] ?? details?.title ?? '';
-              final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : mainDuration;
-
-              if (artist != '') lrcBuffer.writeln('[ar:$artist]');
-              if (album != '') lrcBuffer.writeln('[al:$album]');
-              if (title != '') lrcBuffer.writeln('[ti:$title]');
-              if (durMS > 0) lrcBuffer.writeln('[length:${formatTime(durMS)}]');
-              lrcBuffer.write(syncedLyrics);
-
-              final resultedLRC = lrcBuffer.toString();
-
-              fetched.add(
-                LyricsModel(
-                  lyrics: resultedLRC,
-                  isInCache: false,
-                  fromInternet: true,
-                  synced: true,
-                  file: null,
-                  isEmbedded: false,
-                ),
-              );
-            } else if (plain != '') {
-              // txt
-              fetched.add(
-                LyricsModel(
-                  lyrics: plain,
-                  isInCache: false,
-                  fromInternet: true,
-                  synced: false,
-                  file: null,
-                  isEmbedded: false,
-                ),
-              );
-            }
-          }
-          fetched.removeDuplicates();
-          return fetched;
-        } catch (_) {}
-      }
-      return [];
-    }
+    final searcher = _LRCProvidersSearcher(mainRequester, defaultHeaders);
+    _LRCSearchSession? activeSession;
 
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
       if (PortsProvider.isDisposeMessage(p)) {
+        activeSession?.cancel();
         recievePort.close();
         streamSub?.cancel();
         return;
       }
 
-      var lyrics = <LyricsModel>[];
-      if (p is List<LRCSearchDetails>) {
-        for (final details in p) {
-          lyrics = await fetchLRCBasedLyricsFromInternet(details: details);
-          if (lyrics.isNotEmpty) break;
+      if (p is _LRCSearchRequest) {
+        activeSession?.cancel();
+        final session = activeSession = _LRCSearchSession(p);
+
+        void send(List<LyricsModel> lyrics, bool done) {
+          if (session.cancelled) return;
+          sendPort.send(_LRCSearchResult(token: p.token, lyrics: lyrics, done: done));
         }
-      } else if (p is String) {
-        lyrics = await fetchLRCBasedLyricsFromInternet(details: null, customQuery: p);
+
+        final lyrics = await searcher.search(session, onPartial: (lyrics) => send(lyrics, false));
+        send(lyrics, true);
+        if (identical(activeSession, session)) activeSession = null;
       }
-      sendPort.send(lyrics);
     });
 
     sendPort.send(null); // prepared
+  }
+}
+
+class _LRCSearchSession {
+  final _LRCSearchRequest request;
+  final cancelToken = CancelToken();
+
+  bool _cancelled = false;
+  bool _requestIssued = false;
+
+  bool get cancelled => _cancelled;
+
+  _LRCSearchSession(this.request);
+
+  void markRequestIssued() => _requestIssued = true;
+
+  void cancel() {
+    if (_cancelled) return;
+    _cancelled = true;
+    // -- cancel() never completes if the token was not attached to a request
+    if (_requestIssued) cancelToken.cancel().ignore();
+  }
+}
+
+class _LRCProvidersSearcher {
+  final HttpClientWrapper _requester;
+  final Map<String, String> _defaultHeaders;
+
+  const _LRCProvidersSearcher(this._requester, this._defaultHeaders);
+
+  static const _requestTimeout = Duration(seconds: 20);
+
+  Future<List<LyricsModel>> search(_LRCSearchSession session, {required void Function(List<LyricsModel> lyrics) onPartial}) async {
+    final request = session.request;
+    final customQuery = request.customQuery ?? '';
+    // -- kugou needs a request per candidate, auto mode only uses the first result anyway.
+    final kugouLimit = request.allProviders ? 3 : 1;
+
+    Future<List<LyricsModel>> searchProvider(LyricsProvider provider) async {
+      if (customQuery != '') {
+        return _fetch(session, provider, details: null, customQuery: customQuery, kugouLimit: kugouLimit);
+      }
+      for (final details in request.queries) {
+        if (session.cancelled) break;
+        final fetched = await _fetch(session, provider, details: details, customQuery: '', kugouLimit: kugouLimit);
+        if (fetched.isNotEmpty) return fetched;
+      }
+      return [];
+    }
+
+    if (request.allProviders) {
+      final all = await Future.wait(
+        request.providers.map((provider) async {
+          final fetched = await searchProvider(provider);
+          if (fetched.isNotEmpty) onPartial(fetched);
+          return fetched;
+        }),
+      );
+      final merged = <LyricsModel>[];
+      for (final list in all) {
+        merged.addAll(list);
+      }
+      LyricsModel.removeDuplicateLyrics(merged);
+      return merged;
+    }
+
+    for (final provider in request.providers) {
+      if (session.cancelled) break;
+      final fetched = await searchProvider(provider);
+      if (fetched.isNotEmpty) return fetched;
+    }
+    return [];
+  }
+
+  Future<List<LyricsModel>> _fetch(
+    _LRCSearchSession session,
+    LyricsProvider provider, {
+    required LRCSearchDetails? details,
+    required String customQuery,
+    required int kugouLimit,
+  }) async {
+    if (customQuery == '' && details == null) return [];
+    if (session.cancelled) return [];
+    try {
+      return switch (provider) {
+        LyricsProvider.lrclib => await _fetchLRCLIB(session, details: details, customQuery: customQuery),
+        LyricsProvider.kugou => await _fetchKuGou(session, details: details, customQuery: customQuery, limit: kugouLimit),
+      };
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<dynamic> _getJson(_LRCSearchSession session, Uri uri) async {
+    session.markRequestIssued();
+    final response = await _requester.getUrl(uri.toString(), headers: _defaultHeaders, cancelToken: session.cancelToken).timeout(_requestTimeout);
+    return jsonDecode(response.body);
+  }
+
+  static String _substringArtist(String artist) {
+    int maxIndex = -1;
+    maxIndex = artist.indexOf('(');
+    if (maxIndex <= 0) maxIndex = artist.indexOf('[');
+    return maxIndex <= 0 ? artist : artist.substring(0, maxIndex);
+  }
+
+  static String _pad2(int n) => n.toString().padLeft(2, '0');
+
+  static String _formatLength(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final min = duration.inMinutes;
+    final sec = duration.inSeconds.remainder(60);
+    final ms = milliseconds.remainder(1000);
+    return '${_pad2(min)}:${_pad2(sec)}.${ms.toString().padLeft(3, '0')}';
+  }
+
+  static int _targetDurationMS(LRCSearchDetails? details) {
+    if (details == null || details.isDurationModified) return 0;
+    return details.durationMS;
+  }
+
+  static void _rankCandidates(
+    List<dynamic> items, {
+    required _LyricsMatchScorer? scorer,
+    required int targetMS,
+    required String? Function(dynamic item) title,
+    required String? Function(dynamic item) artist,
+    required int? Function(dynamic item) durationMS,
+  }) {
+    if (items.isEmpty) return;
+    const unknownDiff = 1 << 40;
+    final ranked = <({int index, double score, int diff})>[];
+    for (int i = 0; i < items.length; i++) {
+      final item = items[i];
+      final score = scorer?.score(title(item), artist(item)) ?? 1.0;
+      if (score < _LyricsMatchScorer.acceptThreshold) continue;
+      final d = durationMS(item);
+      final diff = targetMS <= 0 || d == null || d <= 0 ? unknownDiff : (targetMS - d).abs();
+      ranked.add((index: i, score: score, diff: diff));
+    }
+    ranked.sort((a, b) {
+      final s = b.score.compareTo(a.score);
+      if (s != 0) return s;
+      final d = a.diff.compareTo(b.diff);
+      return d != 0 ? d : a.index.compareTo(b.index);
+    });
+    final sorted = ranked.map((r) => items[r.index]).toList();
+    items.length = sorted.length;
+    items.setAll(0, sorted);
+  }
+
+  static String _buildLRC({required String lyrics, required String artist, required String album, required String title, required int durationMS}) {
+    final lrcBuffer = StringBuffer();
+    if (artist != '') lrcBuffer.writeln('[ar:$artist]');
+    if (album != '') lrcBuffer.writeln('[al:$album]');
+    if (title != '') lrcBuffer.writeln('[ti:$title]');
+    if (durationMS > 0) lrcBuffer.writeln('[length:${_formatLength(durationMS)}]');
+    lrcBuffer.write(lyrics);
+    return lrcBuffer.toString();
+  }
+
+  static LyricsModel _model(String lyrics, bool synced, LyricsProvider provider) {
+    return LyricsModel(
+      lyrics: lyrics,
+      isInCache: false,
+      fromInternet: true,
+      synced: synced,
+      file: null,
+      isEmbedded: false,
+      provider: provider,
+    );
+  }
+
+  // ==================== LRCLIB ====================
+
+  Future<List<LyricsModel>> _fetchLRCLIB(_LRCSearchSession session, {required LRCSearchDetails? details, required String customQuery}) async {
+    final params = <String, String>{};
+    if (customQuery != '') {
+      params['q'] = customQuery;
+    } else if (details != null) {
+      if (details.title != '') params['track_name'] = details.title;
+      if (details.artist != '') params['artist_name'] = _substringArtist(details.artist);
+      if (details.album != '') params['album_name'] = details.album;
+    }
+    if (params.isEmpty) return [];
+
+    final jsonLists = (await _getJson(session, Uri.https('lrclib.net', '/api/search', params)) as List<dynamic>?) ?? [];
+    if (jsonLists.isEmpty) return [];
+
+    final targetMS = _targetDurationMS(details);
+    _rankCandidates(
+      jsonLists,
+      scorer: details == null ? null : _LyricsMatchScorer(details),
+      targetMS: targetMS,
+      title: (r) => r['trackName'] as String?,
+      artist: (r) => r['artistName'] as String?,
+      durationMS: (r) => r['duration'] is num ? ((r['duration'] as num) * 1000).round() : null,
+    );
+
+    final fetched = <LyricsModel>[];
+    for (var jsonRes in jsonLists) {
+      final syncedLyrics = jsonRes?["syncedLyrics"] as String? ?? '';
+      final plain = jsonRes?["plainLyrics"] as String? ?? '';
+      if (syncedLyrics != '') {
+        final durMS = jsonRes['duration'] is num ? ((jsonRes['duration'] as num) * 1000).round() : targetMS;
+        final resultedLRC = _buildLRC(
+          lyrics: syncedLyrics,
+          artist: jsonRes['artistName'] ?? details?.artist ?? '',
+          album: jsonRes['albumName'] ?? details?.album ?? '',
+          title: jsonRes['trackName'] ?? details?.title ?? '',
+          durationMS: durMS,
+        );
+        fetched.add(_model(resultedLRC, true, LyricsProvider.lrclib));
+      } else if (plain != '') {
+        fetched.add(_model(plain, false, LyricsProvider.lrclib));
+      }
+    }
+    LyricsModel.removeDuplicateLyrics(fetched);
+    return fetched;
+  }
+
+  // ==================== KuGou ====================
+
+  Future<List<LyricsModel>> _fetchKuGou(_LRCSearchSession session, {required LRCSearchDetails? details, required String customQuery, required int limit}) async {
+    String keyword = customQuery;
+    if (keyword == '' && details != null) {
+      keyword = [
+        if (details.artist != '') _substringArtist(details.artist).trim(),
+        if (details.title != '') details.title,
+      ].join(' - ');
+    }
+    if (keyword == '') return [];
+
+    final targetMS = _targetDurationMS(details);
+    final searchUri = Uri.https('lyrics.kugou.com', '/search', {
+      'ver': '1',
+      'man': 'yes',
+      'client': 'pc',
+      'keyword': keyword,
+      'duration': targetMS.toString(),
+      'hash': '',
+    });
+    final searchJson = await _getJson(session, searchUri);
+    final candidates = (searchJson?['candidates'] as List<dynamic>?) ?? [];
+    if (candidates.isEmpty) return [];
+
+    _rankCandidates(
+      candidates,
+      scorer: details == null ? null : _LyricsMatchScorer(details),
+      targetMS: targetMS,
+      title: (c) => c['song'] as String?,
+      artist: (c) => c['singer'] as String?,
+      durationMS: (c) => c['duration'] is num ? (c['duration'] as num).round() : null,
+    );
+
+    // -- kugou returns the same lyrics under multiple ids, each requiring a separate download.
+    final seenInfo = <String>{};
+    final fetched = <LyricsModel>[];
+    for (final c in candidates) {
+      if (fetched.length >= limit || session.cancelled) break;
+      final id = c['id']?.toString() ?? '';
+      final accesskey = c['accesskey']?.toString() ?? '';
+      if (id == '' || accesskey == '') continue;
+      if (!seenInfo.add('${c['song']}|${c['singer']}|${c['duration']}')) continue;
+
+      final downloadUri = Uri.https('lyrics.kugou.com', '/download', {
+        'ver': '1',
+        'client': 'pc',
+        'id': id,
+        'accesskey': accesskey,
+        'fmt': 'lrc',
+        'charset': 'utf8',
+      });
+      try {
+        final downloadJson = await _getJson(session, downloadUri);
+        final content = downloadJson?['content'] as String? ?? '';
+        if (content == '') continue;
+        final lrc = utf8.decode(base64Decode(content)).trim();
+        if (lrc == '') continue;
+        final durMS = c['duration'] is num ? (c['duration'] as num).round() : targetMS;
+        final lyrics = lrc.contains('[length:') || durMS <= 0 ? lrc : '[length:${_formatLength(durMS)}]\n$lrc';
+        fetched.add(_model(lyrics, true, LyricsProvider.kugou));
+      } catch (_) {}
+    }
+    LyricsModel.removeDuplicateLyrics(fetched);
+    return fetched;
+  }
+}
+
+// by claude
+class _LyricsMatchScorer {
+  static const acceptThreshold = 0.7;
+
+  final List<_MatchToken> _titleTokens;
+  final List<_MatchToken> _artistTokens;
+  final List<_MatchToken> _allTokens;
+
+  /// catches different word splitting, ex: "Nightcall" vs "Night Call".
+  late final _MatchToken _joinedTitle = _MatchToken(_titleTokens.map((t) => t.text).join());
+
+  _LyricsMatchScorer._(this._titleTokens, this._artistTokens) : _allTokens = [..._titleTokens, ..._artistTokens];
+
+  factory _LyricsMatchScorer(LRCSearchDetails details) {
+    return _LyricsMatchScorer._(
+      _MatchToken.tokenize(details.title, ignore: _kTitleNoiseTokens),
+      _MatchToken.tokenize(_LRCProvidersSearcher._substringArtist(details.artist)),
+    );
+  }
+
+  double score(String? title, String? artist) {
+    final titleParts = _split(title);
+    final artistParts = _split(artist);
+    final allParts = artistParts.isEmpty ? titleParts : [...titleParts, ...artistParts];
+
+    double titleScore = 1.0;
+    if (_titleTokens.isNotEmpty) {
+      titleScore = _coverage(_titleTokens, allParts);
+      if (titleScore < 1.0 && (titleParts.length > 1 || _titleTokens.length > 1) && _joinedTitle.matches(titleParts.join())) titleScore = 1.0;
+    }
+
+    if (_artistTokens.isEmpty || artistParts.isEmpty) return titleScore;
+
+    // -- either side may list extra artists, ex: "A & B" vs "B"
+    final forward = _coverage(_artistTokens, allParts);
+    final reverse = _reverseCoverage(_allTokens, artistParts);
+    final artistScore = forward > reverse ? forward : reverse;
+
+    return titleScore * 0.7 + artistScore * 0.3;
+  }
+
+  /// filler commonly found in video titles, never in lyrics databases.
+  static const _kTitleNoiseTokens = {'official', 'video', 'audio', 'lyrics', 'lyric', 'music', 'hd', 'hq', '4k', 'visualizer', 'mv'};
+
+  static List<String> _split(String? text) {
+    if (text == null || text.isEmpty) return const [];
+    final parts = <String>[];
+    for (final p in text.cleanUpForComparison.split(' ')) {
+      if (p.isNotEmpty) parts.add(p);
+    }
+    return parts;
+  }
+
+  /// fraction of [tokens] found in [parts].
+  static double _coverage(List<_MatchToken> tokens, List<String> parts) {
+    if (parts.isEmpty) return 0.0;
+    int matched = 0;
+    for (final token in tokens) {
+      for (final part in parts) {
+        if (token.matches(part)) {
+          matched++;
+          break;
+        }
+      }
+    }
+    return matched / tokens.length;
+  }
+
+  /// fraction of [parts] matched by any of [tokens].
+  static double _reverseCoverage(List<_MatchToken> tokens, List<String> parts) {
+    int matched = 0;
+    for (final part in parts) {
+      for (final token in tokens) {
+        if (token.matches(part)) {
+          matched++;
+          break;
+        }
+      }
+    }
+    return matched / parts.length;
+  }
+}
+
+class _MatchToken {
+  final String text;
+  final int length;
+  final int maxDistance;
+  final FuzzyMatcher _fuzzy;
+
+  _MatchToken(this.text) : length = text.length, maxDistance = _maxDistanceFor(text.length), _fuzzy = FuzzyMatcher(text);
+
+  /// [ignore]d words are dropped unless they make up the whole text.
+  static List<_MatchToken> tokenize(String text, {Set<String>? ignore}) {
+    final tokens = <_MatchToken>[];
+    final ignored = <_MatchToken>[];
+    for (final p in text.cleanUpForComparison.split(' ')) {
+      if (p.isEmpty) continue;
+      (ignore != null && ignore.contains(p) ? ignored : tokens).add(_MatchToken(p));
+    }
+    return tokens.isEmpty ? ignored : tokens;
+  }
+
+  /// insert/delete distance allowed, short tokens must match exactly.
+  static int _maxDistanceFor(int length) => length >= 7
+      ? 2
+      : length >= 4
+      ? 1
+      : 0;
+
+  bool matches(String other) {
+    if (other == text) return true;
+    if (maxDistance == 0) return false;
+    if ((other.length - length).abs() > maxDistance) return false;
+    return _fuzzy.distanceTo(other, other.length, maxDistance) <= maxDistance;
   }
 }
 

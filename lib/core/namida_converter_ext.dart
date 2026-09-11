@@ -2285,6 +2285,13 @@ extension LyricsSourceL10n on LyricsSource {
   };
 }
 
+extension LyricsProviderL10n on LyricsProvider {
+  String toText() => switch (this) {
+    LyricsProvider.lrclib => 'LRCLIB',
+    LyricsProvider.kugou => 'KuGou',
+  };
+}
+
 extension WakelockModeL10n on WakelockMode {
   String toText() => switch (this) {
     WakelockMode.none => lang.keepScreenAwakeNone,

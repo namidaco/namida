@@ -18,6 +18,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -311,14 +312,41 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     NamidaLinkUtils.openLink(url, preferredMode: LaunchMode.externalApplication);
   }
 
+  void sortFetchedLyrics(List<LyricsModel> lyrics, int? trackDurationMS) {
+    if (lyrics.length < 2) return;
+    const unknownDiff = 1 << 40;
+    final targetMS = trackDurationMS ?? 0;
+    final keyed = List.generate(lyrics.length, (i) {
+      final l = lyrics[i];
+      final durMS = l.durationMS;
+      final diff = targetMS > 0 && durMS != null && durMS > 0 ? (targetMS - durMS).abs() : unknownDiff;
+      return (index: i, synced: l.synced ? 0 : 1, diff: diff);
+    });
+    keyed.sort((a, b) {
+      final s = a.synced.compareTo(b.synced);
+      if (s != 0) return s;
+      final d = a.diff.compareTo(b.diff);
+      return d != 0 ? d : a.index.compareTo(b.index);
+    });
+    final sorted = keyed.map((k) => lyrics[k.index]).toList();
+    lyrics.setAll(0, sorted);
+  }
+
+  int searchId = 0;
+
   void onSearchTrigger([String? query]) async {
+    final id = ++searchId;
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
     final lyrics = await Lyrics.inst.searchLRCLyricsFromInternet(
       lrcUtils: lrcUtils,
       customQuery: query ?? searchController.text,
+      allProviders: true,
+      onPartial: fetchedLyrics.addAll,
     );
-    if (lyrics.isNotEmpty) fetchedLyrics.addAll(lyrics);
+    if (id != searchId) return;
+    sortFetchedLyrics(lyrics, trackDurationMSRx.value);
+    fetchedLyrics.value = lyrics;
     fetchingFromInternet.value = false;
   }
 
@@ -640,7 +668,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                     final cacheText = l.isEmbedded
                         ? ''
                         : l.file == null
-                        ? ''
+                        ? l.provider?.toText() ?? ''
                         : l.isInCache
                         ? lang.cache
                         : lang.local;

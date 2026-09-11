@@ -58,19 +58,42 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
     ];
   }
 
+  /// "Artist - Title" style titles carry the artist themselves, the channel is usually an uploader.
+  static final _artistTitleSeparatorRegex = RegExp(r'\s[-–—]\s');
+
+  static const _topicChannelSuffix = ' - Topic';
+
   @override
   List<LRCSearchDetails> searchDetailsQueries() {
     final durMS = duration?.inMilliseconds ?? 0;
+    final videoTitle = this.videoTitle ?? '';
+
+    String artist = '';
+    String title = videoTitle;
+    final separator = _artistTitleSeparatorRegex.firstMatch(videoTitle);
+    if (separator != null) {
+      final before = videoTitle.substring(0, separator.start).trim();
+      final after = videoTitle.substring(separator.end).trim();
+      if (before.isNotEmpty && after.isNotEmpty) {
+        artist = before;
+        title = after;
+      }
+    }
+    if (artist.isEmpty) {
+      artist = channelTitle ?? '';
+      if (artist.endsWith(_topicChannelSuffix)) artist = artist.substring(0, artist.length - _topicChannelSuffix.length);
+    }
+
     return [
       LRCSearchDetails(
-        title: videoTitle ?? '',
-        artist: channelTitle ?? '',
+        title: title,
+        artist: artist,
         album: '',
         durationMS: durMS,
         isDurationModified: false,
       ),
       LRCSearchDetails(
-        title: videoTitle ?? '',
+        title: videoTitle,
         artist: '',
         album: '',
         durationMS: durMS,

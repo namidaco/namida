@@ -710,6 +710,11 @@ enum LyricsSource {
   internet,
 }
 
+enum LyricsProvider {
+  lrclib,
+  kugou,
+}
+
 enum QueueInsertionType {
   moreAlbum,
   moreArtist,
