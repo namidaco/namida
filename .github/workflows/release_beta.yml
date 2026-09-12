@@ -11,6 +11,14 @@ on:
       is_beta:
         type: boolean
         default: true
+      flatpak_only:
+        description: only rebuild the flatpak, reusing the portable tarball from source_run_id
+        type: boolean
+        default: false
+      source_run_id:
+        description: run id that produced the namida-linux-portable artifact (flatpak_only)
+        type: string
+        default: ""
   workflow_call:
     inputs:
       is_beta:
@@ -76,6 +84,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   setup_matrix:
+    if: ${{ !inputs.flatpak_only }}
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
@@ -89,6 +98,7 @@ jobs:
           fi
 
   build_android:
+    if: ${{ !inputs.flatpak_only }}
     needs: [create_release, setup_matrix]
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
@@ -199,6 +209,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_windows:
+    if: ${{ !inputs.flatpak_only }}
     needs: create_release
     strategy:
       fail-fast: false
@@ -329,7 +340,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_linux:
-    if: ${{ inputs.is_beta }}
+    if: ${{ inputs.is_beta && !inputs.flatpak_only }}
     needs: create_release
     runs-on: ubuntu-latest
     container:
@@ -451,7 +462,7 @@ jobs:
   #   - Namida-x86_64-<ver>.AppImage (+ .zsync)      -> release asset
   #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
   build_linux_portable:
-    if: ${{ inputs.is_beta }}
+    if: ${{ inputs.is_beta && !inputs.flatpak_only }}
     needs: create_release
     runs-on: ubuntu-24.04
 
@@ -525,7 +536,7 @@ jobs:
   # Flatpak bundle from the portable tarball. libass/libplacebo/ffmpeg/mpv are compiled by the manifest
   # (cached between runs on the manifest hash), the app is dropped in prebuilt.
   build_flatpak:
-    if: ${{ inputs.is_beta }}
+    if: ${{ !cancelled() && inputs.is_beta && (inputs.flatpak_only || needs.build_linux_portable.result == 'success') }}
     needs: [create_release, build_linux_portable]
     runs-on: ubuntu-latest
     container:
@@ -541,6 +552,8 @@ jobs:
         with:
           name: namida-linux-portable
           path: linux/packaging/flatpak
+          run-id: ${{ inputs.flatpak_only && inputs.source_run_id || github.run_id }}
+          github-token: ${{ secrets.PAT }}
 
       - name: Place tarball where the manifest expects it
         run: mv linux/packaging/flatpak/namida-linux-portable.tar.gz linux/packaging/flatpak/namida-linux.tar.gz

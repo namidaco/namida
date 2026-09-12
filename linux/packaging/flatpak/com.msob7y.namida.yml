@@ -125,7 +125,6 @@ modules:
       - -Ddvdnav=disabled
       - -Dlibbluray=disabled
       - -Dlibarchive=disabled
-      - -Dsdl2=disabled
       - -Dvapoursynth=disabled
     cleanup:
       - /share/applications
