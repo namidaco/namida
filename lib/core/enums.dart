@@ -308,6 +308,7 @@ enum LibraryTab {
   moods,
   tags,
   rating,
+  stats,
 }
 
 enum TrackPlayMode {

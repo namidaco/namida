@@ -75,6 +75,7 @@ import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
+import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -130,6 +131,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.moods => null,
       LibraryTab.tags => null,
       LibraryTab.rating => null,
+      LibraryTab.stats => null,
     };
   }
 
@@ -176,6 +178,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.moods => const MoodsPage(),
       LibraryTab.tags => const TagsPage(),
       LibraryTab.rating => const RatingsPage(),
+      LibraryTab.stats => const StatsPage(isYoutube: false),
     };
   }
 }
@@ -1853,6 +1856,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.moods => lang.moods,
     LibraryTab.tags => lang.tags,
     LibraryTab.rating => lang.rating,
+    LibraryTab.stats => lang.stats,
   };
 
   IconData toIcon() => switch (this) {
@@ -1875,6 +1879,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.moods => Broken.emoji_happy,
     LibraryTab.tags => Broken.tag,
     LibraryTab.rating => Broken.grammerly,
+    LibraryTab.stats => Broken.chart_21,
   };
 }
 
