@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
@@ -6361,10 +6362,12 @@ class LongPressDetector extends StatelessWidget {
   }
 }
 
-class ScaleDetector extends StatelessWidget {
+/// pinch to scale. on desktop also ctrl+wheel, and hotkeys via [ScaleDetectorState.topmost].
+class ScaleDetector extends StatefulWidget {
   final GestureScaleStartCallback? onScaleStart;
   final GestureScaleUpdateCallback? onScaleUpdate;
   final GestureScaleEndCallback? onScaleEnd;
+  final VoidCallback? onScaleReset;
   final Widget? child;
   final HitTestBehavior? behavior;
 
@@ -6373,9 +6376,48 @@ class ScaleDetector extends StatelessWidget {
     this.onScaleStart,
     this.onScaleUpdate,
     this.onScaleEnd,
+    this.onScaleReset,
     this.child,
     this.behavior,
   });
+
+  @override
+  State<ScaleDetector> createState() => ScaleDetectorState();
+}
+
+class ScaleDetectorState extends State<ScaleDetector> {
+  static final _mounted = <ScaleDetectorState>[];
+  static ScaleDetectorState? get topmost => _mounted.lastOrNull;
+
+  @override
+  void initState() {
+    super.initState();
+    _mounted.add(this);
+  }
+
+  @override
+  void dispose() {
+    _mounted.remove(this);
+    super.dispose();
+  }
+
+  void scaleBy(double factor) {
+    widget.onScaleStart?.call(ScaleStartDetails());
+    widget.onScaleUpdate?.call(ScaleUpdateDetails(scale: factor));
+    widget.onScaleEnd?.call(ScaleEndDetails());
+  }
+
+  void reset() => widget.onScaleReset?.call();
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (event is PointerScrollEvent && HardwareKeyboard.instance.isControlPressed) {
+      GestureBinding.instance.pointerSignalResolver.register(event, _onScaleScroll);
+    }
+  }
+
+  void _onScaleScroll(PointerSignalEvent event) {
+    scaleBy(math.exp(-(event as PointerScrollEvent).scrollDelta.dy / 2500));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -6384,17 +6426,22 @@ class ScaleDetector extends StatelessWidget {
       () => ScaleGestureRecognizer(debugOwner: this),
       (ScaleGestureRecognizer instance) {
         instance
-          ..onStart = onScaleStart
-          ..onUpdate = onScaleUpdate
-          ..onEnd = onScaleEnd
+          ..onStart = widget.onScaleStart
+          ..onUpdate = widget.onScaleUpdate
+          ..onEnd = widget.onScaleEnd
           ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
       },
     );
 
-    return RawGestureDetector(
+    final behavior = widget.behavior ?? (widget.child == null ? HitTestBehavior.translucent : HitTestBehavior.deferToChild);
+    return Listener(
       behavior: behavior,
-      gestures: gestures,
-      child: child,
+      onPointerSignal: _onPointerSignal,
+      child: RawGestureDetector(
+        behavior: behavior,
+        gestures: gestures,
+        child: widget.child,
+      ),
     );
   }
 }

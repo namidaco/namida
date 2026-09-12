@@ -326,6 +326,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   // -- mouse scroll
   void _onPointerSignal(dynamic _) {
+    if (HardwareKeyboard.instance.isControlPressed) return;
     _onPointerDown(null);
     _onPointerUp(null);
   }
@@ -1047,8 +1048,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
         Positioned.fill(
           child: ScaleDetector(
             onScaleStart: (details) => _previousFontMultiplier = _fontMultiplier,
-            onScaleUpdate: (details) => refreshState(() => _fontMultiplier = (details.scale * _previousFontMultiplier).clampDouble(0.5, 2.0)),
-            onScaleEnd: (details) => widget.isFullScreenView ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier),
+            onScaleUpdate: (details) => _setFontMultiplier(details.scale * _previousFontMultiplier),
+            onScaleEnd: (details) => _saveFontMultiplier(),
+            onScaleReset: () {
+              _setFontMultiplier(1.0);
+              _saveFontMultiplier();
+            },
           ),
         ),
       ],

@@ -216,6 +216,29 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.repeatMode,
     ),
     // -----------------
+    for (final key in const [LogicalKeyboardKey.equal, LogicalKeyboardKey.numpadAdd])
+      ShortcutKeyActivator(
+        key: key,
+        control: true,
+        includeRepeats: true,
+        callback: () => ScaleDetectorState.topmost?.scaleBy(1.1),
+        title: () => lang.zoom,
+      ),
+    for (final key in const [LogicalKeyboardKey.minus, LogicalKeyboardKey.numpadSubtract])
+      ShortcutKeyActivator(
+        key: key,
+        control: true,
+        includeRepeats: true,
+        callback: () => ScaleDetectorState.topmost?.scaleBy(1 / 1.1),
+        title: () => lang.zoom,
+      ),
+    ShortcutKeyActivator(
+      key: LogicalKeyboardKey.digit0,
+      control: true,
+      callback: () => ScaleDetectorState.topmost?.reset(),
+      title: () => lang.zoom,
+    ),
+    // -----------------
     for (int i = 1; i <= 9; i++)
       ShortcutKeyActivator(
         key: LogicalKeyboardKey(0x00000000030 + i),
@@ -307,7 +330,8 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     if (activator is! SingleActivator) return false;
 
     final trigger = activator.trigger;
-    final isArrow = trigger == LogicalKeyboardKey.arrowLeft || //
+    final isArrow =
+        trigger == LogicalKeyboardKey.arrowLeft || //
         trigger == LogicalKeyboardKey.arrowRight ||
         trigger == LogicalKeyboardKey.arrowUp ||
         trigger == LogicalKeyboardKey.arrowDown;
