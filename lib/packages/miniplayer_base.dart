@@ -95,6 +95,8 @@ class FocusedMenuOptions {
   });
 }
 
+const _kSimpleLyricsLineFontSize = 14.0;
+
 abstract class MiniplayerThumbnailScale {
   static const _base = 1.13;
   static const _baseInversed = 1.22;
@@ -786,6 +788,12 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             final currentDefaultDurationInMS = widget.getDurationMS?.call(currentItem) ?? 0;
 
             final videoInfo = Player.inst.videoPlayerInfo.valueR;
+            final showSimpleLyricsLine = settings.enableSimpleLyricsLine.valueR && !settings.enableLyrics.valueR;
+            final reserveSimpleLyricsBand = showSimpleLyricsLine && Lyrics.inst.currentLyricsLRC.valueR != null;
+            final thumbnailBaseScale = MiniplayerThumbnailScale.resolveBase(
+              isInversed: settings.animatingThumbnailInversed.valueR,
+              userScaleMultiplier: settings.animatingThumbnailScaleMultiplier.valueR,
+            );
             final imageAspectRatio = resolvePlayableImageAspectRatio(currentItem, videoInfo != null && videoInfo.isInitialized ? videoInfo.aspectRatio : null);
             _lastArtworkAspectRatio = ArtworkWidget.aspectRatioOf(playableArtworkCacheKey(currentItem));
 
@@ -1023,6 +1031,12 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     );
                     double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0 * heightFactor * bcp) + (6.0 * heightFactor * qp);
 
+                    if (reserveSimpleLyricsBand) {
+                      // -- the line may fall back to 2 lines, the gap under the artwork (16 + 6) only holds one.
+                      final bandHeight = SimpleLyricsLineWidget.fittedMaxHeight(fontSize: _kSimpleLyricsLineFontSize, maxLines: 1);
+                      vOffsetImage -= (bandHeight - 22.0 * heightFactor).withMinimum(0.0) * bcp;
+                    }
+
                     // -- the picture is painted 1.13x past its box, so the side margin has to grow with the
                     // -- width, a fixed one only holds the overshoot inside the panel up to ~380 wide.
                     final imageMaxWidthPre = sMaxOffset - (sMaxOffset * 0.2).withMinimum(76.0);
@@ -1036,12 +1050,15 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     final imageBoxWidth = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
                     final imageBoxHeight = velpy(a: imageWidth, b: imageHeightBig, c: bcp);
                     final trackInfoLeftMargin = imageWidth * (1 - bcp);
+                    // -- the painted picture overshoots its box, adjacent items must clear it while sliding.
+                    final imageSwitchSpacing = (sMaxOffset / kSiParallax).withMinimum(imageBoxWidth * thumbnailBaseScale + 12.0);
 
                     double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageBoxHeight - topInset - topRowHeight;
+                    double imageExtraLift = 0.0;
                     if (spaceLeftAboveImage > 0) {
                       final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
-                      final valueToRemove = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
-                      vOffsetImage -= valueToRemove; // re-adjust offset to make the image semi-centered
+                      imageExtraLift = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
+                      vOffsetImage -= imageExtraLift; // re-adjust offset to make the image semi-centered
                     } else {
                       vOffsetImage += (-spaceLeftAboveImage / 2) * bcp;
                     }
@@ -1331,45 +1348,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                         ClipRect(
                           child: Material(
                             type: MaterialType.transparency,
-                            child: Padding(
-                              padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                              child: Stack(
-                                children: [
-                                  if (prevText != null)
-                                    FadeIgnoreTransition(
-                                      opacity: leftOpacityAnim,
-                                      child: MatrixTransition(
-                                        animation: sAnim,
-                                        onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
-                                        child: Transform.translate(
-                                          offset: Offset(0.0, vOffsetTrackInfo),
-                                          child: _TrackInfo(
-                                            textData: prevText,
-                                            isCurrent: false,
-                                            p: bp,
-                                            qp: qp,
-                                            bcp: bcp,
-                                            qcp: qcp,
-                                            boxHeight: trackInfoBoxHeight,
-                                            leftMargin: trackInfoLeftMargin,
-                                            bottomOffset: bottomOffset,
-                                            maxOffset: maxOffset,
-                                            screenSize: screenSize,
-                                            opacityAnimation: fastOpacityAnimation,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                            child: Stack(
+                              children: [
+                                if (prevText != null)
                                   FadeIgnoreTransition(
-                                    opacity: centerItemFadeAnimation,
+                                    opacity: leftOpacityAnim,
                                     child: MatrixTransition(
                                       animation: sAnim,
-                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kStParallax + (12.0 * qp), 0.0, 0.0),
+                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
                                       child: Transform.translate(
                                         offset: Offset(0.0, vOffsetTrackInfo),
                                         child: _TrackInfo(
-                                          textData: currentText,
-                                          isCurrent: true,
+                                          textData: prevText,
+                                          isCurrent: false,
                                           p: bp,
                                           qp: qp,
                                           bcp: bcp,
@@ -1384,74 +1375,73 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                       ),
                                     ),
                                   ),
-                                  if (nextText != null)
-                                    FadeIgnoreTransition(
-                                      opacity: rightOpacityAnim,
-                                      child: MatrixTransition(
-                                        animation: sAnim,
-                                        onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
-                                        child: Transform.translate(
-                                          offset: Offset(0.0, vOffsetTrackInfo),
-                                          child: _TrackInfo(
-                                            textData: nextText,
-                                            isCurrent: false,
-                                            p: bp,
-                                            qp: qp,
-                                            bcp: bcp,
-                                            qcp: qcp,
-                                            boxHeight: trackInfoBoxHeight,
-                                            leftMargin: trackInfoLeftMargin,
-                                            bottomOffset: bottomOffset,
-                                            maxOffset: maxOffset,
-                                            screenSize: screenSize,
-                                            opacityAnimation: fastOpacityAnimation,
-                                          ),
+                                FadeIgnoreTransition(
+                                  opacity: centerItemFadeAnimation,
+                                  child: MatrixTransition(
+                                    animation: sAnim,
+                                    onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kStParallax + (12.0 * qp), 0.0, 0.0),
+                                    child: Transform.translate(
+                                      offset: Offset(0.0, vOffsetTrackInfo),
+                                      child: _TrackInfo(
+                                        textData: currentText,
+                                        isCurrent: true,
+                                        p: bp,
+                                        qp: qp,
+                                        bcp: bcp,
+                                        qcp: qcp,
+                                        boxHeight: trackInfoBoxHeight,
+                                        leftMargin: trackInfoLeftMargin,
+                                        bottomOffset: bottomOffset,
+                                        maxOffset: maxOffset,
+                                        screenSize: screenSize,
+                                        opacityAnimation: fastOpacityAnimation,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (nextText != null)
+                                  FadeIgnoreTransition(
+                                    opacity: rightOpacityAnim,
+                                    child: MatrixTransition(
+                                      animation: sAnim,
+                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
+                                      child: Transform.translate(
+                                        offset: Offset(0.0, vOffsetTrackInfo),
+                                        child: _TrackInfo(
+                                          textData: nextText,
+                                          isCurrent: false,
+                                          p: bp,
+                                          qp: qp,
+                                          bcp: bcp,
+                                          qcp: qcp,
+                                          boxHeight: trackInfoBoxHeight,
+                                          leftMargin: trackInfoLeftMargin,
+                                          bottomOffset: bottomOffset,
+                                          maxOffset: maxOffset,
+                                          screenSize: screenSize,
+                                          opacityAnimation: fastOpacityAnimation,
                                         ),
                                       ),
                                     ),
-                                ],
-                              ),
+                                  ),
+                              ],
                             ),
                           ),
                         ),
 
                         /// Track Image
                         ClipRect(
-                          child: Padding(
-                            padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                            child: Builder(
-                              builder: (context) {
-                                return Stack(
-                                  children: [
-                                    if (previousImageWidget != null)
-                                      FadeIgnoreTransition(
-                                        opacity: leftOpacityAnim,
-                                        child: MatrixTransition(
-                                          animation: sAnim,
-                                          onTransform: (animationValue) {
-                                            final horizontalOffset = -animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax;
-                                            return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
-                                          },
-                                          child: Transform.translate(
-                                            offset: Offset(0.0, vOffsetImage),
-                                            child: _RawImageContainer(
-                                              width: imageBoxWidth,
-                                              height: imageBoxHeight,
-                                              padding: imagePadding,
-                                              child: Padding(
-                                                padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                                child: previousImageWidget,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
+                          child: Builder(
+                            builder: (context) {
+                              return Stack(
+                                children: [
+                                  if (previousImageWidget != null)
                                     FadeIgnoreTransition(
-                                      opacity: centerItemFadeAnimation,
+                                      opacity: leftOpacityAnim,
                                       child: MatrixTransition(
                                         animation: sAnim,
                                         onTransform: (animationValue) {
-                                          final horizontalOffset = -animationValue * sMaxOffset / kSiParallax;
+                                          final horizontalOffset = -animationValue * imageSwitchSpacing - imageSwitchSpacing;
                                           return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
                                         },
                                         child: Transform.translate(
@@ -1462,97 +1452,110 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                             padding: imagePadding,
                                             child: Padding(
                                               padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                              child: ObxO(
-                                                rx: settings.artworkGestureDoubleTapLRC,
-                                                builder: (context, artworkGestureDoubleTapLRC) {
-                                                  if (artworkGestureDoubleTapLRC) {
-                                                    return ObxO(
-                                                      rx: Lyrics.inst.currentLyricsLRC,
-                                                      builder: (context, currentLyricsLRC) {
-                                                        // -- only when lrc view is not visible, to prevent other gestures delaying.
-                                                        return DoubleTapDetector(
-                                                          onDoubleTap: currentLyricsLRC == null
-                                                              ? () {
-                                                                  settings.save(enableLyrics: !settings.enableLyrics.value);
-                                                                  Lyrics.inst.updateLyrics(currentItem);
-                                                                }
-                                                              : null,
-                                                          child: currentImage,
-                                                        );
-                                                      },
-                                                    );
-                                                  }
-                                                  return currentImage;
-                                                },
-                                              ),
+                                              child: previousImageWidget,
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    if (nextImageWidget != null)
-                                      FadeIgnoreTransition(
-                                        opacity: rightOpacityAnim,
-                                        child: MatrixTransition(
-                                          animation: sAnim,
-                                          onTransform: (animationValue) {
-                                            final horizontalOffset = -animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax;
-                                            return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
-                                          },
-                                          child: Transform.translate(
-                                            offset: Offset(0.0, vOffsetImage),
-                                            child: _RawImageContainer(
-                                              width: imageBoxWidth,
-                                              height: imageBoxHeight,
-                                              padding: imagePadding,
-                                              child: Padding(
-                                                padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                                child: nextImageWidget,
-                                              ),
+                                  FadeIgnoreTransition(
+                                    opacity: centerItemFadeAnimation,
+                                    child: MatrixTransition(
+                                      animation: sAnim,
+                                      onTransform: (animationValue) {
+                                        final horizontalOffset = -animationValue * imageSwitchSpacing;
+                                        return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
+                                      },
+                                      child: Transform.translate(
+                                        offset: Offset(0.0, vOffsetImage),
+                                        child: _RawImageContainer(
+                                          width: imageBoxWidth,
+                                          height: imageBoxHeight,
+                                          padding: imagePadding,
+                                          child: Padding(
+                                            padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                            child: ObxO(
+                                              rx: settings.artworkGestureDoubleTapLRC,
+                                              builder: (context, artworkGestureDoubleTapLRC) {
+                                                if (artworkGestureDoubleTapLRC) {
+                                                  return ObxO(
+                                                    rx: Lyrics.inst.currentLyricsLRC,
+                                                    builder: (context, currentLyricsLRC) {
+                                                      // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                                      return DoubleTapDetector(
+                                                        onDoubleTap: currentLyricsLRC == null
+                                                            ? () {
+                                                                settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                                Lyrics.inst.updateLyrics(currentItem);
+                                                              }
+                                                            : null,
+                                                        child: currentImage,
+                                                      );
+                                                    },
+                                                  );
+                                                }
+                                                return currentImage;
+                                              },
                                             ),
                                           ),
                                         ),
                                       ),
-                                  ],
-                                );
-                              },
-                            ),
+                                    ),
+                                  ),
+                                  if (nextImageWidget != null)
+                                    FadeIgnoreTransition(
+                                      opacity: rightOpacityAnim,
+                                      child: MatrixTransition(
+                                        animation: sAnim,
+                                        onTransform: (animationValue) {
+                                          final horizontalOffset = -animationValue * imageSwitchSpacing + imageSwitchSpacing;
+                                          return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
+                                        },
+                                        child: Transform.translate(
+                                          offset: Offset(0.0, vOffsetImage),
+                                          child: _RawImageContainer(
+                                            width: imageBoxWidth,
+                                            height: imageBoxHeight,
+                                            padding: imagePadding,
+                                            child: Padding(
+                                              padding: EdgeInsets.all(12.0 * (1 - bcp)),
+                                              child: nextImageWidget,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
                           ),
                         ),
 
                         /// Simple current lyrics line (under artwork)
-                        ObxO(
-                          rx: settings.enableSimpleLyricsLine,
-                          builder: (context, enableSimpleLyricsLine) => ObxO(
-                            rx: settings.enableLyrics,
-                            builder: (context, enableLyrics) => enableSimpleLyricsLine && !enableLyrics
-                                ? ClipRect(
-                                    child: Padding(
-                                      padding: EdgeInsets.only(bottom: navBarHeight * cp),
-                                      child: FadeIgnoreTransition(
-                                        completelyKillWhenPossible: true,
-                                        opacity: simpleLyricsOpacityAnimation,
-                                        child: Transform.translate(
-                                          offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0 * heightFactor * bcp),
-                                          child: Align(
-                                            alignment: Alignment.bottomCenter,
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(horizontal: 32.0),
-                                              child: SimpleLyricsLineWidget(
-                                                style: textTheme.displayMedium?.copyWith(
-                                                  fontSize: 14.0,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
+                        showSimpleLyricsLine
+                            ? ClipRect(
+                                child: FadeIgnoreTransition(
+                                  completelyKillWhenPossible: true,
+                                  opacity: simpleLyricsOpacityAnimation,
+                                  child: Transform.translate(
+                                    offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0 * heightFactor * bcp - imageExtraLift * 0.5),
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 32.0),
+                                        child: SimpleLyricsLineWidget(
+                                          fitToWidth: true,
+                                          style: textTheme.displayMedium?.copyWith(
+                                            fontSize: _kSimpleLyricsLineFontSize,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                       ),
                                     ),
-                                  )
-                                : const SizedBox(),
-                          ),
-                        ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox(),
 
                         Positioned(
                           bottom: -bottomOffset + (12.0 * icp) + (-(SeekReadyDimensions.barHeight / 2) + (SeekReadyDimensions.progressBarHeight / 2)),
@@ -1738,6 +1741,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                     return NamidaLoadingSwitcher(
                                       size: 32.0,
                                       builder: (loadingController) => NamidaRawLikeButton(
+                                        key: ValueKey(textData.itemToLike),
                                         size: 32.0,
                                         enableGradient: true,
                                         likedIcon: textData.likedIcon,
@@ -1763,6 +1767,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                               : ObxOClass(
                                   rx: textData.favouritePlaylist,
                                   builder: (context, favouritePlaylist) => NamidaRawLikeButton(
+                                    key: ValueKey(textData.itemToLike),
                                     size: 32.0,
                                     enableGradient: true,
                                     likedIcon: textData.likedIcon,

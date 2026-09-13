@@ -16,6 +16,9 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   final Rxn<Lrc>? customSourceRx;
   final bool respectEndTimestamps;
 
+  /// shrinks the font by [shrinkFactor] when the line overflows [maxLines], then allows one extra line.
+  final bool fitToWidth;
+
   const SimpleLyricsLineWidget({
     super.key,
     this.style,
@@ -24,7 +27,16 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     this.softWrap = false,
     this.customSourceRx,
     this.respectEndTimestamps = false,
+    this.fitToWidth = false,
   });
+
+  static const shrinkFactor = 0.875;
+  static const _lineHeightFactor = 1.3;
+
+  /// tallest layout [fitToWidth] can pick, for layouts reserving the room ahead of time.
+  static double fittedMaxHeight({required double fontSize, required int maxLines}) {
+    return fontSize * shrinkFactor * _lineHeightFactor * (maxLines + 1);
+  }
 
   @override
   State<SimpleLyricsLineWidget> createState() => _SimpleLyricsLineWidgetState();
@@ -37,6 +49,53 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   int _lastScanIndex = -1;
 
   late final Rxn<Lrc> _source = widget.customSourceRx ?? Lyrics.inst.currentLyricsLRC;
+
+  LrcLine? _fitLine;
+  double _fitMaxWidth = -1;
+  TextStyle? _fitStyle;
+  TextScaler? _fitScaler;
+  TextStyle? _fitResultStyle;
+  int _fitResultMaxLines = 1;
+
+  void _resolveFit(LrcLine line, String text, double maxWidth, TextDirection direction, TextScaler scaler) {
+    final style = widget.style;
+    if (identical(line, _fitLine) && maxWidth == _fitMaxWidth && scaler == _fitScaler && style == _fitStyle) return;
+    _fitLine = line;
+    _fitMaxWidth = maxWidth;
+    _fitScaler = scaler;
+    _fitStyle = style;
+
+    final maxLines = widget.maxLines;
+    if (!maxWidth.isFinite) {
+      _fitResultStyle = style;
+      _fitResultMaxLines = maxLines;
+      return;
+    }
+
+    final painter = TextPainter(
+      textDirection: direction,
+      textAlign: widget.textAlign,
+      textScaler: scaler,
+    );
+    bool fits(TextStyle? style, int lines) {
+      painter
+        ..text = TextSpan(text: text, style: style)
+        ..maxLines = lines
+        ..layout(maxWidth: maxWidth);
+      return !painter.didExceedMaxLines;
+    }
+
+    if (fits(style, maxLines)) {
+      _fitResultStyle = style;
+      _fitResultMaxLines = maxLines;
+    } else {
+      final fontSize = (style?.fontSize ?? 14.0) * SimpleLyricsLineWidget.shrinkFactor;
+      final small = style?.copyWith(fontSize: fontSize) ?? TextStyle(fontSize: fontSize);
+      _fitResultStyle = small;
+      _fitResultMaxLines = fits(small, maxLines) ? maxLines : maxLines + 1;
+    }
+    painter.dispose();
+  }
 
   @override
   void initState() {
@@ -120,20 +179,43 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       rx: _currentLine,
       builder: (context, line) {
         final text = line?.readableText ?? '';
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: text.isEmpty
-              ? const SizedBox.shrink(key: ValueKey(''))
+        final Widget child;
+        if (text.isEmpty) {
+          child = const SizedBox.shrink(key: ValueKey(''));
+        } else {
+          final key = ValueKey(line!.timestamp);
+          final direction = line.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
+          child = widget.fitToWidth
+              ? LayoutBuilder(
+                  key: key,
+                  builder: (context, constraints) {
+                    _resolveFit(line, text, constraints.maxWidth, direction, MediaQuery.textScalerOf(context));
+                    final maxLines = _fitResultMaxLines;
+                    return Text(
+                      text,
+                      style: _fitResultStyle,
+                      textAlign: widget.textAlign,
+                      textDirection: direction,
+                      maxLines: maxLines,
+                      softWrap: widget.softWrap || maxLines > widget.maxLines,
+                      overflow: TextOverflow.fade,
+                    );
+                  },
+                )
               : Text(
                   text,
-                  key: ValueKey(line!.timestamp),
+                  key: key,
                   style: widget.style,
                   textAlign: widget.textAlign,
-                  textDirection: line.isRTL == true ? TextDirection.rtl : TextDirection.ltr,
+                  textDirection: direction,
                   maxLines: widget.maxLines,
                   softWrap: widget.softWrap,
                   overflow: TextOverflow.fade,
-                ),
+                );
+        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: child,
         );
       },
     );

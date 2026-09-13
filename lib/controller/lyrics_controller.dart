@@ -53,16 +53,18 @@ class Lyrics {
 
   void _updateWidgets(Lrc? lrc, LrcText? txt) {
     WakelockController.inst.updateLRCStatus(lrc != null);
-    lrcViewKey.currentState?.fillLists(lrc, txt);
-    lrcViewKeyFullscreen.currentState?.fillLists(lrc, txt);
+    for (final view in LyricsLRCParsedViewState.mountedViews) {
+      view.fillLists(lrc, txt);
+    }
   }
 
   void resetLyrics() {
     currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;
     WakelockController.inst.updateLRCStatus(false);
-    lrcViewKey.currentState?.clearLists();
-    lrcViewKeyFullscreen.currentState?.clearLists();
+    for (final view in LyricsLRCParsedViewState.mountedViews) {
+      view.clearLists();
+    }
   }
 
   Future<void> updateLyrics(Playable item) async {

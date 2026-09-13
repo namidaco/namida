@@ -7473,19 +7473,21 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                   runSpacing: 2.0,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    ...shortcutsTexts.map(
-                      (shortcut) => NamidaInkWell(
-                        borderRadius: 4.0,
-                        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                        bgColor: theme.cardColor,
-                        child: RichText(
-                          text: TextSpan(
-                            text: shortcut,
-                            style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                    ...shortcutsTexts
+                        .map(
+                          (shortcut) => NamidaInkWell(
+                            borderRadius: 4.0,
+                            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                            bgColor: theme.cardColor,
+                            child: RichText(
+                              text: TextSpan(
+                                text: shortcut,
+                                style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
+                        )
+                        .addSeparators(separator: const SizedBox(width: 2.0), skipFirst: 1),
                     if (data != null)
                       NamidaContainerDivider(
                         height: 16.0,

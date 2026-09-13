@@ -195,6 +195,20 @@ class NotificationManager {
     );
   }
 
+  void failedImportingHistoryNotification(String error) {
+    _createNotification(
+      id: _historyImportID,
+      title: 'Failed importing history',
+      body: error,
+      channelName: _historyImportChannelName,
+      channelDescription: _historyImportChannelDescription,
+      subText: 'error',
+      payload: '',
+      isInBytes: false,
+      displayTime: DateTime.now(),
+    );
+  }
+
   static void _onDidReceiveLocalNotification(NotificationResponse details) async {
     if (details.payload == _historyImportPayload) {
       JsonToHistoryParser.inst.showParsingProgressDialog();

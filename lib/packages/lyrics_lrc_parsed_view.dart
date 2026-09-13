@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:lrc/lrc.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -39,6 +40,9 @@ class LyricsLRCParsedView extends StatefulWidget {
   final double? maxWidth;
   final double? verticalPadding;
   final Widget? bottomPadding;
+  final bool largeText;
+  final bool fadeOnEmptyLine;
+  final double? baseFontSize;
 
   const LyricsLRCParsedView({
     super.key,
@@ -49,6 +53,9 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.allowOverflow = true,
     this.useSafeArea = true,
     this.blurColorMaskOpacity = 0.6,
+    this.largeText = false,
+    this.fadeOnEmptyLine = true,
+    this.baseFontSize,
     this.maxWidth,
     this.verticalPadding,
     this.bottomPadding,
@@ -59,6 +66,9 @@ class LyricsLRCParsedView extends StatefulWidget {
 }
 
 class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
+  static final _mountedViews = <LyricsLRCParsedViewState>[];
+  static Iterable<LyricsLRCParsedViewState> get mountedViews => _mountedViews;
+
   void toggleFullscreen() {
     if (widget.isFullScreenView) {
       exitFullScreen();
@@ -89,7 +99,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   String _currentLine = '';
 
   static const int _lrcOpacityDurationMS = 500;
-  late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView;
+  late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView && widget.fadeOnEmptyLine;
   bool _isCurrentLineEmpty = true;
 
   void _updateIsCurrentLineEmpty(bool empty) {
@@ -106,6 +116,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   @override
   void initState() {
     super.initState();
+    _mountedViews.add(this);
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -285,11 +296,24 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   var lyrics = <LrcLine>[];
   var highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
 
-  late double _previousFontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
-  late double _fontMultiplier = widget.isFullScreenView ? settings.fontScaleLRCFull : settings.fontScaleLRC;
+  late final bool _largeText = widget.isFullScreenView || widget.largeText;
+  late double _previousFontMultiplier = _fontMultiplier;
+  late double _fontMultiplier = _largeText ? settings.fontScaleLRCFull : settings.fontScaleLRC;
+
+  void _setFontMultiplier(double value) {
+    value = value.clampDouble(0.5, 2.0);
+    if (value == _fontMultiplier) return;
+    refreshState(() => _fontMultiplier = value);
+  }
+
+  void _saveFontMultiplier() {
+    _largeText ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier);
+  }
+
 
   @override
   void dispose() {
+    _mountedViews.remove(this);
     Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
     Player.inst.nowPlayingPosition.removeListener(_playerPositionListener);
 
@@ -338,7 +362,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     final fullscreen = widget.isFullScreenView;
     const maxLyricsWidth = 864.0;
     final alignAtStart = fullscreen && context.width < maxLyricsWidth; // -- align at center if screen got too wide
-    final initialFontSize = fullscreen ? 26.0 : 15.0;
+    final initialFontSize = widget.baseFontSize ?? (_largeText ? 26.0 : 15.0);
     final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
     final fullscreenIconButton = fullscreen && widget.canShowToggleFullscreenButton

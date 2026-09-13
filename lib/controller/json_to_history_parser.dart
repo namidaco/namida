@@ -16,6 +16,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
@@ -61,6 +62,12 @@ class JsonToHistoryParser {
 
   void _hideParsingDialog() => _isShowingParsingMenu = false;
 
+  void _closeParsingDialog() {
+    if (!_isShowingParsingMenu) return;
+    _hideParsingDialog();
+    NamidaNavigator.inst.closeDialog();
+  }
+
   void showParsingProgressDialog() {
     if (_isShowingParsingMenu) return;
     Widget getTextWidget(String text, {TextStyle? style}) {
@@ -86,10 +93,7 @@ class JsonToHistoryParser {
         actions: [
           NamidaTextButton(
             text: lang.confirm,
-            onTap: () {
-              _hideParsingDialog();
-              NamidaNavigator.inst.closeDialog();
-            },
+            onTap: _closeParsingDialog,
           ),
         ],
         child: Padding(
@@ -396,124 +400,135 @@ class JsonToHistoryParser {
 
     Directory? tempZipMainDestination;
 
-    final contents = mainDirectory != null && files.isEmpty ? await mainDirectory.listAllIsolate(recursive: true, followLinks: false) : files;
-    files = await _filterFilesFromPossibleZips(
-      contents,
-      source,
-      () async => tempZipMainDestination ??= await Directory.systemTemp.createTemp('namida_parser_'),
-      (progress, total) => _loadingFileProgress.value = (progress, total),
-    );
+    try {
+      final contents = mainDirectory != null && files.isEmpty ? await mainDirectory.listAllIsolate(recursive: true, followLinks: false) : files;
+      files = await _filterFilesFromPossibleZips(
+        contents,
+        source,
+        () async => tempZipMainDestination ??= await Directory.systemTemp.createTemp('namida_parser_'),
+        (progress, total) => _loadingFileProgress.value = (progress, total),
+      );
 
-    if (files.isEmpty) {
-      snackyy(message: 'No related files were found in this directory.', isError: true);
+      if (files.isEmpty) {
+        snackyy(message: 'No related files were found in this directory.', isError: true);
+        _resetValues();
+        _closeParsingDialog();
+        return;
+      }
+
+      // TODO: warning to backup history
+
+      await Future.delayed(Duration.zero);
+
+      NotificationManager.instance.ensurePermissionGranted();
+      final startTime = DateTime.now();
+      _notificationTimer?.cancel();
+      _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        NotificationManager.instance.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value, startTime);
+      });
+
+      final datesAdded = <int>[];
+      final datesAddedYoutube = <int>[];
+      var allMissingEntriesSorted = <_MissingListenEntry, List<int>>{};
+
+      switch (source) {
+        case TrackSource.youtube || TrackSource.youtubeMusic:
+          currentParsingSource.value = TrackSource.youtube;
+          final res = await _parseYTHistoryJsonAndAdd(
+            files: files,
+            isMatchingTypeLink: ytIsMatchingTypeLink,
+            isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
+            matchYT: ytMatchYT,
+            matchYTMusic: ytMatchYTMusic,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+            matchAll: matchAll,
+          );
+          if (res != null) {
+            allMissingEntriesSorted = res.missingEntriesSorted;
+            datesAdded.addAll(res.historyDays);
+            datesAddedYoutube.addAll(res.ytHistoryDays);
+          }
+          break;
+
+        case TrackSource.lastfm:
+          currentParsingSource.value = TrackSource.lastfm;
+          final res = await _addLastFmSource(
+            files: files,
+            matchAll: matchAll,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+          );
+          if (res != null) {
+            allMissingEntriesSorted = res.missingEntriesSorted;
+            datesAdded.addAll(res.historyDays);
+          }
+          break;
+
+        case TrackSource.spotify:
+          currentParsingSource.value = TrackSource.spotify;
+          final res = await _addSpotifySource(
+            files: files,
+            matchAll: matchAll,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+          );
+          if (res != null) {
+            allMissingEntriesSorted = res.missingEntriesSorted;
+            datesAdded.addAll(res.historyDays);
+          }
+          break;
+        case TrackSource.listenbrainz:
+          currentParsingSource.value = TrackSource.listenbrainz;
+          final res = await _addListenBrainzSource(
+            files: files,
+            matchAll: matchAll,
+            oldestDate: oldestDate,
+            newestDate: newestDate,
+          );
+          if (res != null) {
+            allMissingEntriesSorted = res.missingEntriesSorted;
+            datesAdded.addAll(res.historyDays);
+          }
+          break;
+        case TrackSource.local:
+          break;
+      }
+
+      // -- local history --
+      HistoryController.inst.removeDuplicatedItems(datesAdded);
+      HistoryController.inst.sortHistoryTracks(datesAdded);
+      await HistoryController.inst.saveHistoryToStorage(datesAdded);
+      HistoryController.inst.updateMostPlayedPlaylist();
+
+      // -- youtube history --
+      if (datesAddedYoutube.isNotEmpty) {
+        YoutubeHistoryController.inst.removeDuplicatedItems(datesAddedYoutube);
+        YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
+        await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
+        YoutubeHistoryController.inst.updateMostPlayedPlaylist();
+      }
+
+      isParsing.value = false;
+      HomePageRefresher.requestRefresh();
+
+      _notificationTimer?.cancel();
+      NotificationManager.instance.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
+
+      _latestMissingMap.value = allMissingEntriesSorted;
+      _latestMissingMapAddedStatus.clear();
+      showMissingEntriesDialog();
+    } catch (e, st) {
+      printo(e, isError: true);
+      _notificationTimer?.cancel();
+      NotificationManager.instance.failedImportingHistoryNotification(e.toString());
       _resetValues();
-      NamidaNavigator.inst.closeDialog();
-      return;
+      _closeParsingDialog();
+      snackyy(title: lang.error, message: e.toString(), isError: true);
+      logger.error('Error importing history (${source.name})', e: e, st: st);
+    } finally {
+      tempZipMainDestination?.delete(recursive: true);
     }
-
-    // TODO: warning to backup history
-
-    await Future.delayed(Duration.zero);
-
-    NotificationManager.instance.ensurePermissionGranted();
-    final startTime = DateTime.now();
-    _notificationTimer?.cancel();
-    _notificationTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      NotificationManager.instance.importHistoryNotification(parsedHistoryJson.value, totalJsonToParse.value, startTime);
-    });
-
-    final datesAdded = <int>[];
-    final datesAddedYoutube = <int>[];
-    var allMissingEntriesSorted = <_MissingListenEntry, List<int>>{};
-
-    switch (source) {
-      case TrackSource.youtube || TrackSource.youtubeMusic:
-        currentParsingSource.value = TrackSource.youtube;
-        final res = await _parseYTHistoryJsonAndAdd(
-          files: files,
-          isMatchingTypeLink: ytIsMatchingTypeLink,
-          isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
-          matchYT: ytMatchYT,
-          matchYTMusic: ytMatchYTMusic,
-          oldestDate: oldestDate,
-          newestDate: newestDate,
-          matchAll: matchAll,
-        );
-        if (res != null) {
-          allMissingEntriesSorted = res.missingEntriesSorted;
-          datesAdded.addAll(res.historyDays);
-          datesAddedYoutube.addAll(res.ytHistoryDays);
-        }
-        break;
-
-      case TrackSource.lastfm:
-        currentParsingSource.value = TrackSource.lastfm;
-        final res = await _addLastFmSource(
-          files: files,
-          matchAll: matchAll,
-          oldestDate: oldestDate,
-          newestDate: newestDate,
-        );
-        if (res != null) {
-          allMissingEntriesSorted = res.missingEntriesSorted;
-          datesAdded.addAll(res.historyDays);
-        }
-        break;
-
-      case TrackSource.spotify:
-        currentParsingSource.value = TrackSource.spotify;
-        final res = await _addSpotifySource(
-          files: files,
-          matchAll: matchAll,
-          oldestDate: oldestDate,
-          newestDate: newestDate,
-        );
-        if (res != null) {
-          allMissingEntriesSorted = res.missingEntriesSorted;
-          datesAdded.addAll(res.historyDays);
-        }
-        break;
-      case TrackSource.listenbrainz:
-        currentParsingSource.value = TrackSource.listenbrainz;
-        final res = await _addListenBrainzSource(
-          files: files,
-          matchAll: matchAll,
-          oldestDate: oldestDate,
-          newestDate: newestDate,
-        );
-        if (res != null) {
-          allMissingEntriesSorted = res.missingEntriesSorted;
-          datesAdded.addAll(res.historyDays);
-        }
-        break;
-      case TrackSource.local:
-        break;
-    }
-
-    // -- local history --
-    HistoryController.inst.removeDuplicatedItems(datesAdded);
-    HistoryController.inst.sortHistoryTracks(datesAdded);
-    await HistoryController.inst.saveHistoryToStorage(datesAdded);
-    HistoryController.inst.updateMostPlayedPlaylist();
-
-    // -- youtube history --
-    if (datesAddedYoutube.isNotEmpty) {
-      YoutubeHistoryController.inst.removeDuplicatedItems(datesAddedYoutube);
-      YoutubeHistoryController.inst.sortHistoryTracks(datesAddedYoutube);
-      await YoutubeHistoryController.inst.saveHistoryToStorage(datesAddedYoutube);
-      YoutubeHistoryController.inst.updateMostPlayedPlaylist();
-    }
-
-    isParsing.value = false;
-    HomePageRefresher.requestRefresh();
-
-    _notificationTimer?.cancel();
-    NotificationManager.instance.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);
-
-    _latestMissingMap.value = allMissingEntriesSorted;
-    _latestMissingMapAddedStatus.clear();
-    showMissingEntriesDialog();
-    tempZipMainDestination?.delete(recursive: true);
   }
 
   Future<List<File>> _filterFilesFromPossibleZips(
@@ -595,7 +610,11 @@ class JsonToHistoryParser {
               file,
               (file) {
                 if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
-                  files.add(file);
+                  final name = file.path.getFilename;
+                  final nameLC = name.toLowerCase();
+                  if (nameLC.contains('streaming') || nameLC.contains('history') || name.startsWith('endsong')) {
+                    files.add(file);
+                  }
                 }
               },
             );
@@ -689,11 +708,10 @@ class JsonToHistoryParser {
     HistoryController.inst.setIdleStatus(true);
     YoutubeHistoryController.inst.setIdleStatus(true);
 
-    final res = await _parseYTHistoryJsonAndAddIsolate.thready(params);
-    portProgressParsed.close();
-    portProgressAdded.close();
+    try {
+      final res = await _parseYTHistoryJsonAndAddIsolate.thready(params);
+      if (res == null) return null;
 
-    if (res != null) {
       final mapOfAffectedIds = res.affectedIds;
 
       if (mapOfAffectedIds != null) {
@@ -718,20 +736,21 @@ class JsonToHistoryParser {
         YoutubeHistoryController.inst.totalHistoryItemsCount.value += res.addedYTHistoryCount;
         YoutubeHistoryController.inst.totalHistoryItemsCount.refresh();
       }
+
+      return (
+        historyDays: res.daysToSaveLocal,
+        ytHistoryDays: res.daysToSaveYT,
+        missingEntriesSorted: res.missingEntriesSorted,
+      );
+    } finally {
+      portProgressParsed.close();
+      portProgressAdded.close();
+      portLoadingProgress.close();
+      await Future.wait([
+        HistoryController.inst.setIdleStatus(false),
+        YoutubeHistoryController.inst.setIdleStatus(false),
+      ]);
     }
-
-    await Future.wait([
-      HistoryController.inst.setIdleStatus(false),
-      YoutubeHistoryController.inst.setIdleStatus(false),
-    ]);
-
-    return res == null
-        ? null
-        : (
-            historyDays: res.daysToSaveLocal,
-            ytHistoryDays: res.daysToSaveYT,
-            missingEntriesSorted: res.missingEntriesSorted,
-          );
   }
 
   Future<(int, int)> copyYTHistoryContentToLocalHistory({required bool matchAll}) async {
@@ -1197,27 +1216,26 @@ class JsonToHistoryParser {
 
     HistoryController.inst.setIdleStatus(true);
 
-    final res = await callback(params);
+    try {
+      final res = await callback(params);
+      if (res == null) return null;
 
-    portProgressParsed.close();
-    portProgressAdded.close();
-
-    if (res != null) {
       HistoryController.inst.historyMap.value = res.localHistory;
       if (res.addedHistoryCount > 0) {
         HistoryController.inst.totalHistoryItemsCount.value += res.addedHistoryCount;
         HistoryController.inst.totalHistoryItemsCount.refresh();
       }
+
+      return (
+        historyDays: res.daysToSaveLocal,
+        missingEntriesSorted: res.missingEntriesSorted,
+      );
+    } finally {
+      portProgressParsed.close();
+      portProgressAdded.close();
+      portLoadingProgress.close();
+      await HistoryController.inst.setIdleStatus(false);
     }
-
-    await HistoryController.inst.setIdleStatus(false);
-
-    return res == null
-        ? null
-        : (
-            historyDays: res.daysToSaveLocal,
-            missingEntriesSorted: res.missingEntriesSorted,
-          );
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
@@ -1267,9 +1285,10 @@ class JsonToHistoryParser {
           // -- wasn't really played, skip... (or should we?)
           return null;
         }
+        final mapTitle = map['master_metadata_track_name'] as String?;
+        final mapArtist = map['master_metadata_album_artist_name'] as String?;
+        if (mapTitle == null || mapArtist == null) return null;
         final mapTimestamp = DateTime.parse(map['ts'] ?? '');
-        final mapTitle = map['master_metadata_track_name'] as String;
-        final mapArtist = map['master_metadata_album_artist_name'] as String;
         // final mapAlbum = map['master_metadata_album_album_name'] as String;
 
         final dateMSSE = mapTimestamp.millisecondsSinceEpoch;

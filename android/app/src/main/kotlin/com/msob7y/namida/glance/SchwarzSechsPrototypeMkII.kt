@@ -712,10 +712,10 @@ internal class DecodedArtwork(
 
 internal object ArtworkStore {
   /**
-   * buckets keep the caches warm while the widget is being resized. capped low on purpose:
-   * every bitmap here crosses the RemoteViews IPC on each update, which has a ~1mb budget.
+   * buckets keep the caches warm while the widget is being resized. bitmaps cross the RemoteViews
+   * ipc through ashmem, the cap that matters is the per-widget bitmap memory of 1.5x the screen.
    */
-  private val kSizeBuckets = intArrayOf(96, 128, 160, 200, 256, 320)
+  private val kSizeBuckets = intArrayOf(96, 128, 160, 200, 256, 320, 384, 448, 512, 640)
   private const val kBackdropMaxPx = 180f
 
   private val decodedCache = LruMap<String, DecodedArtwork>(2)

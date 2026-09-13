@@ -808,6 +808,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
         _finalDropPosition = _itemOffsetAt(atIndex) + _extentOffset(_itemExtentAt(atIndex), _scrollDirection);
       }
     }
+    _overlayEntry?.markNeedsBuild();
     widget.onReorderEnd?.call(_insertIndex!);
   }
 
@@ -871,7 +872,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
         continue;
       }
 
-      final Rect geometry = item.targetGeometry();
+      final Rect geometry = item.targetGeometry(_dragInfo!.layoutBox);
       final double itemStart = _scrollDirection == Axis.vertical ? geometry.top : geometry.left;
       final double itemExtent = _scrollDirection == Axis.vertical ? geometry.height : geometry.width;
       final double itemEnd = itemStart + itemExtent;
@@ -933,15 +934,15 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
 
   Rect _getDragTargetRect(_DragInfo dragInfo) {
     final Offset origin = dragInfo.dragPosition - dragInfo.dragOffset;
-    return Rect.fromLTWH(origin.dx, origin.dy, dragInfo.itemSize.width, dragInfo.itemSize.height);
+    return MatrixUtils.transformRect(dragInfo.layoutBox.getTransformTo(null), origin & dragInfo.itemSize);
   }
 
   Offset _itemOffsetAt(int index) {
-    return _items[index]!.targetGeometry().topLeft;
+    return _items[index]!.targetGeometry(_dragInfo!.layoutBox).topLeft;
   }
 
   double _itemExtentAt(int index) {
-    return _sizeExtent(_items[index]!.targetGeometry().size, _scrollDirection);
+    return _sizeExtent(_items[index]!.targetGeometry(_dragInfo!.layoutBox).size, _scrollDirection);
   }
 
   Widget _itemBuilder(BuildContext context, int index) {
@@ -1178,10 +1179,9 @@ class _ReorderableItemState extends State<_ReorderableItem> {
     rebuild();
   }
 
-  Rect targetGeometry() {
+  Rect targetGeometry(RenderBox ancestor) {
     final RenderBox itemRenderBox = context.findRenderObject()! as RenderBox;
-    final Offset itemPosition = itemRenderBox.localToGlobal(Offset.zero) + _targetOffset;
-    return itemPosition & itemRenderBox.size;
+    return itemRenderBox.localToGlobal(_targetOffset, ancestor: ancestor) & itemRenderBox.size;
   }
 
   void rebuild() {
@@ -1323,11 +1323,13 @@ class _DragInfo extends Drag {
     index = item.index;
     child = item.widget.child;
     capturedThemes = item.widget.capturedThemes;
-    dragPosition = initialPosition;
+    scrollable = Scrollable.of(item.context);
+    layoutBox = scrollable!.context.findRenderObject()! as RenderBox;
+    rootScale = _scaleOf(layoutBox.getTransformTo(null));
+    dragPosition = layoutBox.globalToLocal(initialPosition);
     dragOffset = itemRenderBox.globalToLocal(initialPosition);
     itemSize = item.context.size!;
     itemExtent = _sizeExtent(itemSize, scrollDirection);
-    scrollable = Scrollable.of(item.context);
   }
 
   final Axis scrollDirection;
@@ -1341,6 +1343,11 @@ class _DragInfo extends Drag {
   late SliverReorderableListState listState;
   late int index;
   late Widget child;
+
+  /// the scrollable's box, the space items are laid out in. all drag math lives there since
+  /// pointer input is root space and the overlay may sit under a different ui scale.
+  late RenderBox layoutBox;
+  late double rootScale;
   late Offset dragPosition;
   late Offset dragOffset;
   late Size itemSize;
@@ -1372,8 +1379,7 @@ class _DragInfo extends Drag {
 
   @override
   void update(DragUpdateDetails details) {
-    final Offset delta = _restrictAxis(details.delta, scrollDirection);
-    dragPosition += delta;
+    dragPosition += _restrictAxis(details.delta, scrollDirection) / rootScale;
     onUpdate?.call(this, dragPosition, details.delta);
   }
 
@@ -1397,13 +1403,18 @@ class _DragInfo extends Drag {
   }
 
   Widget createProxy(BuildContext context) {
+    final OverlayState overlay = Overlay.of(context, debugRequiredFor: context.widget);
+    final RenderBox overlayBox = overlay.context.findRenderObject()! as RenderBox;
+    final Matrix4 toOverlay = layoutBox.getTransformTo(overlayBox);
+    final Offset? dropPosition = listState._finalDropPosition;
     return capturedThemes.wrap(
       _DragItemProxy(
-        listState: listState,
         index: index,
         size: itemSize,
+        scale: _scaleOf(toOverlay),
         animation: _proxyAnimation!,
-        position: dragPosition - dragOffset - _overlayOrigin(context),
+        position: MatrixUtils.transformPoint(toOverlay, dragPosition - dragOffset),
+        dropPosition: dropPosition == null ? null : MatrixUtils.transformPoint(toOverlay, dropPosition),
         proxyDecorator: proxyDecorator,
         child: child,
       ),
@@ -1411,35 +1422,47 @@ class _DragInfo extends Drag {
   }
 }
 
-Offset _overlayOrigin(BuildContext context) {
-  final OverlayState overlay = Overlay.of(context, debugRequiredFor: context.widget);
-  final RenderBox overlayBox = overlay.context.findRenderObject()! as RenderBox;
-  return overlayBox.localToGlobal(Offset.zero);
-}
+/// [Matrix4.getMaxScaleOnAxis] counts the untouched z axis, so a 2d downscale reads as 1.0.
+double _scaleOf(Matrix4 transform) => transform.storage[0];
 
 class _DragItemProxy extends StatelessWidget {
   const _DragItemProxy({
-    required this.listState,
     required this.index,
     required this.child,
     required this.position,
+    required this.dropPosition,
     required this.size,
+    required this.scale,
     required this.animation,
     required this.proxyDecorator,
   });
 
-  final SliverReorderableListState listState;
   final int index;
   final Widget child;
   final Offset position;
+  final Offset? dropPosition;
   final Size size;
+  final double scale;
   final AnimationController animation;
   final ReorderItemProxyDecorator? proxyDecorator;
 
   @override
   Widget build(BuildContext context) {
     final Widget proxyChild = proxyDecorator?.call(child, index, animation.view) ?? child;
-    final Offset overlayOrigin = _overlayOrigin(context);
+    final Offset? dropPosition = this.dropPosition;
+
+    Widget sized = SizedBox(
+      width: size.width,
+      height: size.height,
+      child: proxyChild,
+    );
+    if (scale != 1.0) {
+      sized = Transform.scale(
+        scale: scale,
+        alignment: Alignment.topLeft,
+        child: sized,
+      );
+    }
 
     return MediaQuery(
       // Remove the top padding so that any nested list views in the item
@@ -1449,21 +1472,16 @@ class _DragItemProxy extends StatelessWidget {
         animation: animation,
         builder: (BuildContext context, Widget? child) {
           Offset effectivePosition = position;
-          final Offset? dropPosition = listState._finalDropPosition;
           if (dropPosition != null) {
-            effectivePosition = Offset.lerp(dropPosition - overlayOrigin, effectivePosition, Curves.easeOut.transform(animation.value))!;
+            effectivePosition = Offset.lerp(dropPosition, effectivePosition, Curves.easeOut.transform(animation.value))!;
           }
           return Positioned(
             left: effectivePosition.dx,
             top: effectivePosition.dy,
-            child: SizedBox(
-              width: size.width,
-              height: size.height,
-              child: child,
-            ),
+            child: child!,
           );
         },
-        child: proxyChild,
+        child: sized,
       ),
     );
   }

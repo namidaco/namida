@@ -2442,7 +2442,11 @@ class SussyBaka {
   static void monetize({required void Function() onEnable}) {
     if (settings.didSupportNamida) return onEnable();
     final membership = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
-    if (membership != null && membership.index >= MembershipType.cutie.index) return onEnable();
+    if (membership != null && membership.index >= MembershipType.cutie.index) {
+      // -- also remember it for future
+      settings.save(didSupportNamida: true);
+      return onEnable();
+    }
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,

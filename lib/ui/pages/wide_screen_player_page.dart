@@ -420,6 +420,9 @@ class _RightPane extends StatelessWidget {
                       isFullScreenView: false,
                       useSafeArea: false,
                       allowOverflow: false,
+                      largeText: true,
+                      fadeOnEmptyLine: false,
+                      baseFontSize: (constraints.maxWidth * 0.03).clampDouble(15.0, 26.0),
                     ),
                     const HeroMode(
                       enabled: false,

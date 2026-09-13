@@ -245,6 +245,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       videosToAdd: videosList,
       videosToRemove: null,
       playlistId: playlist.playlistId,
+      mainList: YtUtilsPlaylist.activeUserPlaylistsList,
+      onUserPlaylistUpdated: _onUserPlaylistUpdated,
     );
     onEnd();
     if (done) {
@@ -262,6 +264,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       videosToAdd: null,
       videosToRemove: videosList,
       playlistId: playlist.playlistId,
+      mainList: YtUtilsPlaylist.activeUserPlaylistsList,
+      onUserPlaylistUpdated: _onUserPlaylistUpdated,
     );
     onEnd();
     if (done) {
@@ -312,7 +316,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   }
 
   Future<void> _fetchNormalPlaylistsResult() async {
-    final res = await YoutiPie.userplaylist.getUserPlaylists();
+    final res = await YoutiPie.userplaylist.getUserPlaylists(
+      cacheMaxPeriod: const Duration(hours: 12),
+    );
     if (res != null && mounted) {
       setState(() {
         for (var item in res.items) {
@@ -321,6 +327,8 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       });
     }
   }
+
+  void _onUserPlaylistUpdated(PlaylistInfoItemUser newInfo) => _playlistsLookup[newInfo.id] = newInfo;
 
   @override
   void initState() {
@@ -335,6 +343,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     final title = pl.playlistTitle ?? '?';
     final subtitle = pl.privacy?.toText();
     final info = _playlistsLookup[pl.playlistId];
+    final thumbnailUrl = info?.thumbnails.pick()?.url;
     bool showBorder = false;
     if (isSingle) {
       showBorder = (_newContainsVideo[pl.playlistId] ?? pl.containsVideo) == true;
@@ -367,11 +376,11 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
             children: [
               const SizedBox(width: 8.0),
               YoutubeThumbnail(
-                key: Key(pl.playlistId),
+                key: Key('${pl.playlistId}_$thumbnailUrl'),
                 borderRadius: 8.0,
                 width: 64.0,
                 height: 64.0 * 9 / 16,
-                customUrl: info?.thumbnails.pick()?.url,
+                customUrl: thumbnailUrl,
                 isImportantInCache: false,
                 type: ThumbnailType.playlist,
                 forceSquared: false,

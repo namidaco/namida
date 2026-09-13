@@ -71,7 +71,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
         details: executeDetails,
       );
     } else {
-      if (widget.playlist.videosCountText == 'No videos') return null; // empty user playlists
+      if (widget.playlist.videosCount == 0 || widget.playlist.videosCountText == 'No videos') return null; // empty user playlists
       return YoutubeInfoController.playlist.fetchPlaylist(
         playlistId: widget.playlist.id,
         details: executeDetails,
@@ -161,7 +161,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
     if (widget.isMixPlaylist) {
       countText = playlist.videosCount?.formatDecimalShort() ?? '+25';
     } else {
-      countText = playlist.videosCount?.formatDecimalShort() ?? (widget.playlist.videosCountText == 'No videos' ? '0' : '?');
+      countText = playlist.videosCount?.formatDecimalShort() ?? (playlist.videosCountText == 'No videos' ? '0' : '?');
     }
     final thumbnailUrl = playlist.thumbnails.pick()?.url;
     final firstVideoID = widget.firstVideoID;
