@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:history_manager/history_manager.dart';
 
+import 'package:namida/core/enums.dart';
+
 abstract class HistoryStatsResolver<E> {
   const HistoryStatsResolver();
 
@@ -14,6 +16,7 @@ abstract class HistoryStatsResolver<E> {
   List<String> artists(E item);
   List<String> genres(E item);
   String? album(E item);
+  List<String> categoryKeys(E item, MediaType type) => const [];
 
   /// 0 when unknown.
   int releaseYear(E item) => 0;
@@ -51,6 +54,14 @@ class StatsCompletedAlbum {
   final int listens;
 
   const StatsCompletedAlbum(this.key, this.name, this.tracks, this.listens);
+}
+
+class StatsCategoryRank {
+  final List<StatsRankEntry<String>> top;
+  final int otherListens;
+  final int unique;
+
+  const StatsCategoryRank(this.top, this.otherListens, this.unique);
 }
 
 class StatsRankEntry<K> {
@@ -163,7 +174,11 @@ class HistoryStatsSnapshot<E> {
   final int avgFirstMinute;
   final int avgLastMinute;
 
-  const HistoryStatsSnapshot({
+  final HistoryStatsResolver<E> resolver;
+  final Map<E, int> itemListens;
+  final _categoryRanks = <MediaType, StatsCategoryRank>{};
+
+  HistoryStatsSnapshot({
     required this.firstDay,
     required this.lastDay,
     required this.listensPerDay,
@@ -210,6 +225,8 @@ class HistoryStatsSnapshot<E> {
     required this.completedAlbums,
     required this.avgFirstMinute,
     required this.avgLastMinute,
+    required this.resolver,
+    required this.itemListens,
   });
 
   bool get isEmpty => totalListens == 0;
@@ -220,6 +237,32 @@ class HistoryStatsSnapshot<E> {
     final i = day - firstDay;
     if (i < 0 || i >= listensPerDay.length) return 0;
     return listensPerDay[i];
+  }
+
+  StatsCategoryRank rankCategory(MediaType type, {int topCount = 20}) => _categoryRanks[type] ??= switch (type) {
+    MediaType.genre => StatsCategoryRank(topGenres, otherGenresListens, uniqueGenres),
+    MediaType.artist => StatsCategoryRank(topArtists, otherArtistsListens, uniqueArtists),
+    _ => _computeCategoryRank(type, topCount),
+  };
+
+  StatsCategoryRank _computeCategoryRank(MediaType type, int topCount) {
+    final map = <String, int>{};
+    for (final e in itemListens.entries) {
+      for (final k in resolver.categoryKeys(e.key, type)) {
+        if (k.isEmpty) continue;
+        map[k] = (map[k] ?? 0) + e.value;
+      }
+    }
+    final list = map.entries.map((e) => StatsRankEntry(e.key, e.value)).toList();
+    list.sort((a, b) => b.count.compareTo(a.count));
+    int other = 0;
+    if (list.length > topCount) {
+      for (int i = topCount; i < list.length; i++) {
+        other += list[i].count;
+      }
+      list.length = topCount;
+    }
+    return StatsCategoryRank(list, other, map.length);
   }
 
   static const sessionGapMS = 15 * 60 * 1000;
@@ -654,6 +697,8 @@ class HistoryStatsSnapshot<E> {
       completedAlbums: completedAlbums,
       avgFirstMinute: daysWithListens == 0 ? -1 : firstMinutesSum ~/ daysWithListens,
       avgLastMinute: daysWithListens == 0 ? -1 : lastMinutesSum ~/ daysWithListens,
+      resolver: resolver,
+      itemListens: counts,
     );
   }
 

@@ -7,6 +7,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -168,6 +169,23 @@ class _TrackStatsResolver extends HistoryStatsResolver<Track> {
 
   @override
   String? album(Track item) => item.toTrackExtOrNull()?.originalAlbum;
+
+  @override
+  List<String> categoryKeys(Track item, MediaType type) {
+    final ext = item.toTrackExtOrNull();
+    if (ext == null) return const [];
+    return switch (type) {
+      MediaType.artist => ext.artistsList,
+      MediaType.albumArtist => [ext.albumArtist],
+      MediaType.composer => [ext.composer],
+      MediaType.album => [ext.originalAlbum],
+      MediaType.genre => ext.genresList,
+      MediaType.style => ext.stylesList,
+      MediaType.mood => ext.moodList,
+      MediaType.tag => ext.tagsList,
+      _ => const [],
+    };
+  }
 
   @override
   int releaseYear(Track item) {

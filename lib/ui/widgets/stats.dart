@@ -253,8 +253,20 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     MostPlayedTimeRange.allTime,
   ];
 
+  static const _donutTypes = [
+    MediaType.genre,
+    MediaType.style,
+    MediaType.mood,
+    MediaType.tag,
+    MediaType.artist,
+    MediaType.albumArtist,
+    MediaType.composer,
+    MediaType.album,
+  ];
+
   MostPlayedTimeRange _mptr = MostPlayedTimeRange.allTime;
   DateRange? _custom;
+  final _donutType = ValueNotifier(MediaType.genre);
   bool _isYoutube = false;
   bool _loading = true;
   bool _showAllArtists = false;
@@ -277,6 +289,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   @override
   void dispose() {
     StatsController.inst.clearCache();
+    _donutType.dispose();
     super.dispose();
   }
 
@@ -437,6 +450,28 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       ),
     );
   }
+
+  static IconData _categoryIcon(MediaType type) => switch (type) {
+    MediaType.style => Broken.brush_1,
+    MediaType.mood => Broken.emoji_happy,
+    MediaType.tag => Broken.tag,
+    MediaType.artist => Broken.microphone,
+    MediaType.albumArtist => Broken.user,
+    MediaType.composer => Broken.profile_2user,
+    MediaType.album => Broken.music_dashboard,
+    _ => Broken.smileys,
+  };
+
+  static String _categoryCountText(MediaType type, int count) => switch (type) {
+    MediaType.style => lang.countStyles(count: count),
+    MediaType.mood => lang.countMoods(count: count),
+    MediaType.tag => lang.countTags(count: count),
+    MediaType.artist => lang.countArtists(count: count),
+    MediaType.albumArtist => lang.countAlbumArtists(count: count),
+    MediaType.composer => lang.countComposers(count: count),
+    MediaType.album => lang.countAlbums(count: count),
+    _ => lang.countGenres(count: count),
+  };
 
   List<Widget Function(BuildContext)> _buildCards() {
     final local = _local;
@@ -1058,28 +1093,65 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       );
     }
 
-    // -- genres donut (local), sources donut when imported
-    if (s.topGenres.isNotEmpty) {
+    // -- categories donut (local), sources donut when imported
+    if (!isYoutube) {
       cards.add(
-        (context) {
-          final top = s.topGenres.length > 8 ? s.topGenres.sublist(0, 8) : s.topGenres;
-          int other = s.otherGenresListens;
-          for (int i = top.length; i < s.topGenres.length; i++) {
-            other += s.topGenres[i].count;
-          }
-          final data = top.map((e) => ChartData(e.key, e.count)).toList(growable: false);
-          return StatsChartCard(
-            title: lang.genres,
-            subtitle: lang.countGenres(count: s.uniqueGenres),
-            icon: Broken.smileys,
-            copyText: () => s.topGenres.map((e) => '${e.key} • ${e.count}').join('\n'),
-            child: DonutChart(
-              data: data,
-              otherValue: other,
-              centerLabel: lang.totalListens,
-            ),
-          );
-        },
+        (context) => ValueListenableBuilder(
+          valueListenable: _donutType,
+          builder: (context, type, _) {
+            final rank = s.rankCategory(type);
+            final all = rank.top;
+            final top = all.length > 8 ? all.sublist(0, 8) : all;
+            int other = rank.otherListens;
+            for (int i = top.length; i < all.length; i++) {
+              other += all[i].count;
+            }
+            final data = top.map((e) => ChartData(e.key, e.count)).toList(growable: false);
+            final categoryIcon = _categoryIcon(type);
+            final categoryTextCount = _categoryCountText(type, rank.unique);
+            final categoryText = type.toText();
+            return StatsChartCard(
+              title: lang.totalListens,
+              subtitle: categoryTextCount,
+              icon: categoryIcon,
+              trailing: NamidaPopupWrapper(
+                childrenDefault: () => _donutTypes.map(
+                  (t) => NamidaPopupItem(
+                    icon: _categoryIcon(t),
+                    title: t.toText(),
+                    selected: t == type,
+                    onTap: () => _donutType.value = t,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Broken.category_2,
+                        size: 14.0,
+                        color: context.defaultIconColor(),
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        categoryText,
+                        style: context.theme.textTheme.displaySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              copyText: () => all.map((e) => '${e.key} • ${e.count}').join('\n'),
+              child: data.isEmpty
+                  ? Text(lang.none, style: context.theme.textTheme.displaySmall)
+                  : DonutChart(
+                      data: data,
+                      otherValue: other,
+                      centerLabel: lang.totalListens,
+                    ),
+            );
+          },
+        ),
       );
     }
 
