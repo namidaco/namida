@@ -26,6 +26,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
+import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -504,6 +505,7 @@ class JsonToHistoryParser {
     }
 
     isParsing.value = false;
+    HomePageRefresher.requestRefresh();
 
     _notificationTimer?.cancel();
     NotificationManager.instance.doneImportingHistoryNotification(parsedHistoryJson.value, addedHistoryJsonToPlaylist.value);

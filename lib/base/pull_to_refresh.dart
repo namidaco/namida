@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:namida/core/dimensions.dart';
@@ -5,7 +7,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
-typedef PullToRefreshCallback = Future<void> Function();
+typedef PullToRefreshCallback = FutureOr<void> Function();
 const double _defaultMaxDistance = 128.0;
 
 class PullToRefreshWidget extends StatelessWidget {

@@ -76,6 +76,13 @@ class YTHomePageLocal extends StatefulWidget with NamidaRouteWidget {
   State<YTHomePageLocal> createState() => _YoutubeHomePageState();
 }
 
+class HomePageRefresher {
+  HomePageRefresher._();
+
+  static final _requests = 0.obs;
+  static void requestRefresh() => _requests.refresh();
+}
+
 abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulWidget> extends State<S> with TickerProviderStateMixin, PullToRefreshMixin {
   bool get isStatsTypeYT;
 
@@ -142,16 +149,23 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
     _scrollController = NamidaScrollController.create();
     _lostMemoriesScrollController = NamidaScrollController.create();
     _topRecentsScrollController = NamidaScrollController.create();
+    HomePageRefresher._requests.addListener(_refreshAll);
     _fillLists();
   }
 
   @override
   void dispose() {
+    HomePageRefresher._requests.removeListener(_refreshAll);
     _emptyAll();
     _scrollController.dispose();
     _lostMemoriesScrollController.dispose();
     _topRecentsScrollController.dispose();
     super.dispose();
+  }
+
+  void _refreshAll() {
+    _emptyAll();
+    _fillLists();
   }
 
   void _emptyAll() {
@@ -533,10 +547,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
           onPointerMove(_scrollController, event);
         },
         onPointerUp: (event) {
-          onRefresh(() async {
-            _emptyAll();
-            _fillLists();
-          });
+          onRefresh(_refreshAll);
         },
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: NamidaScrollbar(
