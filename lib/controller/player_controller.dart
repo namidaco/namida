@@ -839,6 +839,7 @@ class Player {
       onQueueEmpty: togglePlayPauseExclusive,
       startPlaying: startPlaying,
       shuffle: shuffle,
+      shuffleKeepingItem: source != QueueSource.playerQueue && _audioHandler.isShuffleReflectingInQueue,
       onAssigningCurrentItem: onAssigningCurrentItem,
       duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.ytHistory
           ? (item) {

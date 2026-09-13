@@ -35,6 +35,7 @@ class _PlayerSettings with SettingsFileWriter {
   final pauseOnVolume0 = true.obs;
   final jumpToFirstTrackAfterFinishingQueue = false.obs;
   final repeatMode = PlayerRepeatMode.none.obs;
+  final shuffleReflectInQueue = false.obs;
   final infiniyQueueOnNextPrevious = true.obs;
   final displayRemainingDurInsteadOfTotal = false.obs;
   final displayActualPositionWhenSeeking = false.obs;
@@ -82,6 +83,7 @@ class _PlayerSettings with SettingsFileWriter {
     bool? pauseOnVolume0,
     bool? jumpToFirstTrackAfterFinishingQueue,
     PlayerRepeatMode? repeatMode,
+    bool? shuffleReflectInQueue,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
     ReplayGainType? replayGainType,
@@ -119,6 +121,7 @@ class _PlayerSettings with SettingsFileWriter {
     if (pauseOnVolume0 != null) this.pauseOnVolume0.value = pauseOnVolume0;
     if (jumpToFirstTrackAfterFinishingQueue != null) this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     if (repeatMode != null) this.repeatMode.value = repeatMode;
+    if (shuffleReflectInQueue != null) this.shuffleReflectInQueue.value = shuffleReflectInQueue;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
     if (replayGainType != null) this.replayGainType.value = replayGainType;
@@ -176,6 +179,7 @@ class _PlayerSettings with SettingsFileWriter {
       pauseOnVolume0.value = json['pauseOnVolume0'] ?? pauseOnVolume0.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       repeatMode.value = PlayerRepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
+      shuffleReflectInQueue.value = json['shuffleReflectInQueue'] ?? shuffleReflectInQueue.value;
       infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       displayActualPositionWhenSeeking.value = json['displayActualPositionWhenSeeking'] ?? displayActualPositionWhenSeeking.value;
@@ -236,6 +240,7 @@ class _PlayerSettings with SettingsFileWriter {
     'pauseOnVolume0': pauseOnVolume0.value,
     'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
     'repeatMode': repeatMode.value.name,
+    'shuffleReflectInQueue': shuffleReflectInQueue.value,
     'killAfterDismissingApp': killAfterDismissingApp.value.name,
     'lockscreenArtwork': lockscreenArtwork.value,
     'replayGainType': replayGainType.value.name,

@@ -97,9 +97,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     });
 
     settings.player.repeatMode.addListener(resetGaplessPlaybackData);
+    settings.player.shuffleReflectInQueue.addListener(resetGaplessPlaybackData);
 
-    void updateShuffleMode() => setShuffleEnabled(settings.player.repeatMode.value == PlayerRepeatMode.shuffle);
+    bool wasShuffleReflectingInQueue = isShuffleReflectingInQueue;
+    void updateShuffleMode() {
+      final isReflecting = isShuffleReflectingInQueue;
+      setShuffleEnabled(playerRepeatMode == PlayerRepeatMode.shuffle && !isReflecting);
+      if (isReflecting && !wasShuffleReflectingInQueue) shuffleAllItems();
+      wasShuffleReflectingInQueue = isReflecting;
+    }
+
     settings.player.repeatMode.addListener(updateShuffleMode);
+    settings.player.shuffleReflectInQueue.addListener(updateShuffleMode);
     updateShuffleMode();
 
     final homeWidget = HomeWidgetController.instance;
@@ -612,6 +621,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required int playAtIndex,
     required Iterable<Q> queue,
     bool shuffle = false,
+    bool shuffleKeepingItem = false,
     bool startPlaying = true,
     int? maximumItems,
     void Function()? onQueueEmpty,
@@ -629,6 +639,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       queue: queue,
       maximumItems: maximumItems,
       shuffle: shuffle,
+      shuffleKeepingItem: shuffleKeepingItem,
       onIndexAndQueueSame: onIndexAndQueueSame,
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
@@ -2253,6 +2264,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   PlayerRepeatMode get playerRepeatMode => settings.player.repeatMode.value;
+
+  @override
+  bool get shuffleReflectInQueue => settings.player.shuffleReflectInQueue.value;
+
+  bool get isShuffleReflectingInQueue => playerRepeatMode == PlayerRepeatMode.shuffle && shuffleReflectInQueue;
 
   @override
   bool get jumpToFirstItemAfterFinishingQueue => settings.player.jumpToFirstTrackAfterFinishingQueue.value;

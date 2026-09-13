@@ -2650,12 +2650,12 @@ extension PlayerRepeatModeL10n on PlayerRepeatMode {
     PlayerRepeatMode.forNtimes => Broken.status,
   };
 
-  IconData? toSecondaryIcon() => switch (this) {
+  IconData? toSecondaryIcon({bool shuffleReflectInQueue = false}) => switch (this) {
     PlayerRepeatMode.none => null,
     PlayerRepeatMode.one => null,
     PlayerRepeatMode.all => null,
     PlayerRepeatMode.allShuffle => Broken.shuffle,
-    PlayerRepeatMode.shuffle => null,
+    PlayerRepeatMode.shuffle => shuffleReflectInQueue ? Broken.task : null,
     PlayerRepeatMode.forNtimes => null,
   };
 }
