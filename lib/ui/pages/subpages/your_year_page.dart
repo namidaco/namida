@@ -1,15 +1,10 @@
-import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/history_stats.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -17,7 +12,6 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/stats_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -65,18 +59,19 @@ class _YourYearPageState extends State<YourYearPage> {
   int _currentPage = 0;
   List<_StoryPage> _pages = const [];
 
-  final _exportKey = GlobalKey();
-  int? _exportingIndex;
+  Map<int, GlobalKey>? _exporting;
   double _cardWidth = 0.0;
 
   @override
   void initState() {
     super.initState();
+    StatsController.inst.registerShareAll(_exportAll);
     _compute();
   }
 
   @override
   void dispose() {
+    StatsController.inst.unregisterShareAll(_exportAll);
     StatsController.inst.clearCache();
     _pageController.dispose();
     super.dispose();
@@ -666,29 +661,22 @@ class _YourYearPageState extends State<YourYearPage> {
     );
   }
 
-  Future<void> _exportCurrent() async {
-    if (_currentPage < 0 || _currentPage >= _pages.length) return;
-    if (_exportingIndex != null) return;
-    setState(() => _exportingIndex = _currentPage);
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-      await WidgetsBinding.instance.endOfFrame;
-      final boundary = _exportKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return;
-      final image = await boundary.toImage(pixelRatio: 2.0);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      if (bytes == null) return;
-      final dir = Directory(FileParts.joinPath(AppDirs.APP_CACHE, 'stats_export'));
-      await dir.create(recursive: true);
-      final file = File(FileParts.joinPath(dir.path, 'namida_${_year}_${_currentPage + 1}.png'));
-      await file.writeAsBytes(Uint8List.sublistView(bytes));
-      await NamidaUtils.shareFiles([file.path]);
-    } catch (_) {
-    } finally {
-      if (mounted) setState(() => _exportingIndex = null);
-    }
+  Future<void> _exportPages(List<int> indices) async {
+    if (_exporting != null || indices.isEmpty) return;
+    final exporting = {for (final i in indices) i: GlobalKey()};
+    setState(() => _exporting = exporting);
+    final year = _year;
+    final paths = await StatsExport.capture(exporting.values.toList(), (i) => 'namida_${year}_${indices[i] + 1}.png');
+    if (mounted) setState(() => _exporting = null);
+    await StatsExport.share(paths);
   }
+
+  void _exportCurrent() {
+    if (_currentPage < 0 || _currentPage >= _pages.length) return;
+    _exportPages([_currentPage]);
+  }
+
+  Future<void> _exportAll() => _exportPages(List.generate(_pages.length, (i) => i));
 
   @override
   Widget build(BuildContext context) {
@@ -742,7 +730,7 @@ class _YourYearPageState extends State<YourYearPage> {
                 : LayoutBuilder(
                     builder: (context, constraints) {
                       _cardWidth = math.min(480.0, constraints.maxWidth - 24.0);
-                      final exporting = _exportingIndex;
+                      final exporting = _exporting;
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
@@ -753,17 +741,15 @@ class _YourYearPageState extends State<YourYearPage> {
                             onPageChanged: (i) => setState(() => _currentPage = i),
                             itemBuilder: (context, index) => _pages[index].build(context, _year),
                           ),
-                          // -- rendered off-screen only while exporting, so the png holds the whole page instead of the visible part.
-                          if (exporting != null && exporting < _pages.length)
-                            Positioned(
-                              left: -_cardWidth * 4,
-                              top: 0.0,
+                          if (exporting != null)
+                            StatsExportOffstage(
                               width: _cardWidth,
-                              child: IgnorePointer(
-                                child: MediaQuery(
-                                  data: MediaQuery.of(context).copyWith(disableAnimations: true),
-                                  child: _pages[exporting].buildForExport(context, _year, _cardWidth, _exportKey),
-                                ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (final e in exporting.entries)
+                                    if (e.key < _pages.length) _pages[e.key].buildForExport(context, _year, _cardWidth, e.value),
+                                ],
                               ),
                             ),
                         ],

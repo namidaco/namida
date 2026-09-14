@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
@@ -85,64 +86,61 @@ class StatsSection extends StatelessWidget {
       },
       child: SizedBox(
         width: context.width,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: Obx(
-            (context) {
-              final allTracks = Indexer.inst.tracksInfoList.valueR;
-              final stylesR = Indexer.inst.mainMapStyles.valueR;
-              int? stylesLength = stylesR.length;
-              if (stylesLength <= 1) {
-                final firstStyle = stylesR.keys.firstOrNull;
-                if (firstStyle == null || firstStyle == UnknownTags.STYLE) {
-                  stylesLength = null;
-                }
+        child: Obx(
+          (context) {
+            final allTracks = Indexer.inst.tracksInfoList.valueR;
+            final stylesR = Indexer.inst.mainMapStyles.valueR;
+            int? stylesLength = stylesR.length;
+            if (stylesLength <= 1) {
+              final firstStyle = stylesR.keys.firstOrNull;
+              if (firstStyle == null || firstStyle == UnknownTags.STYLE) {
+                stylesLength = null;
               }
-              return Wrap(
-                alignment: WrapAlignment.start,
-                children: [
-                  StatsMiniTile(icon: Broken.music_circle, label: lang.tracks, value: allTracks.length.formatDecimal()),
-                  StatsMiniTile(icon: Broken.music_dashboard, label: lang.albums, value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal()),
-                  StatsMiniTile(icon: Broken.microphone, label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
-                  StatsMiniTile(icon: Broken.smileys, label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
-                  if (stylesLength != null) StatsMiniTile(icon: Broken.brush_1, label: lang.styles, value: stylesLength.formatDecimal()),
-                  StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
-                  Obx(
-                    (context) {
-                      final map = Player.inst.totalListenedTimeInSec;
-                      final trSec = map?[LibraryCategory.localTracks] ?? 0;
-                      final vidSec = map?[LibraryCategory.localVideos] ?? 0;
-                      final totalSec = trSec + vidSec;
-                      return StatsMiniTile(
-                        icon: Broken.timer_1,
-                        label: lang.totalListenTime,
-                        value: totalSec.secondsFormatted,
-                        valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: totalSec) : null,
-                      );
-                    },
-                  ),
-                  Obx(
-                    (context) {
-                      final map = Player.inst.totalListenedTimeInSec;
-                      final sec = map?[LibraryCategory.youtube] ?? 0;
-                      return StatsMiniTile(
-                        leading: const StackedIcon(
-                          baseIcon: Broken.timer_1,
-                          secondaryIcon: Broken.video_square,
-                          secondaryIconSize: 10.0,
-                          iconSize: 16.0,
-                        ),
-                        icon: Broken.timer_1,
-                        label: '${lang.totalListenTime} (${lang.youtube})',
-                        value: sec.secondsFormatted,
-                        valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: sec) : null,
-                      );
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
+            }
+            return Wrap(
+              alignment: WrapAlignment.start,
+              children: [
+                StatsMiniTile(icon: Broken.music_circle, label: lang.tracks, value: allTracks.length.formatDecimal()),
+                StatsMiniTile(icon: Broken.music_dashboard, label: lang.albums, value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal()),
+                StatsMiniTile(icon: Broken.microphone, label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
+                StatsMiniTile(icon: Broken.smileys, label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
+                if (stylesLength != null) StatsMiniTile(icon: Broken.brush_1, label: lang.styles, value: stylesLength.formatDecimal()),
+                StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
+                Obx(
+                  (context) {
+                    final map = Player.inst.totalListenedTimeInSec;
+                    final trSec = map?[LibraryCategory.localTracks] ?? 0;
+                    final vidSec = map?[LibraryCategory.localVideos] ?? 0;
+                    final totalSec = trSec + vidSec;
+                    return StatsMiniTile(
+                      icon: Broken.timer_1,
+                      label: lang.totalListenTime,
+                      value: totalSec.secondsFormatted,
+                      valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: totalSec) : null,
+                    );
+                  },
+                ),
+                Obx(
+                  (context) {
+                    final map = Player.inst.totalListenedTimeInSec;
+                    final sec = map?[LibraryCategory.youtube] ?? 0;
+                    return StatsMiniTile(
+                      leading: const StackedIcon(
+                        baseIcon: Broken.timer_1,
+                        secondaryIcon: Broken.video_square,
+                        secondaryIconSize: 10.0,
+                        iconSize: 16.0,
+                      ),
+                      icon: Broken.timer_1,
+                      label: '${lang.totalListenTime} (${lang.youtube})',
+                      value: sec.secondsFormatted,
+                      valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: sec) : null,
+                    );
+                  },
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -270,6 +268,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   bool _isYoutube = false;
   bool _loading = true;
   bool _showAllArtists = false;
+  bool _sharingAll = false;
   int _requestId = 0;
 
   HistoryStatsSnapshot<Track>? _local;
@@ -283,11 +282,13 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   void initState() {
     super.initState();
     _isYoutube = widget.isYoutube;
+    StatsController.inst.registerShareAll(_shareAll);
     _compute();
   }
 
   @override
   void dispose() {
+    StatsController.inst.unregisterShareAll(_shareAll);
     StatsController.inst.clearCache();
     _donutType.dispose();
     super.dispose();
@@ -356,6 +357,36 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
         _selectPeriod(MostPlayedTimeRange.custom, DateRange(oldest: dates.first, newest: dates.last));
       },
     );
+  }
+
+  Future<void> _shareAll() async {
+    if (_loading || _sharingAll) return;
+    _sharingAll = true;
+    final cards = _buildCards();
+    final width = (context.findRenderObject() as RenderSliver).constraints.crossAxisExtent;
+    final boundaries = <GlobalKey>[];
+    final entry = OverlayEntry(
+      builder: (context) => StatsExportOffstage(
+        width: width,
+        child: StatsExportScope(
+          boundaries: boundaries,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const StatsSection(),
+              for (final card in cards) Builder(builder: card),
+            ],
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(entry);
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    final paths = await StatsExport.capture(boundaries, (i) => 'namida_stats_${ts}_${i + 1}.png');
+    entry.remove();
+    entry.dispose();
+    _sharingAll = false;
+    await StatsExport.share(paths);
   }
 
   Widget _buildHeader(BuildContext context) {

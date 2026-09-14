@@ -20,6 +20,8 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/image_advanced.dart' show ImageAdvanced;
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ChartPalette {
@@ -199,6 +201,119 @@ class StatsWatermark extends StatelessWidget {
   }
 }
 
+class StatsExport {
+  StatsExport._();
+
+  /// captures each boundary to a png, returns only the paths that succeeded.
+  static Future<List<String>> capture(List<GlobalKey> keys, String Function(int index) fileName) async {
+    try {
+      await _waitForImages(keys);
+      await WidgetsBinding.instance.endOfFrame;
+      await WidgetsBinding.instance.endOfFrame;
+      final dir = Directory(FileParts.joinPath(AppDirs.APP_CACHE, 'stats_export'));
+      await dir.create(recursive: true);
+      final paths = await Future.wait(List.generate(keys.length, (i) => _captureOne(keys[i], FileParts.joinPath(dir.path, fileName(i)))));
+      return paths.whereType<String>().toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// freshly built content resolves & decodes images asynchronously, capturing earlier yields empty artworks.
+  static Future<void> _waitForImages(List<GlobalKey> keys) async {
+    const timeout = Duration(seconds: 4);
+    final binding = WidgetsBinding.instance;
+    final sw = Stopwatch()..start();
+    final seen = <ImageProvider>{};
+    await binding.endOfFrame;
+    while (sw.elapsed < timeout) {
+      final loads = <Future<void>>[];
+      bool artworkPending = false;
+      void visit(Element element) {
+        final widget = element.widget;
+        final provider = widget is ImageAdvanced
+            ? widget.image
+            : widget is Image
+            ? widget.image
+            : null;
+        if (provider != null) {
+          if (seen.add(provider)) loads.add(precacheImage(provider, element, onError: (_, _) {}));
+        } else if (!artworkPending && ArtworkWidget.isWaitingForImage(element)) {
+          artworkPending = true;
+        }
+        element.visitChildren(visit);
+      }
+
+      for (final key in keys) {
+        (key.currentContext as Element?)?.visitChildren(visit);
+      }
+      if (loads.isEmpty && !artworkPending) return;
+      if (loads.isEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      } else {
+        await Future.wait(loads).timeout(timeout - sw.elapsed, onTimeout: () => const []);
+      }
+      await binding.endOfFrame;
+    }
+  }
+
+  static Future<String?> _captureOne(GlobalKey key, String path) async {
+    final boundary = key.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+    final image = await boundary.toImage(pixelRatio: 2.0);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (bytes == null) return null;
+    await File(path).writeAsBytes(Uint8List.sublistView(bytes));
+    return path;
+  }
+
+  static Future<void> share(List<String> paths) async {
+    if (paths.isEmpty) return;
+    try {
+      await NamidaUtils.shareFiles(paths);
+    } catch (_) {}
+  }
+}
+
+/// [StatsChartCard]s below render in export mode and register their boundaries in build order.
+class StatsExportScope extends InheritedWidget {
+  final List<GlobalKey> boundaries;
+
+  const StatsExportScope({super.key, required this.boundaries, required super.child});
+
+  static StatsExportScope? maybeOf(BuildContext context) => context.getInheritedWidgetOfExactType<StatsExportScope>();
+
+  @override
+  bool updateShouldNotify(StatsExportScope oldWidget) => false;
+}
+
+/// laid out off-screen at full height, so the png holds the whole content instead of the visible part.
+class StatsExportOffstage extends StatelessWidget {
+  final double width;
+  final Widget child;
+
+  const StatsExportOffstage({super.key, required this.width, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: -width * 4,
+      top: 0.0,
+      width: width,
+      child: IgnorePointer(
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(disableAnimations: true),
+          child: Material(
+            type: MaterialType.transparency,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Card wrapper providing png export (share) & raw numbers copy.
 class StatsChartCard extends StatefulWidget {
   final String title;
@@ -226,7 +341,15 @@ class StatsChartCard extends StatefulWidget {
 
 class _StatsChartCardState extends State<StatsChartCard> {
   final _boundaryKey = GlobalKey();
-  final _exporting = ValueNotifier<bool>(false);
+  late final ValueNotifier<bool> _exporting;
+
+  @override
+  void initState() {
+    super.initState();
+    final exportScope = StatsExportScope.maybeOf(context);
+    exportScope?.boundaries.add(_boundaryKey);
+    _exporting = ValueNotifier<bool>(exportScope != null);
+  }
 
   @override
   void dispose() {
@@ -237,24 +360,9 @@ class _StatsChartCardState extends State<StatsChartCard> {
   Future<void> _export() async {
     if (_exporting.value) return;
     _exporting.value = true;
-    try {
-      await WidgetsBinding.instance.endOfFrame;
-      await WidgetsBinding.instance.endOfFrame;
-      final boundary = _boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
-      if (boundary == null) return;
-      final image = await boundary.toImage(pixelRatio: 2.0);
-      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      image.dispose();
-      if (bytes == null) return;
-      final dir = Directory(FileParts.joinPath(AppDirs.APP_CACHE, 'stats_export'));
-      await dir.create(recursive: true);
-      final file = File(FileParts.joinPath(dir.path, 'namida_stats_${DateTime.now().millisecondsSinceEpoch}.png'));
-      await file.writeAsBytes(Uint8List.sublistView(bytes));
-      await NamidaUtils.shareFiles([file.path]);
-    } catch (_) {
-    } finally {
-      _exporting.value = false;
-    }
+    final paths = await StatsExport.capture([_boundaryKey], (_) => 'namida_stats_${DateTime.now().millisecondsSinceEpoch}.png');
+    if (mounted) _exporting.value = false;
+    await StatsExport.share(paths);
   }
 
   void _copy() {

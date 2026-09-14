@@ -29,6 +29,15 @@ class StatsController {
   final _localPrevCache = _SnapshotCache<Track>();
   final _youtubePrevCache = _SnapshotCache<String>();
 
+  /// stats pages stack, the latest registered belongs to the top route.
+  final _shareAllActions = <Future<void> Function()>[];
+
+  void registerShareAll(Future<void> Function() action) => _shareAllActions.add(action);
+
+  void unregisterShareAll(Future<void> Function() action) => _shareAllActions.remove(action);
+
+  void shareAll() => _shareAllActions.lastOrNull?.call();
+
   void clearCache() {
     _localCache.clear();
     _youtubeCache.clear();

@@ -117,6 +117,11 @@ class ArtworkWidget extends StatefulWidget {
 
   static double? aspectRatioOf(Object? cacheKey) => cacheKey == null ? null : _aspectRatios[cacheKey];
 
+  static bool isWaitingForImage(Element element) {
+    final state = element is StatefulElement ? element.state : null;
+    return state is _ArtworkWidgetState && state._isWaitingForImage;
+  }
+
   static bool _aspectRatioNotifyScheduled = false;
 
   static void _cacheAspectRatio(Object? cacheKey, double ratio) {
@@ -167,6 +172,14 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   // late final bool _imageObtainedBefore = Indexer.inst.imageObtainedBefore(widget.path ?? '');
 
   bool _triedDeleting = false;
+
+  bool get _isWaitingForImage {
+    final imagePath = _imagePath;
+    final bytes = _bytes;
+    if (imagePath != null && imagePath.isNotEmpty) return false;
+    if (bytes != null && bytes.isNotEmpty) return false;
+    return ((imagePath != null && imagePath == _imagePathInitialValue) || bytes != null) && !widget.forceDummyArtwork;
+  }
 
   num get _getThumbnailEffectiveCacheHeight {
     return widget.cacheHeight?.validOrNull ?? widget.height?.validOrNull ?? widget.width?.validOrNull ?? widget.thumbnailSize;
@@ -330,7 +343,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final goodImagePath = _imagePath?.isNotEmpty == true;
     final canDisplayImage = goodImagePath || isValidBytes;
-    final thereMightBeImageSoon = ((_imagePath != null && _imagePath == _imagePathInitialValue) || (bytes != null && bytes.isEmpty)) && !widget.forceDummyArtwork;
     final boxWidth = widget.width ?? widget.thumbnailSize;
     final boxHeight = widget.height ?? widget.thumbnailSize;
 
@@ -338,7 +350,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final sizePercentage = widget.disableBlurBgSizeShrink || !dropShadowEnabled ? 1.0 : DropShadow.defaultSizePercentage;
 
     // -- dont display stock widget if image can be obtained.
-    if (thereMightBeImageSoon && !canDisplayImage) {
+    if (_isWaitingForImage) {
       final box = SizedBox(
         key: key,
         width: boxWidth,
@@ -432,6 +444,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                             if (wasSynchronouslyLoaded || frame == null) return child;
                             if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
                             if (widget.fadeMilliSeconds == 0) return child;
+                            if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
                             if (goodImagePath && bytes != null && bytes.isNotEmpty) return child;
 
                             return TweenAnimationBuilder(

@@ -38,6 +38,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
+import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/version_controller.dart';
@@ -1587,6 +1588,15 @@ extension RouteUtils on NamidaRoute {
           ),
         ),
         shouldShow: route == RouteType.YOUTUBE_HISTORY_SUBPAGE,
+      ),
+
+      _getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.gallery_export,
+          tooltip: () => lang.share,
+          onPressed: StatsController.inst.shareAll,
+        ),
+        shouldShow: route == RouteType.PAGE_stats || route == RouteType.PAGE_yourYear,
       ),
 
       // ---- Playlist Tracks ----
