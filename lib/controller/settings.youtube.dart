@@ -50,6 +50,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final dragToSeek = YTSeekActionMode.all.obs;
   final horizontalDrag = YTHorizontalDragMode.fullscreen.obs;
   final downloadFilenameBuilder = _defaultFilenameBuilder.obs;
+  final downloadParallelCount = RxnF<int>(fallback: 4);
   final initialDefaultMetadataTags = <String, String>{};
 
   // -- currently used for windows
@@ -96,6 +97,7 @@ class _YoutubeSettings with SettingsFileWriter {
     YTSeekActionMode? dragToSeek,
     YTHorizontalDragMode? horizontalDrag,
     String? downloadFilenameBuilder,
+    int? downloadParallelCount,
     DownloadNotifications? downloadNotifications,
     SponsorBlockSettings? sponsorBlockSettings,
     ReturnYoutubeDislikeSettings? ryd,
@@ -138,6 +140,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
     if (horizontalDrag != null) this.horizontalDrag.value = horizontalDrag;
     if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
+    if (downloadParallelCount != null) this.downloadParallelCount.value = downloadParallelCount;
     if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
     if (sponsorBlockSettings != null) this.sponsorBlockSettings.value = sponsorBlockSettings;
     if (ryd != null) this.ryd.value = ryd;
@@ -222,6 +225,7 @@ class _YoutubeSettings with SettingsFileWriter {
       ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
       ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
       downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
+      downloadParallelCount.value = json['downloadParallelCount_v2'] ?? downloadParallelCount.value;
       downloadNotifications.value = DownloadNotifications.values.getEnum(json['downloadNotifications']) ?? downloadNotifications.value;
       sponsorBlockSettings.value = SponsorBlockSettings.fromJson(json['sponsorBlockSettings']);
       ryd.value = ReturnYoutubeDislikeSettings.fromJson(json['ryd']);
@@ -279,6 +283,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
     'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
     'downloadFilenameBuilder': downloadFilenameBuilder.value,
+    'downloadParallelCount_v2': downloadParallelCount.value,
     'downloadNotifications': downloadNotifications.value.name,
     'sponsorBlockSettings': sponsorBlockSettings.value.toJson(),
     'ryd': ryd.value.toJson(),

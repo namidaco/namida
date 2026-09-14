@@ -480,7 +480,7 @@ class NamidaFFMPEG {
       'copy',
       if (override) '-y',
       outputPath,
-    ]);
+    ], noTimeout: true);
   }
 
   Future<bool> convertToWav({

@@ -3,8 +3,9 @@ part of 'ffmpeg_executer.dart';
 class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   final _ffmpegKitQueue = Queue(parallel: 128); // concurrent executions could result in being stuck/failed if session size exceeded
 
-  Future<T?> _enqueue<T>(Future<T?> Function() fn) async {
+  Future<T?> _enqueue<T>(Future<T?> Function() fn, {bool noTimeout = false}) async {
     return await _ffmpegKitQueue.add<T?>(() async {
+      if (noTimeout) return await fn();
       try {
         return await fn().timeout(const Duration(seconds: 10));
       } on TimeoutException {
@@ -20,7 +21,7 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   Future<void> dispose() async {}
 
   @override
-  Future<bool> ffmpegExecute(List<String> args) async {
+  Future<bool> ffmpegExecute(List<String> args, {bool noTimeout = false}) async {
     return await _enqueue(
           () async {
             final session = await FFmpegKit.executeWithArguments([
@@ -32,6 +33,7 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
             final rc = await session.getReturnCode();
             return rc?.isValueSuccess() ?? false;
           },
+          noTimeout: noTimeout,
         ) ??
         false;
   }

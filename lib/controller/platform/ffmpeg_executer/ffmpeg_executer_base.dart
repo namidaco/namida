@@ -11,7 +11,9 @@ abstract class FFMPEGExecuter {
 
   FutureOr<void> init();
   Future<void> dispose();
-  Future<bool> ffmpegExecute(List<String> args);
+
+  /// [noTimeout] is for long operations (ex: merging big files), where the timeout (if any) would report a still-running command as failed.
+  Future<bool> ffmpegExecute(List<String> args, {bool noTimeout = false});
   Future<String?> ffprobeExecute(List<String> args);
   Future<Map<String, dynamic>?> getMediaInformation(String path);
   Future<bool> supportsWebDAV();

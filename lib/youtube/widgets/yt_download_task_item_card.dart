@@ -310,16 +310,11 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       ),
       buttonText: lang.save,
       onButtonTap: (text) async {
-        final wasDownloading = YoutubeController.inst.isDownloading[config.id]?[config.filename] ?? false;
-        if (wasDownloading) _onPauseDownloadTap([config]);
         await YoutubeController.inst.renameConfigFilename(
           config: config,
-          videoID: config.id,
           newFilename: text,
           groupName: groupName,
-          renameCacheFiles: true,
         );
-        if (wasDownloading) _onResumeDownloadTap([config], context);
         return true;
       },
     );
@@ -545,8 +540,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                               children: [
                                 Obx(
                                   (context) {
-                                    final isDownloading = YoutubeController.inst.isDownloading[videoId]?[item.filename] ?? false;
-                                    final isFetching = YoutubeController.inst.isFetchingData[videoId]?[item.filename] ?? false;
+                                    final isDownloading = YoutubeController.inst.isDownloading[videoIdWrapper]?[item.filename] ?? false;
+                                    final isFetching = YoutubeController.inst.isFetchingData[videoIdWrapper]?[item.filename] ?? false;
                                     final willBeDownloaded = YoutubeController.inst.youtubeDownloadTasksInQueueMap[widget.groupName]?[item.filename] == true;
                                     final fileExists = YoutubeController.inst.downloadedFilesMap[widget.groupName]?[item.filename] != null;
 

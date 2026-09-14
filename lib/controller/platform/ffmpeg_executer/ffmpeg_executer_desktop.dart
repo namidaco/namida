@@ -15,7 +15,7 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
   final _isolateExecuter = _FFmpegDesktopIsolateManager();
 
   @override
-  Future<bool> ffmpegExecute(List<String> args) async {
+  Future<bool> ffmpegExecute(List<String> args, {bool noTimeout = false}) async {
     final res = await _isolateExecuter.executeIsolate(args, ffprobe: false);
     return res as bool;
   }

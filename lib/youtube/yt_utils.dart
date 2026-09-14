@@ -1131,7 +1131,6 @@ class YTUtils {
                       videoUploader: null,
                       tagMaps: settings.youtube.initialDefaultMetadataTags,
                       tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
-                      supportTagging: true,
                       showSpecificFileOptions: false,
                       onDownloadFilenameChanged: (filename) {}, // not visible
                       onDownloadGroupNameChanged: (newGroupName) {}, // not visible

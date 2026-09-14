@@ -20,6 +20,17 @@ class DownloadTaskFilename {
     return '${cleaned.substring(0, maxLength - ext.length)}$ext';
   }
 
+  /// `name.ext` -> `name (number).ext`, trimming the name if needed to keep the suffix within limits.
+  static String withNumberSuffix(String filename, int number, {required String parentDirPath}) {
+    final dotIndex = filename.lastIndexOf('.');
+    final base = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+    final ext = dotIndex > 0 ? filename.substring(dotIndex) : '';
+    final suffix = ' ($number)';
+    final maxBaseLength = (255.withMaximum(_fullPathLimit - parentDirPath.length) - ext.length - suffix.length).withMinimum(0);
+    final trimmedBase = base.length > maxBaseLength ? base.substring(0, maxBaseLength) : base;
+    return '$trimmedBase$suffix$ext';
+  }
+
   static int _numberKey = 0;
 
   String filename;

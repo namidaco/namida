@@ -20,7 +20,6 @@ Future<void> showVideoDownloadOptionsSheet({
   required String? videoUploader,
   required Map<String, String?> tagMaps,
   Map<FFMPEGTagField, String?>? tagMapsForFillingInfoOnly,
-  required bool supportTagging,
   required void Function(String newGroupName) onDownloadGroupNameChanged,
   required void Function(String filename) onDownloadFilenameChanged,
   required bool showSpecificFileOptions,
@@ -32,23 +31,16 @@ Future<void> showVideoDownloadOptionsSheet({
 
   Widget getTextChip(FFMPEGTagField fieldKey) {
     final field = fieldKey.tagKey;
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 400),
-      opacity: supportTagging ? 1.0 : 0.5,
-      child: IgnorePointer(
-        ignoring: !supportTagging,
-        child: CustomTagTextField(
-          controller: controllersMap[field]!,
-          hintText: tagMaps[field] ?? '',
-          labelText: fieldKey.ffmpegTagToText(),
-          icon: fieldKey.ffmpegTagToIcon(),
-          onTap: () => currentActiveField = field,
-          onChanged: (value) {
-            currentActiveField = field;
-            tagMaps[field] = value;
-          },
-        ),
-      ),
+    return CustomTagTextField(
+      controller: controllersMap[field]!,
+      hintText: tagMaps[field] ?? '',
+      labelText: fieldKey.ffmpegTagToText(),
+      icon: fieldKey.ffmpegTagToIcon(),
+      onTap: () => currentActiveField = field,
+      onChanged: (value) {
+        currentActiveField = field;
+        tagMaps[field] = value;
+      },
     );
   }
 
@@ -125,25 +117,6 @@ Future<void> showVideoDownloadOptionsSheet({
                         onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
                       ),
                     ),
-                  ],
-                  if (!supportTagging) ...[
-                    const SizedBox(height: 12.0),
-                    Row(
-                      children: [
-                        const SizedBox(width: 12.0),
-                        Icon(
-                          Broken.danger,
-                          color: Colors.red.withOpacityExt(0.7),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Text(
-                          lang.webmNoEditTagsSupport,
-                          style: textTheme.displayLarge,
-                        ),
-                        const SizedBox(width: 12.0),
-                      ],
-                    ),
-                    const SizedBox(height: 12.0),
                   ],
                   const SizedBox(height: 8.0),
                   const NamidaContainerDivider(),

@@ -154,7 +154,7 @@ class _YtFilenameRebuilder {
         }
         return null;
       }(),
-      'ext' => videoStream?.codecInfo.container.nullifyEmpty() ?? audioStream?.codecInfo.container.nullifyEmpty() ?? 'mp4',
+      'ext' => YoutubeController.getOutputContainer(videoStream, audioStream)?.nullifyEmpty() ?? 'mp4',
       'channel_fulltitle' => pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty(),
       'uploader' || 'channel' => () {
         final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();

@@ -143,23 +143,7 @@ Future<void> showDownloadVideoBottomSheet({
     updatefilenameOutput(customName: settings.youtube.downloadFilenameBuilder.value);
   }
 
-  void showWebmWarning() {
-    snackyy(
-      title: lang.warning,
-      message: lang.webmNoEditTagsSupport,
-      leftBarIndicatorColor: Colors.red,
-      altDesign: true,
-      top: false,
-    );
-  }
-
-  void onAudioSelectionChanged() {
-    if (selectedAudioOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
-  }
-
   void onVideoSelectionChanged() {
-    if (selectedVideoOnlyStream.value?.isWebm == true) showWebmWarning(); // webm doesnt support tag editing
-
     if (selectedVideoOnlyStream.value == null) {
       if (!settings.downloadAudioOnly.value) settings.save(downloadAudioOnly: true);
     } else {
@@ -203,7 +187,6 @@ Future<void> showDownloadVideoBottomSheet({
       if (selectedVideoOnlyStream.value?.isWebm == true) showVideoWebm.value = true;
     }
 
-    onAudioSelectionChanged();
     onVideoSelectionChanged();
     updatefilenameOutput();
     videoDateTime = videoInfo.value?.publishDate.accurateDate ?? videoInfo.value?.uploadDate.accurateDate ?? streamInfoItem?.publishedAt.accurateDate;
@@ -519,66 +502,29 @@ Future<void> showDownloadVideoBottomSheet({
                                       ),
                                     ),
                                     const SizedBox(width: 6.0),
-                                    ObxO(
-                                      rx: selectedVideoOnlyStream,
-                                      builder: (context, selectedVideo) => ObxO(
-                                        rx: selectedAudioOnlyStream,
-                                        builder: (context, selectedAudio) {
-                                          // -- we allow cuz now we using parameter builders
-                                          // if (selectedAudio == null && selectedVideo == null) return const SizedBox();
-                                          final isWEBM = (selectedAudio?.isWebm == true || selectedVideo?.isWebm == true);
-                                          return Stack(
-                                            alignment: Alignment.bottomRight,
-                                            children: [
-                                              NamidaIconButton(
-                                                verticalPadding: 4.0,
-                                                horizontalPadding: 8.0,
-                                                icon: Broken.edit,
-                                                onPressed: () {
-                                                  if (videoInfo == null && tagsMap.isEmpty) return;
+                                    NamidaIconButton(
+                                      verticalPadding: 4.0,
+                                      horizontalPadding: 8.0,
+                                      icon: Broken.edit,
+                                      onPressed: () {
+                                        if (videoInfo == null && tagsMap.isEmpty) return;
 
-                                                  showVideoDownloadOptionsSheet(
-                                                    videoTitle: videoInfo?.title,
-                                                    videoUploader: videoInfo?.channelName,
-                                                    tagMaps: tagsMap,
-                                                    supportTagging: !isWEBM,
-                                                    showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
-                                                    onDownloadFilenameChanged: (filename) {
-                                                      updatefilenameOutput(customName: filename);
-                                                      formKey.currentState?.validate();
-                                                    },
-                                                    onDownloadGroupNameChanged: (newGroupName) {
-                                                      groupName = newGroupName;
-                                                      formKey.currentState?.validate();
-                                                    },
-                                                    initialGroupName: initialGroupName,
-                                                  );
-                                                },
-                                              ),
-                                              if (isWEBM)
-                                                IgnorePointer(
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(6),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: theme.scaffoldBackgroundColor,
-                                                          spreadRadius: 0,
-                                                          blurRadius: 3.0,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: const Icon(
-                                                      Broken.info_circle,
-                                                      color: Colors.red,
-                                                      size: 16.0,
-                                                    ),
-                                                  ),
-                                                ),
-                                            ],
-                                          );
-                                        },
-                                      ),
+                                        showVideoDownloadOptionsSheet(
+                                          videoTitle: videoInfo?.title,
+                                          videoUploader: videoInfo?.channelName,
+                                          tagMaps: tagsMap,
+                                          showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
+                                          onDownloadFilenameChanged: (filename) {
+                                            updatefilenameOutput(customName: filename);
+                                            formKey.currentState?.validate();
+                                          },
+                                          onDownloadGroupNameChanged: (newGroupName) {
+                                            groupName = newGroupName;
+                                            formKey.currentState?.validate();
+                                          },
+                                          initialGroupName: initialGroupName,
+                                        );
+                                      },
                                     ),
                                   ],
                                 );
@@ -616,13 +562,11 @@ Future<void> showDownloadVideoBottomSheet({
                                             webmIconEnabled: webmIconEnabled,
                                             onCloseIconTap: () {
                                               selectedAudioOnlyStream.value = null;
-                                              onAudioSelectionChanged();
                                             },
                                             onSussyIconTap: () {
                                               showAudioWebm.toggle();
                                               if (showAudioWebm.value == false && selectedAudioOnlyStream.value?.isWebm == true) {
                                                 selectedAudioOnlyStream.value = streamResult?.audioStreams.firstOrNull;
-                                                onAudioSelectionChanged();
                                               }
                                             },
                                           );
@@ -661,7 +605,6 @@ Future<void> showDownloadVideoBottomSheet({
                                                               : "${element.codecInfo.codecCleaned()} • ${element.bitrateText()}",
                                                           onTap: () {
                                                             selectedAudioOnlyStream.value = element;
-                                                            onAudioSelectionChanged();
                                                           },
                                                         );
                                                       },
