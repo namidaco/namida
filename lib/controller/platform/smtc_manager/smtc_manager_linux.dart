@@ -169,8 +169,10 @@ class _CustomMPRISService extends MPRISService {
 
   @override
   Future<void> onShuffle(bool shuffle) async {
-    await Player.inst.shuffleTracks(true);
-    snackyy(message: "${lang.shuffleAll}: ${lang.done}");
+    // await Player.inst.shuffleTracks(true);
+    // snackyy(message: "${lang.shuffleAll}: ${lang.done}");
+    settings.player.save(shuffleQueue: shuffle);
+    snackyy(message: "${lang.shuffle}: ${shuffle ? '✓' : '✗'}");
   }
 
   @override

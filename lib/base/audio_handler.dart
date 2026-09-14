@@ -97,24 +97,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     });
 
     settings.player.repeatMode.addListener(resetGaplessPlaybackData);
-    settings.player.shuffleReflectInQueue.addListener(resetGaplessPlaybackData);
+    // settings.player.shuffleReflectInQueue.addListener(resetGaplessPlaybackData);
 
-    bool wasShuffleReflectingInQueue = isShuffleReflectingInQueue;
-    void updateShuffleMode() {
-      final isReflecting = isShuffleReflectingInQueue;
-      setShuffleEnabled(playerRepeatMode == PlayerRepeatMode.shuffle && !isReflecting);
-      if (isReflecting && !wasShuffleReflectingInQueue) shuffleAllItems();
-      wasShuffleReflectingInQueue = isReflecting;
+    // bool wasShuffleReflectingInQueue = isShuffleReflectingInQueue;
+    // void updateShuffleMode() {
+    //   final isReflecting = isShuffleReflectingInQueue;
+    //   setShuffleEnabled(playerRepeatMode == PlayerRepeatMode.shuffle && !isReflecting);
+    //   if (isReflecting && !wasShuffleReflectingInQueue) shuffleAllItems();
+    //   wasShuffleReflectingInQueue = isReflecting;
+    // }
+
+    // settings.player.repeatMode.addListener(updateShuffleMode);
+    // settings.player.shuffleReflectInQueue.addListener(updateShuffleMode);
+    // updateShuffleMode();
+
+    void updateQueueShuffled() async {
+      final wasShuffled = isQueueShuffled;
+      await setQueueShuffled(settings.player.shuffleQueue.value);
+      if (wasShuffled != isQueueShuffled) MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
     }
 
-    settings.player.repeatMode.addListener(updateShuffleMode);
-    settings.player.shuffleReflectInQueue.addListener(updateShuffleMode);
-    updateShuffleMode();
+    settings.player.shuffleQueue.addListener(updateQueueShuffled);
+    updateQueueShuffled();
 
     final homeWidget = HomeWidgetController.instance;
     if (homeWidget != null) {
       settings.player.repeatMode.addListener(
         () => homeWidget.updateRepeatMode(settings.player.repeatMode.value, numberOfRepeats.value),
+      );
+      settings.player.shuffleQueue.addListener(
+        () => homeWidget.updateShuffle(settings.player.shuffleQueue.value),
       );
     }
 
@@ -348,13 +360,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void _refreshPlatformStatusDependers(MediaItem media, bool isPlaying, bool isFavourite) {
     SMTCController.instance?.updateMetadata(media);
     HomeWidgetController.instance?.updateAll(
-      media.displayTitle ?? media.title,
-      media.displaySubtitle ?? media.artist ?? media.album,
-      media.artUri,
-      isPlaying,
-      isFavourite,
-      playerRepeatMode,
-      numberOfRepeats.value,
+      title: media.displayTitle ?? media.title,
+      message: media.displaySubtitle ?? media.artist ?? media.album,
+      imageFileUri: media.artUri,
+      isPlaying: isPlaying,
+      isFavourite: isFavourite,
+      repeatMode: playerRepeatMode,
+      repeatCount: numberOfRepeats.value,
+      shuffle: settings.player.shuffleQueue.value,
     );
     _refreshWindowsTaskbar(isPlaying, isFavourite);
     _refreshTrayService(isPlaying, isFavourite);
@@ -553,7 +566,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       ].execute();
     } else {
       refreshNotification(currentItem.value);
-      await QueueController.inst.updateLatestQueue(currentQueue.value, source: latestQueueSource);
+      await QueueController.inst.updateLatestQueue(currentQueue.value, originalIndices: currentQueue.originalIndices, source: latestQueueSource);
     }
   }
 
@@ -622,11 +635,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required Iterable<Q> queue,
     bool shuffle = false,
     bool shuffleKeepingItem = false,
+    List<int>? originalIndices,
     bool startPlaying = true,
     int? maximumItems,
     void Function()? onQueueEmpty,
     void Function()? onIndexAndQueueSame,
-    void Function(List<Q> finalizedQueue)? onQueueDifferent,
+    void Function(List<Q> finalizedQueue, List<int>? originalIndices)? onQueueDifferent,
     void Function(Q currentItem)? onAssigningCurrentItem,
     bool Function(Q? currentItem, Q itemToPlay)? canRestructureQueueOnly,
     void Function()? onRestructuringQueue,
@@ -640,6 +654,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       maximumItems: maximumItems,
       shuffle: shuffle,
       shuffleKeepingItem: shuffleKeepingItem,
+      originalIndices: originalIndices,
       onIndexAndQueueSame: onIndexAndQueueSame,
       onQueueDifferent: onQueueDifferent,
       onQueueEmpty: onQueueEmpty,
@@ -2151,6 +2166,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
+  void onShuffleModeChange(bool shuffled) {
+    settings.player.save(shuffleQueue: shuffled);
+  }
+
+  @override
   void onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) {
     final newSeconds = totalTimeInSeconds[key] ?? 0;
     ListenTimeController.inst.onSecond(key);
@@ -2265,10 +2285,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   PlayerRepeatMode get playerRepeatMode => settings.player.repeatMode.value;
 
-  @override
-  bool get shuffleReflectInQueue => settings.player.shuffleReflectInQueue.value;
+  // @override
+  // bool get shuffleReflectInQueue => settings.player.shuffleReflectInQueue.value;
 
-  bool get isShuffleReflectingInQueue => playerRepeatMode == PlayerRepeatMode.shuffle && shuffleReflectInQueue;
+  // bool get isShuffleReflectingInQueue => playerRepeatMode == PlayerRepeatMode.shuffle && shuffleReflectInQueue;
 
   @override
   bool get jumpToFirstItemAfterFinishingQueue => settings.player.jumpToFirstTrackAfterFinishingQueue.value;
@@ -2468,7 +2488,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
     switch (name) {
       case HomeWidgetController.actionShuffle:
-        await shuffleNextItems();
+        // await shuffleNextItems();
+        settings.player.save(shuffleQueue: !settings.player.shuffleQueue.value);
       case HomeWidgetController.actionCycleRepeat:
         settings.player.save(repeatMode: settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values));
       default:

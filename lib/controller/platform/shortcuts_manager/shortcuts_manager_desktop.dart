@@ -195,10 +195,15 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       control: true,
       shift: true,
       callback: () {
-        final shuffleAll = settings.player.shuffleAllTracks.value;
-        Player.inst.shuffleTracks(shuffleAll);
+        // final shuffleAll = settings.player.shuffleAllTracks.value;
+        // Player.inst.shuffleTracks(shuffleAll);
+        // _showSnack(
+        //   message: "${shuffleAll ? lang.shuffleAll : lang.shuffleNext}: ${lang.done}",
+        // );
+        final shuffleQueue = !settings.player.shuffleQueue.value;
+        settings.player.save(shuffleQueue: shuffleQueue);
         _showSnack(
-          message: "${shuffleAll ? lang.shuffleAll : lang.shuffleNext}: ${lang.done}",
+          message: "${lang.shuffle}: ${shuffleQueue ? '✓' : '✗'}",
         );
       },
       title: () => lang.shuffle,

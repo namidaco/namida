@@ -267,13 +267,13 @@ class SchwarzConfigActivity : Activity() {
     optionsHost.switch("Favourite", config.showFavourite) {
       config = config.copy(showFavourite = it)
     }
-    optionsHost.switch("Shuffle queue", config.showShuffle) { config = config.copy(showShuffle = it) }
     optionsHost.switch("Previous", config.showPrevious) { config = config.copy(showPrevious = it) }
     optionsHost.switch("Play / Pause", config.showPlayPause) {
       config = config.copy(showPlayPause = it)
     }
     optionsHost.switch("Next", config.showNext) { config = config.copy(showNext = it) }
     optionsHost.switch("Repeat mode", config.showRepeat) { config = config.copy(showRepeat = it) }
+    optionsHost.switch("Shuffle", config.showShuffle) { config = config.copy(showShuffle = it) }
     optionsHost.switch("Stop", config.showStop) { config = config.copy(showStop = it) }
 
     optionsHost.section("Tap actions")
@@ -378,6 +378,7 @@ class SchwarzConfigActivity : Activity() {
       isFav = live?.isFav ?: true,
       repeat = live?.repeat ?: WidgetRepeat.ALL,
       repeatCount = live?.repeatCount ?: 3,
+      shuffle = live?.shuffle ?: true,
       imagePath = live?.imagePath ?: sampleArtworkPath(),
     )
   }

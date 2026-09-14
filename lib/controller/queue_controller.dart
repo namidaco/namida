@@ -149,14 +149,16 @@ class QueueController {
     await _saveQueueToStorage(newQueue);
   }
 
-  Future<void> updateLatestQueue(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
+  /// [originalIndices] is provided when the queue is shuffled, queues map saves the original order.
+  Future<void> updateLatestQueue(List<Playable> items, {required List<int>? originalIndices, required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
     _sessionQueueDate = 0;
     _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
+    final validOriginalIndices = originalIndices != null && originalIndices.length == items.length ? originalIndices : null;
     await Future.wait([
-      _saveLatestQueueToStorage(items),
+      _saveLatestQueueToStorage(items, validOriginalIndices),
       if (await _allowSavingQueue(items.length))
         _updateLatestQueueInsideMap(
-          items,
+          validOriginalIndices == null ? items : _toOriginalOrder(items, validOriginalIndices),
           source: source,
           homePageItem: homePageItem,
         ),
@@ -324,8 +326,8 @@ class QueueController {
 
   /// Assigns the last queue to the [Player]
   Future<void> _prepareLatestQueueAsync() async {
-    final latestQueue = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
-    if (latestQueue == null || latestQueue.isEmpty) return;
+    final (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
+    if (latestQueue.isEmpty) return;
 
     int index = settings.extra.lastPlayedIndex;
     if (index > latestQueue.length - 1) index = 0;
@@ -336,14 +338,24 @@ class QueueController {
       index,
       latestQueue,
       QueueSource.playerQueue,
+      originalIndices: originalIndices,
       startPlaying: startPlaying,
       updateQueue: false,
       maximumItems: null,
     );
   }
 
-  static List<Playable>? _prepareLatestQueueSync(String filePath) {
+  static List<Playable> _toOriginalOrder(List<Playable> items, List<int> originalIndices) {
+    final ordered = List<Playable>.of(items);
+    for (int i = 0; i < items.length; i++) {
+      ordered[originalIndices[i]] = items[i];
+    }
+    return ordered;
+  }
+
+  static (List<Playable>, List<int>?) _prepareLatestQueueSync(String filePath) {
     final latestQueue = <Playable>[];
+    List<int>? originalIndices = <int>[];
     try {
       final items = File(filePath).readAsJsonSync() as List?;
       if (items != null) {
@@ -353,11 +365,19 @@ class QueueController {
           final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
           if (item != null) {
             latestQueue.add(item);
+            if (originalIndices != null) {
+              final originalIndex = e[_LatestQueueSaver._kOriginalIndex];
+              if (originalIndex is int) {
+                originalIndices.add(originalIndex);
+              } else {
+                originalIndices = null;
+              }
+            }
           }
         }
       }
     } catch (_) {}
-    return latestQueue;
+    return (latestQueue, originalIndices);
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
@@ -369,17 +389,33 @@ class QueueController {
     executeAfter: const Duration(seconds: 2),
     considerRapidAfterNExecutions: 1,
   );
-  Future<void> _saveLatestQueueToStorage(List<Playable> items) async {
+  Future<void> _saveLatestQueueToStorage(List<Playable> items, List<int>? originalIndices) async {
     return _queueFnLimiter.executeFuture(() async {
       try {
         final file = await File(AppPaths.LATEST_QUEUE).create(recursive: true);
-        var encoder = JsonEncoder(
-          (e) => {
-            'p': (e as Playable).toJson(),
-            't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
-          },
-        );
-        await file.writeAsString(encoder.convert(items));
+        final String content;
+        if (originalIndices != null && originalIndices.length == items.length) {
+          final encoder = JsonEncoder(
+            (e) {
+              final (item, originalIndex) = e as (Playable, int);
+              return {
+                'p': item.toJson(),
+                't': _LatestQueueSaver._typesMapLookup[item.runtimeType],
+                _LatestQueueSaver._kOriginalIndex: originalIndex,
+              };
+            },
+          );
+          content = encoder.convert(List.generate(items.length, (i) => (items[i], originalIndices[i]), growable: false));
+        } else {
+          final encoder = JsonEncoder(
+            (e) => {
+              'p': (e as Playable).toJson(),
+              't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+            },
+          );
+          content = encoder.convert(items);
+        }
+        await file.writeAsString(content);
       } catch (e) {
         printy(e, isError: true);
       }
@@ -603,6 +639,8 @@ class _LatestQueueSaver {
   static const _kTypeTrack = 'tr';
   static const _kTypeTrackWithDate = 'twd';
   static const _kTypeYTVideo = 'ytv';
+
+  static const _kOriginalIndex = 'o';
 
   static final _typesBuilderMapLookup = <String, Playable Function(dynamic p)>{
     _LatestQueueSaver._kTypeVideo: (p) => Video.explicit(p),

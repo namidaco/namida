@@ -570,7 +570,7 @@ extension PlayerRepeatModeUtils on PlayerRepeatMode {
     PlayerRepeatMode.one => lang.repeatModeOne,
     PlayerRepeatMode.all => lang.repeatModeAll,
     PlayerRepeatMode.allShuffle => "${lang.repeatModeAll} (${lang.shuffle})",
-    PlayerRepeatMode.shuffle => lang.shuffle,
+    // PlayerRepeatMode.shuffle => lang.shuffle,
     PlayerRepeatMode.forNtimes => lang.repeatForNTimes(number: numberOfRepeats ?? Player.inst.numberOfRepeats.value),
   };
 }
@@ -2646,16 +2646,17 @@ extension PlayerRepeatModeL10n on PlayerRepeatMode {
     PlayerRepeatMode.one => Broken.repeate_one,
     PlayerRepeatMode.all => Broken.repeat,
     PlayerRepeatMode.allShuffle => Broken.repeat,
-    PlayerRepeatMode.shuffle => Broken.shuffle,
+    // PlayerRepeatMode.shuffle => Broken.shuffle,
     PlayerRepeatMode.forNtimes => Broken.status,
   };
 
-  IconData? toSecondaryIcon({bool shuffleReflectInQueue = false}) => switch (this) {
+  // IconData? toSecondaryIcon({bool shuffleReflectInQueue = false}) => switch (this) {
+  IconData? toSecondaryIcon() => switch (this) {
     PlayerRepeatMode.none => null,
     PlayerRepeatMode.one => null,
     PlayerRepeatMode.all => null,
     PlayerRepeatMode.allShuffle => Broken.shuffle,
-    PlayerRepeatMode.shuffle => shuffleReflectInQueue ? Broken.task : null,
+    // PlayerRepeatMode.shuffle => shuffleReflectInQueue ? Broken.task : null,
     PlayerRepeatMode.forNtimes => null,
   };
 }

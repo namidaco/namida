@@ -31,11 +31,10 @@ class _PlayerSettings with SettingsFileWriter {
   final crossFadeAutoTriggerSeconds = 5.obs;
   final playOnNextPrev = true.obs;
   final skipSilenceEnabled = false.obs;
-  final shuffleAllTracks = false.obs;
   final pauseOnVolume0 = true.obs;
   final jumpToFirstTrackAfterFinishingQueue = false.obs;
   final repeatMode = PlayerRepeatMode.none.obs;
-  final shuffleReflectInQueue = false.obs;
+  final shuffleQueue = false.obs;
   final infiniyQueueOnNextPrevious = true.obs;
   final displayRemainingDurInsteadOfTotal = false.obs;
   final displayActualPositionWhenSeeking = false.obs;
@@ -79,11 +78,10 @@ class _PlayerSettings with SettingsFileWriter {
     int? crossFadeAutoTriggerSeconds,
     bool? playOnNextPrev,
     bool? skipSilenceEnabled,
-    bool? shuffleAllTracks,
     bool? pauseOnVolume0,
     bool? jumpToFirstTrackAfterFinishingQueue,
     PlayerRepeatMode? repeatMode,
-    bool? shuffleReflectInQueue,
+    bool? shuffleQueue,
     KillAppMode? killAfterDismissingApp,
     bool? lockscreenArtwork,
     ReplayGainType? replayGainType,
@@ -117,11 +115,10 @@ class _PlayerSettings with SettingsFileWriter {
     if (crossFadeAutoTriggerSeconds != null) this.crossFadeAutoTriggerSeconds.value = crossFadeAutoTriggerSeconds;
     if (playOnNextPrev != null) this.playOnNextPrev.value = playOnNextPrev;
     if (skipSilenceEnabled != null) this.skipSilenceEnabled.value = skipSilenceEnabled;
-    if (shuffleAllTracks != null) this.shuffleAllTracks.value = shuffleAllTracks;
     if (pauseOnVolume0 != null) this.pauseOnVolume0.value = pauseOnVolume0;
     if (jumpToFirstTrackAfterFinishingQueue != null) this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
     if (repeatMode != null) this.repeatMode.value = repeatMode;
-    if (shuffleReflectInQueue != null) this.shuffleReflectInQueue.value = shuffleReflectInQueue;
+    if (shuffleQueue != null) this.shuffleQueue.value = shuffleQueue;
     if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
     if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
     if (replayGainType != null) this.replayGainType.value = replayGainType;
@@ -175,11 +172,15 @@ class _PlayerSettings with SettingsFileWriter {
       crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
       playOnNextPrev.value = json['playOnNextPrev'] ?? playOnNextPrev.value;
       skipSilenceEnabled.value = json['skipSilenceEnabled'] ?? skipSilenceEnabled.value;
-      shuffleAllTracks.value = json['shuffleAllTracks'] ?? shuffleAllTracks.value;
       pauseOnVolume0.value = json['pauseOnVolume0'] ?? pauseOnVolume0.value;
       jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
       repeatMode.value = PlayerRepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
-      shuffleReflectInQueue.value = json['shuffleReflectInQueue'] ?? shuffleReflectInQueue.value;
+      shuffleQueue.value = json['shuffleQueue'] ?? shuffleQueue.value;
+      // -- backwards compatibility
+      if (json['repeatMode'] == 'shuffle') {
+        repeatMode.value = PlayerRepeatMode.all;
+        shuffleQueue.value = true;
+      }
       infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
       displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
       displayActualPositionWhenSeeking.value = json['displayActualPositionWhenSeeking'] ?? displayActualPositionWhenSeeking.value;
@@ -236,11 +237,10 @@ class _PlayerSettings with SettingsFileWriter {
     'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
     'playOnNextPrev': playOnNextPrev.value,
     'skipSilenceEnabled': skipSilenceEnabled.value,
-    'shuffleAllTracks': shuffleAllTracks.value,
     'pauseOnVolume0': pauseOnVolume0.value,
     'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
     'repeatMode': repeatMode.value.name,
-    'shuffleReflectInQueue': shuffleReflectInQueue.value,
+    'shuffleQueue': shuffleQueue.value,
     'killAfterDismissingApp': killAfterDismissingApp.value.name,
     'lockscreenArtwork': lockscreenArtwork.value,
     'replayGainType': replayGainType.value.name,

@@ -139,7 +139,7 @@ class TrayIcons {
       PlayerRepeatMode.forNtimes => repeatForNTimes,
       PlayerRepeatMode.all => repeatAll,
       PlayerRepeatMode.allShuffle => repeatAllShuffle,
-      PlayerRepeatMode.shuffle => repeatShuffle,
+      // PlayerRepeatMode.shuffle => repeatShuffle,
     };
   }
 }

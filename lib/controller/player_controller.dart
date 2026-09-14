@@ -71,6 +71,7 @@ class Player {
   }
 
   RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue.queueRx;
+  List<int>? get currentQueueOriginalIndices => _audioHandler.currentQueue.originalIndices;
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
 
   RxBaseCore<List<AudioTrack>?> get audioTracks => _audioHandler.audioTracks;
@@ -761,6 +762,7 @@ class Player {
     QueueSourceBase source, {
     HomePageItems? homePageItem,
     bool shuffle = false,
+    List<int>? originalIndices,
     bool startPlaying = true,
     bool updateQueue = true,
     int? maximumItems,
@@ -827,10 +829,11 @@ class Player {
       queue: queue,
       maximumItems: maximumItems,
       onIndexAndQueueSame: togglePlayPauseExclusive,
-      onQueueDifferent: (finalizedQueue) {
+      onQueueDifferent: (finalizedQueue, originalIndices) {
         if (updateQueue) {
           QueueController.inst.updateLatestQueue(
             finalizedQueue,
+            originalIndices: originalIndices,
             source: source,
             homePageItem: homePageItem,
           );
@@ -839,7 +842,8 @@ class Player {
       onQueueEmpty: togglePlayPauseExclusive,
       startPlaying: startPlaying,
       shuffle: shuffle,
-      shuffleKeepingItem: source != QueueSource.playerQueue && _audioHandler.isShuffleReflectingInQueue,
+      shuffleKeepingItem: source != QueueSource.playerQueue && _audioHandler.isQueueShuffled,
+      originalIndices: originalIndices,
       onAssigningCurrentItem: onAssigningCurrentItem,
       duplicateRemover: source == QueueSource.history || source == QueueSourceYoutubeID.ytHistory
           ? (item) {

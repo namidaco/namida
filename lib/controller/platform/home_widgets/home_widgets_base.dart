@@ -14,7 +14,17 @@ abstract class HomeWidgets {
   Future<void> updateIsPlaying(bool isPlaying);
   Future<void> updateIsFavourite(bool isFavourite);
   Future<void> updateRepeatMode(PlayerRepeatMode repeatMode, int repeatCount);
-  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite, PlayerRepeatMode repeatMode, int repeatCount);
+  Future<void> updateShuffle(bool shuffle);
+  Future<void> updateAll({
+    required String title,
+    required String? message,
+    required Uri? imageFileUri,
+    required bool isPlaying,
+    required bool isFavourite,
+    required PlayerRepeatMode repeatMode,
+    required int repeatCount,
+    required bool shuffle,
+  });
 }
 
 enum _HomeWidgetKey {
@@ -25,4 +35,5 @@ enum _HomeWidgetKey {
   favourite,
   repeat,
   repeatCount,
+  shuffle,
 }

@@ -99,6 +99,7 @@ internal class WidgetPayload(
   val isFav: Boolean,
   val repeat: WidgetRepeat,
   val repeatCount: Int,
+  val shuffle: Boolean,
   val imagePath: String?,
 ) {
   companion object {
@@ -111,6 +112,7 @@ internal class WidgetPayload(
         isFav = data.getBoolean("favourite", false),
         repeat = WidgetRepeat.parse(data.getString("repeat", null)),
         repeatCount = data.getInt("repeatCount", 1),
+        shuffle = data.getBoolean("shuffle", false),
         imagePath = data.getString("image", null),
       )
     }
@@ -123,8 +125,8 @@ internal enum class WidgetRepeat(val drawableRes: Int, val secondaryRes: Int?) {
   ONE(R.drawable.repeate_one, null),
   FOR_N_TIMES(R.drawable.status, null),
   ALL(R.drawable.repeat, null),
-  ALL_SHUFFLE(R.drawable.repeat, R.drawable.shuffle),
-  SHUFFLE(R.drawable.shuffle, null);
+  ALL_SHUFFLE(R.drawable.repeat, R.drawable.shuffle);
+  // SHUFFLE(R.drawable.shuffle, null);
 
   companion object {
     fun parse(name: String?): WidgetRepeat =
@@ -133,7 +135,7 @@ internal enum class WidgetRepeat(val drawableRes: Int, val secondaryRes: Int?) {
         "forNtimes" -> FOR_N_TIMES
         "all" -> ALL
         "allShuffle" -> ALL_SHUFFLE
-        "shuffle" -> SHUFFLE
+        // "shuffle" -> SHUFFLE
         else -> NONE
       }
   }
@@ -411,11 +413,11 @@ private fun Titles(
 
 private enum class Ctrl {
   FAVOURITE,
-  SHUFFLE,
   PREVIOUS,
   PLAY_PAUSE,
   NEXT,
   REPEAT,
+  SHUFFLE,
   STOP;
 
   fun drawableRes(payload: WidgetPayload): Int =
@@ -450,7 +452,7 @@ private enum class Ctrl {
   fun contentDescription(payload: WidgetPayload): String =
     when (this) {
       FAVOURITE -> if (payload.isFav) "Unfavourite" else "Set Favourite"
-      SHUFFLE -> "Shuffle queue"
+      SHUFFLE -> "Shuffle"
       PREVIOUS -> "Previous"
       PLAY_PAUSE -> if (payload.isPlaying) "Pause" else "Play"
       NEXT -> "Next"
@@ -460,7 +462,7 @@ private enum class Ctrl {
 
   /** off-state controls are dimmed instead of getting their own drawable. */
   fun isDimmed(payload: WidgetPayload): Boolean =
-    this == REPEAT && payload.repeat == WidgetRepeat.NONE
+    (this == REPEAT && payload.repeat == WidgetRepeat.NONE) || (this == SHUFFLE && !payload.shuffle)
 
   /** the heart glyph is visually chunkier, give it a touch more breathing room. */
   fun iconPaddingScale(): Float = if (this == FAVOURITE) 1.25f else 1f
@@ -507,11 +509,11 @@ private fun MediaControls(
 ) {
   val enabled = ArrayList<Ctrl>(Ctrl.entries.size)
   if (config.showFavourite) enabled.add(Ctrl.FAVOURITE)
-  if (config.showShuffle) enabled.add(Ctrl.SHUFFLE)
   if (config.showPrevious) enabled.add(Ctrl.PREVIOUS)
   if (config.showPlayPause) enabled.add(Ctrl.PLAY_PAUSE)
   if (config.showNext) enabled.add(Ctrl.NEXT)
   if (config.showRepeat) enabled.add(Ctrl.REPEAT)
+  if (config.showShuffle) enabled.add(Ctrl.SHUFFLE)
   if (config.showStop) enabled.add(Ctrl.STOP)
 
   // -- `availableWidth` comes from LocalSize, which some launchers under-report. it is only

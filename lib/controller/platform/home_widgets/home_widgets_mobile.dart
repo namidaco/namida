@@ -18,6 +18,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
   bool? _lastIsFavourite;
   PlayerRepeatMode? _lastRepeatMode;
   int? _lastRepeatCount;
+  bool? _lastShuffle;
 
   @override
   Future<void> updateIsPlaying(bool isPlaying) async {
@@ -49,7 +50,24 @@ class _HomeWidgetsMobile extends HomeWidgets {
   }
 
   @override
-  Future<void> updateAll(String title, String? message, Uri? imageFileUri, bool isPlaying, bool isFavourite, PlayerRepeatMode repeatMode, int repeatCount) async {
+  Future<void> updateShuffle(bool shuffle) async {
+    if (shuffle == _lastShuffle) return;
+    _lastShuffle = shuffle;
+    await HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.shuffle.name, shuffle);
+    await _refresh();
+  }
+
+  @override
+  Future<void> updateAll({
+    required String title,
+    required String? message,
+    required Uri? imageFileUri,
+    required bool isPlaying,
+    required bool isFavourite,
+    required PlayerRepeatMode repeatMode,
+    required int repeatCount,
+    required bool shuffle,
+  }) async {
     final image = imageFileUri?.toString();
     final writes = <Future<bool?>>[
       if (title != _lastTitle) HomeWidget.saveWidgetData<String>(_HomeWidgetKey.title.name, title),
@@ -59,6 +77,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
       if (isFavourite != _lastIsFavourite) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.favourite.name, isFavourite),
       if (repeatMode != _lastRepeatMode) HomeWidget.saveWidgetData<String>(_HomeWidgetKey.repeat.name, repeatMode.name),
       if (repeatCount != _lastRepeatCount) HomeWidget.saveWidgetData<int>(_HomeWidgetKey.repeatCount.name, repeatCount),
+      if (shuffle != _lastShuffle) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.shuffle.name, shuffle),
     ];
     if (writes.isEmpty) return;
     _lastTitle = title;
@@ -68,6 +87,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
     _lastIsFavourite = isFavourite;
     _lastRepeatMode = repeatMode;
     _lastRepeatCount = repeatCount;
+    _lastShuffle = shuffle;
     await Future.wait(writes);
     await _refresh();
   }

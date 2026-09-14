@@ -5855,16 +5855,17 @@ class QueueUtilsRow extends StatelessWidget {
         GestureDetector(
           onLongPressStart: (details) async {
             Widget buildButton(String title, IconData icon, bool isShuffleAll) {
-              final enabled = isShuffleAll == settings.player.shuffleAllTracks.value;
+              // final enabled = isShuffleAll == settings.player.shuffleAllTracks.value;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                 child: NamidaInkWell(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                   borderRadius: 10.0,
-                  bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
+                  // bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
                   onTap: () {
-                    settings.player.save(shuffleAllTracks: isShuffleAll);
+                    // settings.player.save(shuffleAllTracks: isShuffleAll);
                     NamidaNavigator.inst.popMenu();
+                    Player.inst.shuffleTracks(isShuffleAll);
                   },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -5899,10 +5900,15 @@ class QueueUtilsRow extends StatelessWidget {
               context,
             );
           },
-          child: NamidaButton(
-            text: lang.shuffle,
-            icon: Broken.shuffle,
-            onTap: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
+          child: ObxO(
+            rx: settings.player.shuffleQueue,
+            builder: (context, shuffleQueue) => NamidaButton(
+              text: lang.shuffle,
+              icon: Broken.shuffle,
+              colors: shuffleQueue ? NamidaButtonColors.selected : NamidaButtonColors.normal,
+              // onTap: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
+              onTap: () => settings.player.save(shuffleQueue: !shuffleQueue),
+            ),
           ),
         ),
         const SizedBox(width: 12.0),
@@ -6016,24 +6022,24 @@ class RepeatModeIconButton extends StatelessWidget {
                     iconSize: 18.0,
                     horizontalPadding: 4.0,
                   ),
-                if (repeatMode == PlayerRepeatMode.shuffle)
-                  ObxO(
-                    rx: settings.player.shuffleReflectInQueue,
-                    builder: (context, shuffleReflectInQueue) => NamidaTooltip(
-                      message: () => lang.reflectInQueue,
-                      child: NamidaInkWell(
-                        padding: const EdgeInsets.all(6.0),
-                        borderRadius: 8.0,
-                        bgColor: shuffleReflectInQueue ? CurrentColor.inst.color.withOpacityExt(0.4) : null,
-                        onTap: () => settings.player.save(shuffleReflectInQueue: !shuffleReflectInQueue),
-                        child: Icon(
-                          Broken.task,
-                          size: 18.0,
-                          color: shuffleReflectInQueue ? iconColor : iconColor.withOpacityExt(0.5),
-                        ),
-                      ),
-                    ),
-                  ),
+                // if (repeatMode == PlayerRepeatMode.shuffle)
+                //   ObxO(
+                //     rx: settings.player.shuffleReflectInQueue,
+                //     builder: (context, shuffleReflectInQueue) => NamidaTooltip(
+                //       message: () => lang.reflectInQueue,
+                //       child: NamidaInkWell(
+                //         padding: const EdgeInsets.all(6.0),
+                //         borderRadius: 8.0,
+                //         bgColor: shuffleReflectInQueue ? CurrentColor.inst.color.withOpacityExt(0.4) : null,
+                //         onTap: () => settings.player.save(shuffleReflectInQueue: !shuffleReflectInQueue),
+                //         child: Icon(
+                //           Broken.task,
+                //           size: 18.0,
+                //           color: shuffleReflectInQueue ? iconColor : iconColor.withOpacityExt(0.5),
+                //         ),
+                //       ),
+                //     ),
+                //   ),
               ],
             ),
           ),
@@ -6050,76 +6056,72 @@ class RepeatModeIconButton extends StatelessWidget {
 
     final rawWidget = ObxO(
       rx: settings.player.repeatMode,
-      builder: (context, repeatMode) => ObxPrefer(
-        rx: settings.player.shuffleReflectInQueue,
-        enabled: repeatMode == PlayerRepeatMode.shuffle,
-        builder: (context, shuffleReflectInQueue) {
-          final mainIcon = repeatMode.toMainIcon();
-          final secondaryIcon = repeatMode.toSecondaryIcon(shuffleReflectInQueue: shuffleReflectInQueue ?? false);
+      builder: (context, repeatMode) {
+        final mainIcon = repeatMode.toMainIcon();
+        final secondaryIcon = repeatMode.toSecondaryIcon();
 
-          final child = Stack(
-            alignment: Alignment.center,
-            children: [
-              secondaryIcon != null
-                  ? StackedIcon(
-                      baseIcon: mainIcon,
-                      secondaryIcon: secondaryIcon,
-                      baseIconColor: iconColor,
-                      secondaryIconColor: iconColor,
-                      iconSize: iconSize,
-                      secondaryIconSize: iconSize * 0.6,
-                    )
-                  : Icon(
-                      mainIcon,
-                      size: iconSize,
-                      color: iconColor,
-                    ),
-              if (repeatMode == PlayerRepeatMode.forNtimes)
-                ObxO(
-                  rx: Player.inst.numberOfRepeats,
-                  builder: (context, numberOfRepeats) => Text(
-                    '$numberOfRepeats',
-                    style: textTheme.displaySmall?.copyWith(color: iconColor),
+        final child = Stack(
+          alignment: Alignment.center,
+          children: [
+            secondaryIcon != null
+                ? StackedIcon(
+                    baseIcon: mainIcon,
+                    secondaryIcon: secondaryIcon,
+                    baseIconColor: iconColor,
+                    secondaryIconColor: iconColor,
+                    iconSize: iconSize,
+                    secondaryIconSize: iconSize * 0.6,
+                  )
+                : Icon(
+                    mainIcon,
+                    size: iconSize,
+                    color: iconColor,
                   ),
+            if (repeatMode == PlayerRepeatMode.forNtimes)
+              ObxO(
+                rx: Player.inst.numberOfRepeats,
+                builder: (context, numberOfRepeats) => Text(
+                  '$numberOfRepeats',
+                  style: textTheme.displaySmall?.copyWith(color: iconColor),
                 ),
-            ],
+              ),
+          ],
+        );
+        if (builder != null) {
+          return builder!(
+            child,
+            null,
+            () {
+              onPressed?.call();
+              _onPressed(context);
+            },
           );
-          if (builder != null) {
-            return builder!(
-              child,
-              null,
-              () {
-                onPressed?.call();
-                _onPressed(context);
-              },
-            );
-          }
+        }
 
-          return compact
-              ? NamidaIconButton(
-                  icon: null,
-                  verticalPadding: 2.0,
-                  horizontalPadding: 4.0,
-                  padding: EdgeInsets.zero,
-                  iconSize: iconSize,
-                  onPressed: () {
-                    onPressed?.call();
-                    _onPressed(context);
-                  },
-                  child: child,
-                )
-              : IconButton(
-                  visualDensity: VisualDensity.compact,
-                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                  padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
-                  onPressed: () {
-                    onPressed?.call();
-                    _onPressed(context);
-                  },
-                  icon: child,
-                );
-        },
-      ),
+        return compact
+            ? NamidaIconButton(
+                icon: null,
+                verticalPadding: 2.0,
+                horizontalPadding: 4.0,
+                padding: EdgeInsets.zero,
+                iconSize: iconSize,
+                onPressed: () {
+                  onPressed?.call();
+                  _onPressed(context);
+                },
+                child: child,
+              )
+            : IconButton(
+                visualDensity: VisualDensity.compact,
+                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
+                onPressed: () {
+                  onPressed?.call();
+                  _onPressed(context);
+                },
+                icon: child,
+              );
+      },
     );
     return NamidaPopupWrapper(
       onPop: () {
