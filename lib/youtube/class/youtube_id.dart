@@ -19,6 +19,9 @@ class YoutubeID with ItemWithDate, PlaylistItemWithDate implements Playable<Map<
   @override
   String get key => id;
 
+  @override
+  PlayableType get playableType => PlayableType.ytVideo;
+
   final String id;
   final YTWatch? watchNull;
   final PlaylistID? playlistID;

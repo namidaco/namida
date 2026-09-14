@@ -31,13 +31,26 @@ class Queue {
           return Track.fromJson(e as String, isVideo: false);
         }).toList() ??
         [];
+    return Queue.fromMeta(json, finalTracks);
+  }
+
+  factory Queue.fromMeta(Map<String, dynamic> json, List<Track> tracks) {
     return Queue(
       source: QueueSource.fromJson(json['source']) ?? QueueSourceYoutubeID.fromJson(json['source']) ?? QueueSource.others(null),
       homePageItem: HomePageItems.values.getEnum(json['homePageItem'] ?? ''),
       date: json['date'] ?? DateTime(1970),
       isFav: json['isFav'] ?? false,
-      tracks: finalTracks,
+      tracks: tracks,
     );
+  }
+
+  Map<String, dynamic> metaToJson() {
+    return {
+      'source': source.toJson(),
+      'homePageItem': homePageItem?.name,
+      'date': date,
+      'isFav': isFav,
+    };
   }
 
   /// // Saves an empty queue in case its the same as the AllTracksList.
@@ -45,10 +58,7 @@ class Queue {
   /// BREAKING(>v2.5.6): no longer saving allTracks as empty queue.
   Map<String, dynamic> toJson() {
     return {
-      'source': source.toJson(),
-      'homePageItem': homePageItem?.name,
-      'date': date,
-      'isFav': isFav,
+      ...metaToJson(),
       'tracks': tracks.map((e) {
         return e is Video
             ? {

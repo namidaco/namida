@@ -214,6 +214,9 @@ class Video extends Track {
   @override
   Video get track => this;
 
+  @override
+  PlayableType get playableType => PlayableType.video;
+
   Video.explicit(super.path) : super.explicit();
 
   @override

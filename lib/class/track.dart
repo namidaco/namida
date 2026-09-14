@@ -33,6 +33,9 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate, 
   @override
   TrackWithDate? get trackWithDate => this;
 
+  @override
+  PlayableType get playableType => PlayableType.trackWithDate;
+
   final int dateAdded;
   final Track _track;
   final QueueSourceBase? queueSource;
@@ -211,10 +214,22 @@ class PlayableItemStats {
   }
 }
 
+enum PlayableType {
+  track('tr'),
+  video('v'),
+  trackWithDate('twd'),
+  ytVideo('ytv');
+
+  const PlayableType(this.jsonKey);
+  final String jsonKey;
+}
+
 abstract class Playable<T extends Object> {
   const Playable();
 
   String get key;
+
+  PlayableType get playableType;
 
   T toJson();
 }
@@ -250,6 +265,9 @@ class Track extends Selectable<String> {
 
   @override
   TrackWithDate? get trackWithDate => null;
+
+  @override
+  PlayableType get playableType => PlayableType.track;
 
   late final isPhysical = !isNetwork;
   late final isNetwork = path.startsWith('http');

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
@@ -289,10 +290,18 @@ class QueueController {
     final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
     final files = Directory(path).listSyncSafe();
     for (final f in files) {
-      if (f is File) {
+      if (f is File && !f.path.endsWith(_kTempFileSuffix)) {
         try {
-          final response = f.readAsJsonSync(ensureExists: false);
-          final q = Queue.fromJson(response);
+          final bytes = f.readAsBytesSync();
+          final Queue q;
+          if (bytes[0] == _QueueSerializer._kMagic) {
+            final decoded = _QueueSerializer.decode<Track>(bytes);
+            final meta = decoded.meta;
+            if (meta == null) continue;
+            q = Queue.fromMeta(meta, decoded.items);
+          } else {
+            q = Queue.fromJson(jsonDecode(utf8.decode(bytes)));
+          }
           map[q.date] = q;
           if (q.date > newestQueueDate) newestQueueDate = q.date;
         } catch (_) {}
@@ -354,34 +363,27 @@ class QueueController {
   }
 
   static (List<Playable>, List<int>?) _prepareLatestQueueSync(String filePath) {
-    final latestQueue = <Playable>[];
-    List<int>? originalIndices = <int>[];
     try {
-      final items = File(filePath).readAsJsonSync() as List?;
-      if (items != null) {
-        for (var e in items) {
-          final type = e['t'] as String;
-          final valueMap = e['p'];
-          final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
-          if (item != null) {
-            latestQueue.add(item);
-            if (originalIndices != null) {
-              final originalIndex = e[_LatestQueueSaver._kOriginalIndex];
-              if (originalIndex is int) {
-                originalIndices.add(originalIndex);
-              } else {
-                originalIndices = null;
-              }
-            }
-          }
-        }
+      final bytes = File(filePath).readAsBytesSync();
+      if (bytes.isNotEmpty) {
+        if (bytes[0] != _QueueSerializer._kMagic) return _QueueSerializer.decodeLegacyJson(bytes);
+        final decoded = _QueueSerializer.decode<Playable>(bytes);
+        return (decoded.items, decoded.originalIndices);
       }
     } catch (_) {}
-    return (latestQueue, originalIndices);
+    return (const [], null);
   }
 
   Future<void> _saveQueueToStorage(Queue queue) async {
-    await FileParts.join(AppDirs.QUEUES, '${queue.date}.json').writeAsJson(queue.toJson());
+    final bytes = _QueueSerializer.encode(queue.tracks, meta: queue.metaToJson());
+    await _writeAtomic(FileParts.joinPath(AppDirs.QUEUES, '${queue.date}.json'), bytes);
+  }
+
+  static const _kTempFileSuffix = '.tmp';
+
+  static Future<void> _writeAtomic(String path, Uint8List bytes) async {
+    final tempFile = await File('$path$_kTempFileSuffix').writeAsBytes(bytes, flush: true);
+    await tempFile.rename(path);
   }
 
   final _queueFnLimiter = FunctionExecuteLimiter(
@@ -392,30 +394,8 @@ class QueueController {
   Future<void> _saveLatestQueueToStorage(List<Playable> items, List<int>? originalIndices) async {
     return _queueFnLimiter.executeFuture(() async {
       try {
-        final file = await File(AppPaths.LATEST_QUEUE).create(recursive: true);
-        final String content;
-        if (originalIndices != null && originalIndices.length == items.length) {
-          final encoder = JsonEncoder(
-            (e) {
-              final (item, originalIndex) = e as (Playable, int);
-              return {
-                'p': item.toJson(),
-                't': _LatestQueueSaver._typesMapLookup[item.runtimeType],
-                _LatestQueueSaver._kOriginalIndex: originalIndex,
-              };
-            },
-          );
-          content = encoder.convert(List.generate(items.length, (i) => (items[i], originalIndices[i]), growable: false));
-        } else {
-          final encoder = JsonEncoder(
-            (e) => {
-              'p': (e as Playable).toJson(),
-              't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
-            },
-          );
-          content = encoder.convert(items);
-        }
-        await file.writeAsString(content);
+        final bytes = _QueueSerializer.encode(items, originalIndices: originalIndices);
+        await _writeAtomic(AppPaths.LATEST_QUEUE, bytes);
       } catch (e) {
         printy(e, isError: true);
       }
@@ -452,39 +432,40 @@ class QueueController {
   (Iterable<Map<String, dynamic>>, int, int)? buildPlayerQueueSyncPayload() {
     final queue = Player.inst.currentQueue.value;
     if (queue.isEmpty) return null;
-    final items = queue.map(
-      (e) => <String, dynamic>{
-        'p': e.toJson(),
-        't': _LatestQueueSaver._typesMapLookup[e.runtimeType],
+    final originalIndices = Player.inst.currentQueueOriginalIndices;
+    final withOriginal = originalIndices != null && originalIndices.length == queue.length;
+    final items = List.generate(
+      queue.length,
+      (i) {
+        final item = queue[i];
+        return <String, dynamic>{
+          'p': item.toJson(),
+          't': item.playableType.jsonKey,
+          if (withOriginal) _QueueSerializer._kOriginalIndex: originalIndices[i],
+        };
       },
+      growable: false,
     );
     return (items, _playerQueueModifiedTime, Player.inst.currentIndex.value);
   }
 
   Future<void> importPlayerQueue(Iterable<dynamic> items, int queueModifiedTime, int currentIndex, String senderDeviceId) async {
     final resolvedItems = <Playable>[];
+    List<int>? originalIndices = <int>[];
     for (final e in items) {
       final map = (e as Map).cast<String, dynamic>();
-      var type = map['t'] as String?;
+      final type = _QueueSerializer.typeFromJsonKey(map['t']);
       if (type == null) continue;
-      var payload = map['p'];
-
-      // -- resolve sender paths into local ones
-      switch (type) {
-        case _LatestQueueSaver._kTypeTrack || _LatestQueueSaver._kTypeVideo:
-          final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
-          if (resolved != null) {
-            payload = resolved.path;
-            type = resolved is Video ? _LatestQueueSaver._kTypeVideo : _LatestQueueSaver._kTypeTrack;
-          }
-        case _LatestQueueSaver._kTypeTrackWithDate:
-          payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
-        default:
-          break;
+      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, map['p'], senderDeviceId);
+      resolvedItems.add(_QueueSerializer.build(resolvedType, payload));
+      if (originalIndices != null) {
+        final originalIndex = map[_QueueSerializer._kOriginalIndex];
+        if (originalIndex is int) {
+          originalIndices.add(originalIndex);
+        } else {
+          originalIndices = null;
+        }
       }
-
-      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(payload);
-      if (item != null) resolvedItems.add(item);
     }
     if (resolvedItems.isEmpty) return;
     if (currentIndex < 0 || currentIndex >= resolvedItems.length) currentIndex = 0;
@@ -495,6 +476,7 @@ class QueueController {
         currentIndex,
         resolvedItems,
         QueueSource.playerQueue,
+        originalIndices: originalIndices,
       );
     } finally {
       _playerQueueModifiedTime = queueModifiedTime;
@@ -523,7 +505,7 @@ class _LatestPlayedForSourceManager {
       final map = entry.value;
       final type = map['t'] as String;
       final valueMap = map['p'];
-      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(valueMap);
+      final item = _QueueSerializer.buildFromJson(type, valueMap);
       if (item != null) {
         _mapRx.value[source] ??= item;
         final mt = map['_mt'] as int? ?? 0;
@@ -539,7 +521,7 @@ class _LatestPlayedForSourceManager {
     _modifiedTimesMap[source] = mt;
     await _dBManager.put(source.toDbKey(), {
       'p': item.toJson(),
-      't': _LatestQueueSaver._typesMapLookup[item.runtimeType],
+      't': item.playableType.jsonKey,
       '_mt': mt,
     });
   }
@@ -575,15 +557,13 @@ class _LatestPlayedForSourceManager {
   }
 
   Iterable<MapEntry<String, Map<String, dynamic>>> buildSyncEntries() {
-    return _mapRx.value.entries.map((e) {
-      final type = _LatestQueueSaver._typesMapLookup[e.value.runtimeType];
-      if (type == null) return null;
-      return MapEntry(e.key.toDbKey(), <String, dynamic>{
+    return _mapRx.value.entries.map(
+      (e) => MapEntry(e.key.toDbKey(), <String, dynamic>{
         'p': e.value.toJson(),
-        't': type,
+        't': e.value.playableType.jsonKey,
         '_mt': _modifiedTimesMap[e.key] ?? 0,
-      });
-    }).nonNulls;
+      }),
+    );
   }
 
   Future<void> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId) async {
@@ -598,33 +578,17 @@ class _LatestPlayedForSourceManager {
 
       if (_mapRx.value[source] != null && (_modifiedTimesMap[source] ?? 0) >= incomingMt) continue;
 
-      var type = incoming['t'] as String?;
+      final type = _QueueSerializer.typeFromJsonKey(incoming['t']);
       if (type == null) continue;
-      var payload = incoming['p'];
-
-      // -- resolve sender paths into local ones
-      switch (type) {
-        case _LatestQueueSaver._kTypeTrack || _LatestQueueSaver._kTypeVideo:
-          final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
-          if (resolved != null) {
-            payload = resolved.path;
-            type = resolved is Video ? _LatestQueueSaver._kTypeVideo : _LatestQueueSaver._kTypeTrack;
-          }
-        case _LatestQueueSaver._kTypeTrackWithDate:
-          payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
-        default:
-          break;
-      }
-
-      final item = _LatestQueueSaver._typesBuilderMapLookup[type]?.call(payload);
-      if (item == null) continue;
+      final (resolvedType, payload) = _QueueSerializer.resolveSyncPayload(type, incoming['p'], senderDeviceId);
+      final item = _QueueSerializer.build(resolvedType, payload);
 
       _mapRx.value[source] = item;
       _modifiedTimesMap[source] = incomingMt;
       anyChanged = true;
       await _dBManager.put(source.toDbKey(), {
         'p': payload,
-        't': type,
+        't': resolvedType.jsonKey,
         '_mt': incomingMt,
       });
     }
@@ -632,27 +596,153 @@ class _LatestPlayedForSourceManager {
   }
 }
 
-class _LatestQueueSaver {
-  const _LatestQueueSaver();
+/// Binary layout: `magic u8, flags u8, metaLength u32, meta utf8 json, count u32, items...`
+/// item: `type u8, [originalIndex u32], length u32, payload bytes`
+/// payload is the raw path for tracks/videos, utf8 json otherwise.
+class _QueueSerializer {
+  const _QueueSerializer();
 
-  static const _kTypeVideo = 'v';
-  static const _kTypeTrack = 'tr';
-  static const _kTypeTrackWithDate = 'twd';
-  static const _kTypeYTVideo = 'ytv';
+  static const _kMagic = 0x01;
+  static const _kFlagOriginalIndices = 0x01;
+
+  static final _kEmptyBytes = Uint8List(0);
 
   static const _kOriginalIndex = 'o';
 
-  static final _typesBuilderMapLookup = <String, Playable Function(dynamic p)>{
-    _LatestQueueSaver._kTypeVideo: (p) => Video.explicit(p),
-    _LatestQueueSaver._kTypeTrack: (p) => Track.explicit(p),
-    _LatestQueueSaver._kTypeTrackWithDate: (p) => TrackWithDate.fromJson(p),
-    _LatestQueueSaver._kTypeYTVideo: (p) => YoutubeID.fromJson(p),
+  static final _typesByJsonKey = <String, PlayableType>{for (final t in PlayableType.values) t.jsonKey: t};
+
+  static PlayableType? typeFromJsonKey(dynamic key) => _typesByJsonKey[key];
+
+  static Playable build(PlayableType type, dynamic payload) => switch (type) {
+    PlayableType.track => Track.explicit(payload),
+    PlayableType.video => Video.explicit(payload),
+    PlayableType.trackWithDate => TrackWithDate.fromJson(payload),
+    PlayableType.ytVideo => YoutubeID.fromJson(payload),
   };
 
-  static const _typesMapLookup = <Type, String>{
-    Video: _LatestQueueSaver._kTypeVideo,
-    Track: _LatestQueueSaver._kTypeTrack,
-    TrackWithDate: _LatestQueueSaver._kTypeTrackWithDate,
-    YoutubeID: _LatestQueueSaver._kTypeYTVideo,
-  };
+  static Playable? buildFromJson(dynamic typeKey, dynamic payload) {
+    final type = _typesByJsonKey[typeKey];
+    return type == null ? null : build(type, payload);
+  }
+
+  /// resolves sender paths into local ones
+  static (PlayableType, dynamic) resolveSyncPayload(PlayableType type, dynamic payload, String senderDeviceId) {
+    switch (type) {
+      case PlayableType.track || PlayableType.video:
+        final resolved = SyncPathResolver.resolveTrackByPath(senderDeviceId, payload as String);
+        if (resolved != null) return (resolved.playableType, resolved.path);
+      case PlayableType.trackWithDate:
+        payload = SyncPathResolver.resolveTrackWithDate(senderDeviceId, TrackWithDate.fromJson(payload)).toJson();
+      case PlayableType.ytVideo:
+        break;
+    }
+    return (type, payload);
+  }
+
+  static Uint8List encode(List<Playable> items, {List<int>? originalIndices, Map<String, dynamic>? meta}) {
+    final count = items.length;
+    final metaBytes = meta == null ? _kEmptyBytes : utf8.encode(jsonEncode(meta));
+    final payloads = List<Uint8List>.generate(count, (i) => _encodePayload(items[i]), growable: false);
+    final indices = originalIndices != null && originalIndices.length == count ? originalIndices : null;
+
+    int total = 10 + metaBytes.length + count * (indices != null ? 9 : 5);
+    for (int i = 0; i < count; i++) {
+      total += payloads[i].length;
+    }
+
+    final bytes = Uint8List(total);
+    final data = ByteData.sublistView(bytes);
+    bytes[0] = _kMagic;
+    bytes[1] = indices != null ? _kFlagOriginalIndices : 0;
+    int offset = _writeChunk(bytes, data, 2, metaBytes);
+    data.setUint32(offset, count, Endian.little);
+    offset += 4;
+
+    for (int i = 0; i < count; i++) {
+      bytes[offset++] = items[i].playableType.index;
+      if (indices != null) {
+        data.setUint32(offset, indices[i], Endian.little);
+        offset += 4;
+      }
+      offset = _writeChunk(bytes, data, offset, payloads[i]);
+    }
+    return bytes;
+  }
+
+  static int _writeChunk(Uint8List bytes, ByteData data, int offset, Uint8List chunk) {
+    data.setUint32(offset, chunk.length, Endian.little);
+    offset += 4;
+    bytes.setRange(offset, offset + chunk.length, chunk);
+    return offset + chunk.length;
+  }
+
+  static Uint8List _encodePayload(Playable item) {
+    final json = item.toJson();
+    return utf8.encode(json is String ? json : jsonEncode(json));
+  }
+
+  static ({List<T> items, List<int>? originalIndices, Map<String, dynamic>? meta}) decode<T extends Playable>(Uint8List bytes) {
+    final items = <T>[];
+    List<int>? originalIndices;
+    Map<String, dynamic>? meta;
+    try {
+      final data = ByteData.sublistView(bytes);
+      final hasIndices = bytes[1] & _kFlagOriginalIndices != 0;
+      if (hasIndices) originalIndices = <int>[];
+      int offset = 2;
+      final metaLength = data.getUint32(offset, Endian.little);
+      offset += 4;
+      if (metaLength > 0) {
+        meta = jsonDecode(utf8.decoder.convert(bytes, offset, offset + metaLength)) as Map<String, dynamic>;
+        offset += metaLength;
+      }
+      final count = data.getUint32(offset, Endian.little);
+      offset += 4;
+      final types = PlayableType.values;
+      for (int i = 0; i < count; i++) {
+        final type = types[bytes[offset++]];
+        int originalIndex = 0;
+        if (hasIndices) {
+          originalIndex = data.getUint32(offset, Endian.little);
+          offset += 4;
+        }
+        final length = data.getUint32(offset, Endian.little);
+        offset += 4;
+        final text = utf8.decoder.convert(bytes, offset, offset + length);
+        offset += length;
+        final payload = switch (type) {
+          PlayableType.track || PlayableType.video => text,
+          PlayableType.trackWithDate || PlayableType.ytVideo => jsonDecode(text),
+        };
+        items.add(build(type, payload) as T);
+        originalIndices?.add(originalIndex);
+      }
+    } catch (_) {}
+    return (items: items, originalIndices: originalIndices, meta: meta);
+  }
+
+  static (List<Playable>, List<int>?) decodeLegacyJson(Uint8List bytes) {
+    final items = <Playable>[];
+    List<int>? originalIndices = <int>[];
+    try {
+      final list = jsonDecode(utf8.decode(bytes)) as List?;
+      if (list != null) {
+        for (final e in list) {
+          final item = buildFromJson(e['t'], e['p']);
+          if (item != null) {
+            items.add(item);
+            if (originalIndices != null) {
+              final originalIndex = e[_kOriginalIndex];
+              if (originalIndex is int) {
+                originalIndices.add(originalIndex);
+              } else {
+                originalIndices = null;
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return (items, originalIndices);
+  }
 }
