@@ -4646,10 +4646,12 @@ class NamidaInkWellButton extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final BoxDecoration decoration;
+  final Color? itemsColor;
 
   const NamidaInkWellButton({
     super.key,
     this.bgColor,
+    this.itemsColor,
     this.onTap,
     this.borderRadius = 10.0,
     this.animationDurationMS = 250,
@@ -4670,7 +4672,7 @@ class NamidaInkWellButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final itemsColor = theme.colorScheme.onSurface.withOpacityExt(0.8);
+    final itemsColor = this.itemsColor ?? theme.colorScheme.onSurface.withOpacityExt(0.8);
     final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,

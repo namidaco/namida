@@ -96,88 +96,48 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
-    final streamsList = this.streamsList;
+    final streamsList = this.sortedStreams;
 
     final channelInfo = widget.channelInfo;
     final streamsCount = channelInfo?.videosCount;
 
-    String videosCountVSTotalText = "${streamsList?.length ?? '?'} / ${streamsCount?.formatDecimalShort() ?? '?'}";
     String? peakDatesText;
-    if (streamsPeakDates != null) {
-      videosCountVSTotalText += ' | ';
-      peakDatesText = "${streamsPeakDates!.oldest.dateFormattedOriginal} (${TimeAgoController.dateFromNow(streamsPeakDates!.oldest)})";
+    final peakDates = streamsPeakDates;
+    if (peakDates != null) {
+      final oldest = peakDates.oldest;
+      peakDatesText = "${peakDates.oldestIsApproximate ? '~' : ''}${oldest.dateFormattedOriginal} (${TimeAgoController.dateFromNow(oldest)})";
     }
-    final hasMoreStreamsLeft = channelVideoTab?.canFetchNext == true;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8.0),
-        Row(
-          children: [
-            const SizedBox(width: 4.0),
-            Expanded(child: sortWidget),
-            const SizedBox(width: 4.0),
-            ObxO(
-              rx: isLoadingMoreUploads,
-              builder: (context, isLoadingMoreUploads) => NamidaInkWellButton(
-                animationDurationMS: 100,
-                sizeMultiplier: 0.95,
-                borderRadius: 8.0,
-                icon: Broken.task_square,
-                text: lang.loadAll,
-                enabled: !isLoadingMoreUploads && hasMoreStreamsLeft,
-                disableWhenLoading: false,
-                showLoadingWhenDisabled: hasMoreStreamsLeft,
-                onTap: _onLoadAllTap,
-              ),
-            ),
-            const SizedBox(width: 4.0),
-          ],
-        ),
-        const SizedBox(height: 10.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const SizedBox(width: 8.0),
-            Expanded(
-              child: FittedBox(
-                alignment: Alignment.centerLeft,
-                fit: BoxFit.scaleDown,
-                child: NamidaInkWell(
-                  borderRadius: 6.0,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: context.theme.colorScheme.secondary.withOpacityExt(0.5)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Broken.video_square, size: 16.0),
-                      const SizedBox(width: 4.0),
-                      Flexible(
-                        child: Text(
-                          videosCountVSTotalText,
-                          style: textTheme.displayMedium,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    Flexible(child: sortWidget),
+                    const SizedBox(width: 6.0),
+                    Flexible(
+                      child: ObxO(
+                        rx: isLoadingMoreUploads,
+                        builder: (context, isLoading) => YTLoadedCountChip(
+                          loadedCount: streamsList?.length,
+                          totalCount: streamsCount,
+                          isLoading: isLoading,
+                          canLoadMore: channelVideoTab?.canFetchNext == true,
+                          onTap: _onLoadAllTap,
                         ),
                       ),
-                      if (peakDatesText != null)
-                        Flexible(
-                          child: Text(
-                            peakDatesText,
-                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const SizedBox(width: 4.0),
-            Align(
-              alignment: Alignment.centerRight,
-              child: YTVideosActionBar(
+              const SizedBox(width: 4.0),
+              YTVideosActionBar(
                 queueSource: QueueSourceYoutubeID.ytChannelHosted,
                 title: channelInfo?.title ?? widget.localChannel.title,
                 urlBuilder: channelInfo?.buildUrl,
@@ -194,7 +154,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                     )
                     .toList(),
                 infoLookupCallback: () {
-                  final streamsList = this.streamsList;
+                  final streamsList = this.sortedStreams;
                   if (streamsList == null) return null;
                   final m = <String, StreamInfoItem>{};
                   for (var e in streamsList) {
@@ -210,11 +170,9 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                   thumbnails: [],
                 ),
               ),
-            ),
-            const SizedBox(width: 8.0),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(height: 8.0),
         Expanded(
           child: VideoTilePropertiesProvider(
             configs: VideoTilePropertiesConfigs(
@@ -277,6 +235,29 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                               );
                             },
                           ),
+                    if (peakDatesText != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Broken.calendar_1,
+                                size: 14.0,
+                                color: textTheme.displaySmall?.color,
+                              ),
+                              const SizedBox(width: 4.0),
+                              Flexible(
+                                child: Text(
+                                  peakDatesText,
+                                  style: textTheme.displaySmall,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     SliverToBoxAdapter(
                       child: ObxO(
                         rx: isLoadingMoreUploads,

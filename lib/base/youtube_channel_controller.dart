@@ -24,7 +24,39 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   YoutiPieChannelTabResult? get listWrapper => channelVideoTab;
 
   @override
-  Color? get sortChipBGColor => CurrentColor.inst.color;
+  Color? get sortChipBGColor => CurrentColor.inst.color.withOpacityExt(0.5);
+
+  @override
+  YTStreamsNaturalOrder get streamsNaturalOrder {
+    final sorts = channelVideoTab?.itemsSort;
+    if (sorts == null || sorts.isEmpty) return YTStreamsNaturalOrder.newestFirst; // uploads are served newest first by default
+
+    final current = channelVideoTab?.customSort ?? sorts.firstWhereEff((e) => e.initiallySelected);
+    if (current == null) return YTStreamsNaturalOrder.newestFirst;
+
+    // -- youtube orders the chips as [latest, popular, oldest], titles are localized so the index is what can be matched.
+    final index = sorts.indexWhere((e) => e.token == current.token || e.title == current.title);
+    return switch (index) {
+      0 => YTStreamsNaturalOrder.newestFirst,
+      2 => YTStreamsNaturalOrder.oldestFirst,
+      _ => YTStreamsNaturalOrder.unknown,
+    };
+  }
+
+  @override
+  void onServerSortLoadingChange(bool isLoading) {
+    refreshState(
+      () {
+        isLoadingInitialStreams = isLoading;
+        if (isLoading) {
+          streamsPeakDates = null; // the list is fully replaced, old peaks dont belong to it anymore
+        } else {
+          final items = channelVideoTab?.items;
+          if (items != null) updatePeakDates(items.cast());
+        }
+      },
+    );
+  }
 
   @override
   void onSortChanged(void Function() fn) => refreshState(fn);
@@ -37,7 +69,7 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   YoutubeSubscription? channel;
   YoutiPieChannelTabResult? channelVideoTab;
-  ({DateTime oldest, DateTime newest})? streamsPeakDates;
+  ({DateTime oldest, DateTime newest, bool oldestIsApproximate})? streamsPeakDates;
 
   bool isLoadingInitialStreams = true;
 
@@ -75,22 +107,30 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     }
   }
 
-  /// TODO(youtipie): this is not really accurate
+  /// Dates are parsed out of `x ago` texts, [oldestIsApproximate] tells if the oldest one is a guess.
   void updatePeakDates(List<StreamInfoItem> streams) {
-    int oldest = (streamsPeakDates?.oldest ?? DateTime.now()).millisecondsSinceEpoch;
-    int newest = (streamsPeakDates?.newest ?? DateTime(0)).millisecondsSinceEpoch;
-    for (var e in streams) {
-      final d = e.publishedAt.date;
-      if (d != null) {
-        final ms = d.millisecondsSinceEpoch;
-        if (ms < oldest) {
-          oldest = ms;
-        } else if (ms > newest) {
-          newest = ms;
-        }
+    final current = streamsPeakDates;
+    int? oldest = current?.oldest.millisecondsSinceEpoch;
+    int? newest = current?.newest.millisecondsSinceEpoch;
+    bool oldestIsApproximate = current?.oldestIsApproximate ?? false;
+
+    for (final e in streams) {
+      final publishedAt = e.publishedAt;
+      final ms = publishedAt.date?.millisecondsSinceEpoch;
+      if (ms == null) continue;
+      if (oldest == null || ms < oldest) {
+        oldest = ms;
+        oldestIsApproximate = publishedAt.accurateDate == null;
       }
+      if (newest == null || ms > newest) newest = ms;
     }
-    streamsPeakDates = (oldest: DateTime.fromMillisecondsSinceEpoch(oldest), newest: DateTime.fromMillisecondsSinceEpoch(newest));
+
+    if (oldest == null || newest == null) return;
+    streamsPeakDates = (
+      oldest: DateTime.fromMillisecondsSinceEpoch(oldest),
+      newest: DateTime.fromMillisecondsSinceEpoch(newest),
+      oldestIsApproximate: oldestIsApproximate,
+    );
   }
 
   void onSuccessFetch() {}
@@ -102,7 +142,9 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
     if (tab != null) {
       final details = forceRequest ? ExecuteDetails.kForceRequest : null;
-      newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, details: details);
+      final currentTab = channelVideoTab;
+      final keepSort = currentTab?.channelId == channelID ? currentTab?.customSort : null; // keep the server sort the user picked
+      newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, sort: keepSort, details: details);
       if (newResult != null) {
         // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
         // -- but data like viewsCount will not be updated sadly.

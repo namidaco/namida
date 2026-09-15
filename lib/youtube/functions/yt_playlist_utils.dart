@@ -257,6 +257,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlist,
     VoidCallback? onStart,
+    VoidCallback? onProgress,
     VoidCallback? onEnd,
     void Function(YoutiPieFetchAllRes fetchAllRes)? controller,
     ExecuteDetails? executeDetails,
@@ -265,6 +266,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
     final fetchAllRes = playlist.fetchAll(
       onProgress: () {
         currentCount.value = playlist.items.length;
+        onProgress?.call();
       },
       details: executeDetails,
     );

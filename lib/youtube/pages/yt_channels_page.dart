@@ -16,6 +16,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
+import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -64,6 +65,13 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
   @override
   List<StreamInfoItem>? get streamsList => _allStreamsList ?? channelVideoTab?.items.cast();
+
+  /// [_allStreamsList] is merged from several channels, so neither the server order nor its sorts apply to it.
+  @override
+  YTStreamsNaturalOrder get streamsNaturalOrder => _allStreamsList != null ? YTStreamsNaturalOrder.unknown : super.streamsNaturalOrder;
+
+  @override
+  bool get canSortStreamsServerSide => _allStreamsList == null;
 
   List<StreamInfoItem>? _allStreamsList;
 
@@ -233,11 +241,10 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     _allChannelsStreamsProgress.value = 0.0;
     _allChannelsStreamsLoading.value = false;
 
-    sortStreams(streams: streams);
-
     setState(() {
       isLoadingInitialStreams = false;
       _allStreamsList?.addAll(streams);
+      trySortStreams();
     });
   }
 
@@ -282,7 +289,12 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                   children: [
                     Row(
                       children: [
-                        Expanded(child: sortWidget),
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: sortWidget,
+                          ),
+                        ),
                         NamidaIconButton(
                           icon: Broken.calendar,
                           onPressed: () {
@@ -463,7 +475,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                   scrollController: _uploadsScrollController,
                                   onReachingEnd: fetchStreamsNextPage,
                                   listview: (controller) {
-                                    final streamsList = this.streamsList;
+                                    final streamsList = this.sortedStreams;
                                     if (streamsList == null || streamsList.isEmpty) return const SizedBox();
                                     return SuperSmoothListView.builder(
                                       controller: controller,

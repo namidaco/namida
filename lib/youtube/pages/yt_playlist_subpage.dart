@@ -449,6 +449,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   @override
   List<StreamInfoItem> get streamsList => _playlist.items;
 
+  List<StreamInfoItem> get _displayedStreams => sortedStreams ?? _playlist.items;
+
   @override
   YoutiPieListWrapper<StreamInfoItem>? get listWrapper => _playlist;
 
@@ -570,6 +572,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
     final playlist = _playlist;
+    final displayedStreams = _displayedStreams;
 
     const itemsThumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const itemsThumbnailWidth = Dimensions.youtubeThumbnailWidth;
@@ -793,21 +796,19 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                             child: Row(
                               children: [
-                                Expanded(
+                                Align(
+                                  alignment: Alignment.centerLeft,
                                   child: sortWidget,
                                 ),
+                                const SizedBox(width: 6.0),
                                 ObxO(
                                   rx: _isLoadingMoreItems,
-                                  builder: (context, isLoadingMoreItems) => NamidaInkWellButton(
-                                    animationDurationMS: 100,
-                                    sizeMultiplier: 0.95,
-                                    borderRadius: 8.0,
-                                    icon: Broken.task_square,
-                                    text: lang.loadAll,
-                                    enabled: !isLoadingMoreItems && hasMoreStreamsLeft, // this for lazylist
-                                    disableWhenLoading: false,
-                                    showLoadingWhenDisabled: hasMoreStreamsLeft,
-                                    onTap: () async {
+                                  builder: (context, isLoadingMoreItems) => YTLoadedCountChip(
+                                    loadedCount: displayedStreams.length,
+                                    totalCount: videosCount,
+                                    isLoading: isLoadingMoreItems,
+                                    canLoadMore: hasMoreStreamsLeft,
+                                    onTap: () {
                                       if (_currentFetchAllRes != null) {
                                         _currentFetchAllRes?.cancel();
                                         _currentFetchAllRes = null;
@@ -816,7 +817,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                           playlist: _playlist,
                                           showProgressSheet: false,
                                           onStart: () => _isLoadingMoreItems.value = true,
-                                          onEnd: () => _isLoadingMoreItems.value = false,
+                                          onProgress: () => refreshState(trySortStreams),
+                                          onEnd: () => refreshState(() => _isLoadingMoreItems.value = false),
                                           controller: (fetchAllRes) => _currentFetchAllRes = fetchAllRes,
                                         );
                                       }
@@ -830,9 +832,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                       ),
                       SliverFixedExtentList.builder(
                         itemExtent: itemsThumbnailItemExtent,
-                        itemCount: playlist.items.length,
+                        itemCount: displayedStreams.length,
                         itemBuilder: (context, index) {
-                          final item = playlist.items[index];
+                          final item = displayedStreams[index];
                           return YoutubeVideoCard(
                             properties: properties,
                             thumbnailHeight: itemsThumbnailHeight,
