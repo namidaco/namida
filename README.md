@@ -354,19 +354,12 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 > ```
 
 > [!NOTE]
-> (Optional) Install **wpe** for login support (or download the `*_login` variant)
+> (Optional) Install **webkit2gtk** for youtube login & poToken
 >
 > ```bash
-> # Arch/Manjaro
-> sudo pacman -S wpewebkit
->
-> # Debian/Ubuntu/Mint
-> sudo apt install libwpewebkit-2.0-1
->
-> # Fedora/RHEL
-> sudo dnf install dnf-plugins-core
-> sudo dnf copr enable philn/wpewebkit
-> sudo dnf install wpewebkit
+> sudo pacman -S webkit2gtk-4.1          # Arch/Manjaro
+> sudo apt install libwebkit2gtk-4.1-0   # Debian/Ubuntu/Mint
+> sudo dnf install webkit2gtk4.1         # Fedora/RHEL
 > ```
 
 2. **Install Namida**

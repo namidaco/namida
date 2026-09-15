@@ -76,6 +76,11 @@ set_target_properties(${BINARY_NAME}
 )
 
 
+# Webviews go through `flutter_webkitgtk` (webkit2gtk-4.1), which every distro
+# ships. WPE exports the very same `webkit_*` symbols and whichever library the
+# loader resolves first wins, so it has to stay out of the process entirely.
+set(DISABLE_WPE_WEBKIT ON)
+
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
@@ -116,6 +121,7 @@ install(FILES "packaging/com.msob7y.namida.metainfo.xml"
 # bundle required binaries
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
   FILES_MATCHING PATTERN "*"
 )
 

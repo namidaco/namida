@@ -14,16 +14,9 @@ void main(List<String> args) async {
   final tarOnly = args.remove('-tar');
   final noAurPublish = args.remove('--no-aur');
   final skipClean = args.remove('--no-clean');
-  final bundleWPE = args.remove('--bundle-wpe');
-
-  final environment = <String, String>{
-    ...Platform.environment,
-    // -- always specify, otherwise could have a value from previous command env.
-    "DISABLE_WPE_WEBKIT": bundleWPE ? "0" : "1",
-  };
 
   final linuxDistDir = _getDirectoryEnsureExistsAndCleaned('./dist', clean: !skipClean);
-  final bundleOutputDir = _getDirectoryEnsureExistsAndCleaned(bundleWPE ? './scripts/bundle_output_wpe' : './scripts/bundle_output', clean: !skipClean);
+  final bundleOutputDir = _getDirectoryEnsureExistsAndCleaned('./scripts/bundle_output', clean: !skipClean);
 
   print('====> Parsing version...');
 
@@ -44,8 +37,7 @@ void main(List<String> args) async {
     await _execute('flutter', ["pub", "get"]);
   }
 
-  var filename = 'namida-v$versionOnly-beta';
-  if (bundleWPE) filename += '_login';
+  final filename = 'namida-v$versionOnly-beta';
   String buildOutputPath(String ext) {
     return "${bundleOutputDir.path}/$filename.linux.$ext";
   }
@@ -70,7 +62,6 @@ void main(List<String> args) async {
       "--release",
       if (isKuru) "--dart-define=IS_KURU_BUILD=$isKuru",
     ],
-    environment: environment,
   );
 
   if (buildExitCode != 0) {
@@ -113,7 +104,6 @@ void main(List<String> args) async {
       "--flutter-build-args=release",
       if (isKuru) "--build-dart-define=IS_KURU_BUILD=$isKuru",
     ],
-    environment: environment,
   );
   print('====> Success');
 

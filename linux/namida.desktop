@@ -2,7 +2,9 @@
 Version=1.0
 Type=Application
 Name=Namida
+GenericName=Media Player
 Comment=Media Player
+Keywords=Music;Video;Youtube;Media;Player;
 TryExec=namida
 Exec=namida %F
 Icon=namida

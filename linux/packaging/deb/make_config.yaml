@@ -9,32 +9,17 @@ priority: optional
 
 section: x11
 
-installed_size: 21400
-
 dependencies:
   - mpv
   - libepoxy0
 
+recommended_dependencies:
+  - libwebkit2gtk-4.1-0
+
 essential: false
 
 icon: linux/icons/namida_512.png
+desktop_file: linux/namida.desktop
 
 postuninstall_scripts:
   - echo "Sorry to see you go."
-
-keywords:
-  - Music
-  - Video
-  - Youtube
-  - Media
-  - Player
-
-generic_name: Media Player
-
-categories:
-  - AudioVideo
-  - Audio
-  - Video
-  - Player
-
-startup_notify: true

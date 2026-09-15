@@ -6,7 +6,7 @@
 # The same ffmpeg build also provides the ffmpeg + ffprobe binaries the app shells out to
 # (the ones bundled in the tarball are replaced - they are built against a newer glibc than the runtime).
 #
-# Local build (needs flatpak-builder + org.freedesktop.Sdk//25.08):
+# Local build (needs flatpak-builder + org.gnome.Sdk//49):
 #   cp <namida tarball> linux/packaging/flatpak/namida-linux.tar.gz
 #   flatpak-builder --user --install-deps-from=flathub --force-clean --repo=repo build-dir linux/packaging/flatpak/com.msob7y.namida.yml
 #   flatpak build-bundle repo Namida-x86_64.flatpak com.msob7y.namida
@@ -16,9 +16,11 @@
 # release asset (see README.md in this folder).
 
 app-id: com.msob7y.namida
-runtime: org.freedesktop.Platform
-runtime-version: '25.08'
-sdk: org.freedesktop.Sdk
+# gnome's runtime is the freedesktop one plus webkit2gtk-4.1, which the sign-in
+# window and the poToken webview need.
+runtime: org.gnome.Platform
+runtime-version: '49'
+sdk: org.gnome.Sdk
 command: namida
 
 finish-args:
@@ -39,6 +41,8 @@ finish-args:
   - --talk-name=org.kde.StatusNotifierWatcher
   # MPRIS (anni_mpris_service registers org.mpris.MediaPlayer2.namida)
   - --own-name=org.mpris.MediaPlayer2.namida
+  # connectivity_plus queries NetworkManager on the system bus, without it the app stays offline
+  - --system-talk-name=org.freedesktop.NetworkManager
   # mpv needs the C locale for number parsing
   - --env=LC_NUMERIC=C
 
