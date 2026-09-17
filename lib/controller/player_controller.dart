@@ -313,6 +313,13 @@ class Player {
     _audioHandler.prepareTotalListenTime();
   }
 
+  void toggleFavouriteForCurrentItem() {
+    final current = currentItem.value;
+    if (current != null) _audioHandler.onNotificationFavouriteButtonPressed(current);
+  }
+
+  bool get displayFavouriteButtonAsLike => _audioHandler.displayFavouriteButtonAsLikeInNotification;
+
   void refreshNotification() {
     try {
       _audioHandler.refreshNotification();

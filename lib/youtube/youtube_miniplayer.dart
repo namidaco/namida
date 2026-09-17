@@ -141,7 +141,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _expansibleController.expand();
   }
 
-  final _videoLikeManager = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage);
+  final _videoLikeManager = YtVideoLikeManager.current;
 
   @override
   void initState() {
@@ -153,7 +153,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       _shouldShowGlowUnderVideo.value = hasScrolledEnough;
     });
     YoutubeInfoController.current.onVideoPageReset = _onVideoPageReset;
-    _videoLikeManager.init();
   }
 
   @override
@@ -165,7 +164,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     _shouldShowGlowUnderVideo.close();
     _isQueueFullyExpanded.close();
     _canScrollQueue.close();
-    _videoLikeManager.dispose();
     _expansibleController.dispose();
     super.dispose();
   }

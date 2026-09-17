@@ -114,6 +114,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     return res;
   }
 
+  void setVideoFavourite(String videoId, bool favourite) {
+    if (favouritesPlaylist.isSubItemFavourite(videoId) == favourite) return;
+    favouriteButtonOnPressed(videoId, refreshNotification: false);
+  }
+
   void sortYTPlaylists({GroupSortType? sortBy, bool? reverse}) async {
     await waitForPlaylistsLoad;
 

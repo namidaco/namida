@@ -30,6 +30,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final preferMixRelatedVideos = RxnF<bool>(fallback: false);
   final searchCleanup = true.obs;
   final showLikeStatusOnCards = RxnF<bool>(fallback: false);
+  final preferLikeButtonOverFavourite = true.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
   final ytMiniplayerDimAfterSeconds = 15.obs;
@@ -57,6 +58,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final downloadNotifications = DownloadNotifications.showFailedOnly.obs;
 
   bool markVideoWatched = true;
+  bool linkLikeButtonWithFavourites = true;
   InnertubeClients? innertubeClient;
   bool whiteVideoBGInLightMode = false;
   bool enableDimInLightMode = true;
@@ -102,6 +104,8 @@ class _YoutubeSettings with SettingsFileWriter {
     SponsorBlockSettings? sponsorBlockSettings,
     ReturnYoutubeDislikeSettings? ryd,
     bool? markVideoWatched,
+    bool? linkLikeButtonWithFavourites,
+    bool? preferLikeButtonOverFavourite,
     InnertubeClients? innertubeClient,
     bool setDefaultInnertubeClient = false,
     bool? whiteVideoBGInLightMode,
@@ -146,6 +150,8 @@ class _YoutubeSettings with SettingsFileWriter {
     if (ryd != null) this.ryd.value = ryd;
 
     if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
+    if (linkLikeButtonWithFavourites != null) this.linkLikeButtonWithFavourites = linkLikeButtonWithFavourites;
+    if (preferLikeButtonOverFavourite != null) this.preferLikeButtonOverFavourite.value = preferLikeButtonOverFavourite;
     if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
     if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
     if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
@@ -238,6 +244,8 @@ class _YoutubeSettings with SettingsFileWriter {
       }
 
       markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
+      linkLikeButtonWithFavourites = json['linkLikeButtonWithFavourites'] ?? linkLikeButtonWithFavourites;
+      preferLikeButtonOverFavourite.value = json['preferLikeButtonOverFavourite'] ?? preferLikeButtonOverFavourite.value;
       innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient_v2']);
       whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
       enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
@@ -289,6 +297,8 @@ class _YoutubeSettings with SettingsFileWriter {
     'ryd': ryd.value.toJson(),
     'initialDefaultMetadataTags': initialDefaultMetadataTags,
     'markVideoWatched': markVideoWatched,
+    'linkLikeButtonWithFavourites': linkLikeButtonWithFavourites,
+    'preferLikeButtonOverFavourite': preferLikeButtonOverFavourite.value,
     'innertubeClient_v2': innertubeClient?.name,
     'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
     'enableDimInLightMode': enableDimInLightMode,

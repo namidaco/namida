@@ -45,6 +45,8 @@ abstract class NamidaTrayManager {
         Player.inst.previous().ignoreError();
       case TrayMenuKey.next:
         Player.inst.next().ignoreError();
+      case TrayMenuKey.favourite:
+        Player.inst.toggleFavouriteForCurrentItem();
       case TrayMenuKey.showWindow:
         await showWindow();
       case TrayMenuKey.miniLyricsWindow:
@@ -75,6 +77,7 @@ class TrayMenuKey {
   static const String previous = 'previous';
   static const String playPause = 'play_pause';
   static const String next = 'next';
+  static const String favourite = 'favourite';
   static const String showWindow = 'show_window';
   static const String miniLyricsWindow = 'mini_lyrics_window';
   static const String exit = 'exit';

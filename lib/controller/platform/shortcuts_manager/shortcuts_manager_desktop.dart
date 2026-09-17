@@ -68,8 +68,25 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyH,
       control: true,
-      callback: () {
+      callback: () async {
         final currentItem = Player.inst.currentItem.value;
+        if (currentItem is YoutubeID && Player.inst.displayFavouriteButtonAsLike) {
+          final newIsLiked = await YtVideoLikeManager.current.toggleLikeWithoutConfirmation(currentItem.id);
+          if (newIsLiked != null) {
+            newIsLiked
+                ? snackyy(
+                    message: lang.liked,
+                    icon: Broken.like_filled,
+                    leftBarIndicatorColor: Colors.green,
+                  )
+                : snackyy(
+                    message: "${lang.like}: ${lang.removed}",
+                    icon: Broken.like_1,
+                    leftBarIndicatorColor: Colors.red,
+                  );
+          }
+          return;
+        }
         final bool? newIsFav = currentItem?.execute(
           selectable: (finalItem) => PlaylistController.inst.favouriteButtonOnPressed(
             finalItem.track,
@@ -95,7 +112,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
                 );
         }
       },
-      title: () => "${lang.favourites}: ${lang.add}/${lang.remove}",
+      title: () => "${lang.favourites}/${lang.like}: ${lang.add}/${lang.remove}",
     ),
     ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyF,

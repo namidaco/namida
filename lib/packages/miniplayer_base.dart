@@ -58,6 +58,7 @@ import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/simple_lyrics_line.dart';
 import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/seek_ready_widget.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
@@ -121,8 +122,6 @@ class MiniplayerInfoData<E, S> {
   final void Function(TapUpDetails details) onMenuOpen;
   final void Function() onTextLongTap;
   final bool enableTextLongTap;
-  final IconData likedIcon;
-  final IconData normalIcon;
   final YtVideoLikeManager? ytLikeManager;
 
   late final bool firstLineGood;
@@ -138,8 +137,6 @@ class MiniplayerInfoData<E, S> {
     required this.onMenuOpen,
     required this.onTextLongTap,
     this.enableTextLongTap = false,
-    required this.likedIcon,
-    required this.normalIcon,
     this.ytLikeManager,
   }) : firstLineGood = firstLine.isNotEmpty,
        secondLineGood = secondLine.isNotEmpty;
@@ -159,6 +156,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final Widget Function(Playable item) imageBuilder;
   final Widget Function(Playable item, ValueListenable<double> maxWidth) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
+  final RxBaseCore<Object?>? textRefreshRx;
   final bool Function(Playable item) canShowBuffering;
   final TrackTilePropertiesConfigs? trackTileConfigs;
   final VideoTilePropertiesConfigs? videoTileConfigs;
@@ -178,6 +176,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     required this.imageBuilder,
     required this.currentImageBuilder,
     required this.textBuilder,
+    this.textRefreshRx,
     required this.canShowBuffering,
     this.trackTileConfigs,
     this.videoTileConfigs,
@@ -802,6 +801,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             Widget? nextImageWidget;
             MiniplayerInfoData? prevText;
             MiniplayerInfoData? nextText;
+
+            widget.textRefreshRx?.valueR;
 
             if (queue.isNotEmpty) {
               final prevItem = queue[indminusAnimationUI];
@@ -1647,6 +1648,57 @@ class _TrackInfo<E, S> extends StatelessWidget {
     required this.opacityAnimation,
   });
 
+  Widget _buildYTLikeButton(ThemeData theme, YtVideoLikeManager ytLikeManager) {
+    return ObxO(
+      rx: ytLikeManager.currentVideoLikeStatus,
+      builder: (context, currentLikeStatus) {
+        final isUserLiked = currentLikeStatus == LikeStatus.liked;
+        return NamidaLoadingSwitcher(
+          size: 32.0,
+          builder: (loadingController) => NamidaRawLikeButton(
+            key: ValueKey(textData.itemToLike),
+            size: 32.0,
+            enableGradient: true,
+            likedIcon: Broken.like_filled,
+            normalIcon: Broken.like_1,
+            enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
+            disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
+            removeConfirmationAction: null, // manually managed
+            isLiked: isUserLiked,
+            onTap: (isLiked) async {
+              return ytLikeManager.onLikeClicked(
+                YTVideoLikeParamters(
+                  isActive: isLiked,
+                  action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                  onStart: loadingController.startLoading,
+                  onEnd: loadingController.stopLoading,
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildFavouriteButton(ThemeData theme) {
+    return ObxOClass(
+      rx: textData.favouritePlaylist,
+      builder: (context, favouritePlaylist) => NamidaRawLikeButton(
+        key: ValueKey(textData.itemToLike),
+        size: 32.0,
+        enableGradient: true,
+        likedIcon: Broken.heart_filled,
+        normalIcon: Broken.heart,
+        enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
+        disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
+        removeConfirmationAction: lang.removeFromFavourites,
+        isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
+        onTap: textData.onLikeTap,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -1736,50 +1788,14 @@ class _TrackInfo<E, S> extends StatelessWidget {
                           onLongPress: textData.onShowAddToPlaylistDialog,
                           child: ytLikeManager != null
                               ? ObxO(
-                                  rx: ytLikeManager.currentVideoLikeStatus,
-                                  builder: (context, currentLikeStatus) {
-                                    final isUserLiked = currentLikeStatus == LikeStatus.liked;
-                                    return NamidaLoadingSwitcher(
-                                      size: 32.0,
-                                      builder: (loadingController) => NamidaRawLikeButton(
-                                        key: ValueKey(textData.itemToLike),
-                                        size: 32.0,
-                                        enableGradient: true,
-                                        likedIcon: textData.likedIcon,
-                                        normalIcon: textData.normalIcon,
-                                        enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
-                                        disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
-                                        removeConfirmationAction: null, // manually managed
-                                        isLiked: isUserLiked,
-                                        onTap: (isLiked) async {
-                                          return ytLikeManager.onLikeClicked(
-                                            YTVideoLikeParamters(
-                                              isActive: isLiked,
-                                              action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                              onStart: loadingController.startLoading,
-                                              onEnd: loadingController.stopLoading,
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                )
-                              : ObxOClass(
-                                  rx: textData.favouritePlaylist,
-                                  builder: (context, favouritePlaylist) => NamidaRawLikeButton(
-                                    key: ValueKey(textData.itemToLike),
-                                    size: 32.0,
-                                    enableGradient: true,
-                                    likedIcon: textData.likedIcon,
-                                    normalIcon: textData.normalIcon,
-                                    enabledColor: theme.colorScheme.primary.withOpacityExt(0.75),
-                                    disabledColor: theme.colorScheme.secondary.withOpacityExt(0.75),
-                                    removeConfirmationAction: lang.removeFromFavourites,
-                                    isLiked: favouritePlaylist.isSubItemFavourite(textData.itemToLike),
-                                    onTap: textData.onLikeTap,
+                                  rx: settings.youtube.preferLikeButtonOverFavourite,
+                                  builder: (context, preferLike) => ObxO(
+                                    rx: YoutubeAccountController.current.activeAccountChannel,
+                                    builder: (context, activeAccountChannel) =>
+                                        preferLike && activeAccountChannel != null ? _buildYTLikeButton(theme, ytLikeManager) : _buildFavouriteButton(theme),
                                   ),
-                                ),
+                                )
+                              : _buildFavouriteButton(theme),
                         ),
                       ),
                     ),

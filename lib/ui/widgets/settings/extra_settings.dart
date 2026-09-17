@@ -174,6 +174,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         icon: Broken.flag,
         title: lang.configure,
         normalTitleStyle: true,
+        horizontalInset: 32.0,
         actions: [
           NamidaButton(
             text: lang.done,

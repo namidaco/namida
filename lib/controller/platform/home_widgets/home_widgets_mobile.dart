@@ -16,6 +16,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
   String? _lastImage;
   bool? _lastIsPlaying;
   bool? _lastIsFavourite;
+  bool? _lastIsFavouriteAsLike;
   PlayerRepeatMode? _lastRepeatMode;
   int? _lastRepeatCount;
   bool? _lastShuffle;
@@ -64,6 +65,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
     required Uri? imageFileUri,
     required bool isPlaying,
     required bool isFavourite,
+    required bool isFavouriteAsLike,
     required PlayerRepeatMode repeatMode,
     required int repeatCount,
     required bool shuffle,
@@ -75,6 +77,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
       if (image != _lastImage) HomeWidget.saveWidgetData<String>(_HomeWidgetKey.image.name, image),
       if (isPlaying != _lastIsPlaying) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.playing.name, isPlaying),
       if (isFavourite != _lastIsFavourite) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.favourite.name, isFavourite),
+      if (isFavouriteAsLike != _lastIsFavouriteAsLike) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.favouriteAsLike.name, isFavouriteAsLike),
       if (repeatMode != _lastRepeatMode) HomeWidget.saveWidgetData<String>(_HomeWidgetKey.repeat.name, repeatMode.name),
       if (repeatCount != _lastRepeatCount) HomeWidget.saveWidgetData<int>(_HomeWidgetKey.repeatCount.name, repeatCount),
       if (shuffle != _lastShuffle) HomeWidget.saveWidgetData<bool>(_HomeWidgetKey.shuffle.name, shuffle),
@@ -85,6 +88,7 @@ class _HomeWidgetsMobile extends HomeWidgets {
     _lastImage = image;
     _lastIsPlaying = isPlaying;
     _lastIsFavourite = isFavourite;
+    _lastIsFavouriteAsLike = isFavouriteAsLike;
     _lastRepeatMode = repeatMode;
     _lastRepeatCount = repeatCount;
     _lastShuffle = shuffle;

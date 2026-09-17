@@ -12,6 +12,7 @@ import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
+import 'package:youtipie/core/enum.dart' show LikeStatus;
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
@@ -54,8 +55,10 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -95,6 +98,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       WakelockController.inst.updatePlayPauseStatus(ye);
       _refreshPlatformStatusDependersIsPlaying(ye);
     });
+
+    YtVideoLikeManager.current.currentVideoLikeStatus.addListener(() {
+      if (displayFavouriteButtonAsLikeInNotification) _refreshNotificationFavouriteStatus();
+    });
+    settings.youtube.preferLikeButtonOverFavourite.addListener(_refreshNotificationFavouriteStatus);
+    YoutubeAccountController.current.activeAccountChannel.addListener(_refreshNotificationFavouriteStatus);
 
     settings.player.repeatMode.addListener(resetGaplessPlaybackData);
     // settings.player.shuffleReflectInQueue.addListener(resetGaplessPlaybackData);
@@ -328,12 +337,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       youtubeID: (finalItem) {
         _notificationUpdateItemYoutubeID(
           item: finalItem,
-          isItemFavourite: finalItem.isFavourite,
           itemIndex: currentIndex.value,
           youtubeIdMediaItem: youtubeIdMediaItem,
         );
       },
     );
+  }
+
+  bool _isYoutubeIDFavouriteOrLiked(YoutubeID item) {
+    if (YtVideoLikeManager.preferLikeOverFavourite) {
+      final likeManager = YtVideoLikeManager.current;
+      return likeManager.currentVideoLikeStatus.value == LikeStatus.liked && likeManager.pageRx.value?.videoId == item.id;
+    }
+    return item.isFavourite;
   }
 
   int _notificationUpdateGeneration = 0;
@@ -355,7 +371,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   void _notificationUpdateItemYoutubeID({
     required YoutubeID item,
-    required bool isItemFavourite,
     required int itemIndex,
     required YoutubeIDToMediaItemCallback? youtubeIdMediaItem,
   }) async {
@@ -367,9 +382,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final generation = ++_notificationUpdateGeneration;
     final media = await youtubeIdMediaItem(index, ql);
     if (generation != _notificationUpdateGeneration) return;
+    final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
+  }
+
+  void _refreshNotificationFavouriteStatus() {
+    final item = currentItem.value;
+    if (item is! YoutubeID) return;
+    final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
+    final index = currentIndex.value;
+    playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, index));
+    final media = mediaItem.value;
+    if (media != null) _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
 
   void _refreshPlatformStatusDependersIsPlaying(bool isPlaying) {
@@ -387,6 +413,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       imageFileUri: media.artUri,
       isPlaying: isPlaying,
       isFavourite: isFavourite,
+      isFavouriteAsLike: displayFavouriteButtonAsLikeInNotification,
       repeatMode: playerRepeatMode,
       repeatCount: numberOfRepeats.value,
       shuffle: settings.player.shuffleQueue.value,
@@ -400,13 +427,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final trayIcons = TrayIcons.windows;
       ThumbnailToolbarAssetIcon getIco(String path) => ThumbnailToolbarAssetIcon(path);
 
-      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
-      void onFavOrUnfavPress() {
-        final current = currentItem.value;
-        if (current != null) {
-          onNotificationFavouriteButtonPressed(current);
-        }
-      }
+      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: _isYoutubeIDFavouriteOrLiked);
+      final onFavOrUnfavPress = Player.inst.toggleFavouriteForCurrentItem;
+
+      final isLike = displayFavouriteButtonAsLikeInNotification;
 
       final repeat = settings.player.repeatMode.value;
       final repeatText = repeat.buildText();
@@ -432,14 +456,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               [
                 if (isFavourite == true)
                   ThumbnailToolbarButton(
-                    getIco(trayIcons.favorited),
-                    lang.removeFromFavourites,
+                    getIco(isLike ? trayIcons.liked : trayIcons.favorited),
+                    isLike ? lang.liked : lang.removeFromFavourites,
                     onFavOrUnfavPress,
                   )
                 else if (isFavourite == false)
                   ThumbnailToolbarButton(
-                    getIco(trayIcons.favorite),
-                    lang.addToFavourites,
+                    getIco(isLike ? trayIcons.like : trayIcons.favorite),
+                    isLike ? lang.like : lang.addToFavourites,
                     onFavOrUnfavPress,
                   ),
                 ThumbnailToolbarButton(
@@ -486,7 +510,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (tc != null) {
       final trayIcons = TrayIcons.platform();
 
-      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: (finalItem) => finalItem.isFavourite);
+      isFavourite ??= currentItem.value?.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: _isYoutubeIDFavouriteOrLiked);
+      final isLike = displayFavouriteButtonAsLikeInNotification;
 
       String title = mediaItem.value?.displayTitle ?? mediaItem.value?.title ?? 'Chilling...';
       if (title.length > 48) {
@@ -516,6 +541,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             icon: trayIcons?.next,
             label: lang.next,
           ),
+          if (isFavourite == true)
+            TrayMenuItem(
+              key: TrayMenuKey.favourite,
+              icon: isLike ? trayIcons?.liked : trayIcons?.favorited,
+              label: isLike ? lang.liked : lang.removeFromFavourites,
+            )
+          else if (isFavourite == false)
+            TrayMenuItem(
+              key: TrayMenuKey.favourite,
+              icon: isLike ? trayIcons?.like : trayIcons?.favorite,
+              label: isLike ? lang.like : lang.addToFavourites,
+            ),
           TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.showWindow,
@@ -2172,13 +2209,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         );
       },
       youtubeID: (finalItem) {
-        final newStat = YoutubePlaylistController.inst.favouriteButtonOnPressed(finalItem.id, refreshNotification: false);
-        _notificationUpdateItemYoutubeID(
-          item: finalItem,
-          itemIndex: currentIndex.value,
-          isItemFavourite: newStat,
-          youtubeIdMediaItem: null,
-        );
+        if (YtVideoLikeManager.preferLikeOverFavourite) {
+          YtVideoLikeManager.current.toggleLikeWithoutConfirmation(finalItem.id);
+          return;
+        }
+        YoutubePlaylistController.inst.favouriteButtonOnPressed(finalItem.id, refreshNotification: false);
+        _refreshNotificationFavouriteStatus();
       },
     );
   }
@@ -2224,7 +2260,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         playbackState.add(transformEvent(event, isFav, currentIndex.value));
       },
       youtubeID: (finalItem) async {
-        playbackState.add(transformEvent(event, false, currentIndex.value));
+        playbackState.add(transformEvent(event, _isYoutubeIDFavouriteOrLiked(finalItem), currentIndex.value));
       },
     );
   }
@@ -2285,6 +2321,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
+
+  @override
+  bool get displayFavouriteButtonAsLikeInNotification => currentItem.value is YoutubeID && YtVideoLikeManager.preferLikeOverFavourite;
 
   @override
   bool get displayStopButtonInNotification => settings.displayStopButtonInNotification.value;

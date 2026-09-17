@@ -376,6 +376,7 @@ class SchwarzConfigActivity : Activity() {
       subtitle = live?.subtitle?.takeIf { it.isNotBlank() } ?: "Artist • Album",
       isPlaying = live?.isPlaying ?: false,
       isFav = live?.isFav ?: true,
+      isFavAsLike = live?.isFavAsLike ?: false,
       repeat = live?.repeat ?: WidgetRepeat.ALL,
       repeatCount = live?.repeatCount ?: 3,
       shuffle = live?.shuffle ?: true,

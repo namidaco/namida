@@ -11,7 +11,9 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class YTVideoLikeParamters {
   final bool isActive;
@@ -32,6 +34,10 @@ class YtVideoLikeManager {
   YtVideoLikeManager({
     required this.pageRx,
   });
+
+  static final current = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage)..init();
+
+  static bool get preferLikeOverFavourite => settings.youtube.preferLikeButtonOverFavourite.value && YoutubeAccountController.current.activeAccountChannel.value != null;
 
   late final currentVideoLikeStatus = Rxn<LikeStatus>();
 
@@ -82,6 +88,30 @@ class YtVideoLikeManager {
     return _onChangeLikeStatus(parameters);
   }
 
+  /// returns the new liked state, or null if failed.
+  Future<bool?> toggleLikeWithoutConfirmation(String videoId) async {
+    final p = pageRx.value;
+    if (p == null || p.videoId != videoId) return null;
+
+    final oldStatus = currentVideoLikeStatus.value;
+    final isLiked = oldStatus == LikeStatus.liked;
+    final action = isLiked ? LikeAction.removeLike : LikeAction.addLike;
+    currentVideoLikeStatus.value = action.toExpectedStatus();
+    final newIsLiked = await _onChangeLikeStatus(
+      YTVideoLikeParamters(
+        isActive: isLiked,
+        action: action,
+        onStart: () {},
+        onEnd: () {},
+      ),
+    );
+    if (newIsLiked == isLiked) {
+      if (pageRx.value?.videoId == p.videoId) currentVideoLikeStatus.value = oldStatus;
+      return null;
+    }
+    return newIsLiked;
+  }
+
   Future<bool> _onChangeLikeStatus(YTVideoLikeParamters parameters) async {
     final p = pageRx.value;
     if (p == null) return parameters.isActive;
@@ -106,8 +136,23 @@ class YtVideoLikeManager {
         );
       }
 
+      if (settings.youtube.linkLikeButtonWithFavourites) {
+        switch (parameters.action) {
+          case LikeAction.addLike:
+            YoutubePlaylistController.inst.setVideoFavourite(p.videoId, true);
+          case LikeAction.removeLike || LikeAction.addDislike:
+            YoutubePlaylistController.inst.setVideoFavourite(p.videoId, false);
+          case LikeAction.removeDislike:
+        }
+      }
+
       final newExpectedStatus = parameters.action.toExpectedStatus();
-      currentVideoLikeStatus.value = newExpectedStatus;
+      if (pageRx.value?.videoId == p.videoId) {
+        currentVideoLikeStatus.value = newExpectedStatus;
+      }
+      if (!identical(this, current) && current.pageRx.value?.videoId == p.videoId) {
+        current.currentVideoLikeStatus.value = newExpectedStatus;
+      }
       return !parameters.isActive;
     }
 

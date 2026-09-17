@@ -27,6 +27,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/player_transport_controls.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
@@ -405,11 +406,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
         ? ObxO(
             rx: Player.inst.currentItem,
             builder: (context, item) {
-              final textData = item is Selectable
-                  ? NamidaMiniPlayerTrack.textBuilder(item)
-                  : item is YoutubeID
-                  ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
-                  : null;
               return ConstrainedBox(
                 constraints: BoxConstraints(
                   minWidth: context.width, // vip
@@ -450,41 +446,51 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                         ),
                         Padding(
                           padding: EdgeInsetsGeometry.symmetric(horizontal: 48.0 + 8.0),
-                          child: textData == null
-                              ? Text(
-                                  lang.lyrics,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.fade,
-                                  softWrap: false,
-                                  style: textTheme.displayLarge,
-                                )
-                              : Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    if (textData.firstLineGood)
-                                      Text(
-                                        textData.firstLine,
-                                        maxLines: textData.secondLine == '' ? 2 : 1,
-                                        overflow: TextOverflow.fade,
-                                        softWrap: textData.secondLine.isEmpty,
-                                        style: textTheme.displayMedium?.copyWith(
-                                          fontSize: 17.0,
-                                        ),
-                                      ),
-                                    if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
-                                    if (textData.secondLineGood)
-                                      Text(
-                                        textData.secondLine,
-                                        softWrap: false,
-                                        overflow: TextOverflow.fade,
-                                        style: textTheme.displayMedium?.copyWith(
-                                          fontSize: 15.0,
-                                        ),
-                                      ),
-                                  ],
-                                ),
+                          child: ObxO(
+                            rx: YoutubeInfoController.utils.lazyInfoRefresh,
+                            builder: (context, _) {
+                              final textData = item is Selectable
+                                  ? NamidaMiniPlayerTrack.textBuilder(item)
+                                  : item is YoutubeID
+                                  ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
+                                  : null;
+                              return textData == null
+                                  ? Text(
+                                      lang.lyrics,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.fade,
+                                      softWrap: false,
+                                      style: textTheme.displayLarge,
+                                    )
+                                  : Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        if (textData.firstLineGood)
+                                          Text(
+                                            textData.firstLine,
+                                            maxLines: textData.secondLine == '' ? 2 : 1,
+                                            overflow: TextOverflow.fade,
+                                            softWrap: textData.secondLine.isEmpty,
+                                            style: textTheme.displayMedium?.copyWith(
+                                              fontSize: 17.0,
+                                            ),
+                                          ),
+                                        if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
+                                        if (textData.secondLineGood)
+                                          Text(
+                                            textData.secondLine,
+                                            softWrap: false,
+                                            overflow: TextOverflow.fade,
+                                            style: textTheme.displayMedium?.copyWith(
+                                              fontSize: 15.0,
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                            },
+                          ),
                         ),
                         Positioned(
                           right: 10.0,

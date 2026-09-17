@@ -97,6 +97,7 @@ internal class WidgetPayload(
   val subtitle: String,
   val isPlaying: Boolean,
   val isFav: Boolean,
+  val isFavAsLike: Boolean,
   val repeat: WidgetRepeat,
   val repeatCount: Int,
   val shuffle: Boolean,
@@ -110,6 +111,7 @@ internal class WidgetPayload(
         subtitle = data.getString("message", "") ?: "",
         isPlaying = data.getBoolean("playing", false),
         isFav = data.getBoolean("favourite", false),
+        isFavAsLike = data.getBoolean("favouriteAsLike", false),
         repeat = WidgetRepeat.parse(data.getString("repeat", null)),
         repeatCount = data.getInt("repeatCount", 1),
         shuffle = data.getBoolean("shuffle", false),
@@ -422,7 +424,12 @@ private enum class Ctrl {
 
   fun drawableRes(payload: WidgetPayload): Int =
     when (this) {
-      FAVOURITE -> if (payload.isFav) R.drawable.unheart else R.drawable.heart
+      FAVOURITE ->
+        if (payload.isFavAsLike) {
+          if (payload.isFav) R.drawable.unlike else R.drawable.like
+        } else {
+          if (payload.isFav) R.drawable.unheart else R.drawable.heart
+        }
       SHUFFLE -> R.drawable.shuffle
       PREVIOUS -> R.drawable.previous
       PLAY_PAUSE -> if (payload.isPlaying) R.drawable.pause else R.drawable.play
@@ -451,7 +458,12 @@ private enum class Ctrl {
 
   fun contentDescription(payload: WidgetPayload): String =
     when (this) {
-      FAVOURITE -> if (payload.isFav) "Unfavourite" else "Set Favourite"
+      FAVOURITE ->
+        if (payload.isFavAsLike) {
+          if (payload.isFav) "Remove Like" else "Like"
+        } else {
+          if (payload.isFav) "Unfavourite" else "Set Favourite"
+        }
       SHUFFLE -> "Shuffle"
       PREVIOUS -> "Previous"
       PLAY_PAUSE -> if (payload.isPlaying) "Pause" else "Play"

@@ -248,46 +248,26 @@ class _SearchFiltersHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final secondaryColor = theme.colorScheme.secondary;
-    final bgColor = theme.scaffoldBackgroundColor;
     return Row(
       children: [
         Expanded(
-          child: Stack(
-            children: [
-              SmoothSingleChildScrollView(
-                padding: const EdgeInsetsDirectional.only(start: 4.0, end: 16.0),
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _TrackTypesChip(
+          child: NamidaEndEdgeFeather(
+            child: SmoothSingleChildScrollView(
+              padding: const EdgeInsetsDirectional.only(start: 4.0, end: 16.0),
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _TrackTypesChip(
+                    onJump: onJump,
+                  ),
+                  for (final type in _chipsTypes)
+                    _FilterChip(
+                      type: type,
                       onJump: onJump,
                     ),
-                    for (final type in _chipsTypes)
-                      _FilterChip(
-                        type: type,
-                        onJump: onJump,
-                      ),
-                  ],
-                ),
+                ],
               ),
-              PositionedDirectional(
-                end: 0.0,
-                top: 0.0,
-                bottom: 0.0,
-                width: 16.0,
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: AlignmentDirectional.centerStart,
-                        end: AlignmentDirectional.centerEnd,
-                        colors: [bgColor.withAlpha(0), bgColor],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const SizedBox(width: 4.0),

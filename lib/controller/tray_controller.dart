@@ -20,6 +20,8 @@ class TrayIcons {
   final String icStatMusicnote;
   final String favorited;
   final String favorite;
+  final String liked;
+  final String like;
   final String previous;
   final String pause;
   final String play;
@@ -38,6 +40,8 @@ class TrayIcons {
     required this.icStatMusicnote,
     required this.favorited,
     required this.favorite,
+    required this.liked,
+    required this.like,
     required this.previous,
     required this.pause,
     required this.play,
@@ -100,6 +104,8 @@ class TrayIcons {
     icStatMusicnote: _getWindowsIco('ic_stat_musicnote'),
     favorited: _getWindowsIco('favorited'),
     favorite: _getWindowsIco('favorite'),
+    liked: _getWindowsIco('liked'),
+    like: _getWindowsIco('like'),
     previous: _getWindowsIco('previous'),
     pause: _getWindowsIco('pause'),
     play: _getWindowsIco('play'),
@@ -119,6 +125,8 @@ class TrayIcons {
     icStatMusicnote: '♪',
     favorited: '♥',
     favorite: '♡',
+    liked: '👍',
+    like: '🖒',
     previous: '⏮',
     pause: '⏸',
     play: '⏵',

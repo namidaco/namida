@@ -172,6 +172,7 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
             ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track, SortType>
             : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String, YTSortType>;
       },
+      textRefreshRx: ytConfig.textRefreshRx,
       canShowBuffering: (item) => item is Selectable ? trackConfig.canShowBuffering(item) : ytConfig.canShowBuffering(item),
     );
   }
@@ -220,8 +221,6 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       onShowAddToPlaylistDialog: () => showAddToPlaylistDialog([track]),
       onMenuOpen: (_) => openMenu(playable.trackWithDate, track),
       onTextLongTap: () => openInfoMenu(playable.trackWithDate, track),
-      likedIcon: Broken.heart_filled,
-      normalIcon: Broken.heart,
     );
   }
 
@@ -512,19 +511,16 @@ class NamidaMiniPlayerYoutubeID extends StatefulWidget {
 class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
   NamidaMiniPlayerYoutubeIDState();
 
-  static final _videoLikeManager = YtVideoLikeManager(pageRx: YoutubeInfoController.current.currentVideoPage);
   static final _numberOfRepeats = 1.obs;
 
   @override
   void initState() {
     super.initState();
-    _videoLikeManager.init();
     _numberOfRepeats.reInit();
   }
 
   @override
   void dispose() {
-    _videoLikeManager.dispose();
     _numberOfRepeats.close();
     super.dispose();
   }
@@ -574,7 +570,6 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     String secondLine = '';
 
     final utils = YoutubeInfoController.utils;
-    utils.lazyInfoRefresh.valueR;
     firstLine = utils.getVideoNameSyncLazy(video.id) ?? '';
     secondLine = utils.getVideoChannelNameSyncLazy(video.id) ?? '';
     if (firstLine == '') {
@@ -591,9 +586,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       onShowAddToPlaylistDialog: () => showAddToPlaylistSheet(ids: [video.id], idsNamesLookup: {}),
       onMenuOpen: (d) => openMenu(context, video, d),
       onTextLongTap: () => openInfoMenu(context, video),
-      likedIcon: Broken.like_filled,
-      normalIcon: Broken.like_1,
-      ytLikeManager: _videoLikeManager,
+      ytLikeManager: YtVideoLikeManager.current,
     );
   }
 
@@ -794,6 +787,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
         maxWidth: maxWidth,
       ),
       textBuilder: (item) => textBuilder(context, item),
+      textRefreshRx: YoutubeInfoController.utils.lazyInfoRefresh,
       canShowBuffering: (currentItem) => true,
     );
   }

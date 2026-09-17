@@ -103,6 +103,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         icon: Broken.flag,
         title: lang.configure,
         normalTitleStyle: true,
+        horizontalInset: 32.0,
         actions: [
           NamidaButton(
             text: lang.done,
@@ -1058,6 +1059,28 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                   title: 'show_like_status_on_cards'.toUpperCase(),
                   subtitle: 'can increase data usage',
                 ),
+              ),
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.heart,
+                  secondaryIcon: Broken.like_1,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.preferLikeButtonOverFavourite.value,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(preferLikeButtonOverFavourite: !isTrue)),
+                title: 'prefer_like_button_over_favourite'.toUpperCase(),
+                subtitle: 'show like instead of heart in notification, widgets, etc. when signed in',
+              ),
+              CustomSwitchListTile(
+                leading: StackedIcon(
+                  baseIcon: Broken.like_1,
+                  secondaryIcon: Broken.heart,
+                  secondaryIconSize: 12.0,
+                ),
+                value: settings.youtube.linkLikeButtonWithFavourites,
+                onChanged: (isTrue) => setState(() => settings.youtube.save(linkLikeButtonWithFavourites: !isTrue)),
+                title: 'link_like_button_with_favourites'.toUpperCase(),
+                subtitle: 'liking adds to local favourites, unliking/disliking removes',
               ),
               ObxO(
                 rx: settings.player.longPressSpeed,

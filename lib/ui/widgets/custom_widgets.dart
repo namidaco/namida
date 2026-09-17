@@ -3363,6 +3363,45 @@ class SearchPageTitleRow extends StatelessWidget {
   }
 }
 
+/// fades the end edge of a horizontal scrollable into the page background.
+class NamidaEndEdgeFeather extends StatelessWidget {
+  final double width;
+  final Widget child;
+
+  const NamidaEndEdgeFeather({
+    super.key,
+    this.width = 16.0,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = context.theme.scaffoldBackgroundColor;
+    return Stack(
+      children: [
+        child,
+        PositionedDirectional(
+          end: 0.0,
+          top: 0.0,
+          bottom: 0.0,
+          width: width,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: AlignmentDirectional.centerStart,
+                  end: AlignmentDirectional.centerEnd,
+                  colors: [bgColor.withAlpha(0), bgColor],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class NoResultsWidget extends StatelessWidget {
   final IconData icon;
   final Color? iconColor;
