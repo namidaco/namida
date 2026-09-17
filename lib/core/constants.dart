@@ -1111,7 +1111,9 @@ class NamidaFileExtensionsWrapper {
   static const json = NamidaFileExtensionsWrapper._({'json'});
   static const jsonl = NamidaFileExtensionsWrapper._({'jsonl'});
   static const zip = NamidaFileExtensionsWrapper._(_zipExtensions);
+  static const html = NamidaFileExtensionsWrapper._({'html'});
   static const jsonAndZip = NamidaFileExtensionsWrapper._({'json', ..._zipExtensions});
+  static const jsonHtmlAndZip = NamidaFileExtensionsWrapper._({'json', 'html', ..._zipExtensions});
   static const jsonlAndZip = NamidaFileExtensionsWrapper._({'jsonl', ..._zipExtensions});
   static const compressed = NamidaFileExtensionsWrapper._({..._zipExtensions, 'tar', 'gz', 'bz2', 'xz', 'cab', 'iso', 'jar'});
   static const lrcOrTxt = NamidaFileExtensionsWrapper._({..._lrcExtensions, 'txt'});

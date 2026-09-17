@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -568,6 +569,7 @@ class JsonToHistoryParser {
 
     switch (source) {
       case TrackSource.youtube || TrackSource.youtubeMusic:
+        final htmlFiles = <File>[];
         for (final file in contents) {
           progress++;
           onProgress(progress, total);
@@ -575,14 +577,18 @@ class JsonToHistoryParser {
             await executeFileEnsureZipExtracted(
               file,
               (file) {
+                if (!file.path.getFilename.contains('watch-history')) return;
                 if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
-                  final name = file.path.getFilename;
-                  if (name.contains('watch-history')) files.add(file);
+                  files.add(file);
+                } else if (NamidaFileExtensionsWrapper.html.isPathValid(file.path)) {
+                  htmlFiles.add(file);
                 }
               },
             );
           }
         }
+        // -- json first (date more precise and just easier)
+        files.addAll(htmlFiles);
 
       case TrackSource.lastfm:
         for (final file in contents) {
@@ -870,7 +876,11 @@ class JsonToHistoryParser {
 
     int jsonResponseTotal = 0;
     for (final file in files) {
-      jsonResponseTotal += await JsonToHistoryParser._countJsonObjectsInList(file);
+      if (_isHtmlFile(file)) {
+        jsonResponseTotal += await _YTTakeoutHtmlParser.countEntries(file);
+      } else {
+        jsonResponseTotal += await JsonToHistoryParser._countJsonObjectsInList(file);
+      }
     }
     portLoadingProgress.send(jsonResponseTotal); // 1
 
@@ -881,112 +891,105 @@ class JsonToHistoryParser {
     final daysToSaveLocal = <int>[];
     final daysToSaveYT = <int>[];
     const chunkSize = 20;
-    for (final file in files) {
-      List? list = jsonDecode(file.readAsStringSync()) as List?;
-      if (list == null) continue;
 
-      for (final p in list) {
-        totalParsed++;
-        try {
-          final link = utf8.decode((p['titleUrl']).toString().codeUnits);
-          final id = link.length >= 11 ? link.substring(link.length - 11) : link;
-          final z = List<Map<String, dynamic>>.from((p['subtitles'] ?? []));
-
-          /// matching in real time, each object.
-          final yth = YoutubeVideoHistory(
-            id: id,
-            title: (p['title'] as String).replaceFirst('Watched ', ''),
-            channel: z.isNotEmpty ? z.first['name'] : '',
-            channelUrl: z.isNotEmpty ? utf8.decode((z.first['url']).toString().codeUnits) : '',
-            watches: [
-              YTWatch(
-                dateMSNull: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
-                isYTMusic: p['header'] == "YouTube Music",
-              ),
-            ],
-          );
-          // -- updating affected ids map, used to update youtube stats
-          if (mapOfAffectedIds[id] != null) {
-            mapOfAffectedIds[id] = YoutubeVideoHistory.merge(current: mapOfAffectedIds[id], newRes: yth);
-            mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
-          } else {
-            mapOfAffectedIds[id] = yth;
+    void addEntry(YoutubeVideoHistory yth) {
+      final id = yth.id;
+      // -- updating affected ids map, used to update youtube stats
+      if (mapOfAffectedIds[id] != null) {
+        mapOfAffectedIds[id] = YoutubeVideoHistory.merge(current: mapOfAffectedIds[id], newRes: yth);
+        mapOfAffectedIds[id]!.watches.addAllNoDuplicates(yth.watches.map((e) => YTWatch(dateMSNull: e.dateMSNull, isYTMusic: e.isYTMusic)));
+      } else {
+        mapOfAffectedIds[id] = yth;
+      }
+      // ---------------------------------------------------------
+      // -- local history --
+      final tracks = _matchYTVHToNamidaHistory(
+        vh: yth,
+        matchYT: matchYT,
+        matchYTMusic: matchYTMusic,
+        oldestDay: oldestDay,
+        newestDay: newestDay,
+        matchAll: matchAll,
+        tracksIdsMap: tracksIdsMap,
+        matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
+        onMissingEntries: (entries) {
+          for (final e in entries) {
+            missingEntries.addForce(e, e.dateMSSE);
           }
-          // ---------------------------------------------------------
-          // -- local history --
-          final tracks = _matchYTVHToNamidaHistory(
-            vh: yth,
-            matchYT: matchYT,
-            matchYTMusic: matchYTMusic,
-            oldestDay: oldestDay,
-            newestDay: newestDay,
-            matchAll: matchAll,
-            tracksIdsMap: tracksIdsMap,
-            matchByTitleAndArtistIfNotFoundInMap: isMatchingTypeTitleAndArtist,
-            onMissingEntries: (entries) {
-              for (final e in entries) {
-                missingEntries.addForce(e, e.dateMSSE);
-              }
-            },
-            allTracks: allTracks,
-            artistsSplitConfig: artistsSplitConfig,
-            reverseTitleMatcher: reverseTitleMatcher,
-            reverseArtistMatcher: reverseArtistMatcher,
-            reverseAlbumMatcher: reverseAlbumMatcher,
-          );
-          totalAdded += tracks.length;
-          for (var item in tracks) {
-            final day = item.dateAdded.toDaysSince1970();
-            final tracks = localHistory[day] ??= [];
-            if (!tracks.contains(item)) {
-              daysToSaveLocal.add(day);
-              tracks.add(item);
-              addedLocalHistoryCount++;
-            }
-          }
-
-          // -- youtube history --
-          for (var w in yth.watches) {
-            final canAdd = _canSafelyAddToYTHistory(
-              watch: w,
-              matchYT: matchYT,
-              matchYTMusic: matchYTMusic,
-              newestDay: newestDay,
-              oldestDay: oldestDay,
-            );
-            if (canAdd) {
-              final ytid = YoutubeID(
-                id: yth.id,
-                source: w.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
-                watchNull: w,
-                playlistID: null,
-              );
-              final day = ytid.dateAddedMS.toDaysSince1970();
-              final videos = ytHistory[day] ??= [];
-              if (!videos.contains(ytid)) {
-                daysToSaveYT.add(day);
-                videos.add(ytid);
-                addedYTHistoryCount++;
-              }
-            }
-          }
-
-          if (totalParsed >= chunkSize) {
-            portProgressParsed.send(totalParsed);
-            totalParsed = 0;
-          }
-          if (totalAdded >= chunkSize) {
-            portProgressAdded.send(totalAdded);
-            totalAdded = 0;
-          }
-        } catch (e) {
-          printo(e, isError: true);
-          continue;
+        },
+        allTracks: allTracks,
+        artistsSplitConfig: artistsSplitConfig,
+        reverseTitleMatcher: reverseTitleMatcher,
+        reverseArtistMatcher: reverseArtistMatcher,
+        reverseAlbumMatcher: reverseAlbumMatcher,
+      );
+      totalAdded += tracks.length;
+      for (var item in tracks) {
+        final day = item.dateAdded.toDaysSince1970();
+        final tracks = localHistory[day] ??= [];
+        final exists = tracks.any((e) => e.track == item.track && e.sourceNull == item.sourceNull && _isSameSecond(e.dateAdded, item.dateAdded));
+        if (!exists) {
+          daysToSaveLocal.add(day);
+          tracks.add(item);
+          addedLocalHistoryCount++;
         }
       }
-      list = null;
+
+      // -- youtube history --
+      for (var w in yth.watches) {
+        final canAdd = _canSafelyAddToYTHistory(
+          watch: w,
+          matchYT: matchYT,
+          matchYTMusic: matchYTMusic,
+          newestDay: newestDay,
+          oldestDay: oldestDay,
+        );
+        if (canAdd) {
+          final ytid = YoutubeID(
+            id: id,
+            source: w.isYTMusic ? TrackSource.youtubeMusic : TrackSource.youtube,
+            watchNull: w,
+            playlistID: null,
+          );
+          final day = ytid.dateAddedMS.toDaysSince1970();
+          final videos = ytHistory[day] ??= [];
+          final exists = videos.any((e) => e.id == id && e.sourceNull == ytid.sourceNull && _isSameSecond(e.dateAddedMS, ytid.dateAddedMS));
+          if (!exists) {
+            daysToSaveYT.add(day);
+            videos.add(ytid);
+            addedYTHistoryCount++;
+          }
+        }
+      }
     }
-    // jsonResponsesList.clear();
+
+    void addItems<E>(Iterable<E> items, YoutubeVideoHistory? Function(E item) toEntry) {
+      for (final item in items) {
+        totalParsed++;
+        try {
+          final entry = toEntry(item);
+          if (entry != null) addEntry(entry);
+        } catch (e) {
+          printo(e, isError: true);
+        }
+        if (totalParsed >= chunkSize) {
+          portProgressParsed.send(totalParsed);
+          totalParsed = 0;
+        }
+        if (totalAdded >= chunkSize) {
+          portProgressAdded.send(totalAdded);
+          totalAdded = 0;
+        }
+      }
+    }
+
+    for (final file in files) {
+      if (_isHtmlFile(file)) {
+        addItems(_YTTakeoutHtmlParser.splitEntries(file.readAsBytesSync()), _YTTakeoutHtmlParser.parseEntry);
+      } else {
+        addItems(jsonDecode(file.readAsStringSync()) as List? ?? const [], _ytTakeoutJsonEntry);
+      }
+    }
 
     portProgressParsed.send(totalParsed);
     portProgressAdded.send(totalAdded);
@@ -1002,6 +1005,44 @@ class JsonToHistoryParser {
       localHistory: localHistory,
       ytHistory: ytHistory,
       missingEntriesSorted: missingEntries,
+    );
+  }
+
+  static bool _isHtmlFile(File file) => NamidaFileExtensionsWrapper.html.isPathValid(file.path);
+
+  static YoutubeVideoHistory? _ytTakeoutJsonEntry(dynamic p) {
+    final url = p['titleUrl'] as String?;
+    if (url == null) return null;
+    final channel = (p['subtitles'] as List?)?.firstOrNull as Map?;
+    return _ytTakeoutEntry(
+      url: url,
+      title: (p['title'] as String).replaceFirst('Watched ', ''),
+      channel: channel?['name'] as String? ?? '',
+      channelUrl: channel?['url'] as String? ?? '',
+      dateMS: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
+      isYTMusic: p['header'] == 'YouTube Music',
+    );
+  }
+
+  static YoutubeVideoHistory _ytTakeoutEntry({
+    required String url,
+    required String title,
+    required String channel,
+    required String channelUrl,
+    required int? dateMS,
+    required bool isYTMusic,
+  }) {
+    return YoutubeVideoHistory(
+      id: url.length >= 11 ? url.substring(url.length - 11) : url,
+      title: title,
+      channel: channel,
+      channelUrl: channelUrl,
+      watches: [
+        YTWatch(
+          dateMSNull: dateMS,
+          isYTMusic: isYTMusic,
+        ),
+      ],
     );
   }
 
@@ -1647,14 +1688,190 @@ class _MissingListenEntry {
   }
 }
 
+/// html takeouts are second-precise, same watch from json/html takeouts should be considered a duplicate.
+bool _isSameSecond(int ms, int otherMS) => ms ~/ 1000 == otherMS ~/ 1000;
+
 extension _YTWatchListExt on List<YTWatch> {
   void addAllNoDuplicates(Iterable<YTWatch> items) {
     for (final item in items) {
-      final alrExists = this.contains(item);
+      final alrExists = this.any((e) => e.isYTMusic == item.isYTMusic && _isSameSecond(e.dateMS, item.dateMS));
       if (!alrExists) this.add(item);
     }
   }
 }
+
+/// Parses `watch-history.html` of google takeout, each entry body looks like:
+/// `Watched <a href="VIDEO_URL">TITLE</a><br><a href="CHANNEL_URL">CHANNEL</a><br>Feb 4, 2022, 4:20:56 PM EET`
+///
+/// by claude
+class _YTTakeoutHtmlParser {
+  static final _entryStart = ascii.encode('<p class="mdl-typography--title">');
+  static final _bodyStart = ascii.encode('mdl-typography--body-1">');
+  static final _bodyEnd = ascii.encode('</div>');
+  static final _ytMusicHeader = ascii.encode('YouTube Music<');
+
+  static final _dateSeparators = RegExp(r'[\s,]+');
+  static final _gmtOffset = RegExp(r'^(?:GMT|UTC)([+-])(\d{1,2})(?::?(\d{2}))?$');
+  static final _entities = RegExp(r'&(#x[0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos|nbsp);');
+
+  static const _months = {
+    'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, //
+    'Jul': 7, 'Aug': 8, 'Sep': 9, 'Sept': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+  };
+
+  /// takeout prints all dates with the fixed offset of the export zone, regardless of dst at that date.
+  static const _zoneOffsetsMinutes = {
+    'UTC': 0, 'GMT': 0, 'WET': 0, 'WEST': 60, 'BST': 60, 'CET': 60, 'CEST': 120, 'EET': 120, 'EEST': 180, 'MSK': 180, //
+    'PKT': 300, 'IST': 330, 'WIB': 420, 'HKT': 480, 'SGT': 480, 'AWST': 480, 'JST': 540, 'KST': 540,
+    'ACST': 570, 'ACDT': 630, 'AEST': 600, 'AEDT': 660, 'NZST': 720, 'NZDT': 780,
+    'HST': -600, 'AKST': -540, 'AKDT': -480, 'PST': -480, 'PDT': -420, 'MST': -420, 'MDT': -360,
+    'CST': -360, 'CDT': -300, 'EST': -300, 'EDT': -240, 'AST': -240, 'ADT': -180, 'NST': -210, 'NDT': -150,
+  };
+
+  static Future<int> countEntries(File file) async {
+    final pattern = _entryStart;
+    final first = pattern[0];
+    int count = 0;
+    int matched = 0;
+    await for (final chunk in file.openRead()) {
+      final bytes = chunk is Uint8List ? chunk : Uint8List.fromList(chunk);
+      for (int i = 0; i < bytes.length; i++) {
+        final b = bytes[i];
+        if (b == pattern[matched]) {
+          if (++matched == pattern.length) {
+            count++;
+            matched = 0;
+          }
+        } else {
+          matched = b == first ? 1 : 0; // safe since pattern[0] never repeats
+        }
+      }
+    }
+    return count;
+  }
+
+  static Iterable<_YTTakeoutHtmlEntry> splitEntries(Uint8List bytes) sync* {
+    int start = 0;
+    while (true) {
+      final entryStart = _indexOf(bytes, _entryStart, start);
+      if (entryStart == -1) return;
+      final bodyTagStart = _indexOf(bytes, _bodyStart, entryStart);
+      if (bodyTagStart == -1) return;
+      final bodyStart = bodyTagStart + _bodyStart.length;
+      final bodyEnd = _indexOf(bytes, _bodyEnd, bodyStart);
+      if (bodyEnd == -1) return;
+      yield (
+        isYTMusic: _startsWith(bytes, _ytMusicHeader, entryStart + _entryStart.length),
+        body: utf8.decode(Uint8List.sublistView(bytes, bodyStart, bodyEnd), allowMalformed: true),
+      );
+      start = bodyEnd;
+    }
+  }
+
+  static YoutubeVideoHistory? parseEntry(_YTTakeoutHtmlEntry entry) {
+    final lines = entry.body.split('<br>');
+    if (lines.length < 2) return null;
+    final video = _parseLink(lines.first);
+    if (video == null) return null;
+    final dateMS = _parseDateMS(lines.last);
+    if (dateMS == null) return null;
+    final channel = lines.length > 2 ? _parseLink(lines[1]) : null;
+    return JsonToHistoryParser._ytTakeoutEntry(
+      url: video.url,
+      title: video.text,
+      channel: channel?.text ?? '',
+      channelUrl: channel?.url ?? '',
+      dateMS: dateMS,
+      isYTMusic: entry.isYTMusic,
+    );
+  }
+
+  static ({String url, String text})? _parseLink(String line) {
+    const tag = '<a href="';
+    final tagStart = line.indexOf(tag);
+    if (tagStart == -1) return null;
+    final urlStart = tagStart + tag.length;
+    final urlEnd = line.indexOf('">', urlStart);
+    if (urlEnd == -1) return null;
+    final textEnd = line.indexOf('</a>', urlEnd);
+    if (textEnd == -1) return null;
+    return (
+      url: _unescape(line.substring(urlStart, urlEnd)),
+      text: _unescape(line.substring(urlEnd + 2, textEnd)),
+    );
+  }
+
+  /// supports `MMM d, yyyy, h:mm:ss a z` & `d MMM yyyy, HH:mm:ss z`.
+  static int? _parseDateMS(String text) {
+    final parts = text.trim().split(_dateSeparators);
+    if (parts.length < 5) return null;
+    final monthFirst = _months[parts[0]];
+    final month = monthFirst ?? _months[parts[1]];
+    final time = parts[3].split(':');
+    if (month == null || time.length != 3) return null;
+
+    final day = int.parse(monthFirst != null ? parts[1] : parts[0]);
+    final year = int.parse(parts[2]);
+    final meridiem = parts.length > 5 ? parts[4] : null;
+    final hour = int.parse(time[0]);
+    final hour24 = meridiem == null ? hour : hour % 12 + (meridiem == 'PM' ? 12 : 0);
+    final minute = int.parse(time[1]);
+    final second = int.parse(time[2]);
+
+    final offsetMinutes = _parseOffsetMinutes(parts.last);
+    if (offsetMinutes == null) return DateTime(year, month, day, hour24, minute, second).millisecondsSinceEpoch;
+    return DateTime.utc(year, month, day, hour24, minute, second).millisecondsSinceEpoch - offsetMinutes * Duration.millisecondsPerMinute;
+  }
+
+  static int? _parseOffsetMinutes(String zone) {
+    final known = _zoneOffsetsMinutes[zone];
+    if (known != null) return known;
+    final match = _gmtOffset.firstMatch(zone);
+    if (match == null) return null;
+    final minutes = int.parse(match[2]!) * 60 + int.parse(match[3] ?? '0');
+    return match[1] == '-' ? -minutes : minutes;
+  }
+
+  static String _unescape(String text) {
+    if (!text.contains('&')) return text;
+    return text.replaceAllMapped(_entities, (m) {
+      final entity = m[1]!;
+      return switch (entity) {
+        'amp' => '&',
+        'lt' => '<',
+        'gt' => '>',
+        'quot' => '"',
+        'apos' => "'",
+        'nbsp' => ' ',
+        _ => String.fromCharCode(entity[1] == 'x' ? int.parse(entity.substring(2), radix: 16) : int.parse(entity.substring(1))),
+      };
+    });
+  }
+
+  static int _indexOf(Uint8List bytes, Uint8List pattern, int start) {
+    final first = pattern[0];
+    final last = bytes.length - pattern.length;
+    outer:
+    for (int i = start; i <= last; i++) {
+      if (bytes[i] != first) continue;
+      for (int j = 1; j < pattern.length; j++) {
+        if (bytes[i + j] != pattern[j]) continue outer;
+      }
+      return i;
+    }
+    return -1;
+  }
+
+  static bool _startsWith(Uint8List bytes, Uint8List pattern, int start) {
+    if (start + pattern.length > bytes.length) return false;
+    for (int j = 0; j < pattern.length; j++) {
+      if (bytes[start + j] != pattern[j]) return false;
+    }
+    return true;
+  }
+}
+
+typedef _YTTakeoutHtmlEntry = ({bool isYTMusic, String body});
 
 class _GeneralSourceItemInfo {
   final String itemArtist;
