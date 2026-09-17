@@ -999,12 +999,12 @@ enum InternalPlayerType {
   bool get shouldInitializeMPV => ensureResolved() == InternalPlayerType.mpv;
 
   static List<InternalPlayerType> getAvailableForCurrentPlatform() {
-    final nativePlayers = NamidaPlatformBuilder.init(
-      android: () => const [InternalPlayerType.exoplayer, InternalPlayerType.exoplayer_sw],
-      ios: () => const [InternalPlayerType.exoplayer],
-      windows: () => const [InternalPlayerType.mpv],
-      macos: () => const [InternalPlayerType.mpv],
-      linux: () => const [InternalPlayerType.mpv],
+    final nativePlayers = NamidaPlatformBuilder.initValue(
+      android: const [InternalPlayerType.exoplayer, InternalPlayerType.exoplayer_sw],
+      ios: const [InternalPlayerType.exoplayer],
+      windows: const [InternalPlayerType.mpv],
+      macos: const [InternalPlayerType.mpv],
+      linux: const [InternalPlayerType.mpv],
     );
     return [
       InternalPlayerType.auto,
@@ -1015,12 +1015,12 @@ enum InternalPlayerType {
   static final InternalPlayerType platformDefault = InternalPlayerType._getForPlatform();
 
   factory InternalPlayerType._getForPlatform() {
-    return NamidaPlatformBuilder.init(
-      android: () => InternalPlayerType.exoplayer,
-      ios: () => InternalPlayerType.exoplayer,
-      windows: () => InternalPlayerType.mpv,
-      macos: () => InternalPlayerType.mpv,
-      linux: () => InternalPlayerType.mpv,
+    return NamidaPlatformBuilder.initValue(
+      android: InternalPlayerType.exoplayer,
+      ios: InternalPlayerType.exoplayer,
+      windows: InternalPlayerType.mpv,
+      macos: InternalPlayerType.mpv,
+      linux: InternalPlayerType.mpv,
     );
   }
 

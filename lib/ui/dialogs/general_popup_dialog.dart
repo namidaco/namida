@@ -126,7 +126,7 @@ Future<void> showGeneralPopupDialog(
       onColorsObtained(colorSync);
     } else {
       CurrentColor.inst
-          .getTrackDelightnedColor(trackToExtractColorFrom, networkArtworkInfo, useIsolate: true)
+          .getTrackDelightnedColor(trackToExtractColorFrom, networkArtworkInfo)
           .executeWithMinDelay(
             delayMS: NamidaNavigator.kDefaultDialogDurationMS,
           )
@@ -871,7 +871,7 @@ Future<void> showGeneralPopupDialog(
                                   fadeMilliSeconds: 0,
                                   track: tracks.trackOfImage,
                                   path: artworkFileGood ? artworkFile.path : tracks.pathToImage,
-                                  info: artworkFileGood ? networkArtworkInfo : null,
+                                  info: networkArtworkInfo,
                                   thumbnailSize: 60,
                                   forceSquared: forceSquared,
                                   borderRadius: isCircle ? 200 : 8.0,
@@ -1559,6 +1559,8 @@ class _ArtworkManager extends StatelessWidget {
   final CustomArtworkManager customArtworkManager;
   const _ArtworkManager({required this.customArtworkManager});
 
+  static final _lastfmImageSizeRegex = RegExp(r'\/i\/u\/(.+)\/');
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -1712,7 +1714,7 @@ class _ArtworkManager extends StatelessWidget {
                                                       NamidaNavigator.inst.closeDialog();
                                                       Uint8List? fullResbytes;
                                                       try {
-                                                        final fullResUrl = url.replaceAll(RegExp(r'\/i\/u\/(.+)\/'), '/i/u/ar0/');
+                                                        final fullResUrl = url.replaceAll(_lastfmImageSizeRegex, '/i/u/ar0/');
                                                         final res = await Rhttp.getBytes(fullResUrl);
                                                         fullResbytes = res.body;
                                                       } catch (_) {}

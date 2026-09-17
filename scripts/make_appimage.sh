@@ -16,7 +16,7 @@
 # Layout of the resulting AppDir:
 #   /AppRun, /com.msob7y.namida.desktop, /com.msob7y.namida.png, /.DirIcon
 #   /namida, /lib, /data, /bin, /share    <- the flutter bundle, copied verbatim to the AppDir root so that
-#                                            $APPDIR/bin/{ffmpeg,ffprobe,audiowaveform} matches
+#                                            $APPDIR/bin/{ffmpeg,ffprobe} matches
 #                                            NamidaPlatformBuilder.getExecutablesDirectoryPath()
 #   /usr/lib                              <- libmpv.so.2 + its transitive deps that are not "system" libs
 #   /usr/share/{icons,metainfo}

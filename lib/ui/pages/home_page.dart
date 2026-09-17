@@ -1,5 +1,8 @@
 // ignore_for_file: unused_element, unused_element_parameter
 
+import 'dart:async';
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -118,6 +121,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
 
   final _shimmerList = List.filled(20, null, growable: true);
   late bool _isLoading;
+  int _fillGeneration = 0;
 
   List<E>? _recentlyAddedFull;
   final _recentlyAdded = <E>[];
@@ -180,13 +184,19 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
     emptyExtraLists();
   }
 
+  /// lets the frame render between the heavy phases below, all of this runs on the main isolate
+  /// right as the home tab is being built.
+  static Future<void> _yieldFrame() => Future.delayed(Duration.zero);
+
   void _fillLists() async {
+    final generation = ++_fillGeneration;
     final historyManager = this.historyManager;
     if (historyManager.isHistoryLoaded) {
       _isLoading = false;
     } else {
       _isLoading = true;
       await historyManager.waitForHistoryAndMostPlayedLoad;
+      if (generation != _fillGeneration) return;
     }
 
     final timeNow = DateTime.now();
@@ -223,9 +233,12 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
     _updateSameTimeNYearsAgo(timeNow, minusYearClamped);
 
     await fillExtraLists(timeNow);
+    if (generation != _fillGeneration) return;
 
     // ==== Mixes ====
     if (_mixes.isEmpty) {
+      await _yieldFrame();
+      if (generation != _fillGeneration) return;
       final topTracksMapListens = historyManager.topTracksMapListens.value;
 
       // -- Random --
@@ -243,29 +256,42 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         return true;
       });
 
-      final avgTopListensCount = (topTracksMapListens.values.take(20).fold(0, (value, element) => value + element.length) ~/ 20).withMinimum(0);
+      // -- averaged over what actually exists (previously hardcoded 20)
+      int topListensTotal = 0;
+      int topListensEntries = 0;
+      for (final listens in topTracksMapListens.values.take(20)) {
+        topListensTotal += listens.length;
+        topListensEntries++;
+      }
+      final avgTopListensCount = topListensEntries == 0 ? 0 : topListensTotal ~/ topListensEntries;
       final int within1MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 1)).millisecondsSinceEpoch;
       final int within3MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 3)).millisecondsSinceEpoch;
       final int within6MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 6)).millisecondsSinceEpoch;
       final int within12MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 12)).millisecondsSinceEpoch;
-      final lostPartners = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
-        final listens = topTracksMapListens[item];
-        if (listens != null && listens.isNotEmpty) {
-          final lastListen = listens.last;
-          final listensPercentage = listens.length / avgTopListensCount;
-          // -- if listens percentage >= p and there is no listen in the last n days
-          // -- ex: 90/100 >= 0.9 && no listens within 12 months (where 100 is avg top listens)
-          return switch (listensPercentage) {
-            >= 0.90 when within12MonthsDaysMSSE > lastListen => true,
-            >= 0.50 when within6MonthsDaysMSSE > lastListen => true,
-            >= 0.20 when within3MonthsDaysMSSE > lastListen => true,
-            >= 0.1 when within1MonthsDaysMSSE > lastListen => true,
-            _ => false,
-          };
-        }
-        return false;
-      });
+      await _yieldFrame();
+      if (generation != _fillGeneration) return;
+      final lostPartners = avgTopListensCount <= 0
+          ? <E>[] // -- not enough history for the percentages below to mean anything
+          : _allItemsInLibrary.getRandomSampleWhere(100, (item) {
+              final listens = topTracksMapListens[item];
+              if (listens != null && listens.isNotEmpty) {
+                final lastListen = listens.last;
+                final listensPercentage = listens.length / avgTopListensCount;
+                // -- if listens percentage >= p and there is no listen in the last n days
+                // -- ex: 90/100 >= 0.9 && no listens within 12 months (where 100 is avg top listens)
+                return switch (listensPercentage) {
+                  >= 0.90 when within12MonthsDaysMSSE > lastListen => true,
+                  >= 0.50 when within6MonthsDaysMSSE > lastListen => true,
+                  >= 0.20 when within3MonthsDaysMSSE > lastListen => true,
+                  >= 0.1 when within1MonthsDaysMSSE > lastListen => true,
+                  _ => false,
+                };
+              }
+              return false;
+            });
 
+      await _yieldFrame();
+      if (generation != _fillGeneration) return;
       // -- items with little to no listens in the past n days
       final discover = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
         final listens = topTracksMapListens[item];
@@ -284,6 +310,8 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         return listensCountWithinPeriod <= 5;
       });
 
+      await _yieldFrame();
+      if (generation != _fillGeneration) return;
       // -- supermacy
       final ct = getCurrentPlayingItem();
       final maxCount = settings.queueInsertion.value[QueueInsertionType.algorithm]?.numberOfTracks.withMinimum(10) ?? 50;
@@ -638,7 +666,6 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                               },
                             )
                             .addSeparators(
-                              skipFirst: 1,
                               separator: const SliverPadding(padding: EdgeInsets.only(bottom: 12.0)),
                             ),
                         kBottomPaddingWidgetSliver,
@@ -1773,8 +1800,8 @@ class _MixesCardState extends State<_MixesCard> {
   void _extractColor(Track track) {
     if (!mounted) return;
     if (_cardColor == null) {
-      CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null, useIsolate: true).then((value) {
-        if (mounted) setState(() => _cardColor = value.color);
+      _CardPaletteExtractor.extract(track, isMounted: () => mounted).then((color) {
+        if (color != null && mounted) setState(() => _cardColor = color);
       });
     }
   }
@@ -2321,8 +2348,8 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     if (!await canStartLoadingItems()) return;
 
     if (_cardColor == null) {
-      CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null, useIsolate: true).then((value) {
-        if (mounted) setState(() => _cardColor = value.color);
+      _CardPaletteExtractor.extract(track, isMounted: () => mounted).then((color) {
+        if (color != null && mounted) setState(() => _cardColor = color);
       });
     }
   }
@@ -2574,5 +2601,41 @@ class _YourYearBanner extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// by claude
+class _CardPaletteExtractor {
+  static const _maxConcurrent = 2;
+  static int _running = 0;
+  static final _pending = ListQueue<void Function()>();
+
+  static Future<Color?> extract(Track track, {required bool Function() isMounted}) {
+    final completer = Completer<Color?>();
+    void run() {
+      if (!isMounted()) {
+        completer.complete(null);
+        return;
+      }
+      _running++;
+      CurrentColor.inst.getTrackColors(track, networkArtworkInfo: null).then((value) => completer.complete(value.color), onError: completer.completeError).whenComplete(() {
+        _running--;
+        _startNext();
+      });
+    }
+
+    if (_running < _maxConcurrent) {
+      run();
+    } else {
+      _pending.add(run);
+    }
+    return completer.future;
+  }
+
+  static void _startNext() {
+    while (_running < _maxConcurrent && _pending.isNotEmpty) {
+      final callback = _pending.removeFirst();
+      callback();
+    }
   }
 }

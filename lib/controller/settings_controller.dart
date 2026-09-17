@@ -1458,7 +1458,7 @@ class _SettingsController with SettingsFileWriter {
     AppPathsBackupEnum? backupItemslist1,
     List<AppPathsBackupEnum>? backupItemslistAll,
     String? youtubeVideoQualities1,
-    List<AppPathsBackupEnum>? youtubeVideoQualitiesAll,
+    List<String>? youtubeVideoQualitiesAll,
     TagField? tagFieldsToEdit1,
     List<TagField>? tagFieldsToEditAll,
     LibraryImageSource? imageSourceAlbum1,

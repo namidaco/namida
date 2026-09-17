@@ -418,97 +418,100 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
               builder: (context, details) {
                 final isHeatMapActive = details != null;
                 final heatMapCurrentHeight = isHeatMapActive ? _HeatMapWidget.kBarHeight : 0.0;
-                return Obx(
-                  (context) {
-                    final nowPlayingPosition = Player.inst.nowPlayingPositionR;
-                    final itemDurMS = _currentDurationR.inMilliseconds;
-                    final seek = (_seekPercentage.valueR * itemDurMS).round();
+                return AnimatedBuilder(
+                  animation: _animation,
+                  builder: (context, child) => _animation.value <= 0 ? const SizedBox() : child!,
+                  child: Obx(
+                    (context) {
+                      final itemDurMS = _currentDurationR.inMilliseconds;
+                      final seek = (_seekPercentage.valueR * itemDurMS).round();
 
-                    String finalText;
-                    if (_currentSeekStuckWord != '') {
-                      finalText = _currentSeekStuckWord;
-                    } else if (settings.player.displayActualPositionWhenSeeking.value) {
-                      int seekClamped = seek;
-                      seekClamped = seekClamped.withMinimum(0);
-                      seekClamped = seekClamped.withMaximum(itemDurMS);
-                      finalText = " ${seekClamped.milliSecondsLabel} ";
-                    } else {
-                      final diffInMs = seek - nowPlayingPosition;
-                      final plusOrMinus = diffInMs < 0 ? '' : '+';
-                      final seekText = diffInMs.milliSecondsLabel;
-                      finalText = " $plusOrMinus$seekText ";
-                    }
+                      String finalText;
+                      if (_currentSeekStuckWord != '') {
+                        finalText = _currentSeekStuckWord;
+                      } else if (settings.player.displayActualPositionWhenSeeking.value) {
+                        int seekClamped = seek;
+                        seekClamped = seekClamped.withMinimum(0);
+                        seekClamped = seekClamped.withMaximum(itemDurMS);
+                        finalText = " ${seekClamped.milliSecondsLabel} ";
+                      } else {
+                        final diffInMs = seek - Player.inst.nowPlayingPositionR;
+                        final plusOrMinus = diffInMs < 0 ? '' : '+';
+                        final seekText = diffInMs.milliSecondsLabel;
+                        finalText = " $plusOrMinus$seekText ";
+                      }
 
-                    String? landingSegmentTitle;
-                    final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
-                    if (streamSegments != null && streamSegments.isNotEmpty) {
-                      final landingSegment = streamSegments.findByMillisecond(seek);
-                      landingSegmentTitle = landingSegment?.title;
-                    }
-                    final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
-                    final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
-                    final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
-                    final seekTextMaxOffset = (maxWidth - seekTextWidth - seekTextExtraMargin).withMinimum(seekTextExtraMargin);
-                    return Transform.translate(
-                      offset: Offset(
-                        (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, seekTextMaxOffset),
-                        -(12.0.withMinimum(heatMapCurrentHeight)),
-                      ),
-                      child: AnimatedBuilder(
-                        animation: _animation,
-                        child: Padding(
-                          padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
-                          child: Container(
-                            width: seekTextWidth,
-                            padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                            decoration: BoxDecoration(
-                              color: theme.scaffoldBackgroundColor,
-                              borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                            ),
-                            child: isGoodSegmentTitle
-                                ? Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        landingSegmentTitle,
-                                        style: textTheme.displaySmall,
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                        overflow: TextOverflow.fade,
-                                      ),
-                                      Text(
+                      String? landingSegmentTitle;
+                      final streamSegments = YoutubeInfoController.current.currentVideoPage.value?.streamSegments;
+                      if (streamSegments != null && streamSegments.isNotEmpty) {
+                        final landingSegment = streamSegments.findByMillisecond(seek);
+                        landingSegmentTitle = landingSegment?.title;
+                      }
+                      final isGoodSegmentTitle = landingSegmentTitle != null && landingSegmentTitle.isNotEmpty;
+                      final extraBottomPadding = isGoodSegmentTitle ? 4.0 : 0.0;
+                      final seekTextWidth = isGoodSegmentTitle ? 44.0 * 2 : 44.0;
+                      final seekTextMaxOffset = (maxWidth - seekTextWidth - seekTextExtraMargin).withMinimum(seekTextExtraMargin);
+                      return Transform.translate(
+                        offset: Offset(
+                          (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, seekTextMaxOffset),
+                          -(12.0.withMinimum(heatMapCurrentHeight)),
+                        ),
+                        child: AnimatedBuilder(
+                          animation: _animation,
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
+                            child: Container(
+                              width: seekTextWidth,
+                              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                              decoration: BoxDecoration(
+                                color: theme.scaffoldBackgroundColor,
+                                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                              ),
+                              child: isGoodSegmentTitle
+                                  ? Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          landingSegmentTitle,
+                                          style: textTheme.displaySmall,
+                                          textAlign: TextAlign.center,
+                                          softWrap: false,
+                                          overflow: TextOverflow.fade,
+                                        ),
+                                        Text(
+                                          finalText,
+                                          style: textTheme.displaySmall,
+                                          textAlign: TextAlign.center,
+                                          softWrap: false,
+                                          overflow: TextOverflow.fade,
+                                        ),
+                                      ],
+                                    )
+                                  : FittedBox(
+                                      child: Text(
                                         finalText,
                                         style: textTheme.displaySmall,
-                                        textAlign: TextAlign.center,
-                                        softWrap: false,
-                                        overflow: TextOverflow.fade,
                                       ),
-                                    ],
-                                  )
-                                : FittedBox(
-                                    child: Text(
-                                      finalText,
-                                      style: textTheme.displaySmall,
                                     ),
-                                  ),
-                          ),
-                        ),
-                        builder: (context, child) {
-                          final p = _animation.value;
-                          if (p <= 0) return const SizedBox();
-
-                          return Transform.scale(
-                            scale: p,
-                            child: SlideTransition(
-                              position: Tween<Offset>(begin: const Offset(0, 2), end: const Offset(0, 0.0)).animate(_animation),
-                              child: child,
                             ),
-                          );
-                        },
-                      ),
-                    );
-                  },
+                          ),
+                          builder: (context, child) {
+                            final p = _animation.value;
+                            if (p <= 0) return const SizedBox();
+
+                            return Transform.scale(
+                              scale: p,
+                              child: SlideTransition(
+                                position: Tween<Offset>(begin: const Offset(0, 2), end: const Offset(0, 0.0)).animate(_animation),
+                                child: child,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -522,7 +525,6 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   animation: _animation,
                   child: Obx((context) {
                     final durMS = (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR).inMilliseconds;
-                    final currentPositionMS = Player.inst.nowPlayingPositionR;
                     final buffered = Player.inst.buffered.valueR;
                     final videoCached = Player.inst.currentCachedVideo.valueR != null;
                     final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
@@ -609,8 +611,11 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                   Radius.circular(6.0),
                                 ),
                               ),
-                              child: SizedBox(
-                                width: durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS)),
+                              child: ObxO(
+                                rx: Player.inst.nowPlayingPosition,
+                                builder: (context, currentPositionMS) => SizedBox(
+                                  width: durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS)),
+                                ),
                               ),
                             ),
                           ),

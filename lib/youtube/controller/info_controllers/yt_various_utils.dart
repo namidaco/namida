@@ -85,6 +85,40 @@ class _YoutubeInfoUtils {
 
   // ==== sync methods ====
 
+  /// bumped once a lazily resolved name/channel becomes available in memory.
+  final lazyInfoRefresh = 0.obs;
+  final _lazyResolvingIds = <String>{};
+  final _lazyResolvedMissingIds = <String>{};
+
+  /// memory only, resolves from storage in the background and bumps [lazyInfoRefresh] when found.
+  String? getVideoNameSyncLazy(String videoId) {
+    final name = getVideoNameSync(videoId, checkFromStorage: false);
+    if (name == null) _resolveInfoLazy(videoId);
+    return name;
+  }
+
+  String? getVideoChannelNameSyncLazy(String videoId) {
+    final name = getVideoChannelNameSync(videoId, checkFromStorage: false);
+    if (name == null) _resolveInfoLazy(videoId);
+    return name;
+  }
+
+  void _resolveInfoLazy(String videoId) {
+    if (_lazyResolvedMissingIds.contains(videoId) || !_lazyResolvingIds.add(videoId)) return;
+    (getVideoName(videoId), getVideoChannelName(videoId)).wait
+        .then(
+          (res) {
+            if (res.$1 != null || res.$2 != null) {
+              lazyInfoRefresh.value++;
+            } else {
+              _lazyResolvedMissingIds.add(videoId);
+            }
+          },
+          onError: (_) => _lazyResolvedMissingIds.add(videoId),
+        )
+        .whenComplete(() => _lazyResolvingIds.remove(videoId));
+  }
+
   StreamInfoItem? getStreamInfoSync(String videoId) {
     if (tempVideoInfosFromStreams.containsKey(videoId)) return tempVideoInfosFromStreams[videoId];
     return tempVideoInfosFromStreams[videoId] = YoutiPie.cacheBuilder.forStreamInfoItem(videoId: videoId).readSync();

@@ -28,6 +28,8 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
     instance.canQuit = true;
     instance.canRaise = true;
     instance.canSetFullscreen = true;
+    instance.shuffle = settings.player.shuffleQueue.value;
+    instance.loopStatus = settings.player.repeatMode.value.toLoopStatus();
   }
 
   @override
@@ -72,6 +74,24 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
   void updateTimeline(int positionMS, int? durationMS) {
     mpris?.updatePosition(Duration(milliseconds: positionMS), forceEmitSeeked: true);
   }
+
+  @override
+  void updateShuffle(bool shuffle) {
+    mpris?.shuffle = shuffle;
+  }
+
+  @override
+  void updateRepeatMode(PlayerRepeatMode repeatMode) {
+    mpris?.loopStatus = repeatMode.toLoopStatus();
+  }
+}
+
+extension _PlayerRepeatModeToLoopStatus on PlayerRepeatMode {
+  LoopStatus toLoopStatus() => switch (this) {
+    PlayerRepeatMode.none => LoopStatus.none,
+    PlayerRepeatMode.one || PlayerRepeatMode.forNtimes => LoopStatus.track,
+    PlayerRepeatMode.all || PlayerRepeatMode.allShuffle => LoopStatus.playlist,
+  };
 }
 
 class _CustomMPRISService extends MPRISService {

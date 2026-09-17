@@ -1,4 +1,8 @@
-import 'package:namida/controller/platform/waveform_extractor/waveform_extractor.dart';
+import 'dart:typed_data';
+
+import 'package:namida_waveform/namida_waveform.dart';
+
+import 'package:namida/controller/waveform_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
@@ -34,21 +38,18 @@ class WaveformController {
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
   Future<void> generateWaveform({required String path, required Duration duration, required bool Function(String path) stillPlaying}) async {
-    final samplePerSecond = _waveformExtractor.getSampleRateFromDuration(
+    final samplePerSecond = NamidaWaveform.sampleRateForDuration(
       audioDuration: duration,
       maxSampleRate: 400,
       scaleFactor: 0.4,
     );
 
-    List<num> waveformData = [];
+    Float32List waveformData = _emptyWaveformData;
     await Future.wait([
-      _waveformExtractor.extractWaveformData(path, samplesPerSecond: samplePerSecond).catchError((_) => <num>[]).then((value) async {
-        if (value.isNotEmpty) {
-          waveformData = value;
-        } else if (stillPlaying(path)) {
-          waveformData = await _waveformExtractor.extractWaveformData(path).catchError((_) => <num>[]); // re-extracting without samples (out of boundaries error)
-        }
-      }),
+      _waveformExtractor
+          .extractWaveformData(path, samplesPerSecond: samplePerSecond)
+          .then((value) => waveformData = value)
+          .catchError((_) => waveformData = _emptyWaveformData),
       Future.delayed(const Duration(milliseconds: 800)),
     ]);
 
@@ -66,6 +67,7 @@ class WaveformController {
       _currentScaleMaxIndex = _currentScaleLookup.length - 1;
 
       calculateUIWaveform();
+      _ensureHapticListener();
     }
   }
 
@@ -130,15 +132,24 @@ class WaveformController {
       final dynamicScale = posInMap < 0 || posInMap > _currentScaleMaxIndex ? _defaultMinimumScale : _currentScaleLookup[posInMap];
       final finalScale = dynamicScale * intensity * 0.00005;
       if (finalScale.isNaN || finalScale > 0.35) return _defaultMinimumScale;
-
-      if (settings.extra.mediaWaveHaptic == true) {
-        _vibrateHaptic(finalScale);
-      }
-
       return finalScale;
     }
 
     return _defaultMinimumScale;
+  }
+
+  bool _hapticListenerAdded = false;
+
+  void _ensureHapticListener() {
+    if (_hapticListenerAdded) return;
+    _hapticListenerAdded = true;
+    Player.inst.nowPlayingPosition.addListener(_onPositionChangedHaptic);
+  }
+
+  void _onPositionChangedHaptic() {
+    if (_currentScaleMaxIndex < 0) return;
+    if (settings.extra.mediaWaveHaptic != true) return;
+    _vibrateHaptic(getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value));
   }
 
   void _vibrateHaptic(double scale) {
@@ -171,5 +182,7 @@ class WaveformController {
 
   static const _defaultMinimumScale = 0.01;
 
-  final _waveformExtractor = WaveformExtractor.platform()..init();
+  static final _emptyWaveformData = Float32List(0);
+
+  final _waveformExtractor = WaveformExtractor()..init();
 }

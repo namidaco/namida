@@ -907,7 +907,8 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
   List<Widget> get _getCurrentPathsSplitsChildren {
     if (_currentFolderPath == '') return [];
-    final currentRoot = _mainStoragePaths.firstWhere((element) => _currentFolderPath.startsWith(element));
+    // -- can be outside every known root (network mount, symlink, a drive added after the roots were fetched)
+    final currentRoot = _mainStoragePaths.firstWhereEff((element) => _currentFolderPath.startsWith(element)) ?? '';
     final pathWithoutRoot = _currentFolderPath.substring(currentRoot.length);
     final splits = pathWithoutRoot.split(_pathSeparator);
     final map = <int, String>{};

@@ -1217,7 +1217,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
     },
   );
   Future.delayed(const Duration(milliseconds: 2000), () {
-    if (localController.runtimeType == BottomSheetTextFieldConfig) localController.dispose();
+    if (textfieldConfig is! BottomSheetTextFieldConfigWC) localController.dispose();
     focusNode.dispose();
   });
   return finalText;
@@ -1387,6 +1387,7 @@ class DirsFileFilter {
 
     Future<void> listFilesAndAdd(DirectoryIndex d) async {
       final hasNoMedia = allAvailableDirectories[d] ?? false;
+      final folder = fillFolderCovers ? Folder.explicit(d.sourceRaw) : null;
       try {
         final stream = d.list();
         if (stream != null) {
@@ -1394,8 +1395,7 @@ class DirsFileFilter {
             if (systemEntity is File) {
               final path = systemEntity.path;
 
-              if (fillFolderCovers) {
-                final folder = Folder.explicit(d.sourceRaw);
+              if (fillFolderCovers && folder != null) {
                 if (folderCovers[folder] == null) {
                   if (imageExtensions.isPathValid(path)) {
                     final filenameCleaned = path.getFilenameWOExt.toLowerCase();
@@ -1475,17 +1475,23 @@ class DirsFileFilter {
 
     /// Assigning directories and sub-subdirectories that has .nomedia.
     if (respectNoMedia) {
+      final noMediaPrefixes = <String>[];
       for (final d in allAvailableDirectories.keys) {
         if (d.hasNoMedia()) {
-          if (strictNoMedia) {
-            // strictly applies bool to all subdirectories.
-            allAvailableDirectories.forEach((key, value) {
-              if (key.sourceRaw.startsWith(d.sourceRaw)) {
-                allAvailableDirectories[key] = true;
-              }
-            });
-          } else {
-            allAvailableDirectories[d] = true;
+          allAvailableDirectories[d] = true;
+          if (strictNoMedia) noMediaPrefixes.add(d.sourceRaw);
+        }
+      }
+      if (noMediaPrefixes.isNotEmpty) {
+        // strictly applies bool to all subdirectories.
+        for (final key in allAvailableDirectories.keys) {
+          if (allAvailableDirectories[key] == true) continue;
+          final source = key.sourceRaw;
+          for (final prefix in noMediaPrefixes) {
+            if (source.startsWith(prefix)) {
+              allAvailableDirectories[key] = true;
+              break;
+            }
           }
         }
       }

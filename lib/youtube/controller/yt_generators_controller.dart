@@ -19,7 +19,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
-class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider<Map> {
+class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with PortsProvider<YTGeneratorIsolateParams> {
   static final NamidaYTGenerator inst = NamidaYTGenerator._internal();
   NamidaYTGenerator._internal() : super(YoutubeHistoryController.inst);
 
@@ -102,34 +102,34 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   }
 
   @override
-  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
+  IsolateFunctionReturnBuild<YTGeneratorIsolateParams> isolateFunction(SendPort port) {
     final playlists = {for (final pl in YoutubePlaylistController.inst.playlistsMap.value.values) pl.name: pl.tracks};
-    final params = {
-      'databasesDir': AppDirs.YOUTIPIE_CACHE,
-      'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
-      'statsDir': AppDirs.YT_STATS,
-      'mostplayedPlaylist': YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue,
-      'favouritesPlaylist': YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
-      'playlists': playlists,
-      'sendPort': port,
-      'token': RootIsolateToken.instance!,
-    };
+    final params = (
+      databasesDir: AppDirs.YOUTIPIE_CACHE,
+      sensitiveDataDir: AppDirs.YOUTIPIE_DATA,
+      statsDir: AppDirs.YT_STATS,
+      mostplayedPlaylist: YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue,
+      favouritesPlaylist: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
+      playlists: playlists,
+      sendPort: port,
+      token: RootIsolateToken.instance,
+    );
     return IsolateFunctionReturnBuild(_prepareResourcesAndListen, params);
   }
 
-  static void _prepareResourcesAndListen(Map params) async {
-    final databasesDir = params['databasesDir'] as String;
-    final sensitiveDataDir = params['sensitiveDataDir'] as String;
-    final statsDir = params['statsDir'] as String;
+  static void _prepareResourcesAndListen(YTGeneratorIsolateParams params) async {
+    final databasesDir = params.databasesDir;
+    final sensitiveDataDir = params.sensitiveDataDir;
+    final statsDir = params.statsDir;
 
-    final mostplayedPlaylist = params['mostplayedPlaylist'] as Iterable<String>;
-    final favouritesPlaylist = params['favouritesPlaylist'] as List<YoutubeID>;
-    final playlists = params['playlists'] as Map<String, List<YoutubeID>>;
-    final sendPort = params['sendPort'] as SendPort;
-    final token = params['token'] as RootIsolateToken;
+    final mostplayedPlaylist = params.mostplayedPlaylist;
+    final favouritesPlaylist = params.favouritesPlaylist;
+    final playlists = params.playlists;
+    final sendPort = params.sendPort;
+    final token = params.token;
 
     final recievePort = ReceivePort();
-    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+    if (token != null) BackgroundIsolateBinaryMessenger.ensureInitialized(token);
 
     sendPort.send(recievePort.sendPort);
 
@@ -313,3 +313,14 @@ enum _GenerateOperation {
   randomItems,
   sameReleaseDate,
 }
+
+typedef YTGeneratorIsolateParams = ({
+  String databasesDir,
+  String sensitiveDataDir,
+  String statsDir,
+  Iterable<String> mostplayedPlaylist,
+  List<YoutubeID> favouritesPlaylist,
+  Map<String, List<YoutubeID>> playlists,
+  SendPort sendPort,
+  RootIsolateToken? token,
+});

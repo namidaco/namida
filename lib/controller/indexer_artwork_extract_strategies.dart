@@ -58,7 +58,7 @@ class _NetworkBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
 
     try {
       final resBytes = await MusicWebServer.baseUrlToImage(track.path);
-      parent.artworksBytesMap[imagePath] = resBytes;
+      parent._putArtworkBytes(imagePath, resBytes);
       if (resBytes != null && parent.isNetworkArtworkCachingEnabled) {
         File(imagePath).writeAsBytes(resBytes).ignoreError();
       }
@@ -100,42 +100,38 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
   }
 
   Future<FArtwork> _extractFromTrack({required String trackPath, required String? imagePath}) async {
+    final key = imagePath ?? trackPath;
     final pendingResFn = _getPendingRequestResult(trackPath, false);
     if (pendingResFn != null) {
       await pendingResFn();
-      return FArtwork(file: parent.artworksFilesMap[trackPath], bytes: parent.artworksBytesMap[trackPath]);
+      return FArtwork(file: parent.artworksFilesMap[key], bytes: parent.artworksBytesMap[key]);
     }
 
     parent._pendingArtworksFullRes[trackPath] = Completer<void>();
 
     final isVideo = trackPath.isVideo();
 
-    Uint8List? bytes;
-    File? file;
-    final isCachingEnabled = parent._isArtworkCachingEnabled;
     // -- prefer this way before ffmpeg since this can return bytes directly and is generally faster
     final artwork = await NamidaTaggerController.inst.extractArtwork(
       trackPath: trackPath,
       isVideo: isVideo,
     );
-    bytes = artwork?.bytes;
-    file = artwork?.file; // null anyways
-    if (bytes != null && isCachingEnabled && imagePath != null) {
-      File(imagePath).writeAsBytes(bytes).ignoreError();
-      file = File(imagePath);
+    final bytes = artwork?.bytes;
+    File? file = artwork?.file; // null anyways
+    if (bytes != null && imagePath != null && parent._isArtworkCachingEnabled) {
+      file = await File(imagePath).writeAsBytes(bytes).ignoreError();
     }
 
-    if (bytes != null) {
-      parent.artworksBytesMap[trackPath] = bytes;
-    } else {
-      // -- even if file null
-      parent.artworksFilesMap[trackPath] = file;
+    if (file != null) {
+      parent.artworksFilesMap[key] = file;
+    } else if (bytes != null) {
+      parent._putArtworkBytes(key, bytes);
     }
 
     parent._pendingArtworksFullRes[trackPath]!.completeIfWasnt();
     parent._pendingArtworksFullRes.remove(trackPath);
 
-    return FArtwork(file: parent.artworksFilesMap[trackPath], bytes: parent.artworksBytesMap[trackPath]);
+    return FArtwork(file: file, bytes: bytes);
   }
 }
 
@@ -202,11 +198,11 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
       size: size?.clampInt(48, 360) ?? 360,
     );
 
-    parent.artworksBytesMap[imagePath] = artwork;
+    parent._putArtworkBytes(imagePath, artwork);
     parent._pendingArtworksCompressed[imagePath]!.completeIfWasnt();
     parent._pendingArtworksCompressed.remove(imagePath);
 
-    return FArtwork(bytes: parent.artworksBytesMap[imagePath]);
+    return FArtwork(bytes: artwork);
   }
 
   Future<FArtwork> _getFullRes(

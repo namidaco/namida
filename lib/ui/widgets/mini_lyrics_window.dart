@@ -151,13 +151,14 @@ class _MiniLyricsNoSyncedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ObxO(
-      rx: Player.inst.currentItem,
-      builder: (context, item) {
+    return Obx(
+      (context) {
+        final item = Player.inst.currentItem.valueR;
+        YoutubeInfoController.utils.lazyInfoRefresh.valueR;
         final title =
             item?.execute(
               selectable: (finalItem) => finalItem.track.title,
-              youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoNameSync(finalItem.id) ?? '',
+              youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoNameSyncLazy(finalItem.id) ?? '',
             ) ??
             '';
         return Column(

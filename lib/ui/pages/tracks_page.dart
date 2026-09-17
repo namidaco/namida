@@ -25,6 +25,7 @@ import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
+import 'package:namida/ui/widgets/stats.dart';
 
 class TracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -115,6 +116,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   const SizedBox(width: 10.0),
                 ],
                 leftText: leftText,
+                onLeftTextTap: const StatsPage(isYoutube: false).navigate,
                 onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                 onCloseButtonPressed: () {
                   ScrollSearchController.inst.clearSearchTextField(libraryTab);

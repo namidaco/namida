@@ -4,6 +4,10 @@ class _YtFilenameRebuilder {
   _YtFilenameRebuilder();
 
   final paramRegex = RegExp(r'%\((\w+)\)s');
+  static final _uploadDateFormat = DateFormat('yyyyMMdd');
+  static final _nightcoreRegex = RegExp('Nightcore\\W*', caseSensitive: false);
+  static final _artistLineRegex = RegExp('artist:(.*)', caseSensitive: false);
+  static final _titleLineRegex = RegExp('title:(.*)', caseSensitive: false);
 
   bool get fallbackExtractInfoFromDescription => settings.youtube.fallbackExtractInfoDescription.value;
 
@@ -171,7 +175,7 @@ class _YtFilenameRebuilder {
             .toString(),
       'upload_date' => () {
         final date = streamInfo?.publishDate.accurateDate ?? streamInfo?.uploadDate.accurateDate ?? videoItem?.publishedAt.accurateDate;
-        return date == null ? null : DateFormat('yyyyMMdd').format(date.toLocal());
+        return date == null ? null : _uploadDateFormat.format(date.toLocal());
       }(),
       'view_count' =>
         streamInfo?.viewsCount?.toString() ??
@@ -223,15 +227,13 @@ class _YtFilenameRebuilder {
       if (description != null) {
         final title = info?.$2?.splitFirst('(').splitFirst('[');
         final regex = title == null ? RegExp('^\\W*(song|info|details)(.*)', caseSensitive: false) : RegExp('^\\W*(song|info|details)?(.*$title.*)', caseSensitive: false);
-        final regexArtist = RegExp('artist:(.*)', caseSensitive: false);
-        final regexTitle = RegExp('title:(.*)', caseSensitive: false);
         for (String line in description.split('\n')) {
-          line = line.replaceFirst(RegExp('Nightcore\\W*', caseSensitive: false), '');
+          line = line.replaceFirst(_nightcoreRegex, '');
           final m = regex.firstMatch(line);
           try {
             var infosLine = m?.group(2)?.splitArtistAndTitle();
             if (infosLine == null) {
-              final fallback = (regexArtist.firstMatch(line)?.group(1)?.trim(), regexTitle.firstMatch(line)?.group(1)?.trim());
+              final fallback = (_artistLineRegex.firstMatch(line)?.group(1)?.trim(), _titleLineRegex.firstMatch(line)?.group(1)?.trim());
               if (fallback.$1 != null || fallback.$2 != null) infosLine = fallback;
             }
             if (infosLine != null) {

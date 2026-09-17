@@ -50,7 +50,9 @@ dependencies:
   archive: ^4.1.0
   url_launcher: ^6.3.0
   connectivity_plus: ^7.0.0
-  mdns_dart: ^2.2.1
+  mdns_dart:
+    git:
+      url: https://github.com/MSOB7YY/mdns_dart
   uuid: ^4.5.3
   selectable_autolink_text: ^2.6.0
   share_plus:
@@ -83,7 +85,7 @@ dependencies:
     git:
       url: https://github.com/namidaco/history_manager
   flutter_volume_controller: ^2.0.1
-  flutter_markdown: ^0.7.7
+  markdown: ^7.3.1
   flutter_mailer: ^3.0.2
   lrc:
     git:
@@ -124,7 +126,9 @@ dependencies:
   media_kit_libs_macos_video: ^1.1.4
   media_kit_libs_windows_video: ^1.0.11
   http_cache_stream: ^0.2.0
-  waveform_extractor: ^1.1.3
+  namida_waveform:
+    git:
+      url: https://github.com/namidaco/namida_waveform
   basic_audio_handler:
     git:
       url: https://github.com/namidaco/basic_audio_handler
@@ -237,6 +241,12 @@ hooks:
   user_defines:
     sqlite3:
       source: sqlite3mc
+    # Prebuilt waveform library dir (desktop):
+    # - built by external/ffmpeg_build/build_waveform.sh with a static decode-only FFmpeg (no system deps).
+    # - if missing, builds from source against system FFmpeg (dev only, not for release).
+    # - Android: ignored, links ffmpeg-kit's FFmpeg.
+    namida_waveform:
+      prebuilt_dir: external/ffmpeg_build
 
 flutter_native_splash:
   image: assets/namida_icon.png
@@ -298,6 +308,7 @@ inno_bundle:
   publisher: MSOB7Y
   installer_icon: windows/runner/resources/app_icon.ico
   updates_url: https://github.com/namidaco/namida/releases
+  firewall_rule: true # sync discovery (mdns udp 5353) & server (tcp 62310)
   file_extensions_associations:
     # audio extensions
     - m4a,mp3,wav,flac,ogg,oga,ogx,aac,opus,weba,m4b,alac,ac3,mp2,m4p,mpa

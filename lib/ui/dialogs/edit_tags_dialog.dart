@@ -253,7 +253,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       onColorsObtained(colorSync);
     } else {
       CurrentColor.inst
-          .getTrackDelightnedColor(track, null, useIsolate: true)
+          .getTrackDelightnedColor(track, null)
           .executeWithMinDelay(
             delayMS: NamidaNavigator.kDefaultDialogDurationMS,
           )
@@ -531,7 +531,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             ),
                             const SizedBox(height: 8.0),
                             ...tagFieldsToEdit
-                                .sublist(2)
+                                .skip(2)
                                 .map(
                                   (e) => Padding(
                                     padding: const EdgeInsets.only(top: 12.0),

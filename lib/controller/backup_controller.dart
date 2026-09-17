@@ -175,8 +175,10 @@ class BackupController {
     File? tempAllLocal;
     File? tempAllYoutube;
 
-    for (final p in backupItemsPaths) {
-      final type = await FileSystemEntity.type(p);
+    final backupItemsTypes = await backupItemsPaths.mapConcurrent(FileSystemEntity.type);
+    for (int i = 0; i < backupItemsPaths.length; i++) {
+      final p = backupItemsPaths[i];
+      final type = backupItemsTypes[i];
       if (type == FileSystemEntityType.file) {
         final file = File(p);
         if (p.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY)) {

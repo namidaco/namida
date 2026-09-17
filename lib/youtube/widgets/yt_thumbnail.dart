@@ -219,7 +219,6 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
     if (imageColors == null && widget.extractColor && imagePath != null && imagePath != ArtworkWidget.kImagePathInitialValue) {
       final c = await CurrentColor.inst.extractPaletteFromImage(
         imagePath!,
-        useIsolate: true,
         paletteSaveDirectory: Directory(AppDirs.YT_PALETTES),
       );
       imageColors = c ?? NamidaColor.single(playerStaticColor);

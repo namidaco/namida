@@ -1338,7 +1338,6 @@ class _DeviceActionsRow extends StatelessWidget {
                   ),
                 )
                 .addSeparators(
-                  skipFirst: 1,
                   separator: const NamidaContainerDivider(
                     height: 12.0,
                     width: 1.5,

@@ -6,8 +6,6 @@ import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
-typedef _TempListItem = (DownloadTaskGroupName, YoutubeItemDownloadConfig);
-
 class YTOnGoingFinishedDownloads {
   static final YTOnGoingFinishedDownloads inst = YTOnGoingFinishedDownloads._internal();
   YTOnGoingFinishedDownloads._internal();
@@ -130,3 +128,5 @@ class YTOnGoingFinishedDownloads {
     youtubeDownloadTasksTempList.refresh();
   }
 }
+
+typedef _TempListItem = (DownloadTaskGroupName, YoutubeItemDownloadConfig);

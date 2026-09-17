@@ -29,8 +29,7 @@ A Flatpak cannot depend on host packages: inside the sandbox only the runtime
 system ffmpeg" never resolves there, and the runtime ships neither libmpv nor
 the ffmpeg CLI. The custom ffmpeg/ffprobe binaries from `external/ffmpeg_build`
 are built against a newer glibc than the runtime, so the manifest compiles
-ffmpeg (LGPL config) and links `/app/namida/bin/ffmpeg{,probe}` to it;
-`audiowaveform` from the tarball is kept (it only needs libc/libstdc++).
+ffmpeg (LGPL config) and links `/app/namida/bin/ffmpeg{,probe}` to it.
 
 ## Flathub notes (not submitted yet)
 

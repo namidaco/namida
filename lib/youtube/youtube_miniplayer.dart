@@ -1133,7 +1133,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                             ),
                                           ),
                                         )
-                                        .addSeparators(separator: const SizedBox(width: 4.0), skipFirst: 1)
+                                        .addSeparators(separator: const SizedBox(width: 4.0))
                                         .toFixedList(),
                               ),
                             ),

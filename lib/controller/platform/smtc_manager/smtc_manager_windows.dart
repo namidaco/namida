@@ -19,7 +19,12 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
           prevEnabled: true,
           stopEnabled: true,
         ),
+        shuffleEnabled: settings.player.shuffleQueue.value,
+        repeatMode: settings.player.repeatMode.value.toSMTCRepeatMode(),
       );
+
+      smtc?.shuffleChangeStream.listen((shuffle) => settings.player.save(shuffleQueue: shuffle));
+      smtc?.repeatModeChangeStream.listen((repeatMode) => settings.player.save(repeatMode: repeatMode.toPlayerRepeatMode()));
 
       smtc?.buttonPressStream.listen((event) {
         switch (event) {
@@ -108,6 +113,32 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
       ),
     );
   }
+
+  @override
+  void updateShuffle(bool shuffle) {
+    smtc?.setShuffleEnabled(shuffle);
+  }
+
+  @override
+  void updateRepeatMode(PlayerRepeatMode repeatMode) {
+    smtc?.setRepeatMode(repeatMode.toSMTCRepeatMode());
+  }
+}
+
+extension _PlayerRepeatModeToSMTC on PlayerRepeatMode {
+  swin.RepeatMode toSMTCRepeatMode() => switch (this) {
+    PlayerRepeatMode.none => swin.RepeatMode.none,
+    PlayerRepeatMode.one || PlayerRepeatMode.forNtimes => swin.RepeatMode.track,
+    PlayerRepeatMode.all || PlayerRepeatMode.allShuffle => swin.RepeatMode.list,
+  };
+}
+
+extension _SMTCRepeatModeToPlayer on swin.RepeatMode {
+  PlayerRepeatMode toPlayerRepeatMode() => switch (this) {
+    swin.RepeatMode.none => PlayerRepeatMode.none,
+    swin.RepeatMode.track => PlayerRepeatMode.one,
+    swin.RepeatMode.list => PlayerRepeatMode.all,
+  };
 }
 
 extension _UriUtils on Uri {

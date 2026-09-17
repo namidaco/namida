@@ -15,8 +15,8 @@ abstract class NamidaWindowManager {
       android: () => null,
       ios: () => null,
       windows: () => _WindowManagerDesktop(customRoundedCorners: false),
-      linux: () => _WindowManagerDesktop(),
-      macos: () => _WindowManagerDesktop(),
+      linux: _WindowManagerDesktop.new,
+      macos: _WindowManagerDesktop.new,
     );
   }
 

@@ -108,7 +108,7 @@ extension TracksWithDatesUtils on List<Selectable> {
     for (final e in this) {
       final track = e.track;
       final dateAdded = track.dateAdded;
-      return dateAdded < best && dateAdded > _minimumFileDateMilli ? dateAdded : best;
+      if (dateAdded < best && dateAdded > _minimumFileDateMilli) best = dateAdded;
     }
 
     return best;
@@ -214,6 +214,8 @@ extension TracksUtils on List<Track> {
 
     // -- set this to null to mark as invalid
     List<String>? cumulativeArtists = this[0].artistsList;
+    // -- lists are borrowed from tracks, copy before the first in-place intersection
+    bool cumulativeOwned = false;
     for (var i = 0; i < length; i++) {
       final e = this[i];
       final aa = e.albumArtist;
@@ -231,18 +233,17 @@ extension TracksUtils on List<Track> {
           } else {
             if (cumulativeArtists.contains(singleArtistCurrent)) {
               cumulativeArtists = currentArtists;
+              cumulativeOwned = false;
             } else {
               cumulativeArtists = null;
             }
           }
         } else {
-          try {
-            cumulativeArtists.retainWhere(currentArtists.contains);
-          } on UnsupportedError catch (_) {
-            // -- usually was const dummy track, not very common but can happen
-            cumulativeArtists = List<String>.from(cumulativeArtists, growable: true);
-            cumulativeArtists.retainWhere(currentArtists.contains);
+          if (!cumulativeOwned) {
+            cumulativeArtists = List<String>.of(cumulativeArtists, growable: true);
+            cumulativeOwned = true;
           }
+          cumulativeArtists.retainWhere(currentArtists.contains);
           if (cumulativeArtists.isEmpty) {
             cumulativeArtists = null;
           }
@@ -269,9 +270,11 @@ extension StringListJoiner on Iterable<String?> {
   }
 }
 
+final _sharedRandom = math.Random();
+
 extension ListieListieUtils<T> on List<T> {
   T get random {
-    final index = math.Random().nextInt(length);
+    final index = _sharedRandom.nextInt(length);
     return this[index];
   }
 
@@ -351,11 +354,167 @@ extension ListieListieUtils<T> on List<T> {
   }
 }
 
+/// Decorate-sort-undecorate (schwartzian transform).
+///
+/// [sortBy] & friends from `dart_extensions` evaluate the key extractor on *every* comparison,
+/// i.e `2 * n * log(n)` times. these evaluate it exactly `n` times, which matters a lot when
+/// the key costs an allocation (`toLowerCase()`, `join()`, `ignoreCommonPrefixes()`) or a lookup
+/// over a sublist (`getTotalListenCount()`, `getDateAddedEffective()`).
+///
+/// by claude
+extension ListiePrecomputedSortUtils<E> on List<E> {
+  /// below this the extra lists cost more than the saved key evaluations.
+  static const _minLengthToPrecompute = 16;
+
+  void sortByPrecomputed(Comparable Function(E e) key, {bool reverse = false}) {
+    final length = this.length;
+    if (length < 2) return;
+    if (length < _minLengthToPrecompute) {
+      sort(reverse ? (a, b) => key(b).compareTo(key(a)) : (a, b) => key(a).compareTo(key(b)));
+      return;
+    }
+    final keys = List<Comparable>.generate(length, (i) => key(this[i]), growable: false);
+    _applySortedOrder(_sortedIndicesOf(length, (a, b) => keys[a].compareTo(keys[b]), reverse));
+  }
+
+  void sortByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false}) {
+    final alternativesLength = alternatives.length;
+    if (alternativesLength == 0) return;
+    if (alternativesLength == 1) return sortByPrecomputed(alternatives[0], reverse: reverse);
+
+    final length = this.length;
+    if (length < 2) return;
+    if (length < _minLengthToPrecompute) {
+      int compareItems(E a, E b) {
+        for (int i = 0; i < alternativesLength; i++) {
+          final compare = alternatives[i](a).compareTo(alternatives[i](b));
+          if (compare != 0) return compare;
+        }
+        return 0;
+      }
+
+      sort(reverse ? (a, b) => compareItems(b, a) : compareItems);
+      return;
+    }
+
+    final keys = List<List<Comparable>>.generate(
+      alternativesLength,
+      (alternativeIndex) {
+        final key = alternatives[alternativeIndex];
+        return List<Comparable>.generate(length, (i) => key(this[i]), growable: false);
+      },
+      growable: false,
+    );
+
+    _applySortedOrder(
+      _sortedIndicesOf(length, (a, b) {
+        for (int i = 0; i < alternativesLength; i++) {
+          final key = keys[i];
+          final compare = key[a].compareTo(key[b]);
+          if (compare != 0) return compare;
+        }
+        return 0;
+      }, reverse),
+    );
+  }
+
+  /// Returns a new sorted list, keeping items that compare equal in their original order.
+  ///
+  /// [sort] & friends are not stable, which ruins lists where a lot of items share the same key,
+  /// ex. youtube dates parsed from `2 months ago` texts, where a whole month collapses into one value.
+  List<E> sortedByPrecomputed(Comparable Function(E e) key, {bool reverse = false}) {
+    final length = this.length;
+    if (length < 2) return List<E>.of(this, growable: false);
+
+    final keys = List<Comparable>.generate(length, (i) => key(this[i]), growable: false);
+    final indices = List<int>.generate(length, (i) => i, growable: false);
+    indices.sort(
+      reverse
+          ? (a, b) {
+              final compare = keys[b].compareTo(keys[a]);
+              return compare != 0 ? compare : a - b;
+            }
+          : (a, b) {
+              final compare = keys[a].compareTo(keys[b]);
+              return compare != 0 ? compare : a - b;
+            },
+    );
+    return List<E>.generate(length, (i) => this[indices[i]], growable: false);
+  }
+
+  static List<int> _sortedIndicesOf(int length, int Function(int a, int b) compare, bool reverse) {
+    final indices = List<int>.generate(length, (i) => i, growable: false);
+    indices.sort(reverse ? (a, b) => compare(b, a) : compare);
+    return indices;
+  }
+
+  void _applySortedOrder(List<int> indices) {
+    final length = indices.length;
+    final sorted = List<E>.generate(length, (i) => this[indices[i]], growable: false);
+    this.setRange(0, length, sorted);
+  }
+}
+
 extension ListieEqualityUtils<T1> on List<T1>? {
   bool didChangeFrom<T2>(List<T2>? other, {bool ordered = false}) {
     final equality = ordered ? DeepCollectionEquality() : DeepCollectionEquality.unordered();
     final didChange = !equality.equals(this, other);
     return didChange;
+  }
+}
+
+/// Fan-out helpers for independent async work.
+///
+/// A plain `for (...) await ...` loop pays the full latency of every item in series, while a bare
+/// `Future.wait` over a long list puts every item in flight at once, which for file io means
+/// thousands of open handles. these keep at most [concurrency] running.
+///
+/// by claude
+extension IterableConcurrentUtils<E> on Iterable<E> {
+  static const _defaultConcurrency = 16;
+
+  /// Results are returned in the original order, regardless of completion order.
+  Future<List<R>> mapConcurrent<R>(Future<R> Function(E item) action, {int concurrency = _defaultConcurrency}) async {
+    final items = this is List<E> ? this as List<E> : toList();
+    final length = items.length;
+    if (length == 0) return <R>[];
+    if (length == 1) return <R>[await action(items[0])];
+
+    final results = List<R?>.filled(length, null);
+    int next = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        // -- single threaded event loop, nothing can interleave between the read & the increment.
+        final index = next++;
+        if (index >= length) return;
+        results[index] = await action(items[index]);
+      }
+    }
+
+    final workersCount = concurrency < length ? concurrency : length;
+    await Future.wait(List.generate(workersCount, (_) => worker(), growable: false));
+    return List<R>.generate(length, (i) => results[i] as R, growable: false);
+  }
+
+  Future<void> loopConcurrent(Future<void> Function(E item) action, {int concurrency = _defaultConcurrency}) async {
+    final items = this is List<E> ? this as List<E> : toList();
+    final length = items.length;
+    if (length == 0) return;
+    if (length == 1) return await action(items[0]);
+
+    int next = 0;
+
+    Future<void> worker() async {
+      while (true) {
+        final index = next++;
+        if (index >= length) return;
+        await action(items[index]);
+      }
+    }
+
+    final workersCount = concurrency < length ? concurrency : length;
+    await Future.wait(List.generate(workersCount, (_) => worker(), growable: false));
   }
 }
 
@@ -571,15 +730,21 @@ extension YTLinkToID on String {
 }
 
 extension TitleAndArtistUtils on String {
+  static final _artistTitleSplitRegex = RegExp(
+    r'^(.*?)(?:\s+-\s+|\s+\|\s+|\s+by\s+|\s+["「]|-\||-\s+|」)(.*?)(?:"|」)?$',
+    caseSensitive: false,
+  );
+
+  static final _keepFeatKeywordsOnlyRegex = RegExp(
+    r'\s*\((?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^)]*\)|\s*\[(?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^\]]*\]',
+    caseSensitive: false,
+  );
+
   /// (artist, title)
   (String?, String?) splitArtistAndTitle() {
     final input = this;
     if (input == '') return (null, null);
-    final regexCareForSpaces = RegExp(
-      r'^(.*?)(?:\s+-\s+|\s+\|\s+|\s+by\s+|\s+["「]|-\||-\s+|」)(.*?)(?:"|」)?$',
-      caseSensitive: false,
-    );
-    final match2 = regexCareForSpaces.firstMatch(input);
+    final match2 = _artistTitleSplitRegex.firstMatch(input);
     if (match2 != null) {
       String? artist = match2.group(1)?.trim();
       String? title = match2.group(2)?.trim();
@@ -607,11 +772,7 @@ extension TitleAndArtistUtils on String {
 
   String keepFeatKeywordsOnly() {
     if (this == '') return '';
-    final regex = RegExp(
-      r'\s*\((?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^)]*\)|\s*\[(?!remix|featured|features|ft\.|feat\.|featuring)(?!.*Remix)[^\]]*\]',
-      caseSensitive: false,
-    );
-    String res = replaceAll(regex, '').trimAll();
+    String res = replaceAll(_keepFeatKeywordsOnlyRegex, '').trimAll();
     while (res.trim().endsWith(' -')) {
       res = res.substring(0, res.length - 2);
     }
@@ -742,6 +903,13 @@ extension FunctionsExecuter<T> on Iterable<Future<T>?> {
 }
 
 extension IterableExtensions<E> on Iterable<E> {
+  E? firstWhereEff(bool Function(E e) test, {E? fallback}) {
+    for (final element in this) {
+      if (test(element)) return element;
+    }
+    return fallback;
+  }
+
   List<E> getRandomSample(int count) {
     return sample(count);
   }
@@ -770,6 +938,27 @@ extension IterableExtensions<E> on Iterable<E> {
       }
     }
     return finalList;
+  }
+}
+
+extension DEWidgetsSeparator on Iterable<Widget> {
+  /// Inserts [separator] between the items.
+  ///
+  /// [skipFirst] skips adding separators for the first [skipFirst] items.
+  Iterable<Widget> addSeparators({required Widget separator, int skipFirst = 0}) sync* {
+    final iterator = this.iterator;
+    if (!iterator.moveNext()) return;
+    yield iterator.current;
+
+    int remainingToSkip = skipFirst;
+    while (iterator.moveNext()) {
+      if (remainingToSkip > 0) {
+        remainingToSkip--;
+      } else {
+        yield separator;
+      }
+      yield iterator.current;
+    }
   }
 }
 
@@ -870,7 +1059,7 @@ extension FileUtils on File {
 }
 
 final _minimumFileDateMicro = DateTime(1980).microsecondsSinceEpoch + 1;
-final _minimumFileDateMilli = DateTime(1980).microsecondsSinceEpoch + 1;
+final _minimumFileDateMilli = DateTime(1980).millisecondsSinceEpoch + 1;
 
 extension FileStatsUtils on FileStat {
   DateTime get creationDate {
@@ -1041,22 +1230,17 @@ extension StringPathUtils on String {
   /// keeps reverse collecting string until [until] is matched.
   /// useful to exract extensions or filenames.
   String pathReverseSplitter(String until) {
-    String extension = ''; // represents the latest part
     final path = this;
-    int latestIndex = path.length - 1;
+    int end = path.length;
 
     // -- skipping separator at the end.
-    while (latestIndex >= 0 && path[latestIndex] == until) {
-      latestIndex--;
+    while (end > 0 && path[end - 1] == until) {
+      end--;
     }
+    if (end == 0) return '';
 
-    while (latestIndex >= 0) {
-      final char = path[latestIndex];
-      if (char == until) break;
-      extension = char + extension;
-      latestIndex--;
-    }
-    return extension;
+    final start = path.lastIndexOf(until, end - 1) + 1;
+    return path.substring(start, end);
   }
 
   String? nullifyEmpty() {
@@ -1064,22 +1248,27 @@ extension StringPathUtils on String {
     return this;
   }
 
+  /// walks an offset instead of re-slicing: this is called once per item while sorting the
+  /// whole library, and the overwhelmingly common case is "no prefix", which now allocates nothing.
   String ignoreCommonPrefixes() {
-    var text = this;
-    while (true) {
-      final before = text;
+    final prefixes = settings.commonPrefixes.value;
+    final prefixesLength = prefixes.length;
+    if (prefixesLength == 0) return this;
 
-      for (final prefix in settings.commonPrefixes.value) {
-        if (text.startsWith(prefix)) {
-          text = text.substring(prefix.length);
+    int start = 0;
+    bool stripped = true;
+    while (stripped) {
+      stripped = false;
+      for (int i = 0; i < prefixesLength; i++) {
+        final prefix = prefixes[i];
+        // -- an empty prefix would always match & never advance.
+        if (prefix.isNotEmpty && startsWith(prefix, start)) {
+          start += prefix.length;
+          stripped = true;
         }
       }
-
-      if (text == before) {
-        break;
-      }
     }
-    return text;
+    return start == 0 ? this : substring(start);
   }
 
   String toFastHashKey() {
@@ -1111,11 +1300,11 @@ extension ColorExtensions on Color {
 
 extension ClamperExtInt on int {
   int clampInt(int min, int max) {
-    assert(min <= max && !max.isNaN && !min.isNaN);
-    var x = this;
+    assert(min <= max);
+    final x = this;
     if (x < min) return min;
     if (x > max) return max;
-    if (x.isNaN) return max;
+    // if (x.isNaN) return max; // -- isNaN is only for double
     return x;
   }
 }

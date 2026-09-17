@@ -147,7 +147,7 @@ final kMainColorDarkOldValue = const Color(0xFF4e4c72).intValue;
 const isKuru = bool.fromEnvironment('IS_KURU_BUILD');
 const isWindowsPortable = bool.fromEnvironment('WINDOWS_PORTABLE');
 
-const kEnableFancyAnimations = isKuru;
+const kEnableFancyAnimations = false;
 
 const kAllowJellysInvasion = true;
 
@@ -877,6 +877,9 @@ class AppDirs {
   static final RECENTLY_DELETED = _join(USER_DATA, 'Recently Deleted'); // stores files that was deleted recently
   static String get LOGS_DIRECTORY => _join(USER_DATA, 'Logs');
 
+  // ================= App Cache =================
+  static final WAVEFORMS_CACHE = _join(APP_CACHE, 'waveform');
+
   static final LOGIN = _join(ROOT_DIR, 'login'); // this should never be accessed/backed up etc.
 
   // ================= Internal Storage =================
@@ -925,6 +928,8 @@ class AppDirs {
     M3UBackup,
     RECENTLY_DELETED,
     LOGS_DIRECTORY,
+    // -- App Cache
+    WAVEFORMS_CACHE,
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,

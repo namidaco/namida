@@ -27,31 +27,28 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
   int lyricsTotalSize = 0;
   int imagesTotalSize = 0;
 
-  for (var item in tracksPre) {
-    var tr = item.track;
-    if (tracksMap[tr] == null) {
-      tracksMap[tr] = true;
-      var ytId = tr.youtubeID;
-      for (var item in (await VideoController.inst.getNVFromID(tr.youtubeID))) {
-        videosTotalSize += item.sizeInBytes;
-      }
-      final audioCaches = AudioCacheController.inst.audioCacheMap[ytId];
-      if (audioCaches != null) {
-        for (final item in audioCaches) {
-          audiosTotalSize += await item.file.fileSize() ?? 0;
-        }
-      }
-
-      final artworkFile = File(tr.pathToImage);
-      if (await artworkFile.exists()) imagesTotalSize += await artworkFile.fileSize() ?? 0;
-
-      final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, tr);
-      final cachedLRCFile = lrcUtils.cachedLRCFile;
-      final cachedTxtFile = lrcUtils.cachedTxtFile;
-      if (await cachedLRCFile.exists()) lyricsTotalSize += await cachedLRCFile.fileSize() ?? 0;
-      if (await cachedTxtFile.exists()) lyricsTotalSize += await cachedTxtFile.fileSize() ?? 0;
-    }
+  for (final item in tracksPre) {
+    tracksMap[item.track] = true;
   }
+
+  await tracksMap.keys.loopConcurrent((tr) async {
+    for (final video in (await VideoController.inst.getNVFromID(tr.youtubeID))) {
+      videosTotalSize += video.sizeInBytes;
+    }
+
+    final audioCaches = AudioCacheController.inst.audioCacheMap[tr.youtubeID];
+    if (audioCaches != null) {
+      for (final audio in audioCaches) {
+        audiosTotalSize += await audio.file.fileSize() ?? 0;
+      }
+    }
+
+    imagesTotalSize += await File(tr.pathToImage).fileSize() ?? 0;
+
+    final lrcUtils = LrcSearchUtilsSelectable(kDummyExtendedTrack, tr);
+    lyricsTotalSize += await lrcUtils.cachedLRCFile.fileSize() ?? 0;
+    lyricsTotalSize += await lrcUtils.cachedTxtFile.fileSize() ?? 0;
+  });
 
   final tracks = tracksMap.keys.toList();
   final isSingle = tracks.length == 1;
@@ -61,12 +58,11 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
     // -- show custom goofy dialog for single track that has a video id
 
     Future<(String, int, bool, bool)?> magikify(String? img, bool isThumbnail, bool isTempThumbnail) async {
-      if (img != null && await File(img).exists()) {
-        final size = await File(img).fileSize() ?? 0;
-        imagesTotalSize += size;
-        return (img, size, isThumbnail, isTempThumbnail);
-      }
-      return null;
+      if (img == null) return null;
+      final size = await File(img).fileSize();
+      if (size == null) return null; // -- doesn't exist
+      imagesTotalSize += size;
+      return (img, size, isThumbnail, isTempThumbnail);
     }
 
     final singleTrack = tracks[0];

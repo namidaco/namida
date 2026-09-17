@@ -1650,10 +1650,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       builder: (context, page) {
         final streamSegments = page?.streamSegments;
         if (streamSegments != null && streamSegments.isNotEmpty) {
-          return ObxO(
+          return ObxOSelect(
             rx: Player.inst.nowPlayingPosition,
-            builder: (context, currentPositionMS) {
-              final currentSegment = streamSegments.findByMillisecond(currentPositionMS);
+            selector: (currentPositionMS) => streamSegments.findByMillisecond(currentPositionMS),
+            builder: (context, currentSegment) {
               if (currentSegment != null && currentSegment.title.isNotEmpty) {
                 return NamidaBgBlurClipped(
                   blur: 3.0,

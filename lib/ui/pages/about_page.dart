@@ -1,15 +1,10 @@
-// ignore_for_file: implementation_imports, depend_on_referenced_packages
-
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:markdown/src/ast.dart' as md;
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/route.dart';
@@ -30,6 +25,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/ui/widgets/stats.dart';
@@ -289,15 +285,21 @@ class _AboutPageState extends State<AboutPage> {
                     trailing: isLoading ? const LoadingIndicator() : null,
                     onTap: () async {
                       _loadingChangelog.value = true;
-                      final stringy = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
-                      _loadingChangelog.value = false;
+                      final NamidaMarkdownDocument document;
+                      try {
+                        final response = await Rhttp.get('https://raw.githubusercontent.com/namidaco/namida/main/CHANGELOG.md');
+                        document = await NamidaMarkdownDocument.parseAsync(response.body);
+                      } finally {
+                        _loadingChangelog.value = false;
+                      }
                       NamidaNavigator.inst.showSheet(
                         showDragHandle: true,
                         isScrollControlled: true,
                         heightPercentage: 0.6,
-                        builder: (context, bottomPadding, maxWidth, maxHeight) => Markdown(
-                          data: stringy.body,
+                        builder: (context, bottomPadding, maxWidth, maxHeight) => NamidaMarkdown.document(
+                          document: document,
                           selectable: true,
+                          scrollable: true,
                         ),
                       );
                     },
@@ -476,154 +478,6 @@ class _AboutPageState extends State<AboutPage> {
                 ),
               ],
             ),
-    );
-  }
-}
-
-class _NamidaMarkdownElementBuilderHeader extends MarkdownElementBuilder {
-  @override
-  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    return Center(
-      child: NamidaInkWell(
-        onTap: () {
-          final version = text.text.replaceAll(' ', '');
-          if (version.startsWith('v') && version.split('.').length > 1) {
-            final url = "${AppSocial.GITHUB}/releases/tag/$version";
-            NamidaLinkUtils.openLink(url);
-          }
-        },
-        bgColor: namida.theme.cardTheme.color?.withOpacityExt(0.8),
-        borderRadius: 18.0,
-        decoration: BoxDecoration(
-          border: Border.all(
-            width: 1.5,
-            color: namida.theme.colorScheme.primary.withOpacityExt(0.5),
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        child: Text(
-          text.text,
-          style: namida.textTheme.displayMedium,
-        ),
-      ),
-    );
-  }
-}
-
-class NamidaMarkdown extends StatelessWidget {
-  final String data;
-  final bool selectable;
-  final bool smallBodySize;
-  final bool smallerNestedtBullets;
-  final EdgeInsets padding;
-  final ScrollPhysics? physics;
-  final bool shrinkWrap;
-
-  const NamidaMarkdown({
-    super.key,
-    required this.data,
-    required this.selectable,
-    this.smallBodySize = true,
-    this.smallerNestedtBullets = false,
-    this.padding = const EdgeInsets.all(16.0),
-    this.physics,
-    this.shrinkWrap = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = context.theme.textTheme;
-    return Markdown(
-      data: data,
-      selectable: selectable,
-      styleSheetTheme: MarkdownStyleSheetBaseTheme.cupertino,
-      physics: physics,
-      shrinkWrap: shrinkWrap,
-      padding: padding,
-      builders: <String, MarkdownElementBuilder>{
-        'li': _NamidaMarkdownElementBuilderCommitLink(smallerNestedtBullets: smallerNestedtBullets),
-        'h1': _NamidaMarkdownElementBuilderHeader(),
-      },
-      styleSheet: MarkdownStyleSheet(
-        a: textTheme.displayLarge,
-        h1: textTheme.displayLarge,
-        h2: textTheme.displayMedium,
-        h3: textTheme.displayMedium,
-        p: smallBodySize ? textTheme.displaySmall : textTheme.displayMedium?.copyWith(fontSize: 14.0),
-        listBullet: smallerNestedtBullets ? textTheme.displaySmall : textTheme.displayMedium,
-        code: textTheme.displaySmall,
-      ),
-    );
-  }
-}
-
-class _NamidaMarkdownElementBuilderCommitLink extends MarkdownElementBuilder {
-  final bool smallerNestedtBullets;
-  _NamidaMarkdownElementBuilderCommitLink({required this.smallerNestedtBullets});
-
-  final regex = RegExp(r'([a-f0-9]{7}):', caseSensitive: false);
-
-  @override
-  Widget? visitText(md.Text text, TextStyle? preferredStyle) {
-    if (smallerNestedtBullets) {
-      // -- for some reason nested bullets don't start with space, unlike top level
-      if (!text.text.startsWith(' ')) {
-        return Text(text.text, style: preferredStyle?.copyWith(fontSize: 12.0));
-      }
-    }
-    final res = regex.firstMatch(text.text);
-    final shortHash = res?.group(1);
-    final url = "${AppSocial.GITHUB}/commit/$shortHash";
-    final textWithoutCommit = shortHash == null ? text.text : text.text.substring(shortHash.length + 1);
-    return _CommitTapWidget(
-      url: url,
-      commit: shortHash,
-      textWithoutCommit: textWithoutCommit,
-    );
-  }
-}
-
-class _CommitTapWidget extends StatefulWidget {
-  final String url;
-  final String? commit;
-  final String textWithoutCommit;
-  const _CommitTapWidget({required this.url, required this.commit, required this.textWithoutCommit});
-
-  @override
-  State<_CommitTapWidget> createState() => _CommitTapWidgetState();
-}
-
-class _CommitTapWidgetState extends State<_CommitTapWidget> {
-  late final TapGestureRecognizer recognizer = TapGestureRecognizer()..onTap = () => NamidaLinkUtils.openLink(widget.url);
-
-  @override
-  void dispose() {
-    recognizer.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Text.rich(
-      TextSpan(
-        text: widget.commit == null ? '' : "#${widget.commit}:",
-        style: namida.textTheme.displayMedium?.copyWith(
-          fontSize: 13.5,
-          color: namida.theme.colorScheme.secondary,
-        ),
-        recognizer: recognizer,
-        children: [
-          TextSpan(
-            text: widget.textWithoutCommit,
-            style: widget.commit == null
-                ? namida.textTheme.displayMedium
-                : namida.textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 13.0,
-                  ),
-          ),
-        ],
-      ),
     );
   }
 }

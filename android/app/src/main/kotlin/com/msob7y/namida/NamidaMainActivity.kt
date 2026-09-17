@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.media.RingtoneManager
 import android.media.audiofx.AudioEffect
+import android.net.wifi.WifiManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -45,6 +46,7 @@ class NamidaMainActivity : FlutterActivity() {
   private lateinit var channelStorage: MethodChannel
   private lateinit var context: Context
   private var toast: Toast? = null
+  private var multicastLock: WifiManager.MulticastLock? = null
 
   private val storageUtilsCompleter = CompletableFuture<StorageUtils>()
   private val storageUtils: StorageUtils
@@ -119,6 +121,23 @@ class NamidaMainActivity : FlutterActivity() {
     channel.setMethodCallHandler { call, result ->
       when (call.method) {
         "sdk" -> result.success(Build.VERSION.SDK_INT)
+        "setMulticastLock" -> {
+          val enabled = call.argument<Boolean>("enabled") ?: false
+          try {
+            if (enabled) {
+              if (multicastLock == null) {
+                val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                multicastLock = wifi.createMulticastLock("namida_sync").apply { setReferenceCounted(false) }
+              }
+              multicastLock?.acquire()
+            } else {
+              multicastLock?.let { if (it.isHeld) it.release() }
+            }
+            result.success(true)
+          } catch (e: Exception) {
+            result.error("MULTICAST_LOCK", e.message, null)
+          }
+        }
         "showToast" -> {
           try {
             val durInSeconds = call.argument<Number?>("seconds")

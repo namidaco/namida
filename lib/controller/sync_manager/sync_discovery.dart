@@ -29,6 +29,12 @@ class SyncDiscovery {
     anyDeviceConnected.value = client._connectedServers.isNotEmpty || server._clientsSockets.isNotEmpty;
   }
 
+  /// android drops multicast packets unless a lock is held, needed while advertising or discovering.
+  static void _updateMulticastLock() {
+    final needed = serverRunning.value || client._isDiscovering || client._allowAutoRetryDiscovery;
+    NamidaChannel.inst.setMulticastLock(needed);
+  }
+
   static void autoRestoreOnStartup() async {
     if (!settings.sync.autoReconnect.valueF) return;
     if (settings.sync.serverWasRunning) {
@@ -120,29 +126,37 @@ class _ServerSide extends RxNotifier {
     serverSocket.listen((socket) {
       final reader = _FrameReader();
       final dispatcher = _FrameDispatcher();
-      reader.frames.listen((frame) {
-        final msg = dispatcher.onFrame(frame);
-        if (msg != null) {
-          final senderDeviceId = msg.messageInfo.senderDeviceId;
-          final existing = _clientsSockets[senderDeviceId];
-          if (existing == null || existing._socket != socket) {
-            if (existing != null) {
-              // -- device reconnected on a new socket while the old one never closed
-              // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
-              // -- fingerprints tracking & completes stale log entries.
-              SyncSender.inst.onDeviceDisconnected(senderDeviceId);
-              try {
-                existing._socket.destroy();
-              } catch (_) {}
+      reader.frames.listen(
+        (frame) {
+          final msg = dispatcher.onFrame(frame);
+          if (msg != null) {
+            final senderDeviceId = msg.messageInfo.senderDeviceId;
+            final existing = _clientsSockets[senderDeviceId];
+            if (existing == null || existing._socket != socket) {
+              if (existing != null) {
+                // -- device reconnected on a new socket while the old one never closed
+                // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
+                // -- fingerprints tracking & completes stale log entries.
+                SyncSender.inst.onDeviceDisconnected(senderDeviceId);
+                try {
+                  existing._socket.destroy();
+                } catch (_) {}
+              }
+              final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
+              _clientsSockets[senderDeviceId] = wrapper;
+              SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
+              SyncDiscovery._updateConnectionFlags();
+              _refresh();
             }
-            final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
-            _clientsSockets[senderDeviceId] = wrapper;
-            SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
-            SyncDiscovery._updateConnectionFlags();
-            _refresh();
           }
-        }
-      });
+        },
+        onError: (_) {
+          // -- malformed/desynced stream, nothing more can be read off this socket.
+          try {
+            socket.destroy();
+          } catch (_) {}
+        },
+      );
       socket.listen(
         reader.addBytes,
         onDone: () {
@@ -158,6 +172,7 @@ class _ServerSide extends RxNotifier {
 
     _serverWrapper = await ServerWrapper.startBroadcast(serverSocket);
     SyncDiscovery.serverRunning.value = true;
+    SyncDiscovery._updateMulticastLock();
 
     if (!settings.sync.serverWasRunning) {
       settings.sync.modify((syncSettings) => syncSettings.serverWasRunning = true);
@@ -189,6 +204,7 @@ class _ServerSide extends RxNotifier {
     final sw = _serverWrapper;
     _serverWrapper = null;
     SyncDiscovery.serverRunning.value = false;
+    SyncDiscovery._updateMulticastLock();
     if (andRefresh) _refresh();
     await sw?.stopAll();
 
@@ -316,6 +332,7 @@ class _ClientSide extends RxNotifier {
     }
     _isDiscovering = true;
     _allowAutoRetryDiscovery = !onlyOnce;
+    SyncDiscovery._updateMulticastLock();
     _refresh();
 
     final newAvailableServers = <NetworkDevice>[];
@@ -331,6 +348,7 @@ class _ClientSide extends RxNotifier {
       if (_isDiscovering) {
         _isDiscovering = false;
         _availableServers = newAvailableServers;
+        SyncDiscovery._updateMulticastLock();
         _refresh();
       }
     }
@@ -349,6 +367,7 @@ class _ClientSide extends RxNotifier {
       service: SyncUtils.kDefaultServiceType,
       timeout: const Duration(seconds: 3),
       networkInterface: preferredInterface,
+      wantUnicastResponse: true, // -- replies come directly to us, bypassing routers that filter multicast
     );
     final stream = await MDNSClient.query(params);
     stream.listen(
@@ -380,6 +399,7 @@ class _ClientSide extends RxNotifier {
     _autoDiscoveryTimer?.cancel();
     _allowAutoRetryDiscovery = false;
     _isDiscovering = false;
+    SyncDiscovery._updateMulticastLock();
     _refresh();
   }
 
@@ -583,7 +603,15 @@ class _SocketWrapper {
 
     final reader = _FrameReader();
     final dispatcher = _FrameDispatcher();
-    reader.frames.listen(dispatcher.onFrame);
+    reader.frames.listen(
+      dispatcher.onFrame,
+      onError: (_) {
+        // -- malformed/desynced stream, nothing more can be read off this socket.
+        try {
+          socket.destroy();
+        } catch (_) {}
+      },
+    );
 
     socket.listen(
       reader.addBytes,

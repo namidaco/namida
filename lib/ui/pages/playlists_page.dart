@@ -77,8 +77,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     if (pickFolder) {
       final dirs = await NamidaFileBrowser.pickDirectories(note: "${lang.import} (${lang.folders})");
       playlistsFilesPath = {};
-      for (final d in dirs) {
-        final subfiles = await d.listAllIsolate(recursive: true);
+      final allSubfiles = await dirs.mapConcurrent((d) => d.listAllIsolate(recursive: true), concurrency: 4);
+      for (final subfiles in allSubfiles) {
         for (var f in subfiles) {
           if (f is File) {
             var path = f.path;

@@ -3,8 +3,8 @@ part of 'home_widgets.dart';
 abstract class HomeWidgets {
   static HomeWidgets? platform() {
     return NamidaPlatformBuilder.init(
-      android: () => _HomeWidgetsMobile(),
-      ios: () => _HomeWidgetsMobile(),
+      android: _HomeWidgetsMobile.new,
+      ios: _HomeWidgetsMobile.new,
       windows: () => null,
       linux: () => null,
     );

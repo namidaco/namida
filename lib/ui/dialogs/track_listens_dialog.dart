@@ -27,8 +27,8 @@ void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Co
     datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
     subtitle: subtitle,
     colorScheme: colorScheme,
-    colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null, useIsolate: true),
-    colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null, useIsolate: true),
+    colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null),
+    colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null),
     onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
     onTopListensRangeTap: (customRange) {
       NamidaOnTaps.inst.onMostPlayedPlaylistTap(

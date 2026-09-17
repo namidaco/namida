@@ -453,7 +453,6 @@ class IndexerSettings extends SettingSubpageProvider {
                             )
                             .addSeparators(
                               separator: SizedBox(width: 8.0),
-                              skipFirst: 1,
                             )
                             .toFixedList(),
                       ),
@@ -1795,8 +1794,9 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
     );
   }
 
-  final newPaths = Indexer.inst.getNewFoundPaths(currentFiles);
-  final deletedPath = Indexer.inst.getDeletedPaths(currentFiles);
+  final pathsDifference = Indexer.inst.getPathsDifference(currentFiles);
+  final newPaths = pathsDifference.newPaths;
+  final deletedPath = pathsDifference.deletedPaths;
 
   final settingsServers = settings.directoriesToScan.value.allServers();
   final hasServer = settingsServers.isNotEmpty || allTracksInLibrary.any((element) => element.isNetwork);

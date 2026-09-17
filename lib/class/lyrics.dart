@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:namida/core/enums.dart';
 
 class LyricsModel {
+  static final _lengthTagRegex = RegExp(r'\[length:([\d:\.]+)\]');
+
   final String lyrics;
   final bool synced;
   final bool isInCache;
@@ -35,8 +37,7 @@ class LyricsModel {
   int? _extractDurationMS() {
     if (!synced) return null;
 
-    final regex = RegExp(r'\[length:([\d:\.]+)\]');
-    final match = regex.firstMatch(lyrics);
+    final match = _lengthTagRegex.firstMatch(lyrics);
 
     if (match == null) return null;
     String? length = match.group(1);
@@ -88,7 +89,7 @@ class LyricsModel {
 
   @override
   int get hashCode {
-    return lyrics.hashCode ^ synced.hashCode ^ isInCache.hashCode ^ fromInternet.hashCode ^ isEmbedded.hashCode ^ file.hashCode;
+    return Object.hash(lyrics, synced, isInCache, fromInternet, isEmbedded, file);
   }
 }
 

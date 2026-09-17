@@ -76,9 +76,12 @@ class _NamidaStorageLinux extends NamidaStorage {
     var paths = skipHeader ? lines.skip(1) : lines;
     if (reverse) paths = paths.toFixedList().reversed;
 
-    for (final p in paths) {
-      final isAccessible = await _isAccessibleDirectory(p);
-      if (isAccessible) all.add(p);
+    // -- each check opens a directory stream & a dead network mount can block for a while,
+    // -- so they run together. `mapConcurrent` keeps the original order, which matters here.
+    final pathsList = paths.toFixedList();
+    final accessibility = await pathsList.mapConcurrent(_isAccessibleDirectory, concurrency: 8);
+    for (int i = 0; i < pathsList.length; i++) {
+      if (accessibility[i]) all.add(pathsList[i]);
     }
 
     all.remove('/');

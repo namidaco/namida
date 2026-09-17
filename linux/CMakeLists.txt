@@ -119,10 +119,12 @@ install(FILES "packaging/com.msob7y.namida.metainfo.xml"
 )
 
 # bundle required binaries
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/"
+# named rather than globbed: the same directory also holds the waveform library,
+# which ships as a native asset under lib/ and has no business in bin/
+install(PROGRAMS
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/ffmpeg"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/ffprobe"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-  FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
-  FILES_MATCHING PATTERN "*"
 )
 
 

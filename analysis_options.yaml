@@ -8,8 +8,8 @@
 # The following line activates a set of recommended lints for Flutter apps,
 # packages, and plugins designed to encourage good coding practices.
 analyzer:
-  plugins:
-    - custom_lint
+  # plugins:
+  #   - custom_lint
   errors:
     unnecessary_this: ignore
     use_string_in_part_of_directives: ignore
@@ -18,7 +18,7 @@ formatter:
   trailing_commas: preserve
   page_width: 180
 
-custom_lint:
+# custom_lint:
 
 include: package:flutter_lints/flutter.yaml
 

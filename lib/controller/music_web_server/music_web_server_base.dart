@@ -470,7 +470,6 @@ class _MusicWebServerAuthManager {
                 )
                 .addSeparators(
                   separator: const SizedBox(height: 8.0),
-                  skipFirst: 1,
                 ),
           ],
         ),

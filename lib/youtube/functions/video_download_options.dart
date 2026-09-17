@@ -52,7 +52,7 @@ Future<void> showVideoDownloadOptionsSheet({
             child: getTextChip(e),
           ),
         ),
-      ].addSeparators(separator: const SizedBox(width: 8.0), skipFirst: 1).toFixedList(),
+      ].addSeparators(separator: const SizedBox(width: 8.0)).toFixedList(),
     );
   }
 

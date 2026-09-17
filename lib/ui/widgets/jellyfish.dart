@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:namida/class/color_m.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -328,7 +329,7 @@ class _JellyFieldState extends State<JellyField> {
     super.initState();
     if (!_imagesReady) {
       NamidaJellys.ensureImagesLoaded().then((_) {
-        if (mounted) setState(() => _imagesReady = true);
+        if (mounted && NamidaJellys.hasAnyImage) setState(() => _imagesReady = true);
       });
     }
   }
@@ -356,7 +357,7 @@ class _JellyFieldState extends State<JellyField> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || !_imagesReady || namidaAnimationsDisabled(context)) {
+    if (!widget.enabled || !_imagesReady || namidaAnimationsPaused(context)) {
       _detach();
       return const SizedBox();
     }
@@ -973,7 +974,7 @@ class _JellyFullArtState extends State<JellyFullArt> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.art.isLayered && !namidaAnimationsDisabled(context)) {
+    if (widget.art.isLayered && !namidaAnimationsPaused(context)) {
       if (_sceneReady) {
         _driver ??= (_JellySceneDriver()..start());
         return RepaintBoundary(
@@ -994,7 +995,8 @@ class _JellyFullArtState extends State<JellyFullArt> {
           NamidaJellys.ensureLayersLoaded(),
           NamidaJellys.ensureSceneArtsLoaded(),
         ]).then((_) {
-          if (mounted) setState(() => _sceneReady = true);
+          // -- a half-decoded scene would draw with pieces missing, the flat art is the better fallback
+          if (mounted && NamidaJellys.layersReady && NamidaJellys.sceneArtsReady) setState(() => _sceneReady = true);
         });
       }
     }
@@ -1371,13 +1373,11 @@ abstract class NamidaJellys {
   static Future<void> ensureLayersLoaded() {
     if (layersReady) return Future.value();
     return _layersLoading ??= Future.wait(
-      NamidaJellyLayer.values.map((layer) async {
-        final data = await rootBundle.load(layer.assetPath);
-        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: (_sceneDecodeWidth * layer.rect.width).round());
-        final frame = await codec.getNextFrame();
-        _layerImages[layer] = frame.image;
+      NamidaJellyLayer.values.where((e) => !_layerImages.containsKey(e)).map((layer) async {
+        final image = await _decodeAsset(layer.assetPath, (_sceneDecodeWidth * layer.rect.width).round());
+        if (image != null) _layerImages[layer] = image;
       }),
-    ).then((_) => _layersLoading = null);
+    ).whenComplete(() => _layersLoading = null);
   }
 
   static final _images = <NamidaJelly, ui.Image>{};
@@ -1390,26 +1390,44 @@ abstract class NamidaJellys {
 
   static bool get imagesReady => _detailedArts.every(_images.containsKey);
 
+  /// Enough to draw a field with, the painter simply skips whatever didn't decode.
+  static bool get hasAnyImage => _detailedArts.any(_images.containsKey);
+
   static bool get sceneArtsReady => _sceneArts.every(_images.containsKey);
 
   /// Decodes every jelly once for the whole app, they are kept alive on purpose,
   /// the four of them together cost less than a single artwork tile.
   static Future<void> ensureImagesLoaded() {
     if (imagesReady) return Future.value();
-    return _loading ??= Future.wait(_detailedArts.map(_decodeArt)).then((_) => _loading = null);
+    return _loading ??= Future.wait(_detailedArts.where((e) => !_images.containsKey(e)).map(_decodeArt)).whenComplete(() => _loading = null);
   }
 
   /// The arts the layered scene moors, undecoded until it is actually shown.
   static Future<void> ensureSceneArtsLoaded() {
     if (sceneArtsReady) return Future.value();
-    return _sceneArtsLoading ??= Future.wait(_sceneArts.where((e) => !_images.containsKey(e)).map(_decodeArt)).then((_) => _sceneArtsLoading = null);
+    return _sceneArtsLoading ??= Future.wait(_sceneArts.where((e) => !_images.containsKey(e)).map(_decodeArt)).whenComplete(() => _sceneArtsLoading = null);
   }
 
   static Future<void> _decodeArt(NamidaJelly jelly) async {
-    final data = await rootBundle.load(jelly.assetPath);
-    final codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: jelly.decodeWidth);
-    final frame = await codec.getNextFrame();
-    _images[jelly] = frame.image;
+    final image = await _decodeAsset(jelly.assetPath, jelly.decodeWidth);
+    if (image != null) _images[jelly] = image;
+  }
+
+  /// `null` if the asset is missing or refuses to decode.
+  ///
+  /// A failed art is dropped on its own rather than taking the whole load down with it,
+  /// otherwise a single bad asset leaves the jellies gone for the session with nothing
+  /// but an unhandled async error to show for it.
+  static Future<ui.Image?> _decodeAsset(String assetPath, int targetWidth) async {
+    try {
+      final data = await rootBundle.load(assetPath);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: targetWidth);
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (e, st) {
+      logger.error('failed decoding jelly asset $assetPath', e: e, st: st);
+      return null;
+    }
   }
 }
 

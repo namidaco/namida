@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:namida/core/utils.dart';
@@ -48,27 +49,17 @@ class NamidaUIScaleWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final scale = NamidaUIScale._resolve(constraints.biggest);
-        if (scale == 1.0) return child;
-
-        final inverse = 1 / scale;
-        // -- [FittedBox] rather than [Transform] + [SizedBox], since the incoming
-        // -- constraints are tight and would shrink the child back down.
-        return FittedBox(
-          fit: BoxFit.fill,
-          alignment: Alignment.topLeft,
-          child: SizedBox(
-            width: constraints.maxWidth * inverse,
-            height: constraints.maxHeight * inverse,
-            child: MediaQuery(
-              data: MediaQuery.of(context).scaledForUI(scale),
-              child: child,
-            ),
-          ),
-        );
-      },
+    // -- at the root the incoming constraints are the view size, same as the media query.
+    final mediaQuery = MediaQuery.of(context);
+    final scale = NamidaUIScale._resolve(mediaQuery.size);
+    // -- the tree shape must never depend on [scale], switching it would remount the whole app.
+    return _NamidaScaleBox(
+      scale: scale,
+      roundVirtualSize: false,
+      child: MediaQuery(
+        data: mediaQuery.scaledForUI(scale),
+        child: child,
+      ),
     );
   }
 }
@@ -86,25 +77,120 @@ class NamidaUiScaleBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (scale == 1.0) return child;
-    final inverse = 1 / scale;
     return LayoutBuilder(
       builder: (context, constraints) {
-        // -- whole pixels, fractional virtual sizes leave sub pixel overflows behind.
-        final virtualSize = Size((constraints.maxWidth * inverse).ceilToDouble(), (constraints.maxHeight * inverse).ceilToDouble());
-        return FittedBox(
-          fit: BoxFit.fill,
-          alignment: Alignment.topLeft,
-          child: SizedBox.fromSize(
-            size: virtualSize,
-            child: MediaQuery(
-              data: MediaQuery.of(context).scaledForUI(scale).copyWith(size: virtualSize),
-              child: child,
-            ),
+        final mediaQuery = MediaQuery.of(context);
+        return _NamidaScaleBox(
+          scale: scale,
+          roundVirtualSize: true,
+          child: MediaQuery(
+            data: scale == 1.0 ? mediaQuery : mediaQuery.scaledForUI(scale).copyWith(size: _NamidaScaleBox.virtualSizeFor(constraints.biggest, scale, true)),
+            child: child,
           ),
         );
       },
     );
+  }
+}
+
+class _NamidaScaleBox extends SingleChildRenderObjectWidget {
+  final double scale;
+  final bool roundVirtualSize;
+
+  const _NamidaScaleBox({required this.scale, required this.roundVirtualSize, required Widget super.child});
+
+  static Size virtualSizeFor(Size size, double scale, bool round) {
+    final inverse = 1 / scale;
+    // -- whole pixels, fractional virtual sizes leave sub pixel overflows behind.
+    return round ? Size((size.width * inverse).ceilToDouble(), (size.height * inverse).ceilToDouble()) : size * inverse;
+  }
+
+  @override
+  _RenderNamidaScaleBox createRenderObject(BuildContext context) => _RenderNamidaScaleBox(scale, roundVirtualSize);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderNamidaScaleBox renderObject) {
+    renderObject
+      ..scale = scale
+      ..roundVirtualSize = roundVirtualSize;
+  }
+}
+
+/// A pass-through at 1.0, otherwise lays the child out in the virtual box and stretches it to fill.
+class _RenderNamidaScaleBox extends RenderProxyBox {
+  _RenderNamidaScaleBox(this._scale, this._roundVirtualSize);
+
+  double _scale;
+  set scale(double value) {
+    if (_scale == value) return;
+    _scale = value;
+    markNeedsLayout();
+    markNeedsSemanticsUpdate();
+  }
+
+  bool _roundVirtualSize;
+  set roundVirtualSize(bool value) {
+    if (_roundVirtualSize == value) return;
+    _roundVirtualSize = value;
+    markNeedsLayout();
+  }
+
+  final _transform = Matrix4.identity();
+  final _inverseTransform = Matrix4.identity();
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    if (_scale == 1.0) return super.computeDryLayout(constraints);
+    return constraints.biggest;
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child!;
+    if (_scale == 1.0) {
+      child.layout(constraints, parentUsesSize: true);
+      size = child.size;
+      return;
+    }
+    final biggest = constraints.biggest;
+    final virtualSize = _NamidaScaleBox.virtualSizeFor(biggest, _scale, _roundVirtualSize);
+    child.layout(BoxConstraints.tight(virtualSize));
+    size = biggest;
+
+    final sx = virtualSize.width > 0 ? biggest.width / virtualSize.width : _scale;
+    final sy = virtualSize.height > 0 ? biggest.height / virtualSize.height : _scale;
+    _transform
+      ..setEntry(0, 0, sx)
+      ..setEntry(1, 1, sy);
+    _inverseTransform
+      ..setEntry(0, 0, 1 / sx)
+      ..setEntry(1, 1, 1 / sy);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (_scale == 1.0) {
+      layer = null;
+      context.paintChild(child!, offset);
+      return;
+    }
+    layer = context.pushTransform(needsCompositing, offset, _transform, super.paint, oldLayer: layer as TransformLayer?);
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child!;
+    if (_scale == 1.0) return child.hitTest(result, position: position);
+    return result.addWithRawTransform(
+      transform: _inverseTransform,
+      position: position,
+      hitTest: (result, position) => child.hitTest(result, position: position),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    if (_scale != 1.0) transform.multiply(_transform);
   }
 }
 

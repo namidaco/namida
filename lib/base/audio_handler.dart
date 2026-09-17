@@ -26,8 +26,8 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
-import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/listen_time_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
@@ -114,11 +114,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     void updateQueueShuffled() async {
       final wasShuffled = isQueueShuffled;
       await setQueueShuffled(settings.player.shuffleQueue.value);
-      if (wasShuffled != isQueueShuffled) MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
+      final shuffled = isQueueShuffled;
+      if (wasShuffled != shuffled) MiniPlayerController.inst.animateQueueToCurrentTrack(jump: false, minZero: true);
+      refreshPlaybackStateModes();
+      SMTCController.instance?.updateShuffle(shuffled);
     }
 
     settings.player.shuffleQueue.addListener(updateQueueShuffled);
     updateQueueShuffled();
+
+    settings.player.repeatMode.addListener(() {
+      refreshPlaybackStateModes();
+      SMTCController.instance?.updateRepeatMode(playerRepeatMode);
+    });
 
     final homeWidget = HomeWidgetController.instance;
     if (homeWidget != null) {
@@ -132,9 +140,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     final smtc = SMTCController.instance;
     if (smtc != null) {
+      const int staleTimelineValue = -1;
+      int latestPositionSec = staleTimelineValue;
+      int? latestDurationMS;
       void listener() {
         final positionMS = currentPositionMS.value;
         final durationMS = currentItemDuration.value?.inMilliseconds;
+        // -- no point calling each position change, only refreshes on second basis.
+        final positionSec = positionMS ~/ 1000;
+        if (positionSec == latestPositionSec && durationMS == latestDurationMS) return;
+        latestPositionSec = positionSec;
+        latestDurationMS = durationMS;
         smtc.updateTimeline(positionMS, durationMS);
       }
 
@@ -320,13 +336,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  int _notificationUpdateGeneration = 0;
+
   void _notificationUpdateItemSelectable({
     required Selectable item,
     required bool isItemFavourite,
     required int itemIndex,
     required Duration? duration,
   }) async {
+    final generation = ++_notificationUpdateGeneration;
     final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
+    if (generation != _notificationUpdateGeneration) return;
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
 
@@ -344,7 +364,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     };
     final index = currentIndex.value;
     final ql = currentQueue.value.length;
+    final generation = ++_notificationUpdateGeneration;
     final media = await youtubeIdMediaItem(index, ql);
+    if (generation != _notificationUpdateGeneration) return;
     mediaItem.add(media);
     playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
@@ -886,7 +908,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }) async {
     final tr = item.track;
     videoPlayerInfo.value = null;
-    Lyrics.inst.resetLyrics();
+    Lyrics.inst.resetLyrics(hide: false);
     WaveformController.inst.resetWaveform();
     VideoController.inst.currentVideoConfig.resetAll();
 
@@ -917,11 +939,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (checkInterrupted()) return; // -- refresh duration
 
     // -- generating artwork in case it wasnt, to be displayed in notification
-    File(tr.pathToImage).exists().then((exists) {
+    final imagePath = tr.pathToImage;
+    File(imagePath).exists().then((exists) {
       // -- we check if it exists to avoid refreshing notification redundently.
       // -- otherwise `getArtwork` already handles duplications.
       if (!exists) {
-        Indexer.inst.getArtwork(imagePath: tr.pathToImage, track: tr, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
+        Indexer.inst.getArtwork(imagePath: imagePath, track: tr, compressed: false, checkFileFirst: false).then((value) => refreshNotification());
       }
     });
 
@@ -1508,7 +1531,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           : prefferedAudioStream == null
           ? false
           : _allowSwitchingVideoStreamIfCachedPlaying
-          ? prefferedAudioStream.bitrate > prefferedAudioStream.bitrate
+          ? prefferedAudioStream.bitrate > (cachedAudio.bitrate ?? 0)
           : false;
       if (isAudioStreamRequiredBetterThanCachedSet) {
         audioStream = prefferedAudioStream;
@@ -1757,7 +1780,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
   }) async {
     WaveformController.inst.resetWaveform();
-    Lyrics.inst.resetLyrics();
+    Lyrics.inst.resetLyrics(hide: false);
     SponsorBlockController.inst.clearSegmentsIfVideoIsDifferent(item.id);
 
     currentVideoStream.value = null;
@@ -2170,6 +2193,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     settings.player.save(shuffleQueue: shuffled);
   }
 
+  var _totalListenTimeWriteLock = Future<void>.value();
+
   @override
   void onTotalListenTimeIncrease(Map<String, int> totalTimeInSeconds, String key) {
     final newSeconds = totalTimeInSeconds[key] ?? 0;
@@ -2177,7 +2202,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
     // saves the file each 20 seconds.
     if (newSeconds % 20 == 0) {
-      File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds);
+      _totalListenTimeWriteLock = _totalListenTimeWriteLock.then((_) => File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds)).ignoreError();
       ListenTimeController.inst.flush();
     }
   }

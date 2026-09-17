@@ -27,7 +27,9 @@ enum YTLocalSearchSortType {
   firstListen,
 }
 
-class YTLocalSearchController with PortsProvider<Map> {
+typedef YTLocalSearchIsolateParams = ({String databasesDir, String sensitiveDataDir, String statsDir, bool enableFuzzySearch, SendPort sendPort});
+
+class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
   YTLocalSearchController._internal();
 
@@ -118,14 +120,14 @@ class YTLocalSearchController with PortsProvider<Map> {
   }
 
   @override
-  IsolateFunctionReturnBuild<Map> isolateFunction(SendPort port) {
-    final params = {
-      'databasesDir': AppDirs.YOUTIPIE_CACHE,
-      'sensitiveDataDir': AppDirs.YOUTIPIE_DATA,
-      'statsDir': AppDirs.YT_STATS,
-      'enableFuzzySearch': enableFuzzySearch,
-      'sendPort': port,
-    };
+  IsolateFunctionReturnBuild<YTLocalSearchIsolateParams> isolateFunction(SendPort port) {
+    final params = (
+      databasesDir: AppDirs.YOUTIPIE_CACHE,
+      sensitiveDataDir: AppDirs.YOUTIPIE_DATA,
+      statsDir: AppDirs.YT_STATS,
+      enableFuzzySearch: enableFuzzySearch,
+      sendPort: port,
+    );
     return IsolateFunctionReturnBuild(_prepareResourcesAndSearch, params);
   }
 
@@ -140,12 +142,12 @@ class YTLocalSearchController with PortsProvider<Map> {
     return super.initialize();
   }
 
-  static void _prepareResourcesAndSearch(Map params) async {
-    final databasesDir = params['databasesDir'] as String;
-    final sensitiveDataDir = params['sensitiveDataDir'] as String;
-    final statsDir = params['statsDir'] as String;
-    final enableFuzzySearch = params['enableFuzzySearch'] as bool;
-    final sendPort = params['sendPort'] as SendPort;
+  static void _prepareResourcesAndSearch(YTLocalSearchIsolateParams params) async {
+    final databasesDir = params.databasesDir;
+    final sensitiveDataDir = params.sensitiveDataDir;
+    final statsDir = params.statsDir;
+    final enableFuzzySearch = params.enableFuzzySearch;
+    final sendPort = params.sendPort;
 
     final recievePort = ReceivePort();
     sendPort.send(recievePort.sendPort);

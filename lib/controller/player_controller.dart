@@ -246,7 +246,9 @@ class Player {
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
         final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => const YTUtils().showVideoClearDialog(itemId)) : null;
-        snackyy(message: e.details.toString().substring(0, 600), title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
+        final details = e.details.toString();
+        final detailsTrimmed = details.length > 600 ? details.substring(0, 600) : details;
+        snackyy(message: detailsTrimmed, title: '${lang.error}: ${e.message}', isError: true, top: false, button: button, maxLinesMessage: 8);
       }
     };
 
@@ -973,14 +975,21 @@ class _AudioConfigsManager {
     if (anyChanged) _mapRx.refresh();
   }
 
+  final _dirtyKeys = <String>{};
+
   void _scheduleSave(String key) {
+    _dirtyKeys.add(key);
     _updateDebouncer?.cancel();
     _updateDebouncer = Timer(
       const Duration(milliseconds: 600),
       () async {
-        final config = _mapRx.value[key];
+        final keys = _dirtyKeys.toFixedList();
+        _dirtyKeys.clear();
         _mapRx.refresh();
-        await _dBManager.put(key, config?.toMap());
+        for (final key in keys) {
+          final config = _mapRx.value[key];
+          await _dBManager.put(key, config?.toMap());
+        }
       },
     );
   }

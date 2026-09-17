@@ -153,7 +153,6 @@ modules:
       - mkdir -p /app/namida
       - cp -a namida lib data /app/namida/
       - mkdir -p /app/namida/bin
-      - if [ -f bin/audiowaveform ]; then install -Dm755 bin/audiowaveform /app/namida/bin/audiowaveform; fi
       # ffmpeg/ffprobe: use the ones built above (the tarball's need a newer glibc than the runtime)
       - ln -sf /app/bin/ffmpeg /app/namida/bin/ffmpeg
       - ln -sf /app/bin/ffprobe /app/namida/bin/ffprobe

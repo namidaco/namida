@@ -119,6 +119,8 @@ class MIFormat {
 }
 
 class MIFormatTags {
+  static final _popmRatingRegex = RegExp(r'rating=(\d+)', caseSensitive: false);
+
   final String? date;
   final int? bpm;
   final double? rating;
@@ -205,7 +207,7 @@ class MIFormatTags {
     // -- probably non-existent
     final popmString = map.getOrUpperCase("POPM");
     if (popmString is String && popmString.isNotEmpty) {
-      final popm = MediaInfo.extractNum(popmString) ?? MediaInfo.extractNum(RegExp(r'rating=(\d+)', caseSensitive: false).firstMatch(popmString)?.group(1));
+      final popm = MediaInfo.extractNum(popmString) ?? MediaInfo.extractNum(_popmRatingRegex.firstMatch(popmString)?.group(1));
       if (popm != null) return popm / 255.0;
     }
 

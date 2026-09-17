@@ -64,6 +64,7 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_tooltip.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/popup_wrapper.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -767,7 +768,7 @@ class CustomBlurryDialog extends StatelessWidget {
                                           mainAxisSize: .max,
                                           mainAxisAlignment: .end,
                                           children: [
-                                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0), skipFirst: 1),
+                                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
                                           ],
                                         ),
                                       ),
@@ -2608,10 +2609,10 @@ class _NamidaPartyContainerState extends State<NamidaPartyContainer> {
     final width = widget.width;
     final height = widget.height;
     if (!settings.enablePartyModeColorSwap.value) {
-      return ObxO(
+      return ObxOSelect(
         rx: Player.inst.nowPlayingPosition,
-        builder: (context, nowPlayingPosition) {
-          final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+        selector: WaveformController.inst.getCurrentAnimatingScale,
+        builder: (context, finalScale) {
           return AnimatedSizedBox(
             duration: const Duration(milliseconds: 400),
             height: height ?? context.height,
@@ -2693,10 +2694,10 @@ class _PartyPaletteBox extends StatelessWidget {
         }
         final colorIndex = (start + ((index - rotation) % count)) % palette.length;
         final color = palette[colorIndex];
-        return ObxO(
+        return ObxOSelect(
           rx: Player.inst.nowPlayingPosition,
-          builder: (context, nowPlayingPosition) {
-            final finalScale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+          selector: WaveformController.inst.getCurrentAnimatingScale,
+          builder: (context, finalScale) {
             return AnimatedSizedBox(
               duration: const Duration(milliseconds: 400),
               height: height,
@@ -3330,28 +3331,31 @@ class SearchPageTitleRow extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 16.0),
-        Row(
-          children: [
-            leading ?? Icon(icon),
-            const SizedBox(width: 8.0),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: textTheme.displayLarge?.copyWith(fontSize: 15.5),
+        Expanded(
+          child: Row(
+            children: [
+              leading ?? Icon(icon),
+              const SizedBox(width: 8.0),
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textTheme.displayLarge?.copyWith(fontSize: 15.5),
+                    ),
+                    ?subtitleWidget,
+                    if (subtitle != '')
+                      Text(
+                        subtitle,
+                        style: textTheme.displaySmall,
+                      ),
+                  ],
                 ),
-                ?subtitleWidget,
-                if (subtitle != '')
-                  Text(
-                    subtitle,
-                    style: textTheme.displaySmall,
-                  ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
-        const Spacer(),
         ?trailing,
         const SizedBox(width: 8.0),
       ],
@@ -5085,7 +5089,10 @@ class CustomAnimatedSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
+      duration: duration,
+      reverseDuration: reverseDuration,
+      switchInCurve: switchInCurve,
+      switchOutCurve: switchOutCurve,
       layoutBuilder: layoutBuilder ?? defaultLayoutBuilder,
       transitionBuilder: CustomAnimatedSwitcher.defaultTransitionBuilder,
       child: child,
@@ -7325,6 +7332,8 @@ class _NamidaVersionReleasesInfoList extends StatefulWidget {
 }
 
 class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesInfoList> {
+  final _documents = <VersionReleaseInfo, NamidaMarkdownDocument>{};
+
   @override
   void initState() {
     VersionController.inst.fetchReleasesAfterCurrent();
@@ -7372,13 +7381,11 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                     NamidaInkWell(
                       bgColor: theme.cardColor,
                       padding: EdgeInsets.all(8.0),
-                      child: NamidaMarkdown(
+                      child: NamidaMarkdown.document(
+                        document: _documents[info] ??= NamidaMarkdownDocument.parse(info.body),
                         selectable: false,
                         smallBodySize: false,
-                        smallerNestedtBullets: true,
-                        data: info.body.replaceAll(RegExp(r'https:\/\/\S+'), ''),
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
+                        smallerNestedBullets: true,
                         padding: EdgeInsets.zero,
                       ),
                     ),
@@ -7491,7 +7498,7 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
                             ),
                           ),
                         )
-                        .addSeparators(separator: const SizedBox(width: 2.0), skipFirst: 1),
+                        .addSeparators(separator: const SizedBox(width: 2.0)),
                     if (data != null)
                       NamidaContainerDivider(
                         height: 16.0,
@@ -8242,7 +8249,6 @@ class SplitPageState extends State<SplitPage> {
                 )
                 .addSeparators(
                   separator: widget.joinHeaderChips ? const SizedBox(width: 4.0) : const SizedBox(width: 8.0),
-                  skipFirst: 1,
                 )
                 .toList(),
           ),

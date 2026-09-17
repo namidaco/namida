@@ -65,6 +65,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
+import 'package:namida/core/translations/arb/app_localizations.dart';
 import 'package:namida/core/translations/fallback_delegates.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
@@ -206,7 +207,7 @@ Future<bool> _mainAppInitialization() async {
     );
 
     _initErrorInterpreters();
-    _cleanOldLogsSync.thready([AppDirs.LOGS_DIRECTORY, AppPaths.getLogsSuffix()]);
+    _cleanOldLogsSync.thready((dirPath: AppDirs.LOGS_DIRECTORY, currentSuffix: AppPaths.getLogsSuffix()));
 
     // -- creating directories
     await AppDirs.values.map((p) => Directory(p).create(recursive: true)).executeAllAndSilentReportErrors();
@@ -224,7 +225,7 @@ Future<bool> _mainAppInitialization() async {
 
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
-      settings.directoriesToScan.value.addAll(defaultDirs);
+      settings.save(directoriesToScan: defaultDirs.toList());
     } else {
       final servers = settings.directoriesToScan.value.allServers();
       if (servers.isNotEmpty) {
@@ -386,9 +387,9 @@ Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) asy
   return dirsToScanDefault;
 }
 
-void _cleanOldLogsSync(List params) {
-  String dirPath = params[0];
-  String? fileSuffix = params[1];
+void _cleanOldLogsSync(({String dirPath, String? currentSuffix}) params) {
+  final dirPath = params.dirPath;
+  final fileSuffix = params.currentSuffix;
   for (final e in Directory(dirPath).listSyncSafe()) {
     if (e is File) {
       final filename = e.path.getFilename;
@@ -451,6 +452,7 @@ void _initLifeCycle() {
 }
 
 Future<void> _clearIntentCachedFiles() async {
+  if (!(Platform.isAndroid || Platform.isIOS)) return;
   final cacheDir = await pp.getTemporaryDirectory();
   return Isolate.run(
     () {
@@ -525,6 +527,9 @@ class Namida extends StatefulWidget {
 
   static final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;
 
+  /// `en` is prepended to be used as the resolution fallback instead of the first supported locale.
+  static const _supportedLocales = <Locale>[Locale('en'), ...AppLocalizations.supportedLocales];
+
   static const _localizationsDelegates = <LocalizationsDelegate<dynamic>>[
     GlobalMaterialLocalizations.delegate,
     GlobalCupertinoLocalizations.delegate,
@@ -536,45 +541,42 @@ class Namida extends StatefulWidget {
 }
 
 class _NamidaState extends State<Namida> {
-  Widget buildMainApp(Widget widget, Brightness? platformBrightness) => Directionality(
-    textDirection: TextDirection.ltr,
-    child: ScrollConfiguration(
-      behavior: const ScrollBehaviorModified(),
-      child: ObxO(
-        rx: Language.inst.currentLanguageRx,
-        builder: (_, l) => Obx(
-          key: ValueKey(l),
-          (context) {
-            final mode = settings.themeMode.valueR;
-            final isLight = mode.checkIsLight(platformBrightness);
-            final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
-            final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
-                ? WrapWithWindowGoodies(
-                    child: widget,
-                  )
-                : widget;
+  Widget buildMainApp(Widget widget, Brightness? platformBrightness) => ScrollConfiguration(
+    behavior: const ScrollBehaviorModified(),
+    child: ObxO(
+      rx: Language.inst.currentLanguageRx,
+      builder: (_, l) => Obx(
+        key: ValueKey(l),
+        (context) {
+          final mode = settings.themeMode.valueR;
+          final isLight = mode.checkIsLight(platformBrightness);
+          final theme = AppThemes.inst.getAppTheme(CurrentColor.inst.currentColorScheme, isLight);
+          final mainChild = WindowController.instance?.usingCustomWindowTitleBar == true
+              ? WrapWithWindowGoodies(
+                  child: widget,
+                )
+              : widget;
 
-            return Theme(
-              data: theme,
-              child: WindowController.instance == null
-                  ? mainChild
-                  : ObxO(
-                      rx: NamidaWindowManager.isMiniLyricsMode,
-                      builder: (context, isMiniLyricsMode) => Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Visibility(
-                            maintainState: true,
-                            visible: !isMiniLyricsMode,
-                            child: mainChild,
-                          ),
-                          if (isMiniLyricsMode) const MiniLyricsWindow(),
-                        ],
-                      ),
+          return Theme(
+            data: theme,
+            child: WindowController.instance == null
+                ? mainChild
+                : ObxO(
+                    rx: NamidaWindowManager.isMiniLyricsMode,
+                    builder: (context, isMiniLyricsMode) => Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Visibility(
+                          maintainState: true,
+                          visible: !isMiniLyricsMode,
+                          child: mainChild,
+                        ),
+                        if (isMiniLyricsMode) const MiniLyricsWindow(),
+                      ],
                     ),
-            );
-          },
-        ),
+                  ),
+          );
+        },
       ),
     ),
   );
@@ -595,13 +597,19 @@ class _NamidaState extends State<Namida> {
     final shouldShowOnBoarding = await _mainAppInitialization();
     setState(() => _shouldShowOnBoarding = shouldShowOnBoarding);
 
-    FlutterNativeSplash.remove();
-    WindowController.instance?.ensurePositionRestored();
+    // -- resizing after first frame can crash flutter linux (x11), https://github.com/namidaco/namida/issues/1212
+    await WindowController.instance?.ensurePositionRestored().catchError(logger.report);
 
-    Timer(
-      Duration.zero,
-      () => _secondaryAppInitialization(shouldShowOnBoarding),
-    );
+    FlutterNativeSplash.remove();
+
+    if (Platform.isLinux) {
+      WidgetsBinding.instance.endOfFrame.then((_) => _secondaryAppInitialization(shouldShowOnBoarding));
+    } else {
+      Timer(
+        Duration.zero,
+        () => _secondaryAppInitialization(shouldShowOnBoarding),
+      );
+    }
 
     if (MusicWebServerAuthDetails.manager.hasMissingAuthRx.value) {
       Timer(
@@ -668,45 +676,52 @@ class _NamidaState extends State<Namida> {
                 Visibility(
                   maintainState: true,
                   visible: !showPipOnly,
-                  child: MaterialApp(
-                    color: kDefaultIconLightColor,
-                    key: const Key('namida_app'),
-                    debugShowCheckedModeBanner: false,
-                    navigatorKey: namida.rootNavigatorKey,
-                    title: 'Namida',
-                    shortcuts: ShortcutsController.instance?.appShortcuts,
-                    // restorationScopeId: 'Namida',
-                    // -- we use custom logic to avoid context based translations
-                    // locale: currentLanguage?.locale,
-                    // supportedLocales: AppLocalizations.supportedLocales,
-                    localizationsDelegates: Namida._localizationsDelegates,
-                    builder: (context, widget) {
-                      Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
-                      // overlay entries get rebuilt on any insertion/removal, so we create app here.
+                  child: ObxO(
+                    rx: Language.inst.currentLanguageRx,
+                    builder: (context, language) => MaterialApp(
+                      color: kDefaultIconLightColor,
+                      key: const Key('namida_app'),
+                      debugShowCheckedModeBanner: false,
+                      navigatorKey: namida.rootNavigatorKey,
+                      title: 'Namida',
+                      shortcuts: ShortcutsController.instance?.appShortcuts,
+                      // restorationScopeId: 'Namida',
+                      // -- we use custom logic for translations, but the locale is still required for
+                      // -- region-specific glyphs, ex: CJK ideographs are rendered differently per locale.
+                      locale: language?.locale,
+                      supportedLocales: Namida._supportedLocales,
+                      localizationsDelegates: Namida._localizationsDelegates,
+                      builder: (context, widget) {
+                        Brightness platformBrightness = MediaQuery.platformBrightnessOf(context);
+                        // overlay entries get rebuilt on any insertion/removal, so we create app here.
 
-                      Widget mainApp = buildMainApp(widget!, platformBrightness);
+                        Widget mainApp = buildMainApp(widget!, platformBrightness);
 
-                      // -- text scaling is applied here rather than above [MaterialApp], so keyboard insets
-                      // -- & other media query changes dont recreate the app widget itself.
-                      return _ScaledTextMediaQuery(
-                        child: Overlay(
-                          initialEntries: [
-                            OverlayEntry(
-                              builder: (context) {
-                                final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
-                                if (newPlatformBrightness != platformBrightness) {
-                                  platformBrightness = newPlatformBrightness;
-                                  mainApp = buildMainApp(widget, platformBrightness);
-                                  YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
-                                }
-                                return mainApp;
-                              },
+                        // -- text scaling is applied here rather than above [MaterialApp], so keyboard insets
+                        // -- & other media query changes dont recreate the app widget itself.
+                        return Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: _ScaledTextMediaQuery(
+                            child: Overlay(
+                              initialEntries: [
+                                OverlayEntry(
+                                  builder: (context) {
+                                    final newPlatformBrightness = MediaQuery.platformBrightnessOf(context);
+                                    if (newPlatformBrightness != platformBrightness) {
+                                      platformBrightness = newPlatformBrightness;
+                                      mainApp = buildMainApp(widget, platformBrightness);
+                                      YoutubeMiniplayerUiController.inst.startDimTimer(brightness: platformBrightness);
+                                    }
+                                    return mainApp;
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      );
-                    },
-                    home: mainPageWrapper,
+                          ),
+                        );
+                      },
+                      home: mainPageWrapper,
+                    ),
                   ),
                 ),
 

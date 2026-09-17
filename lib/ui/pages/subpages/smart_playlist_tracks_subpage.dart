@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
@@ -36,7 +37,7 @@ class SmartPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
 }
 
 class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
-    with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<Map<String, dynamic>>, TracksSearchWidgetMixin<SmartPlaylistTracksPage> {
+    with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<SmartPlaylistTracksPage> {
   @override
   Iterable<TrackExtended> getTracksExtended() {
     return _tracks.map((e) => e.track.toTrackExt());

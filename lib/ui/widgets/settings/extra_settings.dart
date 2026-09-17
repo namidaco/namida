@@ -899,7 +899,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                         ),
                       );
                     } else {
-                      final remainingCount = CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
+                      final remainingCount = await CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
                       NamidaNavigator.inst.navigateDialog(
                         dialog: CustomBlurryDialog(
                           title: lang.note,

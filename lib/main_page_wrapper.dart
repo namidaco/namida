@@ -22,6 +22,7 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/ui/pages/about_page.dart';
@@ -69,13 +70,21 @@ class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderSt
     }
   }
 
+  static const _drawerWidth = 194.0;
+  static const _drawerReferenceWidth = 400.0;
+
   @override
   Widget build(BuildContext context) {
+    final width = context.width;
+    final drawerScale = (width / _drawerReferenceWidth).clampDouble(0.7, 1.0);
     return NamidaInnerDrawer(
       key: NamidaNavigator.inst.innerDrawerKey,
       borderRadius: 42.0.multipliedRadius,
-      drawerChild: const NamidaDrawer(),
-      maxPercentage: 194.0 / context.width,
+      drawerChild: NamidaUiScaleBox(
+        scale: drawerScale,
+        child: const NamidaDrawer(),
+      ),
+      maxPercentage: _drawerWidth * drawerScale / width,
       initiallySwipeable: settings.swipeableDrawer.value,
       child: MainScreenStack(
         animation: animation,

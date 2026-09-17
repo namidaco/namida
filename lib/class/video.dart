@@ -92,7 +92,7 @@ class YTWatch {
   }
 
   @override
-  int get hashCode => dateMSNull.hashCode ^ isYTMusic.hashCode;
+  int get hashCode => Object.hash(dateMSNull, isYTMusic);
 }
 
 class NamidaVideo {
@@ -168,7 +168,7 @@ class NamidaVideo {
 
   @override
   int get hashCode {
-    return path.hashCode ^ ytID.hashCode ^ height.hashCode ^ width.hashCode ^ sizeInBytes.hashCode ^ frameratePrecise.hashCode ^ creationTimeMS.hashCode;
+    return Object.hash(path, ytID, height, width, sizeInBytes, frameratePrecise, creationTimeMS);
   }
 
   @override

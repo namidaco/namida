@@ -36,9 +36,14 @@ class Lyrics {
   static final Lyrics _instance = Lyrics._internal();
   Lyrics._internal();
 
+  static final _htmlTagRegex = RegExp(r'<[^>]*>');
+
   final textScrollController = NamidaScrollController.create(keepScrollOffset: true);
 
   final lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
+
+  /// the miniplayer lyrics overlay's animated visibility (0..1).
+  final lrcOverlayVisibility = ValueNotifier<double>(0.0);
   final lrcViewKeyFullscreen = GlobalKey<LyricsLRCParsedViewState>();
 
   final currentLyricsText = LrcText.empty.obs;
@@ -58,12 +63,12 @@ class Lyrics {
     }
   }
 
-  void resetLyrics() {
+  void resetLyrics({bool hide = true}) {
     currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;
     WakelockController.inst.updateLRCStatus(false);
     for (final view in LyricsLRCParsedViewState.mountedViews) {
-      view.clearLists();
+      view.clearLists(hide: hide);
     }
   }
 
@@ -89,8 +94,10 @@ class Lyrics {
     return LrcParser.cleanPlainLyrics(lyrics);
   }
 
+  /// The view is only hidden once the lookup settles with nothing, otherwise a hide & show would
+  /// cross-fade over each other whenever the new lyrics arrive right away (cached/device ones do).
   Future<void> _updateLyrics(Playable item) async {
-    resetLyrics();
+    resetLyrics(hide: false);
     bool checkInterrupted() => Player.inst.currentItem.value != item;
 
     try {
@@ -98,64 +105,70 @@ class Lyrics {
     } catch (_) {}
 
     lyricsCanBeAvailable.value = true;
-    if (!_lyricsEnabled) return;
+
+    final resolved = await _resolveLyrics(item, checkInterrupted);
+    if (resolved == null || checkInterrupted()) return;
+
+    final lrc = resolved.lrc;
+    final txt = resolved.txt;
+    if (lrc != null) {
+      currentLyricsLRC.value = lrc;
+    } else if (txt != null) {
+      currentLyricsText.value = txt;
+    } else if (!resolved.canBeAvailable) {
+      lyricsCanBeAvailable.value = false;
+    }
+    _updateWidgets(lrc, txt);
+  }
+
+  static const _LyricsResolveResult _noLyrics = (lrc: null, txt: null, canBeAvailable: true);
+
+  /// null when interrupted.
+  Future<_LyricsResolveResult?> _resolveLyrics(Playable item, bool Function() checkInterrupted) async {
+    if (!_lyricsEnabled) return _noLyrics;
 
     final LrcSearchUtils? lrcUtils = await LrcSearchUtils.fromPlayable(item);
 
-    if (lrcUtils == null) return;
-    if (checkInterrupted()) return;
+    if (lrcUtils == null) return _noLyrics;
+    if (checkInterrupted()) return null;
 
     final embedded = lrcUtils.embeddedLyrics;
-    if (embedded.startsWith('IGNORE')) return;
+    if (embedded.startsWith('IGNORE')) return _noLyrics;
 
     if (_lyricsPrioritizeEmbedded && embedded != '') {
       final lrc = embedded.parseLRC();
-      if (lrc != null && lrc.lyrics.isNotEmpty) {
-        currentLyricsLRC.value = lrc;
-        _updateWidgets(lrc, null);
-      } else {
-        final txt = LrcText.fromText(_cleanPlainLyrics(embedded));
-        currentLyricsText.value = txt;
-        _updateWidgets(null, txt);
-      }
-      return;
+      if (lrc != null && lrc.lyrics.isNotEmpty) return (lrc: lrc, txt: null, canBeAvailable: true);
+      return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(embedded)), canBeAvailable: true);
     }
 
     /// 1. device lrc
     /// 2. cached lrc
     /// 3. track embedded lrc
     /// 4. database.
-    final lrcLyrics = await _fetchLRCBasedLyrics(lrcUtils, embedded, _lyricsSource);
+    final lrcLyrics = await _fetchLRCBasedLyrics(
+      lrcUtils,
+      embedded,
+      _lyricsSource,
+      // -- nothing local, hide now instead of holding an empty overlay for the whole network request.
+      onBeforeNetwork: () {
+        if (!checkInterrupted()) _updateWidgets(null, null);
+      },
+    );
 
-    if (checkInterrupted()) return;
+    if (checkInterrupted()) return null;
 
-    if (lrcLyrics.$1 != null) {
-      currentLyricsLRC.value = lrcLyrics.$1;
-      _updateWidgets(lrcLyrics.$1, null);
-      return;
-    } else if (lrcLyrics.$2 != null) {
-      final txt = LrcText.fromText(_cleanPlainLyrics(lrcLyrics.$2!));
-      currentLyricsText.value = txt;
-      _updateWidgets(null, txt);
-      return;
-    }
-
-    if (checkInterrupted()) return;
+    if (lrcLyrics.$1 != null) return (lrc: lrcLyrics.$1, txt: null, canBeAvailable: true);
+    if (lrcLyrics.$2 != null) return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(lrcLyrics.$2!)), canBeAvailable: true);
 
     /// 1. cached txt lyrics
     /// 2. track embedded txt
     /// 3. google search
     final textLyrics = await _fetchTextBasedLyrics(lrcUtils, embedded, _lyricsSource);
 
-    if (checkInterrupted()) return;
+    if (checkInterrupted()) return null;
 
-    if (textLyrics != '') {
-      final txt = LrcText.fromText(_cleanPlainLyrics(textLyrics));
-      currentLyricsText.value = txt;
-      _updateWidgets(null, txt);
-    } else {
-      lyricsCanBeAvailable.value = false;
-    }
+    if (textLyrics != '') return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(textLyrics)), canBeAvailable: true);
+    return (lrc: null, txt: null, canBeAvailable: false);
   }
 
   Future<List<LyricsModel>> searchLRCLyricsFromInternet({
@@ -179,7 +192,7 @@ class Lyrics {
     );
   }
 
-  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source) async {
+  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source, {void Function()? onBeforeNetwork}) async {
     String? lrcContent;
 
     /// 1. device lrc
@@ -212,6 +225,7 @@ class Lyrics {
 
     /// 4. if still null, fetch from database.
     if (source != LyricsSource.local && lrcContent == null) {
+      onBeforeNetwork?.call();
       final lyrics = await searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
       final lyricsModelToUse = lyrics.firstOrNull;
       if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
@@ -248,9 +262,8 @@ class Lyrics {
     /// download lyrics
     else if (source != LyricsSource.local) {
       final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
-      final regex = RegExp(r'<[^>]*>');
       if (lyrics != '') {
-        final formattedText = lyrics.replaceAll(regex, '');
+        final formattedText = lyrics.replaceAll(_htmlTagRegex, '');
         await lyricsFile.writeAsString(formattedText);
         return formattedText;
       }
@@ -856,3 +869,5 @@ class LrcText {
     );
   }
 }
+
+typedef _LyricsResolveResult = ({Lrc? lrc, LrcText? txt, bool canBeAvailable});

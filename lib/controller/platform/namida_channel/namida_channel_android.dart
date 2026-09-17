@@ -63,6 +63,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<void> setMulticastLock(bool enabled) async {
+    await _channel.invokeMethod('setMulticastLock', {'enabled': enabled});
+  }
+
+  @override
   Future<int> getPlatformSdk() async {
     final version = await _channel.invokeMethod<int>('sdk');
     return version!; // if null, the thrown exception is catched and retried eitherways.

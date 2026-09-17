@@ -120,7 +120,7 @@ class ShortcutKeyData {
 
   @override
   int get hashCode {
-    return key.hashCode ^ ctrl.hashCode ^ shift.hashCode ^ alt.hashCode ^ meta.hashCode;
+    return Object.hash(key, ctrl, shift, alt, meta);
   }
 }
 

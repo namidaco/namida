@@ -22,7 +22,7 @@ import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
-mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvider<Map<String, dynamic>> {
+mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvider<TracksSearchParams> {
   Iterable<TrackExtended> getTracksExtended();
 
   /// example: sort, sortReverse
@@ -130,8 +130,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
     }
   }
 
-  static void _searchTracksIsolate(Map params) {
-    final sendPort = params['sendPort'] as SendPort;
+  static void _searchTracksIsolate(TracksSearchParams params) {
+    final sendPort = params.sendPort;
 
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
@@ -167,7 +167,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   }
 
   @override
-  Future<IsolateFunctionReturnBuild<Map<String, dynamic>>> isolateFunction(SendPort port) async {
+  Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
     final params = TracksSearchWrapper.generateParams(port, getTracksExtended(), topTracksMapListens);

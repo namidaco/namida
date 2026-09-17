@@ -24,6 +24,7 @@ import 'package:namida/ui/pages/current_queue_page.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/player_transport_controls.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
 enum _WidePlayerPane { lyrics, queue }
@@ -243,19 +244,26 @@ class _TrackInfoText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final item = this.item;
+    if (item is YoutubeID) {
+      return ObxO(
+        rx: YoutubeInfoController.utils.lazyInfoRefresh,
+        builder: (context, _) => _build(
+          context,
+          YoutubeInfoController.utils.getVideoNameSyncLazy(item.id) ?? item.id,
+          YoutubeInfoController.utils.getVideoChannelNameSyncLazy(item.id) ?? '',
+        ),
+      );
+    }
+    return _build(
+      context,
+      item.execute(selectable: (finalItem) => finalItem.track.title, youtubeID: (_) => '') ?? '',
+      item.execute(selectable: (finalItem) => finalItem.track.originalArtist, youtubeID: (_) => '') ?? '',
+    );
+  }
+
+  Widget _build(BuildContext context, String title, String subtitle) {
     final textTheme = context.textTheme;
-    final title =
-        item.execute(
-          selectable: (finalItem) => finalItem.track.title,
-          youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoNameSync(finalItem.id) ?? finalItem.id,
-        ) ??
-        '';
-    final subtitle =
-        item.execute(
-          selectable: (finalItem) => finalItem.track.originalArtist,
-          youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoChannelNameSync(finalItem.id) ?? '',
-        ) ??
-        '';
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [

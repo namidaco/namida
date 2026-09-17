@@ -2,11 +2,11 @@ import 'models.dart';
 
 ///normal lyric parser
 class LRCParserLrc extends LyricsParse {
-  RegExp pattern = RegExp(r"\[\d{2}:\d{2}.\d{2,3}]");
+  static final RegExp pattern = RegExp(r"\[\d{2}:\d{2}.\d{2,3}]");
 
   ///匹配普通格式内容
   ///eg:[00:03.47] -> 00:03.47
-  RegExp valuePattern = RegExp(r"\[(\d{2}:\d{2}.\d{2,3})\]");
+  static final RegExp valuePattern = RegExp(r"\[(\d{2}:\d{2}.\d{2,3})\]");
 
   LRCParserLrc(super.lyric);
 

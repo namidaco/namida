@@ -5,8 +5,8 @@ abstract class AppSingleInstanceBase {
   static AppSingleInstanceBase? platform() {
     return NamidaPlatformBuilder.init(
       android: () => null,
-      windows: () => AppSingleInstanceWindows(),
-      linux: () => AppSingleInstanceLinux(),
+      windows: AppSingleInstanceWindows.new,
+      linux: AppSingleInstanceLinux.new,
     );
   }
 

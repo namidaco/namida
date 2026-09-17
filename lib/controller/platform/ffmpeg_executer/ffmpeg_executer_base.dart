@@ -3,9 +3,9 @@ part of 'ffmpeg_executer.dart';
 abstract class FFMPEGExecuter {
   static FFMPEGExecuter platform() {
     return NamidaPlatformBuilder.init(
-      android: () => _FFMPEGExecuterAndroid(),
-      windows: () => _FFMPEGExecuterDesktop(),
-      linux: () => _FFMPEGExecuterDesktop(),
+      android: _FFMPEGExecuterAndroid.new,
+      windows: _FFMPEGExecuterDesktop.new,
+      linux: _FFMPEGExecuterDesktop.new,
     );
   }
 

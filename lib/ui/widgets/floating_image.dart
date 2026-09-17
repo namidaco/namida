@@ -49,9 +49,13 @@ class NamidaFloatClock extends ChangeNotifier {
   }
 }
 
-bool namidaAnimationsDisabled(BuildContext context) {
-  return (MediaQuery.maybeDisableAnimationsOf(context) ?? false) || !TickerMode.valuesOf(context).enabled;
-}
+/// Whether a drifting decoration should hold still.
+///
+/// The system remove-animations setting is deliberately not honored here: these are
+/// opt-in decorations that draw nothing at all when they aren't moving, so respecting it
+/// would silently hide the whole feature from anyone who turned animations off system-wide.
+/// Offstage subtrees still stop, nobody is looking at them.
+bool namidaAnimationsPaused(BuildContext context) => !TickerMode.valuesOf(context).enabled;
 
 /// Animates [child] (typically an image) in a smooth slow floating/drifting effect.
 ///
@@ -184,7 +188,7 @@ class _FloatingImageState extends State<FloatingImage> {
   @override
   Widget build(BuildContext context) {
     final child = RepaintBoundary(child: widget.child);
-    if (!widget.enabled || namidaAnimationsDisabled(context)) return child;
+    if (!widget.enabled || namidaAnimationsPaused(context)) return child;
 
     final cycleUS = widget.cycleDuration.inMicroseconds;
     final omega = cycleUS <= 0 ? 0.0 : 2 * math.pi / (cycleUS / Duration.microsecondsPerSecond);

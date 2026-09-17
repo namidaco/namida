@@ -18,6 +18,7 @@ class ExpandableBox extends StatefulWidget {
   final bool displayloadingIndicator;
   final bool Function(bool newShow) onSearchBoxVisibilityChange;
   final String leftText;
+  final void Function()? onLeftTextTap;
   final void Function() onCloseButtonPressed;
   final SortByMenu sortByMenuWidget;
   final CustomTextField textField;
@@ -36,6 +37,7 @@ class ExpandableBox extends StatefulWidget {
     this.displayloadingIndicator = false,
     required this.onSearchBoxVisibilityChange,
     required this.leftText,
+    this.onLeftTextTap,
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
     required this.textField,
@@ -138,12 +140,22 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                 children: [
                                   ...?leftWidgets,
                                   if (widget.leftText.isNotEmpty)
-                                    Text(
-                                      widget.leftText,
-                                      style: textTheme.displayMedium,
-                                      softWrap: false,
-                                      overflow: TextOverflow.fade,
-                                    ),
+                                    widget.onLeftTextTap != null
+                                        ? TapDetector(
+                                            onTap: widget.onLeftTextTap,
+                                            child: Text(
+                                              widget.leftText,
+                                              style: textTheme.displayMedium,
+                                              softWrap: false,
+                                              overflow: TextOverflow.fade,
+                                            ),
+                                          )
+                                        : Text(
+                                            widget.leftText,
+                                            style: textTheme.displayMedium,
+                                            softWrap: false,
+                                            overflow: TextOverflow.fade,
+                                          ),
                                   if (widget.displayloadingIndicator) ...[
                                     const SizedBox(width: 8.0),
                                     const LoadingIndicator(),

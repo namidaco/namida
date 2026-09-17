@@ -109,7 +109,7 @@ class LibraryGroup<T extends Track> {
     final allTracksSorter = mediasWithSorts[MediaType.track];
     if (allTracksSorter != null) {
       final reverse = mediaItemsTrackSortingReverse[MediaType.track] ?? false;
-      reverse ? allTracks.sortByReverseAlts(allTracksSorter) : allTracks.sortByAlts(allTracksSorter);
+      allTracks.sortByAltsPrecomputed(allTracksSorter, reverse: reverse);
     }
 
     final allTracksLength = allTracks.length;

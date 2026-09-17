@@ -266,13 +266,13 @@ class BackupAndRestore extends SettingSubpageProvider {
     final sizesMap = <AppPathsBackupEnum, int>{}.obs;
 
     void fillAllItemsSize() async {
-      for (final item in AppPathsBackupEnum.values) {
+      await AppPathsBackupEnum.values.loopConcurrent((item) async {
         if (item.isDir) {
           sizesMap[item] = await Directory(item.resolve()).getTotalSize() ?? 0;
         } else {
           sizesMap[item] = await File(item.resolve()).fileSize() ?? 0;
         }
-      }
+      }, concurrency: 8);
     }
 
     fillAllItemsSize();

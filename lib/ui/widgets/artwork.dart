@@ -127,6 +127,7 @@ class ArtworkWidget extends StatefulWidget {
   static void _cacheAspectRatio(Object? cacheKey, double ratio) {
     if (cacheKey == null || !ratio.isFinite || ratio <= 0) return;
     if (_aspectRatios[cacheKey] == ratio) return;
+    if (_aspectRatios.length >= _ArtworkWidgetState._kStaticMapsMaxEntries) _aspectRatios.clear();
     _aspectRatios[cacheKey] = ratio;
     // -- this runs from the image's layout callback, listeners rebuilding on it would
     // -- be setState during build, so tell them after the frame, once for the batch.
@@ -145,6 +146,12 @@ class ArtworkWidget extends StatefulWidget {
 class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMixin {
   static final _latestInvalidImagePath = <String?, bool>{};
   static final _staggeredAspectRatios = <Object, double>{};
+  static const _kStaticMapsMaxEntries = 4000;
+
+  static void _markInvalidImagePath(String? path) {
+    if (_latestInvalidImagePath.length >= _kStaticMapsMaxEntries) _latestInvalidImagePath.clear();
+    _latestInvalidImagePath[path] = true;
+  }
 
   Object? get _staggeredCacheKey {
     final key = widget.staggeredCacheKey;
@@ -157,7 +164,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final cacheKey = _staggeredCacheKey;
     if (info != null) {
       final ratio = info.image.width / info.image.height;
-      if (cacheKey != null) _staggeredAspectRatios[cacheKey] = ratio;
+      if (cacheKey != null) {
+        if (_staggeredAspectRatios.length >= _kStaticMapsMaxEntries) _staggeredAspectRatios.clear();
+        _staggeredAspectRatios[cacheKey] = ratio;
+      }
       ArtworkWidget._cacheAspectRatio(cacheKey, ratio);
       return boxWidth / ratio;
     }
@@ -200,7 +210,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
       _initValues().whenComplete(
         () {
           if (_imagePath == null) {
-            _latestInvalidImagePath[widget.path] = true;
+            _markInvalidImagePath(widget.path);
           }
         },
       );
@@ -647,6 +657,7 @@ class MultiArtworks extends StatelessWidget {
             icon: fallbackIcon,
           )
         : null;
+    late final imagePaths = [for (final t in tracks) t.pathToImage];
     return NamidaHero(
       tag: heroTag,
       enabled: !disableHero,
@@ -690,11 +701,11 @@ class MultiArtworks extends StatelessWidget {
                   builder: (context, c) {
                     return tracks.length == 1
                         ? ArtworkWidget(
-                            key: Key(tracks[0].pathToImage),
+                            key: Key(imagePaths[0]),
                             fadeMilliSeconds: fadeMilliSeconds,
                             thumbnailSize: thumbnailSize,
                             track: tracks[0],
-                            path: tracks[0].pathToImage,
+                            path: imagePaths[0],
                             forceSquared: true,
                             blur: 0,
                             borderRadius: 0,
@@ -708,11 +719,11 @@ class MultiArtworks extends StatelessWidget {
                         ? Row(
                             children: [
                               ArtworkWidget(
-                                key: Key("0_${tracks[0].pathToImage}"),
+                                key: Key("0_${imagePaths[0]}"),
                                 fadeMilliSeconds: fadeMilliSeconds,
                                 thumbnailSize: thumbnailSize / 2,
                                 track: tracks[0],
-                                path: tracks[0].pathToImage,
+                                path: imagePaths[0],
                                 forceSquared: true,
                                 blur: 0,
                                 borderRadius: 0,
@@ -724,11 +735,11 @@ class MultiArtworks extends StatelessWidget {
                                 icon: fallbackIcon,
                               ),
                               ArtworkWidget(
-                                key: Key("1_${tracks[1].pathToImage}"),
+                                key: Key("1_${imagePaths[1]}"),
                                 fadeMilliSeconds: fadeMilliSeconds,
                                 thumbnailSize: thumbnailSize / 2,
                                 track: tracks[1],
-                                path: tracks[1].pathToImage,
+                                path: imagePaths[1],
                                 forceSquared: true,
                                 blur: 0,
                                 borderRadius: 0,
@@ -747,11 +758,11 @@ class MultiArtworks extends StatelessWidget {
                               Column(
                                 children: [
                                   ArtworkWidget(
-                                    key: Key("0_${tracks[0].pathToImage}"),
+                                    key: Key("0_${imagePaths[0]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[0],
-                                    path: tracks[0].pathToImage,
+                                    path: imagePaths[0],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
@@ -763,11 +774,11 @@ class MultiArtworks extends StatelessWidget {
                                     icon: fallbackIcon,
                                   ),
                                   ArtworkWidget(
-                                    key: Key("1_${tracks[1].pathToImage}"),
+                                    key: Key("1_${imagePaths[1]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[1],
-                                    path: tracks[1].pathToImage,
+                                    path: imagePaths[1],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
@@ -781,11 +792,11 @@ class MultiArtworks extends StatelessWidget {
                                 ],
                               ),
                               ArtworkWidget(
-                                key: Key("2_${tracks[2].pathToImage}"),
+                                key: Key("2_${imagePaths[2]}"),
                                 fadeMilliSeconds: fadeMilliSeconds,
                                 thumbnailSize: thumbnailSize / 2,
                                 track: tracks[2],
-                                path: tracks[2].pathToImage,
+                                path: imagePaths[2],
                                 forceSquared: true,
                                 blur: 0,
                                 borderRadius: 0,
@@ -803,11 +814,11 @@ class MultiArtworks extends StatelessWidget {
                               Row(
                                 children: [
                                   ArtworkWidget(
-                                    key: Key("0_${tracks[0].pathToImage}"),
+                                    key: Key("0_${imagePaths[0]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[0],
-                                    path: tracks[0].pathToImage,
+                                    path: imagePaths[0],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
@@ -819,11 +830,11 @@ class MultiArtworks extends StatelessWidget {
                                     icon: fallbackIcon,
                                   ),
                                   ArtworkWidget(
-                                    key: Key("1_${tracks[1].pathToImage}"),
+                                    key: Key("1_${imagePaths[1]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[1],
-                                    path: tracks[1].pathToImage,
+                                    path: imagePaths[1],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
@@ -839,11 +850,11 @@ class MultiArtworks extends StatelessWidget {
                               Row(
                                 children: [
                                   ArtworkWidget(
-                                    key: Key("2_${tracks[2].pathToImage}"),
+                                    key: Key("2_${imagePaths[2]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[2],
-                                    path: tracks[2].pathToImage,
+                                    path: imagePaths[2],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,
@@ -855,11 +866,11 @@ class MultiArtworks extends StatelessWidget {
                                     icon: fallbackIcon,
                                   ),
                                   ArtworkWidget(
-                                    key: Key("3_${tracks[3].pathToImage}"),
+                                    key: Key("3_${imagePaths[3]}"),
                                     fadeMilliSeconds: fadeMilliSeconds,
                                     thumbnailSize: thumbnailSize / 2,
                                     track: tracks[3],
-                                    path: tracks[3].pathToImage,
+                                    path: imagePaths[3],
                                     forceSquared: true,
                                     blur: 0,
                                     borderRadius: 0,

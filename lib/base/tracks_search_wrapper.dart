@@ -30,52 +30,52 @@ class TracksSearchWrapper {
     this.textCleanedMinorForSearch,
   );
 
-  static Map<String, dynamic> generateParams(SendPort sendPort, Iterable<TrackExtended> tracks, ListensSortedMap<Track> topTracksMapListens) {
+  static TracksSearchParams generateParams(SendPort sendPort, Iterable<TrackExtended> tracks, ListensSortedMap<Track> topTracksMapListens) {
     final filters = settings.trackSearchFilter.value;
     final addDescription = filters.contains(TrackSearchFilter.description);
     final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     final addMoods = filters.contains(TrackSearchFilter.moods);
     final addTags = filters.contains(TrackSearchFilter.tags);
     final maxListensCount = topTracksMapListens.values.firstOrNull?.length;
-    return {
-      'tracks': tracks
+    return (
+      tracks: tracks
           .map(
-            (e) => {
-              'title': e.title,
-              'artist': e.originalArtist,
-              'album': e.originalAlbum,
-              'albumArtist': e.albumArtist,
-              'genre': e.originalGenre,
-              'style': e.originalStyle,
-              'composer': e.composer,
-              'year': e.year,
-              'comment': e.comment,
-              if (addDescription) 'description': e.description,
-              if (addLyrics) 'lyrics': e.lyrics,
-              if (addMoods) 'moods': e.effectiveMoods,
-              if (addTags) 'tags': e.effectiveTags,
-              'path': e.path,
-              'v': e.isVideo,
-              'lc': topTracksMapListens[e.asTrack()]?.length,
-            },
+            (e) => (
+              title: e.title,
+              artist: e.originalArtist,
+              album: e.originalAlbum,
+              albumArtist: e.albumArtist,
+              genre: e.originalGenre,
+              style: e.originalStyle,
+              composer: e.composer,
+              year: e.year,
+              comment: e.comment,
+              description: addDescription ? e.description : null,
+              lyrics: addLyrics ? e.lyrics : null,
+              moods: addMoods ? e.effectiveMoods : null,
+              tags: addTags ? e.effectiveTags : null,
+              path: e.path,
+              isVideo: e.isVideo,
+              listensCount: topTracksMapListens[e.asTrack()]?.length,
+            ),
           )
           .toFixedList(),
-      'splitConfig': SplitArtistGenreConfigsWrapper.settings(),
-      'filters': filters,
-      'cleanup': settings.enableSearchCleanup.value,
-      'lyricsCacheDirectory': AppDirs.LYRICS,
-      'maxListensCount': maxListensCount,
-      'sendPort': sendPort,
-    };
+      splitConfig: SplitArtistGenreConfigsWrapper.settings(),
+      filters: filters,
+      cleanup: settings.enableSearchCleanup.value,
+      lyricsCacheDirectory: AppDirs.LYRICS,
+      maxListensCount: maxListensCount,
+      sendPort: sendPort,
+    );
   }
 
-  factory TracksSearchWrapper.init(Map params) {
-    final tracks = params['tracks'] as List<Map>;
-    final splitConfig = params['splitConfig'] as SplitArtistGenreConfigsWrapper;
-    final tsf = params['filters'] as List<TrackSearchFilter>;
-    final cleanup = params['cleanup'] as bool;
-    final lyricsCacheDirectory = params['lyricsCacheDirectory'] as String;
-    final maxListensCount = params['maxListensCount'] as int? ?? 0;
+  factory TracksSearchWrapper.init(TracksSearchParams params) {
+    final tracks = params.tracks;
+    final splitConfig = params.splitConfig;
+    final tsf = params.filters;
+    final cleanup = params.cleanup;
+    final lyricsCacheDirectory = params.lyricsCacheDirectory;
+    final maxListensCount = params.maxListensCount ?? 0;
 
     var stitle = tsf.contains(TrackSearchFilter.title);
     final sfilename = tsf.contains(TrackSearchFilter.filename);
@@ -112,13 +112,13 @@ class TracksSearchWrapper {
     int index = -1;
     for (final trMap in tracks) {
       index++;
-      final path = trMap['path'] as String;
-      final title = trMap['title'] as String;
-      final isVideo = trMap['v'] == true;
-      final year = trMap['year'] as int?;
+      final path = trMap.path;
+      final title = trMap.title;
+      final isVideo = trMap.isVideo;
+      final year = trMap.year;
       final track = Track.decide(path, isVideo);
 
-      final listensCount = trMap['lc'] as int?;
+      final listensCount = trMap.listensCount;
       final listensScore = maxListensCount > 0 ? (((listensCount ?? 0) / maxListensCount).roundDecimals(1) * 100).round() : 0;
 
       tracksExtended.add(
@@ -131,19 +131,19 @@ class TracksSearchWrapper {
           splitAlbum: salbum
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitAlbum(
-                    trMap['album'],
+                    trMap.album,
                     config: splitConfig.albumConfig,
                   ),
                   textCleanedForSearch,
                   textCleanedMinorForSearch,
                 )
               : null,
-          splitAlbumArtist: splitThis(trMap['albumArtist'], salbumartist),
+          splitAlbumArtist: splitThis(trMap.albumArtist, salbumartist),
           splitArtist: sartist
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitArtist(
                     title: title,
-                    originalArtist: trMap['artist'],
+                    originalArtist: trMap.artist,
                     config: splitConfig.artistsConfig,
                   ),
                   textCleanedForSearch,
@@ -153,7 +153,7 @@ class TracksSearchWrapper {
           splitGenre: sgenre
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitGenre(
-                    trMap['genre'],
+                    trMap.genre,
                     config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
@@ -163,26 +163,26 @@ class TracksSearchWrapper {
           splitStyle: sstyle
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitStyle(
-                    trMap['style'],
+                    trMap.style,
                     config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
                   textCleanedMinorForSearch,
                 )
               : null,
-          splitComposer: splitThis(trMap['composer'], scomposer),
-          splitComment: splitThis(trMap['comment'], scomment),
-          description: !sdescription ? null : _PropertySimple.orNull(trMap['description'] as String?),
+          splitComposer: splitThis(trMap.composer, scomposer),
+          splitComment: splitThis(trMap.comment, scomment),
+          description: !sdescription ? null : _PropertySimple.orNull(trMap.description),
           splitMoods: smoods
               ? _mapListCleanedAndCleanedMinorOrNull(
-                  trMap['moods'] as List<String>?,
+                  trMap.moods,
                   textCleanedForSearch,
                   textCleanedMinorForSearch,
                 )
               : null,
           splitTags: stags
               ? _mapListCleanedAndCleanedMinorOrNull(
-                  trMap['tags'] as List<String>?,
+                  trMap.tags,
                   textCleanedForSearch,
                   textCleanedMinorForSearch,
                 )
@@ -200,7 +200,7 @@ class TracksSearchWrapper {
               ? null
               : _fillAllAvailableLyrics(
                   track,
-                  trMap['lyrics'] as String? ?? '',
+                  trMap.lyrics ?? '',
                   lyricsCacheDirectory,
                 ),
           listensCount: listensCount,
@@ -755,3 +755,32 @@ class _StringMatcher {
   /// lowest ratio that survives [_kRoundDecimals] rounding, minus an epsilon so it stays inclusive.
   static const double _kMinEffectiveRatio = 0.05 - 1e-9;
 }
+
+typedef TracksSearchTrackParams = ({
+  String title,
+  String artist,
+  String album,
+  String albumArtist,
+  String genre,
+  String style,
+  String composer,
+  int? year,
+  String? comment,
+  String? description,
+  String? lyrics,
+  List<String>? moods,
+  List<String>? tags,
+  String path,
+  bool isVideo,
+  int? listensCount,
+});
+
+typedef TracksSearchParams = ({
+  List<TracksSearchTrackParams> tracks,
+  SplitArtistGenreConfigsWrapper splitConfig,
+  List<TrackSearchFilter> filters,
+  bool cleanup,
+  String lyricsCacheDirectory,
+  int? maxListensCount,
+  SendPort sendPort,
+});

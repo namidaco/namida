@@ -116,7 +116,7 @@ class StatsSection extends StatelessWidget {
                       icon: Broken.timer_1,
                       label: lang.totalListenTime,
                       value: totalSec.secondsFormatted,
-                      valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: totalSec) : null,
+                      valueWidget: _ListenTimeOdometer(seconds: totalSec),
                     );
                   },
                 ),
@@ -134,7 +134,7 @@ class StatsSection extends StatelessWidget {
                       icon: Broken.timer_1,
                       label: '${lang.totalListenTime} (${lang.youtube})',
                       value: sec.secondsFormatted,
-                      valueWidget: kEnableFancyAnimations ? _ListenTimeOdometer(seconds: sec) : null,
+                      valueWidget: _ListenTimeOdometer(seconds: sec),
                     );
                   },
                 ),
@@ -685,7 +685,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                 values: s.weekHours,
                 rows: 7,
                 cols: 24,
-                rowLabels: weekdays.map((e) => e.label).toList(growable: false),
+                rowLabels: weekdays.map((e) => e.label).toFixedList(),
                 colLabels: List.generate(24, (h) => h.toString().padLeft(2, '0'), growable: false),
                 colLabelStep: 3,
                 tipBuilder: (row, col, value) => '${weekdays[row].label} ${col.toString().padLeft(2, '0')}:00\n${lang.countTracks(count: value)}',
@@ -1015,7 +1015,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
         (context) {
           final all = s.topArtists;
           final shown = _showAllArtists || all.length <= 10 ? all : all.sublist(0, 10);
-          final data = shown.map((e) => ChartData(e.key, e.count)).toList(growable: false);
+          final data = shown.map((e) => ChartData(e.key, e.count)).toFixedList();
           return StatsChartCard(
             title: '${lang.top} $artistsLabel',
             icon: isYoutube ? Broken.profile_2user : Broken.microphone,
@@ -1137,7 +1137,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             for (int i = top.length; i < all.length; i++) {
               other += all[i].count;
             }
-            final data = top.map((e) => ChartData(e.key, e.count)).toList(growable: false);
+            final data = top.map((e) => ChartData(e.key, e.count)).toFixedList();
             final categoryIcon = _categoryIcon(type);
             final categoryTextCount = _categoryCountText(type, rank.unique);
             final categoryText = type.toText();
@@ -1191,7 +1191,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           const labels = ['< 128', '128 – 255', '256 – 319', '320+'];
-          final buckets = List.generate(4, (i) => ChartData('${labels[i]} kbps', s.bitrateBuckets[i]), growable: false).where((e) => e.value > 0).toList(growable: false);
+          final buckets = List.generate(4, (i) => ChartData('${labels[i]} kbps', s.bitrateBuckets[i]), growable: false).where((e) => e.value > 0).toFixedList();
           final total = s.losslessListens + s.lossyListens;
           final losslessPct = total == 0 ? 0 : (s.losslessListens * 100 / total).round();
           return StatsChartCard(
@@ -1227,7 +1227,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           final entries = s.sources.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-          final data = entries.map((e) => ChartData(_sourceText(e.key), e.value)).toList(growable: false);
+          final data = entries.map((e) => ChartData(_sourceText(e.key), e.value)).toFixedList();
           return StatsChartCard(
             title: lang.source,
             icon: Broken.import_1,
@@ -1278,7 +1278,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     if (s.decades.isNotEmpty) {
       cards.add(
         (context) {
-          final data = s.decades.map((e) => ChartData('${e.key}s', e.count)).toList(growable: false);
+          final data = s.decades.map((e) => ChartData('${e.key}s', e.count)).toFixedList();
           return StatsChartCard(
             title: lang.year,
             icon: Broken.cake,
@@ -1311,7 +1311,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   }) {
     if (items.isEmpty) return const SizedBox();
     if (items.first.key is String) {
-      return StatsTopVideosRow(items: items.map((e) => StatsRankEntry(e.key as String, e.count)).toList(growable: false));
+      return StatsTopVideosRow(items: items.map((e) => StatsRankEntry(e.key as String, e.count)).toFixedList());
     }
     final tracks = items.map((e) => e.key as Track).toList();
     return Column(

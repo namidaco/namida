@@ -603,6 +603,7 @@ class _NamidaColorPickerDialogState extends State<NamidaColorPickerDialog> {
         editIcon: Broken.edit_2,
         wheelSquarePadding: 12.0,
         wheelDiameter: 224.0,
+        wheelWidth: 24.0,
         borderRadius: 8.0.multipliedRadius,
         opacityThumbRadius: 16.0,
         opacityTrackHeight: 12.0,

@@ -21,13 +21,8 @@ class AudioCacheController {
     final possibleAudioFiles = audioCacheMap[videoId] ?? [];
     final possibleLocalFiles = Indexer.inst.allTracksMappedByYTID[videoId] ?? [];
 
-    final audioFiles = possibleAudioFiles.isNotEmpty
-        ? possibleAudioFiles
-        : await _getCachedAudiosForID.thready({
-            "dirPath": AppDirs.AUDIOS_CACHE,
-            "id": videoId,
-          });
-    final finalAudioFiles = audioFiles..sortByReverseAlt((e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0);
+    final audioFiles = possibleAudioFiles.isNotEmpty ? possibleAudioFiles : await _getCachedAudiosForID.thready((dirPath: AppDirs.AUDIOS_CACHE, id: videoId));
+    final finalAudioFiles = audioFiles..sortByAltsPrecomputed([(e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0], reverse: true);
     AudioCacheDetails? cachedAudio = await finalAudioFiles.firstWhereEffAsync((e) => e.file.exists());
 
     if (cachedAudio == null) {
@@ -60,17 +55,15 @@ class AudioCacheController {
   Future<void> deleteAudioCache(String videoId) async {
     final audios = audioCacheMap[videoId];
     if (audios != null) {
-      for (final item in audios) {
-        await item.file.delete();
-      }
+      await audios.loopConcurrent((item) => item.file.tryDeleting());
     }
     audioCacheMap.remove(videoId);
   }
 
   /// TODO: improve using PortsProvider
-  static List<AudioCacheDetails> _getCachedAudiosForID(Map map) {
-    final dirPath = map["dirPath"] as String;
-    final id = map["id"] as String;
+  static List<AudioCacheDetails> _getCachedAudiosForID(({String dirPath, String id}) params) {
+    final dirPath = params.dirPath;
+    final id = params.id;
 
     final newFiles = <AudioCacheDetails>[];
 

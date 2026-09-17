@@ -20,7 +20,8 @@ class ServerWrapper {
       service: SyncUtils.kDefaultServiceType,
       port: SyncUtils.kDefaultNamidaPort,
       domain: SyncUtils.kDefaultDomain,
-      ips: preferredInterface?.addresses,
+      hostName: SyncUtils.createMdnsHostName(deviceId),
+      ips: await SyncUtils.getAdvertisedAddresses(preferredInterface),
       txt: MDNSService.createTXTRecords({
         'device_name': deviceName,
         'device_id': deviceId,

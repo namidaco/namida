@@ -238,19 +238,18 @@ class FoldersController<T extends Folder, E extends Track> {
       map[folder] ??= <E>[]; // adding missing/new folders
     }
     _sortMap(map, _pathsTreeMapRoot);
+    Folder.invalidateNameCounts();
     if (_config.enableFoldersHierarchy.value) stepIn(_pathsTreeMapCurrent?.parent);
   }
 
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {
-    final folderToNameCompare = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder)
-        ? (T folder) => folder.folderNameRaw.toLowerCase().ignoreCommonPrefixes()
-        : (T folder) => folder.folderNameRaw.toLowerCase();
+    final ignorePrefix = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder);
+    final namesCache = <T, String>{};
+    String folderToNameCompare(T folder) => namesCache[folder] ??= ignorePrefix ? folder.folderNameLower.ignoreCommonPrefixes() : folder.folderNameLower;
 
     final parsedMap = _buildParsedMap(map.keys.map((e) => folderToNameCompare(e)));
 
-    int compare(MapEntry<T, dynamic> entryA, MapEntry<T, dynamic> entryB) {
-      final a = folderToNameCompare(entryA.key);
-      final b = folderToNameCompare(entryB.key);
+    int compareNames(String a, String b) {
       final parsedA = parsedMap[a];
       final parsedB = parsedMap[b];
       if (parsedA != null && parsedB != null) {
@@ -260,10 +259,24 @@ class FoldersController<T extends Folder, E extends Track> {
       return a.compareTo(b);
     }
 
-    final sorted = map.entries.toFixedList()..sort(compare);
+    final sorted = map.entries.toFixedList()
+      ..sort(
+        (entryA, entryB) => compareNames(
+          folderToNameCompare(entryA.key),
+          folderToNameCompare(entryB.key),
+        ),
+      );
     map.assignAllEntries(sorted); // we clear after building new sorted one
 
-    _FolderNode._walkChildrenRescursive(rootNode, (map) => map.sort(compare));
+    _FolderNode._walkChildrenRescursive(
+      rootNode,
+      (map) => map.sort(
+        (a, b) => compareNames(
+          folderToNameCompare(a.key),
+          folderToNameCompare(b.key),
+        ),
+      ),
+    );
 
     refreshAfterSorting();
   }
@@ -449,6 +462,8 @@ class _FolderNode<T extends Folder, E extends Track> {
 
   final children = <T, _FolderNode<T, E>>{};
 
+  List<E>? _recursiveTracksCache;
+
   late final foldersList = children.keys.toList();
 
   /// Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
@@ -500,6 +515,15 @@ class _FolderNode<T extends Folder, E extends Track> {
 
     if (node == null) return [];
 
+    // -- validated by total count, the walk is map lookups only, way cheaper than re-concatenating every build.
+    int total = folderToTracks(folder)?.length ?? 0;
+    _walkKeysRescursive<Null, T, E>(node, (folder) {
+      total += folderToTracks(folder)?.length ?? 0;
+      return null;
+    });
+    final cached = node._recursiveTracksCache;
+    if (cached != null && cached.length == total) return cached;
+
     final allTracks = <E>[];
     allTracks.addAll(folderToTracks(folder) ?? []);
     _walkKeysRescursive<Null, T, E>(node, (folder) {
@@ -507,6 +531,7 @@ class _FolderNode<T extends Folder, E extends Track> {
       return null;
     });
 
+    node._recursiveTracksCache = allTracks;
     return allTracks;
   }
 

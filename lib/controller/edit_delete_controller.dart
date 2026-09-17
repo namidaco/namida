@@ -33,17 +33,11 @@ class EditDeleteController {
   }
 
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {
-    for (final e in tracks) {
-      var ytid = e.track.youtubeID;
-      await VideoController.inst.deleteAllVideosForVideoId(ytid);
-    }
+    await tracks.loopConcurrent((e) => VideoController.inst.deleteAllVideosForVideoId(e.track.youtubeID));
   }
 
   Future<void> deleteCachedAudios(List<Selectable> tracks) async {
-    for (var e in tracks) {
-      var ytid = e.track.youtubeID;
-      await AudioCacheController.inst.deleteAudioCache(ytid);
-    }
+    await tracks.loopConcurrent((e) => AudioCacheController.inst.deleteAudioCache(e.track.youtubeID));
   }
 
   Future<void> deleteTXTLyrics(List<Selectable> tracks) async {

@@ -384,7 +384,7 @@ class CustomMPVPlayer implements AVPlayer {
   // -- timeline that repeats it enough times to outlast the audio. it stays a normal track, so seeking still works.
   bool _loopingVideoApplied = false;
 
-  static const _kMaxLoopingVideoRepeats = 1000;
+  static const _kMaxLoopingVideoRepeats = 3000;
   static const _kFallbackLoopingVideoDuration = Duration(minutes: 30);
 
   /// Returns the source to add as a video track, an `edl://` looping timeline when the animation asks for it.
@@ -643,10 +643,13 @@ class CustomMPVPlayer implements AVPlayer {
     return _player.pause();
   }
 
+  // -- when the video is a non-looped external track, seeking past its end leaves a frozen frame,
+  // -- but skipping the seek entirely blocks audio seeking, so its disabled.
+  static const _kSkipSeekWhenLoopNotApplied = false;
+
   @override
   Future<void> seek(Duration? position) async {
-    // -- when the video is a non-looped external track, seeking past its end leaves a frozen frame.
-    if (!_loopingVideoApplied && _videoOptions?.loop == true) return;
+    if (_kSkipSeekWhenLoopNotApplied && !_loopingVideoApplied && _videoOptions?.loop == true) return;
     return _player.seek(position ?? Duration.zero);
   }
 
@@ -979,7 +982,7 @@ class _VideoDetails {
   const _VideoDetails.dummy() : width = -1, height = -1, textureId = -1;
 
   @override
-  int get hashCode => width ^ height ^ textureId;
+  int get hashCode => Object.hash(width, height, textureId);
 
   @override
   bool operator ==(Object other) {

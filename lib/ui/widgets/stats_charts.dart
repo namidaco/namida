@@ -995,7 +995,7 @@ class _VerticalBarsPainter extends CustomPainter {
     if (_size == size) return;
     _size = size;
     final slot = size.width / data.length;
-    _labels = data.map((e) => _textPainter(e.label, labelStyle, maxWidth: slot)).toList(growable: false);
+    _labels = data.map((e) => _textPainter(e.label, labelStyle, maxWidth: slot)).toFixedList();
   }
 
   int? indexAt(Offset p) {
@@ -1159,7 +1159,7 @@ class _GridHeatmapPainter extends CustomPainter {
     _left = _rowLabelsWidth;
     _cellW = (width - _left) / widget.cols - _gap;
     _cellH = math.min(_maxCellH, _cellW * 1.4);
-    _rowLabels = widget.rowLabels.map((e) => _textPainter(e, labelStyle, maxWidth: _rowLabelsWidth - 4.0)).toList(growable: false);
+    _rowLabels = widget.rowLabels.map((e) => _textPainter(e, labelStyle, maxWidth: _rowLabelsWidth - 4.0)).toFixedList();
     _colLabels = List.generate(
       widget.cols,
       (i) => i % widget.colLabelStep == 0 ? _textPainter(widget.colLabels[i], labelStyle) : null,
@@ -1570,8 +1570,8 @@ class _RankBarsPainter extends CustomPainter {
     if (_size == size) return;
     _size = size;
     _labelW = (size.width * 0.38).clamp(60.0, 200.0);
-    _labels = data.map((e) => _textPainter(e.label, labelStyle, maxWidth: _labelW - 8.0)).toList(growable: false);
-    _values = data.map((e) => _textPainter(e.value.formatDecimal(), valueStyle)).toList(growable: false);
+    _labels = data.map((e) => _textPainter(e.label, labelStyle, maxWidth: _labelW - 8.0)).toFixedList();
+    _values = data.map((e) => _textPainter(e.value.formatDecimal(), valueStyle)).toFixedList();
     _ranks = List.generate(data.length, (i) => _textPainter('${i + 1}', rankStyle), growable: false);
     double vw = 0;
     for (final v in _values) {

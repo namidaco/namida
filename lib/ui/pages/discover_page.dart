@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -68,10 +69,9 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   void _shuffle() {
-    setState(() {
-      _shuffleSeed++;
-      _build();
-    });
+    _shuffleSeed++;
+    _build();
+    setState(() {});
   }
 
   void _build() {
@@ -195,20 +195,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
   }
 
   /// breadth first from the most connected node, so neighbours end up adjacent in the grid.
+  ///
+  /// [links] sublists are expected to be already sorted by score descending (see [_build]).
   List<int> _layoutOrder(int count, List<List<MapEntry<int, double>>> links) {
     final visited = List.filled(count, false);
     final order = <int>[];
 
     final byDegree = List.generate(count, (i) => i, growable: false)..sort((a, b) => links[b].length.compareTo(links[a].length));
 
+    final queue = Queue<int>();
     for (final start in byDegree) {
       if (visited[start]) continue;
-      final queue = <int>[start];
+      queue.add(start);
       visited[start] = true;
       while (queue.isNotEmpty) {
-        final current = queue.removeAt(0);
+        final current = queue.removeFirst();
         order.add(current);
-        final neighbours = links[current].toList()..sort((a, b) => b.value.compareTo(a.value));
+        final neighbours = links[current];
         for (final n in neighbours) {
           if (visited[n.key]) continue;
           visited[n.key] = true;

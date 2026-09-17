@@ -41,11 +41,11 @@ class StorageCacheManager {
   }
 
   Future<int> getTempVideosSize() async {
-    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready((tempDir: AppDirs.VIDEOS_CACHE_TEMP, normalDir: AppDirs.VIDEOS_CACHE));
   }
 
   Future<void> deleteTempVideos() async {
-    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready({'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready((tempDir: AppDirs.VIDEOS_CACHE_TEMP, normalDir: AppDirs.VIDEOS_CACHE));
   }
 
   Future<void> deleteAllVideos() async {
@@ -57,29 +57,21 @@ class StorageCacheManager {
   }
 
   Future<int> getTempAudiosSize() async {
-    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready({'normal': AppDirs.AUDIOS_CACHE});
+    return _AudioVideoTrimmer._getTempFilesSizeIsolate.thready((tempDir: null, normalDir: AppDirs.AUDIOS_CACHE));
   }
 
   Future<void> deleteTempAudios() async {
-    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready({'normal': AppDirs.AUDIOS_CACHE});
+    return _AudioVideoTrimmer._deleteTempFilesIsolate.thready((tempDir: null, normalDir: AppDirs.AUDIOS_CACHE));
   }
 
   Future<void> deleteMediaFilesThatAlreadyExistsInLocalLibrary(Map<String, List<Track>> idsMap, {required bool forVideos}) async {
     final dirPath = forVideos ? AppDirs.VIDEOS_CACHE : AppDirs.AUDIOS_CACHE;
-    return _AudioVideoTrimmer._deleteAudioFilesThatAlreadyExistsIsolate.thready({
-      'normal': dirPath,
-      'idsMap': idsMap,
-      'forVideos': forVideos,
-    });
+    return _AudioVideoTrimmer._deleteAudioFilesThatAlreadyExistsIsolate.thready((normalDir: dirPath, idsMap: idsMap, forVideos: forVideos));
   }
 
   Future<(List<File>, int)> countMediaFilesThatAlreadyExistsInLocalLibrary(Map<String, List<Track>> idsMap, {required bool forVideos}) async {
     final dirPath = forVideos ? AppDirs.VIDEOS_CACHE : AppDirs.AUDIOS_CACHE;
-    return _AudioVideoTrimmer._countAudioFilesThatAlreadyExistsIsolate.thready({
-      'normal': dirPath,
-      'idsMap': idsMap,
-      'forVideos': forVideos,
-    });
+    return _AudioVideoTrimmer._countAudioFilesThatAlreadyExistsIsolate.thready((normalDir: dirPath, idsMap: idsMap, forVideos: forVideos));
   }
 
   Future<void> deleteAllAudios() async {
@@ -88,11 +80,11 @@ class StorageCacheManager {
   }
 
   Future<Map<File, int>> getTempVideosForID(String videoId) async {
-    return _VideoTrimmer._getTempVideosForID.thready({'id': videoId, 'temp': AppDirs.VIDEOS_CACHE_TEMP, 'normal': AppDirs.VIDEOS_CACHE});
+    return _VideoTrimmer._getTempVideosForID.thready((id: videoId, tempDir: AppDirs.VIDEOS_CACHE_TEMP, normalDir: AppDirs.VIDEOS_CACHE));
   }
 
   Future<Map<File, int>> getTempAudiosForID(String videoId) async {
-    return _AudioTrimmer._getTempAudiosForID.thready({'id': videoId, 'dirPath': AppDirs.AUDIOS_CACHE});
+    return _AudioTrimmer._getTempAudiosForID.thready((id: videoId, dirPath: AppDirs.AUDIOS_CACHE));
   }
 
   String getDeleteSizeSubtitleText(int length, int totalSize) {
@@ -189,10 +181,7 @@ class StorageCacheManager {
     final accessTimeMap = <String, int>{};
     int maxListenCount = 0;
 
-    final int length = allFiles.value.length;
-    for (int i = 0; i < length; i++) {
-      var e = allFiles.value[i];
-
+    await allFiles.value.loopConcurrent((e) async {
       final path = itemToPath(e);
       final stats = await File(path).stat();
       final accessed = stats.accessed.millisecondsSinceEpoch;
@@ -207,7 +196,7 @@ class StorageCacheManager {
         listensMap[videoId] = listensCount;
         if (maxListenCount < listensCount) maxListenCount = listensCount;
       }
-    }
+    });
 
     void sortBy(_CacheSorting type) {
       currentSort.value = type;
@@ -218,7 +207,7 @@ class StorageCacheManager {
             final accessTime = accessTimeMap[itemToPath(e)] ?? 0;
             final listenCount = listensMap[itemToYtId(e)] ?? 0;
             final normalizedAccessTime = (accessTime / maxLastAccess);
-            final normalizedListenCount = (listenCount / maxListenCount);
+            final normalizedListenCount = maxListenCount > 0 ? listenCount / maxListenCount : 0.0;
             return normalizedAccessTime * 0.3 + normalizedListenCount * 0.7;
           });
         case _CacheSorting.size:
@@ -643,7 +632,7 @@ class _VideoTrimmer {
     final maxMB = _videosMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
-    final paramters = _TrimDirParam(
+    final paramters = (
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.VIDEOS_CACHE,
       extraDirPath: AppDirs.VIDEOS_CACHE_TEMP,
@@ -652,7 +641,7 @@ class _VideoTrimmer {
     return await _trimExcessVideoCacheIsolate.thready(paramters);
   }
 
-  static Future<int> _trimExcessVideoCacheIsolate(_TrimDirParam params) async {
+  static Future<int> _trimExcessVideoCacheIsolate(_TrimDirParams params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathTemp = params.extraDirPath!;
@@ -661,14 +650,15 @@ class _VideoTrimmer {
     final videos = Directory(dirPath).listSyncSafe();
     final videosTemp = Directory(dirPathTemp).listSyncSafe();
     final videosFinal = [...videosTemp, ...videos];
-    _Trimmer._sortFiles(videosFinal, priorityMap);
-    return _Trimmer._trimExcessCache(videosFinal, maxBytes);
+    final stats = _Trimmer._statAll(videosFinal);
+    _Trimmer._sortFiles(videosFinal, priorityMap, stats);
+    return _Trimmer._trimExcessCache(videosFinal, maxBytes, stats);
   }
 
-  static Map<File, int> _getTempVideosForID(Map params) {
-    final id = params['id'] as String;
-    final tempDir = params['temp'] as String;
-    final normalDir = params['normal'] as String;
+  static Map<File, int> _getTempVideosForID(({String id, String tempDir, String normalDir}) params) {
+    final id = params.id;
+    final tempDir = params.tempDir;
+    final normalDir = params.normalDir;
 
     final sep = Platform.pathSeparator;
 
@@ -702,27 +692,29 @@ class _AudioTrimmer {
     final maxMB = _audiosMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
-    final paramters = _TrimDirParam(
+    final paramters = (
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.AUDIOS_CACHE,
+      extraDirPath: null,
       priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessAudioCacheIsolate.thready(paramters);
   }
 
-  static Future<int> _trimExcessAudioCacheIsolate(_TrimDirParam params) async {
+  static Future<int> _trimExcessAudioCacheIsolate(_TrimDirParams params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
     final audios = Directory(dirPath).listSyncSafe();
-    _Trimmer._sortFiles(audios, priorityMap);
-    return _Trimmer._trimExcessCache(audios, maxBytes);
+    final stats = _Trimmer._statAll(audios);
+    _Trimmer._sortFiles(audios, priorityMap, stats);
+    return _Trimmer._trimExcessCache(audios, maxBytes, stats);
   }
 
-  static Map<File, int> _getTempAudiosForID(Map params) {
-    final id = params['id'] as String;
-    final dirPath = params['dirPath'] as String;
+  static Map<File, int> _getTempAudiosForID(({String id, String dirPath}) params) {
+    final id = params.id;
+    final dirPath = params.dirPath;
 
     final sep = Platform.pathSeparator;
 
@@ -751,7 +743,7 @@ class _ImageTrimmer {
     final maxMB = _imagesMaxCacheInMB;
     if (maxMB < 0) return 0;
     final totalMaxBytes = maxMB * 1024 * 1024;
-    final paramters = _TrimDirParam(
+    final paramters = (
       maxBytes: totalMaxBytes,
       dirPath: AppDirs.YT_THUMBNAILS,
       extraDirPath: AppDirs.YT_THUMBNAILS_CHANNELS,
@@ -760,7 +752,7 @@ class _ImageTrimmer {
     return await _trimExcessImageCacheIsolate.thready(paramters);
   }
 
-  static Future<int> _trimExcessImageCacheIsolate(_TrimDirParam params) async {
+  static Future<int> _trimExcessImageCacheIsolate(_TrimDirParams params) async {
     final maxBytes = params.maxBytes;
     final dirPath = params.dirPath;
     final dirPathChannel = params.extraDirPath!;
@@ -769,28 +761,31 @@ class _ImageTrimmer {
     final imagesVideos = Directory(dirPath).listSyncSafe();
     final imagesChannels = Directory(dirPathChannel).listSyncSafe();
 
-    _Trimmer._sortFiles(imagesVideos, priorityMap);
-    _Trimmer._sortFiles(imagesChannels, null); // file names dont start with videoId
+    final statsVideos = _Trimmer._statAll(imagesVideos);
+    final statsChannels = _Trimmer._statAll(imagesChannels);
+    _Trimmer._sortFiles(imagesVideos, priorityMap, statsVideos);
+    _Trimmer._sortFiles(imagesChannels, null, statsChannels); // file names dont start with videoId
     final maxBytesImages = (maxBytes * 0.9).round();
     final maxBytesImagesChannels = maxBytes - maxBytesImages;
     int total = 0;
-    total += _Trimmer._trimExcessCache(imagesVideos, maxBytesImages);
-    total += _Trimmer._trimExcessCache(imagesChannels, maxBytesImagesChannels);
+    total += _Trimmer._trimExcessCache(imagesVideos, maxBytesImages, statsVideos);
+    total += _Trimmer._trimExcessCache(imagesChannels, maxBytesImagesChannels, statsChannels);
     return total;
   }
 
   Future<void> _trimExcessImageCacheTemp(DbWrapperFileInfo priorityDbInfo) async {
     final dirPath = FileParts.joinPath(AppDirs.YT_THUMBNAILS, 'temp');
     if (!await Directory(dirPath).exists()) return;
-    final params = _TrimDirParam(
+    final params = (
       dirPath: dirPath,
       maxBytes: 0, // not by bytes
+      extraDirPath: null,
       priorityDbInfo: priorityDbInfo,
     );
     return await _trimExcessImageCacheTempIsolate.thready(params);
   }
 
-  static Future<void> _trimExcessImageCacheTempIsolate(_TrimDirParam params) async {
+  static Future<void> _trimExcessImageCacheTempIsolate(_TrimDirParams params) async {
     final dirPath = params.dirPath;
     final priorityMap = await VideosPriorityManager.loadEverythingSync(params.priorityDbInfo);
 
@@ -813,7 +808,7 @@ class _ImageTrimmer {
 
     if (excess <= 0) return;
 
-    _Trimmer._sortFiles(images, priorityMap);
+    _Trimmer._sortFiles(images, priorityMap, _Trimmer._statAll(images));
 
     for (final element in images.take(excess)) {
       try {
@@ -824,16 +819,26 @@ class _ImageTrimmer {
 }
 
 class _Trimmer {
-  /// cached files are guranteed to have a name starting with [priorityMap].key
-  static void _sortFiles(List<FileSystemEntity> files, Map<String, CacheVideoPriority>? priorityMap) {
-    int compareAccessTime(FileSystemEntity a, FileSystemEntity b) {
-      try {
-        final aTime = a.statSync().accessed;
-        final bTime = b.statSync().accessed;
-        return aTime.compareTo(bTime);
-      } catch (_) {
-        return 0;
+  static Map<String, _TrimFileStat> _statAll(List<FileSystemEntity> files) {
+    final map = <String, _TrimFileStat>{};
+    for (final f in files) {
+      if (f is File) {
+        try {
+          final stat = f.statSync();
+          if (stat.type == FileSystemEntityType.notFound) continue;
+          map[f.path] = (accessed: stat.accessed.millisecondsSinceEpoch, size: stat.size.withMinimum(0));
+        } catch (_) {}
       }
+    }
+    return map;
+  }
+
+  /// cached files are guranteed to have a name starting with [priorityMap].key
+  static void _sortFiles(List<FileSystemEntity> files, Map<String, CacheVideoPriority>? priorityMap, Map<String, _TrimFileStat> stats) {
+    int compareAccessTime(FileSystemEntity a, FileSystemEntity b) {
+      final aTime = stats[a.path]?.accessed ?? 0;
+      final bTime = stats[b.path]?.accessed ?? 0;
+      return aTime.compareTo(bTime);
     }
 
     if (priorityMap != null && priorityMap.isNotEmpty) {
@@ -858,26 +863,24 @@ class _Trimmer {
         }
         return compareAccessTime(a, b);
       });
+      files
+        ..clear()
+        ..addAll(finalFiles);
     } else {
       files.sort(compareAccessTime);
     }
   }
 
-  static int _trimExcessCache(List<FileSystemEntity> files, int maxBytes) {
+  static int _trimExcessCache(List<FileSystemEntity> files, int maxBytes, Map<String, _TrimFileStat> stats) {
     int totalDeletedBytes = 0;
     int totalBytes = 0;
-    final sizesMap = <String, int>{};
-    for (var f in files) {
-      if (f is File) {
-        final size = f.fileSizeSync() ?? 0;
-        sizesMap[f.path] = size;
-        totalBytes += size;
-      }
+    for (final s in stats.values) {
+      totalBytes += s.size;
     }
     for (final file in files) {
       if (totalBytes <= maxBytes) break; // better than checking with each loop
       if (file is File) {
-        final deletedSize = sizesMap[file.path] ?? file.fileSizeSync() ?? 0;
+        final deletedSize = stats[file.path]?.size ?? 0;
         try {
           file.deleteSync();
           totalBytes -= deletedSize;
@@ -891,10 +894,10 @@ class _Trimmer {
 }
 
 class _AudioVideoTrimmer {
-  static int _getTempFilesSizeIsolate(Map dirsPath) {
+  static int _getTempFilesSizeIsolate(({String? tempDir, String normalDir}) params) {
     int size = 0;
-    final tempDir = dirsPath['temp'] as String?;
-    final normalDir = dirsPath['normal'] as String;
+    final tempDir = params.tempDir;
+    final normalDir = params.normalDir;
     if (tempDir != null) {
       final files = Directory(tempDir).listSyncSafe();
       for (var e in files) {
@@ -912,9 +915,9 @@ class _AudioVideoTrimmer {
     return size;
   }
 
-  static void _deleteTempFilesIsolate(Map dirsPath) {
-    final tempDir = dirsPath['temp'] as String?;
-    final normalDir = dirsPath['normal'] as String;
+  static void _deleteTempFilesIsolate(({String? tempDir, String normalDir}) params) {
+    final tempDir = params.tempDir;
+    final normalDir = params.normalDir;
     if (tempDir != null) {
       final files = Directory(tempDir).listSyncSafe();
       for (var e in files) {
@@ -937,7 +940,7 @@ class _AudioVideoTrimmer {
     }
   }
 
-  static (List<File>, int) _countAudioFilesThatAlreadyExistsIsolate(Map params) {
+  static (List<File>, int) _countAudioFilesThatAlreadyExistsIsolate(_AudioCacheExistingIdsParams params) {
     int totalSize = 0;
     final files = <File>[];
     _loopAudioCacheExistingIdsMap(params, (file, isMetadata) {
@@ -950,14 +953,14 @@ class _AudioVideoTrimmer {
     return (files, totalSize);
   }
 
-  static void _deleteAudioFilesThatAlreadyExistsIsolate(Map params) {
+  static void _deleteAudioFilesThatAlreadyExistsIsolate(_AudioCacheExistingIdsParams params) {
     return _loopAudioCacheExistingIdsMap(params, (file, isMetadata) => file.deleteSync());
   }
 
-  static void _loopAudioCacheExistingIdsMap(Map params, void Function(File file, bool isMetadata) callback) {
-    final normalDir = params['normal'] as String;
-    final alreadyExistingInLibrary = params['idsMap'] as Map<String, List<Track>>;
-    final forVideos = params['forVideos'] as bool;
+  static void _loopAudioCacheExistingIdsMap(_AudioCacheExistingIdsParams params, void Function(File file, bool isMetadata) callback) {
+    final normalDir = params.normalDir;
+    final alreadyExistingInLibrary = params.idsMap;
+    final forVideos = params.forVideos;
     // ignore: prefer_function_declarations_over_variables
     final forVideosChecker = forVideos ? (Track tr) => tr is Video : (Track tr) => true;
     final files = Directory(normalDir).listSyncSafe();
@@ -978,16 +981,8 @@ class _AudioVideoTrimmer {
   }
 }
 
-class _TrimDirParam {
-  final String dirPath;
-  final String? extraDirPath;
-  final int maxBytes;
-  final DbWrapperFileInfo priorityDbInfo;
+typedef _TrimFileStat = ({int accessed, int size});
 
-  const _TrimDirParam({
-    required this.dirPath,
-    this.extraDirPath,
-    required this.maxBytes,
-    required this.priorityDbInfo,
-  });
-}
+typedef _TrimDirParams = ({String dirPath, String? extraDirPath, int maxBytes, DbWrapperFileInfo priorityDbInfo});
+
+typedef _AudioCacheExistingIdsParams = ({String normalDir, Map<String, List<Track>> idsMap, bool forVideos});

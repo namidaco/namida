@@ -580,7 +580,6 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                   )
                                                   .addSeparators(
                                                     separator: const SizedBox(height: 3.0),
-                                                    skipFirst: 1,
                                                   ),
 
                                               if (group.rules.isNotEmpty) const SizedBox(height: 3.0),
@@ -654,7 +653,6 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                          skipFirst: 1,
                         ),
 
                     const SizedBox(height: 12.0),
@@ -743,7 +741,6 @@ class _JoinerRow extends StatelessWidget {
           )
           .addSeparators(
             separator: const SizedBox(width: 8.0),
-            skipFirst: 1,
           )
           .toFixedList(),
     );

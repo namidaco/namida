@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -10,10 +11,10 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -22,7 +23,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
-import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/player_transport_controls.dart';
@@ -44,6 +44,9 @@ class LyricsLRCParsedView extends StatefulWidget {
   final bool fadeOnEmptyLine;
   final double? baseFontSize;
 
+  /// receives the overlay's animated visibility, so siblings can match its backdrop.
+  final ValueNotifier<double>? visibilityNotifier;
+
   const LyricsLRCParsedView({
     super.key,
     required this.videoOrImage,
@@ -56,6 +59,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.largeText = false,
     this.fadeOnEmptyLine = true,
     this.baseFontSize,
+    this.visibilityNotifier,
     this.maxWidth,
     this.verticalPadding,
     this.bottomPadding,
@@ -65,9 +69,11 @@ class LyricsLRCParsedView extends StatefulWidget {
   State<LyricsLRCParsedView> createState() => LyricsLRCParsedViewState();
 }
 
-class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
+class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTickerProviderStateMixin {
   static final _mountedViews = <LyricsLRCParsedViewState>[];
   static Iterable<LyricsLRCParsedViewState> get mountedViews => _mountedViews;
+
+  static final _lengthSplitRegex = RegExp(r'[:.]');
 
   void toggleFullscreen() {
     if (widget.isFullScreenView) {
@@ -102,10 +108,19 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   late final bool _updateOpacityForEmptyLines = !widget.isFullScreenView && widget.fadeOnEmptyLine;
   bool _isCurrentLineEmpty = true;
 
+  /// the only thing blur, mask & text opacity follow, so they can never disagree or pop.
+  late final _visibility = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: _lrcOpacityDurationMS),
+  );
+
   void _updateIsCurrentLineEmpty(bool empty) {
     if (_isCurrentLineEmpty == empty) return;
-    refreshState(() => _isCurrentLineEmpty = empty);
+    _isCurrentLineEmpty = empty;
+    _visibility.animateTo(empty ? 0.0 : 1.0);
   }
+
+  void _reportVisibility() => widget.visibilityNotifier?.value = _visibility.value;
 
   final _emptyTextRegex = RegExp(r'[^\s]');
   bool _checkIfTextEmpty(String text) {
@@ -117,6 +132,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
   void initState() {
     super.initState();
     _mountedViews.add(this);
+    if (widget.visibilityNotifier != null) _visibility.addListener(_reportVisibility);
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -142,12 +158,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
 
   final _currentItemDurationMS = RxnO<int>();
 
-  void clearLists() {
+  void clearLists({bool hide = true}) {
     highlightTimestampsMap.clear();
     lyrics.clear();
-    if (!_isCurrentLineEmpty) {
-      _updateIsCurrentLineEmpty(true);
-    }
+    if (hide) _updateIsCurrentLineEmpty(true);
     _latestUpdatedLineInfo.value = null;
     _currentIndex = null;
   }
@@ -168,7 +182,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     double cal = 0;
     if (settings.stretchLyricsDuration.value) {
       if (llength != '') {
-        final parts = llength.split(RegExp(r'[:.]'));
+        final parts = llength.split(_lengthSplitRegex);
         try {
           String? hundreds;
           if (parts.length >= 3) {
@@ -241,10 +255,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
       int newIndex = newIndexPre!;
       _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
 
-      final list = _list;
-      if ((_canAnimateScroll.value || forceAnimate) && list != null && list.canScroll) {
+      if (_canAnimateScroll.value || forceAnimate) {
         _currentIndex = newIndex;
-        list.scrollToIndex(newIndex, jump: jump);
+        final list = _list;
+        if (list != null && list.canScroll) list.scrollToIndex(newIndex, jump: jump);
         try {
           _currentLine = lyrics[newIndex].lyrics;
         } catch (_) {
@@ -310,10 +324,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
     _largeText ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier);
   }
 
-
   @override
   void dispose() {
     _mountedViews.remove(this);
+    widget.visibilityNotifier?.value = 0.0;
+    _visibility.dispose();
     Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
     Player.inst.nowPlayingPosition.removeListener(_playerPositionListener);
 
@@ -603,52 +618,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
               ],
             ),
           )
-        : CustomAnimatedSwitcher(
-            duration: const Duration(milliseconds: _lrcOpacityDurationMS),
-            child: _isCurrentLineEmpty
-                ? KeyedSubtree(
-                    key: const ValueKey('lyrics_no_builder'),
-                    child: widget.videoOrImage,
-                  )
-                : KeyedSubtree(
-                    key: const ValueKey('lyrics_builder'),
-                    child: AnimatedBuilder(
-                      animation: mpAnimation,
-                      builder: (context, child) {
-                        final mpAnimationValue = mpAnimation.value;
-                        final blur = 12.0 * mpAnimationValue;
-                        late final maskColor = mpAnimationValue == 0
-                            ? Colors.transparent
-                            : theme.scaffoldBackgroundColor.withOpacityExt((fullscreen ? 0.8 : 0.5) * mpAnimationValue);
-                        return Stack(
-                          children: [
-                            NamidaBlur(
-                              blur: blur,
-                              fixArtifacts: true,
-                              child: Stack(
-                                children: [
-                                  widget.videoOrImage,
-                                  Positioned.fill(
-                                    child:
-                                        !_isCurrentLineEmpty &&
-                                            mpAnimationValue ==
-                                                1 // animate color only when not animating mp itself
-                                        ? AnimatedColoredBox(
-                                            duration: const Duration(milliseconds: _lrcOpacityDurationMS),
-                                            color: maskColor,
-                                          )
-                                        : ColoredBox(
-                                            color: maskColor,
-                                          ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
+        : LyricsOverlayBackdrop(
+            mpAnimation: mpAnimation,
+            visibility: _visibility,
+            child: widget.videoOrImage,
           );
 
     final middleLyricsStackWidget = Stack(
@@ -669,11 +642,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                   return Obx(
                     (context) {
                       final lrc = Lyrics.inst.currentLyricsLRC.valueR;
+                      Widget? textChild;
                       if (lrc == null) {
                         final textWrapper = Lyrics.inst.currentLyricsText.valueR;
                         if (!_checkIfTextEmpty(textWrapper.text)) {
                           final textDirection = textWrapper.isRTL ? TextDirection.rtl : TextDirection.ltr;
-                          return Align(
+                          textChild = Align(
+                            key: ObjectKey(textWrapper),
                             // -- Align vip to center widget
                             child: SmoothSingleChildScrollView(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -700,7 +675,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                       final miniplayerColor = CurrentColor.inst.miniplayerColor;
                       final personCount = currentLRC?.personCount ?? 1;
 
-                      return ObxO(
+                      final lrcListChild = ObxO(
+                        key: const ValueKey('lrc_list'),
                         rx: _latestUpdatedLineInfo,
                         builder: (context, selectedInfo) {
                           final selectedIndex = selectedInfo?.$2;
@@ -960,6 +936,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                           );
                         },
                       );
+                      return CustomAnimatedSwitcher(
+                        duration: const Duration(milliseconds: 800),
+                        switchInCurve: Curves.easeInOutQuart,
+                        switchOutCurve: Curves.easeInOutQuart,
+                        child: textChild ?? lrcListChild,
+                      );
                     },
                   );
                 },
@@ -981,9 +963,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
             alignment: Alignment.center,
             children: [
               Positioned.fill(
-                child: AnimatedOpacity(
-                  duration: const Duration(milliseconds: _lrcOpacityDurationMS),
-                  opacity: _isCurrentLineEmpty ? 0.0 : 1.0,
+                child: FadeIgnoreTransition(
+                  opacity: _visibility,
                   child: FadeIgnoreTransition(
                     opacity: mpAnimation,
                     child: fullscreen || !widget.allowOverflow
@@ -992,7 +973,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> {
                             child: middleLyricsStackWidget,
                           )
                         : OverflowBox(
-                            maxWidth: Dimensions.inst.miniplayerMaxWidth - pagePaddingHorizontal * 2, // keep the text steady while animating mp
+                            maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
                             child: Padding(
                               padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
                               child: middleLyricsStackWidget,
@@ -1615,6 +1596,45 @@ class _LyricsListState extends State<_LyricsList> {
       listController: _listController,
       itemCount: widget.itemCount,
       itemBuilder: widget.itemBuilder,
+    );
+  }
+}
+
+class LyricsOverlayBackdrop extends StatelessWidget {
+  final ValueListenable<double> mpAnimation;
+  final ValueListenable<double> visibility;
+  final Widget child;
+
+  const LyricsOverlayBackdrop({
+    super.key,
+    required this.mpAnimation,
+    required this.visibility,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = context.theme.scaffoldBackgroundColor;
+    return AnimatedBuilder(
+      animation: Listenable.merge([mpAnimation, visibility]),
+      child: child,
+      builder: (context, child) {
+        final factor = mpAnimation.value * visibility.value;
+        return NamidaBlur(
+          blur: 12.0 * factor,
+          fixArtifacts: true,
+          child: Stack(
+            children: [
+              child!,
+              Positioned.fill(
+                child: ColoredBox(
+                  color: bgColor.withOpacityExt(0.5 * factor),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -176,7 +176,7 @@ class _YourYearPageState extends State<YourYearPage> {
       // -- top artists / channels
       if (s.topArtists.isNotEmpty) {
         final shown = s.topArtists.length > 8 ? s.topArtists.sublist(0, 8) : s.topArtists;
-        final data = shown.map((e) => ChartData(e.key, e.count)).toList(growable: false);
+        final data = shown.map((e) => ChartData(e.key, e.count)).toFixedList();
         pages.add(
           _StoryPage(
             tint: baseTint,
@@ -215,7 +215,7 @@ class _YourYearPageState extends State<YourYearPage> {
         for (int i = top.length; i < s.topGenres.length; i++) {
           other += s.topGenres[i].count;
         }
-        final data = top.map((e) => ChartData(e.key, e.count)).toList(growable: false);
+        final data = top.map((e) => ChartData(e.key, e.count)).toFixedList();
         pages.add(
           _StoryPage(
             tint: baseTint,
@@ -822,7 +822,7 @@ class _TrackStoryAdapter extends _StoryAdapter<Track> {
     if (item == null) return CurrentColor.inst.color;
     final sync = CurrentColor.inst.getTrackColorsSync(item, networkArtworkInfo: null)?.color;
     if (sync != null) return sync;
-    return (await CurrentColor.inst.getTrackColors(item, networkArtworkInfo: null, useIsolate: true)).color;
+    return (await CurrentColor.inst.getTrackColors(item, networkArtworkInfo: null)).color;
   }
 
   @override

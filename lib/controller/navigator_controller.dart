@@ -574,49 +574,55 @@ class NamidaNavigator {
     }
   }
 
-  Future<void> popPage({bool waitForAnimation = false}) async {
+  bool _tryPopNonMainPageLayer() {
     if (isInSoundControlSubpage) {
       popRoot();
       isInSoundControlSubpage = false;
-      return;
+      return true;
     } else if (isInWideScreenPlayerPage) {
       popRoot();
       isInWideScreenPlayerPage = false;
-      return;
+      return true;
     }
 
     if (innerDrawerKey.currentState?.isOpened == true) {
       innerDrawerKey.currentState?.close();
-      return;
+      return true;
     }
 
     if (MiniPlayerController.inst.ytMiniplayerKey.currentState?.isExpanded == true) {
       if (isQueueSheetOpen) {
         ytQueueSheetKey.currentState?.dismissSheet();
         isQueueSheetOpen = false;
-        return;
+        return true;
       } else if (isInYTCommentRepliesSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentRepliesSubpage = false;
-        return;
+        return true;
       } else if (isInYTCommentsSubpage) {
         ytMiniplayerCommentsPageKey.currentState?.pop();
         isInYTCommentsSubpage = false;
-        return;
+        return true;
       } else if (!Dimensions.inst.miniplayerIsWideScreen) {
         MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(false);
-        return;
+        return true;
       }
     }
 
     final miniplayerAllowPop = MiniPlayerController.inst.onWillPop();
-    if (!miniplayerAllowPop) return;
+    if (!miniplayerAllowPop) return true;
 
     if (isytLocalSearchInFullPage) {
       ytLocalSearchNavigatorKey.currentState?.pop();
       isytLocalSearchInFullPage = false;
-      return;
+      return true;
     }
+
+    return false;
+  }
+
+  Future<void> popPage({bool fromMainPage = false, bool waitForAnimation = false}) async {
+    if (!fromMainPage && _tryPopNonMainPageLayer()) return;
 
     if (ScrollSearchController.inst.isGlobalSearchMenuShown.value || SettingsSearchController.inst.canShowSearch.value) {
       _hideSearchMenusAndUnfocus();

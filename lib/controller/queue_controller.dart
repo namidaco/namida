@@ -139,7 +139,6 @@ class QueueController {
   Future<bool> toggleFavButton(Queue oldQueue) async {
     final isNowFav = !(queuesMap.value[oldQueue.date]?.isFav ?? false);
     final newQueue = oldQueue.copyWith(isFav: isNowFav);
-    queuesMap.value[oldQueue.date] = newQueue;
     _updateMap(newQueue);
     await _saveQueueToStorage(newQueue);
     return isNowFav;
@@ -154,16 +153,20 @@ class QueueController {
   Future<void> updateLatestQueue(List<Playable> items, {required List<int>? originalIndices, required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
     _sessionQueueDate = 0;
     _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
-    final validOriginalIndices = originalIndices != null && originalIndices.length == items.length ? originalIndices : null;
-    await Future.wait([
-      _saveLatestQueueToStorage(items, validOriginalIndices),
-      if (await _allowSavingQueue(items.length))
-        _updateLatestQueueInsideMap(
-          validOriginalIndices == null ? items : _toOriginalOrder(items, validOriginalIndices),
-          source: source,
-          homePageItem: homePageItem,
-        ),
-    ]);
+    final validOriginalIndices = originalIndices != null && _isValidOriginalIndices(originalIndices, items.length) ? originalIndices : null;
+    // -- some actions in ui would wait for this (ex: scrolling to current item in queue right after modifying queue)
+    // -- hopefully this doesn't cause other issues (pls)
+    unawaited(
+      Future.wait([
+        _saveLatestQueueToStorage(items, validOriginalIndices),
+        if (await _allowSavingQueue(items.length))
+          _updateLatestQueueInsideMap(
+            validOriginalIndices == null ? items : _toOriginalOrder(items, validOriginalIndices),
+            source: source,
+            homePageItem: homePageItem,
+          ),
+      ]),
+    );
   }
 
   Future<void> _updateLatestQueueInsideMap(List<Playable> items, {required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
@@ -335,11 +338,21 @@ class QueueController {
 
   /// Assigns the last queue to the [Player]
   Future<void> _prepareLatestQueueAsync() async {
-    final (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
+    var (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
     if (latestQueue.isEmpty) return;
 
     int index = settings.extra.lastPlayedIndex;
     if (index > latestQueue.length - 1) index = 0;
+
+    // -- shuffle was toggled off but the app was killed before the queue file was rewritten.
+    // -- 0.67% chance..
+    if (originalIndices != null && !settings.player.shuffleQueue.value) {
+      if (_isValidOriginalIndices(originalIndices, latestQueue.length)) {
+        latestQueue = _toOriginalOrder(latestQueue, originalIndices);
+        index = originalIndices[index];
+      }
+      originalIndices = null;
+    }
 
     final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeSelfSentMediaCommand();
 
@@ -352,6 +365,20 @@ class QueueController {
       updateQueue: false,
       maximumItems: null,
     );
+  }
+
+  /// [originalIndices] must be a permutation of `0..length-1`, otherwise [_toOriginalOrder]
+  /// would either throw or silently drop items. a partially decodable queue file could hand us
+  /// indices of a longer original list
+  static bool _isValidOriginalIndices(List<int> originalIndices, int length) {
+    if (originalIndices.length != length) return false;
+    final seen = List<bool>.filled(length, false);
+    for (int i = 0; i < length; i++) {
+      final index = originalIndices[i];
+      if (index < 0 || index >= length || seen[index]) return false;
+      seen[index] = true;
+    }
+    return true;
   }
 
   static List<Playable> _toOriginalOrder(List<Playable> items, List<int> originalIndices) {
@@ -611,6 +638,17 @@ class _QueueSerializer {
 
   static final _typesByJsonKey = <String, PlayableType>{for (final t in PlayableType.values) t.jsonKey: t};
 
+  static final _playableTypeFromId = () {
+    final list = [...PlayableType.values]..sort((a, b) => a.binaryId.compareTo(b.binaryId));
+    assert(() {
+      for (int i = 0; i < list.length; i++) {
+        if (list[i].binaryId != i) return false;
+      }
+      return true;
+    }(), 'PlayableType.binaryId must be unique & contiguous');
+    return list;
+  }();
+
   static PlayableType? typeFromJsonKey(dynamic key) => _typesByJsonKey[key];
 
   static Playable build(PlayableType type, dynamic payload) => switch (type) {
@@ -659,7 +697,7 @@ class _QueueSerializer {
     offset += 4;
 
     for (int i = 0; i < count; i++) {
-      bytes[offset++] = items[i].playableType.index;
+      bytes[offset++] = items[i].playableType.binaryId;
       if (indices != null) {
         data.setUint32(offset, indices[i], Endian.little);
         offset += 4;
@@ -698,9 +736,8 @@ class _QueueSerializer {
       }
       final count = data.getUint32(offset, Endian.little);
       offset += 4;
-      final types = PlayableType.values;
       for (int i = 0; i < count; i++) {
-        final type = types[bytes[offset++]];
+        final type = _playableTypeFromId[bytes[offset++]];
         int originalIndex = 0;
         if (hasIndices) {
           originalIndex = data.getUint32(offset, Endian.little);

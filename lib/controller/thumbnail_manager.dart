@@ -22,6 +22,8 @@ class ThumbnailManager {
   static final ThumbnailManager inst = ThumbnailManager._internal();
   ThumbnailManager._internal();
 
+  static final _ytimgUrlRegex = RegExp(r'i\.ytimg\.com/vi.*?/');
+
   final _thumbnailDownloader = _YTThumbnailDownloadManager();
 
   static Future<String> getPathToYTImage(String? id) async {
@@ -91,7 +93,7 @@ class ThumbnailManager {
       return File("$innerDirPath$dirPrefix$filename");
     }
     String? finalUrl = url;
-    final imageUrl = finalUrl?.split(RegExp(r'i\.ytimg\.com/vi.*?/'));
+    final imageUrl = finalUrl?.split(_ytimgUrlRegex);
     if (imageUrl != null && imageUrl.length > 1) {
       finalUrl = imageUrl.last.splitFirst('?').replaceAll('/', '_');
     } else {
@@ -286,10 +288,20 @@ class _ActiveDownload {
 
 class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   final _activeDownloads = <_VideoIdAndTemp, _ActiveDownload>{};
-  final _notFoundThumbnails = <String>{}; // item id
+  final _notFoundThumbnails = <String, int>{}; // {item id: not found time ms}
   final _tokens = IsolateMessageTokenWrapper.create();
 
-  bool isNotFound(String id) => _notFoundThumbnails.contains(id);
+  static const _kNotFoundRetryMS = 1 * 60 * 60 * 1000; // 1 hour
+
+  bool isNotFound(String id) {
+    final notFoundMS = _notFoundThumbnails[id];
+    if (notFoundMS == null) return false;
+    if (DateTime.now().millisecondsSinceEpoch - notFoundMS > _kNotFoundRetryMS) {
+      _notFoundThumbnails.remove(id);
+      return false;
+    }
+    return true;
+  }
 
   Future<File?> download({
     required List<String> urls,
@@ -299,7 +311,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
     required File destinationFile,
     required String? symlinkId,
   }) async {
-    if (_notFoundThumbnails.contains(id)) return null;
+    if (isNotFound(id)) return null;
 
     final mapKey = _VideoIdAndTemp(videoId: id, isTemp: isTemp);
     var active = _activeDownloads[mapKey];
@@ -471,7 +483,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
   void _onFileFinish(_VideoIdAndTemp mapKey, int token, File? downloadedFile, bool notfound) {
     final active = _activeDownloads[mapKey];
     if (active == null || active.token != token) return;
-    if (notfound) _notFoundThumbnails.add(mapKey.videoId);
+    if (notfound) _notFoundThumbnails[mapKey.videoId] = DateTime.now().millisecondsSinceEpoch;
     _activeDownloads.remove(mapKey);
     active.completer.completeIfWasnt(downloadedFile);
   }

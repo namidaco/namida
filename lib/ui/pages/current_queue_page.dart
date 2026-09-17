@@ -211,15 +211,21 @@ class _QueueListBaseState extends State<_QueueListBase> {
   }
 }
 
+// -- only the row at the last removed index gets re-keyed, for when the next item is the same as the removed one.
+// -- better alternative for putting queueLength in each item key
+int _lastRemovedIndex = -1;
+int _removalNonce = 0;
+
 Widget _dismissibleWrapper({
   required int index,
   required Key childKey,
-  required int queueLength,
   required Widget child,
 }) {
   return FadeDismissible(
-    key: Key("Diss_${index}_${childKey}_$queueLength"), // queue length only for when removing current item and next is the same.
+    key: Key(index == _lastRemovedIndex ? "Diss_${index}_${childKey}_$_removalNonce" : "Diss_${index}_$childKey"),
     onDismissed: (direction) async {
+      _lastRemovedIndex = index;
+      _removalNonce++;
       await Player.inst.removeFromQueueWithUndo(index);
       Player.inst.invokeQueueModifyLockRelease();
     },
@@ -266,7 +272,6 @@ class _LocalQueueList extends StatelessWidget {
           return _dismissibleWrapper(
             index: i,
             childKey: key,
-            queueLength: queue.length,
             child: ObxOSelect(
               rx: Player.inst.currentIndex,
               selector: (currentIndex) => i < currentIndex,
@@ -334,7 +339,6 @@ class _YoutubeQueueList extends StatelessWidget {
           return _dismissibleWrapper(
             index: i,
             childKey: key,
-            queueLength: queue.length,
             child: ObxOSelect(
               rx: Player.inst.currentIndex,
               selector: (currentIndex) => i < currentIndex,

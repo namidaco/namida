@@ -2,16 +2,17 @@ import 'models.dart';
 
 ///qrc lyric parser
 class LRCParserQrc extends LyricsParse {
-  RegExp advancedPattern = RegExp(r"""\[\d+,\d+]""");
-  RegExp qrcPattern = RegExp(r"""\((\d+,\d+)\)""");
+  static final RegExp advancedPattern = RegExp(r"""\[\d+,\d+]""");
+  static final RegExp qrcPattern = RegExp(r"""\((\d+,\d+)\)""");
 
-  RegExp advancedValuePattern = RegExp(r"\[(\d*,\d*)\]");
+  static final RegExp advancedValuePattern = RegExp(r"\[(\d*,\d*)\]");
+  static final RegExp _lyricContentPattern = RegExp(r"""LyricContent="([\s\S]*)">""");
 
   LRCParserQrc(super.lyric);
 
   @override
   List<LyricsLineModel> parseLines({bool isMain = true}) {
-    lyric = RegExp(r"""LyricContent="([\s\S]*)">""").firstMatch(lyric)?.group(1) ?? lyric;
+    lyric = _lyricContentPattern.firstMatch(lyric)?.group(1) ?? lyric;
     //读每一行
     var lines = lyric.split("\n");
     if (lines.isEmpty) {

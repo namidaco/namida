@@ -25,6 +25,27 @@ class NamidaPlatformBuilder {
     };
   }
 
+  static const _unsupportedPlatform = Object();
+
+  /// fall back to a sentinel rather than `null`, otherwise a nullable [T] could
+  /// not tell "this platform yields null" apart from "this platform is unsupported".
+  static T initValue<T>({
+    required T android,
+    required T windows,
+    required T linux,
+    Object? ios = _unsupportedPlatform,
+    Object? macos = _unsupportedPlatform,
+  }) {
+    return switch (defaultTargetPlatform) {
+      TargetPlatform.android => android,
+      TargetPlatform.windows => windows,
+      TargetPlatform.linux => linux,
+      TargetPlatform.iOS when !identical(ios, _unsupportedPlatform) => ios as T,
+      TargetPlatform.macOS when !identical(macos, _unsupportedPlatform) => macos as T,
+      _ => throw UnimplementedError(),
+    };
+  }
+
   static String getExecutablesDirectoryPath() {
     return NamidaPlatformBuilder.init(
       android: () => '',
@@ -55,10 +76,10 @@ class NamidaPlatformBuilder {
   }
 
   static String _getExecutablePath(String executablesDirPath, String name, {bool fallbackToSystemPath = false, bool Function(String path)? systemPathTester}) {
-    final exeName = NamidaPlatformBuilder.init(
-      android: () => '',
-      windows: () => '$name.exe',
-      linux: () => name,
+    final exeName = NamidaPlatformBuilder.initValue(
+      android: '',
+      windows: '$name.exe',
+      linux: name,
     );
 
     final fullPathBundled = p.join(executablesDirPath, exeName);
@@ -131,10 +152,6 @@ class NamidaPlatformBuilder {
       fallbackToSystemPath: true,
       systemPathTester: _testFFmpegBuildIfHasBetterSupport,
     );
-  }
-
-  static String getAudioWaveformExecutablePath(String executablesDirPath) {
-    return _getExecutablePath(executablesDirPath, 'audiowaveform');
   }
 
   static String? get windowsUserHome => Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];

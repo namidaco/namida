@@ -85,7 +85,7 @@ class NamidaColor {
   }
 
   @override
-  int get hashCode => used.hashCode /* ^ mix.hashCode  */ ^ mix2.hashCode ^ palette.hashCode;
+  int get hashCode => Object.hash(used, /* mix, */ mix2, Object.hashAll(palette));
 }
 
 extension NamidaColorMExtensions on List<NamidaColor> {

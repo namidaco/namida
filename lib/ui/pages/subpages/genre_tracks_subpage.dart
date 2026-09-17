@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
@@ -34,7 +35,7 @@ class GenreTracksPage extends StatefulWidget with NamidaRouteWidget {
   State<GenreTracksPage> createState() => _GenreTracksPageState();
 }
 
-class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Map<String, dynamic>>, TracksSearchWidgetMixin<GenreTracksPage> {
+class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<GenreTracksPage> {
   @override
   Iterable<TrackExtended> getTracksExtended() {
     return widget.tracks.map((e) => e.track.toTrackExt());

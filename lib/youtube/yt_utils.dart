@@ -18,6 +18,7 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
@@ -522,8 +523,8 @@ class YTUtils {
     final int? stopAfterItems = isFromQueue
         ? Player.inst.sleepAfterItemsForIndex(queueIndex)
         : videoId == Player.inst.currentVideo?.id
-            ? 1
-            : null;
+        ? 1
+        : null;
 
     NamidaPopupItem? favouriteItem;
     if (showFavouritesTile) {
@@ -879,19 +880,25 @@ class YTUtils {
 
     final extraTilesBuilt = extraTiles?.call(pathsToDelete, totalSizeToDelete, allSelected);
     final videosCached = await VideoController.inst.getNVFromID(videoId);
-    final audiosCached = await AudioCacheController.inst.audioCacheMap[videoId]?.whereAsync((element) => element.file.exists()).toList() ?? [];
-
     final fileSizeLookup = <String, int>{};
     final fileTypeLookup = <String, int>{};
 
     int videosSize = 0;
     int audiosSize = 0;
 
-    for (final e in audiosCached) {
-      final s = await e.file.fileSize() ?? 0;
-      audiosSize += s;
-      fileSizeLookup[e.file.path] = s;
-      fileTypeLookup[e.file.path] = 0;
+    final audiosCached = <AudioCacheDetails>[];
+    final audioCachesAll = AudioCacheController.inst.audioCacheMap[videoId];
+    if (audioCachesAll != null) {
+      final sizes = await audioCachesAll.mapConcurrent((e) => e.file.fileSize());
+      for (int i = 0; i < audioCachesAll.length; i++) {
+        final s = sizes[i];
+        if (s == null) continue; // -- doesn't exist
+        final e = audioCachesAll[i];
+        audiosCached.add(e);
+        audiosSize += s;
+        fileSizeLookup[e.file.path] = s;
+        fileTypeLookup[e.file.path] = 0;
+      }
     }
 
     for (var e in videosCached) {
@@ -935,7 +942,7 @@ class YTUtils {
     }
 
     Future<void> deleteItems(Iterable<String> paths) async {
-      for (final path in paths) {
+      await paths.loopConcurrent((path) async {
         final type = fileTypeLookup[path];
         await File(path).tryDeleting(); // always delete even if not in fileTypeLookup, for temp files
         if (type == 1) {
@@ -943,7 +950,7 @@ class YTUtils {
         } else if (type == 0) {
           AudioCacheController.inst.removeFromCacheMap(videoId, path);
         }
-      }
+      });
     }
 
     NamidaNavigator.inst.navigateDialog(

@@ -296,6 +296,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   /// what the last build used, the cache listener only rebuilds when it changes.
   double? _lastArtworkAspectRatio;
 
+  /// frozen while switching: the artwork keeps painting the outgoing frame, so the box keeps its ratio.
+  double? _videoAspectRatio;
+
   void _artworkAspectRatiosListener() {
     final item = Player.inst.currentItem.value;
     if (item == null) return;
@@ -490,37 +493,34 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
     final seekPositionTextChild = ObxO(
       rx: MiniPlayerController.inst.seekValue,
-      builder: (context, seekNull) => ObxO(
-        rx: Player.inst.nowPlayingPosition,
-        builder: (context, nowPlayingPosition) => NamidaAnimatedSwitcher(
-          key: const ValueKey('seek_switcher'),
-          firstChild: Obx(
-            (context) {
-              final seek = seekNull ?? 0;
-              String finalText;
-              if (settings.player.displayActualPositionWhenSeeking.value) {
-                final itemDur = Player.inst.currentItemDuration.value?.inMilliseconds;
-                int seekClamped = seek;
-                seekClamped = seekClamped.withMinimum(0);
-                if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
-                finalText = seekClamped.milliSecondsLabel;
-              } else {
-                final diffInMs = seek - nowPlayingPosition;
-                final plusOrMinus = diffInMs < 0 ? '' : '+';
-                final seekText = diffInMs.milliSecondsLabel;
-                finalText = "$plusOrMinus$seekText";
-              }
-              return Text(
-                finalText,
-                style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
-              );
-            },
-          ),
-          secondChild: const SizedBox(),
-          showFirst: seekNull != null,
-          durationMS: 700,
-          allCurves: Curves.easeInOutQuart,
+      builder: (context, seekNull) => NamidaAnimatedSwitcher(
+        key: const ValueKey('seek_switcher'),
+        firstChild: Obx(
+          (context) {
+            final seek = seekNull ?? 0;
+            String finalText;
+            if (settings.player.displayActualPositionWhenSeeking.valueR) {
+              final itemDur = Player.inst.currentItemDuration.valueR?.inMilliseconds;
+              int seekClamped = seek;
+              seekClamped = seekClamped.withMinimum(0);
+              if (itemDur != null) seekClamped = seekClamped.withMaximum(itemDur);
+              finalText = seekClamped.milliSecondsLabel;
+            } else {
+              final diffInMs = seek - Player.inst.nowPlayingPositionR;
+              final plusOrMinus = diffInMs < 0 ? '' : '+';
+              final seekText = diffInMs.milliSecondsLabel;
+              finalText = "$plusOrMinus$seekText";
+            }
+            return Text(
+              finalText,
+              style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
+            );
+          },
         ),
+        secondChild: const SizedBox(),
+        showFirst: seekNull != null,
+        durationMS: 700,
+        allCurves: Curves.easeInOutQuart,
       ),
     );
 
@@ -794,7 +794,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
               isInversed: settings.animatingThumbnailInversed.valueR,
               userScaleMultiplier: settings.animatingThumbnailScaleMultiplier.valueR,
             );
-            final imageAspectRatio = resolvePlayableImageAspectRatio(currentItem, videoInfo != null && videoInfo.isInitialized ? videoInfo.aspectRatio : null);
+            if (override == null) _videoAspectRatio = videoInfo != null && videoInfo.isInitialized ? videoInfo.aspectRatio : null;
+            final imageAspectRatio = resolvePlayableImageAspectRatio(currentItem, _videoAspectRatio);
             _lastArtworkAspectRatio = ArtworkWidget.aspectRatioOf(playableArtworkCacheKey(currentItem));
 
             Widget? previousImageWidget;

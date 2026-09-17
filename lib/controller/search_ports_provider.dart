@@ -7,6 +7,8 @@ import 'package:namida/base/ports_provider.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
+typedef SearchRequest = ({String text, bool temp});
+
 class SendPortWithCachedMessage {
   final SendPort sendPort;
   Object? _latestMessage;

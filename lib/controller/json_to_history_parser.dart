@@ -663,35 +663,34 @@ class JsonToHistoryParser {
     });
     final portLoadingProgress = ReceivePort();
 
-    final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
+    final _YTTakeoutParserParams params = (
+      tracks: Indexer.inst.allTracksMappedByPath.values
           .map(
-            (e) => {
-              'title': e.title,
-              'album': e.originalAlbum,
-              'artist': e.originalArtist,
-              'path': e.path,
-              'filename': e.filename,
-              'comment': e.comment,
-              'v': e.isVideo,
-            },
+            (e) => (
+              title: e.title,
+              album: e.originalAlbum,
+              artist: e.originalArtist,
+              path: e.path,
+              comment: e.comment,
+              isVideo: e.isVideo,
+            ),
           )
           .toFixedList(),
-      'files': files,
-      'isMatchingTypeLink': isMatchingTypeLink,
-      'isMatchingTypeTitleAndArtist': isMatchingTypeTitleAndArtist,
-      'matchYT': matchYT,
-      'matchYTMusic': matchYTMusic,
-      'oldestDay': oldestDate?.toDaysSince1970(),
-      'newestDay': newestDate?.toDaysSince1970(),
-      'matchAll': matchAll,
-      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-      'portProgressParsed': portProgressParsed.sendPort,
-      'portProgressAdded': portProgressAdded.sendPort,
-      'portLoadingProgress': portLoadingProgress.sendPort,
-      'localHistory': HistoryController.inst.historyMap.value,
-      'ytHistory': YoutubeHistoryController.inst.historyMap.value,
-    };
+      files: files,
+      isMatchingTypeLink: isMatchingTypeLink,
+      isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
+      matchYT: matchYT,
+      matchYTMusic: matchYTMusic,
+      oldestDay: oldestDate?.toDaysSince1970(),
+      newestDay: newestDate?.toDaysSince1970(),
+      matchAll: matchAll,
+      artistsSplitConfig: ArtistsSplitConfig.settings(),
+      portProgressParsed: portProgressParsed.sendPort,
+      portProgressAdded: portProgressAdded.sendPort,
+      portLoadingProgress: portLoadingProgress.sendPort,
+      localHistory: HistoryController.inst.historyMap.value,
+      ytHistory: YoutubeHistoryController.inst.historyMap.value,
+    );
 
     StreamSubscription? portLoadingProgressSub;
     portLoadingProgressSub = portLoadingProgress.listen((message) {
@@ -814,48 +813,48 @@ class JsonToHistoryParser {
       Map<_MissingListenEntry, List<int>> missingEntriesSorted,
     })?
   >
-  _parseYTHistoryJsonAndAddIsolate(Map params) async {
-    final allTracks = params['tracks'] as List<Map>;
-    final files = params['files'] as List<File>;
-    final isMatchingTypeLink = params['isMatchingTypeLink'] as bool;
-    final isMatchingTypeTitleAndArtist = params['isMatchingTypeTitleAndArtist'] as bool;
-    final matchYT = params['matchYT'] as bool;
-    final matchYTMusic = params['matchYTMusic'] as bool;
-    final oldestDay = params['oldestDay'] as int?;
-    final newestDay = params['newestDay'] as int?;
-    final matchAll = params['matchAll'] as bool;
-    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
+  _parseYTHistoryJsonAndAddIsolate(_YTTakeoutParserParams params) async {
+    final allTracks = params.tracks;
+    final files = params.files;
+    final isMatchingTypeLink = params.isMatchingTypeLink;
+    final isMatchingTypeTitleAndArtist = params.isMatchingTypeTitleAndArtist;
+    final matchYT = params.matchYT;
+    final matchYTMusic = params.matchYTMusic;
+    final oldestDay = params.oldestDay;
+    final newestDay = params.newestDay;
+    final matchAll = params.matchAll;
+    final artistsSplitConfig = params.artistsSplitConfig;
 
-    final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
-    final ytHistory = params['ytHistory'] as SplayTreeMap<int, List<YoutubeID>>;
+    final localHistory = params.localHistory;
+    final ytHistory = params.ytHistory;
 
     int addedLocalHistoryCount = 0;
     int addedYTHistoryCount = 0;
 
-    final portProgressParsed = params['portProgressParsed'] as SendPort;
-    final portProgressAdded = params['portProgressAdded'] as SendPort;
-    final portLoadingProgress = params['portLoadingProgress'] as SendPort;
+    final portProgressParsed = params.portProgressParsed;
+    final portProgressAdded = params.portProgressAdded;
+    final portLoadingProgress = params.portLoadingProgress;
 
     Map<String, List<Track>>? tracksIdsMap;
     if (isMatchingTypeLink) {
       tracksIdsMap = <String, List<Track>>{};
       for (var trMap in allTracks) {
-        String? videoId = NamidaLinkUtils.extractYoutubeId(trMap['comment'] as String? ?? '');
-        videoId ??= NamidaLinkUtils.extractYoutubeId(trMap['filename'] as String? ?? '');
+        String? videoId = NamidaLinkUtils.extractYoutubeId(trMap.comment);
+        videoId ??= NamidaLinkUtils.extractYoutubeId(trMap.path.getFilename);
         if (videoId != null && videoId.isNotEmpty) {
-          tracksIdsMap.addForce(videoId, Track.decide(trMap['path'], trMap['v']));
+          tracksIdsMap.addForce(videoId, Track.decide(trMap.path, trMap.isVideo));
         }
       }
     }
 
-    final reverseTitleMatcher = ReverseSearchMatcher<Map>();
-    final reverseArtistMatcher = ReverseSearchMatcher<Map>();
-    final reverseAlbumMatcher = ReverseSearchMatcher<Map>();
+    final reverseTitleMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
+    final reverseArtistMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
+    final reverseAlbumMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
     if (isMatchingTypeTitleAndArtist) {
       for (var trMap in allTracks) {
-        final title = trMap['title'] as String;
-        final album = trMap['album'] as String;
-        final originalArtist = trMap['artist'] as String;
+        final title = trMap.title;
+        final album = trMap.album;
+        final originalArtist = trMap.artist;
         final artistsList = Indexer.splitArtist(
           title: title,
           originalArtist: originalArtist,
@@ -1041,10 +1040,10 @@ class JsonToHistoryParser {
     required bool matchByTitleAndArtistIfNotFoundInMap,
     required void Function(Iterable<_MissingListenEntry> missingEntries) onMissingEntries,
     required ArtistsSplitConfig artistsSplitConfig,
-    required List<Map> allTracks,
-    required ReverseSearchMatcher<Map> reverseTitleMatcher,
-    required ReverseSearchMatcher<Map> reverseArtistMatcher,
-    required ReverseSearchMatcher<Map> reverseAlbumMatcher,
+    required List<_YTHistoryParserTrackParams> allTracks,
+    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseTitleMatcher,
+    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseArtistMatcher,
+    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseAlbumMatcher,
   }) {
     Iterable<Track> tracks = <Track>[];
 
@@ -1076,8 +1075,8 @@ class JsonToHistoryParser {
         final secondCondition = artistInTitle.union(albumInChannel).union(artistInChannel);
         final matched = secondCondition.isEmpty ? titleMatches : titleMatches.intersection(secondCondition);
 
-        final result = matchAll ? matched : (matched.isEmpty ? <Map>{} : {matched.first});
-        tracks = result.map((e) => Track.decide(e['path'] ?? '', e['v']));
+        final result = matchAll ? matched : (matched.isEmpty ? <_YTHistoryParserTrackParams>{} : {matched.first});
+        tracks = result.map((e) => Track.decide(e.path, e.isVideo));
       }
     }
 
@@ -1170,7 +1169,7 @@ class JsonToHistoryParser {
     required bool matchAll,
     required DateTime? oldestDate,
     required DateTime? newestDate,
-    required Future<_GeneralSourceResult?> Function(Map params) callback,
+    required Future<_GeneralSourceResult?> Function(_GeneralSourceParserParams params) callback,
   }) async {
     final portProgressParsed = RawReceivePort((message) {
       parsedHistoryJson.value += message as int;
@@ -1180,27 +1179,27 @@ class JsonToHistoryParser {
     });
     final portLoadingProgress = ReceivePort();
 
-    final params = {
-      'tracks': Indexer.inst.allTracksMappedByPath.values
+    final _GeneralSourceParserParams params = (
+      tracks: Indexer.inst.allTracksMappedByPath.values
           .map(
-            (e) => {
-              'title': e.title,
-              'artist': e.originalArtist,
-              'path': e.path,
-              'v': e.isVideo,
-            },
+            (e) => (
+              title: e.title,
+              artist: e.originalArtist,
+              path: e.path,
+              isVideo: e.isVideo,
+            ),
           )
           .toFixedList(),
-      'oldestDay': oldestDate?.toDaysSince1970(),
-      'newestDay': newestDate?.toDaysSince1970(),
-      'files': files,
-      'matchAll': matchAll,
-      'artistsSplitConfig': ArtistsSplitConfig.settings().toMap(),
-      'portProgressParsed': portProgressParsed.sendPort,
-      'portProgressAdded': portProgressAdded.sendPort,
-      'portLoadingProgress': portLoadingProgress.sendPort,
-      'localHistory': HistoryController.inst.historyMap.value,
-    };
+      oldestDay: oldestDate?.toDaysSince1970(),
+      newestDay: newestDate?.toDaysSince1970(),
+      files: files,
+      matchAll: matchAll,
+      artistsSplitConfig: ArtistsSplitConfig.settings(),
+      portProgressParsed: portProgressParsed.sendPort,
+      portProgressAdded: portProgressAdded.sendPort,
+      portLoadingProgress: portLoadingProgress.sendPort,
+      localHistory: HistoryController.inst.historyMap.value,
+    );
     StreamSubscription? portLoadingProgressSub;
     portLoadingProgressSub = portLoadingProgress.listen((message) {
       message as int;
@@ -1239,9 +1238,11 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<_GeneralSourceResult?> _addLastFmSourceIsolate(Map params) async {
+  static Future<_GeneralSourceResult?> _addLastFmSourceIsolate(_GeneralSourceParserParams params) async {
     // used for cases where date couldnt be parsed, so it uses this one as a reference
     int? lastDate;
+    // -- hoisted, `itemToInfoFn` runs once per line & lastfm exports go well into 6 figures.
+    final dateFormat = DateFormat('dd MMM yyyy HH:mm');
     return _addGeneralSourceIsolate(
       params,
       trackSource: TrackSource.lastfm,
@@ -1255,7 +1256,7 @@ class JsonToHistoryParser {
         // this is used for cases where date couldn't be parsed, so it'll add the track with (date == lastDate - 30 seconds)
         int date = 0;
         try {
-          date = DateFormat('dd MMM yyyy HH:mm').parseLoose(pieces.last, true).millisecondsSinceEpoch;
+          date = dateFormat.parseLoose(pieces.last, true).millisecondsSinceEpoch;
         } catch (e) {
           if (lastDate != null) {
             date = lastDate! - 30000;
@@ -1273,7 +1274,7 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<_GeneralSourceResult?> _addSpotifySourceIsolate(Map params) async {
+  static Future<_GeneralSourceResult?> _addSpotifySourceIsolate(_GeneralSourceParserParams params) async {
     return _addGeneralSourceIsolate(
       params,
       trackSource: TrackSource.spotify,
@@ -1303,7 +1304,7 @@ class JsonToHistoryParser {
   }
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<_GeneralSourceResult?> _addListenBrainzSourceIsolate(Map params) async {
+  static Future<_GeneralSourceResult?> _addListenBrainzSourceIsolate(_GeneralSourceParserParams params) async {
     return _addGeneralSourceIsolate(
       params,
       trackSource: TrackSource.listenbrainz,
@@ -1333,26 +1334,26 @@ class JsonToHistoryParser {
 
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static Future<_GeneralSourceResult?> _addGeneralSourceIsolate<E>(
-    Map params, {
+    _GeneralSourceParserParams params, {
     required TrackSource trackSource,
     required Future<int> Function(File file) loadingProgressCounterFn,
     required List<E> Function(File file) fileToItemsFn,
     required _GeneralSourceItemInfo? Function(E item) itemToInfoFn,
   }) async {
-    final allTracks = params['tracks'] as List<Map>;
-    final oldestDay = params['oldestDay'] as int?;
-    final newestDay = params['newestDay'] as int?;
-    final files = params['files'] as List<File>;
-    final matchAll = params['matchAll'] as bool;
-    final artistsSplitConfig = ArtistsSplitConfig.fromMap(params['artistsSplitConfig']);
+    final allTracks = params.tracks;
+    final oldestDay = params.oldestDay;
+    final newestDay = params.newestDay;
+    final files = params.files;
+    final matchAll = params.matchAll;
+    final artistsSplitConfig = params.artistsSplitConfig;
 
-    final localHistory = params['localHistory'] as SplayTreeMap<int, List<TrackWithDate>>;
+    final localHistory = params.localHistory;
 
     int addedHistoryCount = 0;
 
-    final portProgressParsed = params['portProgressParsed'] as SendPort;
-    final portProgressAdded = params['portProgressAdded'] as SendPort;
-    final portLoadingProgress = params['portLoadingProgress'] as SendPort;
+    final portProgressParsed = params.portProgressParsed;
+    final portProgressAdded = params.portProgressAdded;
+    final portLoadingProgress = params.portLoadingProgress;
 
     int linesCount = 0;
     for (final file in files) {
@@ -1361,18 +1362,18 @@ class JsonToHistoryParser {
 
     portLoadingProgress.send(linesCount);
 
-    final tracksLookupTitlesMap = <String, List<Map>>{};
-    final tracksLookupArtistsMap = <String, List<Map>>{};
+    final tracksLookupTitlesMap = <String, List<_HistoryParserTrackParams>>{};
+    final tracksLookupArtistsMap = <String, List<_HistoryParserTrackParams>>{};
 
-    final reverseTitleMatcher = ReverseSearchMatcher<Map>();
-    final reverseArtistMatcher = ReverseSearchMatcher<Map>();
+    final reverseTitleMatcher = ReverseSearchMatcher<_HistoryParserTrackParams>();
+    final reverseArtistMatcher = ReverseSearchMatcher<_HistoryParserTrackParams>();
 
     for (final trMap in allTracks) {
-      final title = trMap['title'] as String;
+      final title = trMap.title;
       tracksLookupTitlesMap.addForce(title.cleanUpForComparison, trMap);
       reverseTitleMatcher.addItemWithTokens(trMap, title.splitFirst('(').splitFirst('['));
 
-      final originalArtist = trMap['artist'] as String;
+      final originalArtist = trMap.artist;
       final artistsList = Indexer.splitArtist(
         title: title,
         originalArtist: originalArtist,
@@ -1408,7 +1409,7 @@ class JsonToHistoryParser {
             if (watchAsDSE < oldestDay || watchAsDSE > newestDay) continue;
           }
 
-          final tracks = <Map>[];
+          final tracks = <_HistoryParserTrackParams>[];
           final itemTitleCleaned = info.itemTitle.cleanUpForComparison;
           final itemArtistCleaned = info.itemArtist.cleanUpForComparison;
 
@@ -1444,7 +1445,7 @@ class JsonToHistoryParser {
             for (final trMap in tracks) {
               final twd = TrackWithDate(
                 dateAdded: info.dateMSSE,
-                track: Track.decide(trMap['path'] ?? '', trMap['v']),
+                track: Track.decide(trMap.path, trMap.isVideo),
                 source: trackSource,
               );
               final day = twd.dateAdded.toDaysSince1970();
@@ -1503,18 +1504,14 @@ class JsonToHistoryParser {
     final progressPort = RawReceivePort((message) {
       onProgress(message as int);
     });
-    await _updateYoutubeStatsDirectoryIsolate.thready({
-      "affectedIds": affectedIds,
-      "dirPath": AppDirs.YT_STATS,
-      "progressPort": progressPort.sendPort,
-    });
+    await _updateYoutubeStatsDirectoryIsolate.thready((affectedIds: affectedIds, dirPath: AppDirs.YT_STATS, progressPort: progressPort.sendPort));
     progressPort.close();
   }
 
-  static void _updateYoutubeStatsDirectoryIsolate(Map params) {
-    final affectedIds = params['affectedIds'] as Map<String, YoutubeVideoHistory>;
-    final progressPort = params['progressPort'] as SendPort;
-    final dirPath = params['dirPath'] as String;
+  static void _updateYoutubeStatsDirectoryIsolate(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort progressPort}) params) {
+    final affectedIds = params.affectedIds;
+    final progressPort = params.progressPort;
+    final dirPath = params.dirPath;
 
     // ===== Getting affected files (which are arranged by id[0])
     final fileIdentifierMap = <String, Map<String, YoutubeVideoHistory>>{}; // {id[0]: {id: YoutubeVideoHistory}}
@@ -1598,7 +1595,9 @@ class JsonToHistoryParser {
     bool escape = false;
 
     await for (final chunk in file.openRead()) {
-      for (final b in chunk) {
+      final bytes = chunk is Uint8List ? chunk : Uint8List.fromList(chunk);
+      for (int i = 0; i < bytes.length; i++) {
+        final b = bytes[i];
         if (escape) {
           escape = false;
           continue;
@@ -1644,7 +1643,7 @@ class _MissingListenEntry {
 
   @override
   int get hashCode {
-    return dateMSSE.hashCode ^ source.hashCode ^ youtubeID.hashCode ^ title.hashCode ^ artistOrChannel.hashCode;
+    return Object.hash(dateMSSE, source, youtubeID, title, artistOrChannel);
   }
 }
 
@@ -1682,3 +1681,50 @@ class _GeneralSourceResult {
     required this.missingEntriesSorted,
   });
 }
+
+typedef _HistoryParserTrackParams = ({
+  String title,
+  String artist,
+  String path,
+  bool isVideo,
+});
+
+typedef _YTHistoryParserTrackParams = ({
+  String title,
+  String artist,
+  String album,
+  String path,
+  String comment,
+  bool isVideo,
+});
+
+typedef _YTTakeoutParserParams = ({
+  List<_YTHistoryParserTrackParams> tracks,
+  List<File> files,
+  bool isMatchingTypeLink,
+  bool isMatchingTypeTitleAndArtist,
+  bool matchYT,
+  bool matchYTMusic,
+  int? oldestDay,
+  int? newestDay,
+  bool matchAll,
+  ArtistsSplitConfig artistsSplitConfig,
+  SendPort portProgressParsed,
+  SendPort portProgressAdded,
+  SendPort portLoadingProgress,
+  SplayTreeMap<int, List<TrackWithDate>> localHistory,
+  SplayTreeMap<int, List<YoutubeID>> ytHistory,
+});
+
+typedef _GeneralSourceParserParams = ({
+  List<_HistoryParserTrackParams> tracks,
+  int? oldestDay,
+  int? newestDay,
+  List<File> files,
+  bool matchAll,
+  ArtistsSplitConfig artistsSplitConfig,
+  SendPort portProgressParsed,
+  SendPort portProgressAdded,
+  SendPort portLoadingProgress,
+  SplayTreeMap<int, List<TrackWithDate>> localHistory,
+});

@@ -226,7 +226,7 @@ class StatsTopVideosRow extends StatelessWidget {
             playlistID: const PlaylistID(id: k_PLAYLIST_NAME_MOST_PLAYED),
           ),
         )
-        .toList(growable: false);
+        .toFixedList();
     return VideoTilePropertiesProvider(
       configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytMostPlayed,

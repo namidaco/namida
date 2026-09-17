@@ -77,9 +77,12 @@ install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
 
 
 # bundle required binaries
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/windows/"
+# named rather than globbed: the same directory also holds the waveform library,
+# which ships as a native asset under lib/ and has no business in bin/
+install(PROGRAMS
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/windows/ffmpeg.exe"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/windows/ffprobe.exe"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-  FILES_MATCHING PATTERN "*"
 )
 
 install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"

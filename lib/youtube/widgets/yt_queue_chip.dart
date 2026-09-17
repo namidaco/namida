@@ -251,7 +251,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   final nextItem = Player.inst.currentQueue.valueR.length - 1 >= currentIndex + 1
                                       ? Player.inst.currentQueue.valueR[currentIndex + 1] as YoutubeID
                                       : null;
-                                  final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSync(nextItem.id);
+                                  YoutubeInfoController.utils.lazyInfoRefresh.valueR;
+                                  final nextItemName = nextItem == null ? '' : YoutubeInfoController.utils.getVideoNameSyncLazy(nextItem.id);
                                   final queueLength = Player.inst.currentQueue.valueR.length;
                                   return Column(
                                     mainAxisSize: MainAxisSize.min,

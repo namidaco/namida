@@ -204,12 +204,28 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   Future<void> exportPlaylistToM3UFile(LocalPlaylist playlist, String path) async {
-    await _saveM3UPlaylistToFile.thready({
-      'path': path,
-      'tracks': playlist.tracks,
-      'infoMap': _pathsM3ULookup,
-      'artworkUrl': _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
-    });
+    await _saveM3UPlaylistToFile.thready((
+      path: path,
+      entries: _buildM3UEntries(playlist.tracks),
+      artworkUrl: _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
+      relative: true,
+    ));
+  }
+
+  List<_M3UEntry> _buildM3UEntries(List<TrackWithDate> tracks) {
+    final infoMap = _pathsM3ULookup;
+    return List.generate(
+      tracks.length,
+      (i) {
+        final tr = tracks[i].track;
+        final path = tr.path;
+        final info = infoMap[path];
+        if (info != null) return (path: path, info: info);
+        final trext = tr.toTrackExt();
+        return (path: path, info: '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}');
+      },
+      growable: false,
+    );
   }
 
   Future<void> prepareAllPlaylists() async {
@@ -617,6 +633,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     bool pathExists(String path) => File(path).existsSync();
 
+    late final libraryPathsByLowerFilename = () {
+      final index = <String, List<String>>{};
+      for (final trackPath in libraryTracksPaths) {
+        (index[trackPath.getFilename.toLowerCase()] ??= []).add(trackPath);
+      }
+      return index;
+    }();
+
     final pathSep = Platform.pathSeparator;
     late final albumartUrlRegex = RegExp(r'(?<=#EXTALBUMARTURL:\s*).+');
     final pathSepRegex = RegExp(r'[\\/]');
@@ -657,11 +681,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             // no idea, trying to get from library
             if (tracksDBManager == null) await loadTracksDb();
             final normalizedLowerPath = p.normalize(line).toLowerCase();
-            for (final trackPath in libraryTracksPaths) {
-              if (trackPath.toLowerCase().endsWith(normalizedLowerPath)) {
-                fullPath = trackPath;
-                // if (pathExists(fullPath)) fileExists = true; // no further checks
-                break;
+            final candidates = libraryPathsByLowerFilename[normalizedLowerPath.getFilename];
+            if (candidates != null) {
+              for (final trackPath in candidates) {
+                if (trackPath.toLowerCase().endsWith(normalizedLowerPath)) {
+                  fullPath = trackPath;
+                  // if (pathExists(fullPath)) fileExists = true; // no further checks
+                  break;
+                }
               }
             }
           }
@@ -717,12 +744,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return name;
   }
 
-  static Future<void> _saveM3UPlaylistToFile(Map params) async {
-    final mainPath = params['path'] as String;
-    final tracks = params['tracks'] as List<TrackWithDate>;
-    final infoMap = params['infoMap'] as Map<String, String?>;
-    final artworkUrl = params['artworkUrl'] as String?;
-    final relative = params['relative'] as bool? ?? true;
+  static Future<void> _saveM3UPlaylistToFile(
+    ({String path, List<_M3UEntry> entries, String? artworkUrl, bool relative}) params,
+  ) async {
+    final mainPath = params.path;
+    final entries = params.entries;
+    final artworkUrl = params.artworkUrl;
+    final relative = params.relative;
 
     // String findCommonPath(List<TrackWithDate> tracks) {
     //   if (tracks.isEmpty) return '';
@@ -747,7 +775,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     // }
 
     final commonParent = relative ? p.dirname(mainPath) : '';
-    final commonParentIsGood = commonParent.isNotEmpty && RegExp(r'[^\s]').hasMatch(commonParent); // ensure has any char
+    final commonParentIsGood = commonParent.trim().isNotEmpty;
 
     final file = File(mainPath);
 
@@ -765,12 +793,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       sink.writeln('# this file should be put in `$commonParent` or a folder with similar structure');
       sink.writeln();
     }
-    for (final trwd in tracks) {
-      final tr = trwd.track;
-      final trext = tr.track.toTrackExt();
-      final infoLine = infoMap[tr.path] ?? '#EXTINF:${trext.durationMS / 1000},${trext.originalArtist} - ${trext.title}';
-      final pathLine = commonParentIsGood ? p.relative(tr.path, from: commonParent) : tr.path;
-      sink.writeln(infoLine);
+    for (final entry in entries) {
+      final path = entry.path;
+      final pathLine = commonParentIsGood ? p.relative(path, from: commonParent) : path;
+      sink.writeln(entry.info);
       sink.writeln(pathLine);
     }
 
@@ -839,12 +865,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         final writeTimer = _m3uWriteTimers[m3uPath];
         writeTimer?.cancel();
         _m3uWriteTimers[m3uPath] = Timer(const Duration(seconds: 2), () async {
-          await _saveM3UPlaylistToFile.thready({
-            'path': m3uPath,
-            'tracks': playlist.tracks,
-            'infoMap': _pathsM3ULookup,
-            'artworkUrl': _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
-          });
+          await _saveM3UPlaylistToFile.thready((
+            path: m3uPath,
+            entries: _buildM3UEntries(playlist.tracks),
+            artworkUrl: _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
+            relative: true,
+          ));
           _m3uWriteTimers[m3uPath]?.cancel();
           _m3uWriteTimers.remove(m3uPath);
         });
@@ -1054,3 +1080,5 @@ extension LocalPlaylistUtils on LocalPlaylist {
     return (title, assetImagePath);
   }
 }
+
+typedef _M3UEntry = ({String path, String info});

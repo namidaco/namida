@@ -638,7 +638,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     height: 1.5,
                                     colorForce: theme.colorScheme.onSurface.withOpacityExt(0.2),
                                   ),
-                                  skipFirst: 4,
+                                  skipFirst: 3,
                                 )
                                 .toFixedList(),
                       ),

@@ -573,8 +573,10 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     String firstLine = '';
     String secondLine = '';
 
-    firstLine = YoutubeInfoController.utils.getVideoNameSync(video.id) ?? '';
-    secondLine = YoutubeInfoController.utils.getVideoChannelNameSync(video.id) ?? '';
+    final utils = YoutubeInfoController.utils;
+    utils.lazyInfoRefresh.valueR;
+    firstLine = utils.getVideoNameSyncLazy(video.id) ?? '';
+    secondLine = utils.getVideoChannelNameSyncLazy(video.id) ?? '';
     if (firstLine == '') {
       firstLine = secondLine;
       secondLine = '';
@@ -770,7 +772,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
       topText: (currentItem) =>
           YoutubeInfoController.current.currentVideoPage.value?.channelInfo?.title ??
           YoutubeInfoController.current.currentYTStreams.value?.info?.channelName ??
-          YoutubeInfoController.utils.getVideoChannelNameSync((currentItem as YoutubeID).id) ??
+          YoutubeInfoController.utils.getVideoChannelNameSyncLazy((currentItem as YoutubeID).id) ??
           '',
       onTopTextTap: (currentItem) async {
         final pageChannel = YoutubeInfoController.current.currentVideoPage.value?.channelInfo;
@@ -816,7 +818,14 @@ class _AdjacentThumbnailScale extends StatelessWidget {
         rx: settings.animatingThumbnailScaleMultiplier,
         builder: (context, userScaleMultiplier) => Transform.scale(
           scale: MiniplayerThumbnailScale.resolveBase(isInversed: isInversed, userScaleMultiplier: userScaleMultiplier),
-          child: RepaintBoundary(child: child),
+          child: RepaintBoundary(
+            // -- matches the current card's lyrics backdrop, so sliding in/out doesn't pop between blurred & not.
+            child: LyricsOverlayBackdrop(
+              mpAnimation: NamidaMiniPlayerBase.clampedAnimationBCP,
+              visibility: Lyrics.inst.lrcOverlayVisibility,
+              child: child,
+            ),
+          ),
         ),
       ),
     );
@@ -1037,6 +1046,7 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                           key: Lyrics.inst.lrcViewKey,
                           videoOrImage: videoOrImage,
                           maxWidth: maxWidth,
+                          visibilityNotifier: Lyrics.inst.lrcOverlayVisibility,
                         ),
                       )
                     : KeyedSubtree(
@@ -1058,14 +1068,14 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                         rx: _lrcAdditionalScale,
                         builder: (context, lrcAdditionalScale) {
                           final additionalScaleLRC = 0.02 * lrcAdditionalScale;
-                          return ObxO(
+                          return ObxOSelect(
                             rx: Player.inst.nowPlayingPosition,
-                            builder: (context, nowPlayingPosition) {
-                              final animatingScale = MiniPlayerController.inst.animation.value == 0
-                                  ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
-                                  : shoulShowLyricsView
-                                  ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
-                                  : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
+                            selector: (nowPlayingPosition) => MiniPlayerController.inst.animation.value == 0
+                                ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
+                                : shoulShowLyricsView
+                                ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
+                                : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition),
+                            builder: (context, animatingScale) {
                               final finalScale = additionalScaleLRC + additionalScaleVideo + animatingScale;
                               return AnimatedScale(
                                 duration: const Duration(milliseconds: 100),
@@ -1206,6 +1216,29 @@ class Wallpaper extends StatefulWidget {
 
 class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMixin {
   late final _particleBehaviour = RandomParticleBehaviour(options: _buildParticleOptions(Colors.transparent, 0));
+  final _particlesScale = ValueNotifier<double>(0.0);
+  Color _particlesBaseColor = Colors.transparent;
+
+  @override
+  void initState() {
+    super.initState();
+    if (settings.enableMiniplayerParticles.value) Player.inst.nowPlayingPosition.addListener(_onPositionChanged);
+  }
+
+  @override
+  void dispose() {
+    Player.inst.nowPlayingPosition.removeListener(_onPositionChanged);
+    _particlesScale.dispose();
+    super.dispose();
+  }
+
+  void _onPositionChanged() {
+    final scale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
+    if (scale == _particlesScale.value) return;
+    final bpm = (2000 * scale).withMinimum(0);
+    _particleBehaviour.options = _buildParticleOptions(_particlesBaseColor, bpm);
+    _particlesScale.value = scale;
+  }
 
   ParticleOptions _buildParticleOptions(Color baseColor, double bpm) {
     return ParticleOptions(
@@ -1223,6 +1256,7 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    _particlesBaseColor = theme.colorScheme.secondary;
     final particlesChild = AnimatedBackground(
       vsync: this,
       behaviour: _particleBehaviour,
@@ -1264,18 +1298,14 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
               builder: (context, playing) => AnimatedOpacity(
                 duration: const Duration(seconds: 1),
                 opacity: playing ? 1 : 0,
-                child: ObxO(
-                  rx: Player.inst.nowPlayingPosition,
-                  builder: (context, nowPlayingPosition) {
-                    final scale = WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition);
-                    final bpm = (2000 * scale).withMinimum(0);
-                    _particleBehaviour.options = _buildParticleOptions(theme.colorScheme.secondary, bpm);
-                    return AnimatedScale(
-                      duration: const Duration(milliseconds: 300),
-                      scale: 1.0 + scale * 1.5,
-                      child: particlesChild,
-                    );
-                  },
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _particlesScale,
+                  child: particlesChild,
+                  builder: (context, scale, child) => AnimatedScale(
+                    duration: const Duration(milliseconds: 300),
+                    scale: 1.0 + scale * 1.5,
+                    child: child,
+                  ),
                 ),
               ),
             ),

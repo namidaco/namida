@@ -259,7 +259,7 @@ sealed class DirectoryIndex {
   }
 
   @override
-  int get hashCode => source.hashCode ^ type.hashCode ^ username.hashCode;
+  int get hashCode => Object.hash(source, type, username);
 }
 
 enum DirectoryIndexTypeTag {

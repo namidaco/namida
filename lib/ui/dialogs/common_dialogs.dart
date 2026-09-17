@@ -71,7 +71,7 @@ class NamidaDialogs {
       forceSingleArtwork: true,
       heroTag: 'album_$albumIdentifier',
       albumToAddFrom: albumIdentifier,
-      networkArtworkInfo: NetworkArtworkInfo.album(name, artists.firstOrNull),
+      networkArtworkInfo: NetworkArtworkInfo.albumAutoArtist(albumIdentifier),
     );
   }
 

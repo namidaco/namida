@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -107,7 +106,8 @@ class SettingsSearchController {
   SettingsSearchController._internal();
 
   final _map = <SettingSubpageEnum, Map<int, GlobalKey>>{};
-  final _allWidgets = <(SettingSubpageProvider, Map<SettingKeysBase, List<String>>)>[];
+
+  final _searchIndex = <({SettingSubpageEnum page, Enum key, List<String> titles, List<String> titlesCleaned})>[];
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
@@ -115,7 +115,7 @@ class SettingsSearchController {
   final _canShowSearch = false.obs;
 
   void closeSearch() {
-    _allWidgets.clear();
+    _searchIndex.clear();
     subpagesDetails.clear();
     searchResults.clear();
     _canShowSearch.value = false;
@@ -132,7 +132,7 @@ class SettingsSearchController {
 
   void onSearchTap({required bool isOpen}) {
     if (isOpen) {
-      _allWidgets.clear();
+      _searchIndex.clear();
       final settingsWidgets = [
         ThemeSetting(),
         IndexerSettings(),
@@ -145,7 +145,16 @@ class SettingsSearchController {
       ];
       for (final p in settingsWidgets) {
         subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();
-        _allWidgets.add((p, p.lookupMap));
+        final page = p.settingPage;
+        for (final e in p.lookupMap.entries) {
+          final titles = e.value;
+          _searchIndex.add((
+            page: page,
+            key: e.key as Enum,
+            titles: titles,
+            titlesCleaned: titles.map((title) => title.cleanUpForComparison).toFixedList(),
+          ));
+        }
       }
       _canShowSearch.value = true;
     } else {
@@ -154,20 +163,21 @@ class SettingsSearchController {
   }
 
   void onSearchChanged(String val) {
+    final valCleaned = val.cleanUpForComparison;
     final res = <SettingSubpageEnum, List<SettingSearchResultItem>>{};
-    for (final widget in _allWidgets) {
-      for (final e in widget.$2.entries) {
-        final match = e.value.any((element) => element.cleanUpForComparison.contains(val.cleanUpForComparison));
-        if (match) {
-          final p = widget.$1.settingPage;
+    for (final entry in _searchIndex) {
+      final titlesCleaned = entry.titlesCleaned;
+      for (int i = 0; i < titlesCleaned.length; i++) {
+        if (titlesCleaned[i].contains(valCleaned)) {
           res.addForce(
-            p,
+            entry.page,
             SettingSearchResultItem(
-              page: p,
-              key: e.key as Enum,
-              titles: e.value,
+              page: entry.page,
+              key: entry.key,
+              titles: entry.titles,
             ),
           );
+          break;
         }
       }
     }

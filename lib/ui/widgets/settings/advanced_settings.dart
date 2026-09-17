@@ -623,8 +623,8 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
       ),
       title: lang.clearVideoCache,
       trailingText: totalSize.fileSizeFormatted,
-      onTap: () {
-        final allvideos = VideoController.inst.getCurrentVideosInCache();
+      onTap: () async {
+        final allvideos = await VideoController.inst.getCurrentVideosInCache();
         const cacheManager = StorageCacheManager();
         cacheManager.promptCacheDeleteDialog(
           allItems: allvideos,
@@ -645,13 +645,13 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
               confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
               onDeleteFiles: (itemsToDelete) async {
                 setState(() => totalSize = -1);
-                for (final video in itemsToDelete) {
+                await itemsToDelete.loopConcurrent((video) async {
                   await [
                     File(video.path).tryDeleting(),
                     File('${video.path}.metadata').tryDeleting(),
                   ].wait;
                   if (video.ytID != null) VideoController.inst.removeNVFromCacheMap(video.ytID!, video.path);
-                }
+                });
                 _fillSizes();
               },
               includeLocalTracksListens: true,
@@ -876,14 +876,13 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
               confirmDialogText: cacheManager.getDeleteSizeSubtitleText,
               onDeleteFiles: (itemsToDelete) async {
                 setState(() => totalSize = -1);
-                for (final audio in itemsToDelete) {
-                  await audio.file.tryDeleting();
+                await itemsToDelete.loopConcurrent((audio) async {
                   await [
                     audio.file.tryDeleting(),
                     File('${audio.file.path}.metadata').tryDeleting(),
                   ].wait;
                   AudioCacheController.inst.removeFromCacheMap(audio.youtubeId, audio.file.path);
-                }
+                });
                 _fillSizes();
               },
               includeLocalTracksListens: true,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:nampack/reactive/class/rx_base.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
@@ -78,7 +79,7 @@ class _MoodsTagsTracksPage extends StatefulWidget with NamidaRouteWidget {
   State<_MoodsTagsTracksPage> createState() => _MoodsTagsTracksPageState();
 }
 
-class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsProvider<Map<String, dynamic>>, TracksSearchWidgetMixin<_MoodsTagsTracksPage> {
+class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<_MoodsTagsTracksPage> {
   @override
   Iterable<TrackExtended> getTracksExtended() {
     return widget.tracks.map((e) => e.toTrackExt());

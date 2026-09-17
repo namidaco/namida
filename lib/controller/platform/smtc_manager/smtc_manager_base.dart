@@ -5,8 +5,8 @@ abstract class NamidaSMTCManager {
     return NamidaPlatformBuilder.init(
       android: () => null,
       ios: () => null,
-      windows: () => _SMTCManagerWindows(),
-      linux: () => _SMTCManagerLinux(),
+      windows: _SMTCManagerWindows.new,
+      linux: _SMTCManagerLinux.new,
     );
   }
 
@@ -21,4 +21,6 @@ abstract class NamidaSMTCManager {
 
   void updateMetadata(MediaItem mediaItem);
   void updateTimeline(int positionMS, int? durationMS);
+  void updateShuffle(bool shuffle);
+  void updateRepeatMode(PlayerRepeatMode repeatMode);
 }

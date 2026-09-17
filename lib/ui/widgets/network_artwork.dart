@@ -13,6 +13,7 @@ import 'package:namida/base/loading_items_delay.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
@@ -203,14 +204,30 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   _NetworkArtworkRequest? _joinedRequest;
   static final _defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
 
+  static final _mountedStates = <_NetworkArtworkState>{};
+
+  /// called after a custom artwork is set/replaced/deleted.
+  static void refreshForInfo(NetworkArtworkInfo info) {
+    for (final state in _mountedStates) {
+      if (state.widget.info == info) {
+        state._artworkVersion++;
+        state._getThumbnail();
+      }
+    }
+  }
+
+  int _artworkVersion = 0;
+
   @override
   void initState() {
     super.initState();
+    _mountedStates.add(this);
     _getThumbnail();
   }
 
   @override
   void dispose() {
+    _mountedStates.remove(this);
     _leaveRequest();
     super.dispose();
   }
@@ -311,6 +328,10 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   }
 
   Future<void> _getThumbnail() async {
+    _leaveRequest();
+    final version = _artworkVersion;
+    bool isLatest() => mounted && _artworkVersion == version;
+
     final cachedFile = widget.info.toArtworkIfExists();
     imagePath = cachedFile?.path;
     imagePath ??= ArtworkWidget.kImagePathInitialValue;
@@ -322,12 +343,15 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
       if (imagePath == null || imagePath == ArtworkWidget.kImagePathInitialValue) {
         await Future.delayed(Duration.zero);
         if (!await canStartLoadingItems(delayMS: 800)) return;
-        if (!mounted) return;
+        if (!isLatest()) return;
 
-        imagePath = await _requestNetworkArtwork();
-        imagePath ??= ArtworkWidget.kImagePathInitialValue;
+        final path = await _requestNetworkArtwork();
+        if (!isLatest()) return;
+        imagePath = path ?? ArtworkWidget.kImagePathInitialValue;
       }
     }
+
+    if (!isLatest()) return;
 
     if (imagePath == null || imagePath == ArtworkWidget.kImagePathInitialValue) {
       final isLocalAllowed = widget.info.settingsKey.value.contains(LibraryImageSource.local);
@@ -342,7 +366,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
     refreshState();
   }
 
-  Key get thumbKey => Key("${widget.info.name}$imagePath");
+  Key get thumbKey => Key("${widget.info.name}$imagePath$_artworkVersion");
 
   @override
   Widget build(BuildContext context) {
@@ -388,6 +412,9 @@ final class _NetworkArtworkInfoAlbum extends NetworkArtworkInfo {
   RxList<LibraryImageSource> get settingsKey => settings.imageSourceAlbum;
 
   @override
+  String get _paletteKeyPrefix => 'album_';
+
+  @override
   File toArtworkLocation() => NetworkArtworkInfo._getCustomArtworkLocation(AppDirs.ARTWORKS_ALBUMS, fileIdentifier ?? name);
 
   @override
@@ -401,13 +428,13 @@ final class _NetworkArtworkInfoAlbum extends NetworkArtworkInfo {
   }
 
   @override
-  int get hashCode => name.hashCode ^ artist.hashCode;
+  int get hashCode => Object.hash(name, artist, fileIdentifier);
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! _NetworkArtworkInfoAlbum) return false;
-    return name == other.name && artist == other.artist;
+    return name == other.name && artist == other.artist && fileIdentifier == other.fileIdentifier;
   }
 }
 
@@ -416,6 +443,9 @@ final class _NetworkArtworkInfoArtist extends NetworkArtworkInfo {
 
   @override
   RxList<LibraryImageSource> get settingsKey => settings.imageSourceArtist;
+
+  @override
+  String get _paletteKeyPrefix => 'artist_';
 
   @override
   File toArtworkLocation() => NetworkArtworkInfo._getCustomArtworkLocation(AppDirs.ARTWORKS_ARTISTS, name);
@@ -444,7 +474,6 @@ sealed class NetworkArtworkInfo {
   final IconData? icon;
   const NetworkArtworkInfo._(this.name, this.icon, {this.fileIdentifier});
 
-  factory NetworkArtworkInfo.album(String name, String? artist) = _NetworkArtworkInfoAlbum;
   factory NetworkArtworkInfo.albumAutoArtist(AlbumIdentifierWrapper identifier) {
     final tracks = identifier.getAlbumTracks();
     final album = identifier.displayAlbumName;
@@ -462,6 +491,13 @@ sealed class NetworkArtworkInfo {
   String? toLastfmUrl();
 
   RxList<LibraryImageSource> get settingsKey;
+
+  String get _paletteKeyPrefix;
+
+  /// prefixed by artwork type, otherwise palettes of tracks/albums/artists sharing a name
+  /// would all resolve to the same file inside [AppDirs.PALETTES].
+  String toPaletteKey() => '$_paletteKeyPrefix${toArtworkLocation().path.getFilenameWOExt}';
+
   File toArtworkLocation();
   File? toArtworkIfExists() {
     final file = toArtworkLocation();
@@ -477,24 +513,27 @@ sealed class NetworkArtworkInfo {
   }
 
   File? toArtworkIfExistsAndValidAndEnabled() {
-    final file = toArtworkIfExistsAndEnabled();
-    if (file != null) {
-      final size = file.fileSizeSync() ?? 0;
-      if (size > 0) {
-        return file;
-      }
-    }
-    return null;
+    final isNetworkAllowed = settingsKey.value.any((element) => element.isNetwork);
+    if (!isNetworkAllowed) return null;
+    // -- `fileSizeSync` already returns null for a missing file, so this is one stat instead of two.
+    final file = toArtworkLocation();
+    final size = file.fileSizeSync() ?? 0;
+    return size > 0 ? file : null;
   }
 
   CustomArtworkManager toManager() {
     return CustomArtworkManager(
       getArtworkFile: () => toArtworkLocation(),
-      setArtworkFile: (file, bytes) => CustomArtworkManager._setCustomArtwork(
-        toArtworkLocation(),
-        artworkFile: file,
-        artworkBytes: bytes,
-      ),
+      setArtworkFile: (file, bytes) async {
+        final destination = toArtworkLocation();
+        await CustomArtworkManager._setCustomArtwork(
+          destination,
+          artworkFile: file,
+          artworkBytes: bytes,
+        );
+        await CurrentColor.inst.deletePaletteForImage(destination.path, paletteKey: toPaletteKey());
+        _NetworkArtworkState.refreshForInfo(this);
+      },
       fetchPossibleArtworks: (cancelToken) async {
         if (!ConnectivityController.inst.hasConnection) return null;
         final url = toLastfmUrl();

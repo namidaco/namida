@@ -860,7 +860,7 @@ class _CustomAppBar extends StatelessWidget {
               child: isInnerPage
                   ? NamidaAppBarIcon(
                       icon: Broken.arrow_left_2,
-                      onPressed: NamidaNavigator.inst.popPage,
+                      onPressed: () => NamidaNavigator.inst.popPage(fromMainPage: true),
                     )
                   : NamidaAppBarIcon(
                       icon: Broken.menu_1,
@@ -1242,7 +1242,14 @@ class _AnimatedThemeState extends AnimatedWidgetBaseState<_AnimatedTheme> {
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
-    if (!_animated) return;
+    if (!_animated) {
+      // -- theme changes while not animated (ie. player expanded) must still be tracked,
+      // -- otherwise the next update animates from the stale theme (flashes the old one).
+      _data
+        ?..begin = widget.data
+        ..end = widget.data;
+      return;
+    }
     _themeDidChange = true;
     _data = visitor(_data, widget.data, (dynamic value) => ThemeDataTween(begin: value as ThemeData))! as ThemeDataTween;
   }

@@ -130,11 +130,13 @@ class Indexer<T extends Track> {
 
   List<T> recentlyAddedTracksSorted() {
     final alltracks = tracksInfoList.value.toList();
-    alltracks.sort((a, b) {
-      var result = b.dateModified.compareTo(a.dateModified);
-      if (result == 0) result = b.dateAdded.compareTo(a.dateAdded);
-      return result;
-    });
+    alltracks.sortByAltsPrecomputed(
+      [
+        (tr) => tr.toTrackExt().dateModified,
+        (tr) => tr.toTrackExt().dateAdded,
+      ],
+      reverse: true,
+    );
     return alltracks;
   }
 
@@ -146,8 +148,16 @@ class Indexer<T extends Track> {
 
   /// {imagePath: (TrackExtended, id)};
   final _backupMediaStoreIDS = <String, (Track, int)>{};
+  static const _kArtworksBytesMapMaxEntries = 60;
   final artworksBytesMap = <String, Uint8List?>{};
   final artworksFilesMap = <String, File?>{};
+
+  void _putArtworkBytes(String key, Uint8List? bytes) {
+    final map = artworksBytesMap;
+    if (map.length >= _kArtworksBytesMapMaxEntries) map.remove(map.keys.first);
+    map[key] = bytes;
+  }
+
   final _pendingArtworksCompressed = <String, Completer<void>>{};
   final _pendingArtworksFullRes = <String, Completer<void>>{};
 
@@ -311,8 +321,9 @@ class Indexer<T extends Track> {
       );
     } else {
       currentFiles ??= await getAudioFiles();
-      final newFiles = getNewFoundPaths(currentFiles);
-      final deletedPaths = allowDeletion ? getDeletedPaths(currentFiles) : <String>{};
+      final difference = getPathsDifference(currentFiles);
+      final newFiles = difference.newPaths;
+      final deletedPaths = allowDeletion ? difference.deletedPaths : <String>{};
       differenceStats = (newFiles, deletedPaths);
 
       await _fetchAllSongsAndWriteToFile(
@@ -1034,13 +1045,16 @@ class Indexer<T extends Track> {
     final tracksRealPaths = <String>[];
     final tracksMissing = <Track>[];
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
-    for (final s in tracks) {
-      bool exists = false;
-      final tr = s.track;
+    final tracksExistence = await tracks.mapConcurrent((s) async {
       try {
-        exists = await tr.exists();
-      } catch (_) {}
-      if (exists) {
+        return await s.track.exists();
+      } catch (_) {
+        return false;
+      }
+    });
+    for (int i = 0; i < tracks.length; i++) {
+      final tr = tracks[i].track;
+      if (tracksExistence[i]) {
         tracksReal.add(tr);
         tracksRealPaths.add(tr.path);
       } else {
@@ -1193,14 +1207,20 @@ class Indexer<T extends Track> {
       index++;
     }
 
-    for (final path in tracksPathPre) {
-      final isDir = await Directory(path).exists().ignoreError() ?? false;
-      if (isDir) {
+    final resolvedPaths = await tracksPathPre.mapConcurrent(
+      (path) async {
+        final isDir = await Directory(path).exists().ignoreError() ?? false;
+        if (!isDir) return <String>[path];
         final files = await Directory(path).listAllIsolate(recursive: true).ignoreError() ?? [];
-        for (final f in files) {
-          if (f is File) onPath(f.path);
-        }
-      } else {
+        return <String>[
+          for (final f in files)
+            if (f is File) f.path,
+        ];
+      },
+      concurrency: 4, // -- each directory listing spawns an isolate
+    );
+    for (final paths in resolvedPaths) {
+      for (final path in paths) {
         onPath(path);
       }
     }
@@ -1945,17 +1965,17 @@ class Indexer<T extends Track> {
     }
 
     await [
-      _IndexerIsolateExecuter._readTrackStatsDataSync.thready([AppPaths.TRACKS_STATS_DB_INFO, AppPaths.TRACKS_STATS_OLD]).then(
+      _IndexerIsolateExecuter._readTrackStatsDataSync.thready((dbInfo: AppPaths.TRACKS_STATS_DB_INFO, oldJsonFilePath: AppPaths.TRACKS_STATS_OLD)).then(
         (res) {
           trackStatsMap.value = res;
         },
       ),
       _IndexerIsolateExecuter._readTracksDataSync
-          .thready([
-            AppPaths.TRACKS_DB_INFO,
-            AppPaths.TRACKS_OLD,
-            _createSplitConfig(),
-          ])
+          .thready((
+            dbInfo: AppPaths.TRACKS_DB_INFO,
+            oldJsonFilePath: AppPaths.TRACKS_OLD,
+            splitConfig: _createSplitConfig(),
+          ))
           .then(
             (value) async {
               allTracksMappedByPath = value.allTracksMappedByPath;
@@ -2134,9 +2154,23 @@ class Indexer<T extends Track> {
     );
   }
 
-  Iterable<String> _getPhysicalMedias() => tracksInfoList.value.where((tr) => tr.isPhysical).map((t) => t.path);
-  Set<String> getNewFoundPaths(Set<String> currentFiles) => currentFiles.difference(Set.of(_getPhysicalMedias()));
-  Set<String> getDeletedPaths(Set<String> currentFiles) => Set.of(_getPhysicalMedias()).difference(currentFiles);
+  Set<String> _getPhysicalMediasPaths() {
+    final paths = <String>{};
+    final tracks = tracksInfoList.value;
+    for (int i = 0; i < tracks.length; i++) {
+      final tr = tracks[i];
+      if (tr.isPhysical) paths.add(tr.path);
+    }
+    return paths;
+  }
+
+  ({Set<String> newPaths, Set<String> deletedPaths}) getPathsDifference(Set<String> currentFiles) {
+    final physicalPaths = _getPhysicalMediasPaths();
+    return (
+      newPaths: currentFiles.difference(physicalPaths),
+      deletedPaths: physicalPaths.difference(currentFiles),
+    );
+  }
 
   /// [strictNoMedia] forces all subdirectories to follow the same result of the parent.
   ///
@@ -2296,18 +2330,15 @@ class Indexer<T extends Track> {
   }
 
   Future<void> calculateAllImageSizesInStorage() async {
-    final stats = await _caclulateDirectoryInfoIsolate.thready({
-      "dirPath": AppDirs.ARTWORKS,
-      "token": RootIsolateToken.instance,
-    });
+    final stats = await _caclulateDirectoryInfoIsolate.thready((dirPath: AppDirs.ARTWORKS, token: RootIsolateToken.instance));
     artworksInStorage.value = stats.$1;
     artworksSizeInStorage.value = stats.$2;
   }
 
-  static (int, int) _caclulateDirectoryInfoIsolate(Map p) {
-    final dirPath = p["dirPath"] as String;
-    final token = p["token"] as RootIsolateToken;
-    BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+  static (int, int) _caclulateDirectoryInfoIsolate(({String dirPath, RootIsolateToken? token}) p) {
+    final dirPath = p.dirPath;
+    final token = p.token;
+    if (token != null) BackgroundIsolateBinaryMessenger.ensureInitialized(token);
 
     int totalCount = 0;
     int totalSize = 0;
@@ -2392,9 +2423,9 @@ class Indexer<T extends Track> {
 
 class _IndexerIsolateExecuter {
   /// reading stats db containing track rating etc.
-  static Future<Map<Track, TrackStats>> _readTrackStatsDataSync(List paramsList) async {
-    final statsDbInfo = paramsList[0] as DbWrapperFileInfo;
-    final oldJsonFilePath = paramsList[1] as String;
+  static Future<Map<Track, TrackStats>> _readTrackStatsDataSync(({DbWrapperFileInfo dbInfo, String oldJsonFilePath}) params) async {
+    final statsDbInfo = params.dbInfo;
+    final oldJsonFilePath = params.oldJsonFilePath;
 
     final statsDBManager = await DBWrapper.openFromInfoSyncTry(
       fileInfo: statsDbInfo,
@@ -2441,10 +2472,10 @@ class _IndexerIsolateExecuter {
   }
 
   /// Reading actual tracks db.
-  static Future<_TracksLoadResult> _readTracksDataSync(List paramsList) async {
-    final tracksDbInfo = paramsList[0] as DbWrapperFileInfo;
-    final oldJsonFilePath = paramsList[1] as String;
-    final splitconfig = paramsList[2] as SplitArtistGenreConfigsWrapper;
+  static Future<_TracksLoadResult> _readTracksDataSync(({DbWrapperFileInfo dbInfo, String oldJsonFilePath, SplitArtistGenreConfigsWrapper splitConfig}) params) async {
+    final tracksDbInfo = params.dbInfo;
+    final oldJsonFilePath = params.oldJsonFilePath;
+    final splitconfig = params.splitConfig;
     // --------- enable only if sorting will be done here ---------
     // final mediaItemsTrackSorters = paramsList[3] as Map<MediaType, List<Comparable<dynamic> Function(Track)>>;
     // final mediaItemsTrackSortingReverse = paramsList[4] as Map<MediaType, bool>;

@@ -24,8 +24,17 @@ class Folder {
   final String _key;
 
   late final parts = splitParts();
+  late final folderNameLower = folderNameRaw.toLowerCase();
 
   Folder.explicit(this.path) : folderNameRaw = path.pathReverseSplitter(_pathSeparator), _key = _computeKey(path);
+
+  static final _nameCountsTracks = _FolderNameCounts();
+  static final _nameCountsVideos = _FolderNameCounts();
+
+  static void invalidateNameCounts() {
+    _nameCountsTracks.invalidate();
+    _nameCountsVideos.invalidate();
+  }
 
   static T fromType<T extends Folder>(String path) {
     return T == VideoFolder ? VideoFolder.explicit(path) as T : Folder.explicit(path) as T;
@@ -136,15 +145,8 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   ///
   /// Can be heplful to display full path in such case.
   bool get hasSimilarFolderNames {
-    int count = 0;
-    var thisfolderLower = folderNameRaw.toLowerCase();
-    for (final k in _mainFoldersMapDedicated.keys) {
-      if (k.folderNameRaw.toLowerCase() == thisfolderLower) {
-        count++;
-        if (count > 1) return true;
-      }
-    }
-    return false;
+    final counts = this is VideoFolder ? Folder._nameCountsVideos : Folder._nameCountsTracks;
+    return (counts.of(_mainFoldersMapDedicated)[folderNameLower] ?? 0) > 1;
   }
 
   bool hasSamePathAs(String path) {
@@ -169,4 +171,26 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   }
 
   List<E> tracksDedicated() => _mainFoldersMapDedicated[this] ?? [];
+}
+
+// by claude
+class _FolderNameCounts {
+  Map<Folder, Object?>? _mapRef;
+  int _mapLength = -1;
+  Map<String, int> _counts = const {};
+
+  void invalidate() => _mapRef = null;
+
+  Map<String, int> of(Map<Folder, Object?> map) {
+    if (!identical(map, _mapRef) || map.length != _mapLength) {
+      final counts = <String, int>{};
+      for (final k in map.keys) {
+        counts.update(k.folderNameLower, (v) => v + 1, ifAbsent: () => 1);
+      }
+      _counts = counts;
+      _mapRef = map;
+      _mapLength = map.length;
+    }
+    return _counts;
+  }
 }

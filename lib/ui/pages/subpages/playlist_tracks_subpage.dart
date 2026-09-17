@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:sticky_headers/sticky_headers.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/history_days_rebuilder.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/pull_to_refresh.dart';
@@ -520,7 +521,7 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
 }
 
 class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
-    with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<Map<String, dynamic>>, TracksSearchWidgetMixin<NormalPlaylistTracksPage> {
+    with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<NormalPlaylistTracksPage> {
   @override
   Iterable<TrackExtended> getTracksExtended() {
     final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);

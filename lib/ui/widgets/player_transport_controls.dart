@@ -80,26 +80,30 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
         SizedBox(height: widget.waveformBottomGap),
         LayoutBuilder(
           builder: (context, constraints) => Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(),
-              SeekBackwardsDetectorWidget(
-                child: NamidaHero(
-                  enabled: false,
-                  tag: 'MINIPLAYER_POSITION',
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                    child: ObxO(
-                      rx: Player.inst.nowPlayingPosition,
-                      builder: (context, currentMS) => Text(
-                        currentMS.milliSecondsLabel,
-                        style: textTheme.displaySmall,
+              Expanded(
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: SeekBackwardsDetectorWidget(
+                      child: NamidaHero(
+                        enabled: false,
+                        tag: 'MINIPLAYER_POSITION',
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          child: ObxO(
+                            rx: Player.inst.nowPlayingPosition,
+                            builder: (context, currentMS) => Text(
+                              currentMS.milliSecondsLabel,
+                              style: textTheme.displaySmall,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-              const Spacer(),
               NamidaIconButton(
                 icon: Broken.previous,
                 iconSize: 24.0,
@@ -114,60 +118,65 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                 iconSize: 24.0,
                 onPressed: Player.inst.next,
               ),
-              const Spacer(),
-              SeekForwardDetectorWidget(
-                child: NamidaHero(
-                  enabled: false,
-                  tag: 'MINIPLAYER_DURATION',
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                    child: ObxO(
-                      rx: settings.player.displayRemainingDurInsteadOfTotal,
-                      builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
-                          ? ObxO(
-                              rx: _currentItemDurationMS,
-                              builder: (context, durMS) {
-                                int finalDurMS = durMS ?? 0;
-                                return ObxO(
-                                  rx: Player.inst.currentItem,
-                                  builder: (context, currentItem) {
-                                    if (finalDurMS == 0 && currentItem is Selectable) {
-                                      finalDurMS = currentItem.track.durationMS;
-                                    }
-                                    return ObxO(
-                                      rx: Player.inst.nowPlayingPosition,
-                                      builder: (context, toSubtract) => Text(
-                                        "- ${(finalDurMS - toSubtract).milliSecondsLabel}",
+              Expanded(
+                child: Center(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: SeekForwardDetectorWidget(
+                      child: NamidaHero(
+                        enabled: false,
+                        tag: 'MINIPLAYER_DURATION',
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          child: ObxO(
+                            rx: settings.player.displayRemainingDurInsteadOfTotal,
+                            builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
+                                ? ObxO(
+                                    rx: _currentItemDurationMS,
+                                    builder: (context, durMS) {
+                                      int finalDurMS = durMS ?? 0;
+                                      return ObxO(
+                                        rx: Player.inst.currentItem,
+                                        builder: (context, currentItem) {
+                                          if (finalDurMS == 0 && currentItem is Selectable) {
+                                            finalDurMS = currentItem.track.durationMS;
+                                          }
+                                          return ObxO(
+                                            rx: Player.inst.nowPlayingPosition,
+                                            builder: (context, toSubtract) => Text(
+                                              "- ${(finalDurMS - toSubtract).milliSecondsLabel}",
+                                              style: textTheme.displaySmall,
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  )
+                                : ObxO(
+                                    rx: _currentItemDurationMS,
+                                    builder: (context, milliseconds) {
+                                      if (milliseconds == null || milliseconds == 0) {
+                                        return ObxO(
+                                          rx: Player.inst.currentItem,
+                                          builder: (context, currentItem) => Text(
+                                            (currentItem is Selectable ? currentItem.track.durationMS : 0).milliSecondsLabel,
+                                            style: textTheme.displaySmall,
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        milliseconds.milliSecondsLabel,
                                         style: textTheme.displaySmall,
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            )
-                          : ObxO(
-                              rx: _currentItemDurationMS,
-                              builder: (context, milliseconds) {
-                                if (milliseconds == null || milliseconds == 0) {
-                                  return ObxO(
-                                    rx: Player.inst.currentItem,
-                                    builder: (context, currentItem) => Text(
-                                      (currentItem is Selectable ? currentItem.track.durationMS : 0).milliSecondsLabel,
-                                      style: textTheme.displaySmall,
-                                    ),
-                                  );
-                                }
-                                return Text(
-                                  milliseconds.milliSecondsLabel,
-                                  style: textTheme.displaySmall,
-                                );
-                              },
-                            ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-              const Spacer(),
             ],
           ),
         ),

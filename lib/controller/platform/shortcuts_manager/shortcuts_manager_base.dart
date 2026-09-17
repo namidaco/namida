@@ -7,9 +7,9 @@ abstract class ShortcutsManager {
     return NamidaPlatformBuilder.init(
       android: () => null,
       ios: () => null,
-      windows: () => _ShortcutsManagerDesktop(),
-      linux: () => _ShortcutsManagerDesktop(),
-      macos: () => _ShortcutsManagerDesktop(),
+      windows: _ShortcutsManagerDesktop.new,
+      linux: _ShortcutsManagerDesktop.new,
+      macos: _ShortcutsManagerDesktop.new,
     );
   }
 

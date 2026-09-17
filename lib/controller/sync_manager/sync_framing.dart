@@ -96,6 +96,11 @@ class _FrameReader {
   static const _initialCapacity = 4096;
   static const _maxHeaderPreallocation = 256 * 1024 * 1024;
 
+  /// a peer declaring a huge frame would make us buffer until OOM, since [_process]
+  /// keeps accumulating until the whole frame arrived. the largest legitimate payload is
+  /// a file transfer, capped at 200MB by the files sync messages.
+  static const _maxFrameLength = 256 * 1024 * 1024;
+
   Uint8List _buf = Uint8List(_initialCapacity);
   int _writePos = 0; // how many bytes are in the buffer
   int _readPos = 0; // how far we've consumed
@@ -155,6 +160,16 @@ class _FrameReader {
         // read header directly, zero copy
         _expectedLength = (_buf[_readPos] << 24) | (_buf[_readPos + 1] << 16) | (_buf[_readPos + 2] << 8) | _buf[_readPos + 3];
         _readPos += 4;
+
+        if (_expectedLength > _maxFrameLength) {
+          // -- the stream is desynced beyond recovery, drop everything & let the consumer close the socket.
+          _readPos = 0;
+          _writePos = 0;
+          _expectedLength = -1;
+          _buf = Uint8List(_initialCapacity);
+          _streamController.addError(const SocketException('Frame length exceeds the maximum allowed size'));
+          return;
+        }
 
         var toPreallocate = _expectedLength - _available;
         if (toPreallocate > 0) {

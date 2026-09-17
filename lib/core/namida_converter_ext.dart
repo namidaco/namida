@@ -1382,7 +1382,7 @@ extension RouteUtils on NamidaRoute {
     final trackToExtractFrom = trackOfColor;
     final networkArtworkInfo = getNetworkArtworkInfo;
     if (trackToExtractFrom != null || networkArtworkInfo != null) {
-      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom ?? kDummyTrack, networkArtworkInfo, useIsolate: true);
+      color = await CurrentColor.inst.getTrackDelightnedColor(trackToExtractFrom ?? kDummyTrack, networkArtworkInfo);
     }
     CurrentColor.inst.updateCurrentColorSchemeOfSubPages(color);
   }

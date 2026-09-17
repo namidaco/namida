@@ -11,10 +11,10 @@ abstract class NamidaChannel {
     );
   }
 
-  static NamidaAppIcons get defaultAppIconForPlatform => NamidaPlatformBuilder.init(
-    android: () => NamidaAppIcons.namida,
-    windows: () => NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
-    linux: () => NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
+  static NamidaAppIcons get defaultAppIconForPlatform => NamidaPlatformBuilder.initValue(
+    android: NamidaAppIcons.namida,
+    windows: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
+    linux: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
   );
   static final defaultLayerIconForPlatform = 'assets/namida.png';
 
@@ -58,6 +58,8 @@ abstract class NamidaChannel {
   Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined);
 
   Future<bool> openHomeWidgetSettings() async => false;
+
+  Future<void> setMulticastLock(bool enabled) async {}
 
   Future<bool> shareFiles(List<String> paths) async => false;
 

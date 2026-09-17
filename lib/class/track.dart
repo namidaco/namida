@@ -81,7 +81,7 @@ class TrackWithDate extends Selectable<Map<String, dynamic>> with ItemWithDate, 
   }
 
   @override
-  int get hashCode => dateAdded.hashCode ^ _track.hashCode ^ sourceNull.hashCode;
+  int get hashCode => Object.hash(dateAdded, _track, sourceNull);
 
   @override
   String toString() => "track: ${track.toString()}, source: $source, dateAdded: $dateAdded";
@@ -215,13 +215,14 @@ class PlayableItemStats {
 }
 
 enum PlayableType {
-  track('tr'),
-  video('v'),
-  trackWithDate('twd'),
-  ytVideo('ytv');
+  track('tr', 0),
+  video('v', 1),
+  trackWithDate('twd', 2),
+  ytVideo('ytv', 3);
 
-  const PlayableType(this.jsonKey);
   final String jsonKey;
+  final int binaryId;
+  const PlayableType(this.jsonKey, this.binaryId);
 }
 
 abstract class Playable<T extends Object> {
@@ -359,6 +360,11 @@ class TrackExtended {
   final String? server;
 
   List<AlbumIdentifierWrapper> albumsIdentifiersWrappersModifed(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modifyOnly(identifiers)).toList();
+
+  // -- cache for image path instead of resolving it each time.
+  // -- ignores `uniqueArtworkHash` since toggling it requires reindexing (new instances)
+  int _pathToImageStamp = -1;
+  String? _pathToImageCache;
 
   TrackExtended({
     required this.title,
@@ -694,9 +700,18 @@ extension TrackExtUtils on TrackExtended {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
+    final stamp = _imageKeyStamp();
+    if (stamp == _pathToImageStamp) return _pathToImageCache!;
     final dirPath = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
-    final identifier = this.cacheKeyForImage(dirPath);
-    return "$dirPath$identifier.png";
+    final res = "$dirPath${this.cacheKeyForImage(dirPath)}.png";
+    _pathToImageCache = res;
+    _pathToImageStamp = stamp;
+    return res;
+  }
+
+  static int _imageKeyStamp() {
+    if (!settings.groupArtworksByAlbum.value) return 0;
+    return AlbumIdentifierWrapper.identifiersStamp(settings.albumIdentifiers.value) | (1 << 30);
   }
 
   String rawCacheKey(String parentDirPath) {
@@ -1109,6 +1124,8 @@ extension TrackUtils on Track {
   String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
   String get folderName => folderPath.splitLast(Platform.pathSeparator);
   String get pathToImage {
+    final trExt = toTrackExtOrNull();
+    if (trExt != null && trExt.isVideo == (this is Video)) return trExt.pathToImage; // -- to benefit from cache
     final dirPath = this is Video ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
     final identifier = this.cacheKeyForImage(dirPath);
     return "$dirPath$identifier.png";

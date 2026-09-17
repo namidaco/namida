@@ -3,11 +3,11 @@ part of 'zip_manager.dart';
 abstract class ZipManager {
   static ZipManager platform() {
     return NamidaPlatformBuilder.init(
-      android: () => _ZipManagerNative(),
-      ios: () => _ZipManagerNative(),
-      macos: () => _ZipManagerNative(),
-      windows: () => _ZipManagerGeneric(),
-      linux: () => _ZipManagerGeneric(),
+      android: _ZipManagerNative.new,
+      ios: _ZipManagerNative.new,
+      macos: _ZipManagerNative.new,
+      windows: _ZipManagerGeneric.new,
+      linux: _ZipManagerGeneric.new,
     );
   }
 

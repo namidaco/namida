@@ -628,17 +628,10 @@ class TrackTile extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               if (properties.displayFavouriteIconInListTile)
-                                TweenAnimationBuilder<Color?>(
-                                  tween: ColorTween(
-                                    begin: iconColor,
-                                    end: iconColor,
-                                  ),
-                                  duration: const Duration(milliseconds: 300),
-                                  builder: (context, color, child) => NamidaLocalLikeButton(
-                                    track: track,
-                                    size: 22.0,
-                                    color: color,
-                                  ),
+                                NamidaLocalLikeButton(
+                                  track: track,
+                                  size: 22.0,
+                                  color: iconColor,
                                 ),
                             ],
                           ),
@@ -804,12 +797,13 @@ class TrackTileManager {
 
     bool needsSeparator = false;
     bool shouldNotCache = false;
+    final trExt = track.toTrackExt();
 
     for (final itemPosition in positions) {
       final trackItem = settings.trackItem.value[itemPosition];
       if (trackItem == TrackTileItem.latestListenDate || trackItem == TrackTileItem.listenCount) shouldNotCache = true;
 
-      var info = _buildChoosenTrackTileItem(trackItem, track);
+      var info = _buildChoosenTrackTileItem(trackItem, trExt, track);
 
       if (info.isNotEmpty) {
         if (needsSeparator) _buffer.write(_separator);
@@ -821,69 +815,66 @@ class TrackTileManager {
     return (text: _buffer.toString(), shouldNotCache: shouldNotCache);
   }
 
-  static String _buildChoosenTrackTileItem(TrackTileItem? trackItem, Track trackPre) {
+  static String _buildChoosenTrackTileItem(TrackTileItem? trackItem, TrackExtended trExt, Track track) {
     if (trackItem == null || trackItem == TrackTileItem.none) return '';
 
     final fn = _lookup[trackItem];
-    if (fn != null) {
-      final track = trackPre.toTrackExt();
-      return fn(track);
-    }
+    if (fn != null) return fn(trExt, track);
 
     return '';
   }
 
-  static final _lookup = <TrackTileItem, String Function(TrackExtended track)>{
-    TrackTileItem.title: (track) => track.title,
-    TrackTileItem.artists: (track) => track.originalArtist,
-    TrackTileItem.album: (track) => track.originalAlbum,
-    TrackTileItem.albumArtist: (track) => track.albumArtist,
-    TrackTileItem.genres: (track) => track.originalGenre,
-    TrackTileItem.styles: (track) => track.originalStyle,
-    TrackTileItem.duration: (track) => track.durationMS.milliSecondsLabel,
-    TrackTileItem.year: (track) => track.year.yearFormatted,
-    TrackTileItem.trackNumber: (track) => track.trackNo.toString(),
-    TrackTileItem.discNumber: (track) => track.discNo.toString(),
-    TrackTileItem.fileNameWOExt: (track) => track.filenameWOExt,
-    TrackTileItem.extension: (track) => track.extension,
-    TrackTileItem.fileName: (track) => track.filename,
-    TrackTileItem.folder: (track) => track.folderName,
-    TrackTileItem.path: (track) => track.path.formatPath(),
-    TrackTileItem.channels: (track) => track.channels.channelToLabel,
-    TrackTileItem.comment: (track) => track.comment,
-    TrackTileItem.composer: (track) => track.composer,
-    TrackTileItem.dateAdded: (track) => track.dateAdded.dateFormatted,
-    TrackTileItem.format: (track) => track.format.toUpperCase(),
-    TrackTileItem.sampleRate: (track) => '${track.sampleRate}Hz',
-    TrackTileItem.bitDepth: (track) => '${track.bits} bit',
-    TrackTileItem.bpm: (track) => '${track.bpm ?? 0} BPM',
-    TrackTileItem.size: (track) => track.size.fileSizeFormatted,
-    TrackTileItem.bitrate: (track) => "${(track.bitrate)} kb/s",
-    TrackTileItem.dateModified: (track) {
+  static final _lookup = <TrackTileItem, String Function(TrackExtended track, Track rawTrack)>{
+    TrackTileItem.title: (track, _) => track.title,
+    TrackTileItem.artists: (track, _) => track.originalArtist,
+    TrackTileItem.album: (track, _) => track.originalAlbum,
+    TrackTileItem.albumArtist: (track, _) => track.albumArtist,
+    TrackTileItem.genres: (track, _) => track.originalGenre,
+    TrackTileItem.styles: (track, _) => track.originalStyle,
+    TrackTileItem.duration: (track, _) => track.durationMS.milliSecondsLabel,
+    TrackTileItem.year: (track, _) => track.year.yearFormatted,
+    TrackTileItem.trackNumber: (track, _) => track.trackNo.toString(),
+    TrackTileItem.discNumber: (track, _) => track.discNo.toString(),
+    TrackTileItem.fileNameWOExt: (track, _) => track.filenameWOExt,
+    TrackTileItem.extension: (track, _) => track.extension,
+    TrackTileItem.fileName: (track, _) => track.filename,
+    TrackTileItem.folder: (track, _) => track.folderName,
+    TrackTileItem.path: (track, _) => track.path.formatPath(),
+    TrackTileItem.channels: (track, _) => track.channels.channelToLabel,
+    TrackTileItem.comment: (track, _) => track.comment,
+    TrackTileItem.composer: (track, _) => track.composer,
+    TrackTileItem.dateAdded: (track, _) => track.dateAdded.dateFormatted,
+    TrackTileItem.format: (track, _) => track.format.toUpperCase(),
+    TrackTileItem.sampleRate: (track, _) => '${track.sampleRate}Hz',
+    TrackTileItem.bitDepth: (track, _) => '${track.bits} bit',
+    TrackTileItem.bpm: (track, _) => '${track.bpm ?? 0} BPM',
+    TrackTileItem.size: (track, _) => track.size.fileSizeFormatted,
+    TrackTileItem.bitrate: (track, _) => "${(track.bitrate)} kb/s",
+    TrackTileItem.dateModified: (track, _) {
       final finalDate = track.dateModified.dateFormatted;
       final finalClock = track.dateModified.clockFormatted;
       return '$finalDate, $finalClock';
     },
-    TrackTileItem.dateModifiedClock: (track) {
+    TrackTileItem.dateModifiedClock: (track, _) {
       final finalClock = track.dateModified.clockFormatted;
       return finalClock;
     },
-    TrackTileItem.dateModifiedDate: (track) {
+    TrackTileItem.dateModifiedDate: (track, _) {
       final finalDate = track.dateModified.dateFormatted;
       return finalDate;
     },
     // -- stats
-    TrackTileItem.rating: (track) => "${track.effectiveRating}%",
-    TrackTileItem.moods: (track) => track.effectiveMoods.join(', '),
-    TrackTileItem.tags: (track) => track.effectiveTags.join(', '),
-    TrackTileItem.listenCount: (track) => HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.length.formatDecimal() ?? '0',
-    TrackTileItem.latestListenDate: (track) {
-      final date = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.lastOrNull;
+    TrackTileItem.rating: (track, _) => "${track.effectiveRating}%",
+    TrackTileItem.moods: (track, _) => track.effectiveMoods.join(', '),
+    TrackTileItem.tags: (track, _) => track.effectiveTags.join(', '),
+    TrackTileItem.listenCount: (_, rawTrack) => HistoryController.inst.topTracksMapListens.value[rawTrack]?.length.formatDecimal() ?? '0',
+    TrackTileItem.latestListenDate: (_, rawTrack) {
+      final date = HistoryController.inst.topTracksMapListens.value[rawTrack]?.lastOrNull;
       if (date == null) return '';
       return TimeAgoController.dateFromNow(date.milliSecondsSinceEpoch);
     },
-    TrackTileItem.firstListenDate: (track) {
-      final firstListenDateMS = HistoryController.inst.topTracksMapListens.value[track.asTrack()]?.firstOrNull;
+    TrackTileItem.firstListenDate: (track, rawTrack) {
+      final firstListenDateMS = HistoryController.inst.topTracksMapListens.value[rawTrack]?.firstOrNull;
       if (firstListenDateMS == null) return '';
       if (isKuru) {
         final releaseDate = track.yearAsDateTime();

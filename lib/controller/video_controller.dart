@@ -282,16 +282,21 @@ class VideoController {
     return videos;
   }
 
-  List<NamidaVideo> getCurrentVideosInCache() {
-    final videos = <NamidaVideo>[];
+  Future<List<NamidaVideo>> getCurrentVideosInCache() async {
+    final all = <NamidaVideo>[];
     for (final vl in _videoCacheIDMap.values) {
-      for (var v in vl) {
-        if (File(v.path).existsSync()) {
-          videos.add(v);
-        }
-      }
+      all.addAll(vl);
     }
-    return videos;
+    if (all.isEmpty) return all;
+    final paths = all.map((v) => v.path).toFixedList();
+    final existing = await Isolate.run(() {
+      final existing = <String>{};
+      for (final path in paths) {
+        if (File(path).existsSync()) existing.add(path);
+      }
+      return existing;
+    });
+    return all.where((v) => existing.contains(v.path)).toList();
   }
 
   void removeNVFromCacheMap(String youtubeId, String path) {
@@ -303,7 +308,7 @@ class VideoController {
     final videos = _videoCacheIDMap[youtubeId];
     _videoCacheIDMap.remove(youtubeId);
     _saveCachedVideos(youtubeId);
-    if (videos != null) await Future.wait(videos.map((item) => File(item.path).delete()));
+    if (videos != null) await Future.wait(videos.map((item) => File(item.path).tryDeleting()));
   }
 
   void clearCachedVideosMap() {
@@ -791,8 +796,7 @@ class VideoController {
 
     final possibleCached = await getNVFromIDSorted(id);
     final local = _getPossibleVideosPathsFromAudioFile(track.path);
-    final possibleLocal = <NamidaVideo>[];
-    for (final l in local) {
+    Future<NamidaVideo?> resolveLocal(String l) async {
       final infoInMap = _videoPathsInfoMap[l];
       if (infoInMap == null || !infoInMap.hasSaneFramerate) {
         try {
@@ -809,13 +813,14 @@ class VideoController {
           }
         } catch (e) {
           printy(e, isError: true);
-          continue;
+          return null;
         }
       }
-      final nv = _videoPathsInfoMap[l];
-      if (nv != null) possibleLocal.add(nv);
+      return _videoPathsInfoMap[l];
     }
-    return [...possibleCached, ...possibleLocal];
+
+    final possibleLocal = local.isEmpty ? const <NamidaVideo?>[] : await Future.wait(local.map(resolveLocal));
+    return [...possibleCached, ...possibleLocal.nonNulls];
   }
 
   Future<void> initialize() async {
@@ -838,7 +843,7 @@ class VideoController {
   Future<void> _fetchAndCheckLocalVideos() async {
     await rescanLocalVideosPaths();
 
-    final localVideos = await _VideoControllerIsolateFunctions._readLocalVideosDb.thready([AppPaths.VIDEOS_LOCAL_OLD, _videoLocalMapDB.fileInfo]);
+    final localVideos = await _VideoControllerIsolateFunctions._readLocalVideosDb.thready((oldJsonFilePath: AppPaths.VIDEOS_LOCAL_OLD, dbFileInfo: _videoLocalMapDB.fileInfo));
 
     _videoPathsInfoMap = localVideos;
     printy('videos local: ${localVideos.length}');
@@ -1004,9 +1009,9 @@ extension _GlobalPaintBounds on BuildContext {
 class _VideoControllerIsolateFunctions {
   const _VideoControllerIsolateFunctions();
 
-  static Future<Map<String, NamidaVideo>> _readLocalVideosDb(List params) async {
-    final oldJsonFilePath = params[0] as String;
-    final dbFileInfo = params[1] as DbWrapperFileInfo;
+  static Future<Map<String, NamidaVideo>> _readLocalVideosDb(({String oldJsonFilePath, DbWrapperFileInfo dbFileInfo}) params) async {
+    final oldJsonFilePath = params.oldJsonFilePath;
+    final dbFileInfo = params.dbFileInfo;
     final oldJsonFile = File(oldJsonFilePath);
     final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: dbFileInfo,

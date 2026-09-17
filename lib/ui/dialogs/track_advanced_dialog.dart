@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/class/file_parts.dart';
@@ -628,12 +629,12 @@ void showTrackAdvancedDialog({
             future: Future.wait<NamidaColor>(
               networkArtworkInfo != null
                   ? [
-                      CurrentColor.inst.getTrackColors(kDummyTrack, networkArtworkInfo: networkArtworkInfo, delightnedAndAlpha: false, useIsolate: true),
+                      CurrentColor.inst.getTrackColors(kDummyTrack, networkArtworkInfo: networkArtworkInfo, delightnedAndAlpha: false),
                     ]
                   : tracksForColorPalette
                         .take(4)
                         .map(
-                          (e) => CurrentColor.inst.getTrackColors(e, networkArtworkInfo: null, delightnedAndAlpha: false, useIsolate: true),
+                          (e) => CurrentColor.inst.getTrackColors(e, networkArtworkInfo: null, delightnedAndAlpha: false),
                         ),
             ),
             builder: (context, snapshot) {
@@ -1212,7 +1213,7 @@ void showLibraryTracksChooseDialog({
   );
 }
 
-class _TracksSearchTemp with PortsProvider<Map> {
+class _TracksSearchTemp with PortsProvider<TracksSearchParams> {
   final void Function(List<Track> tracks) _onResult;
   _TracksSearchTemp(this._onResult);
 
@@ -1230,7 +1231,7 @@ class _TracksSearchTemp with PortsProvider<Map> {
   }
 
   @override
-  Future<IsolateFunctionReturnBuild<Map<dynamic, dynamic>>> isolateFunction(SendPort port) async {
+  Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
     final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, topTracksMapListens);
