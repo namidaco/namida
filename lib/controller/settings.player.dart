@@ -10,7 +10,7 @@ class _PlayerSettings with SettingsFileWriter {
   final volume = 1.0.obs;
   final speed = 1.0.obs;
   final pitch = 1.0.obs;
-  final longPressSpeed = 2.0.obs;
+  final longPressSpeed = 1.5.obs;
   final linkSpeedPitch = false.obs;
   final useSemitones = false.obs;
   final isPerTrackAudioConfigOverriden = false.obs;

@@ -46,6 +46,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   autoPlayOnNextPrev,
   infinityQueue,
   onVolume0,
+  longPressSpeed,
   onInterruption(NamidaFeaturesAvailablity.android),
   onConnect(NamidaFeaturesAvailablity.android),
   jumpToFirstTrackAfterFinishing,
@@ -88,6 +89,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.playAfterNextPrev],
     _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
     _PlaybackSettingsKeys.onVolume0: [lang.onVolumeZero],
+    _PlaybackSettingsKeys.longPressSpeed: [lang.longPressAction, lang.speed],
     _PlaybackSettingsKeys.onInterruption: [lang.onInterruption],
     _PlaybackSettingsKeys.onConnect: [lang.onDeviceConnect],
     _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
@@ -859,6 +861,25 @@ class PlaybackSettings extends SettingSubpageProvider {
               },
             ),
           ],
+        ),
+      ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.longPressSpeed,
+        child: ObxO(
+          rx: settings.player.longPressSpeed,
+          builder: (context, longPressSpeed) => CustomListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.longPressSpeed),
+            icon: Broken.forward,
+            title: '${lang.longPressAction}: ${lang.speed}',
+            trailing: NamidaWheelSlider(
+              initValue: (longPressSpeed * 100).round(),
+              max: 2 * 100,
+              onValueChanged: (val) {
+                settings.player.save(longPressSpeed: val / 100);
+              },
+              text: "${longPressSpeed}x",
+            ),
+          ),
         ),
       ),
       getItemWrapper(
