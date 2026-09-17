@@ -188,7 +188,12 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                               ),
                             )
                           : searchResults.isEmpty
-                          ? const SliverToBoxAdapter()
+                          ? const SliverToBoxAdapter(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 24.0),
+                                child: NoResultsWidget(),
+                              ),
+                            )
                           : SliverFixedExtentList.builder(
                               itemExtent: thumbnailItemExtent,
                               itemCount: searchResults.length,

@@ -3363,6 +3363,36 @@ class SearchPageTitleRow extends StatelessWidget {
   }
 }
 
+class NoResultsWidget extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+
+  const NoResultsWidget({
+    super.key,
+    this.icon = Broken.emoji_sad,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          icon,
+          size: 48.0,
+          color: iconColor,
+        ),
+        const SizedBox(height: 8.0),
+        Text(
+          lang.noResults,
+          style: context.textTheme.displayLarge,
+        ),
+      ],
+    );
+  }
+}
+
 class NamidaLogoContainer extends StatelessWidget {
   final double? width, height;
   final double iconSize;

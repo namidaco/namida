@@ -1308,6 +1308,13 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 title: 'yt_style_player_button_switcher'.toUpperCase(),
                 subtitle: 'shows a button to switch between local style player and youtube style player',
               ),
+              CustomSwitchListTile(
+                icon: Broken.search_status,
+                value: settings.extra.recentSearchesEnabled ?? false,
+                onChanged: (isTrue) => setState(() => settings.extra.save(recentSearchesEnabled: !isTrue)),
+                title: 'recent_searches'.toUpperCase(),
+                subtitle: 'saves searches and shows them in the search page',
+              ),
 
               if (NamidaFeaturesVisibility.equalizerAvailable)
                 ObxO(

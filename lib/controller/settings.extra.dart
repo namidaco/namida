@@ -14,6 +14,9 @@ class _ExtraSettings with SettingsFileWriter {
   final autoLibraryTab = true.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
   final preferredSearchType = RxnF<SearchType>(fallback: SearchType.auto);
+  final recentSearches = <String>[].obs;
+
+  static const _maxRecentSearches = 20;
 
   bool? tapToScroll;
   bool? enhancedDragToScroll;
@@ -26,6 +29,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? artistAlbumsExpanded;
   bool? artistSinglesExpanded;
   bool? ytStyleButtonSwitcher;
+  bool? recentSearchesEnabled;
 
   int lastPlayedIndex = 0;
 
@@ -57,6 +61,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? artistAlbumsExpanded,
     bool? artistSinglesExpanded,
     bool? ytStyleButtonSwitcher,
+    bool? recentSearchesEnabled,
     int? lastPlayedIndex,
     int? ytAddToPlaylistsTabIndex,
     int? ytPlaylistsPageIndex,
@@ -84,6 +89,10 @@ class _ExtraSettings with SettingsFileWriter {
     if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
     if (ytStyleButtonSwitcher != null) this.ytStyleButtonSwitcher = ytStyleButtonSwitcher;
+    if (recentSearchesEnabled != null) {
+      this.recentSearchesEnabled = recentSearchesEnabled;
+      if (!recentSearchesEnabled) recentSearches.clear();
+    }
     if (lastPlayedIndex != null) this.lastPlayedIndex = lastPlayedIndex;
     if (ytAddToPlaylistsTabIndex != null) this.ytAddToPlaylistsTabIndex = ytAddToPlaylistsTabIndex;
     if (ytPlaylistsPageIndex != null) this.ytPlaylistsPageIndex = ytPlaylistsPageIndex;
@@ -94,6 +103,29 @@ class _ExtraSettings with SettingsFileWriter {
     if (windowBounds != null) this.windowBounds = windowBounds;
     if (windowMaximized != null) this.windowMaximized = windowMaximized;
     if (miniLyricsWindowBounds != null) this.miniLyricsWindowBounds = miniLyricsWindowBounds;
+    _writeToStorage();
+  }
+
+  void addRecentSearch(String text) {
+    if (recentSearchesEnabled == false) return;
+    if (recentSearches.value.firstOrNull == text) return;
+    recentSearches.execute(
+      (list) {
+        list.remove(text);
+        list.insert(0, text);
+        if (list.length > _maxRecentSearches) list.length = _maxRecentSearches;
+      },
+    );
+    _writeToStorage();
+  }
+
+  void removeRecentSearch(String text) {
+    recentSearches.remove(text);
+    _writeToStorage();
+  }
+
+  void clearRecentSearches() {
+    recentSearches.clear();
     _writeToStorage();
   }
 
@@ -116,6 +148,8 @@ class _ExtraSettings with SettingsFileWriter {
       autoLibraryTab.value = autoLibraryTabFinal;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
       preferredSearchType.value = SearchType.values.getEnum(json['preferredSearchType']) ?? preferredSearchType.value;
+      final recentSearchesInStorage = json['recentSearches'];
+      if (recentSearchesInStorage is List) recentSearches.value = recentSearchesInStorage.whereType<String>().toList();
 
       tapToScroll = json['tapToScroll'] ?? tapToScroll;
       enhancedDragToScroll = json['enhancedDragToScroll'] ?? enhancedDragToScroll;
@@ -128,6 +162,7 @@ class _ExtraSettings with SettingsFileWriter {
       artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
       ytStyleButtonSwitcher = json['ytStyleButtonSwitcher'] ?? ytStyleButtonSwitcher;
+      recentSearchesEnabled = json['recentSearchesEnabled'] ?? recentSearchesEnabled;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
       ytAddToPlaylistsTabIndex = json['ytAddToPlaylistsTabIndex'] ?? ytAddToPlaylistsTabIndex;
       ytPlaylistsPageIndex = json['ytPlaylistsPageIndex'] ?? ytPlaylistsPageIndex;
@@ -169,6 +204,7 @@ class _ExtraSettings with SettingsFileWriter {
     'autoLibraryTab': autoLibraryTab.value,
     'ytInitialHomePage': ytInitialHomePage.value.name,
     'preferredSearchType': ?preferredSearchType.value?.name,
+    'recentSearches': recentSearches.value,
     if (tapToScroll != null) 'tapToScroll': tapToScroll,
     if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
     if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,
@@ -180,6 +216,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
     if (ytStyleButtonSwitcher != null) 'ytStyleButtonSwitcher': ytStyleButtonSwitcher,
+    if (recentSearchesEnabled != null) 'recentSearchesEnabled': recentSearchesEnabled,
     'lastPlayedIndex': lastPlayedIndex,
     'ytAddToPlaylistsTabIndex': ?ytAddToPlaylistsTabIndex,
     'ytPlaylistsPageIndex': ?ytPlaylistsPageIndex,

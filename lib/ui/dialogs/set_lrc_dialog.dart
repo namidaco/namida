@@ -858,11 +858,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(
-                                  Broken.emoji_sad,
-                                  size: 48.0,
-                                ),
-                                const SizedBox(height: 6.0),
+                                const NoResultsWidget(),
+                                const SizedBox(height: 8.0),
                                 NamidaInkWell(
                                   borderRadius: 6.0,
                                   bgColor: context.theme.cardColor,

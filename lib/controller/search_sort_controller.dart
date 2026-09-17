@@ -10,6 +10,7 @@ import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -28,7 +29,10 @@ class SearchSortController extends SearchPortsProvider {
   static final SearchSortController _instance = SearchSortController._internal();
   SearchSortController._internal();
 
-  String lastSearchText = '';
+  final _lastSearchText = ''.obs;
+  RxBaseCore<String> get lastSearchTextRx => _lastSearchText;
+  String get lastSearchText => _lastSearchText.value;
+  set lastSearchText(String text) => _lastSearchText.value = text;
 
   bool get isSearching =>
       trackSearchTemp.isNotEmpty ||
@@ -81,6 +85,13 @@ class SearchSortController extends SearchPortsProvider {
   RxList<String> get folderVideosSearchTemp => _searchMapTemp[MediaType.folderVideo]!;
   RxList<String> get moodSearchTemp => _searchMapTemp[MediaType.mood]!;
   RxList<String> get tagSearchTemp => _searchMapTemp[MediaType.tag]!;
+
+  RxBaseCore<List<Object>> getTempResultsRx(MediaType type) => switch (type) {
+    MediaType.track => trackSearchTemp,
+    MediaType.album => albumSearchTemp,
+    MediaType.playlist => playlistSearchTemp,
+    _ => _searchMapTemp[type]!,
+  };
 
   RxList<Track> get _tracksInfoList => Indexer.inst.tracksInfoList;
 
@@ -139,6 +150,69 @@ class SearchSortController extends SearchPortsProvider {
       } else {
         _searchMediaType(type: es, text: text, temp: true);
       }
+    }
+  }
+
+  void setTracksSearchTemp(List<Track> tracks) {
+    trackSearchTemp.value = _filterTracksByActiveSearchTypes(tracks);
+    sortTracksSearch();
+  }
+
+  List<Track> _filterTracksByActiveSearchTypes(List<Track> tracks) {
+    final activeTypes = settings.activeTrSearch.value;
+    final tracksActive = activeTypes[TrackTypeSearch.tr] ?? true;
+    final videosActive = activeTypes[TrackTypeSearch.v] ?? true;
+    if (tracksActive && videosActive) return tracks;
+    if (tracksActive) return tracks.where((e) => e is! Video).toList();
+    return <Track>[...tracks.whereType<Video>()];
+  }
+
+  List<String> _filterNonEmptyFolders(MediaType type, List<String> folders) {
+    return switch (type) {
+      MediaType.folderMusic => folders.where((f) => Folder.explicit(f).tracksDedicated().isNotEmpty).toList(),
+      MediaType.folderVideo => folders.where((f) => VideoFolder.explicit(f).tracksDedicated().isNotEmpty).toList(),
+      _ => folders,
+    };
+  }
+
+  void toggleSearchMediaType(MediaType type) async {
+    if (settings.activeSearchMediaTypes.value.contains(type)) {
+      settings.removeFromList(activeSearchMediaTypes1: type);
+      _clearTempResults(type);
+      await disposeMediaResources(type);
+    } else {
+      settings.save(activeSearchMediaTypes: [type]);
+      await prepareResources();
+      searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+    }
+  }
+
+  void toggleSearchTrackType(TrackTypeSearch type) {
+    final activeTypes = settings.activeTrSearch.value;
+    final isTracks = type == TrackTypeSearch.tr;
+    final tracksActive = activeTypes[TrackTypeSearch.tr] ?? true;
+    final videosActive = activeTypes[TrackTypeSearch.v] ?? true;
+    var tracks = isTracks ? !tracksActive : tracksActive;
+    var videos = isTracks ? videosActive : !videosActive;
+    if (!tracks && !videos) {
+      // -- at least one should be active, switch to the other
+      tracks = !isTracks;
+      videos = isTracks;
+    }
+    settings.updateActiveTrSearch(tracks: tracks, videos: videos);
+    searchAll(ScrollSearchController.inst.searchTextEditingController.text);
+  }
+
+  void _clearTempResults(MediaType type) {
+    switch (type) {
+      case MediaType.track:
+        trackSearchTemp.clear();
+      case MediaType.album:
+        albumSearchTemp.clear();
+      case MediaType.playlist:
+        playlistSearchTemp.clear();
+      default:
+        _searchMapTemp[type]?.clear();
     }
   }
 
@@ -418,10 +492,7 @@ class SearchSortController extends SearchPortsProvider {
         final fetchedQuery = r.$3;
         if (isTemp) {
           _onTempSearchEnded(MediaType.track, fetchedQuery);
-          if (fetchedQuery == lastSearchText) {
-            trackSearchTemp.value = r.$1;
-            sortTracksSearch();
-          }
+          if (fetchedQuery == lastSearchText) setTracksSearchTemp(r.$1);
         } else {
           if (fetchedQuery == LibraryTab.tracks.textSearchController?.text) trackSearchList.value = r.$1;
         }
@@ -516,7 +587,7 @@ class SearchSortController extends SearchPortsProvider {
         if (isTemp) {
           _onTempSearchEnded(type, fetchedQuery);
           if (fetchedQuery == lastSearchText) {
-            _searchMapTemp[type]?.value = r.$1;
+            _searchMapTemp[type]?.value = _filterNonEmptyFolders(type, r.$1);
             // sortMedia(type);
           }
         } else {

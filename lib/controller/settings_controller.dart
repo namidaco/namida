@@ -1593,8 +1593,13 @@ class _SettingsController with SettingsFileWriter {
     _writeToStorage();
   }
 
-  void updateActiveTrSearch(TrackTypeSearch type, bool active) {
-    activeTrSearch[type] = active;
+  void updateActiveTrSearch({required bool tracks, required bool videos}) {
+    activeTrSearch.execute(
+      (map) {
+        map[TrackTypeSearch.tr] = tracks;
+        map[TrackTypeSearch.v] = videos;
+      },
+    );
     _writeToStorage();
   }
 

@@ -639,6 +639,7 @@ class NamidaSearchBar extends StatelessWidget {
       ScrollSearchController.inst.latestSubmittedYTSearch.value = val;
       ScrollSearchController.inst.ytSearchKey.currentState?.fetchSearch(customText: val);
     }
+    ScrollSearchController.inst.saveCurrentSearchAsRecent();
   }
 
   @override

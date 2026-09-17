@@ -5,6 +5,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:youtipie/class/search_filters.dart';
 
 import 'package:namida/class/count_per_row.dart';
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -157,11 +158,28 @@ class ScrollSearchController {
 
   void hideSearchMenu() {
     unfocusKeyboard();
-    isGlobalSearchMenuShown.value = false;
+    showSearchMenu(false);
   }
 
   void showSearchMenu([bool show = true]) {
+    if (!show && isGlobalSearchMenuShown.value) saveCurrentSearchAsRecent();
     isGlobalSearchMenuShown.value = show;
+  }
+
+  void saveCurrentSearchAsRecent() {
+    final text = searchTextEditingController.text;
+    final hasResults = currentSearchType.value == SearchType.youtube ? text == latestSubmittedYTSearch.value : SearchSortController.inst.isSearching;
+    if (!hasResults) return;
+    final textTrimmed = text.trim();
+    if (textTrimmed.isEmpty) return;
+    settings.extra.addRecentSearch(textTrimmed);
+  }
+
+  void searchLocal(String text) {
+    searchTextEditingController.text = text;
+    searchTextEditingController.selection = TextSelection.collapsed(offset: text.length);
+    ClipboardController.inst.updateTextInControllerEmpty(text == '');
+    SearchSortController.inst.searchAll(text);
   }
 
   // returns wether search menu is now shown or not.

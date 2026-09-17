@@ -100,8 +100,8 @@ Future<void> showGeneralPopupDialog(
   final int? stopAfterItems = isSingleAndFromQueue
       ? Player.inst.sleepAfterItemsForIndex(index)
       : isSingleAndCurrentTrack
-          ? 1
-          : null;
+      ? 1
+      : null;
 
   final trackToExtractColorFrom = tracks.isEmpty
       ? null
@@ -1672,9 +1672,8 @@ class _ArtworkManager extends StatelessWidget {
                               : fetchPossibleArtworksFn == null
                               ? null
                               : urls == null || urls.isEmpty
-                              ? Icon(
-                                  Broken.emoji_sad,
-                                  size: 48.0,
+                              ? const Center(
+                                  child: NoResultsWidget(),
                                 )
                               : SmoothGridView.builder(
                                   padding: EdgeInsets.zero,
