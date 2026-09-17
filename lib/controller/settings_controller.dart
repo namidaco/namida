@@ -186,7 +186,7 @@ class _SettingsController with SettingsFileWriter {
   final enableSearchCleanup = true.obs;
   final enableBottomNavBar = true.obs;
   final displayAudioInfoMiniplayer = false.obs;
-  final showUnknownFieldsInTrackInfoDialog = true.obs;
+  final showUnknownFieldsInTrackInfoDialog = false.obs;
   final extractFeatArtistFromTitle = true.obs;
   final groupArtworksByAlbum = false.obs;
   final uniqueArtworkHash = false.obs;
@@ -642,7 +642,7 @@ class _SettingsController with SettingsFileWriter {
       enableSearchCleanup.value = json['enableSearchCleanup'] ?? enableSearchCleanup.value;
       enableBottomNavBar.value = json['enableBottomNavBar'] ?? enableBottomNavBar.value;
       displayAudioInfoMiniplayer.value = json['displayAudioInfoMiniplayer'] ?? displayAudioInfoMiniplayer.value;
-      showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog'] ?? showUnknownFieldsInTrackInfoDialog.value;
+      showUnknownFieldsInTrackInfoDialog.value = json['showUnknownFieldsInTrackInfoDialog_v2'] ?? showUnknownFieldsInTrackInfoDialog.value;
       extractFeatArtistFromTitle.value = json['extractFeatArtistFromTitle'] ?? extractFeatArtistFromTitle.value;
       groupArtworksByAlbum.value = json['groupArtworksByAlbum'] ?? groupArtworksByAlbum.value;
       uniqueArtworkHash.value = json['uniqueArtworkHash'] ?? uniqueArtworkHash.value;
@@ -896,7 +896,7 @@ class _SettingsController with SettingsFileWriter {
     'enableSearchCleanup': enableSearchCleanup.value,
     'enableBottomNavBar': enableBottomNavBar.value,
     'displayAudioInfoMiniplayer': displayAudioInfoMiniplayer.value,
-    'showUnknownFieldsInTrackInfoDialog': showUnknownFieldsInTrackInfoDialog.value,
+    'showUnknownFieldsInTrackInfoDialog_v2': showUnknownFieldsInTrackInfoDialog.value,
     'extractFeatArtistFromTitle': extractFeatArtistFromTitle.value,
     'groupArtworksByAlbum': groupArtworksByAlbum.value,
     'uniqueArtworkHash': uniqueArtworkHash.value,

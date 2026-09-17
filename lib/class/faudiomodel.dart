@@ -93,6 +93,7 @@ class FTags {
   final String? tempo;
   final String? country;
   final String? recordLabel;
+  final String? releaseType;
   final int? bpm;
   final String? mbAlbumId;
   final String? mbAlbumArtistId;
@@ -131,6 +132,7 @@ class FTags {
     required this.tempo,
     required this.country,
     required this.recordLabel,
+    required this.releaseType,
     required this.bpm,
     this.mbAlbumId,
     this.mbAlbumArtistId,
@@ -169,6 +171,7 @@ class FTags {
     this.tempo,
     this.country,
     this.recordLabel,
+    this.releaseType,
     this.bpm,
     this.mbAlbumId,
     this.mbAlbumArtistId,
@@ -239,6 +242,7 @@ class FTags {
       tempo: _listToString(map["tempo"]) ?? map["TEMPO"],
       country: _listToString(map["country"]) ?? map["COUNTRY"],
       recordLabel: _listToString(map["recordLabel"]) ?? map["RECORDLABEL"] ?? map["label"] ?? map["LABEL"],
+      releaseType: _listToString(map["releaseType"]) ?? map["RELEASETYPE"],
       bpm: MediaInfo.extractInt(map["bpm"]),
       mbAlbumId: map["mbAlbumId"] ?? map["MUSICBRAINZ_ALBUMID"] ?? map["MusicBrainz Album Id"],
       mbAlbumArtistId: map["mbAlbumArtistId"] ?? map["MUSICBRAINZ_ALBUMARTISTID"] ?? map["MusicBrainz Album Artist Id"],
@@ -278,6 +282,7 @@ class FTags {
       "tempo": tempo,
       "country": country,
       "recordLabel": recordLabel,
+      "releaseType": releaseType,
       "bpm": bpm,
       "language": language,
       "mbAlbumId": mbAlbumId,
@@ -315,6 +320,7 @@ class FTags {
       TagLibField.tags: ?_createList(tags),
       TagLibField.country: ?_createList(country),
       TagLibField.label: ?_createList(label),
+      TagLibField.releaseType: ?_createList(releaseType),
       TagLibField.tempo: ?_createList(tempo),
       TagLibField.mixer: ?_createList(mixer),
       TagLibField.djmixer: ?_createList(djmixer),

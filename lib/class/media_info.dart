@@ -140,6 +140,7 @@ class MIFormatTags {
   final String? style;
   final String? country;
   final String? label;
+  final String? releaseType;
   final String? comment;
   final String? disc;
   final String? track;
@@ -178,6 +179,7 @@ class MIFormatTags {
     this.style,
     required this.country,
     required this.label,
+    required this.releaseType,
     required this.comment,
     required this.disc,
     required this.track,
@@ -236,6 +238,7 @@ class MIFormatTags {
       style: map.getOrUpperCase("style") ?? map["Style"],
       country: map.getOrUpperCase("country") ?? map["Country"],
       label: map.getOrLowerCase("LABEL") ?? map["Label"],
+      releaseType: map.getOrLowerCase("RELEASETYPE") ?? map["MusicBrainz Album Type"] ?? map.getOrLowerCase("MUSICBRAINZ_ALBUMTYPE"),
       comment: map.getOrUpperCase("comment") ?? map["Comment"],
       disc: map.getOrUpperCase("disc") ?? map["Disc"],
       track: map.getOrUpperCase("track") ?? map["Track"],
@@ -276,6 +279,7 @@ class MIFormatTags {
     "style": style,
     "Country": country,
     "LABEL": label,
+    "RELEASETYPE": releaseType,
     "comment": comment,
     "disc": disc,
     "track": track,

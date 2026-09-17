@@ -235,6 +235,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       tags: ffmpegTags[FFMPEGTagField.tags.tagKey],
       country: ffmpegTags[FFMPEGTagField.country.tagKey],
       recordLabel: ffmpegTags[FFMPEGTagField.recordLabel.tagKey],
+      releaseType: ffmpegTags[FFMPEGTagField.releaseType.tagKey],
       ratingPercentage: doubleFromString(ffmpegTags[FFMPEGTagField.rating.tagKey]),
       djmixer: null,
       mixer: null,

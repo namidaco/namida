@@ -308,6 +308,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           metadata["bpm"] = tag.getFirst(FieldKey.BPM)
           metadata["country"] = tag.getAll(FieldKey.COUNTRY)
           metadata["recordLabel"] = tag.getAll(FieldKey.RECORD_LABEL)
+          metadata["releaseType"] = try { tag.getAll(FieldKey.MUSICBRAINZ_RELEASE_TYPE) } catch (_: Exception) { emptyList<String>() }
           metadata["language"] = tag.getAll(FieldKey.LANGUAGE)
           metadata["tempo"] = tag.getAll(FieldKey.TEMPO)
           metadata["tags"] = tag.getAll(FieldKey.TAGS)
@@ -489,6 +490,7 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
       setFieldIfExist(newTag, FieldKey.TEMPO, map, "tempo")
       setFieldIfExist(newTag, FieldKey.LANGUAGE, map, "language")
       setFieldIfExist(newTag, FieldKey.RECORD_LABEL, map, "recordLabel")
+      setFieldIfExist(newTag, FieldKey.MUSICBRAINZ_RELEASE_TYPE, map, "releaseType")
       setFieldIfExist(newTag, FieldKey.COUNTRY, map, "country")
       setFieldIfExist(newTag, FieldKey.BPM, map, "bpm")
       

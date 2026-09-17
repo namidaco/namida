@@ -103,6 +103,7 @@ enum GroupSortType {
   dateModified,
   composer,
   label,
+  releaseType,
   bpm,
   duration,
   numberOfTracks,
@@ -137,6 +138,7 @@ enum GroupSortType {
     GroupSortType.artistsList,
     GroupSortType.composer,
     GroupSortType.label,
+    GroupSortType.releaseType,
     GroupSortType.bpm,
     GroupSortType.shuffle,
   ];
@@ -590,6 +592,7 @@ enum TagField {
   lyricist,
   language,
   recordLabel,
+  releaseType,
   country,
   rating,
   tags,

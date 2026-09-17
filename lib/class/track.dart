@@ -347,6 +347,7 @@ class TrackExtended {
   final String language;
   final String lyrics;
   final String label;
+  final String releaseType;
   final int? bpm;
   final double rating;
   final String? originalTags;
@@ -403,6 +404,7 @@ class TrackExtended {
     required this.language,
     required this.lyrics,
     required this.label,
+    required this.releaseType,
     required this.bpm,
     required this.rating,
     required this.originalTags,
@@ -609,6 +611,7 @@ class TrackExtended {
       language: json['language'] ?? '',
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
+      releaseType: json['releaseType'] ?? '',
       bpm: json['bpm'] as int?,
       rating: json['rating'] ?? 0.0,
       originalTags: json['originalTags'],
@@ -657,6 +660,7 @@ class TrackExtended {
       if (language.isNotEmpty) 'language': language,
       if (lyrics.isNotEmpty) 'lyrics': lyrics,
       if (label.isNotEmpty) 'label': label,
+      if (releaseType.isNotEmpty) 'releaseType': releaseType,
       if (bpm != null && bpm! > 0) 'bpm': bpm,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
@@ -687,7 +691,7 @@ extension TrackExtUtils on TrackExtended {
   bool get hasUnknownArtist => artistsList.isEmpty || artistsList.first == UnknownTags.ARTIST;
   bool get hasUnknownGenre => genresList.isEmpty || genresList.first == UnknownTags.GENRE;
   bool get hasUnknownStyle => stylesList.isEmpty || stylesList.first == UnknownTags.STYLE;
-  bool get hasUnknownMood => moodList.isEmpty || moodList.first == UnknownTags.MOOD || moodList.first == UnknownTags.GENRE; // cuz moods get parsed like genres
+  static bool hasUnknownMoods(List<String> moods) => moods.isEmpty || moods.first == UnknownTags.MOOD || moods.first == UnknownTags.GENRE; // cuz moods get parsed like genres
 
   bool get isPhysical => !isNetwork;
   bool get isNetwork => path.startsWith('http');
@@ -905,6 +909,7 @@ extension TrackExtUtils on TrackExtended {
       language: tag.language ?? language,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
+      releaseType: tag.releaseType ?? releaseType,
       bpm: tag.bpm ?? bpm,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
@@ -974,6 +979,7 @@ extension TrackExtUtils on TrackExtended {
     String? language,
     String? lyrics,
     String? label,
+    String? releaseType,
     int? bpm,
     double? rating,
     String? originalTags,
@@ -1024,6 +1030,7 @@ extension TrackExtUtils on TrackExtended {
       language: language ?? this.language,
       lyrics: lyrics ?? this.lyrics,
       label: label ?? this.label,
+      releaseType: releaseType ?? this.releaseType,
       bpm: bpm ?? this.bpm,
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
@@ -1089,6 +1096,7 @@ extension TrackUtils on Track {
   String get language => toTrackExt().language;
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;
+  String get releaseType => toTrackExt().releaseType;
   int? get bpm => toTrackExt().bpm;
 
   int? get lastPlayedPositionInMs => statsRaw?.lastPositionInMs;

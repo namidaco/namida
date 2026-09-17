@@ -134,6 +134,7 @@ class TagLibRes {
     redirectField(TagLibField.date, _TagLibFieldsFallback.date);
     redirectField(TagLibField.rating, _TagLibFieldsFallback.rating);
     redirectField(TagLibField.label, _TagLibFieldsFallback.label);
+    redirectField(TagLibField.releaseType, _TagLibFieldsFallback.releaseType);
 
     allProperties.addAll(newPropertiesMap);
     return allProperties;
@@ -172,6 +173,7 @@ class TagLibRes {
         tags: info.tags,
         country: info.country,
         recordLabel: info.recordLabel,
+        releaseType: info.releaseType,
         bpm: parsy(info.bpm),
         mbAlbumId: info.MUSICBRAINZ_ALBUMID,
         mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
@@ -262,6 +264,7 @@ class TagLibPropertiesWrapper {
   String? get tags => _getProperty(TagLibField.tags);
   String? get country => _getProperty(TagLibField.country);
   String? get recordLabel => _getPropertyFallbacks(_TagLibFieldsFallback.label);
+  String? get releaseType => _getPropertyFallbacks(_TagLibFieldsFallback.releaseType);
   String? get bpm => _getPropertyFirst(TagLibField.bpm);
   String? get sampleRate => _getPropertyFirst(TagLibField.sampleRate);
   String? get tempo => _getPropertyFirst(TagLibField.tempo);
@@ -328,6 +331,10 @@ class _TagLibFieldsFallback {
   static const List<_TagProperty> label = [
     _TagProperty.key(TagLibField.label),
     _TagProperty.key(TagLibField.recordLabel),
+  ];
+  static const List<_TagProperty> releaseType = [
+    _TagProperty.key(TagLibField.releaseType),
+    _TagProperty.key(TagLibField.MUSICBRAINZ_ALBUMTYPE),
   ];
 }
 
@@ -491,6 +498,7 @@ class TagLibField {
   static const MUSICBRAINZ_TRACKID = 'MUSICBRAINZ_TRACKID';
   static const MUSICBRAINZ_WORKID = 'MUSICBRAINZ_WORKID';
   static const MUSICBRAINZ_DISCID = 'MUSICBRAINZ_DISCID';
+  static const MUSICBRAINZ_ALBUMTYPE = 'MUSICBRAINZ_ALBUMTYPE';
   static const ACOUSTID_ID = 'ACOUSTID_ID';
   static const ACOUSTID_FINGERPRINT = 'ACOUSTID_FINGERPRINT';
   static const MUSICIP_PUID = 'MUSICIP_PUID';

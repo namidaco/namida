@@ -202,6 +202,7 @@ Future<void> showVideoDownloadOptionsSheet({
                                   FFMPEGTagField.lyricist,
                                   FFMPEGTagField.language,
                                   FFMPEGTagField.recordLabel,
+                                  FFMPEGTagField.releaseType,
                                   FFMPEGTagField.country,
                                 ].map((e) => getTextChip(e)),
                               ]

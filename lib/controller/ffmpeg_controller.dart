@@ -536,6 +536,7 @@ enum FFMPEGTagField {
   lyricist('LYRICIST'),
   language('LANGUAGE'),
   recordLabel('LABEL'),
+  releaseType('RELEASETYPE'),
   country('Country'),
 
   // -- NOT WORKING
@@ -581,6 +582,7 @@ enum FFMPEGTagField {
       FFMPEGTagField.lyricist => newTags.lyricist,
       FFMPEGTagField.language => newTags.language,
       FFMPEGTagField.recordLabel => newTags.recordLabel,
+      FFMPEGTagField.releaseType => newTags.releaseType,
       FFMPEGTagField.country => newTags.country,
 
       // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.

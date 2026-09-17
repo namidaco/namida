@@ -155,6 +155,7 @@ class NamidaTaggerController {
             lyricist: editedTags[TagField.lyricist],
             language: editedTags[TagField.language],
             recordLabel: editedTags[TagField.recordLabel],
+            releaseType: editedTags[TagField.releaseType],
             country: editedTags[TagField.country],
             tags: editedTags[TagField.tags],
             ratingPercentage: () {

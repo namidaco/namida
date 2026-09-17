@@ -1162,6 +1162,7 @@ final kDummyExtendedTrack = TrackExtended(
   language: "",
   lyrics: "",
   label: "",
+  releaseType: "",
   bpm: 0,
   rating: 0.0,
   originalTags: null,

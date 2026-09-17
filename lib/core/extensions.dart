@@ -255,8 +255,11 @@ extension TracksUtils on List<Track> {
     return cumulativeArtists?.join(', ') ?? '';
   }
 
+  String get originalArtist => _firstNonEmpty((e) => e.originalArtist);
+  String get originalGenre => _firstNonEmpty((e) => e.originalGenre);
   String get composer => _firstNonEmpty((e) => e.composer);
   String get recordLabel => _firstNonEmpty((e) => e.label);
+  String get releaseType => _firstNonEmpty((e) => e.releaseType);
 
   String get albumSort => _firstNonEmpty((e) => e.sortInfo?.album ?? '');
   String get albumArtistSort => _firstNonEmpty((e) => e.sortInfo?.albumArtist ?? '');

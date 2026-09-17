@@ -177,6 +177,12 @@ Future<void> showTrackInfoDialog(
   ];
 
   final yearFormatted = trackExt?.year.yearFormatted;
+  final effectiveRating = trackExt?.effectiveRating ?? 0;
+  final effectiveTags = trackExt?.effectiveTags ?? const <String>[];
+  final effectiveMoods = trackExt?.effectiveMoods ?? const <String>[];
+  final hasUnknownMood = TrackExtUtils.hasUnknownMoods(effectiveMoods);
+  final dateAddedText = trackExt?.dateAdded.dateAndClockFormattedOriginal ?? '';
+  final dateModifiedText = trackExt?.dateModified.dateAndClockFormattedOriginal ?? '';
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -368,20 +374,6 @@ Future<void> showTrackInfoDialog(
                                   icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
                                 ),
 
-                              if (shouldShowTheField(trackExt.hasUnknownStyle))
-                                TrackInfoListTile(
-                                  title: trackExt.stylesList.length == 1 ? lang.style : lang.styles,
-                                  value: trackExt.hasUnknownStyle ? UnknownTags.STYLE : trackExt.stylesList.join(', '),
-                                  icon: Broken.brush_1,
-                                ),
-
-                              if (shouldShowTheField(trackExt.hasUnknownMood))
-                                TrackInfoListTile(
-                                  title: trackExt.moodList.length == 1 ? lang.mood : lang.moods,
-                                  value: trackExt.hasUnknownMood ? UnknownTags.MOOD : trackExt.moodList.join(', '),
-                                  icon: Broken.emoji_happy,
-                                ),
-
                               if (shouldShowTheField(trackExt.hasUnknownComposer))
                                 TrackInfoListTile(
                                   title: lang.composer,
@@ -407,14 +399,20 @@ Future<void> showTrackInfoDialog(
                                   icon: Broken.calendar,
                                 ),
 
-                              if (shouldShowTheField(trackExt.dateModified == 0))
+                              if (shouldShowTheField(trackExt.dateAdded == 0))
+                                TrackInfoListTile(
+                                  title: lang.dateAdded,
+                                  value: dateAddedText,
+                                  icon: Broken.calendar_add,
+                                ),
+
+                              if (dateModifiedText != dateAddedText && shouldShowTheField(trackExt.dateModified == 0))
                                 TrackInfoListTile(
                                   title: lang.dateModified,
-                                  value: trackExt.dateModified.dateAndClockFormattedOriginal,
+                                  value: dateModifiedText,
                                   icon: Broken.calendar_1,
                                 ),
 
-                              ///
                               if (shouldShowTheField(trackExt.trackNo == 0))
                                 TrackInfoListTile(
                                   title: lang.trackNumber,
@@ -429,8 +427,6 @@ Future<void> showTrackInfoDialog(
                                   icon: Broken.hashtag,
                                 ),
 
-                              ...trackPathDetailTilesSection,
-
                               TrackInfoListTile(
                                 title: lang.format,
                                 value: [
@@ -443,6 +439,64 @@ Future<void> showTrackInfoDialog(
                                 ].joinText(separator: '\n'),
                                 icon: Broken.voice_cricle,
                               ),
+
+                              ...trackPathDetailTilesSection,
+
+                              if (shouldShowTheField((trackExt.bpm ?? 0) == 0))
+                                TrackInfoListTile(
+                                  title: 'BPM',
+                                  value: '${trackExt.bpm ?? 0}',
+                                  icon: Broken.alarm,
+                                ),
+
+                              if (shouldShowTheField(trackExt.releaseType == ''))
+                                TrackInfoListTile(
+                                  title: lang.releaseType,
+                                  value: trackExt.releaseType,
+                                  icon: Broken.cd,
+                                ),
+
+                              if (shouldShowTheField(trackExt.label == ''))
+                                TrackInfoListTile(
+                                  title: lang.recordLabel,
+                                  value: trackExt.label,
+                                  icon: Broken.ticket,
+                                ),
+
+                              if (shouldShowTheField(trackExt.language == ''))
+                                TrackInfoListTile(
+                                  title: lang.language,
+                                  value: trackExt.language,
+                                  icon: Broken.language_circle,
+                                ),
+
+                              if (shouldShowTheField(effectiveRating == 0))
+                                TrackInfoListTile(
+                                  title: lang.rating,
+                                  value: '$effectiveRating%',
+                                  icon: Broken.grammerly,
+                                ),
+
+                              if (shouldShowTheField(trackExt.hasUnknownStyle))
+                                TrackInfoListTile(
+                                  title: trackExt.stylesList.length == 1 ? lang.style : lang.styles,
+                                  value: trackExt.hasUnknownStyle ? UnknownTags.STYLE : trackExt.stylesList.join(', '),
+                                  icon: Broken.brush_1,
+                                ),
+
+                              if (shouldShowTheField(hasUnknownMood))
+                                TrackInfoListTile(
+                                  title: effectiveMoods.length == 1 ? lang.mood : lang.moods,
+                                  value: hasUnknownMood ? UnknownTags.MOOD : effectiveMoods.join(', '),
+                                  icon: Broken.emoji_happy,
+                                ),
+
+                              if (shouldShowTheField(effectiveTags.isEmpty))
+                                TrackInfoListTile(
+                                  title: lang.tags,
+                                  value: effectiveTags.join(', '),
+                                  icon: Broken.ticket_discount,
+                                ),
 
                               if (shouldShowTheField(trackExt.lyrics == ''))
                                 TrackInfoListTile(

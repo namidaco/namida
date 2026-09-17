@@ -318,6 +318,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       TagField.lyricist => TextEditingController(text: tags.lyricist ?? ''),
       TagField.language => TextEditingController(text: tags.language ?? ''),
       TagField.recordLabel => TextEditingController(text: tags.recordLabel ?? ''),
+      TagField.releaseType => TextEditingController(text: tags.releaseType ?? ''),
       TagField.country => TextEditingController(text: tags.country ?? ''),
 
       // -- in tag editor we aint knowing local db shi
