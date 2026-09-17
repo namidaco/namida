@@ -54,6 +54,7 @@ import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
+import 'package:namida/ui/widgets/seek_magnet.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/simple_lyrics_line.dart';
 import 'package:namida/ui/widgets/waveform.dart';
@@ -1837,7 +1838,7 @@ class WaveformMiniplayer extends StatelessWidget {
     if (allowSeek && _dragUpToCancel < _dragUpToCancelMax) {
       final ms = MiniPlayerController.inst.seekValue.value;
       if (ms != null) {
-        Player.inst.seek(Duration(milliseconds: ms));
+        Player.inst.seek(Duration(milliseconds: SeekMagnet.snapMilliseconds(ms, _currentDurationInMS, _magnetThreshold)));
       }
     }
 
@@ -1852,6 +1853,7 @@ class WaveformMiniplayer extends StatelessWidget {
   static bool _canDragToSeekLatest = true;
   static double _dragUpToCancel = 0.0;
   static final _dragUpToCancelMax = 5;
+  static final _magnetThreshold = SeekMagnet.threshold();
 
   @override
   Widget build(BuildContext context) {
@@ -1887,7 +1889,28 @@ class WaveformMiniplayer extends StatelessWidget {
                   onTapCancel: () => onSeekEnd(allowSeek: false),
                   onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
                   onHorizontalDragEnd: (details) => onSeekEnd(),
-                  child: const WaveformComponent(),
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      const WaveformComponent(),
+                      ObxO(
+                        rx: MiniPlayerController.inst.seekValue,
+                        builder: (context, seekMS) {
+                          if (seekMS == null) return const SizedBox();
+                          final durMS = _currentDurationInMS;
+                          if (durMS <= 0) return const SizedBox();
+                          final p = SeekMagnet.uiIntensity(seekMS / durMS);
+                          if (p == 0) return const SizedBox();
+                          return SeekMagnetGlow(
+                            width: _magnetThreshold * constraints.maxWidth,
+                            height: p * 4.0,
+                            intensity: p,
+                            color: CurrentColor.inst.miniplayerColor.withOpacityExt(0.8),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

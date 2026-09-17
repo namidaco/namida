@@ -12,12 +12,12 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/seek_magnet.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -63,15 +63,7 @@ class SeekReadyWidget extends StatefulWidget {
 }
 
 class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
-  /// the percentage of the seek bar that causes a seek near the left edge to trigger a magnet effect to 0.
-  late final _defaultSeekLeftMagnet = isDesktop
-      ? widget.isFullscreen
-            ? 0.01
-            : 0.01
-      : widget.isFullscreen
-      ? 0.01
-      : 0.05;
-  late final _defaultSeekLeftMagnetUiThreshold = 0.25;
+  late final _defaultSeekLeftMagnet = SeekMagnet.threshold(isFullscreen: widget.isFullscreen);
   final _seekPercentage = 0.0.obs;
 
   late AnimationController _animation;
@@ -160,11 +152,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   void _onDragFinish({required bool allowMagnet}) {
     widget.onDraggingChange?.call(false);
 
-    if (allowMagnet && _seekPercentage.value <= _defaultSeekLeftMagnet) {
-      // left magnet
-      _seekPercentage.value = 0;
-      VibratorController.veryhigh();
-    }
+    if (allowMagnet) _seekPercentage.value = SeekMagnet.snapPercentage(_seekPercentage.value, _defaultSeekLeftMagnet);
 
     _isPointerDown = false;
     _animation.animateTo(0);
@@ -691,23 +679,13 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   rx: _seekPercentage,
                   builder: (context, seekP) {
                     if (_animation.value == 0) return const SizedBox();
-                    final p = _animation.value * ((_defaultSeekLeftMagnetUiThreshold - seekP) / _defaultSeekLeftMagnetUiThreshold).clampDouble(0.0, 1.0);
+                    final p = _animation.value * SeekMagnet.uiIntensity(seekP);
                     if (p == 0) return const SizedBox();
-                    return SizedBox(
+                    return SeekMagnetGlow(
                       width: _defaultSeekLeftMagnet * maxWidth,
                       height: p * progressBarHeight * 2.0,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12.0),
-                          boxShadow: [
-                            BoxShadow(
-                              blurRadius: p * 12.0,
-                              spreadRadius: p * 6.0,
-                              color: progressColor,
-                            ),
-                          ],
-                        ),
-                      ),
+                      intensity: p,
+                      color: progressColor,
                     );
                   },
                 ),
