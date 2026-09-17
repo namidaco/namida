@@ -12,6 +12,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/base/generator_base.dart';
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -107,6 +108,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final params = (
       databasesDir: AppDirs.YOUTIPIE_CACHE,
       sensitiveDataDir: AppDirs.YOUTIPIE_DATA,
+      sensitiveDataKey: SensitiveDataKey.current,
       statsDir: AppDirs.YT_STATS,
       mostplayedPlaylist: YoutubeHistoryController.inst.topTracksMapListens.value.keysSortedByValue,
       favouritesPlaylist: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
@@ -120,6 +122,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
   static void _prepareResourcesAndListen(YTGeneratorIsolateParams params) async {
     final databasesDir = params.databasesDir;
     final sensitiveDataDir = params.sensitiveDataDir;
+    final sensitiveDataKey = params.sensitiveDataKey;
     final statsDir = params.statsDir;
 
     final mostplayedPlaylist = params.mostplayedPlaylist;
@@ -198,7 +201,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
 
     YoutiPie.cacheManager.init(databasesDir);
     YoutiPie.cacheManagerSync.init(databasesDir);
-    final activeChannel = await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
+    final activeChannel = sensitiveDataKey == null ? null : await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir, encryptionKey: sensitiveDataKey);
     final activeChannelId = activeChannel?.id;
 
     if (activeChannelId != null && activeChannelId.isNotEmpty) {
@@ -317,6 +320,7 @@ enum _GenerateOperation {
 typedef YTGeneratorIsolateParams = ({
   String databasesDir,
   String sensitiveDataDir,
+  String? sensitiveDataKey,
   String statsDir,
   Iterable<String> mostplayedPlaylist,
   List<YoutubeID> favouritesPlaylist,

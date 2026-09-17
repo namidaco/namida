@@ -16,6 +16,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
@@ -93,8 +94,6 @@ class YoutubeAccountController {
   static Future<void> initialize() async {
     current.canAddMultiAccounts = false;
 
-    NamicoSubscriptionManager.initialize(dataDirectory: AppDirs.YOUTIPIE_DATA);
-
     NamicoSubscriptionManager.onError = (message, e, st) {
       _showError(message, exception: e, manageSubscriptionButton: true, messageAsTitle: true);
       logger.error(message, e: e, st: st);
@@ -134,6 +133,14 @@ class YoutubeAccountController {
       }
       return false;
     };
+
+    final sensitiveKey = await SensitiveDataKey.obtain();
+    await NamicoSubscriptionManager.initialize(
+      dataDirectory: AppDirs.YOUTIPIE_DATA,
+      encryptionKey: sensitiveKey.key,
+      isNewKey: sensitiveKey.isNew,
+    );
+    if (sensitiveKey.isNew) SensitiveDataKey.markMigrated(SensitiveDb.memberships);
 
     await fetchAccSupportDetails();
   }
@@ -342,19 +349,36 @@ class _CurrentMembership {
     }
   }
 
-  Future<void> claimPatreon({required LoginPageConfiguration pageConfig, required SignInDecision signIn}) async {
+  bool _didCancelPatreonSignIn = false;
+
+  void cancelPatreonSignIn() {
+    _didCancelPatreonSignIn = true;
     redirectUrlCompleter?.completeIfWasnt();
-    redirectUrlCompleter = Completer<String?>();
-    final tier = await NamicoSubscriptionManager.patreon.getUserSupportTier(
-      redirectUrlCompleter: redirectUrlCompleter,
-      pageConfig: pageConfig,
-      signIn: signIn,
-    );
-    redirectUrlCompleter = null;
+  }
+
+  /// Returns whether account info was obtained.
+  Future<bool> claimPatreon({required LoginPageConfiguration pageConfig, required SignInDecision signIn}) async {
+    redirectUrlCompleter?.completeIfWasnt();
+    final completer = redirectUrlCompleter = Completer<String?>();
+    _didCancelPatreonSignIn = false;
+    final SupportTier? tier;
+    try {
+      tier = await NamicoSubscriptionManager.patreon.getUserSupportTier(
+        redirectUrlCompleter: completer,
+        pageConfig: pageConfig,
+        signIn: signIn,
+      );
+    } finally {
+      if (redirectUrlCompleter == completer) redirectUrlCompleter = null;
+    }
 
     if (tier == null) {
-      YoutubeAccountController._showError(lang.failed);
-      return;
+      if (_didCancelPatreonSignIn) {
+        YoutubeAccountController._showInfo(lang.signInCanceled);
+      } else {
+        YoutubeAccountController._showError(lang.signInFailed);
+      }
+      return false;
     }
 
     if (tier.ammountUSD == null) {
@@ -366,6 +390,7 @@ class _CurrentMembership {
     final ms = tier.toMembershipType();
     userMembershipTypePatreon.value = ms;
     _updateGlobal(ms);
+    return true;
   }
 
   Future<void> checkPatreon({bool showError = true}) async {
@@ -397,6 +422,14 @@ class _CurrentMembership {
     );
     userSupabaseSub.value = sub;
     final ms = sub.toMembershipType();
+    userMembershipTypeSupabase.value = ms;
+    _updateGlobal(ms);
+  }
+
+  void signOutSupabase() {
+    NamicoSubscriptionManager.cacheManager.deleteSupabaseCache();
+    const ms = MembershipType.unknown;
+    userSupabaseSub.value = null;
     userMembershipTypeSupabase.value = ms;
     _updateGlobal(ms);
   }

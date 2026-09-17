@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/items_sort.dart';
@@ -15,9 +16,11 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/search_box_manager.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -479,29 +482,32 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
           builder: (context, membership) => ObxO(
             rx: YoutubeAccountController.current.activeAccountChannel,
             builder: (context, activeAccountChannel) {
-              String? errorMessage;
-              Widget? button;
+              Widget? blockedPage;
               if (widget.operation.requiresAccount) {
                 if (activeAccountChannel == null) {
-                  errorMessage = lang.signInYouNeedAccountToViewPage;
-                  button = NamidaInkWellButton(
-                    sizeMultiplier: 1.1,
-                    icon: Broken.user_edit,
-                    text: lang.manageYourAccounts,
-                    onTap: const YoutubeAccountManagePage().navigate,
+                  blockedPage = _BlockedPage(
+                    icon: Broken.profile_circle,
+                    title: lang.signInYouNeedAccountToViewPage,
+                    subtitle: null,
+                    buttonIcon: Broken.user_edit,
+                    buttonText: lang.manageYourAccounts,
+                    onButtonTap: const YoutubeAccountManagePage().navigate,
                   );
                 } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
-                  errorMessage = YoutubeAccountController.formatMembershipErrorMessage(widget.operation, membership);
-                  button = NamidaInkWellButton(
-                    sizeMultiplier: 1.1,
-                    icon: Broken.message_edit,
-                    text: lang.membershipManage,
-                    onTap: const YoutubeManageSubscriptionPage().navigate,
+                  blockedPage = _BlockedPage(
+                    icon: Broken.ticket_star,
+                    title: lang.operationRequiresMembership(name: MembershipType.cutie.name, operation: widget.operation.name),
+                    subtitle: lang.yourCurrentMembershipIs(name: (membership ?? MembershipType.unknown).name),
+                    buttonIcon: Broken.money_3,
+                    buttonText: lang.membershipManage,
+                    onButtonTap: const YoutubeManageSubscriptionPage().navigate,
+                    secondaryText: lang.learnMore,
+                    onSecondaryTap: () => NamidaLinkUtils.openLink(AppSocial.PATREON_BENEFITS_POST),
                   );
                 }
               }
 
-              return errorMessage != null
+              return blockedPage != null
                   ? Padding(
                       padding: pagePadding,
                       child: SuperSmoothListView(
@@ -512,24 +518,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                             alignment: Alignment.centerLeft,
                             child: header,
                           ),
-                          const SizedBox(height: 38.0),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  errorMessage,
-                                  style: textTheme.displayLarge,
-                                  textAlign: TextAlign.center,
-                                ),
-                                if (button != null) ...[
-                                  const SizedBox(height: 12.0),
-                                  button,
-                                ],
-                              ],
-                            ),
-                          ),
+                          const SizedBox(height: 24.0),
+                          blockedPage,
                         ],
                       ),
                     )
@@ -658,5 +648,83 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     }
 
     return page;
+  }
+}
+
+class _BlockedPage extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final IconData buttonIcon;
+  final String buttonText;
+  final void Function() onButtonTap;
+  final String? secondaryText;
+  final void Function()? onSecondaryTap;
+
+  const _BlockedPage({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.buttonIcon,
+    required this.buttonText,
+    required this.onButtonTap,
+    this.secondaryText,
+    this.onSecondaryTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final subtitle = this.subtitle;
+    final secondaryText = this.secondaryText;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 64.0,
+                color: context.defaultIconColor().withOpacityExt(0.7),
+              ),
+              const SizedBox(height: 16.0),
+              Text(
+                title,
+                style: textTheme.displayLarge,
+                textAlign: TextAlign.center,
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 6.0),
+                Text(
+                  subtitle,
+                  style: textTheme.displaySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              const SizedBox(height: 20.0),
+              NamidaInkWellButton(
+                sizeMultiplier: 1.2,
+                icon: buttonIcon,
+                text: buttonText,
+                onTap: onButtonTap,
+              ),
+              if (secondaryText != null) ...[
+                const SizedBox(height: 6.0),
+                NamidaInkWellButton(
+                  bgColor: Colors.transparent,
+                  sizeMultiplier: 0.9,
+                  icon: Broken.export_1,
+                  text: secondaryText,
+                  onTap: onSecondaryTap,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

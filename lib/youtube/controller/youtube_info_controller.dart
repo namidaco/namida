@@ -33,6 +33,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -86,15 +87,19 @@ class YoutubeInfoController {
     YoutiPie.setLogs(_YTReportingLog());
     try {
       final accountCompleter = Completer<void>();
+      final sensitiveKey = await SensitiveDataKey.obtain();
       YoutiPie.initialize(
         dataDirectory: AppDirs.YOUTIPIE_CACHE,
         sensitiveDataDirectory: AppDirs.YOUTIPIE_DATA,
+        sensitiveDataEncryptionKey: sensitiveKey.key,
+        isNewSensitiveDataEncryptionKey: sensitiveKey.isNew,
         checkJSPlayer: false, // we properly check for jsplayer with each streams request if needed,
         checkHasConnectionCallback: () => ConnectivityController.inst.hasConnection,
         syncItemsCompleter: syncItemsCompleter,
         accountCompleter: accountCompleter,
       );
       await accountCompleter.future;
+      if (sensitiveKey.isNew) SensitiveDataKey.markMigrated(SensitiveDb.accounts);
       history.init(AppDirs.YOUTIPIE_CACHE);
     } catch (e, st) {
       syncItemsCompleter.completeErrorIfWasnt(e, st);

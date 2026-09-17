@@ -16,6 +16,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -27,7 +28,7 @@ enum YTLocalSearchSortType {
   firstListen,
 }
 
-typedef YTLocalSearchIsolateParams = ({String databasesDir, String sensitiveDataDir, String statsDir, bool enableFuzzySearch, SendPort sendPort});
+typedef YTLocalSearchIsolateParams = ({String databasesDir, String sensitiveDataDir, String? sensitiveDataKey, String statsDir, bool enableFuzzySearch, SendPort sendPort});
 
 class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
   static final YTLocalSearchController inst = YTLocalSearchController._internal();
@@ -124,6 +125,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
     final params = (
       databasesDir: AppDirs.YOUTIPIE_CACHE,
       sensitiveDataDir: AppDirs.YOUTIPIE_DATA,
+      sensitiveDataKey: SensitiveDataKey.current,
       statsDir: AppDirs.YT_STATS,
       enableFuzzySearch: enableFuzzySearch,
       sendPort: port,
@@ -145,6 +147,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
   static void _prepareResourcesAndSearch(YTLocalSearchIsolateParams params) async {
     final databasesDir = params.databasesDir;
     final sensitiveDataDir = params.sensitiveDataDir;
+    final sensitiveDataKey = params.sensitiveDataKey;
     final statsDir = params.statsDir;
     final enableFuzzySearch = params.enableFuzzySearch;
     final sendPort = params.sendPort;
@@ -249,7 +252,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
     try {
       YoutiPie.cacheManager.init(databasesDir);
       YoutiPie.cacheManagerSync.init(databasesDir);
-      final activeChannel = await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir);
+      final activeChannel = sensitiveDataKey == null ? null : await YoutiPie.getActiveAccountChannelIsolate(sensitiveDataDir, encryptionKey: sensitiveDataKey);
       final activeChannelId = activeChannel?.id;
 
       final accountIds = <String?>[

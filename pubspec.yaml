@@ -190,6 +190,7 @@ dependencies:
       path: packages/smtc_windows
   windows_taskbar: ^1.1.2
   win32_registry: ^3.0.3
+  ffi: ^2.1.0
   super_drag_and_drop:
     git:
       url: https://github.com/MSOB7YY/super_native_extensions
