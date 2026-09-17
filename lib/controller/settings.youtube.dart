@@ -30,6 +30,7 @@ class _YoutubeSettings with SettingsFileWriter {
   final preferMixRelatedVideos = RxnF<bool>(fallback: false);
   final searchCleanup = true.obs;
   final showLikeStatusOnCards = RxnF<bool>(fallback: false);
+  final useNewNotificationExtractor = RxnF<bool>(fallback: false);
   final preferLikeButtonOverFavourite = true.obs;
 
   final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
@@ -80,6 +81,7 @@ class _YoutubeSettings with SettingsFileWriter {
     bool? preferMixRelatedVideos,
     bool? searchCleanup,
     bool? showLikeStatusOnCards,
+    bool? useNewNotificationExtractor,
     String? ytDownloadLocation,
     int? ytMiniplayerDimAfterSeconds,
     double? ytMiniplayerDimOpacity,
@@ -124,6 +126,7 @@ class _YoutubeSettings with SettingsFileWriter {
     if (preferMixRelatedVideos != null) this.preferMixRelatedVideos.value = preferMixRelatedVideos;
     if (searchCleanup != null) this.searchCleanup.value = searchCleanup;
     if (showLikeStatusOnCards != null) this.showLikeStatusOnCards.value = showLikeStatusOnCards;
+    if (useNewNotificationExtractor != null) this.useNewNotificationExtractor.value = useNewNotificationExtractor;
 
     if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
     if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
@@ -205,6 +208,7 @@ class _YoutubeSettings with SettingsFileWriter {
       preferMixRelatedVideos.value = json['preferMixRelatedVideos'] ?? preferMixRelatedVideos.value;
       searchCleanup.value = json['searchCleanup'] ?? searchCleanup.value;
       showLikeStatusOnCards.value = json['showLikeStatusOnCards'] ?? showLikeStatusOnCards.value;
+      useNewNotificationExtractor.value = json['useNewNotificationExtractor'] ?? useNewNotificationExtractor.value;
 
       ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
       ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
@@ -269,6 +273,7 @@ class _YoutubeSettings with SettingsFileWriter {
     'preferMixRelatedVideos': ?preferMixRelatedVideos.value,
     'searchCleanup': searchCleanup.value,
     'showLikeStatusOnCards': ?showLikeStatusOnCards.value,
+    'useNewNotificationExtractor': ?useNewNotificationExtractor.value,
     'ytDownloadLocation': ytDownloadLocation.value,
     'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
     'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,

@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/core/enum.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
+import 'package:youtipie/class/cache_details.dart';
+import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/playlist_for_video.dart';
+import 'package:youtipie/class/result_wrapper/playlist_user_result.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
@@ -315,17 +318,28 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     }
   }
 
+  void _fillPlaylistsLookup(YoutiPieUserPlaylistsResult res) {
+    if (res.items.isEmpty || !mounted) return;
+    setState(() {
+      for (final item in res.items) {
+        _playlistsLookup[item.id] = item;
+      }
+    });
+  }
+
   Future<void> _fetchNormalPlaylistsResult() async {
-    final res = await YoutiPie.userplaylist.getUserPlaylists(
-      cacheMaxPeriod: const Duration(hours: 12),
+    final cacheReader = YoutiPie.cacheBuilder.forUserPlaylists().withMaxPeriod(
+      allowedDuration: const Duration(hours: 12),
     );
-    if (res != null && mounted) {
-      setState(() {
-        for (var item in res.items) {
-          _playlistsLookup[item.id] = item;
-        }
-      });
+    final cached = await cacheReader.readRaw();
+    if (cached != null) {
+      final cachedRes = cached.$1;
+      await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(cachedRes);
+      _fillPlaylistsLookup(cachedRes);
+      if (cached.$2) return; // -- cache still fresh
     }
+    final res = await YoutiPie.userplaylist.getUserPlaylists(details: ExecuteDetails.forceRequest());
+    if (res != null) _fillPlaylistsLookup(res);
   }
 
   void _onUserPlaylistUpdated(PlaylistInfoItemUser newInfo) => _playlistsLookup[newInfo.id] = newInfo;

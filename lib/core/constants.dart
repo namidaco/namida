@@ -879,6 +879,7 @@ class AppDirs {
 
   // ================= App Cache =================
   static final WAVEFORMS_CACHE = _join(APP_CACHE, 'waveform');
+  static final ABOUT_CACHE = _join(APP_CACHE, 'about');
 
   static final LOGIN = _join(ROOT_DIR, 'login'); // this should never be accessed/backed up etc.
 
@@ -930,6 +931,7 @@ class AppDirs {
     LOGS_DIRECTORY,
     // -- App Cache
     WAVEFORMS_CACHE,
+    ABOUT_CACHE,
     // -- Youtube
     YOUTUBE_MAIN_DIRECTORY,
     YT_PLAYLISTS,

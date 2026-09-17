@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +10,7 @@ import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rhttp/rhttp.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -109,9 +113,11 @@ class _AboutPageState extends State<AboutPage> {
     final jellyBanner = NamidaJellys.enabled
         ? _EnabledAppIconBuilder(
             builder: (enabledIcon) => enabledIcon.isJelly
-                ? _JellydaBanner(
-                    scrollOffset: _scrollOffset,
-                    height: context.height * 0.42,
+                ? _UnderwaterAmbience(
+                    child: _JellydaBanner(
+                      scrollOffset: _scrollOffset,
+                      height: context.height * 0.42,
+                    ),
                   )
                 : const SizedBox(),
           )
@@ -145,17 +151,10 @@ class _AboutPageState extends State<AboutPage> {
                             shape: BoxShape.circle,
                             color: Color.fromRGBO(25, 25, 25, 0.8),
                           ),
-                          child: Image.network(
-                            'https://avatars.githubusercontent.com/u/85245079',
-                            width: 48.0,
-                            height: 48.0,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress?.cumulativeBytesLoaded == loadingProgress?.expectedTotalBytes) {
-                                return child;
-                              }
-                              return fallbackAvatar;
-                            },
-                            errorBuilder: (context, error, stackTrace) => fallbackAvatar,
+                          child: _CachedAvatar(
+                            asset: _AboutAsset.developerAvatar,
+                            size: 48.0,
+                            fallback: fallbackAvatar,
                           ),
                         ),
                         title: lang.developer,
@@ -588,23 +587,25 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
   }
 
   void _play({bool longerVer = false}) async {
-    (String, Duration) randomSample;
+    (_AboutAsset, Duration) randomSample;
     if (longerVer) {
-      randomSample = ('https://www.myinstants.com/media/sounds/kuru-kuru.mp3', Duration(milliseconds: 0));
+      randomSample = (_AboutAsset.kuruKuruLong, Duration(milliseconds: 0));
     } else {
       const sounds = [
-        ('https://www.myinstants.com/media/sounds/kurukuru.mp3', Duration(milliseconds: 200)),
-        ('https://www.myinstants.com/media/sounds/kururinnn.mp3', Duration(milliseconds: 0)),
+        (_AboutAsset.kuruKuru, Duration(milliseconds: 200)),
+        (_AboutAsset.kururin, Duration(milliseconds: 0)),
       ];
       randomSample = sounds.random;
     }
+    final file = await randomSample.$1.resolve();
+    if (file == null || !mounted) return;
     final pl = Player.createTempPlayer();
     _activePlayers ??= [];
     _activePlayers?.add(pl);
     try {
       await pl.setSource(
         ItemPrepareConfig(
-          AudioVideoSource.uri(Uri.parse(randomSample.$1)),
+          AudioVideoSource.file(file.path),
           index: 0,
           initialPosition: randomSample.$2,
           audioTrackId: null,
@@ -655,6 +656,237 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
               child: child,
             ),
     );
+  }
+}
+
+// by claude
+class _UnderwaterAmbience extends StatefulWidget {
+  final Widget child;
+
+  const _UnderwaterAmbience({required this.child});
+
+  @override
+  State<_UnderwaterAmbience> createState() => _UnderwaterAmbienceState();
+}
+
+class _UnderwaterAmbienceState extends State<_UnderwaterAmbience> {
+  static const _startDelay = Duration(seconds: 1);
+  static const _fadeInMs = 5000;
+  static const _fadeOutMs = 3000;
+  static const _crossfadeMs = 6000;
+
+  /// The crossfade starts this early, covers the first load of the second voice.
+  static const _crossfadeLeadMs = 3000;
+
+  static const _volume = 0.5;
+  static const _volumeWhilePlaying = 0.25;
+
+  // -- two voices take turns, the ending one crossfades into the other restarting from zero
+  _AmbienceVoice? _active;
+  _AmbienceVoice? _idle;
+
+  Timer? _timer;
+  String _path = '';
+  double _targetVolume = _volume;
+  bool _disposed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final file = _AboutAsset.underwaterAmbience.resolve();
+    _timer = Timer(_startDelay, () => _start(file));
+  }
+
+  void _start(Future<File?> fileFuture) async {
+    final file = await fileFuture;
+    if (file == null || _disposed) return;
+    _path = file.path;
+    _targetVolume = Player.inst.isPlaying.value ? _volumeWhilePlaying : _volume;
+    _bringIn(_active = _AmbienceVoice(), _fadeInMs, null);
+  }
+
+  void _crossfade() {
+    final ending = _active;
+    final next = _idle ?? _AmbienceVoice();
+    _active = next;
+    _idle = ending;
+    _bringIn(next, _crossfadeMs, ending);
+  }
+
+  void _bringIn(_AmbienceVoice voice, int fadeMs, _AmbienceVoice? ending) async {
+    try {
+      final duration = await voice.prepare(_path);
+      if (_disposed) return;
+      voice.player.play().ignoreError(); // -- on android it only completes once playback ends
+
+      voice.fadeTo(_targetVolume, fadeMs);
+      ending?.fadeTo(0.0, fadeMs, onDone: ending.rewind);
+
+      if (duration == null) return;
+      final nextCrossfadeMs = duration.inMilliseconds - _crossfadeMs - _crossfadeLeadMs;
+      if (nextCrossfadeMs > 0) _timer = Timer(Duration(milliseconds: nextCrossfadeMs), _crossfade);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
+    _active?.release(_fadeOutMs);
+    _idle?.release(_fadeOutMs);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// Owns its fade timer, so it can finish fading out after the page is gone.
+class _AmbienceVoice {
+  static const _curve = CrossFadeCurve.equalPower();
+  static const _tick = Duration(milliseconds: 50);
+
+  final player = Player.createTempPlayer();
+
+  Timer? _fadeTimer;
+  Duration? _duration;
+  bool _prepared = false;
+
+  Future<Duration?> prepare(String path) async {
+    if (_prepared) return _duration;
+    await player.setVolume(0.0);
+    _duration = await player.setSource(
+      ItemPrepareConfig(
+        AudioVideoSource.file(path),
+        index: 0,
+        initialPosition: Duration.zero,
+        audioTrackId: null,
+        videoOptions: null,
+      ),
+    );
+    _prepared = true;
+    return _duration;
+  }
+
+  void fadeTo(double target, int durationMs, {void Function()? onDone}) {
+    _fadeTimer?.cancel();
+    final start = player.volume;
+    final stopwatch = Stopwatch()..start();
+    _fadeTimer = Timer.periodic(_tick, (timer) {
+      final t = (stopwatch.elapsedMilliseconds / durationMs).clampDouble(0.0, 1.0);
+      final volume =
+          target >
+              start //
+          ? start + (target - start) * _curve.transform(t)
+          : target + (start - target) * _curve.transform(1.0 - t);
+      player.setVolume(volume);
+      if (t >= 1.0) {
+        timer.cancel();
+        onDone?.call();
+      }
+    });
+  }
+
+  void rewind() {
+    player.pause().whenComplete(() => player.seek(Duration.zero));
+  }
+
+  void release(int fadeOutMs) {
+    if (player.playing) {
+      fadeTo(0.0, fadeOutMs, onDone: _dispose);
+    } else {
+      _fadeTimer?.cancel();
+      _dispose();
+    }
+  }
+
+  void _dispose() {
+    player.pause().whenComplete(player.dispose);
+  }
+}
+
+class _CachedAvatar extends StatefulWidget {
+  final _AboutAsset asset;
+  final double size;
+  final Widget fallback;
+
+  const _CachedAvatar({required this.asset, required this.size, required this.fallback});
+
+  @override
+  State<_CachedAvatar> createState() => _CachedAvatarState();
+}
+
+class _CachedAvatarState extends State<_CachedAvatar> {
+  File? _file;
+
+  @override
+  void initState() {
+    super.initState();
+    final file = widget.asset.file;
+    if (file.existsSync()) {
+      _file = file;
+    } else {
+      widget.asset.resolve().then((file) {
+        if (file != null && mounted) setState(() => _file = file);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final file = _file;
+    if (file == null) return widget.fallback;
+    return Image.file(
+      file,
+      width: widget.size,
+      height: widget.size,
+      errorBuilder: (context, error, stackTrace) => widget.fallback,
+    );
+  }
+}
+
+class _AboutAsset {
+  final String url;
+  final String filename;
+
+  const _AboutAsset(this.url, this.filename);
+
+  static const developerAvatar = _AboutAsset('https://avatars.githubusercontent.com/u/85245079?s=144', 'developer_avatar');
+  static const kuruKuru = _AboutAsset('https://www.myinstants.com/media/sounds/kurukuru.mp3', 'kurukuru.mp3');
+  static const kururin = _AboutAsset('https://www.myinstants.com/media/sounds/kururinnn.mp3', 'kururinnn.mp3');
+  static const kuruKuruLong = _AboutAsset('https://www.myinstants.com/media/sounds/kuru-kuru.mp3', 'kuru-kuru.mp3');
+
+  /// CC0, https://freesound.org/people/Fission9/sounds/504641/
+  static const underwaterAmbience = _AboutAsset('https://cdn.freesound.org/previews/504/504641_9395330-hq.mp3', 'underwater_ambience.mp3');
+
+  static final _downloads = <String, Future<File?>>{};
+
+  File get file => File(FileParts.joinPath(AppDirs.ABOUT_CACHE, filename));
+
+  Future<File?> resolve() {
+    final file = this.file;
+    if (file.existsSync()) return Future.value(file);
+    return _downloads[filename] ??= _download(file);
+  }
+
+  Future<File?> _download(File file) async {
+    try {
+      final bytes = (await Rhttp.getBytes(url)).body;
+      if (bytes.isEmpty) return null;
+      // -- renamed once complete, a half written file would be served forever otherwise
+      final temp = File('${file.path}.part');
+      try {
+        await temp.writeAsBytes(bytes);
+      } catch (_) {
+        await temp.parent.create(recursive: true);
+        await temp.writeAsBytes(bytes);
+      }
+      return await temp.rename(file.path);
+    } catch (_) {
+      return null;
+    } finally {
+      _downloads.remove(filename);
+    }
   }
 }
 

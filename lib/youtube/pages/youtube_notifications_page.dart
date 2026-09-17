@@ -5,6 +5,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item_notification.da
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/translations/language.dart';
@@ -31,7 +32,10 @@ class YoutubeNotificationsPage extends StatelessWidget {
         transparentShimmer: true,
         title: lang.notifications,
         cacheReader: YoutiPie.cacheBuilder.forNotificationItems(),
-        networkFetcher: (details) => YoutiPie.feed.fetchNotifications(details: details),
+        networkFetcher: (details) => YoutiPie.feed.fetchNotifications(
+          details: details,
+          useNewExtractor: settings.youtube.useNewNotificationExtractor.valueF,
+        ),
         itemExtent: thumbnailItemExtent,
         dummyCard: const YoutubeVideoCardNotificationDummy(
           thumbnailWidth: thumbnailWidth,

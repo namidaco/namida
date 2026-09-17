@@ -834,7 +834,7 @@ class _Trimmer {
   }
 
   /// cached files are guranteed to have a name starting with [priorityMap].key
-  static void _sortFiles(List<FileSystemEntity> files, Map<String, CacheVideoPriority>? priorityMap, Map<String, _TrimFileStat> stats) {
+  static void _sortFiles<T extends FileSystemEntity>(List<T> files, Map<String, CacheVideoPriority>? priorityMap, Map<String, _TrimFileStat> stats) {
     int compareAccessTime(FileSystemEntity a, FileSystemEntity b) {
       final aTime = stats[a.path]?.accessed ?? 0;
       final bTime = stats[b.path]?.accessed ?? 0;
@@ -843,7 +843,7 @@ class _Trimmer {
 
     if (priorityMap != null && priorityMap.isNotEmpty) {
       final videoIdsLookup = <String, String?>{};
-      final finalFiles = <FileSystemEntity>[];
+      final finalFiles = <T>[];
       for (final f in files) {
         try {
           final videoId = videoIdsLookup[f.path] = f.path.getFilename.substring(0, 11);
