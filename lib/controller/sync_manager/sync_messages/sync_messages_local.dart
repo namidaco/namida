@@ -405,15 +405,18 @@ class AudioConfigsMessage extends BaseMessage {
 
 class SmartPlaylistsMessage extends BaseMessage {
   final Iterable<SmartPlaylist> playlists;
+  final Map<String, dynamic>? order;
 
   const SmartPlaylistsMessage({
     required this.playlists,
+    required this.order,
     required super.messageInfo,
   }) : super(MessageType.smartPlaylists);
 
   static Future<SmartPlaylistsMessage> createForCurrentDevice() async {
     return SmartPlaylistsMessage(
       playlists: SmartPlaylistsController.inst.buildSyncEntries(),
+      order: SmartPlaylistsController.inst.buildSyncOrder(),
       messageInfo: await SyncUtils.createMessageInfo(.add),
     );
   }
@@ -429,6 +432,7 @@ class SmartPlaylistsMessage extends BaseMessage {
   factory SmartPlaylistsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return SmartPlaylistsMessage(
       playlists: (map['e'] as List).map(_tryParse).nonNulls,
+      order: (map['o'] as Map?)?.cast<String, dynamic>(),
       messageInfo: messageInfo,
     );
   }
@@ -436,6 +440,7 @@ class SmartPlaylistsMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'e': playlists.map((e) => e.toMap()).toFixedList(),
+    'o': ?order,
   };
 
   @override
@@ -444,7 +449,7 @@ class SmartPlaylistsMessage extends BaseMessage {
   @override
   FutureOr<void> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
-      return SmartPlaylistsController.inst.import(playlists);
+      return SmartPlaylistsController.inst.import(playlists, order: order);
     } else {
       snackyy(message: 'Importing ${playlists.length} smart playlists | ${playlists.map((e) => e.key).toFixedList()}');
     }

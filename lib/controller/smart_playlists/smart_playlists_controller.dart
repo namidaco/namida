@@ -32,7 +32,11 @@ class SmartPlaylistsController {
   static final inst = SmartPlaylistsController._();
   SmartPlaylistsController._();
 
+  static const _orderRowKey = '_order_index_';
+
   final smartPlaylistsMap = <SmartPlaylistKey, SmartPlaylistWrapper>{}.obs;
+  final smartPlaylistsList = <SmartPlaylistWrapper>[].obs;
+  int _orderModifiedDate = 0;
 
   SmartPlaylistWrapper? getPlaylistForKey(SmartPlaylistKey? key) => key == null ? null : smartPlaylistsMap.value[key];
 
@@ -49,13 +53,88 @@ class SmartPlaylistsController {
 
   Future<void> prepareAll() async {
     final res = await _dBManager.loadEverythingKeyedResult();
+    final orderRow = res.remove(_orderRowKey);
+    final orderedKeys = orderRow?['keys'] as List?;
+    _orderModifiedDate = orderRow?['_mt'] as int? ?? 0;
+    final map = smartPlaylistsMap.value;
     for (final entry in res.entries) {
       try {
         final config = SmartPlaylist.fromMap(entry.value);
-        smartPlaylistsMap.value[entry.key] ??= SmartPlaylistWrapper(config);
+        map[entry.key] ??= SmartPlaylistWrapper(config);
       } catch (_) {}
     }
+
+    smartPlaylistsList.value.clear();
+    final isOrderRowValid = orderedKeys != null && _applyOrder(orderedKeys);
+    _refresh();
+    if (!isOrderRowValid && map.isNotEmpty) await _saveOrder();
+  }
+
+  /// returns false if [orderedKeys] didn't match the map exactly.
+  bool _applyOrder(List orderedKeys) {
+    final map = smartPlaylistsMap.value;
+    final list = smartPlaylistsList.value..clear();
+    final added = <SmartPlaylistWrapper>{};
+    for (final key in orderedKeys) {
+      final wrapper = map[key];
+      if (wrapper != null && added.add(wrapper)) list.add(wrapper);
+    }
+    return list.length == map.length && list.length == orderedKeys.length;
+  }
+
+  void _ensureListValid() {
+    final map = smartPlaylistsMap.value;
+    final list = smartPlaylistsList.value;
+    if (list.isEmpty) {
+      list.addAll(map.values);
+      return;
+    }
+    final seen = <SmartPlaylistWrapper>{};
+    bool isValid = list.length == map.length;
+    if (isValid) {
+      for (final e in list) {
+        if (!identical(map[e.value.key], e) || !seen.add(e)) {
+          isValid = false;
+          break;
+        }
+      }
+    }
+    if (isValid) return;
+    seen.clear();
+    list.retainWhere((e) => identical(map[e.value.key], e) && seen.add(e));
+    for (final wrapper in map.values) {
+      if (seen.add(wrapper)) list.add(wrapper);
+    }
+  }
+
+  void _refresh() {
+    _ensureListValid();
     smartPlaylistsMap.refresh();
+    smartPlaylistsList.refresh();
+  }
+
+  void _add(SmartPlaylist smartPlaylist) {
+    final wrapper = SmartPlaylistWrapper(smartPlaylist);
+    smartPlaylistsMap.value[smartPlaylist.key] = wrapper;
+    smartPlaylistsList.value.add(wrapper);
+  }
+
+  Map<String, dynamic> _buildOrderRow() => {
+    'keys': smartPlaylistsList.value.map((e) => e.value.key).toFixedList(),
+    if (_orderModifiedDate > 0) '_mt': _orderModifiedDate,
+  };
+
+  Future<void> _saveOrder() async {
+    await _dBManager.put(_orderRowKey, _buildOrderRow());
+  }
+
+  void reorder(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex -= 1;
+    if (newIndex == oldIndex) return;
+    smartPlaylistsList.value.move(oldIndex, newIndex);
+    smartPlaylistsList.refresh();
+    _orderModifiedDate = currentTimeMS;
+    _saveOrder();
   }
 
   Future<void> create(SmartPlaylist smartPlaylist) async {
@@ -65,30 +144,34 @@ class SmartPlaylistsController {
     if (alreadyExisting != null) {
       alreadyExisting.value = smartPlaylist;
     } else {
-      smartPlaylistsMap.value[key] = SmartPlaylistWrapper(smartPlaylist);
+      _add(smartPlaylist);
     }
-    smartPlaylistsMap.refresh();
     await saveToStorage(key);
+    if (alreadyExisting == null) await _saveOrder();
   }
 
   Future<void> edit(SmartPlaylist oldSmartPlaylist, SmartPlaylist smartPlaylist) async {
-    smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
-    if (oldSmartPlaylist.key == smartPlaylist.key) {
+    final oldKey = oldSmartPlaylist.key;
+    final alreadyExisting = oldKey == smartPlaylist.key ? null : smartPlaylistsMap.value.remove(oldKey);
+    if (alreadyExisting == null) {
       await create(smartPlaylist);
-    } else {
-      final alreadyExisting = smartPlaylistsMap.value[oldSmartPlaylist.key];
-      alreadyExisting?.value = smartPlaylist;
-      smartPlaylistsMap.value[smartPlaylist.key] = alreadyExisting ?? SmartPlaylistWrapper(smartPlaylist);
-      smartPlaylistsMap.refresh();
-      await delete(oldSmartPlaylist.key);
-      await saveToStorage(smartPlaylist.key);
+      return;
     }
+    smartPlaylist = smartPlaylist.copyWith(modifiedDate: currentTimeMS);
+    alreadyExisting.value = smartPlaylist;
+    smartPlaylistsMap.value[smartPlaylist.key] = alreadyExisting;
+    await _dBManager.delete(oldKey);
+    await saveToStorage(smartPlaylist.key);
+    await _saveOrder();
   }
 
   Future<void> delete(SmartPlaylistKey key) async {
-    smartPlaylistsMap.remove(key);
+    final removed = smartPlaylistsMap.value.remove(key);
+    if (removed != null) smartPlaylistsList.value.remove(removed);
+    _refresh();
     _popPageIfCurrent(key);
     await _dBManager.delete(key);
+    if (removed != null) await _saveOrder();
   }
 
   void _popPageIfCurrent(SmartPlaylistKey key) {
@@ -103,27 +186,41 @@ class SmartPlaylistsController {
 
   Future<void> saveToStorage(SmartPlaylistKey key) async {
     final pl = smartPlaylistsMap.value[key];
-    smartPlaylistsMap.refresh();
+    _refresh();
     await _dBManager.put(key, pl?.value.toMap());
   }
 
   Iterable<SmartPlaylist> buildSyncEntries() => smartPlaylistsMap.value.values.map((e) => e.value);
 
-  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists) async {
+  Map<String, dynamic>? buildSyncOrder() => _orderModifiedDate > 0 ? _buildOrderRow() : null;
+
+  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order}) async {
     bool anyChanged = false;
+    bool orderChanged = false;
     for (final incoming in incomingPlaylists) {
       final key = incoming.key;
+      if (key == _orderRowKey) continue;
       final local = smartPlaylistsMap.value[key];
       if (local != null && local.value.modifiedDate >= incoming.modifiedDate) continue;
       if (local != null) {
         local.value = incoming;
       } else {
-        smartPlaylistsMap.value[key] = SmartPlaylistWrapper(incoming);
+        _add(incoming);
+        orderChanged = true;
       }
       anyChanged = true;
       await _dBManager.put(key, incoming.toMap());
     }
-    if (anyChanged) smartPlaylistsMap.refresh();
+    final incomingOrderKeys = order?['keys'] as List?;
+    final incomingOrderModifiedDate = order?['_mt'] as int? ?? 0;
+    if (incomingOrderKeys != null && incomingOrderModifiedDate > _orderModifiedDate) {
+      _orderModifiedDate = incomingOrderModifiedDate;
+      _applyOrder(incomingOrderKeys);
+      anyChanged = true;
+      orderChanged = true;
+    }
+    if (anyChanged) _refresh();
+    if (orderChanged) await _saveOrder();
   }
 
   String? validatePlaylistName(String? value, {required SmartPlaylistKey? oldKey}) {
@@ -133,7 +230,7 @@ class SmartPlaylistsController {
       return lang.pleaseEnterAName;
     }
 
-    if (value != oldKey && smartPlaylistsMap.value.containsKey(value)) {
+    if (value == _orderRowKey || (value != oldKey && smartPlaylistsMap.value.containsKey(value))) {
       return lang.pleaseEnterADifferentName;
     }
 
@@ -166,7 +263,7 @@ class SmartPlaylistsController {
       } else {
         await destinationFile.delete();
       }
-      smartPlaylistsMap.refresh();
+      _refresh();
       return true;
     } catch (_) {}
 

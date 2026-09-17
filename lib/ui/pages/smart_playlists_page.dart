@@ -10,6 +10,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/smart_playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -33,16 +34,18 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
               ObxO(
-                rx: SmartPlaylistsController.inst.smartPlaylistsMap,
-                builder: (context, smartPlaylistsMap) {
-                  final smartPlaylists = smartPlaylistsMap.values.toFixedList();
-                  return SliverFixedExtentList.builder(
+                rx: SmartPlaylistsController.inst.smartPlaylistsList,
+                builder: (context, smartPlaylists) {
+                  return NamidaSliverReorderableList(
+                    longPressToDrag: false,
                     itemCount: smartPlaylists.length,
                     itemExtent: _tileItemExtent,
+                    onReorder: SmartPlaylistsController.inst.reorder,
                     itemBuilder: (context, i) {
                       final smplWrapper = smartPlaylists[i];
                       final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
                       return AnimatingTile(
+                        key: ValueKey(smplWrapper),
                         position: i,
                         allowTilting: true,
                         child: NamidaInkWell(
@@ -58,7 +61,19 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
                           onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
                           child: Row(
                             children: [
-                              const SizedBox(width: 4.0),
+                              NamidaReordererableListener(
+                                index: i,
+                                durationMs: 100,
+                                child: const ColoredBox(
+                                  color: Colors.transparent,
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 10.0),
+                                    child: ThreeLineSmallContainers(
+                                      enabled: true,
+                                    ),
+                                  ),
+                                ),
+                              ),
                               ArtworkWidget(
                                 key: ValueKey(imgFile),
                                 track: null,

@@ -3086,7 +3086,7 @@ class AnimatingTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget child = this.child;
-    if (shouldAnimate) {
+    if (shouldAnimate && context.getInheritedWidgetOfExactType<_ReorderProxyScope>() == null) {
       child = AnimationConfiguration.staggeredList(
         position: position,
         duration: duration,
@@ -4384,6 +4384,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
   final double? itemExtent;
   final fr.ItemExtentBuilder? itemExtentBuilder;
   final int itemCount;
+  final bool longPressToDrag;
 
   const NamidaSliverReorderableList({
     super.key,
@@ -4395,6 +4396,7 @@ class NamidaSliverReorderableList extends StatelessWidget {
     this.itemExtent,
     this.itemExtentBuilder,
     required this.itemCount,
+    this.longPressToDrag = true,
   });
 
   Widget _reorderableItemBuilder(BuildContext context, int index) {
@@ -4412,16 +4414,26 @@ class NamidaSliverReorderableList extends StatelessWidget {
     return SliverReorderableList(
       itemExtent: itemExtent,
       itemExtentBuilder: itemExtentBuilder,
-      itemBuilder: _reorderableItemBuilder,
+      itemBuilder: longPressToDrag ? _reorderableItemBuilder : itemBuilder,
       itemCount: itemCount,
       onReorder: onReorder,
       onReorderCancel: onReorderCancel,
-      proxyDecorator: (child, index, animation) => child,
+      proxyDecorator: (child, index, animation) => _ReorderProxyScope(
+        child: child,
+      ),
       onReorderStart: onReorderStart,
       onReorderEnd: onReorderEnd,
       autoScrollerVelocityScalar: 500,
     );
   }
+}
+
+/// the drag proxy lives in the overlay, outside any [AnimationLimiter], so entrance animations would re-run.
+class _ReorderProxyScope extends InheritedWidget {
+  const _ReorderProxyScope({required super.child});
+
+  @override
+  bool updateShouldNotify(_ReorderProxyScope oldWidget) => false;
 }
 
 class NamidaTracksList extends StatelessWidget {

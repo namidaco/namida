@@ -515,9 +515,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                         const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
                         SliverToBoxAdapter(
                           child: ObxO(
-                            rx: SmartPlaylistsController.inst.smartPlaylistsMap,
-                            builder: (context, smartPlaylistsMap) {
-                              final smartPlaylists = smartPlaylistsMap.values.toFixedList();
+                            rx: SmartPlaylistsController.inst.smartPlaylistsList,
+                            builder: (context, smartPlaylists) {
                               if (smartPlaylists.isEmpty) return const SizedBox();
                               return SizedBox(
                                 height: 48.0,

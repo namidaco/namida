@@ -48,8 +48,8 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/ui/widgets/stats_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 
