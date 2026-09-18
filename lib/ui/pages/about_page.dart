@@ -16,6 +16,7 @@ import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
@@ -583,6 +584,10 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
       _controller?.forward(from: 0).then((_) => _speedLevel = 0);
 
       _play(longerVer: playLongerVer);
+
+      if (kAllowJellysInvasion && playLongerVer) {
+        if (settings.extra.jellysInvasion != true) NamidaJellys.setInvasion(true);
+      }
     }
   }
 
@@ -871,7 +876,8 @@ class _AboutAsset {
 
   Future<File?> _download(File file) async {
     try {
-      final bytes = (await Rhttp.getBytes(url)).body;
+      // -- myinstants sits behind cloudflare, which refuses requests without a user agent
+      final bytes = (await Rhttp.getBytes(url, headers: const HttpHeaders.rawMap({'User-Agent': 'Namida'}))).body;
       if (bytes.isEmpty) return null;
       // -- renamed once complete, a half written file would be served forever otherwise
       final temp = File('${file.path}.part');

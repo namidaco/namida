@@ -720,6 +720,7 @@ final _snackbarsStackManager = _SnackbarStackManager();
 
 SnackbarController snackyy({
   IconData? icon,
+  Widget? iconWidget,
   String title = '',
   required String message,
   bool top = true,
@@ -771,7 +772,7 @@ SnackbarController snackyy({
     } else {
       paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0);
     }
-  } else if (icon != null || title != '') {
+  } else if (icon != null || iconWidget != null || title != '') {
     paddingInsets = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0);
   } else {
     paddingInsets = const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0);
@@ -796,7 +797,12 @@ SnackbarController snackyy({
         width: snackWidth,
         child: Row(
           children: [
-            if (icon != null)
+            if (iconWidget != null)
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: iconWidget,
+              )
+            else if (icon != null)
               Padding(
                 padding: const EdgeInsets.only(right: 8.0),
                 child: Icon(icon, color: itemsColor),

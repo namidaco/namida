@@ -254,6 +254,24 @@ class CurrentColor {
     );
   }
 
+  /// Re-extracts the colors of whatever is playing, for when the source of the colors changed
+  /// rather than the item, ex. leaving the jellys palette.
+  void refreshColorsOfCurrentItem() {
+    if (!_canAutoUpdateColor) {
+      updatePlayerColorFromColor(playerStaticColor);
+      return;
+    }
+    final currentItem = Player.inst.currentItem.value;
+    if (currentItem is YoutubeID) {
+      _currentPlayingVideo = null; // -- otherwise the item already playing is skipped
+      updatePlayerColorFromYoutubeID(currentItem);
+    } else if (currentItem is Selectable) {
+      updatePlayerColorFromTrack(currentItem, null);
+    } else {
+      updatePlayerColorFromColor(playerStaticColor);
+    }
+  }
+
   final _fnLimiter = FunctionExecuteLimiter();
   void _updatePlayerColorFromItem({
     required Future<NamidaColor?> Function() getColorPalette,

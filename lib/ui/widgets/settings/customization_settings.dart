@@ -22,6 +22,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
@@ -1316,6 +1317,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                       onTap: () async {
                         await NamidaChannel.inst.changeAppIcon(e);
                         await _refreshStatus();
+                        if (e.isJelly) NamidaJellys.promptEnable('Let jellyfishes invade namida too?');
                       },
                       child: Column(
                         mainAxisSize: MainAxisSize.min,

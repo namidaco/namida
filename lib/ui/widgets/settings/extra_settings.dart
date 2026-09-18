@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -29,7 +28,6 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 
 enum _ExtraSettingsKeys with SettingKeysBase {
   collapsedTiles,
@@ -1130,24 +1128,6 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
     );
   }
 
-  void _applyJellydaPalette() {
-    settings.save(
-      forceMiniplayerTrackColor: false,
-    );
-    CurrentColor.inst.updatePlayerColorFromColor(namida.isDarkMode ? NamidaJellys.paletteDark : NamidaJellys.paletteLight, false);
-  }
-
-  void _resetJellydaPalette() {
-    final currentItem = Player.inst.currentItem.value;
-    if (currentItem is YoutubeID) {
-      CurrentColor.inst.updatePlayerColorFromYoutubeID(currentItem);
-    } else if (currentItem is Selectable) {
-      CurrentColor.inst.updatePlayerColorFromTrack(currentItem, null);
-    } else {
-      CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
-    }
-  }
-
   static Iterable<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) {
     return SearchType.values.map(
       (e) => NamidaPopupItem(
@@ -1223,41 +1203,16 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 ),
               if (kAllowJellysInvasion) ...[
                 CustomSwitchListTile(
-                  icon: Broken.drop,
+                  leading: const JellyMascot(height: 30.0),
                   value: settings.extra.jellysInvasion ?? false,
-                  onChanged: (isTrue) {
-                    final newEnabled = !isTrue;
-                    final alsoModifyPalette = true;
-                    setState(
-                      () => settings.extra.save(
-                        jellysInvasion: newEnabled,
-                        // ignore: dead_code
-                        jellysPalette: alsoModifyPalette ? newEnabled : null,
-                      ),
-                    );
-                    if (alsoModifyPalette) {
-                      if (newEnabled) {
-                        _applyJellydaPalette();
-                      } else {
-                        _resetJellydaPalette();
-                      }
-                    }
-                  },
+                  onChanged: (isTrue) => setState(() => NamidaJellys.setInvasion(!isTrue)),
                   title: 'jellys_invasion'.toUpperCase(),
                   subtitle: "Lets jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}",
                 ),
                 CustomSwitchListTile(
                   icon: Broken.color_swatch,
                   value: settings.extra.jellysPalette ?? false,
-                  onChanged: (isTrue) {
-                    final newEnabled = !isTrue;
-                    setState(() => settings.extra.save(jellysPalette: newEnabled));
-                    if (newEnabled) {
-                      _applyJellydaPalette();
-                    } else {
-                      _resetJellydaPalette();
-                    }
-                  },
+                  onChanged: (isTrue) => setState(() => NamidaJellys.setPaletteHijack(!isTrue)),
                   title: 'jellys_color_palette'.toUpperCase(),
                 ),
               ],

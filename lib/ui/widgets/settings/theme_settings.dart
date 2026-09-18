@@ -6,10 +6,8 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
-import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -23,8 +21,8 @@ import 'package:namida/core/translations/arb/app_localizations.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
 enum _ThemeSettingsKeys with SettingKeysBase {
@@ -32,6 +30,7 @@ enum _ThemeSettingsKeys with SettingKeysBase {
   autoColoring,
   wallpaperColors(NamidaFeaturesAvailablity.android12and_plus),
   forceMiniplayerColors,
+  jellysInvasion,
   pitchBlack,
   defaultColor,
   defaultColorDark,
@@ -55,20 +54,12 @@ class ThemeSetting extends SettingSubpageProvider {
     _ThemeSettingsKeys.autoColoring: [lang.autoColoring, lang.autoColoringSubtitle],
     _ThemeSettingsKeys.wallpaperColors: [lang.pickColorsFromDeviceWallpaper],
     _ThemeSettingsKeys.forceMiniplayerColors: [lang.forceMiniplayerFollowTrackColors],
+    _ThemeSettingsKeys.jellysInvasion: ['jellys_invasion'.toUpperCase(), 'jellys_color_palette'.toUpperCase()],
     _ThemeSettingsKeys.pitchBlack: [lang.usePitchBlack, lang.usePitchBlackSubtitle],
     _ThemeSettingsKeys.defaultColor: [lang.defaultColor, lang.defaultColorSubtitle],
     _ThemeSettingsKeys.defaultColorDark: ["${lang.defaultColor} (${lang.themeModeDark})", lang.defaultColorSubtitle],
     _ThemeSettingsKeys.language: [lang.language],
   };
-
-  void _refreshColorCurrentPlayingItem() {
-    final currentItem = Player.inst.currentItem.value;
-    if (currentItem is YoutubeID) {
-      CurrentColor.inst.updatePlayerColorFromYoutubeID(currentItem);
-    } else if (currentItem is Selectable) {
-      CurrentColor.inst.updatePlayerColorFromTrack(currentItem, null);
-    }
-  }
 
   Widget getThemeTile({double? maxWidth}) {
     return getItemWrapper(
@@ -104,7 +95,7 @@ class ThemeSetting extends SettingSubpageProvider {
               CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
               CurrentColor.inst.updateCurrentColorSchemeOfSubPages(playerStaticColor);
             } else {
-              _refreshColorCurrentPlayingItem();
+              CurrentColor.inst.refreshColorsOfCurrentItem();
             }
           },
         ),
@@ -238,6 +229,12 @@ class ThemeSetting extends SettingSubpageProvider {
       title: lang.themeSettings,
       subtitle: lang.themeSettingsSubtitle,
       icon: Broken.brush_2,
+      trailing: kAllowJellysInvasion
+          ? getItemWrapper(
+              key: _ThemeSettingsKeys.jellysInvasion,
+              child: const _JellysInvasionButton(),
+            )
+          : null,
       child: SizedBox(
         width: context.width,
         child: Column(
@@ -255,7 +252,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   value: settings.pickColorsFromDeviceWallpaper.valueR,
                   onChanged: (isTrue) {
                     settings.save(pickColorsFromDeviceWallpaper: !isTrue);
-                    _refreshColorCurrentPlayingItem();
+                    CurrentColor.inst.refreshColorsOfCurrentItem();
                   },
                 ),
               ),
@@ -271,7 +268,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   value: settings.forceMiniplayerTrackColor.valueR,
                   onChanged: (isTrue) {
                     settings.save(forceMiniplayerTrackColor: !isTrue);
-                    _refreshColorCurrentPlayingItem();
+                    CurrentColor.inst.refreshColorsOfCurrentItem();
                   },
                 ),
               ),
@@ -397,6 +394,33 @@ class ThemeSetting extends SettingSubpageProvider {
     if (namida.isDarkMode) {
       CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }
+  }
+}
+
+/// The flag lives in the extra settings, offered here too because this is where colors are looked for.
+class _JellysInvasionButton extends StatefulWidget {
+  const _JellysInvasionButton();
+
+  @override
+  State<_JellysInvasionButton> createState() => _JellysInvasionButtonState();
+}
+
+class _JellysInvasionButtonState extends State<_JellysInvasionButton> {
+  @override
+  Widget build(BuildContext context) {
+    final enabled = NamidaJellys.enabled;
+    return NamidaTooltip(
+      message: () => 'Jellys Invasion',
+      child: NamidaInkWell(
+        borderRadius: 8.0,
+        padding: const EdgeInsets.all(4.0),
+        onTap: () => setState(() => NamidaJellys.setInvasion(!enabled)),
+        child: JellyMascot(
+          height: 38.0,
+          opacity: enabled ? 0.9 : 0.35,
+        ),
+      ),
+    );
   }
 }
 

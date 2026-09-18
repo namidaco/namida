@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'package:namida/class/color_m.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -13,6 +14,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/floating_image.dart';
 
@@ -520,17 +522,21 @@ class NamidaJellyBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!NamidaJellys.enabled) return const SizedBox();
-    return IgnorePointer(
-      child: JellyField(
-        count: count,
-        opacity: opacity,
-        minHeight: minHeight,
-        maxHeight: maxHeight,
-        reactToPlayback: reactToPlayback,
-        enabled: enabled,
-        seed: seed,
-      ),
+    return ObxO(
+      rx: NamidaJellys.enabledRx,
+      builder: (context, invaded) => invaded
+          ? IgnorePointer(
+              child: JellyField(
+                count: count,
+                opacity: opacity,
+                minHeight: minHeight,
+                maxHeight: maxHeight,
+                reactToPlayback: reactToPlayback,
+                enabled: enabled,
+                seed: seed,
+              ),
+            )
+          : const SizedBox(),
     );
   }
 }
@@ -564,12 +570,11 @@ class FloatingJelly extends StatelessWidget {
   Widget build(BuildContext context) {
     final tint = this.tint ?? context.theme.colorScheme.primary;
     Widget image = ColorFiltered(
-      colorFilter: NamidaJellys.tintFilter(tint, tintStrength),
+      colorFilter: NamidaJellys.tintFilter(tint, tintStrength, opacity),
       child: Image.asset(
         jelly.assetPath,
         height: height,
         cacheHeight: (height * MediaQuery.devicePixelRatioOf(context)).round(),
-        opacity: opacity == 1.0 ? null : AlwaysStoppedAnimation(opacity),
       ),
     );
     if (mirrored) {
@@ -583,6 +588,33 @@ class FloatingJelly extends StatelessWidget {
       alignment: mirrored ? Alignment(-jelly.bellAlignment.x, jelly.bellAlignment.y) : jelly.bellAlignment,
       seed: seed,
       child: image,
+    );
+  }
+}
+
+/// The one pose every fixed jelly in the ui shares, matching the one resting under a list.
+///
+/// [JellyListEnd] rolls its own mirroring and timings to read as a shoal, everything else
+/// goes through here so a jelly looks the same wherever it shows up.
+class JellyMascot extends StatelessWidget {
+  final double height;
+  final double opacity;
+
+  const JellyMascot({
+    super.key,
+    required this.height,
+    this.opacity = 0.9,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingJelly(
+      jelly: NamidaJelly.jelly70d,
+      mirrored: true,
+      height: height,
+      opacity: opacity,
+      amplitude: 4.0,
+      cycleDuration: const Duration(seconds: 18),
     );
   }
 }
@@ -1272,6 +1304,58 @@ abstract class NamidaJellys {
   static bool get enabled => kAllowJellysInvasion && settings.extra.jellysInvasion == true;
   static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette == true;
 
+  /// [enabled] as a listenable, for the jellies already on screen when it is flipped.
+  ///
+  /// It is kept beside the plain getter instead of replacing it, that one is read before
+  /// the settings file is loaded, this is only ever touched from a build.
+  static final enabledRx = enabled.obs;
+
+  /// Outside the flags page the invasion and the palette are offered as one thing.
+  static void setInvasion(bool enabled) {
+    settings.extra.save(jellysInvasion: enabled, jellysPalette: enabled);
+    enabledRx.value = enabled;
+    _refreshColors(enabled);
+  }
+
+  static void setPaletteHijack(bool enabled) {
+    settings.extra.save(jellysPalette: enabled);
+    _refreshColors(enabled);
+  }
+
+  static void _refreshColors(bool paletteEnabled) {
+    if (paletteEnabled) {
+      settings.save(forceMiniplayerTrackColor: false);
+      CurrentColor.inst.updatePlayerColorFromColor(namida.isDarkMode ? paletteDark : paletteLight, false);
+    } else {
+      CurrentColor.inst.refreshColorsOfCurrentItem();
+    }
+  }
+
+  /// The flag is buried, so the invasion is offered wherever a jelly already showed up.
+  static void promptEnable(String message) {
+    if (!kAllowJellysInvasion || enabled) return;
+    snackyy(
+      iconWidget: const JellyMascot(height: 38.0),
+      title: 'Jellys Invasion',
+      message: message,
+      displayDuration: SnackDisplayDuration.tutorial,
+      button: SnackbarButton(
+        text: lang.accept,
+        function: () => setInvasion(true),
+      ),
+    );
+  }
+
+  /// Offered once on startup, otherwise only whoever digs through the flags would ever see it.
+  ///
+  /// A null flag is the only proof the offer was never made, so declining is written down as a
+  /// plain `false` instead of spending a second key on remembering it.
+  static void promptEnableOnce() {
+    if (!kAllowJellysInvasion || settings.extra.jellysInvasion != null) return;
+    settings.extra.save(jellysInvasion: false);
+    promptEnable('The jellyfishes want to invade namida');
+  }
+
   /// Sampled off the artworks, abyss blue through to bell-glow cyan.
   static const palette = <Color>[
     Color(0xFF2157AD),
@@ -1323,22 +1407,25 @@ abstract class NamidaJellys {
   // -- luminance weights, so the recolor keeps the artwork's own shading
   static const _lumR = 0.2126, _lumG = 0.7152, _lumB = 0.0722;
 
-  static final _tintFilters = <(int, double), ColorFilter>{};
+  static final _tintFilters = <(int, double, double), ColorFilter>{};
 
   /// Recolors the blue-ish artwork into a [tint]-toned duotone.
   ///
   /// Luminance is mapped between a darkened and a lightened [tint], so the bell keeps
   /// glowing brighter than the body instead of the whole sprite turning one flat color.
   /// [strength] blends back toward the original blue, `1.0` leaves none of it.
-  static ColorFilter tintFilter(Color tint, [double strength = kJellyDefaultTintStrength]) {
-    final key = (tint.intValue, strength);
+  ///
+  /// [opacity] rides along in the alpha row instead of an [Opacity] layer, and unlike
+  /// `Image.opacity` a changed filter repaints itself.
+  static ColorFilter tintFilter(Color tint, [double strength = kJellyDefaultTintStrength, double opacity = 1.0]) {
+    final key = (tint.intValue, strength, opacity);
     final cached = _tintFilters[key];
     if (cached != null) return cached;
-    if (_tintFilters.length >= 16) _tintFilters.clear(); // -- themes change, the map shouldn't grow forever
-    return _tintFilters[key] = _buildTintFilter(tint, strength);
+    if (_tintFilters.length >= 24) _tintFilters.clear(); // -- themes change, the map shouldn't grow forever
+    return _tintFilters[key] = _buildTintFilter(tint, strength, opacity);
   }
 
-  static ColorFilter _buildTintFilter(Color tint, double strength) {
+  static ColorFilter _buildTintFilter(Color tint, double strength, double opacity) {
     final dark = Color.lerp(tint, Colors.black, 0.5)!;
     final light = Color.lerp(tint, Colors.white, 0.72)!;
     final s = strength.clampDouble(0.0, 1.0);
@@ -1355,7 +1442,7 @@ abstract class NamidaJellys {
       ...row(dark.r, light.r, 0),
       ...row(dark.g, light.g, 1),
       ...row(dark.b, light.b, 2),
-      0.0, 0.0, 0.0, 1.0, 0.0, //
+      0.0, 0.0, 0.0, opacity, 0.0, //
     ]);
   }
 
