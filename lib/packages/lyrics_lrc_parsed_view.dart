@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' hide Selectable;
 import 'package:flutter/services.dart';
 
 import 'package:lrc/lrc.dart';
@@ -39,9 +41,11 @@ class LyricsLRCParsedView extends StatefulWidget {
   final bool useSafeArea;
   final double blurColorMaskOpacity;
   final double? maxWidth;
+  final double? maxHeight;
   final double? verticalPadding;
   final Widget? bottomPadding;
   final bool largeText;
+  final bool insideMiniplayerCard;
   final bool fadeOnEmptyLine;
   final double? baseFontSize;
 
@@ -58,10 +62,12 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.useSafeArea = true,
     this.blurColorMaskOpacity = 0.6,
     this.largeText = false,
+    this.insideMiniplayerCard = false,
     this.fadeOnEmptyLine = true,
     this.baseFontSize,
     this.visibilityNotifier,
     this.maxWidth,
+    this.maxHeight,
     this.verticalPadding,
     this.bottomPadding,
   });
@@ -113,6 +119,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   late final _visibility = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: _lrcOpacityDurationMS),
+    value: widget.isFullScreenView ? 1.0 : 0.0,
   );
 
   void _updateIsCurrentLineEmpty(bool empty) {
@@ -159,19 +166,47 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   final _currentItemDurationMS = RxnO<int>();
 
+  /// the miniplayer fades its center card to 0 while the cards slide ([_cardSlide] away from 0),
+  /// so a fill started there would play its fade-in completely unseen. hold it until the card is back.
+  /// clearing isnt held, otherwise the previous item's lines would linger once the card returns.
+  static AnimationController get _cardSlide => MiniPlayerController.inst.sAnim;
+
+  void Function()? _pendingCardSettleAction;
+
+  void _whenCardSettled(void Function() action) {
+    if (!widget.insideMiniplayerCard || (_cardSlide.value == 0.0 && !_cardSlide.isAnimating)) {
+      action();
+      return;
+    }
+    _pendingCardSettleAction = action;
+    _cardSlide.removeListener(_onCardSlideTick);
+    _cardSlide.addListener(_onCardSlideTick);
+  }
+
+  void _onCardSlideTick() {
+    if (_cardSlide.value != 0.0 || _cardSlide.isAnimating) return;
+    _cardSlide.removeListener(_onCardSlideTick);
+    final action = _pendingCardSettleAction;
+    _pendingCardSettleAction = null;
+    action?.call();
+  }
+
+  void fillLists(Lrc? lrc, LrcText? txt) => _whenCardSettled(() => _fillListsNow(lrc, txt));
+
   void clearLists({bool hide = true}) {
-    highlightTimestampsMap.clear();
-    lyrics.clear();
+    _pendingCardSettleAction = null;
+    highlightTimestampsMap = {};
+    lyrics = [];
     if (hide) _updateIsCurrentLineEmpty(true);
     _latestUpdatedLineInfo.value = null;
     _currentIndex = null;
   }
 
-  void fillLists(Lrc? lrc, LrcText? txt) {
+  void _fillListsNow(Lrc? lrc, LrcText? txt) {
     currentLRC = lrc;
     if (lrc == null) {
-      highlightTimestampsMap.clear();
-      lyrics.clear();
+      highlightTimestampsMap = {};
+      lyrics = [];
       final isTextEmpty = txt == null ? true : _checkIfTextEmpty(txt.text);
       _updateIsCurrentLineEmpty(isTextEmpty);
       return;
@@ -207,9 +242,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
         } catch (_) {}
       }
     }
-
-    highlightTimestampsMap.clear();
-    lyrics.clear();
 
     final uiInfo = lrc.forUiDisplay(
       cal,
@@ -297,7 +329,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     });
   }
 
-  void _onListInit(_LyricsListState state) => _list = state;
+  void _onListInit(_LyricsListState state) {
+    _list = state;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final index = _currentIndex;
+      if (index != null && identical(_list, state) && state.canScroll) state.scrollToIndex(index, jump: true);
+    });
+  }
 
   void _onListDispose(_LyricsListState state) {
     if (identical(_list, state)) _list = null;
@@ -305,6 +343,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   Timer? _scrollTimer;
   final _canAnimateScroll = true.obs;
+
+  final _scrollTick = _LyricsScrollTick();
 
   final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
 
@@ -328,6 +368,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   @override
   void dispose() {
     _mountedViews.remove(this);
+    _cardSlide.removeListener(_onCardSlideTick);
     widget.visibilityNotifier?.value = 0.0;
     _visibility.dispose();
     Player.inst.currentItemDuration.removeListener(_itemDurationUpdater);
@@ -336,6 +377,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     _latestUpdatedLineInfo.close();
     _currentItemDurationMS.close();
     _canAnimateScroll.close();
+    _scrollTick.dispose();
     super.dispose();
   }
 
@@ -375,6 +417,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
     final fullscreen = widget.isFullScreenView;
     const maxLyricsWidth = 864.0;
     final alignAtStart = fullscreen && context.width < maxLyricsWidth; // -- align at center if screen got too wide
@@ -634,324 +677,335 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
       fit: StackFit.loose,
       alignment: AlignmentGeometry.center,
       children: [
-        Listener(
-          onPointerDown: _onPointerDown,
-          onPointerUp: _onPointerUp,
-          onPointerCancel: _onPointerUp,
-          onPointerSignal: _onPointerSignal,
-          child: ShaderFadingWidget(
-            biggerValues: fullscreen,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxLyricsWidth),
-              child: Builder(
-                builder: (context) {
-                  return Obx(
-                    (context) {
-                      final lrc = Lyrics.inst.currentLyricsLRC.valueR;
-                      Widget? textChild;
-                      if (lrc == null) {
-                        final textWrapper = Lyrics.inst.currentLyricsText.valueR;
-                        if (!_checkIfTextEmpty(textWrapper.text)) {
-                          final textDirection = textWrapper.isRTL ? TextDirection.rtl : TextDirection.ltr;
-                          textChild = Align(
-                            key: ObjectKey(textWrapper),
-                            // -- Align vip to center widget
-                            child: SmoothSingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                              controller: Lyrics.inst.textScrollController,
-                              child: Directionality(
-                                textDirection: textDirection,
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: _paddingVertical),
-                                    Text(
-                                      textWrapper.text,
-                                      style: plainLyricsTextStyle,
-                                      textAlign: alignAtStart ? TextAlign.start : TextAlign.center,
-                                    ),
-                                    SizedBox(height: _paddingVertical),
-                                  ],
-                                ),
+        ShaderFadingWidget(
+          biggerValues: fullscreen,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxLyricsWidth),
+            child: Builder(
+              builder: (context) {
+                return Obx(
+                  (context) {
+                    final lrc = Lyrics.inst.currentLyricsLRC.valueR;
+                    Widget? textChild;
+                    if (lrc == null) {
+                      final textWrapper = Lyrics.inst.currentLyricsText.valueR;
+                      if (!_checkIfTextEmpty(textWrapper.text)) {
+                        final textDirection = textWrapper.isRTL ? TextDirection.rtl : TextDirection.ltr;
+                        textChild = Align(
+                          key: ObjectKey(textWrapper),
+                          // -- Align vip to center widget
+                          child: SmoothSingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                            controller: Lyrics.inst.textScrollController,
+                            child: Directionality(
+                              textDirection: textDirection,
+                              child: Column(
+                                children: [
+                                  SizedBox(height: _paddingVertical),
+                                  Text(
+                                    textWrapper.text,
+                                    style: plainLyricsTextStyle,
+                                    textAlign: alignAtStart ? TextAlign.start : TextAlign.center,
+                                  ),
+                                  SizedBox(height: _paddingVertical),
+                                ],
                               ),
                             ),
-                          );
-                        }
+                          ),
+                        );
                       }
+                    }
 
-                      final miniplayerColor = CurrentColor.inst.miniplayerColor;
-                      final personCount = currentLRC?.personCount ?? 1;
+                    final miniplayerColor = CurrentColor.inst.miniplayerColor;
+                    final personCount = currentLRC?.personCount ?? 1;
+                    // -- the outgoing list rebuilds its items while it fades, it must keep reading
+                    // -- the data it was built with instead of whatever the next track swapped in
+                    final lyrics = this.lyrics;
+                    final highlightTimestampsMap = this.highlightTimestampsMap;
 
-                      final lrcListChild = ObxO(
-                        key: const ValueKey('lrc_list'),
-                        rx: _latestUpdatedLineInfo,
-                        builder: (context, selectedInfo) {
-                          final selectedIndex = selectedInfo?.$2;
-                          final selectedLineTimestamp = selectedInfo?.$1;
-                          return CustomAnimatedSwitcher(
-                            duration: const Duration(milliseconds: 800),
-                            switchInCurve: Curves.easeInOutQuart,
-                            switchOutCurve: Curves.easeInOutQuart,
-                            child: lyrics.isEmpty
-                                ? const SizedBox(
-                                    key: ValueKey('empty_lrc'),
-                                  )
-                                : _LyricsList(
-                                    key: ObjectKey(currentLRC),
-                                    verticalPadding: _paddingVertical,
-                                    onInit: _onListInit,
-                                    onDispose: _onListDispose,
-                                    itemCount: lyrics.length,
-                                    itemBuilder: (context, index) {
-                                      // -- usually not needed, but helps cuz sometimes gets called on stale index
-                                      if (index >= lyrics.length) return const SizedBox.shrink();
+                    final lrcListChild = ObxO(
+                      key: const ValueKey('lrc_list'),
+                      rx: _latestUpdatedLineInfo,
+                      builder: (context, selectedInfo) {
+                        final selectedIndex = selectedInfo?.$2;
+                        final selectedLineTimestamp = selectedInfo?.$1;
+                        return CustomAnimatedSwitcher(
+                          duration: const Duration(milliseconds: 800),
+                          reverseDuration: widget.isFullScreenView ? null : Duration.zero, // 0 to make lyrics go instantly on switching animation, otherwise can look bad
+                          switchInCurve: Curves.easeInOutQuart,
+                          switchOutCurve: Curves.easeInOutQuart,
+                          child: lyrics.isEmpty
+                              ? const SizedBox(
+                                  key: ValueKey('empty_lrc'),
+                                )
+                              : _LyricsList(
+                                  key: ObjectKey(currentLRC),
+                                  verticalPadding: _paddingVertical,
+                                  scrollTick: _scrollTick,
+                                  onInit: _onListInit,
+                                  onDispose: _onListDispose,
+                                  itemCount: lyrics.length,
+                                  itemBuilder: (context, index) {
+                                    // -- usually not needed, but helps cuz sometimes gets called on stale index
+                                    if (index >= lyrics.length) return const SizedBox.shrink();
 
-                                      final distanceDiffFromSelected = selectedIndex == null ? null : index - selectedIndex; // -- does not account for empty lines
-                                      final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
-                                      final lrc = lyrics[index];
-                                      String text = lrc.readableText;
-                                      final parts = lrc.parts;
-                                      final person = lrc.person;
-                                      final isBGLyrics = lrc.isBGLyrics;
-                                      final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
-                                      final textDirection = lrc.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
+                                    final distanceDiffFromSelected = selectedIndex == null ? null : index - selectedIndex; // -- does not account for empty lines
+                                    final distanceDiffFromSelectedAbs = distanceDiffFromSelected?.abs();
+                                    final lrc = lyrics[index];
+                                    String text = lrc.readableText;
+                                    final parts = lrc.parts;
+                                    final person = lrc.person;
+                                    final isBGLyrics = lrc.isBGLyrics;
+                                    final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
+                                    final textDirection = lrc.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
 
-                                      final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
-                                      final selectedAndEmpty = selected && _checkIfTextEmpty(text);
-                                      var bgColor = selected && !isBGLyrics
-                                          ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
-                                              selectedAndEmpty
-                                                  ? 0.1
-                                                  : fullscreen
-                                                  ? 0.4
-                                                  : 0.5,
-                                            )
-                                          : null;
+                                    final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
+                                    final selectedAndEmpty = selected && _checkIfTextEmpty(text);
+                                    var bgColor = selected && !isBGLyrics
+                                        ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
+                                            selectedAndEmpty
+                                                ? 0.1
+                                                : fullscreen
+                                                ? 0.4
+                                                : 0.5,
+                                          )
+                                        : null;
 
-                                      EdgeInsetsGeometry lineMargin = EdgeInsets.symmetric(
-                                        vertical: /* (selected ? 2.0 : 0.0) + */ (fullscreen ? 8.0 : 2.0),
-                                        horizontal: fullscreen ? 10.0 : 8.0,
-                                      );
+                                    EdgeInsetsGeometry lineMargin = EdgeInsets.symmetric(
+                                      vertical: /* (selected ? 2.0 : 0.0) + */ (fullscreen ? 8.0 : 2.0),
+                                      horizontal: fullscreen ? 10.0 : 8.0,
+                                    );
 
-                                      EdgeInsetsGeometry padding = selectedAndEmpty
-                                          ? const EdgeInsets.symmetric(
-                                              vertical: 3.0,
-                                              horizontal: 24.0,
-                                            )
-                                          : fullscreen
-                                          ? const EdgeInsets.symmetric(
-                                              vertical: 8.0,
-                                              horizontal: 8.0,
-                                            )
-                                          : const EdgeInsets.symmetric(
-                                              vertical: 8.0,
-                                              horizontal: 8.0,
-                                            );
-
-                                      BorderRadius borderRadius = selectedAndEmpty ? BorderRadius.circular(5.0.multipliedRadius) : BorderRadius.circular(8.0.multipliedRadius);
-
-                                      TextAlign textAlign = alignAtStart ? TextAlign.start : TextAlign.center;
-                                      AlignmentDirectional alignment = alignAtStart ? AlignmentDirectional.centerStart : AlignmentDirectional.center;
-                                      double normalLineColorOpacity = 0.5;
-                                      (double, FontWeight)? fontModifier;
-                                      TextStyle textStyle;
-
-                                      if (person != null && personCount > 0) {
-                                        if (personCount == 1) {
-                                          // -- keep defaults
-                                        } else if (person == 0) {
-                                          // -- bg
-                                          textAlign = TextAlign.center;
-                                          alignment = AlignmentDirectional.center;
-                                          fontModifier = (0.75, FontWeight.w400);
-                                        } else if (person == 1) {
-                                          // -- v1
-                                          textAlign = TextAlign.start;
-                                          alignment = AlignmentDirectional.centerStart;
-                                          padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
-                                        } else if (person == 2) {
-                                          // -- v2
-                                          textAlign = TextAlign.end;
-                                          alignment = AlignmentDirectional.centerEnd;
-                                          padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
-                                        } else if (person >= 3) {
-                                          // -- v3
-                                          textAlign = TextAlign.center;
-                                          alignment = AlignmentDirectional.center;
-                                        }
-                                        if (selected) {
-                                          textStyle = normalTextStyle.copyWith(
-                                            color: Colors.white.withOpacityExt(0.75),
+                                    EdgeInsetsGeometry padding = selectedAndEmpty
+                                        ? const EdgeInsets.symmetric(
+                                            vertical: 3.0,
+                                            horizontal: 24.0,
+                                          )
+                                        : fullscreen
+                                        ? const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                            horizontal: 8.0,
+                                          )
+                                        : const EdgeInsets.symmetric(
+                                            vertical: 8.0,
+                                            horizontal: 8.0,
                                           );
-                                        } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
-                                          // -- lines before current in word synced lyrics
-                                          textStyle = normalTextStyle.copyWith(
-                                            color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                          );
-                                        } else {
-                                          // -- lines after current in word synced lyrics
-                                          normalLineColorOpacity = 0.2;
-                                          textStyle = normalTextStyle.copyWith(
-                                            color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                          );
-                                        }
+
+                                    BorderRadius borderRadius = selectedAndEmpty ? BorderRadius.circular(5.0.multipliedRadius) : BorderRadius.circular(8.0.multipliedRadius);
+
+                                    TextAlign textAlign = alignAtStart ? TextAlign.start : TextAlign.center;
+                                    AlignmentDirectional alignment = alignAtStart ? AlignmentDirectional.centerStart : AlignmentDirectional.center;
+                                    double normalLineColorOpacity = 0.5;
+                                    (double, FontWeight)? fontModifier;
+                                    TextStyle textStyle;
+
+                                    if (person != null && personCount > 0) {
+                                      if (personCount == 1) {
+                                        // -- keep defaults
+                                      } else if (person == 0) {
+                                        // -- bg
+                                        textAlign = TextAlign.center;
+                                        alignment = AlignmentDirectional.center;
+                                        fontModifier = (0.75, FontWeight.w400);
+                                      } else if (person == 1) {
+                                        // -- v1
+                                        textAlign = TextAlign.start;
+                                        alignment = AlignmentDirectional.centerStart;
+                                        padding = padding.add(EdgeInsetsDirectional.only(start: 12.0, end: 64.0));
+                                      } else if (person == 2) {
+                                        // -- v2
+                                        textAlign = TextAlign.end;
+                                        alignment = AlignmentDirectional.centerEnd;
+                                        padding = padding.add(EdgeInsetsDirectional.only(start: 64.0, end: 12.0));
+                                      } else if (person >= 3) {
+                                        // -- v3
+                                        textAlign = TextAlign.center;
+                                        alignment = AlignmentDirectional.center;
+                                      }
+                                      if (selected) {
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: Colors.white.withOpacityExt(0.75),
+                                        );
+                                      } else if (distanceDiffFromSelected != null && distanceDiffFromSelected <= 0) {
+                                        // -- lines before current in word synced lyrics
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
                                       } else {
-                                        // -- lines in normal synced lyrics
-                                        if (distanceDiffFromSelected != null) {
-                                          normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
-                                              ? 0.5
-                                              : distanceDiffFromSelectedAbs == 2
-                                              ? 0.4
-                                              : 0.25;
-                                        }
+                                        // -- lines after current in word synced lyrics
+                                        normalLineColorOpacity = 0.2;
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
+                                      }
+                                    } else {
+                                      // -- lines in normal synced lyrics
+                                      if (distanceDiffFromSelected != null) {
+                                        normalLineColorOpacity = distanceDiffFromSelectedAbs == 1
+                                            ? 0.5
+                                            : distanceDiffFromSelectedAbs == 2
+                                            ? 0.4
+                                            : 0.25;
+                                      }
 
-                                        if (selected) {
-                                          textStyle = normalTextStyle;
-                                        } else {
-                                          textStyle = normalTextStyle.copyWith(
-                                            color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
-                                          );
+                                      if (selected) {
+                                        textStyle = normalTextStyle;
+                                      } else {
+                                        textStyle = normalTextStyle.copyWith(
+                                          color: normalTextStyle.color?.withOpacityExt(normalLineColorOpacity) ?? Colors.transparent,
+                                        );
+                                      }
+                                    }
+                                    if (fontModifier != null) {
+                                      final size = fontModifier.$1;
+                                      final weigth = fontModifier.$2;
+                                      textStyle = textStyle.copyWith(
+                                        fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
+                                        fontWeight: weigth,
+                                      );
+                                    }
+
+                                    if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
+                                      final isFirst = index == indicesForTimestamp.first;
+                                      final isLast = index == indicesForTimestamp.last;
+                                      final isSecondaryLanguageLine = !isFirst;
+
+                                      if (isSecondaryLanguageLine) {
+                                        final multiplier = fullscreen ? 0.75 : 0.85;
+                                        textStyle = textStyle.copyWith(
+                                          fontSize: textStyle.fontSize! * multiplier,
+                                        );
+                                        if (bgColor != null) {
+                                          bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
                                         }
                                       }
-                                      if (fontModifier != null) {
-                                        final size = fontModifier.$1;
-                                        final weigth = fontModifier.$2;
-                                        textStyle = textStyle.copyWith(
-                                          fontSize: size == 1.0 ? null : textStyle.fontSize! * size,
-                                          fontWeight: weigth,
+
+                                      if (!isFirst) {
+                                        lineMargin = lineMargin.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            top: lineMargin.resolve(textDirection).top,
+                                          ),
+                                        );
+                                        padding = padding.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            top: padding.resolve(textDirection).top * 0.4,
+                                          ),
+                                        );
+                                        borderRadius = borderRadius.copyWith(
+                                          topRight: Radius.zero,
+                                          topLeft: Radius.zero,
                                         );
                                       }
 
-                                      if (indicesForTimestamp != null && indicesForTimestamp.length > 1) {
-                                        final isFirst = index == indicesForTimestamp.first;
-                                        final isLast = index == indicesForTimestamp.last;
-                                        final isSecondaryLanguageLine = !isFirst;
-
-                                        if (isSecondaryLanguageLine) {
-                                          final multiplier = fullscreen ? 0.75 : 0.85;
-                                          textStyle = textStyle.copyWith(
-                                            fontSize: textStyle.fontSize! * multiplier,
-                                          );
-                                          if (bgColor != null) {
-                                            bgColor = bgColor.withOpacityExt(bgColor.a * 0.75);
-                                          }
-                                        }
-
-                                        if (!isFirst) {
-                                          lineMargin = lineMargin.subtract(
-                                            EdgeInsetsDirectional.only(
-                                              top: lineMargin.resolve(textDirection).top,
-                                            ),
-                                          );
-                                          padding = padding.subtract(
-                                            EdgeInsetsDirectional.only(
-                                              top: padding.resolve(textDirection).top * 0.4,
-                                            ),
-                                          );
-                                          borderRadius = borderRadius.copyWith(
-                                            topRight: Radius.zero,
-                                            topLeft: Radius.zero,
-                                          );
-                                        }
-
-                                        if (!isLast) {
-                                          lineMargin = lineMargin.subtract(
-                                            EdgeInsetsDirectional.only(
-                                              bottom: lineMargin.resolve(textDirection).bottom,
-                                            ),
-                                          );
-                                          padding = padding.subtract(
-                                            EdgeInsetsDirectional.only(
-                                              bottom: padding.resolve(textDirection).bottom * 0.4,
-                                            ),
-                                          );
-                                          borderRadius = borderRadius.copyWith(
-                                            bottomRight: Radius.zero,
-                                            bottomLeft: Radius.zero,
-                                          );
-                                        }
+                                      if (!isLast) {
+                                        lineMargin = lineMargin.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            bottom: lineMargin.resolve(textDirection).bottom,
+                                          ),
+                                        );
+                                        padding = padding.subtract(
+                                          EdgeInsetsDirectional.only(
+                                            bottom: padding.resolve(textDirection).bottom * 0.4,
+                                          ),
+                                        );
+                                        borderRadius = borderRadius.copyWith(
+                                          bottomRight: Radius.zero,
+                                          bottomLeft: Radius.zero,
+                                        );
                                       }
+                                    }
 
-                                      final textWidget = selected && parts != null && parts.isNotEmpty
-                                          ? _TextWithFadingProgress(
-                                              parts: parts,
-                                              textStyle: textStyle,
-                                              textAlign: textAlign,
-                                              textDirection: textDirection,
-                                            )
-                                          : Text(
-                                              text,
-                                              style: textStyle,
-                                              textAlign: textAlign,
-                                              // softWrap: false, // keep the text steady while animating mp
-                                            );
-
-                                      return Directionality(
+                                    final Widget textWidget;
+                                    if (_LyricsEffects.interludeDots && selectedAndEmpty) {
+                                      textWidget = _LyricsInterludeDots(
+                                        start: lrc.timestamp,
+                                        end: index + 1 < lyrics.length ? lyrics[index + 1].timestamp : null,
+                                        color: normalTextStyle.color ?? Colors.white,
+                                        dotRadius: (normalTextStyle.fontSize ?? 15.0) * 0.16,
+                                      );
+                                    } else if (selected && parts != null && parts.isNotEmpty) {
+                                      textWidget = _TextWithFadingProgress(
+                                        parts: parts,
+                                        textStyle: textStyle,
+                                        textAlign: textAlign,
                                         textDirection: textDirection,
-                                        child: Align(
-                                          alignment: alignment, // needed for constraints
-                                          child: ConstrainedBox(
-                                            constraints: BoxConstraints(
-                                              maxWidth: widget.maxWidth != null ? widget.maxWidth! : double.infinity,
-                                            ),
-                                            child: Stack(
-                                              alignment: Alignment.center,
-                                              children: [
-                                                Positioned.fill(
-                                                  child: Material(
-                                                    type: MaterialType.transparency,
-                                                    child: InkWell(
-                                                      splashFactory: InkSparkle.splashFactory,
-                                                      onTap: () {
-                                                        _canAnimateScroll.value = true;
-                                                        _currentIndex = null; // reset so that tapping the current line still animates to it
-                                                        Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
-                                                      },
-                                                    ),
+                                        accentColor: miniplayerColor,
+                                        isDark: isDark,
+                                      );
+                                    } else {
+                                      textWidget = Text(
+                                        text,
+                                        style: textStyle,
+                                        textAlign: textAlign,
+                                        // softWrap: false, // keep the text steady while animating mp
+                                      );
+                                    }
+
+                                    return Directionality(
+                                      textDirection: textDirection,
+                                      child: Align(
+                                        alignment: alignment, // needed for constraints
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth: widget.maxWidth != null ? widget.maxWidth! : double.infinity,
+                                          ),
+                                          child: Stack(
+                                            alignment: Alignment.center,
+                                            children: [
+                                              Positioned.fill(
+                                                child: Material(
+                                                  type: MaterialType.transparency,
+                                                  child: InkWell(
+                                                    splashFactory: InkSparkle.splashFactory,
+                                                    onTap: () {
+                                                      _canAnimateScroll.value = true;
+                                                      _currentIndex = null; // reset so that tapping the current line still animates to it
+                                                      Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
+                                                    },
                                                   ),
                                                 ),
-                                                IgnorePointer(
-                                                  child: NamidaHero(
-                                                    tag: 'LYRICS_LINE_${lrc.timestamp}',
-                                                    enabled: false,
-                                                    child: AnimatedScale(
-                                                      alignment: alignment.resolve(textDirection),
-                                                      duration: const Duration(milliseconds: 400),
-                                                      curve: Curves.easeInOutCubicEmphasized,
-                                                      scale: selected ? 1.0 : 0.95,
-                                                      child: NamidaInkWell(
-                                                        alignment: alignment,
-                                                        bgColor: bgColor,
-                                                        decoration: BoxDecoration(
-                                                          borderRadius: borderRadius,
-                                                        ),
-                                                        animationDurationMS: 300,
-                                                        margin: lineMargin,
-                                                        padding: padding,
-                                                        child: textWidget,
+                                              ),
+                                              IgnorePointer(
+                                                child: NamidaHero(
+                                                  tag: 'LYRICS_LINE_${lrc.timestamp}',
+                                                  enabled: false,
+                                                  child: _LyricsFocalEffect(
+                                                    alignment: alignment.resolve(textDirection),
+                                                    selected: selected,
+                                                    scrollTick: _scrollTick,
+                                                    child: NamidaInkWell(
+                                                      alignment: alignment,
+                                                      bgColor: bgColor,
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: borderRadius,
                                                       ),
+                                                      animationDurationMS: 300,
+                                                      margin: lineMargin,
+                                                      padding: padding,
+                                                      child: textWidget,
                                                     ),
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                      );
-                                    },
-                                  ),
-                          );
-                        },
-                      );
-                      return CustomAnimatedSwitcher(
-                        duration: const Duration(milliseconds: 800),
-                        switchInCurve: Curves.easeInOutQuart,
-                        switchOutCurve: Curves.easeInOutQuart,
-                        child: textChild ?? lrcListChild,
-                      );
-                    },
-                  );
-                },
-              ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                        );
+                      },
+                    );
+                    return CustomAnimatedSwitcher(
+                      duration: const Duration(milliseconds: 800),
+                      switchInCurve: Curves.easeInOutQuart,
+                      switchOutCurve: Curves.easeInOutQuart,
+                      child: textChild ?? lrcListChild,
+                    );
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -970,21 +1024,28 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
             children: [
               Positioned.fill(
                 child: FadeIgnoreTransition(
-                  opacity: _visibility,
-                  child: FadeIgnoreTransition(
-                    opacity: mpAnimation,
-                    child: fullscreen || !widget.allowOverflow
-                        ? Padding(
-                            padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                            child: middleLyricsStackWidget,
-                          )
-                        : OverflowBox(
-                            maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
-                            child: Padding(
+                  opacity: mpAnimation,
+                  child: Listener(
+                    onPointerDown: _onPointerDown,
+                    onPointerUp: _onPointerUp,
+                    onPointerCancel: _onPointerUp,
+                    onPointerSignal: _onPointerSignal,
+                    child: FadeTransition(
+                      opacity: _visibility,
+                      child: fullscreen || !widget.allowOverflow
+                          ? Padding(
                               padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
                               child: middleLyricsStackWidget,
+                            )
+                          : OverflowBox(
+                              maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
+                              maxHeight: widget.maxHeight, // -- the panel space, not the artwork box which reshapes per item
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                                child: middleLyricsStackWidget,
+                              ),
                             ),
-                          ),
+                    ),
                   ),
                 ),
               ),
@@ -1200,21 +1261,27 @@ class _TextWithFadingProgress extends StatefulWidget {
   final TextStyle textStyle;
   final TextAlign textAlign;
   final TextDirection textDirection;
+  final Color accentColor;
+  final bool isDark;
 
   const _TextWithFadingProgress({
     required this.parts,
     required this.textStyle,
     required this.textAlign,
     required this.textDirection,
+    required this.accentColor,
+    required this.isDark,
   });
 
   @override
   State<_TextWithFadingProgress> createState() => _TextWithFadingProgressState();
 }
 
-class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with SingleTickerProviderStateMixin {
+class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with TickerProviderStateMixin {
   /// unbounded; its value is the number of "sung" characters (fractional) of [_fullText].
   late final AnimationController _fillController;
+
+  _ShimmerSweep? _shimmer;
 
   late String _fullText;
   late List<int> _partCharStarts;
@@ -1225,15 +1292,19 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
   // -- relaid only when text / style / width / textScaler actually change.
   TextPainter? _tpDim;
   TextPainter? _tpFull;
+  TextPainter? _tpGlow;
+  Color _shimmerColor = const Color(0x00FFFFFF);
   double _laidOutMaxWidth = -1;
   TextScaler _laidOutScaler = TextScaler.noScaling;
   TextStyle? _laidOutStyle;
   String? _laidOutText;
+  Color? _laidOutAccent;
 
   @override
   void initState() {
     super.initState();
     _fillController = AnimationController.unbounded(vsync: this);
+    if (_LyricsEffects.karaokeShimmer) _shimmer = _ShimmerSweep(this);
     _computeParts();
     _syncFill();
     Player.inst.nowPlayingPosition.addListener(_syncFill);
@@ -1289,6 +1360,7 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
     double exactChars;
     double targetChars;
     int remainingMicros = 0;
+    bool heldNote = false;
 
     if (active < 0) {
       exactChars = 0.0;
@@ -1307,6 +1379,7 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
         exactChars = startChar + frac * (endChar - startChar);
         targetChars = endChar.toDouble();
         remainingMicros = endMicros - posMicros;
+        heldNote = endMicros - startMicros >= _ShimmerSweep.heldNoteMicros;
       }
     }
 
@@ -1325,33 +1398,58 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
       _fillController.stop();
       _fillController.value = exactChars;
     }
+
+    _shimmer?.setActive(playing && (heldNote || posMicros > parts.last.endTimestamp.inMicroseconds + _ShimmerSweep.holdDelayMicros));
   }
 
   /// (Re)lays out the cached painters only when an input that affects layout changed.
   /// Keeps [paint] layout-free (layout is the costly part; painting a laid-out painter is cheap).
   void _ensurePainters(double maxWidth, TextScaler textScaler) {
     final style = widget.textStyle;
-    final upToDate = _tpFull != null && _laidOutMaxWidth == maxWidth && _laidOutScaler == textScaler && _laidOutStyle == style && _laidOutText == _fullText;
+    final upToDate =
+        _tpFull != null &&
+        _laidOutMaxWidth == maxWidth &&
+        _laidOutScaler == textScaler &&
+        _laidOutStyle == style &&
+        _laidOutText == _fullText &&
+        _laidOutAccent == widget.accentColor;
     if (upToDate) return;
 
     _tpDim?.dispose();
     _tpFull?.dispose();
-    final normalColor = style.color ?? const Color(0xFFFFFFFF);
-    final dimmedColor = normalColor.withValues(alpha: 0.25);
-    _tpDim = _layoutPainter(dimmedColor, style, maxWidth, textScaler);
-    _tpFull = _layoutPainter(normalColor, style, maxWidth, textScaler);
+    _tpGlow?.dispose();
+    final colors = _KaraokeColors.resolve(
+      base: style.color ?? const Color(0xFFFFFFFF),
+      accent: widget.accentColor,
+      isDark: widget.isDark,
+    );
+    _tpDim = _layoutPainter(style.copyWith(color: colors.dim), maxWidth, textScaler);
+    _tpFull = _layoutPainter(style.copyWith(color: colors.sung), maxWidth, textScaler);
+    final glowColor = colors.glow;
+    _tpGlow = glowColor == null
+        ? null
+        : _layoutPainter(
+            style.copyWith(
+              foreground: Paint()
+                ..color = glowColor
+                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, _KaraokeColors.glowSigma),
+            ),
+            maxWidth,
+            textScaler,
+          );
+    _shimmerColor = colors.shimmer;
     _laidOutMaxWidth = maxWidth;
     _laidOutScaler = textScaler;
     _laidOutStyle = style;
     _laidOutText = _fullText;
+    _laidOutAccent = widget.accentColor;
   }
 
-  TextPainter _layoutPainter(Color color, TextStyle style, double maxWidth, TextScaler textScaler) {
+  TextPainter _layoutPainter(TextStyle style, double maxWidth, TextScaler textScaler) {
     return TextPainter(
       text: TextSpan(
         text: _fullText,
         style: style.copyWith(
-          color: color,
           height: 1.5, // -- ensure it clips more for higher glyphs, shouldn't affect anything else even with very high number
         ),
       ),
@@ -1372,6 +1470,8 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
     Player.inst.playWhenReady.removeListener(_syncFill);
     _tpDim?.dispose();
     _tpFull?.dispose();
+    _tpGlow?.dispose();
+    _shimmer?.dispose();
     _fillController.dispose();
     super.dispose();
   }
@@ -1390,9 +1490,14 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
             painter: _KaraokeTextPainter(
               dim: _tpDim!,
               full: full,
+              glow: _tpGlow,
               total: _totalChars,
               textDirection: widget.textDirection,
               fill: _fillController,
+              partStarts: _partCharStarts,
+              partEnds: _partCharEnds,
+              shimmer: _shimmer,
+              shimmerColor: _shimmerColor,
             ),
           ),
         );
@@ -1401,88 +1506,157 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with S
   }
 }
 
+/// vertical band + x position of the sweep boundary, resolved once per frame.
+typedef _KaraokeSweep = ({double top, double bottom, double boundaryX, bool ltr});
+
 /// Generated by claude.ai
 /// Reason: no enough experience with deep rendering stuff
 class _KaraokeTextPainter extends CustomPainter {
   final TextPainter dim;
   final TextPainter full;
+  final TextPainter? glow;
   final int total;
   final TextDirection textDirection;
   final Animation<double> fill;
+  final List<int> partStarts;
+  final List<int> partEnds;
+  final _ShimmerSweep? shimmer;
+  final Color shimmerColor;
 
   static const double _featherPx = 20.0;
 
-  const _KaraokeTextPainter({
+  _KaraokeTextPainter({
     required this.dim,
     required this.full,
+    required this.glow,
     required this.total,
     required this.textDirection,
     required this.fill,
-  }) : super(repaint: fill);
+    required this.partStarts,
+    required this.partEnds,
+    required this.shimmer,
+    required this.shimmerColor,
+  }) : super(repaint: shimmer == null ? fill : Listenable.merge([fill, shimmer.listenable]));
 
   @override
   void paint(Canvas canvas, Size size) {
-    // -- base dimmed layer (whole line)
-    dim.paint(canvas, Offset.zero);
-
-    if (total == 0) return;
     var fillChars = fill.value;
     if (fillChars.isNaN) fillChars = 0.0;
     fillChars = fillChars.clampDouble(0.0, total.toDouble());
-    if (fillChars <= 0) return;
 
-    if (fillChars >= total) {
-      full.paint(canvas, Offset.zero); // -- whole line sung
+    final partial = total > 0 && fillChars > 0 && fillChars < total;
+    final sweep = partial ? _resolveSweep(fillChars) : null;
+    final bump = partial && _LyricsEffects.karaokeWordBump ? _KaraokeWordBump.resolve(painter: full, starts: partStarts, ends: partEnds, fillChars: fillChars) : null;
+
+    // -- layer must contain the glow halo, else it gets cut into a visible box around the text
+    final bounds = glow == null ? Offset.zero & size : (Offset.zero & size).inflate(_KaraokeColors.glowSigma * 3.0);
+    final shimmer = this.shimmer;
+    final shimmerShader = shimmer != null && shimmer.isActive ? shimmer.shader(size.width, shimmerColor) : null;
+    if (bump == null) {
+      _paintLine(canvas, size, fillChars, sweep, bounds, shimmerShader);
       return;
     }
 
-    final n = fillChars.floor();
-    final frac = fillChars - n;
+    // -- everything except the active word, then the word itself scaled on top
+    canvas.save();
+    canvas.clipRect(bump.rect, clipOp: ui.ClipOp.difference);
+    _paintLine(canvas, size, fillChars, sweep, bounds, shimmerShader);
+    canvas.restore();
 
+    canvas.save();
+    final center = bump.rect.center;
+    canvas.translate(center.dx, center.dy);
+    canvas.scale(bump.scale);
+    canvas.translate(-center.dx, -center.dy);
+    canvas.clipRect(bump.rect);
+    _paintLine(canvas, size, fillChars, sweep, bump.rect, shimmerShader);
+    canvas.restore();
+  }
+
+  _KaraokeSweep? _resolveSweep(double fillChars) {
+    final n = fillChars.floor();
     // -- the active char's box gives us the boundary line's vertical band + the sweep x position
-    final cboxes = full.getBoxesForSelection(
+    final boxes = full.getBoxesForSelection(
       TextSelection(baseOffset: n, extentOffset: n + 1),
       boxHeightStyle: ui.BoxHeightStyle.max,
     );
-    if (cboxes.isEmpty) {
-      _paintHardSung(canvas, n); // -- fallback (e.g. active char is a zero-width glyph)
+    if (boxes.isEmpty) return null;
+    final box = boxes.first;
+    final rect = box.toRect();
+    final ltr = box.direction == TextDirection.ltr;
+    final frac = fillChars - n;
+    return (
+      top: rect.top,
+      bottom: rect.bottom,
+      boundaryX: ltr ? rect.left + frac * rect.width : rect.right - frac * rect.width,
+      ltr: ltr,
+    );
+  }
+
+  void _paintLine(Canvas canvas, Size size, double fillChars, _KaraokeSweep? sweep, Rect layerBounds, Shader? shimmerShader) {
+    // -- base dimmed layer (whole line)
+    dim.paint(canvas, Offset.zero);
+
+    if (total == 0 || fillChars <= 0) return;
+    if (fillChars >= total) {
+      _paintSungWhole(canvas, size, shimmerShader);
       return;
     }
-    final cb = cboxes.first;
-    final cRect = cb.toRect();
-    final ltr = cb.direction == TextDirection.ltr;
-    final lineTop = cRect.top;
-    final lineBottom = cRect.bottom;
-    final boundaryX = ltr ? cRect.left + frac * cRect.width : cRect.right - frac * cRect.width;
+    if (sweep == null) {
+      _paintHardSung(canvas, fillChars.floor()); // -- fallback (e.g. active char is a zero-width glyph)
+      return;
+    }
 
     // -- one small saveLayer: paint the full-color line, then carve it down to the sung region
     // -- with a dstIn mask. Lines above the sweep stay opaque, the sweep line feathers, lines below clear.
-    canvas.saveLayer(Offset.zero & size, Paint());
-    full.paint(canvas, Offset.zero);
+    canvas.saveLayer(layerBounds, Paint());
+    glow?.paint(canvas, Offset.zero);
+    _paintSungText(canvas, layerBounds, shimmerShader);
 
-    if (lineTop > 0) {
-      canvas.drawRect(
-        Rect.fromLTRB(0, 0, size.width, lineTop),
-        Paint()
-          ..blendMode = BlendMode.dstIn
-          ..color = const Color(0xFFFFFFFF), // -- keep everything above
-      );
-    }
+    final isFirstLine = sweep.top <= 0.5;
+    final isLastLine = sweep.bottom >= size.height - 0.5;
     canvas.drawRect(
-      Rect.fromLTRB(0, lineTop, size.width, lineBottom),
+      Rect.fromLTRB(
+        layerBounds.left,
+        isFirstLine ? math.min(layerBounds.top, sweep.top) : sweep.top,
+        layerBounds.right,
+        isLastLine ? math.max(layerBounds.bottom, sweep.bottom) : sweep.bottom,
+      ),
       Paint()
         ..blendMode = BlendMode.dstIn
-        ..shader = _featherShader(size.width, boundaryX, ltr), // -- feather the sweep line
+        ..shader = _featherShader(size.width, sweep.boundaryX, sweep.ltr), // -- feather the sweep line
     );
-    if (lineBottom < size.height) {
+    if (!isLastLine) {
       canvas.drawRect(
-        Rect.fromLTRB(0, lineBottom, size.width, size.height),
+        Rect.fromLTRB(layerBounds.left, sweep.bottom, layerBounds.right, math.max(layerBounds.bottom, size.height)),
         Paint()
           ..blendMode = BlendMode.dstIn
           ..color = const Color(0x00000000), // -- clear everything below
       );
     }
     canvas.restore();
+  }
+
+  // -- shimmer gets its own layer holding the glyphs only, otherwise srcATop lights up the glow halo too
+  void _paintSungText(Canvas canvas, Rect bounds, Shader? shimmerShader) {
+    if (shimmerShader == null) {
+      full.paint(canvas, Offset.zero);
+      return;
+    }
+    canvas.saveLayer(bounds, Paint());
+    full.paint(canvas, Offset.zero);
+    canvas.drawRect(
+      bounds,
+      Paint()
+        ..blendMode = BlendMode.srcATop
+        ..shader = shimmerShader,
+    );
+    canvas.restore();
+  }
+
+  void _paintSungWhole(Canvas canvas, Size size, Shader? shimmerShader) {
+    glow?.paint(canvas, Offset.zero);
+    _paintSungText(canvas, Offset.zero & size, shimmerShader);
   }
 
   Shader _featherShader(double width, double boundaryX, bool ltr) {
@@ -1526,6 +1700,7 @@ class _KaraokeTextPainter extends CustomPainter {
       path.addRect(b.toRect());
     }
     canvas.clipPath(path);
+    glow?.paint(canvas, Offset.zero);
     full.paint(canvas, Offset.zero);
 
     canvas.restore();
@@ -1533,14 +1708,577 @@ class _KaraokeTextPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _KaraokeTextPainter old) {
-    return old.dim != dim || old.full != full || old.total != total || old.textDirection != textDirection;
+    return old.dim != dim || old.full != full || old.glow != glow || old.total != total || old.textDirection != textDirection || old.shimmerColor != shimmerColor;
   }
+}
+
+/// const switches for every lyrics effect, so disabling one tree-shakes it away.
+///
+/// all effects below and their implementations by claude
+class _LyricsEffects {
+  const _LyricsEffects._();
+
+  /// lines scale down continuously the further they are from the current line, following the scroll.
+  static const focalTransform = true;
+
+  /// far lines lean back in 3d, above & below tilting opposite ways. needs [focalTransform].
+  static const perspectiveTilt = false;
+
+  /// far lines get blurred like a depth of field. costs a gpu blur per far line, first to disable on jank. needs [focalTransform].
+  static const depthBlur = true;
+
+  /// the line that just became current pops in with a small overshoot.
+  static const springPop = true;
+
+  /// instrumental gaps show three dots filling up until the next line, instead of an empty pill.
+  static const interludeDots = true;
+
+  /// sung words are tinted towards the artwork color. word-synced only.
+  static const accentTint = true;
+
+  /// soft artwork colored halo behind sung words. costs a text blur per frame. word-synced only.
+  static const karaokeGlow = true;
+
+  /// the word being sung grows slightly as the sweep crosses it. word-synced only.
+  static const karaokeWordBump = true;
+
+  /// highlight band travelling over the sung text during long held words (>=1s), or a line held after its last word. word-synced only.
+  static const karaokeShimmer = true;
+
+  /// far jumps (seeks) scroll slower with an emphasized curve, adjacent lines keep the quick glide.
+  static const velocityAwareScroll = true;
+
+  /// where the current line rests inside the viewport, shared by the scroller and the focal effect.
+  static const listAlignment = 0.4;
+}
+
+/// overshoots then settles instead of easing flatly into place.
+class _LyricsSpringCurve extends Curve {
+  static const _frequency = 1.65;
+  static const _damping = 5.2;
+
+  const _LyricsSpringCurve();
+
+  @override
+  double transformInternal(double t) => 1.0 - math.exp(-_damping * t) * math.cos(_frequency * math.pi * t);
+}
+
+/// repaint signal fed by the lyrics list scroll position.
+class _LyricsScrollTick extends ChangeNotifier {
+  void tick() => notifyListeners();
+}
+
+/// scroll duration/curve picked from how far the jump is: adjacent lines glide, seeks travel.
+class _LyricsScrollPlan {
+  static const _shortDuration = Duration(milliseconds: 300);
+  static const _longDuration = Duration(milliseconds: 620);
+  static const _shortCurve = Curves.easeOut;
+  static const _longCurve = Curves.easeInOutCubicEmphasized;
+  static const _shortThreshold = 0.25;
+
+  final Duration duration;
+  final Curve curve;
+
+  const _LyricsScrollPlan._(this.duration, this.curve);
+
+  factory _LyricsScrollPlan.forDelta(double delta, double viewportHeight) {
+    const short = _LyricsScrollPlan._(_shortDuration, _shortCurve);
+    if (!_LyricsEffects.velocityAwareScroll || viewportHeight <= 0) return short;
+    final t = (delta.abs() / viewportHeight).clampDouble(0.0, 1.0);
+    if (t < _shortThreshold) return short;
+    return _LyricsScrollPlan._(
+      Duration(milliseconds: ui.lerpDouble(_shortDuration.inMilliseconds, _longDuration.inMilliseconds, t)!.round()),
+      _longCurve,
+    );
+  }
+}
+
+/// sung/dim/glow/shimmer colors for a karaoke line, tinted towards the player accent.
+class _KaraokeColors {
+  static const glowSigma = 7.0;
+  static const _dimAlpha = 0.25;
+  static const _tintStrength = 0.6;
+  static const _glowAlpha = 0.85;
+  static const _shimmerAlpha = 0.85;
+  static const _minSaturation = 0.55;
+
+  final Color dim;
+  final Color sung;
+  final Color? glow;
+  final Color shimmer;
+
+  const _KaraokeColors._(this.dim, this.sung, this.glow, this.shimmer);
+
+  factory _KaraokeColors.resolve({required Color base, required Color accent, required bool isDark}) {
+    final baseAlpha = base.a;
+    // -- raw artwork colors are often too dark/muted to show as a tint, only the hue is kept
+    final hsl = HSLColor.fromColor(accent);
+    final vivid = hsl.saturation < 0.08 ? hsl : hsl.withSaturation(math.max(hsl.saturation, _minSaturation));
+    return _KaraokeColors._(
+      base.withValues(alpha: baseAlpha * _dimAlpha),
+      _LyricsEffects.accentTint ? Color.lerp(base, vivid.withLightness(isDark ? 0.78 : 0.32).toColor().withValues(alpha: baseAlpha), _tintStrength)! : base,
+      _LyricsEffects.karaokeGlow ? vivid.withLightness(isDark ? 0.6 : 0.5).toColor().withValues(alpha: baseAlpha * _glowAlpha * (isDark ? 1.0 : 0.6)) : null,
+      Color.fromRGBO(255, 255, 255, baseAlpha * _shimmerAlpha),
+    );
+  }
+}
+
+/// slight scale of the syllable the karaoke sweep is currently crossing.
+class _KaraokeWordBump {
+  static const _scaleAmount = 0.02;
+
+  final Rect rect;
+  final double scale;
+
+  const _KaraokeWordBump._(this.rect, this.scale);
+
+  static _KaraokeWordBump? resolve({
+    required TextPainter painter,
+    required List<int> starts,
+    required List<int> ends,
+    required double fillChars,
+  }) {
+    int active = -1;
+    for (int i = 0; i < starts.length; i++) {
+      if (fillChars >= starts[i] && fillChars < ends[i]) {
+        active = i;
+        break;
+      }
+    }
+    if (active < 0) return null;
+
+    final start = starts[active];
+    final end = ends[active];
+    final span = end - start;
+    if (span <= 0) return null;
+
+    final amount = math.sin(((fillChars - start) / span).clampDouble(0.0, 1.0) * math.pi);
+    if (amount <= 0.01) return null;
+
+    final boxes = painter.getBoxesForSelection(
+      TextSelection(baseOffset: start, extentOffset: end),
+      boxHeightStyle: ui.BoxHeightStyle.max,
+    );
+    if (boxes.isEmpty) return null;
+    var rect = boxes.first.toRect();
+    for (int i = 1; i < boxes.length; i++) {
+      final other = boxes[i].toRect();
+      if ((other.top - rect.top).abs() > 0.5) return null; // -- part wrapped onto another line
+      rect = rect.expandToInclude(other);
+    }
+    if (rect.width <= 0 || rect.height <= 0) return null;
+
+    return _KaraokeWordBump._(rect, 1.0 + _scaleAmount * amount);
+  }
+}
+
+/// travelling highlight band, only ticking during a long held syllable or a line held past its last one.
+class _ShimmerSweep {
+  static const holdDelayMicros = 1200 * 1000;
+  static const heldNoteMicros = 1000 * 1000;
+  static const _period = Duration(milliseconds: 1300);
+  static const _band = 0.2;
+
+  final AnimationController _controller;
+
+  _ShimmerSweep(TickerProvider vsync) : _controller = AnimationController(vsync: vsync, duration: _period);
+
+  Listenable get listenable => _controller;
+
+  bool get isActive => _controller.isAnimating;
+
+  void setActive(bool active) {
+    if (active) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else if (_controller.isAnimating) {
+      _controller.stop();
+      _controller.value = 0.0;
+    }
+  }
+
+  Shader? shader(double width, Color color) {
+    if (width <= 0) return null;
+    final center = -_band + _controller.value * (1.0 + _band * 2);
+    var s0 = (center - _band).clampDouble(0.0, 1.0);
+    var s1 = center.clampDouble(0.0, 1.0);
+    var s2 = (center + _band).clampDouble(0.0, 1.0);
+    if (s1 <= s0) s1 = (s0 + 0.001).clampDouble(0.0, 1.0);
+    if (s2 <= s1) s2 = (s1 + 0.001).clampDouble(0.0, 1.0);
+    if (s0 >= s2) return null;
+    return LinearGradient(
+      begin: Alignment.centerLeft,
+      end: Alignment.centerRight,
+      colors: [color.withValues(alpha: 0.0), color, color.withValues(alpha: 0.0)],
+      stops: [s0, s1, s2],
+    ).createShader(Rect.fromLTWH(0, 0, width, 1));
+  }
+
+  void dispose() => _controller.dispose();
+}
+
+/// continuous scale/tilt/blur driven by the line's live distance to the list focal point,
+/// plus a spring pop when it becomes the current line.
+class _LyricsFocalEffect extends StatefulWidget {
+  final Alignment alignment;
+  final bool selected;
+  final _LyricsScrollTick scrollTick;
+  final Widget child;
+
+  const _LyricsFocalEffect({
+    required this.alignment,
+    required this.selected,
+    required this.scrollTick,
+    required this.child,
+  });
+
+  @override
+  State<_LyricsFocalEffect> createState() => _LyricsFocalEffectState();
+}
+
+class _LyricsFocalEffectState extends State<_LyricsFocalEffect> with SingleTickerProviderStateMixin {
+  static const _popCurve = _LyricsSpringCurve();
+  static const _popDuration = Duration(milliseconds: 520);
+
+  AnimationController? _popController;
+  Animation<double>? _pop;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_LyricsEffects.springPop) {
+      final controller = AnimationController(vsync: this, duration: _popDuration, value: 1.0);
+      _popController = controller;
+      _pop = controller.drive(CurveTween(curve: _popCurve));
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _LyricsFocalEffect oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected && !oldWidget.selected) _popController?.forward(from: 0.0);
+  }
+
+  @override
+  void dispose() {
+    _popController?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _LyricsFocalEffectRenderer(
+      alignment: widget.alignment,
+      scrollTick: widget.scrollTick,
+      pop: _pop,
+      child: widget.child,
+    );
+  }
+}
+
+class _LyricsFocalEffectRenderer extends SingleChildRenderObjectWidget {
+  final Alignment alignment;
+  final _LyricsScrollTick scrollTick;
+  final Animation<double>? pop;
+
+  const _LyricsFocalEffectRenderer({
+    required this.alignment,
+    required this.scrollTick,
+    required this.pop,
+    required super.child,
+  });
+
+  @override
+  _RenderLyricsFocalEffect createRenderObject(BuildContext context) {
+    return _RenderLyricsFocalEffect(alignment, scrollTick, pop);
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderLyricsFocalEffect renderObject) {
+    renderObject
+      ..alignment = alignment
+      ..scrollTick = scrollTick
+      ..pop = pop;
+  }
+}
+
+/// Generated by claude.ai
+/// Reason: no enough experience with deep rendering stuff
+///
+/// everything is applied as layers (transform + image filter) around an already rasterized
+/// child, so scrolling only re-composites and never re-rasterizes the text.
+class _RenderLyricsFocalEffect extends RenderProxyBox {
+  static const _falloffFraction = 0.5;
+  static const _minScale = 0.92;
+  static const _maxTilt = 0.4;
+  static const _maxBlurSigma = 1.2;
+  static const _minBlurSigma = 0.2;
+  static const _popStrength = 0.06;
+  static const _perspective = 0.002;
+
+  _RenderLyricsFocalEffect(this._alignment, this._scrollTick, this._pop);
+
+  Alignment _alignment;
+  set alignment(Alignment value) {
+    if (_alignment == value) return;
+    _alignment = value;
+    markNeedsPaint();
+  }
+
+  _LyricsScrollTick _scrollTick;
+  set scrollTick(_LyricsScrollTick value) {
+    if (identical(_scrollTick, value)) return;
+    if (attached) _scrollTick.removeListener(markNeedsPaint);
+    _scrollTick = value;
+    if (attached) _scrollTick.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  Animation<double>? _pop;
+  set pop(Animation<double>? value) {
+    if (identical(_pop, value)) return;
+    if (attached) _pop?.removeListener(markNeedsPaint);
+    _pop = value;
+    if (attached) _pop?.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  RenderBox? _viewport;
+  final _blurLayerHandle = LayerHandle<ImageFilterLayer>();
+  ui.ImageFilter? _blurFilter;
+  double _blurSigma = -1.0;
+  final _paintTransform = Matrix4.identity();
+  final _innerTransform = Matrix4.identity();
+
+  @override
+  bool get alwaysNeedsCompositing => true;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _scrollTick.addListener(markNeedsPaint);
+    _pop?.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _scrollTick.removeListener(markNeedsPaint);
+    _pop?.removeListener(markNeedsPaint);
+    _viewport = null;
+    super.detach();
+  }
+
+  @override
+  void dispose() {
+    _blurLayerHandle.layer = null;
+    super.dispose();
+  }
+
+  /// signed -1..1 distance of this line's center from where the current line rests.
+  double _focalDistance() {
+    var viewport = _viewport;
+    if (viewport == null || !viewport.attached) {
+      final RenderObject? found = RenderAbstractViewport.maybeOf(this);
+      if (found is! RenderBox) return 0.0;
+      viewport = _viewport = found;
+    }
+    if (!viewport.hasSize) return 0.0;
+    final viewportHeight = viewport.size.height;
+    if (viewportHeight <= 0) return 0.0;
+    final halfHeight = size.height * 0.5;
+    final centerY = localToGlobal(Offset.zero, ancestor: viewport).dy + halfHeight;
+    final focalY = (viewportHeight - size.height) * _LyricsEffects.listAlignment + halfHeight;
+    return ((centerY - focalY) / (viewportHeight * _falloffFraction)).clampDouble(-1.0, 1.0);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child == null) return;
+
+    final signedDistance = _LyricsEffects.focalTransform ? _focalDistance() : 0.0;
+    final distance = signedDistance.abs();
+
+    var scale = 1.0 - (1.0 - _minScale) * distance;
+    final pop = _pop;
+    if (pop != null) scale *= 1.0 + _popStrength * (pop.value - 1.0);
+
+    final tilt = _LyricsEffects.perspectiveTilt ? signedDistance * _maxTilt : 0.0;
+    final sigma = _LyricsEffects.depthBlur ? (_maxBlurSigma * distance * distance * 4.0).roundToDouble() * 0.25 : 0.0;
+    if (sigma != _blurSigma) {
+      _blurSigma = sigma;
+      _blurFilter = sigma > _minBlurSigma ? ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.decal) : null;
+    }
+
+    final inner = _innerTransform;
+    inner.setIdentity();
+    if (tilt != 0.0) {
+      inner.setEntry(3, 2, _perspective);
+      inner.rotateX(tilt);
+    }
+    inner.scaleByDouble(scale, scale, 1.0, 1.0);
+
+    final origin = _alignment.alongSize(size);
+    final transform = _paintTransform;
+    transform.setIdentity();
+    transform.translateByDouble(origin.dx, origin.dy, 0.0, 1.0);
+    transform.multiply(inner);
+    transform.translateByDouble(-origin.dx, -origin.dy, 0.0, 1.0);
+
+    layer = context.pushTransform(
+      true,
+      offset,
+      transform,
+      _paintFiltered,
+      oldLayer: layer as TransformLayer?,
+    );
+  }
+
+  void _paintFiltered(PaintingContext context, Offset offset) {
+    final filter = _blurFilter;
+    if (filter == null) {
+      _paintChild(context, offset);
+      return;
+    }
+    final blurLayer = _blurLayerHandle.layer ??= ImageFilterLayer();
+    blurLayer.imageFilter = filter;
+    context.pushLayer(blurLayer, _paintChild, offset);
+  }
+
+  void _paintChild(PaintingContext context, Offset offset) => context.paintChild(child!, offset);
+
+  @override
+  void applyPaintTransform(RenderObject child, Matrix4 transform) {
+    transform.multiply(_paintTransform);
+  }
+}
+
+/// three dots filling across an instrumental gap, pulsing right before the next line lands.
+class _LyricsInterludeDots extends StatefulWidget {
+  final Duration start;
+  final Duration? end;
+  final Color color;
+  final double dotRadius;
+
+  const _LyricsInterludeDots({
+    required this.start,
+    required this.end,
+    required this.color,
+    required this.dotRadius,
+  });
+
+  @override
+  State<_LyricsInterludeDots> createState() => _LyricsInterludeDotsState();
+}
+
+class _LyricsInterludeDotsState extends State<_LyricsInterludeDots> with SingleTickerProviderStateMixin {
+  static const _resyncToleranceMicros = 250 * 1000;
+
+  late final _progress = AnimationController.unbounded(vsync: this);
+
+  @override
+  void initState() {
+    super.initState();
+    _sync();
+    Player.inst.nowPlayingPosition.addListener(_sync);
+    Player.inst.playWhenReady.addListener(_sync);
+  }
+
+  @override
+  void didUpdateWidget(covariant _LyricsInterludeDots oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.start != widget.start || oldWidget.end != widget.end) _sync();
+  }
+
+  @override
+  void dispose() {
+    Player.inst.nowPlayingPosition.removeListener(_sync);
+    Player.inst.playWhenReady.removeListener(_sync);
+    _progress.dispose();
+    super.dispose();
+  }
+
+  void _sync() {
+    final end = widget.end;
+    if (end == null) return;
+    final startMicros = widget.start.inMicroseconds;
+    final totalMicros = end.inMicroseconds - startMicros;
+    if (totalMicros <= 0) return;
+
+    final posMicros = Player.inst.nowPlayingPosition.value * 1000;
+    final exact = ((posMicros - startMicros) / totalMicros).clampDouble(0.0, 1.0);
+    if ((exact - _progress.value).abs() * totalMicros > _resyncToleranceMicros) _progress.value = exact;
+
+    final remainingMicros = end.inMicroseconds - posMicros;
+    if (Player.inst.playWhenReady.value && remainingMicros > 0 && exact < 1.0) {
+      _progress.animateTo(
+        1.0,
+        duration: Duration(microseconds: remainingMicros),
+        curve: Curves.linear,
+      );
+    } else {
+      _progress.stop();
+      _progress.value = exact;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = widget.dotRadius;
+    return RepaintBoundary(
+      child: CustomPaint(
+        size: Size(radius * 8.0, radius * 3.0),
+        painter: _LyricsInterludeDotsPainter(
+          progress: _progress,
+          color: widget.color,
+          dotRadius: radius,
+        ),
+      ),
+    );
+  }
+}
+
+class _LyricsInterludeDotsPainter extends CustomPainter {
+  static const _count = 3;
+  static const _pulseStart = 0.88;
+
+  final Animation<double> progress;
+  final Color color;
+  final double dotRadius;
+
+  _LyricsInterludeDotsPainter({
+    required this.progress,
+    required this.color,
+    required this.dotRadius,
+  }) : super(repaint: progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final value = progress.value.clampDouble(0.0, 1.0);
+    final pulse = value <= _pulseStart ? 0.0 : math.sin((value - _pulseStart) / (1.0 - _pulseStart) * math.pi);
+    final gap = dotRadius * 3.0;
+    final firstX = size.width * 0.5 - gap;
+    final centerY = size.height * 0.5;
+    final baseAlpha = color.a;
+    final paint = Paint();
+    for (int i = 0; i < _count; i++) {
+      final fill = (value * _count - i).clampDouble(0.0, 1.0);
+      paint.color = color.withValues(alpha: baseAlpha * (0.25 + 0.75 * fill));
+      canvas.drawCircle(
+        Offset(firstX + gap * i, centerY),
+        dotRadius * (0.55 + 0.45 * fill + 0.28 * pulse),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LyricsInterludeDotsPainter old) => old.color != color || old.dotRadius != dotRadius;
 }
 
 class _LyricsList extends StatefulWidget {
   final double verticalPadding;
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
+  final _LyricsScrollTick scrollTick;
   final void Function(_LyricsListState state) onInit;
   final void Function(_LyricsListState state) onDispose;
 
@@ -1549,6 +2287,7 @@ class _LyricsList extends StatefulWidget {
     required this.verticalPadding,
     required this.itemCount,
     required this.itemBuilder,
+    required this.scrollTick,
     required this.onInit,
     required this.onDispose,
   });
@@ -1558,9 +2297,6 @@ class _LyricsList extends StatefulWidget {
 }
 
 class _LyricsListState extends State<_LyricsList> {
-  static const _alignment = 0.4;
-  static const _animationDuration = Duration(milliseconds: 300);
-
   final _listController = ListController();
   final _scrollController = NamidaScrollController.create();
 
@@ -1570,11 +2306,13 @@ class _LyricsListState extends State<_LyricsList> {
   void initState() {
     super.initState();
     widget.onInit(this);
+    _scrollController.addListener(widget.scrollTick.tick);
   }
 
   @override
   void dispose() {
     widget.onDispose(this);
+    _scrollController.removeListener(widget.scrollTick.tick);
     _listController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -1585,24 +2323,69 @@ class _LyricsListState extends State<_LyricsList> {
   void scrollToIndex(int index, {required bool jump}) {
     final position = _scrollController.position;
     // ignore: invalid_use_of_visible_for_testing_member
-    final offset = _listController.getOffsetToReveal(index, _alignment).clampDouble(position.minScrollExtent, position.maxScrollExtent);
+    final offset = _listController.getOffsetToReveal(index, _LyricsEffects.listAlignment).clampDouble(position.minScrollExtent, position.maxScrollExtent);
     if (offset == position.pixels) return;
     if (jump) {
       position.jumpTo(offset);
     } else {
-      position.animateTo(offset, duration: _animationDuration, curve: Curves.easeOut);
+      final plan = _LyricsScrollPlan.forDelta(offset - position.pixels, position.viewportDimension);
+      position.animateTo(offset, duration: plan.duration, curve: plan.curve);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SuperSmoothListView.builder(
-      padding: EdgeInsets.symmetric(vertical: widget.verticalPadding),
-      controller: _scrollController,
-      listController: _listController,
-      itemCount: widget.itemCount,
-      itemBuilder: widget.itemBuilder,
+    return _LyricsViewportTick(
+      scrollTick: widget.scrollTick,
+      child: SuperSmoothListView.builder(
+        padding: EdgeInsets.symmetric(vertical: widget.verticalPadding),
+        controller: _scrollController,
+        listController: _listController,
+        itemCount: widget.itemCount,
+        itemBuilder: widget.itemBuilder,
+      ),
     );
+  }
+}
+
+/// lines read the viewport height to place themselves against the focal point, but a height-only
+/// change keeps their own constraints identical, so nothing would repaint them. this ticks on it.
+class _LyricsViewportTick extends SingleChildRenderObjectWidget {
+  final _LyricsScrollTick scrollTick;
+
+  const _LyricsViewportTick({
+    required this.scrollTick,
+    required super.child,
+  });
+
+  @override
+  _RenderLyricsViewportTick createRenderObject(BuildContext context) => _RenderLyricsViewportTick(scrollTick);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderLyricsViewportTick renderObject) {
+    renderObject.scrollTick = scrollTick;
+  }
+}
+
+class _RenderLyricsViewportTick extends RenderProxyBox {
+  _RenderLyricsViewportTick(this._scrollTick);
+
+  _LyricsScrollTick _scrollTick;
+  set scrollTick(_LyricsScrollTick value) {
+    if (identical(_scrollTick, value)) return;
+    _scrollTick = value;
+    markNeedsLayout();
+  }
+
+  Size? _lastSize;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    if (_lastSize != size) {
+      _lastSize = size;
+      _scrollTick.tick();
+    }
   }
 }
 
@@ -1621,24 +2404,30 @@ class LyricsOverlayBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgColor = context.theme.scaffoldBackgroundColor;
-    return AnimatedBuilder(
-      animation: Listenable.merge([mpAnimation, visibility]),
-      child: child,
-      builder: (context, child) {
-        final factor = mpAnimation.value * visibility.value;
-        return NamidaBlur(
-          blur: 12.0 * factor,
-          fixArtifacts: true,
-          child: Stack(
-            children: [
-              child!,
-              Positioned.fill(
-                child: ColoredBox(
-                  color: bgColor.withOpacityExt(0.5 * factor),
-                ),
+    final animation = Listenable.merge([mpAnimation, visibility]);
+    return Obx(
+      (context) {
+        final maskColor = Color.alphaBlend(CurrentColor.inst.miniplayerColor.withOpacityExt(0.25), bgColor);
+        return AnimatedBuilder(
+          animation: animation,
+          child: child,
+          builder: (context, child) {
+            final factor = mpAnimation.value * visibility.value;
+            return NamidaBlur(
+              blur: 12.0 * factor,
+              fixArtifacts: true,
+              child: Stack(
+                children: [
+                  child!,
+                  Positioned.fill(
+                    child: ColoredBox(
+                      color: maskColor.withOpacityExt(0.25 * factor),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
