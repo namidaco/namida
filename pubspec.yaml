@@ -91,7 +91,6 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/dart_lrc
   vibration: ^3.1.6
-  flutter_displaymode: ^0.7.0
   flutter_udid: ^4.1.2
   namico_db_wrapper:
     git:

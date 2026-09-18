@@ -462,7 +462,14 @@ class NamidaMainActivity : FlutterActivity() {
     if (intent?.action == NamidaConstants.BABE_WAKE_UP) {
       moveTaskToBack(true)
     }
+    DisplayRefreshRate.applyMax(this)
     LauncherIconController.tryFixLauncherIconIfNeeded();
+  }
+
+  override fun onWindowFocusChanged(hasFocus: Boolean) {
+    // -- some roms reset the window attributes while the app is in the background
+    if (hasFocus) DisplayRefreshRate.applyMax(this)
+    super.onWindowFocusChanged(hasFocus)
   }
 
   override fun onResume() {

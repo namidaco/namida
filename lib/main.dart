@@ -8,7 +8,6 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_sharing_intent/flutter_sharing_intent.dart';
@@ -267,7 +266,6 @@ Future<bool> _mainAppInitialization() async {
       YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubeSubscriptionsController.inst.loadSubscriptionsFileAsync(),
       ConnectivityController.inst.initialize(),
-      FlutterDisplayMode.setHighRefreshRate().ignoreError(), // ignore cuz whatever
       NamidaNavigator.setSystemUIImmersiveMode(false),
       Rhttp.init().then(
         (_) async {
@@ -448,7 +446,6 @@ void _initLifeCycle() {
     }
   });
   NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
-  NamidaChannel.inst.addOnResume(() async => FlutterDisplayMode.setHighRefreshRate().ignoreError());
 }
 
 Future<void> _clearIntentCachedFiles() async {
