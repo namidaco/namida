@@ -31,6 +31,12 @@ import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
 typedef YoutubeMainPageFetcherItemBuilder<T, W> = Widget? Function(T item, int index, W list);
 
+abstract class YoutubeMainPageFetcherActions<W> {
+  W? get currentList;
+  Future<void> forceFetchFeed();
+  void updateList(W? list);
+}
+
 final _resultsFetchTime = <ValueKey, DateTime>{};
 
 class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends StatefulWidget {
@@ -106,7 +112,8 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
 }
 
 class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializable> extends State<YoutubeMainPageFetcherAccBase<W, T>>
-    with TickerProviderStateMixin, PullToRefreshMixin {
+    with TickerProviderStateMixin, PullToRefreshMixin
+    implements YoutubeMainPageFetcherActions<W> {
   ValueKey get _getFetchTimeMapKey => widget.fetchTimeMapKey ?? ValueKey(W);
 
   @override
@@ -115,7 +122,13 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
   @override
   double get maxDistance => 64.0;
 
+  @override
+  W? get currentList => _currentFeed.value;
+
+  @override
   Future<void> forceFetchFeed() => _fetchFeedSilent();
+
+  @override
   void updateList(W? list) {
     _currentFeed.value = list;
     _lastFetchWasCached.value = false;

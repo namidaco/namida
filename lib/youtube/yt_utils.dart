@@ -8,6 +8,7 @@ import 'package:youtipie/class/comments/comment_info_item.dart';
 import 'package:youtipie/class/comments/comment_info_item_base.dart';
 import 'package:youtipie/class/result_wrapper/comment_reply_result.dart';
 import 'package:youtipie/class/result_wrapper/comment_result.dart';
+import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -1179,5 +1180,28 @@ class YTUtils {
         leftBarIndicatorColor: CurrentColor.inst.miniplayerColor,
       );
     }
+  }
+}
+
+extension YoutiPieNotificationResultUtils on YoutiPieNotificationResult {
+  void playNotifications({int? startAtIndex, bool unreadOnly = false}) {
+    int startIndex = 0;
+    final itemsToPlay = <YoutubeID>[];
+    items.reverseLoopAdv(
+      (item, index) {
+        if (index == startAtIndex) startIndex = itemsToPlay.length;
+        if (item.isComment || item.id.isEmpty) return;
+        if (unreadOnly && item.isRead != false) return;
+        itemsToPlay.add(YoutubeID(id: item.id, playlistID: null));
+      },
+    );
+    if (itemsToPlay.isEmpty) return;
+
+    Player.inst.playOrPause(
+      startIndex,
+      itemsToPlay,
+      QueueSourceYoutubeID.ytNotificationsHosted,
+    );
+    YTUtils.expandMiniplayer();
   }
 }

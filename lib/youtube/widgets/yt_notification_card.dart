@@ -7,7 +7,6 @@ import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -81,23 +80,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     if (widget.notification.isComment) return;
 
     final mainList = widget.mainList();
-    int startIndex = mainList.length - widget.index - 1;
-    final itemsToPlay = <YoutubeID>[];
-    mainList.items.reverseLoopAdv(
-      (item, index) {
-        if (item.isComment == false) {
-          itemsToPlay.add(YoutubeID(id: item.id, playlistID: null));
-        } else {
-          if (index > widget.index) startIndex--;
-        }
-      },
-    );
-    Player.inst.playOrPause(
-      startIndex,
-      itemsToPlay,
-      QueueSourceYoutubeID.ytNotificationsHosted,
-    );
-    YTUtils.expandMiniplayer();
+    mainList.playNotifications(startAtIndex: widget.index);
     await _markAsRead(mainList);
   }
 

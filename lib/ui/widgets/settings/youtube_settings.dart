@@ -217,6 +217,20 @@ class YoutubeSettings extends SettingSubpageProvider {
     );
   }
 
+  static Widget getNotificationsExtractorFlagWidget({required void Function() afterChanged}) => ObxOF(
+    rx: settings.youtube.useNewNotificationExtractor,
+    builder: (context, value, fallback) => CustomSwitchListTile(
+      icon: Broken.notification_1,
+      value: value ?? fallback,
+      onChanged: (isTrue) {
+        settings.youtube.save(useNewNotificationExtractor: !isTrue);
+        afterChanged();
+      },
+      title: 'use_new_notifications_extractor'.toUpperCase(),
+      subtitle: 'use if you don\'t see new notifications. order might not be accurate if enabled',
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -1082,15 +1096,8 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 title: 'link_like_button_with_favourites'.toUpperCase(),
                 subtitle: 'liking adds to local favourites, unliking/disliking removes',
               ),
-              ObxOF(
-                rx: settings.youtube.useNewNotificationExtractor,
-                builder: (context, value, fallback) => CustomSwitchListTile(
-                  icon: Broken.notification_1,
-                  value: value ?? fallback,
-                  onChanged: (isTrue) => setState(() => settings.youtube.save(useNewNotificationExtractor: !isTrue)),
-                  title: 'use_new_notification_extractor'.toUpperCase(),
-                  subtitle: 'use if you don\'t see new notifications. order might not be accurate if enabled',
-                ),
+              YoutubeSettings.getNotificationsExtractorFlagWidget(
+                afterChanged: refreshState,
               ),
               CustomListTile(
                 icon: Broken.driver_refresh,
