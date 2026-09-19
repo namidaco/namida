@@ -88,7 +88,7 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Best Video & Audio Quality
 - Audio Only & Data Saver Mode
 - Support Downloads, Caching & Offline Playback
-- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, swipe to seek, long press for 2x speed, etc)
+- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, swipe to seek, long press for 1.5x speed, etc)
 - SponsorBlock & Return Youtube Dislike Integration
 - Segments and Heatmap for videos
 - Data Saver Mode

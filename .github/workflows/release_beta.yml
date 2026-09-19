@@ -11,12 +11,26 @@ on:
       is_beta:
         type: boolean
         default: true
-      flatpak_only:
-        description: only rebuild the flatpak, reusing the portable tarball from source_run_id
+      build_android:
         type: boolean
-        default: false
+        default: true
+      build_windows:
+        type: boolean
+        default: true
+      build_linux:
+        description: deb/rpm/tar.gz + AUR (beta only)
+        type: boolean
+        default: true
+      build_linux_portable:
+        description: AppImage + portable tarball (beta only)
+        type: boolean
+        default: true
+      build_flatpak:
+        description: beta only
+        type: boolean
+        default: true
       source_run_id:
-        description: run id that produced the namida-linux-portable artifact (flatpak_only)
+        description: run id to pull the namida-linux-portable artifact from, when build_linux_portable is off
         type: string
         default: ""
   workflow_call:
@@ -24,6 +38,24 @@ on:
       is_beta:
         type: boolean
         default: true
+      build_android:
+        type: boolean
+        default: true
+      build_windows:
+        type: boolean
+        default: true
+      build_linux:
+        type: boolean
+        default: true
+      build_linux_portable:
+        type: boolean
+        default: true
+      build_flatpak:
+        type: boolean
+        default: true
+      source_run_id:
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -84,7 +116,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   setup_matrix:
-    if: ${{ !inputs.flatpak_only }}
+    if: ${{ inputs.build_android }}
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
@@ -98,7 +130,7 @@ jobs:
           fi
 
   build_android:
-    if: ${{ !inputs.flatpak_only }}
+    if: ${{ inputs.build_android }}
     needs: [create_release, setup_matrix]
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
@@ -123,7 +155,7 @@ jobs:
           sudo swapoff -a
           sudo rm -f /swapfile
           sudo apt clean
-          docker rmi $(docker image ls -aq)
+          docker image prune -af
           df -h
 
       - name: remove unused SDKs
@@ -210,7 +242,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_windows:
-    if: ${{ !inputs.flatpak_only }}
+    if: ${{ inputs.build_windows }}
     needs: create_release
     strategy:
       fail-fast: false
@@ -341,7 +373,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_linux:
-    if: ${{ inputs.is_beta && !inputs.flatpak_only }}
+    if: ${{ inputs.is_beta && inputs.build_linux }}
     needs: create_release
     runs-on: ubuntu-latest
     container:
@@ -460,7 +492,7 @@ jobs:
   #   - Namida-x86_64-<ver>.AppImage (+ .zsync)      -> release asset
   #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
   build_linux_portable:
-    if: ${{ inputs.is_beta && !inputs.flatpak_only }}
+    if: ${{ inputs.is_beta && inputs.build_linux_portable }}
     needs: create_release
     runs-on: ubuntu-24.04
 
@@ -532,7 +564,7 @@ jobs:
   # Flatpak bundle from the portable tarball. libass/libplacebo/ffmpeg/mpv are compiled by the manifest
   # (cached between runs on the manifest hash), the app is dropped in prebuilt.
   build_flatpak:
-    if: ${{ !cancelled() && inputs.is_beta && (inputs.flatpak_only || needs.build_linux_portable.result == 'success') }}
+    if: ${{ !cancelled() && inputs.is_beta && inputs.build_flatpak && (!inputs.build_linux_portable || needs.build_linux_portable.result == 'success') }}
     needs: [create_release, build_linux_portable]
     runs-on: ubuntu-latest
     container:
@@ -548,7 +580,7 @@ jobs:
         with:
           name: namida-linux-portable
           path: linux/packaging/flatpak
-          run-id: ${{ inputs.flatpak_only && inputs.source_run_id || github.run_id }}
+          run-id: ${{ inputs.source_run_id != '' && inputs.source_run_id || github.run_id }}
           github-token: ${{ secrets.PAT }}
 
       - name: Place tarball where the manifest expects it
