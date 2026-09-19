@@ -39,7 +39,7 @@ class ScrollSearchController {
 
   final _textSearchControllers = <LibraryTab, TextEditingController>{}.obs;
 
-  final focusNode = FocusNode();
+  final _searchFocusNodes = <FocusNode>[];
 
   final searchBarKey = GlobalKey<SearchBarAnimationState>();
   final tabViewKey = GlobalKey<NamidaTabViewState>();
@@ -215,9 +215,14 @@ class ScrollSearchController {
     if (globalSearchState != null && isGlobalSearchMenuShown.value) {
       globalSearchState.focusNode.requestFocus();
     } else {
-      focusNode.requestFocus();
+      _searchFocusNodes.lastOrNull?.requestFocus();
     }
   }
+
+  /// per-field nodes, a shared one gets detached once any field is disposed.
+  void registerSearchFocusNode(FocusNode node) => _searchFocusNodes.add(node);
+
+  void unregisterSearchFocusNode(FocusNode node) => _searchFocusNodes.remove(node);
 
   bool onSearchBoxVisibiltyChange(LibraryTab libraryTab, bool newShow) {
     _textSearchControllers[libraryTab] ??= TextEditingController();

@@ -33,6 +33,8 @@ class VideoCardInfoFetcherWrapper {
 
   String? _fetchingVideoId;
 
+  static const _kNetworkFetchDelay = Duration(milliseconds: 500);
+
   String? get channelId => infoVideoFinal?.channelId ?? infoFinal?.channelId ?? infoFinal?.channel?.id;
 
   bool get isTitleMissing {
@@ -196,6 +198,11 @@ class VideoCardInfoFetcherWrapper {
       // -- if only title is missing then most likely video is deleted/etc so no need to refetch (unless enforced),
       // -- but missing details for an available video are worth a network request.
       final fromNetwork = preferFetchNewInfo || (detailsMissing && !isVideoUnavailable);
+      if (fromNetwork) {
+        // -- skip cards scrolled past by fast, useful also in most played page when using slider
+        await Future.delayed(_kNetworkFetchDelay);
+        if (_isStale(videoId) || !_state.mounted) return;
+      }
       await _fetchNewInfo(videoId, fromNetwork: fromNetwork);
     }
   }

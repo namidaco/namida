@@ -84,10 +84,10 @@ class PermissionManager {
     return p.isGranted;
   }
 
-  Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, bool ensureDirectoryCreated = false}) async {
+  Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, required String? directoryToCreate}) async {
     Future<void> createDir() async {
-      if (!ensureDirectoryCreated) return;
-      final dir = Directory(AppDirs.INTERNAL_STORAGE);
+      if (directoryToCreate == null) return;
+      final dir = Directory(directoryToCreate);
       if (!await dir.exists()) await dir.create(recursive: true);
     }
 

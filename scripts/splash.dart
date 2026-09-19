@@ -297,8 +297,8 @@ final _appIcons = [
     'jellyda',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
       _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
     ],
   ),
   _IconDetails.create(

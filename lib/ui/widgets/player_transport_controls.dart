@@ -19,14 +19,14 @@ import 'package:namida/youtube/class/youtube_id.dart';
 /// Used in fullscreen lyrics & widescreen player
 class PlayerTransportControls extends StatefulWidget {
   final bool addBottomSafePadding;
-  final double waveformHeight;
+  final double waveformYScale;
   final double waveformBottomGap;
   final double bottomPadding;
 
   const PlayerTransportControls({
     super.key,
     this.addBottomSafePadding = true,
-    this.waveformHeight = 64.0,
+    this.waveformYScale = 1.0,
     this.waveformBottomGap = 12.0,
     this.bottomPadding = 24.0,
   });
@@ -69,14 +69,23 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
+    const waveform = WaveformMiniplayer(
+      fixPadding: true,
+      enableHero: false,
+    );
+    final waveformYScale = widget.waveformYScale;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        WaveformMiniplayer(
-          fixPadding: true,
-          height: widget.waveformHeight,
-          enableHero: false,
-        ),
+        waveformYScale == 1.0
+            ? waveform
+            : Align(
+                heightFactor: waveformYScale,
+                child: Transform.scale(
+                  scaleY: waveformYScale,
+                  child: waveform,
+                ),
+              ),
         SizedBox(height: widget.waveformBottomGap),
         LayoutBuilder(
           builder: (context, constraints) => Row(

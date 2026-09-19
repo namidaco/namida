@@ -1205,9 +1205,9 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 CustomSwitchListTile(
                   leading: const JellyMascot(height: 30.0),
                   value: settings.extra.jellysInvasion ?? false,
-                  onChanged: (isTrue) => setState(() => NamidaJellys.setInvasion(!isTrue)),
+                  onChanged: (isTrue) => setState(() => NamidaJellys.setInvasion(!isTrue, paletteFollows: true)),
                   title: 'jellys_invasion'.toUpperCase(),
-                  subtitle: "Lets jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}",
+                  subtitle: 'Let jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}',
                 ),
                 CustomSwitchListTile(
                   icon: Broken.color_swatch,

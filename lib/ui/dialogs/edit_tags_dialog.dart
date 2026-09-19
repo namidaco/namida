@@ -52,7 +52,7 @@ Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorSc
 }
 
 Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme, {bool autoOpenSearch = false}) async {
-  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+  if (!await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE)) return;
 
   // -- even tho we can modify the link in comment (app only), the next refresh would nuke it instantly, so better prevent it alltogether.
   final singleTrack = singleTrackPre.asPhysicalOrError();
@@ -237,7 +237,7 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
 }
 
 Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme, {bool instantEditArtwork = false}) async {
-  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+  if (!await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE)) return;
 
   final color = Colors.transparent.obso;
 
@@ -609,7 +609,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
 }
 
 Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instantEditArtwork = false}) async {
-  if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+  if (!await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE)) return;
 
   final tracksGoingToBeEditedRx = <PhysicalMedia, bool>{for (final t in tracksPre) t: true}.obs;
 

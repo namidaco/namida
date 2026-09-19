@@ -1282,7 +1282,7 @@ class NamidaFeaturesVisibility {
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
   static final changeApplicationBrightness = _isAndroid;
-  static final skipSilenceAvailable = _isAndroid;
+  static final skipSilenceAvailable = PlayerConfig.isSkipSilenceSupported;
   static final equalizerAvailable = PlayerConfig.isEqualizerSupported;
   static final loudnessEnhancerAvailable = PlayerConfig.isLoudnessEnhancerSupported;
 

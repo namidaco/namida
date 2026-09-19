@@ -14,6 +14,7 @@ import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/core/enum.dart' show LikeStatus;
 
+import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/file_parts.dart';
@@ -55,7 +56,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
-import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -2272,14 +2272,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return super.onPlaybackCompleted();
   }
 
+  static bool supportsSkipSilence(Playable? item) => item is! YoutubeID;
+
   @override
   Future<void> setSkipSilenceEnabled(bool enabled) async {
-    if (getDefaultPlayerConfig(currentItem.value).skipSilence) await super.setSkipSilenceEnabled(enabled);
+    if (enabled && !supportsSkipSilence(currentItem.value)) return; // -- disabling always goes through
+    await super.setSkipSilenceEnabled(enabled);
   }
 
   @override
   PlayerConfig getDefaultPlayerConfig(Q? item) => PlayerConfig(
-    skipSilence: settings.player.skipSilenceEnabled.value && item is! YoutubeID,
+    skipSilence: settings.player.skipSilenceEnabled.value && supportsSkipSilence(item),
     loudnessEnhancerEnabled: settings.equalizer.loudnessEnhancerEnabled.value,
     loudnessEnhancer: settings.equalizer.loudnessEnhancer.value,
     equalizerEnabled: settings.equalizer.equalizerEnabled.value,
@@ -2291,7 +2294,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   );
 
   PlayerConfig getDefaultPlayerConfigR(Q? item) => PlayerConfig(
-    skipSilence: settings.player.skipSilenceEnabled.valueR && item is! YoutubeID,
+    skipSilence: settings.player.skipSilenceEnabled.valueR && supportsSkipSilence(item),
     loudnessEnhancerEnabled: settings.equalizer.loudnessEnhancerEnabled.valueR,
     loudnessEnhancer: settings.equalizer.loudnessEnhancer.valueR,
     equalizerEnabled: settings.equalizer.equalizerEnabled.valueR,

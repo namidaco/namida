@@ -1,5 +1,7 @@
 #include "flutter_window.h"
 
+#include <dwmapi.h>
+
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
@@ -27,13 +29,17 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  // Dart positions, maximizes and shows the window. Maximizing makes it
+  // visible, so it stays cloaked until it has a frame to present.
+  BOOL cloak = TRUE;
+  DwmSetWindowAttribute(GetHandle(), DWMWA_CLOAK, &cloak, sizeof(cloak));
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+    BOOL cloak = FALSE;
+    DwmSetWindowAttribute(GetHandle(), DWMWA_CLOAK, &cloak, sizeof(cloak));
   });
 
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
+  // Flutter can complete the first frame before the callback is registered.
+  // This ensures a frame is pending, no-op if the first frame hasn't completed.
   flutter_controller_->ForceRedraw();
 
   return true;

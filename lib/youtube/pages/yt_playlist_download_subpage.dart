@@ -599,7 +599,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                       text: lang.download,
                       onTap: () async {
                         if (_selectedList.isEmpty) return;
-                        if (!await requestManageStoragePermission()) return;
+                        if (!await requestManageStoragePermission(directoryToCreate: AppDirs.YOUTUBE_DOWNLOADS)) return;
                         final timeNow = DateTime.now();
                         final group = _groupName.value;
                         final itemsConfig = _selectedList.value

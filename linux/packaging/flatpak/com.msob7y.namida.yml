@@ -157,11 +157,11 @@ modules:
       - ln -sf /app/bin/ffmpeg /app/namida/bin/ffmpeg
       - ln -sf /app/bin/ffprobe /app/namida/bin/ffprobe
       - install -Dm755 namida-launcher /app/bin/namida
-      # desktop integration, named after the app-id as flatpak requires
-      - install -Dm644 share/applications/namida.desktop /app/share/applications/com.msob7y.namida.desktop
+      # only the icon needs renaming, flatpak exports app-id-prefixed icons only
+      - install -Dm644 share/applications/com.msob7y.namida.desktop /app/share/applications/com.msob7y.namida.desktop
       - sed -i -e 's|^Icon=.*|Icon=com.msob7y.namida|' -e '/^TryExec=/d' /app/share/applications/com.msob7y.namida.desktop
-      - for s in 128 256 512; do install -Dm644 share/icons/namida_$s.png /app/share/icons/hicolor/${s}x${s}/apps/com.msob7y.namida.png; done
-      - install -Dm644 share/metainfo/namida.metainfo.xml /app/share/metainfo/com.msob7y.namida.metainfo.xml
+      - for s in 128 256 512; do install -Dm644 share/icons/hicolor/${s}x${s}/apps/namida.png /app/share/icons/hicolor/${s}x${s}/apps/com.msob7y.namida.png; done
+      - install -Dm644 share/metainfo/com.msob7y.namida.metainfo.xml /app/share/metainfo/com.msob7y.namida.metainfo.xml
     sources:
       - type: archive
         # produced by the release workflow (flutter build linux, non-login variant); replace with

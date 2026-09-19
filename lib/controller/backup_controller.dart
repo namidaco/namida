@@ -34,24 +34,20 @@ class BackupController {
   final isCreatingBackup = false.obso;
   final isRestoringBackup = false.obso;
 
+  static String get _backupDirectoryPath => settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
+
   Future<String?> _getBackupDirectoryPathEnsured(String? operationName) async {
-    final path = settings.defaultBackupLocation.value ?? AppDirs.BACKUPS;
-    Directory? dir;
-    String? error;
+    final path = _backupDirectoryPath;
     try {
-      dir = await Directory(path).create(recursive: true);
+      if (await requestManageStoragePermission(directoryToCreate: path)) return path;
     } catch (e) {
-      error = e.toString();
-    }
-    if (dir == null || !await dir.exists()) {
       snackyy(
         title: "${lang.error}: ${operationName ?? lang.backupAndRestore}",
-        message: '${error ?? lang.directoryDoesntExist}: "$path"',
+        message: '$e: "$path"',
         isError: true,
       );
-      return null;
     }
-    return path;
+    return null;
   }
 
   int get _defaultAutoBackupInterval => settings.autoBackupIntervalDays.value;
@@ -150,7 +146,8 @@ class BackupController {
       return;
     }
 
-    if (!await requestManageStoragePermission()) return;
+    final backupDirPath = await _getBackupDirectoryPathEnsured(lang.createBackup);
+    if (backupDirPath == null) return;
 
     isCreatingBackup.value = true;
 
@@ -158,12 +155,7 @@ class BackupController {
     final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
-    final backupDirPath = await _getBackupDirectoryPathEnsured(lang.createBackup);
-    if (backupDirPath == null) return;
-
-    // creates directories and file
-    final dir = await Directory(backupDirPath).create();
-    final backupFile = await FileParts.join(dir.path, "Namida Backup - $date$fileSuffix.zip").create();
+    final backupFile = await FileParts.join(backupDirPath, "Namida Backup - $date$fileSuffix.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files

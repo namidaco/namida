@@ -98,11 +98,10 @@ class EditDeleteController {
 
   /// returns save file if saved successfully
   Future<String?> saveTrackArtworkToStorage(Track track) async {
-    if (!await requestManageStoragePermission()) {
+    final saveDirPath = AppDirs.SAVED_ARTWORKS;
+    if (!await requestManageStoragePermission(directoryToCreate: saveDirPath)) {
       return null;
     }
-    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
-    final saveDirPath = saveDir.path;
     final info = await Indexer.inst.getArtwork(
       compressed: false,
       imagePath: track.pathToImage,
@@ -134,11 +133,10 @@ class EditDeleteController {
 
   /// returns save path if saved successfully
   Future<String?> saveImageToStorage(File imageFile) async {
-    if (!await requestManageStoragePermission()) {
+    final saveDirPath = AppDirs.SAVED_ARTWORKS;
+    if (!await requestManageStoragePermission(directoryToCreate: saveDirPath)) {
       return null;
     }
-    final saveDir = await Directory(AppDirs.SAVED_ARTWORKS).create(recursive: true);
-    final saveDirPath = saveDir.path;
     final newPath = FileParts.joinPath(saveDirPath, "${imageFile.path.getFilenameWOExt}.png");
     try {
       await imageFile.copy(newPath);

@@ -3737,9 +3737,11 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
               }
               _dragged = 0;
             },
-      onCancel: () {
-        FadeDismissible.isDismissing = false;
-      },
+      onCancel: !draggable
+          ? null
+          : () {
+              FadeDismissible.isDismissing = false;
+            },
       child: AnimatedBuilder(
         animation: _animation,
         child: FadeTransition(
@@ -7136,6 +7138,7 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
   final Object dismissibleKey;
   final bool allowSwipeLeft;
   final bool allowSwipeRight;
+  final RxBaseCore<bool>? disabledRx;
   final Widget child;
 
   const SwipeQueueAddTile({
@@ -7145,14 +7148,28 @@ class SwipeQueueAddTile<Q extends Playable> extends StatelessWidget {
     required this.dismissibleKey,
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
+    this.disabledRx,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
+    final disabledRx = this.disabledRx;
+    if (disabledRx != null) {
+      return ObxO(
+        rx: disabledRx,
+        builder: (context, disabled) => _buildTile(disabled),
+      );
+    }
+    return _buildTile(false);
+  }
+
+  Widget _buildTile(bool disabled) {
     return FadeDismissible(
       key: ValueKey(dismissibleKey),
-      direction: allowSwipeLeft && allowSwipeRight
+      direction: disabled
+          ? DismissDirection.none
+          : allowSwipeLeft && allowSwipeRight
           ? DismissDirection.horizontal
           : allowSwipeLeft
           ? DismissDirection.endToStart

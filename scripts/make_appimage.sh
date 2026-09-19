@@ -66,7 +66,7 @@ chmod +x "$APPDIR/AppRun"
 sed -e "s|^Icon=.*|Icon=$APP_ID|" \
     -e "s|^Exec=.*|Exec=namida %F|" \
     -e "/^TryExec=/d" \
-    "$LINUX_DIR/namida.desktop" > "$APPDIR/$APP_ID.desktop"
+    "$LINUX_DIR/$APP_ID.desktop" > "$APPDIR/$APP_ID.desktop"
 
 cp "$LINUX_DIR/icons/namida_512.png" "$APPDIR/$APP_ID.png"
 ln -sf "$APP_ID.png" "$APPDIR/.DirIcon"

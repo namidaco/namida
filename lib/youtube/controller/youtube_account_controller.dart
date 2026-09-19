@@ -285,13 +285,18 @@ class YoutubeAccountController {
               text: lang.manage,
               function: const YoutubeManageSubscriptionPage().navigate,
             )
-          : manageAccountButton
+          : manageAccountButton && !_isInsideAccountsPage()
           ? SnackbarButton(
-              text: lang.signIn,
+              text: lang.manage,
               function: const YoutubeAccountManagePage().navigate,
             )
           : null,
     );
+  }
+
+  static bool _isInsideAccountsPage() {
+    final currentRoute = NamidaNavigator.inst.currentRoute;
+    return currentRoute != null && const YoutubeAccountManagePage().isSameRouteAs(currentRoute);
   }
 
   static void _showInfo(String msg, {String? title}) {
@@ -304,7 +309,7 @@ class YoutubeAccountController {
       if (p == YoutiLoginProgress.canceled) {
         _showInfo(lang.signInCanceled);
       } else if (p == YoutiLoginProgress.failed) {
-        _showError("${lang.signInFailed}\nCookies validity: ${cookiesValidity?.name ?? "?"}");
+        _showError("${lang.signInFailed}\nCookies validity: ${cookiesValidity?.name ?? "?"}", manageAccountButton: true);
       }
     }
 

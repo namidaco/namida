@@ -806,7 +806,7 @@ Future<void> showDownloadVideoBottomSheet({
                                                     final accept = onConfirmButtonTap(groupName, itemConfig);
                                                     if (accept) context.safePop();
                                                   } else {
-                                                    if (!await requestManageStoragePermission()) return;
+                                                    if (!await requestManageStoragePermission(directoryToCreate: AppDirs.YOUTUBE_DOWNLOADS)) return;
                                                     PermissionManager.platform.requestIgnoreBatteryOptimizations();
                                                     if (context.mounted) context.safePop();
                                                     YoutubeController.inst.downloadYoutubeVideos(

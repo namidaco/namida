@@ -17,12 +17,18 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     final windowOptions = WindowOptions(
       size: Size(428, 812),
       center: true,
-      backgroundColor: Colors.transparent,
+      // -- on windows this makes dwm fill the window with a gray accent until flutter draws
+      backgroundColor: Platform.isWindows ? null : Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
     );
 
-    await windowManager.waitUntilReadyToShow(windowOptions, ensurePositionRestored);
+    await windowManager.waitUntilReadyToShow(windowOptions);
+
+    await _restoreBounds();
+    // -- before first frame, so it renders at the final size. resizing after it can also crash flutter linux (x11), https://github.com/namidaco/namida/issues/1212
+    // -- maximizing shows the window on windows, the runner keeps it cloaked until first frame
+    await _syncMaximized(settings.extra.windowMaximized);
 
     if (Platform.isLinux) {
       // -- window_manager on linux doesnt support some methods.
@@ -46,36 +52,42 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   }
 
   @override
-  Future<void> ensurePositionRestored({bool isStartup = true}) async {
-    // -- sometimes waitUntilReadyToShow is not enough for linux
-
+  Future<void> ensurePositionRestored({required bool restoreBounds}) async {
     if (NamidaWindowManager.isMiniLyricsMode.value) {
       await windowManager.show();
       await windowManager.focus();
       return;
     }
 
-    if (isStartup) {
-      final bounds = settings.extra.windowBounds;
-      if (bounds != null) {
-        // -- making sure window is in bounds with the current screen/s max size
-        // -- for example: after disconnecting a second screen
-        final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
-        await windowManager.setBounds(shiftedBounds);
-      }
-    }
+    // -- read once, the window events fired below would otherwise flip it mid-way
+    final shouldBeMaximized = settings.extra.windowMaximized;
 
-    final isMaximized = await windowManager.isMaximized();
-    if (settings.extra.windowMaximized && !isMaximized) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      await windowManager.maximize();
-    } else if (!settings.extra.windowMaximized && isMaximized) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      await windowManager.unmaximize();
-    }
+    // -- bounds first, they are what the window unmaximizes to
+    if (restoreBounds) await _restoreBounds();
+    await _syncMaximized(shouldBeMaximized);
 
     await windowManager.show();
     await windowManager.focus();
+  }
+
+  Future<void> _restoreBounds() async {
+    final bounds = settings.extra.windowBounds;
+    if (bounds == null) return;
+    // -- making sure window is in bounds with the current screen/s max size
+    // -- for example: after disconnecting a second screen
+    final shiftedBounds = await _ensureBoundsWithinScreenSizeShift(bounds);
+    await windowManager.setBounds(shiftedBounds);
+  }
+
+  Future<void> _syncMaximized(bool shouldBeMaximized) async {
+    final isMaximized = await windowManager.isMaximized();
+    if (shouldBeMaximized == isMaximized) return;
+    if (!Platform.isWindows) await Future.delayed(const Duration(milliseconds: 100));
+    if (shouldBeMaximized) {
+      await windowManager.maximize();
+    } else {
+      await windowManager.unmaximize();
+    }
   }
 
   @override
@@ -120,12 +132,17 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     await windowManager.setSkipTaskbar(false);
     await windowManager.setVisibleOnAllWorkspaces(false).ignoreError();
     await windowManager.setHasShadow(true).ignoreError();
+    if (Platform.isWindows) await windowManager.setBackgroundColor(Colors.black);
     await windowManager.setMinimumSize(Size.zero);
+    if (Platform.isLinux && usingCustomWindowTitleBar) {
+      // -- setAsFrameless() undecorated the window, and gtk only re-decorates it on TitleBarStyle.normal
+      await windowManager.setTitleBarStyle(TitleBarStyle.normal, windowButtonVisibility: false);
+    }
     await windowManager.setTitleBarStyle(
       usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
       windowButtonVisibility: !usingCustomWindowTitleBar,
     );
-    await ensurePositionRestored(isStartup: true);
+    await ensurePositionRestored(restoreBounds: true);
   }
 
   Future<Rect> _resolveMiniLyricsBounds() async {
@@ -235,15 +252,18 @@ class _NamidaWindowListenerEnhanced extends _NamidaWindowListener {
 
 class _NamidaWindowListener with WindowListener {
   Future<void> _saveBounds() async {
-    final currentBounds = await windowManager.getBounds();
     if (NamidaWindowManager.isMiniLyricsMode.value) {
+      final currentBounds = await windowManager.getBounds();
       if (currentBounds != settings.extra.miniLyricsWindowBounds) {
         settings.extra.save(miniLyricsWindowBounds: currentBounds);
       }
-    } else {
-      if (currentBounds != settings.extra.windowBounds) {
-        settings.extra.save(windowBounds: currentBounds);
-      }
+      return;
+    }
+    // -- maximized bounds would replace the size the window restores to
+    if (await windowManager.isMaximized()) return;
+    final currentBounds = await windowManager.getBounds();
+    if (currentBounds != settings.extra.windowBounds) {
+      settings.extra.save(windowBounds: currentBounds);
     }
   }
 

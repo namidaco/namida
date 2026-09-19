@@ -113,34 +113,13 @@ if [ -d "data" ]; then
   find data -type f -exec install -Dm644 {} "${INSTALL_DIR}/{}" \;
 fi
 
-# Install desktop file
-if [ -f "share/applications/namida.desktop" ]; then
-  install -Dm644 "share/applications/namida.desktop" \
-    "/usr/share/applications/namida.desktop"
+# Install desktop file, metainfo & icons - the bundle ships them as a drop-in XDG tree
+if [ -d "share" ]; then
+  find share -type f -exec install -Dm644 "{}" "/usr/{}" \;
 fi
 
-# Install metainfo
-if [ -f "share/metainfo/namida.metainfo.xml" ]; then
-  install -Dm644 "share/metainfo/namida.metainfo.xml" \
-    "/usr/share/metainfo/namida.metainfo.xml"
-fi
-
-# Install icons
-
-if [ -f "share/icons/namida_512.png" ]; then
-  install -Dm644 "share/icons/namida_512.png" \
-    "/usr/share/icons/hicolor/512x512/apps/namida.png"
-fi
-
-if [ -f "share/icons/namida_128.png" ]; then
-  install -Dm644 "share/icons/namida_128.png" \
-    "/usr/share/icons/hicolor/128x128/apps/namida.png"
-fi
-
-if [ -f "share/icons/namida_256.png" ]; then
-  install -Dm644 "share/icons/namida_256.png" \
-    "/usr/share/icons/hicolor/256x256/apps/namida.png"
-fi
+# older versions shipped these under the binary name, leaving them duplicates the menu entry
+rm -f "/usr/share/applications/namida.desktop" "/usr/share/metainfo/namida.metainfo.xml"
 
 # Create symlink to /usr/bin
 mkdir -p /usr/bin

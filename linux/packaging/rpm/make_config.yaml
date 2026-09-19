@@ -7,7 +7,7 @@ packagerEmail: namida.coo@gmail.com
 license: EULA
 url: https://github.com/namidaco/namida
 icon: linux/icons/namida_512.png
-desktop_file: linux/namida.desktop
+desktop_file: linux/com.msob7y.namida.desktop
 bin_name: namida
 package_name: namida
 build_arch: x86_64

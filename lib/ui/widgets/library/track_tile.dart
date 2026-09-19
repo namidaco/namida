@@ -169,6 +169,7 @@ class TrackTilePropertiesConfigs {
   final bool fallbackToAlbumCover;
   final bool horizontalGestures;
   final String? playlistName;
+  final Rx<bool>? reorderableRx;
 
   const TrackTilePropertiesConfigs({
     required this.queueSource,
@@ -179,6 +180,7 @@ class TrackTilePropertiesConfigs {
     this.fallbackToAlbumCover = false,
     this.horizontalGestures = true,
     this.playlistName,
+    this.reorderableRx,
   });
 }
 
@@ -233,6 +235,8 @@ class TrackTileProperties {
 }
 
 class TrackTile extends StatelessWidget {
+  static const _thumbnailLeftPadding = 12.0;
+
   final int index;
   final Selectable trackOrTwd;
   final List<Playable> tracks;
@@ -448,6 +452,28 @@ class TrackTile extends StatelessWidget {
           )
         : textColor?.withAlpha(140) ?? textTheme.displayMedium?.color?.withAlpha(140);
 
+    Widget? draggingTileWidget;
+    if (properties.configs.draggableThumbnail) {
+      final listener = NamidaReordererableListener(
+        durationMs: 80,
+        index: index,
+        child: const ColoredBox(color: Colors.transparent),
+      );
+      final reorderableRx = properties.configs.reorderableRx;
+      draggingTileWidget = Positioned(
+        left: 0.0,
+        top: 0.0,
+        bottom: 0.0,
+        width: _thumbnailLeftPadding + properties.thumbnailSize,
+        child: reorderableRx != null
+            ? ObxO(
+                rx: reorderableRx,
+                builder: (context, reorderable) => reorderable ? listener : const SizedBox(),
+              )
+            : listener,
+      );
+    }
+
     Widget finalChild = Stack(
       alignment: Alignment.centerRight,
       children: [
@@ -529,7 +555,7 @@ class TrackTile extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
                     child: Row(
                       children: [
-                        const SizedBox(width: 12.0),
+                        const SizedBox(width: _thumbnailLeftPadding),
                         Stack(
                           alignment: Alignment.center,
                           children: [
@@ -588,16 +614,6 @@ class TrackTile extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (properties.configs.draggableThumbnail)
-                              NamidaReordererableListener(
-                                durationMs: 80,
-                                index: index,
-                                child: Container(
-                                  color: Colors.transparent,
-                                  height: properties.trackTileHeight,
-                                  width: properties.thumbnailSize,
-                                ),
-                              ),
                           ],
                         ),
                         const SizedBox(width: 12.0),
@@ -669,6 +685,7 @@ class TrackTile extends StatelessWidget {
             ),
           ),
         ),
+        ?draggingTileWidget,
         if (fadeOpacity > 0)
           Positioned.fill(
             child: IgnorePointer(
@@ -724,6 +741,7 @@ class TrackTile extends StatelessWidget {
         dismissibleKey: heroTag,
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
+        disabledRx: properties.configs.reorderableRx,
         child: finalChild,
       );
     }

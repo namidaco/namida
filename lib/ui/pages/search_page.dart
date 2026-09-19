@@ -552,6 +552,7 @@ class _RecentSearchesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (settings.extra.recentSearchesEnabled != true) return const SizedBox.expand();
     final theme = context.theme;
     final chipBgColor = theme.colorScheme.secondary.withOpacityExt(0.12);
     final chipTextStyle = theme.textTheme.displayMedium?.copyWith(fontSize: 13.0);

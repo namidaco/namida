@@ -42,7 +42,7 @@ class WideScreenPlayerPage extends StatefulWidget with NamidaRouteWidget {
 
 class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
   final _lrcViewKey = GlobalKey<LyricsLRCParsedViewState>();
-  final _artworkMaxWidth = ValueNotifier<double>(0.0);
+  final _artworkMaxSize = ValueNotifier<Size>(Size.zero);
   late final Rx<_WidePlayerPane> _selectedPane;
 
   static const _paneGap = 26.0;
@@ -66,7 +66,7 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
     MiniPlayerController.inst.screenValuesVersion.removeListener(_screenValuesListener);
     NamidaNavigator.inst.isInWideScreenPlayerPage = false;
     _selectedPane.close();
-    _artworkMaxWidth.dispose();
+    _artworkMaxSize.dispose();
     super.dispose();
   }
 
@@ -95,6 +95,15 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
     if (_selectedPane.value == pane) return;
     _selectedPane.value = pane;
     settings.extra.save(widePlayerPageIndex: pane.index);
+
+    if (pane == .lyrics) {
+      if (!settings.enableLyrics.value) {
+        final currentItem = Player.inst.currentItem.value;
+        if (currentItem == null) return;
+        settings.save(enableLyrics: true);
+        Lyrics.inst.updateLyrics(currentItem);
+      }
+    }
   }
 
   @override
@@ -117,13 +126,13 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(_edgePadding),
+              padding: EdgeInsets.symmetric(horizontal: _edgePadding, vertical: 6.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(
                     flex: 5,
-                    child: _LeftPane(artworkMaxWidth: _artworkMaxWidth),
+                    child: _LeftPane(artworkMaxSize: _artworkMaxSize),
                   ),
                   const SizedBox(width: _paneGap),
                   Expanded(
@@ -145,9 +154,9 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
 }
 
 class _LeftPane extends StatelessWidget {
-  final ValueNotifier<double> artworkMaxWidth;
+  final ValueNotifier<Size> artworkMaxSize;
 
-  const _LeftPane({required this.artworkMaxWidth});
+  const _LeftPane({required this.artworkMaxSize});
 
   @override
   Widget build(BuildContext context) {
@@ -169,13 +178,13 @@ class _LeftPane extends StatelessWidget {
                     Expanded(
                       child: _Artwork(
                         item: currentItem,
-                        artworkMaxWidth: artworkMaxWidth,
+                        artworkMaxSize: artworkMaxSize,
                       ),
                     ),
                     SizedBox(height: verticalGap),
                     PlayerTransportControls(
                       addBottomSafePadding: false,
-                      waveformHeight: (maxHeight * 0.075).clampDouble(28.0, 64.0),
+                      waveformYScale: (maxHeight * 0.075).clampDouble(28.0, 64.0) / 64.0,
                       waveformBottomGap: verticalGap * 0.75,
                       bottomPadding: verticalGap * 0.5,
                     ),
@@ -192,9 +201,9 @@ class _LeftPane extends StatelessWidget {
 
 class _Artwork extends StatelessWidget {
   final Playable item;
-  final ValueNotifier<double> artworkMaxWidth;
+  final ValueNotifier<Size> artworkMaxSize;
 
-  const _Artwork({required this.item, required this.artworkMaxWidth});
+  const _Artwork({required this.item, required this.artworkMaxSize});
 
   @override
   Widget build(BuildContext context) {
@@ -215,8 +224,9 @@ class _Artwork extends StatelessWidget {
               final availableHeight = constraints.maxHeight / scaleHeadroom;
               final boxWidth = availableWidth.withMaximum(availableHeight * aspectRatio);
               final boxHeight = boxWidth / aspectRatio;
-              if (artworkMaxWidth.value != boxWidth) {
-                WidgetsBinding.instance.addPostFrameCallback((_) => artworkMaxWidth.value = boxWidth);
+              final boxSize = Size(boxWidth, boxHeight);
+              if (artworkMaxSize.value != boxSize) {
+                WidgetsBinding.instance.addPostFrameCallback((_) => artworkMaxSize.value = boxSize);
               }
               return Center(
                 child: SizedBox(
@@ -224,7 +234,7 @@ class _Artwork extends StatelessWidget {
                   height: boxHeight,
                   child: MiniplayerArtwork(
                     item: item,
-                    maxWidth: artworkMaxWidth,
+                    lyricsMaxSize: artworkMaxSize,
                     showLyricsOverlay: false,
                   ),
                 ),

@@ -1073,7 +1073,7 @@ class _FixYTDLPThumbnailSizeListTile extends StatelessWidget {
   const _FixYTDLPThumbnailSizeListTile({this.bgColor});
 
   Future<void> _onFixYTDLPPress() async {
-    if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+    if (!await requestManageStoragePermission()) return;
 
     final dirs = await NamidaFileBrowser.getDirectories(note: lang.fixYtdlpBigThumbnailSize);
     if (dirs.isEmpty) return;

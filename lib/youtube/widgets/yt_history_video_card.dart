@@ -327,7 +327,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     final newVideoId = videoIdWatch.$1;
     videoWatch = videoIdWatch.$2;
 
-    if (newVideoId != videoId) {
+    if (newVideoId != videoId && !newVideoId.isDummyVideoId) {
       videoId = newVideoId;
       final info = widget.info?.call(item);
       if (info != null) {
@@ -374,24 +374,37 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     }
 
     Widget? draggingThumbWidget;
+    Widget? draggingTileWidget;
     if (configs.draggableThumbnail && configs.draggingEnabled) {
-      final lis = NamidaReordererableListener(
+      final listener = NamidaReordererableListener(
         key: const ValueKey(0),
         durationMs: 80,
         index: index,
-        child: Container(
-          color: Colors.transparent,
-          height: thumbHeight * 0.9,
-          width: thumbWidth * 0.9, // not fully but better, to avoid accidents
-        ),
+        child: widget.minimalCard
+            ? Container(
+                color: Colors.transparent,
+                height: thumbHeight * 0.9,
+                width: thumbWidth * 0.9, // not fully but better, to avoid accidents
+              )
+            : const ColoredBox(color: Colors.transparent),
       );
-      if (configs.reorderableRx != null) {
-        draggingThumbWidget = ObxO(
-          rx: configs.reorderableRx!,
-          builder: (context, value) => value ? lis : const SizedBox(),
-        );
+      final reorderableRx = configs.reorderableRx;
+      final gatedListener = reorderableRx != null
+          ? ObxO(
+              rx: reorderableRx,
+              builder: (context, value) => value ? listener : const SizedBox(),
+            )
+          : listener;
+      if (widget.minimalCard) {
+        draggingThumbWidget = gatedListener;
       } else {
-        draggingThumbWidget = lis;
+        draggingTileWidget = Positioned(
+          left: 0.0,
+          top: 0.0,
+          bottom: 0.0,
+          width: ThreeLineSmallContainers.enabledWidth + thumbWidth + 4.0,
+          child: gatedListener,
+        );
       }
     }
 
@@ -618,6 +631,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
                 : Row(
                     children: children,
                   ),
+            ?draggingTileWidget,
             Positioned(
               bottom: 4.0,
               right: widget.minimalCard ? 2.0 : 12.0,
@@ -692,6 +706,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
         dismissibleKey: plItem,
         allowSwipeLeft: properties.allowSwipeLeft,
         allowSwipeRight: properties.allowSwipeRight,
+        disabledRx: configs.reorderableRx,
         child: finalChild,
       );
     }

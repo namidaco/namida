@@ -773,7 +773,19 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
     if (_recentAlbums.isEmpty) _recentAlbums.addAll(_recentListened.mappedUniquedList((e) => e.track.albumsIdentifiersModified).take(25));
 
     // -- Recent Artists --
-    if (_recentArtists.isEmpty) _recentArtists.addAll(_recentListened.mappedUniquedList((e) => e.track.artistsList.map((e) => e.toLowerCase())).take(25));
+    if (_recentArtists.isEmpty) {
+      const maxCount = 25;
+      final addedLowercase = <String>{};
+      artistsLoop:
+      for (final e in _recentListened) {
+        for (final artist in e.track.artistsList) {
+          if (addedLowercase.add(artist.toLowerCase())) {
+            _recentArtists.add(artist);
+            if (_recentArtists.length >= maxCount) break artistsLoop;
+          }
+        }
+      }
+    }
 
     _topRecentAlbums.sortByReverse((e) => e.value);
     _topRecentArtists.sortByReverse((e) => e.value);

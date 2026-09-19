@@ -216,7 +216,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
   }
 }
 
-class CustomTextField extends StatelessWidget {
+class CustomTextField extends StatefulWidget {
   final TextEditingController? textFieldController;
   final String textFieldHintText;
   final void Function(String value)? onTextFieldValueChanged;
@@ -230,18 +230,44 @@ class CustomTextField extends StatelessWidget {
   });
 
   @override
+  State<CustomTextField> createState() => _CustomTextFieldState();
+}
+
+class _CustomTextFieldState extends State<CustomTextField> {
+  FocusNode? _internalFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.focusNode == null) {
+      final node = _internalFocusNode = FocusNode();
+      ScrollSearchController.inst.registerSearchFocusNode(node);
+    }
+  }
+
+  @override
+  void dispose() {
+    final node = _internalFocusNode;
+    if (node != null) {
+      ScrollSearchController.inst.unregisterSearchFocusNode(node);
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return TextField(
-      focusNode: focusNode ?? ScrollSearchController.inst.focusNode,
-      controller: textFieldController,
+      focusNode: widget.focusNode ?? _internalFocusNode,
+      controller: widget.textFieldController,
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.0.multipliedRadius),
         ),
-        hintText: textFieldHintText,
+        hintText: widget.textFieldHintText,
       ),
-      onChanged: onTextFieldValueChanged,
+      onChanged: widget.onTextFieldValueChanged,
     );
   }
 }

@@ -34,8 +34,8 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   static const _lineHeightFactor = 1.3;
 
   /// tallest layout [fitToWidth] can pick, for layouts reserving the room ahead of time.
-  static double fittedMaxHeight({required double fontSize, required int maxLines}) {
-    return fontSize * shrinkFactor * _lineHeightFactor * (maxLines + 1);
+  static double fittedMaxHeight({required double fontSize, required int maxLines, required TextScaler textScaler}) {
+    return textScaler.scale(fontSize * shrinkFactor) * _lineHeightFactor * (maxLines + 1);
   }
 
   @override
@@ -65,9 +65,12 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     _fitScaler = scaler;
     _fitStyle = style;
 
+    // -- fixed line height, otherwise the painted band doesn't match [fittedMaxHeight].
+    final fittedStyle = (style ?? const TextStyle()).copyWith(height: SimpleLyricsLineWidget._lineHeightFactor);
+
     final maxLines = widget.maxLines;
     if (!maxWidth.isFinite) {
-      _fitResultStyle = style;
+      _fitResultStyle = fittedStyle;
       _fitResultMaxLines = maxLines;
       return;
     }
@@ -85,12 +88,12 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       return !painter.didExceedMaxLines;
     }
 
-    if (fits(style, maxLines)) {
-      _fitResultStyle = style;
+    if (fits(fittedStyle, maxLines)) {
+      _fitResultStyle = fittedStyle;
       _fitResultMaxLines = maxLines;
     } else {
-      final fontSize = (style?.fontSize ?? 14.0) * SimpleLyricsLineWidget.shrinkFactor;
-      final small = style?.copyWith(fontSize: fontSize) ?? TextStyle(fontSize: fontSize);
+      final fontSize = (fittedStyle.fontSize ?? 14.0) * SimpleLyricsLineWidget.shrinkFactor;
+      final small = fittedStyle.copyWith(fontSize: fontSize);
       _fitResultStyle = small;
       _fitResultMaxLines = fits(small, maxLines) ? maxLines : maxLines + 1;
     }
@@ -214,7 +217,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
                 );
         }
         return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 250),
           child: child,
         );
       },

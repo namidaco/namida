@@ -916,41 +916,40 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           iconSize: 20.0,
         ),
       const SizedBox(width: 8.0),
-      Expanded(
-        child: isFullScreen
-            ? Material(
-                type: MaterialType.transparency,
-                child: _VideoTitleSubtitleWidget(
-                  isLocal: widget.isLocal,
-                ),
-              )
-            : const SizedBox(),
-      ),
-      const SizedBox(width: 4.0),
-
-      // ==== Reset Brightness ====
-      ObxO(
-        rx: _currentBrigthnessDim,
-        builder: (context, brigthnessDim) => CustomAnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child: brigthnessDim < 1.0
-              ? NamidaIconButton(
-                  key: const Key('brightnesseto_ok'),
-                  tooltip: () => lang.resetBrightness,
-                  icon: Broken.sun_1,
-                  iconColor: itemsColor.withOpacityExt(0.8),
-                  verticalPadding: 4.0,
-                  horizontalPadding: 8.0,
-                  iconSize: 18.0,
-                  onPressed: () => _currentBrigthnessDim.value = 1.0,
-                )
-              : const SizedBox(
-                  key: Key('brightnesseto_no'),
-                ),
-        ),
-      ),
-      const SizedBox(width: 4.0),
     ];
+
+    final topRowTitle = Expanded(
+      child: isFullScreen
+          ? Material(
+              type: MaterialType.transparency,
+              child: _VideoTitleSubtitleWidget(
+                isLocal: widget.isLocal,
+              ),
+            )
+          : const SizedBox(),
+    );
+
+    // ==== Reset Brightness ====
+    final resetBrightnessButton = ObxO(
+      rx: _currentBrigthnessDim,
+      builder: (context, brigthnessDim) => CustomAnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: brigthnessDim < 1.0
+            ? NamidaIconButton(
+                key: const Key('brightnesseto_ok'),
+                tooltip: () => lang.resetBrightness,
+                icon: Broken.sun_1,
+                iconColor: itemsColor.withOpacityExt(0.8),
+                verticalPadding: 4.0,
+                horizontalPadding: 8.0,
+                iconSize: 18.0,
+                onPressed: () => _currentBrigthnessDim.value = 1.0,
+              )
+            : const SizedBox(
+                key: Key('brightnesseto_no'),
+              ),
+      ),
+    );
 
     final speedChip = NamidaPopupWrapper(
       onPop: _startTimer,
@@ -1985,41 +1984,73 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                               child: ObxO(
                                 rx: Subtitles.inst.canHaveSubtitles,
                                 builder: (context, canHaveSubtitles) {
-                                  // -- subtitle chip is the one making row very long (yes)
-                                  final splitToTwoRows = isFullScreen && canHaveSubtitles && maxWidth < _kTwoRowsControlsMaxWidth;
-                                  if (!splitToTwoRows) {
+                                  // -- title takes leftover space, chips keep natural size & only scale down when they cant fit
+                                  Widget buildTopRow(List<Widget> trailing) {
                                     return Row(
                                       children: [
                                         ...topRowLeading,
-                                        if (canHaveSubtitles) subtitleChip,
-                                        audioLanguageChip,
-                                        audioTracksChip,
-                                        speedChip,
-                                        qualityChip,
-                                        ?configChip,
+                                        Expanded(
+                                          child: LayoutWidthProvider(
+                                            builder: (context, availableWidth) => Row(
+                                              children: [
+                                                topRowTitle,
+                                                ConstrainedBox(
+                                                  constraints: BoxConstraints(maxWidth: availableWidth),
+                                                  child: FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: trailing,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     );
                                   }
+
+                                  // -- subtitle chip is the one making row very long (yes)
+                                  final splitToTwoRows = isFullScreen && canHaveSubtitles && maxWidth < _kTwoRowsControlsMaxWidth;
+                                  if (!splitToTwoRows) {
+                                    return buildTopRow([
+                                      const SizedBox(width: 4.0),
+                                      resetBrightnessButton,
+                                      const SizedBox(width: 4.0),
+                                      if (canHaveSubtitles) subtitleChip,
+                                      audioLanguageChip,
+                                      audioTracksChip,
+                                      speedChip,
+                                      qualityChip,
+                                      ?configChip,
+                                    ]);
+                                  }
                                   return Column(
                                     mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Row(
-                                        children: [
-                                          ...topRowLeading,
-                                          qualityChip,
-                                          ?configChip,
-                                        ],
-                                      ),
+                                      buildTopRow([
+                                        const SizedBox(width: 4.0),
+                                        resetBrightnessButton,
+                                        const SizedBox(width: 4.0),
+                                        qualityChip,
+                                        ?configChip,
+                                      ]),
                                       Transform.translate(
                                         offset: Offset(0, -4.0),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.end,
-                                          children: [
-                                            subtitleChip,
-                                            audioLanguageChip,
-                                            audioTracksChip,
-                                            speedChip,
-                                          ],
+                                        child: FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              subtitleChip,
+                                              audioLanguageChip,
+                                              audioTracksChip,
+                                              speedChip,
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ],

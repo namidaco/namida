@@ -107,7 +107,7 @@ class _ExtraSettings with SettingsFileWriter {
   }
 
   void addRecentSearch(String text) {
-    if (recentSearchesEnabled == false) return;
+    if (recentSearchesEnabled != true) return;
     if (recentSearches.value.firstOrNull == text) return;
     recentSearches.execute(
       (list) {

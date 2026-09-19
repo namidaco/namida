@@ -30,7 +30,7 @@ abstract class NamidaTrayManager {
       await windowManager.hide();
     }
 
-    WindowController.instance?.ensurePositionRestored(isStartup: false);
+    WindowController.instance?.ensurePositionRestored(restoreBounds: false);
   }
 
   static Future<void> hideWindow() async {

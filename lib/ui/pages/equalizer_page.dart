@@ -617,40 +617,45 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
               mainAxisSize: .min,
               children: [
                 if (NamidaFeaturesVisibility.skipSilenceAvailable) ...[
-                  ObxO(
-                    rx: widget.updateConfig.skipSilenceEnabledRx,
-                    builder: (context, skipSilence) => Padding(
-                      padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
-                      child: NamidaInkWell(
-                        borderRadius: 12.0,
-                        padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
-                        onTap: () => _setSkipSilence(!skipSilence),
+                  Obx(
+                    (context) {
+                      final skipSilence = widget.updateConfig.skipSilenceEnabledRx.valueR;
+                      return AnimatedEnabled(
+                        enabled: Player.inst.supportsSkipSilence(Player.inst.currentItem.valueR),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                          child: Row(
-                            children: [
-                              NamidaIconButton(
-                                horizontalPadding: 6.0,
-                                icon: Broken.forward,
+                          padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
+                          child: NamidaInkWell(
+                            borderRadius: 12.0,
+                            padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
+                            onTap: () => _setSkipSilence(!skipSilence),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: Row(
+                                children: [
+                                  NamidaIconButton(
+                                    horizontalPadding: 6.0,
+                                    icon: Broken.forward,
+                                  ),
+                                  const SizedBox(width: 6.0),
+                                  Expanded(
+                                    child: Text(
+                                      lang.skipSilence,
+                                      style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  CustomSwitch(
+                                    active: skipSilence,
+                                  ),
+                                  const SizedBox(width: 8.0),
+                                  const SizedBox(width: 6.0),
+                                ],
                               ),
-                              const SizedBox(width: 6.0),
-                              Expanded(
-                                child: Text(
-                                  lang.skipSilence,
-                                  style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              CustomSwitch(
-                                active: skipSilence,
-                              ),
-                              const SizedBox(width: 8.0),
-                              const SizedBox(width: 6.0),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
                   verticalPadding,
                 ],

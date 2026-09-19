@@ -562,95 +562,92 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
 
           final queueSource = playlist.toQueueSource();
 
-          return ObxO(
-            rx: PlaylistController.inst.canReorderItems,
-            builder: (context, reorderable) => TrackTilePropertiesProvider(
-              configs: TrackTilePropertiesConfigs(
-                queueSource: queueSource,
-                playlistName: playlist.name,
-                draggableThumbnail: reorderable,
-                horizontalGestures: !reorderable,
-                selectable: () => !PlaylistController.inst.canReorderItems.value,
-              ),
-              builder: (properties) => NamidaListView(
-                scrollController: scrollController,
-                itemCount: searchResults?.length ?? tracksWithDate.length,
-                infoBox: (maxWidth) => SubpageInfoContainer(
-                  bottomPadding: 0.0,
-                  maxWidth: maxWidth,
-                  source: queueSource,
-                  title: playlist.name.translatePlaylistName(),
-                  subtitle: playlist.creationDate.dateFormatted,
-                  thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+          return TrackTilePropertiesProvider(
+            configs: TrackTilePropertiesConfigs(
+              queueSource: queueSource,
+              playlistName: playlist.name,
+              draggableThumbnail: true,
+              reorderableRx: PlaylistController.inst.canReorderItems,
+              selectable: () => !PlaylistController.inst.canReorderItems.value,
+            ),
+            builder: (properties) => NamidaListView(
+              scrollController: scrollController,
+              itemCount: searchResults?.length ?? tracksWithDate.length,
+              infoBox: (maxWidth) => SubpageInfoContainer(
+                bottomPadding: 0.0,
+                maxWidth: maxWidth,
+                source: queueSource,
+                title: playlist.name.translatePlaylistName(),
+                subtitle: playlist.creationDate.dateFormatted,
+                thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+                heroTag: heroTag,
+                imageBuilder: (size) => MultiArtworkContainer(
                   heroTag: heroTag,
-                  imageBuilder: (size) => MultiArtworkContainer(
-                    heroTag: heroTag,
-                    size: size,
-                    tracks: tracksWithDate.toImageTracks(),
-                    artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                    wrapArtworkFileInFullscreenOpener: true,
-                  ),
-                  tracksFn: () => tracksWithDate,
+                  size: size,
+                  tracks: tracksWithDate.toImageTracks(),
+                  artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
+                  wrapArtworkFileInFullscreenOpener: true,
                 ),
-                onReorderStart: (index) => super.enablePullToRefresh = false,
-                onReorderEnd: (index) => super.enablePullToRefresh = true,
-                onReorder: searchResults != null || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
-                stickyHeader: TracksSearchWidgetBoxBase(
-                  state: this,
-                  leftText: [
-                    tracksWithDate.displayTrackKeyword,
-                    tracksWithDate.totalDurationFormatted,
-                  ].join(' - '),
-                  sort: sort,
-                  sortReverse: sortReverse,
-                  onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
-                    playlist.name,
-                    PlaylistController.inst,
-                    SortType.values,
-                    (sort) => sort.toText(),
-                    (sort) => sort.toIcon(),
-                  ),
-                  onReverseIconTap: (newSortReverse) {
-                    PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
-                    PlaylistController.inst.resetCanReorder();
-                  },
+                tracksFn: () => tracksWithDate,
+              ),
+              onReorderStart: (index) => super.enablePullToRefresh = false,
+              onReorderEnd: (index) => super.enablePullToRefresh = true,
+              onReorder: searchResults != null || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
+              stickyHeader: TracksSearchWidgetBoxBase(
+                state: this,
+                leftText: [
+                  tracksWithDate.displayTrackKeyword,
+                  tracksWithDate.totalDurationFormatted,
+                ].join(' - '),
+                sort: sort,
+                sortReverse: sortReverse,
+                onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+                  playlist.name,
+                  PlaylistController.inst,
+                  SortType.values,
+                  (sort) => sort.toText(),
+                  (sort) => sort.toIcon(),
                 ),
-                itemExtent: Dimensions.inst.trackTileItemExtent,
-                itemBuilder: (context, i) {
-                  final index = searchResults == null ? i : searchResults[i];
-                  final trackWithDate = tracksWithDate[index];
-                  return FadeDismissible(
-                    key: Key("Diss_$index$trackWithDate"),
-                    draggableRx: PlaylistController.inst.canReorderItems,
-                    onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
-                    onTopWidget: Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: threeC,
-                    ),
-                    child: AnimatingTile(
-                      key: ValueKey(index),
-                      position: i,
-                      shouldAnimate: !(reorderable || widget.disableAnimation),
-                      child: TrackTile(
-                        properties: properties,
-                        index: index,
-                        trackOrTwd: trackWithDate,
-                        tracks: tracksWithDate,
-                      ),
-                    ),
-                  );
-                },
-                listBuilder: (list) {
-                  return Stack(
-                    children: [
-                      list,
-                      pullToRefreshWidget,
-                    ],
-                  );
+                onReverseIconTap: (newSortReverse) {
+                  PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
+                  PlaylistController.inst.resetCanReorder();
                 },
               ),
+              itemExtent: Dimensions.inst.trackTileItemExtent,
+              itemBuilder: (context, i) {
+                final index = searchResults == null ? i : searchResults[i];
+                final trackWithDate = tracksWithDate[index];
+                return FadeDismissible(
+                  key: Key("Diss_$index$trackWithDate"),
+                  draggableRx: PlaylistController.inst.canReorderItems,
+                  onDismissed: (direction) => NamidaOnTaps.inst.onRemoveTracksFromPlaylist(playlist.name, [trackWithDate]),
+                  onTopWidget: Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: threeC,
+                  ),
+                  child: AnimatingTile(
+                    key: ValueKey(index),
+                    position: i,
+                    shouldAnimate: !(PlaylistController.inst.canReorderItems.value || widget.disableAnimation),
+                    child: TrackTile(
+                      properties: properties,
+                      index: index,
+                      trackOrTwd: trackWithDate,
+                      tracks: tracksWithDate,
+                    ),
+                  ),
+                );
+              },
+              listBuilder: (list) {
+                return Stack(
+                  children: [
+                    list,
+                    pullToRefreshWidget,
+                  ],
+                );
+              },
             ),
           );
         },
@@ -687,6 +684,9 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
 }
 
 class ThreeLineSmallContainers extends StatelessWidget {
+  static const enabledWidth = 9.0;
+  static const disabledWidth = 2.0;
+
   final bool enabled;
   final Color? color;
 
@@ -707,7 +707,7 @@ class ThreeLineSmallContainers extends StatelessWidget {
           child: AnimatedSizedBox(
             duration: const Duration(milliseconds: 300),
             curve: Curves.fastEaseInToSlowEaseOut,
-            width: enabled ? 9.0 : 2.0,
+            width: enabled ? enabledWidth : disabledWidth,
             height: 1.2,
             animateHeight: false,
             decoration: BoxDecoration(

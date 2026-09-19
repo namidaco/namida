@@ -299,9 +299,8 @@ class NamidaFFMPEG {
     required bool keepOriginalFileStats,
     bool recursive = true,
   }) async {
-    if (!await requestManageStoragePermission()) return;
-
-    final dir = await Directory(AppDirs.COMPRESSED_IMAGES).create(recursive: true);
+    final saveDirPath = AppDirs.COMPRESSED_IMAGES;
+    if (!await requestManageStoragePermission(directoryToCreate: saveDirPath)) return;
 
     final dirFiles = <FileSystemEntity>[];
 
@@ -319,7 +318,7 @@ class NamidaFFMPEG {
     for (final f in dirFiles) {
       final didUpdate = await compressImage(
         path: f.path,
-        saveDir: dir.path,
+        saveDir: saveDirPath,
         percentage: compressionPerc,
         keepOriginalFileStats: keepOriginalFileStats,
       );
@@ -336,7 +335,7 @@ class NamidaFFMPEG {
   }
 
   Future<void> fixYTDLPBigThumbnailSize({required List<String> directoriesPaths, bool recursive = true}) async {
-    if (!await requestManageStoragePermission(ensureDirectoryCreated: true)) return;
+    if (!await requestManageStoragePermission()) return;
 
     final allFiles = <FileSystemEntity>[];
     int remainingDirsLength = directoriesPaths.length;

@@ -22,7 +22,7 @@ abstract class NamidaWindowManager {
 
   Future<void> init();
   Future<void> restorePosition();
-  Future<void> ensurePositionRestored({bool isStartup = true});
+  Future<void> ensurePositionRestored({required bool restoreBounds});
 
   // ================== Mini Lyrics Window ==================
 

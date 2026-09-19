@@ -164,8 +164,8 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       imageBuilder: (item) {
         return item is Selectable ? trackConfig.imageBuilder(item) : ytConfig.imageBuilder(item);
       },
-      currentImageBuilder: (item, maxWidth) {
-        return item is Selectable ? trackConfig.currentImageBuilder(item, maxWidth) : ytConfig.currentImageBuilder(item, maxWidth);
+      currentImageBuilder: (item, lyricsMaxSize) {
+        return item is Selectable ? trackConfig.currentImageBuilder(item, lyricsMaxSize) : ytConfig.currentImageBuilder(item, lyricsMaxSize);
       },
       textBuilder: (item) {
         return item is Selectable
@@ -486,9 +486,9 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           track: (item as Selectable).track,
         ),
       ),
-      currentImageBuilder: (item, maxWidth) => _AnimatingTrackImage(
+      currentImageBuilder: (item, lyricsMaxSize) => _AnimatingTrackImage(
         track: (item as Selectable).track,
-        maxWidth: maxWidth,
+        lyricsMaxSize: lyricsMaxSize,
       ),
       textBuilder: textBuilder,
       canShowBuffering: (currentItem) => (currentItem as Selectable).track.isNetwork,
@@ -782,9 +782,9 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
           video: item as YoutubeID,
         ),
       ),
-      currentImageBuilder: (item, maxWidth) => _AnimatingYoutubeIDImage(
+      currentImageBuilder: (item, lyricsMaxSize) => _AnimatingYoutubeIDImage(
         video: item as YoutubeID,
-        maxWidth: maxWidth,
+        lyricsMaxSize: lyricsMaxSize,
       ),
       textBuilder: (item) => textBuilder(context, item),
       textRefreshRx: YoutubeInfoController.utils.lazyInfoRefresh,
@@ -837,7 +837,7 @@ FocusedMenuOptions? miniplayerFocusedMenuOptionsFor(BuildContext context, Playab
 /// The miniplayer's animating artwork/video, usable outside the miniplayer itself.
 class MiniplayerArtwork extends StatelessWidget {
   final Playable item;
-  final ValueListenable<double> maxWidth;
+  final ValueListenable<Size> lyricsMaxSize;
 
   /// when the lyrics live somewhere else, the artwork shouldnt blur itself for them.
   final bool showLyricsOverlay;
@@ -845,7 +845,7 @@ class MiniplayerArtwork extends StatelessWidget {
   const MiniplayerArtwork({
     super.key,
     required this.item,
-    required this.maxWidth,
+    required this.lyricsMaxSize,
     this.showLyricsOverlay = true,
   });
 
@@ -854,12 +854,12 @@ class MiniplayerArtwork extends StatelessWidget {
     return item.execute(
           selectable: (finalItem) => _AnimatingTrackImage(
             track: finalItem.track,
-            maxWidth: maxWidth,
+            lyricsMaxSize: lyricsMaxSize,
             showLyricsOverlay: showLyricsOverlay,
           ),
           youtubeID: (finalItem) => _AnimatingYoutubeIDImage(
             video: finalItem,
-            maxWidth: maxWidth,
+            lyricsMaxSize: lyricsMaxSize,
             showLyricsOverlay: showLyricsOverlay,
           ),
         ) ??
@@ -869,12 +869,12 @@ class MiniplayerArtwork extends StatelessWidget {
 
 class _AnimatingTrackImage extends StatelessWidget {
   final Track track;
-  final ValueListenable<double> maxWidth;
+  final ValueListenable<Size> lyricsMaxSize;
   final bool showLyricsOverlay;
 
   const _AnimatingTrackImage({
     required this.track,
-    required this.maxWidth,
+    required this.lyricsMaxSize,
     this.showLyricsOverlay = true,
   });
 
@@ -882,7 +882,7 @@ class _AnimatingTrackImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
       isLocal: true,
-      maxWidth: maxWidth,
+      lyricsMaxSize: lyricsMaxSize,
       showLyricsOverlay: showLyricsOverlay,
       fallback: _TrackImage(
         track: track,
@@ -894,13 +894,13 @@ class _AnimatingTrackImage extends StatelessWidget {
 class _AnimatingThumnailWidget extends StatefulWidget {
   final bool isLocal;
   final Widget fallback;
-  final ValueListenable<double> maxWidth;
+  final ValueListenable<Size> lyricsMaxSize;
   final bool showLyricsOverlay;
 
   const _AnimatingThumnailWidget({
     required this.isLocal,
     required this.fallback,
-    required this.maxWidth,
+    required this.lyricsMaxSize,
     this.showLyricsOverlay = true,
   });
 
@@ -973,7 +973,7 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
   Widget build(BuildContext context) {
     final videoInfo = _effective;
     final isLocal = widget.isLocal;
-    final maxWidth = widget.maxWidth;
+    final lyricsMaxSize = widget.lyricsMaxSize;
     final showLyricsOverlay = widget.showLyricsOverlay;
     return ObxO(
       rx: settings.animatingThumbnailInversed,
@@ -1035,11 +1035,13 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                 duration: const Duration(milliseconds: 300),
                 child: shoulShowLyricsView
                     ? ValueListenableBuilder(
-                        valueListenable: maxWidth,
-                        builder: (context, maxWidth, _) => LyricsLRCParsedView(
+                        valueListenable: lyricsMaxSize,
+                        builder: (context, lyricsMaxSize, _) => LyricsLRCParsedView(
                           key: Lyrics.inst.lrcViewKey,
                           videoOrImage: videoOrImage,
-                          maxWidth: maxWidth,
+                          maxWidth: lyricsMaxSize.width,
+                          maxHeight: lyricsMaxSize.height,
+                          insideMiniplayerCard: true,
                           visibilityNotifier: Lyrics.inst.lrcOverlayVisibility,
                         ),
                       )
@@ -1170,12 +1172,12 @@ class _YoutubeIDImage extends StatelessWidget {
 
 class _AnimatingYoutubeIDImage extends StatelessWidget {
   final YoutubeID video;
-  final ValueListenable<double> maxWidth;
+  final ValueListenable<Size> lyricsMaxSize;
   final bool showLyricsOverlay;
 
   const _AnimatingYoutubeIDImage({
     required this.video,
-    required this.maxWidth,
+    required this.lyricsMaxSize,
     this.showLyricsOverlay = true,
   });
 
@@ -1183,7 +1185,7 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
   Widget build(BuildContext context) {
     return _AnimatingThumnailWidget(
       isLocal: false,
-      maxWidth: maxWidth,
+      lyricsMaxSize: lyricsMaxSize,
       showLyricsOverlay: showLyricsOverlay,
       fallback: _YoutubeIDImage(
         video: video,

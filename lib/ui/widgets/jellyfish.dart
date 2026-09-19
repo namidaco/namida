@@ -1311,8 +1311,8 @@ abstract class NamidaJellys {
   static final enabledRx = enabled.obs;
 
   /// Outside the flags page the invasion and the palette are offered as one thing.
-  static void setInvasion(bool enabled) {
-    settings.extra.save(jellysInvasion: enabled, jellysPalette: enabled);
+  static void setInvasion(bool enabled, {bool paletteFollows = false}) {
+    settings.extra.save(jellysInvasion: enabled, jellysPalette: paletteFollows ? enabled : null);
     enabledRx.value = enabled;
     _refreshColors(enabled);
   }

@@ -31,6 +31,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 export 'package:dart_extensions/dart_extensions.dart';
+export 'package:youtipie/youtipie.dart' show YTStringUtils;
 
 extension TracksSelectableUtils on Iterable<Selectable> {
   String get displayTrackKeyword => length.displayTrackKeyword;
@@ -727,9 +728,6 @@ extension TRACKPLAYMODE on TrackPlayMode {
 
 extension YTLinkToID on String {
   String get getYoutubeID => NamidaLinkUtils.extractYoutubeId(this) ?? '';
-
-  /// empty, 'null', etc..
-  bool get isDummyVideoId => length < 11;
 }
 
 extension TitleAndArtistUtils on String {

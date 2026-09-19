@@ -122,7 +122,7 @@ extension NamidaAppIconsUtils on NamidaAppIcons {
 enum NamidaAppIcons {
   namida("assets/namida_icon.png", [AuthorInfo("شاكور", null, AuthorPlatform.discord, null), AuthorInfo("MSOB7YY", "MSOB7YY", AuthorPlatform.github, null)]),
   cutsie("assets/namida_icon_cutsie.webp", [AuthorInfo("smilez", null, AuthorPlatform.discord, AuthorAIModel.gpt4)]),
-  jellyda("assets/namida_icon_jellyda.webp", [AuthorInfo("Tsuune", "TsunekiHouse", AuthorPlatform.telegram, null), AuthorInfo("Tsuune", "tsuuneki", AuthorPlatform.discord, null)]),
+  jellyda("assets/namida_icon_jellyda.webp", [AuthorInfo("Tsuune", "tsuuneki", AuthorPlatform.discord, null), AuthorInfo("Tsuune", "TsunekiHouse", AuthorPlatform.telegram, null)]),
   eddy("assets/namida_icon_eddy.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),
   namichin("assets/namida_icon_namichin.webp", [AuthorInfo("Scarecloud", null, AuthorPlatform.discord, null)]),
   space("assets/namida_icon_space.webp", [AuthorInfo(":𝟛𝓗𝓪𝓹𝓹𝔂", null, AuthorPlatform.discord, null)]),

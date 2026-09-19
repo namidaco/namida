@@ -155,7 +155,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final void Function(Playable currentItem, TapUpDetails details) onMenuOpen;
   final FocusedMenuOptions Function(Playable item) focusedMenuOptions;
   final Widget Function(Playable item) imageBuilder;
-  final Widget Function(Playable item, ValueListenable<double> maxWidth) currentImageBuilder;
+  final Widget Function(Playable item, ValueListenable<Size> lyricsMaxSize) currentImageBuilder;
   final MiniplayerInfoData<E, S> Function(Playable item) textBuilder;
   final RxBaseCore<Object?>? textRefreshRx;
   final bool Function(Playable item) canShowBuffering;
@@ -286,7 +286,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   final isMenuOpened = false.obs;
   static const animationDuration = Duration(milliseconds: 150);
 
-  final _currentImageMaxWidth = ValueNotifier<double>(0.0);
+  /// the space the lyrics overlay may use, independent of the artwork's own aspect ratio.
+  final _lyricsMaxSize = ValueNotifier<Size>(Size.zero);
 
   /// used to skip implicit decoration animations while the miniplayer itself is animating.
   double _lastAnimationP = 0.0;
@@ -320,7 +321,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   @override
   void dispose() {
     isMenuOpened.close();
-    _currentImageMaxWidth.dispose();
+    _lyricsMaxSize.dispose();
     MiniPlayerController.inst.screenValuesVersion.removeListener(_screenValuesListener);
     ArtworkWidget.aspectRatiosVersion.removeListener(_artworkAspectRatiosListener);
     super.dispose();
@@ -789,7 +790,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             final videoInfo = Player.inst.videoPlayerInfo.valueR;
             final showSimpleLyricsLine = settings.enableSimpleLyricsLine.valueR && !settings.enableLyrics.valueR;
-            final reserveSimpleLyricsBand = showSimpleLyricsLine && Lyrics.inst.currentLyricsLRC.valueR != null;
+            final simpleLyricsBandHeight = showSimpleLyricsLine && Lyrics.inst.currentLyricsLRC.valueR != null
+                ? SimpleLyricsLineWidget.fittedMaxHeight(
+                    fontSize: _kSimpleLyricsLineFontSize,
+                    maxLines: 1,
+                    textScaler: MediaQuery.textScalerOf(context),
+                  )
+                : 0.0;
             final thumbnailBaseScale = MiniplayerThumbnailScale.resolveBase(
               isInversed: settings.animatingThumbnailInversed.valueR,
               userScaleMultiplier: settings.animatingThumbnailScaleMultiplier.valueR,
@@ -820,7 +827,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             Widget currentImage = widget.currentImageBuilder(
               currentItemAnimationUI,
-              _currentImageMaxWidth,
+              _lyricsMaxSize,
             );
 
             if (settings.artworkTapAction.valueR != TrackExecuteActions.none) {
@@ -1026,7 +1033,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     double vOffsetTrackInfo = _lerpDouble(
                       _lerpDouble(
                         vOffsetExtras,
-                        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0 * heightFactor, // idk bro this the only way it matches :/
+                        // -- [maxOffset] excludes the navbar, but these are anchored to the real screen bottom.
+                        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0 * heightFactor - navBarHeight * cp, // idk bro this the only way it matches :/
                         qp,
                       ),
                       (vOffsetWaveform - 64.0 * waveformYScale).withMaximum(-(maxOffset - bottomInset - topInset) * 0.3), // don't ask why topInset.. it works like that idk
@@ -1034,10 +1042,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     );
                     double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0 * heightFactor * bcp) + (6.0 * heightFactor * qp);
 
-                    if (reserveSimpleLyricsBand) {
-                      // -- the line may fall back to 2 lines, the gap under the artwork (16 + 6) only holds one.
-                      final bandHeight = SimpleLyricsLineWidget.fittedMaxHeight(fontSize: _kSimpleLyricsLineFontSize, maxLines: 1);
-                      vOffsetImage -= (bandHeight - 22.0 * heightFactor).withMinimum(0.0) * bcp;
+                    if (simpleLyricsBandHeight > 0) {
+                      // -- the line may fall back to 2 lines, the gap under the artwork (22) only holds one.
+                      vOffsetImage -= (simpleLyricsBandHeight - 22.0 * heightFactor).withMinimum(0.0) * bcp;
                     }
 
                     // -- the picture is painted 1.13x past its box, so the side margin has to grow with the
@@ -1077,7 +1084,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     final imageEmptyRightSpace = screenSize.width - imageBoxWidth;
                     final imageLeftOffset = (((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp);
 
-                    _currentImageMaxWidth.value = imageWidthBig;
+                    // -- the pre-ratio box, so lyrics keep the same space no matter what shape the artwork takes
+                    _lyricsMaxSize.value = Size(imageMaxWidthPre, imageMaxHeightPre.withMaximum(imageMaxWidthPre));
 
                     final animateDecoration = p == _lastAnimationP;
                     _lastAnimationP = p;
@@ -1541,7 +1549,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   completelyKillWhenPossible: true,
                                   opacity: simpleLyricsOpacityAnimation,
                                   child: Transform.translate(
-                                    offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 6.0 * heightFactor * bcp - imageExtraLift * 0.5),
+                                    offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 12.0 * heightFactor * bcp - imageExtraLift * 0.5),
                                     child: Align(
                                       alignment: Alignment.bottomCenter,
                                       child: Padding(
@@ -1848,7 +1856,10 @@ class WaveformMiniplayer extends StatelessWidget {
     MiniPlayerController.inst.seekValue.value = null;
   }
 
-  bool get _isMiniplayerExpanded => MiniPlayerController.inst.animation.value >= 0.95;
+  static void _onSeekPointerDown(PointerDownEvent _) {
+    _dragUpToCancel = 0.0;
+    _canDragToSeekLatest = true;
+  }
 
   static bool _canDragToSeekLatest = true;
   static double _dragUpToCancel = 0.0;
@@ -1868,8 +1879,9 @@ class WaveformMiniplayer extends StatelessWidget {
               padding: fixPadding ? EdgeInsets.symmetric(horizontal: (16.0 / 2)) : EdgeInsets.zero,
               child: Listener(
                 behavior: HitTestBehavior.translucent,
+                onPointerDown: _onSeekPointerDown,
                 onPointerMove: (event) {
-                  if (!_isMiniplayerExpanded) return;
+                  if (MiniPlayerController.inst.seekValue.value == null) return;
                   if (!_canDragToSeekLatest) return;
                   if (_dragUpToCancel > _dragUpToCancelMax) {
                     _canDragToSeekLatest = false;

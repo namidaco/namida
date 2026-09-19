@@ -73,6 +73,7 @@ class Player {
   RxBaseCore<List<Playable>> get currentQueue => _audioHandler.currentQueue.queueRx;
   List<int>? get currentQueueOriginalIndices => _audioHandler.currentQueue.originalIndices;
   RxBaseCore<Playable?> get currentItem => _audioHandler.currentItem;
+  bool supportsSkipSilence(Playable? item) => NamidaAudioVideoHandler.supportsSkipSilence(item);
 
   RxBaseCore<List<AudioTrack>?> get audioTracks => _audioHandler.audioTracks;
   RxBaseCore<List<TextTrack>?> get textTracks => _audioHandler.textTracks;

@@ -105,17 +105,19 @@ set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib")
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
-# bundle .desktop, icons & metainfo
-install(FILES "namida.desktop"
+# bundle .desktop, icons & metainfo as a drop-in XDG tree.
+# the .desktop basename must equal the wayland app_id, or compositors can't resolve the icon
+install(FILES "${APPLICATION_ID}.desktop"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
 )
-install(DIRECTORY "icons/"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/"
-  FILES_MATCHING PATTERN "*"
-)
-install(FILES "packaging/com.msob7y.namida.metainfo.xml"
+foreach(icon_size 128 256 512)
+  install(FILES "icons/namida_${icon_size}.png"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/${icon_size}x${icon_size}/apps"
+    RENAME "${BINARY_NAME}.png"
+  )
+endforeach()
+install(FILES "packaging/${APPLICATION_ID}.metainfo.xml"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo/"
-  RENAME "namida.metainfo.xml"
 )
 
 # bundle required binaries

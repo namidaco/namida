@@ -99,7 +99,7 @@ class _CustomMPRISService extends MPRISService {
     : super(
         "namida",
         identity: "Namida",
-        desktopEntry: "namida",
+        desktopEntry: "com.msob7y.namida",
         emitSeekedSignal: true,
         canControl: true,
         canQuit: true,

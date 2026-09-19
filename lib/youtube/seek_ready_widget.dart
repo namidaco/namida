@@ -226,7 +226,10 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
             ),
       child: Listener(
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) => _canDragToSeek, // refresh `_canDragToSeekLatest`
+        onPointerDown: (_) {
+          _canDragToSeekLatest = _canDragToSeek;
+          _dragUpToCancel = 0.0;
+        },
         onPointerMove: (event) {
           if (!_canDragToSeekLatest) return;
           if (!_isMiniplayerExpanded) return;

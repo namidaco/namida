@@ -19,7 +19,7 @@ recommended_dependencies:
 essential: false
 
 icon: linux/icons/namida_512.png
-desktop_file: linux/namida.desktop
+desktop_file: linux/com.msob7y.namida.desktop
 
 postuninstall_scripts:
   - echo "Sorry to see you go."

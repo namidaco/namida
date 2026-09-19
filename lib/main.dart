@@ -236,7 +236,7 @@ Future<bool> _mainAppInitialization() async {
   }
 
   try {
-    WindowController.instance?.restorePosition(); // -- requires settings
+    final windowRestoration = WindowController.instance?.restorePosition(); // -- requires settings
     TrayController.instance?.init(); // -- requires paths
 
     args = Zone.current['args'] as List<String>? ?? [];
@@ -261,6 +261,7 @@ Future<bool> _mainAppInitialization() async {
     }
 
     await [
+      windowRestoration,
       if (!shouldShowOnBoarding) Indexer.inst.prepareTracksFile(startupBoost: true).whenComplete(Player.inst.refreshNotification),
       PlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
       YoutubePlaylistController.inst.prepareDefaultPlaylistsFileAsync(),
@@ -479,11 +480,11 @@ void _initializeIntenties() {
   }
 }
 
-Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, bool ensureDirectoryCreated = false}) async {
+Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, String? directoryToCreate}) async {
   return PermissionManager.platform.requestManageStoragePermission(
     request: request,
     showError: showError,
-    ensureDirectoryCreated: ensureDirectoryCreated,
+    directoryToCreate: directoryToCreate,
   );
 }
 
@@ -594,10 +595,13 @@ class _NamidaState extends State<Namida> {
     final shouldShowOnBoarding = await _mainAppInitialization();
     setState(() => _shouldShowOnBoarding = shouldShowOnBoarding);
 
-    // -- resizing after first frame can crash flutter linux (x11), https://github.com/namidaco/namida/issues/1212
-    await WindowController.instance?.ensurePositionRestored().catchError(logger.report);
-
     FlutterNativeSplash.remove();
+
+    final windowController = WindowController.instance;
+    if (windowController != null) {
+      // -- a window shown before its first frame is transparent then flashes white
+      WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) => windowController.ensurePositionRestored(restoreBounds: false)).catchError(logger.report);
+    }
 
     if (Platform.isLinux) {
       WidgetsBinding.instance.endOfFrame.then((_) => _secondaryAppInitialization(shouldShowOnBoarding));
