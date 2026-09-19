@@ -812,10 +812,13 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
   void Function(List<DateTime> dates)? onChanged,
   required void Function(List<DateTime> dates) onGenerate,
   DateTime? initialDate,
+  List<DateTime> initialSelection = const [],
+  Widget? bottomWidget,
+  VoidCallback? onDisposing,
 }) async {
   historyController ??= HistoryController.inst as HistoryManager<T, E>;
 
-  final dates = <DateTime>[];
+  final dates = <DateTime>[...initialSelection];
 
   final daysNumber = 0.obs;
   final canGenerate = false.obs;
@@ -841,6 +844,9 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
     }
   }
 
+  reEvaluateCanGenerate();
+  calculateDaysNumber();
+
   final context = namida.context!;
   final locale = Localizations.localeOf(context);
   final localizations = MaterialLocalizations.of(context);
@@ -852,6 +858,7 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
     onDisposing: () {
       daysNumber.close();
       canGenerate.close();
+      onDisposing?.call();
     },
     scale: 0.90,
     dialog: CustomBlurryDialog(
@@ -873,121 +880,127 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
           ),
         ),
       ],
-      child: CalendarDatePicker2(
-        displayedMonthDate: initialDate,
-        onValueChanged: (value) {
-          final dts = value.whereType<DateTime>().toList();
-          dates.assignAll(dts);
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CalendarDatePicker2(
+            displayedMonthDate: initialDate,
+            onValueChanged: (value) {
+              final dts = value.whereType<DateTime>().toList();
+              dates.assignAll(dts);
 
-          if (onChanged != null) onChanged(dts);
+              if (onChanged != null) onChanged(dts);
 
-          reEvaluateCanGenerate();
-          calculateDaysNumber();
-        },
-        config: CalendarDatePicker2Config(
-          hideYearPickerDividers: true,
-          hideMonthPickerDividers: true,
-          disableVibration: true,
-          dayModeScrollDirection: .horizontal,
-          calendarViewMode: CalendarDatePicker2Mode.day,
-          dayBorderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          modePickerBuilder:
-              ({
-                required CalendarDatePicker2Mode viewMode,
-                required DateTime monthDate,
-                required VoidCallback? onTap,
-                bool? isMonthPicker,
-              }) {
-                String text;
-                IconData icon;
-                if (isMonthPicker == true) {
-                  text = "${formatMonth(monthDate)} • ${monthDate.month}";
-                  icon = Broken.calendar_1;
-                } else {
-                  text = localizations.formatYear(monthDate);
-                  icon = Broken.calendar;
-                }
-                return NamidaInkWell(
-                  alignment: AlignmentGeometry.center,
-                  onTap: onTap,
-                  padding: const EdgeInsetsGeometry.symmetric(horizontal: 16.0, vertical: 12.0),
-                  child: Row(
-                    mainAxisSize: .min,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2.0),
-                        child: Icon(
-                          icon,
-                          size: 20.0,
-                        ),
+              reEvaluateCanGenerate();
+              calculateDaysNumber();
+            },
+            config: CalendarDatePicker2Config(
+              hideYearPickerDividers: true,
+              hideMonthPickerDividers: true,
+              disableVibration: true,
+              dayModeScrollDirection: .horizontal,
+              calendarViewMode: CalendarDatePicker2Mode.day,
+              dayBorderRadius: BorderRadius.circular(8.0.multipliedRadius),
+              modePickerBuilder:
+                  ({
+                    required CalendarDatePicker2Mode viewMode,
+                    required DateTime monthDate,
+                    required VoidCallback? onTap,
+                    bool? isMonthPicker,
+                  }) {
+                    String text;
+                    IconData icon;
+                    if (isMonthPicker == true) {
+                      text = "${formatMonth(monthDate)} • ${monthDate.month}";
+                      icon = Broken.calendar_1;
+                    } else {
+                      text = localizations.formatYear(monthDate);
+                      icon = Broken.calendar;
+                    }
+                    return NamidaInkWell(
+                      alignment: AlignmentGeometry.center,
+                      onTap: onTap,
+                      padding: const EdgeInsetsGeometry.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: Row(
+                        mainAxisSize: .min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2.0),
+                            child: Icon(
+                              icon,
+                              size: 20.0,
+                            ),
+                          ),
+                          const SizedBox(width: 6.0),
+                          Flexible(
+                            child: Text(
+                              text,
+                              style: context.textTheme.displayMedium,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 6.0),
-                      Flexible(
-                        child: Text(
-                          text,
-                          style: context.textTheme.displayMedium,
-                        ),
-                      ),
-                    ],
+                    );
+                  },
+              dayBuilder:
+                  ({
+                    required DateTime date,
+                    TextStyle? textStyle,
+                    BoxDecoration? decoration,
+                    bool? isSelected,
+                    bool? isDisabled,
+                    bool? isToday,
+                  }) => _buildCalendarDayWidget(
+                    date: date,
+                    textStyle: textStyle,
+                    decoration: decoration,
+                    isSelected: isSelected,
+                    isDisabled: isDisabled,
+                    isToday: isToday,
+                    extraText: useHistoryDates ? historyController?.historyMap.value[date.toDaysSince1970()]?.length.toString() ?? '' : null,
+                    localizations: localizations,
                   ),
-                );
-              },
-          dayBuilder:
-              ({
-                required DateTime date,
-                TextStyle? textStyle,
-                BoxDecoration? decoration,
-                bool? isSelected,
-                bool? isDisabled,
-                bool? isToday,
-              }) => _buildCalendarDayWidget(
-                date: date,
-                textStyle: textStyle,
-                decoration: decoration,
-                isSelected: isSelected,
-                isDisabled: isDisabled,
-                isToday: isToday,
-                extraText: useHistoryDates ? historyController?.historyMap.value[date.toDaysSince1970()]?.length.toString() ?? '' : null,
-                localizations: localizations,
-              ),
-          monthBuilder:
-              ({
-                required int month,
-                required DateTime date,
-                TextStyle? textStyle,
-                BoxDecoration? decoration,
-                bool? isSelected,
-                bool? isDisabled,
-                bool? isCurrentMonth,
-              }) => Center(
-                child: SizedBox(
-                  height: 36.0,
-                  width: 72.0,
-                  child: DecoratedBox(
-                    decoration: decoration ?? const BoxDecoration(),
-                    child: Center(
-                      child: Semantics(
-                        selected: isSelected,
-                        button: true,
-                        child: Text(
-                          "${formatMonth(date)} • $month",
-                          style: textStyle,
+              monthBuilder:
+                  ({
+                    required int month,
+                    required DateTime date,
+                    TextStyle? textStyle,
+                    BoxDecoration? decoration,
+                    bool? isSelected,
+                    bool? isDisabled,
+                    bool? isCurrentMonth,
+                  }) => Center(
+                    child: SizedBox(
+                      height: 36.0,
+                      width: 72.0,
+                      child: DecoratedBox(
+                        decoration: decoration ?? const BoxDecoration(),
+                        child: Center(
+                          child: Semantics(
+                            selected: isSelected,
+                            button: true,
+                            child: Text(
+                              "${formatMonth(date)} • $month",
+                              style: textStyle,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-          calendarType: switch (calendarType) {
-            NamidaCalendarDatePickerType.single => CalendarDatePicker2Type.single,
-            NamidaCalendarDatePickerType.multi => CalendarDatePicker2Type.multi,
-            NamidaCalendarDatePickerType.range => CalendarDatePicker2Type.range,
-          },
-          currentDate: initialDate,
-          firstDate: firstDate ?? (useHistoryDates ? historyController.oldestTrack?.dateAddedMS.milliSecondsSinceEpoch : null),
-          lastDate: lastDate ?? (useHistoryDates ? historyController.newestTrack?.dateAddedMS.milliSecondsSinceEpoch : null),
-        ),
-        value: const [],
+              calendarType: switch (calendarType) {
+                NamidaCalendarDatePickerType.single => CalendarDatePicker2Type.single,
+                NamidaCalendarDatePickerType.multi => CalendarDatePicker2Type.multi,
+                NamidaCalendarDatePickerType.range => CalendarDatePicker2Type.range,
+              },
+              currentDate: initialDate,
+              firstDate: firstDate ?? (useHistoryDates ? historyController.oldestTrack?.dateAddedMS.milliSecondsSinceEpoch : null),
+              lastDate: lastDate ?? (useHistoryDates ? historyController.newestTrack?.dateAddedMS.milliSecondsSinceEpoch : null),
+            ),
+            value: initialSelection,
+          ),
+          ?bottomWidget,
+        ],
       ),
     ),
   );

@@ -86,6 +86,108 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
     NamidaNavigator.inst.closeDialog();
   }
 
+  static const _kDayMS = Duration.millisecondsPerDay;
+  static final _kMinValidHistoryDate = DateTime(1971);
+
+  int? _oldestValidHistoryMS() {
+    final map = widget.historyController.historyMap.value;
+    final oldestValidDay = map.lastKeyBefore(_kMinValidHistoryDate.toDaysSince1970()) ?? map.lastKey();
+    return oldestValidDay == null ? null : HistoryManager.daysSince1970ToMilliseconds(oldestValidDay);
+  }
+
+  DateRange? _resolveDisplayRange(MostPlayedTimeRange mptr, DateRange storedRange) {
+    if (mptr == MostPlayedTimeRange.custom) {
+      return storedRange.newest.isAfter(storedRange.oldest) ? storedRange : null;
+    }
+    final now = DateTime.now();
+    final oldest = widget.historyController.resolveOldDate(mptr, now, null, null);
+    if (oldest == null) return null;
+    final oldestValidMS = _oldestValidHistoryMS();
+    return DateRange(
+      oldest: oldestValidMS != null && oldest.millisecondsSinceEpoch < oldestValidMS ? DateTime.fromMillisecondsSinceEpoch(oldestValidMS) : oldest,
+      newest: now,
+    );
+  }
+
+  Widget _getStartOfDayButton(BuildContext context) {
+    return ObxO(
+      rx: widget.historyController.mostPlayedCustomIsStartOfDay,
+      builder: (context, isStartOfDay) => NamidaPopupWrapper(
+        openOnLongPress: false,
+        childrenDefault: () {
+          final mptr = widget.historyController.currentMostPlayedTimeRange.value;
+          final now = DateTime.now();
+          return [
+            NamidaPopupItem(
+              icon: Broken.calendar_1,
+              title: lang.day,
+              subtitle: widget.historyController.resolveOldDate(mptr, now, true, null)?.dateFormattedOriginal ?? '',
+              selected: isStartOfDay,
+              onTap: () => _onSelectingTimeRange(mptr: mptr, isStartOfDay: true),
+            ),
+            NamidaPopupItem(
+              icon: Broken.clock,
+              title: lang.clock,
+              subtitle: widget.historyController.resolveOldDate(mptr, now, false, null)?.dateAndClockFormattedOriginal ?? '',
+              selected: !isStartOfDay,
+              onTap: () => _onSelectingTimeRange(mptr: mptr, isStartOfDay: false),
+            ),
+          ];
+        },
+        child: const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Icon(
+            Broken.setting_4,
+            size: 18.0,
+          ),
+        ),
+      ),
+    );
+  }
+
+  DateRange _rangeCenteredOnDay(DateTime day, int daysRadius) {
+    final centerMS = DateTime(day.year, day.month, day.day).millisecondsSinceEpoch + _kDayMS ~/ 2;
+    final radiusMS = daysRadius * _kDayMS;
+    return DateRange(
+      oldest: DateTime.fromMillisecondsSinceEpoch(centerMS - radiusMS),
+      newest: DateTime.fromMillisecondsSinceEpoch(centerMS + radiusMS),
+    );
+  }
+
+  void _showDaysRadiusPicker({required DateRange currentRange, required int daysRadius, required int maxDaysRadius}) {
+    final centerMS = (currentRange.oldest.millisecondsSinceEpoch + currentRange.newest.millisecondsSinceEpoch) ~/ 2;
+    final centerDate = DateTime.fromMillisecondsSinceEpoch(centerMS);
+    final centerDay = DateTime(centerDate.year, centerDate.month, centerDate.day);
+    final daysRadiusRx = daysRadius.obs;
+    showCalendarDialog(
+      title: lang.custom,
+      buttonText: lang.confirm,
+      useHistoryDates: true,
+      historyController: widget.historyController,
+      calendarType: NamidaCalendarDatePickerType.single,
+      initialDate: centerDay,
+      initialSelection: [centerDay],
+      onDisposing: daysRadiusRx.close,
+      bottomWidget: Padding(
+        padding: const EdgeInsets.only(top: 12.0),
+        child: ObxO(
+          rx: daysRadiusRx,
+          builder: (context, radius) => NamidaWheelSlider(
+            min: 1,
+            max: maxDaysRadius,
+            initValue: daysRadius,
+            onValueChanged: (val) => daysRadiusRx.value = val,
+            text: '± ${radius.displayDayKeyword}',
+          ),
+        ),
+      ),
+      onGenerate: (dates) => _onSelectingTimeRange(
+        dateCustom: _rangeCenteredOnDay(dates.first, daysRadiusRx.value),
+        mptr: .custom,
+      ),
+    );
+  }
+
   // bool _isCustomChipSelected({
   //   DateRange? dateCustom,
   //   required MostPlayedTimeRange mptr,
@@ -103,133 +205,50 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
   //   return false;
   // }
 
-  Widget _getChipChild({
-    required BuildContext context,
-    DateRange? dateCustom,
-    required MostPlayedTimeRange mptr,
-    bool dense = false,
-  }) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final dateText = dateCustom == null || dateCustom == DateRange.dummy()
-        ? null
-        : "${dateCustom.oldest.dateFormattedOriginalNoYears(dateCustom.newest)} → ${dateCustom.newest.dateFormattedOriginalNoYears(dateCustom.oldest)}";
+  void _showCustomRangePicker() {
+    showCalendarDialog(
+      title: lang.choose,
+      buttonText: lang.confirm,
+      useHistoryDates: true,
+      historyController: widget.historyController,
+      onGenerate: (dates) => _onSelectingTimeRange(
+        dateCustom: DateRange(oldest: dates.first, newest: dates.last),
+        mptr: MostPlayedTimeRange.custom,
+      ),
+    );
+  }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: ObxO(
-        rx: widget.historyController.currentMostPlayedTimeRange,
-        builder: (context, activeChip) {
-          final isActive = activeChip == mptr;
-          final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
-          final chipTextStyle = textTheme.displaySmall?.copyWith(
-            color: textColor,
-            fontSize: dateText == null
-                ? null
-                : dense
-                ? 11.0
-                : 12.0,
-            fontWeight: FontWeight.w600,
-          );
-          return TapDetector(
-            onTap: () => _onSelectingTimeRange(
-              dateCustom: dateCustom,
-              mptr: mptr,
-            ),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              padding: EdgeInsets.symmetric(horizontal: dense ? 8.0 : 12.0, vertical: 6.0),
-              decoration: BoxDecoration(
-                color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                borderRadius: BorderRadius.circular(dense ? 6.0.multipliedRadius : 8.0.multipliedRadius),
-              ),
-              child: FittedBox(
-                alignment: AlignmentDirectional.centerStart,
-                fit: .scaleDown,
-                child: Column(
-                  mainAxisSize: .min,
-                  crossAxisAlignment: .start,
-                  children: [
-                    if (dateCustom == null || dateCustom == DateRange.dummy())
-                      Text(
-                        mptr.toText(),
-                        style: chipTextStyle,
-                        softWrap: false,
-                      )
-                    else ...[
-                      NamidaInkWell(
-                        borderRadius: 4.0,
-                        bgColor: theme.cardColor.withOpacityExt(0.2),
-                        padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
-                        onTap: () {
-                          showCalendarDialog(
-                            title: lang.choose,
-                            buttonText: lang.confirm,
-                            useHistoryDates: true,
-                            historyController: widget.historyController,
-                            calendarType: NamidaCalendarDatePickerType.single,
-                            lastDate: dateCustom.newest,
-                            onGenerate: (dates) {
-                              final newDate = dates.first;
-                              _onSelectingTimeRange(
-                                dateCustom: DateRange(oldest: newDate, newest: dateCustom.newest),
-                                mptr: MostPlayedTimeRange.custom,
-                              );
-                            },
-                          );
-                        },
-                        child: Text(
-                          dateCustom.oldest.dateFormattedOriginal,
-                          style: chipTextStyle,
-                          softWrap: false,
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: .min,
-                        children: [
-                          Text(
-                            '⤷ ',
-                            style: chipTextStyle,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(top: 1.0),
-                            child: NamidaInkWell(
-                              borderRadius: 4.0,
-                              bgColor: theme.cardColor.withOpacityExt(0.2),
-                              padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 2.0),
-                              onTap: () {
-                                showCalendarDialog(
-                                  title: lang.choose,
-                                  buttonText: lang.confirm,
-                                  useHistoryDates: true,
-                                  historyController: widget.historyController,
-                                  calendarType: NamidaCalendarDatePickerType.single,
-                                  firstDate: dateCustom.oldest,
-                                  onGenerate: (dates) {
-                                    final newDate = dates.first;
-                                    _onSelectingTimeRange(
-                                      dateCustom: DateRange(oldest: dateCustom.oldest, newest: newDate),
-                                      mptr: MostPlayedTimeRange.custom,
-                                    );
-                                  },
-                                );
-                              },
-                              child: Text(
-                                dateCustom.newest.dateFormattedOriginal,
-                                style: chipTextStyle,
-                                softWrap: false,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
+  Widget _getDateButton({
+    required BuildContext context,
+    required DateTime date,
+    required TextStyle? style,
+    DateTime? firstDate,
+    DateTime? lastDate,
+    required void Function(DateTime newDate) onPick,
+  }) {
+    return NamidaInkWell(
+      borderRadius: 4.0,
+      bgColor: context.theme.cardColor,
+      padding: const EdgeInsetsGeometry.symmetric(horizontal: 6.0, vertical: 4.0),
+      onTap: () {
+        showCalendarDialog(
+          title: lang.choose,
+          buttonText: lang.confirm,
+          useHistoryDates: true,
+          historyController: widget.historyController,
+          calendarType: NamidaCalendarDatePickerType.single,
+          firstDate: firstDate,
+          lastDate: lastDate,
+          initialDate: date,
+          initialSelection: [DateTime(date.year, date.month, date.day)],
+          onGenerate: (dates) => onPick(dates.first),
+        );
+      },
+      child: Text(
+        date.dateFormattedOriginal,
+        style: style,
+        softWrap: false,
+        maxLines: 1,
       ),
     );
   }
@@ -237,8 +256,6 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
   Widget getChipsRow(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final mostplayedOptions = List<MostPlayedTimeRange>.from(MostPlayedTimeRange.values)..remove(MostPlayedTimeRange.custom);
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
@@ -250,62 +267,95 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
               const SizedBox(width: 8.0),
               ObxO(
                 rx: widget.historyController.currentMostPlayedTimeRange,
-                builder: (context, activeChip) => NamidaInkWell(
-                  animationDurationMS: 200,
-                  borderRadius: 6.0,
-                  bgColor: theme.cardTheme.color,
-                  padding: const EdgeInsets.all(8.0),
-                  decoration: BoxDecoration(
-                    border: activeChip == MostPlayedTimeRange.custom ? Border.all(color: CurrentColor.inst.color) : null,
+                builder: (context, activeRange) => NamidaPopupWrapper(
+                  openOnLongPress: false,
+                  childrenDefault: () => MostPlayedTimeRange.values.map(
+                    (e) => NamidaPopupItem(
+                      icon: e.toIcon(),
+                      title: e.toText(),
+                      selected: e == activeRange,
+                      onTap: () => e == MostPlayedTimeRange.custom ? _showCustomRangePicker() : _onSelectingTimeRange(mptr: e),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Broken.calendar,
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 4.0),
-                      Text(
-                        lang.custom,
-                        style: textTheme.displayMedium,
-                      ),
-                      const SizedBox(width: 4.0),
-                      const Icon(
-                        Broken.arrow_down_2,
-                        size: 14.0,
-                      ),
-                    ],
+                  child: NamidaInkWell(
+                    animationDurationMS: 200,
+                    borderRadius: 6.0,
+                    bgColor: theme.cardTheme.color,
+                    padding: const EdgeInsets.all(8.0),
+                    decoration: BoxDecoration(
+                      border: activeRange == MostPlayedTimeRange.custom ? Border.all(color: CurrentColor.inst.color) : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: .min,
+                      children: [
+                        Icon(
+                          activeRange.toIcon(),
+                          size: 18.0,
+                        ),
+                        const SizedBox(width: 6.0),
+                        Text(
+                          activeRange.toText(),
+                          style: textTheme.displayMedium,
+                        ),
+                        const SizedBox(width: 6.0),
+                        const Icon(
+                          Broken.arrow_down_2,
+                          size: 14.0,
+                        ),
+                      ],
+                    ),
                   ),
-                  onTap: () {
-                    showCalendarDialog(
-                      title: lang.choose,
-                      buttonText: lang.confirm,
-                      useHistoryDates: true,
-                      historyController: widget.historyController,
-                      onGenerate: (dates) => _onSelectingTimeRange(
-                        dateCustom: DateRange(oldest: dates.first, newest: dates.last),
-                        mptr: MostPlayedTimeRange.custom,
-                      ),
-                    );
-                  },
                 ),
               ),
-              const SizedBox(width: 4.0),
+              const SizedBox(width: 6.0),
               Expanded(
-                child: SmoothSingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: mostplayedOptions
-                        .map(
-                          (timeRange) => _getChipChild(
-                            context: context,
-                            mptr: timeRange,
-                          ),
-                        )
-                        .toFixedList(),
+                child: ObxO(
+                  rx: widget.historyController.currentMostPlayedTimeRange,
+                  builder: (context, mptr) => ObxO(
+                    rx: widget.historyController.mostPlayedCustomDateRange,
+                    builder: (context, storedRange) {
+                      final dateRange = _resolveDisplayRange(mptr, storedRange);
+                      if (dateRange == null) return const SizedBox();
+                      final dateTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w600);
+                      return FittedBox(
+                        fit: .scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Row(
+                          mainAxisSize: .min,
+                          children: [
+                            _getDateButton(
+                              context: context,
+                              date: dateRange.oldest,
+                              style: dateTextStyle,
+                              lastDate: dateRange.newest,
+                              onPick: (newDate) => _onSelectingTimeRange(
+                                dateCustom: DateRange(oldest: newDate, newest: dateRange.newest),
+                                mptr: MostPlayedTimeRange.custom,
+                              ),
+                            ),
+                            Text(
+                              ' → ',
+                              style: dateTextStyle,
+                            ),
+                            _getDateButton(
+                              context: context,
+                              date: dateRange.newest,
+                              style: dateTextStyle,
+                              firstDate: dateRange.oldest,
+                              onPick: (newDate) => _onSelectingTimeRange(
+                                dateCustom: DateRange(oldest: dateRange.oldest, newest: newDate),
+                                mptr: MostPlayedTimeRange.custom,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
+              _getStartOfDayButton(context),
+              const SizedBox(width: 4.0),
             ],
           ),
           if (widget.isInFullPage) const SizedBox(height: 2.0),
@@ -315,7 +365,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
               builder: (context, customRange) => ObxO(
                 rx: widget.historyController.currentMostPlayedTimeRange,
                 builder: (context, mptr) {
-                  final oldestMS = widget.historyController.oldestTrack?.dateAddedMS;
+                  final oldestMS = _oldestValidHistoryMS();
                   final newestMS = widget.historyController.newestTrack?.dateAddedMS;
                   if (oldestMS == null || newestMS == null) return const SizedBox();
                   final oldestDay = oldestMS.toDaysSince1970();
@@ -368,70 +418,66 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                   // -- put to the end if different
                   if (isSliderDifferentFromSelected) currentIndex = rangesCount;
 
-                  return LayoutWidthProvider(
-                    builder: (context, maxWidth) {
-                      final customChipWidth = maxWidth * 0.27;
-                      final sliderWidth = maxWidth - customChipWidth;
-                      return Row(
-                        children: [
-                          FittedBox(
+                  final rangeDays = effectiveRange.toDurationSafe().inDays ~/ 2;
+                  final daysRadius = rangeDays < 1 ? 1 : rangeDays;
+                  final maxDaysRadius = totalDaysInBetween.clampInt(2, 365);
+
+                  return Row(
+                    children: [
+                      const SizedBox(width: 8.0),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 86.0),
+                        child: NamidaInkWell(
+                          borderRadius: 6.0,
+                          bgColor: theme.cardColor,
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                          onTap: () => _showDaysRadiusPicker(
+                            currentRange: effectiveRange,
+                            daysRadius: daysRadius.clampInt(1, maxDaysRadius),
+                            maxDaysRadius: maxDaysRadius,
+                          ),
+                          child: FittedBox(
                             fit: .scaleDown,
-                            child: ObxO(
-                              rx: widget.historyController.mostPlayedCustomDateRange,
-                              builder: (context, dateRange) => SizedBox(
-                                width: customChipWidth,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: 6.0),
-                                  child: _getChipChild(
-                                    context: context,
-                                    mptr: MostPlayedTimeRange.custom,
-                                    dateCustom: dateRange,
-                                    dense: true,
-                                  ),
-                                ),
-                              ),
+                            child: Text(
+                              '± ${daysRadius.displayDayKeyword}',
+                              style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                              softWrap: false,
+                              maxLines: 1,
                             ),
                           ),
-                          SizedBox(
-                            width: sliderWidth,
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 12.0),
-                                _getArrowIcon(
-                                  icon: Broken.arrow_left_2,
-                                  callback: () => selectRangeIndex(currentIndex - 1),
-                                ),
-                                Expanded(
-                                  child: Slider.adaptive(
-                                    min: 0,
-                                    max: isSliderDifferentFromSelected ? rangesCount.toDouble() : (rangesCount - 1).toDouble(),
-                                    value: currentIndex.toDouble(),
-                                    onChangeStart: (value) {
-                                      if (isSliderDifferentFromSelected) {
-                                        selectRangeIndex((value - 1).round());
-                                      }
-                                    },
-                                    onChanged: (v) {
-                                      // -- floor cuz adding index can offset (when isSliderDifferentFromSelected == true)
-                                      selectRangeIndex(v.floor());
-                                    },
-                                    divisions: rangesCount > 1 ? rangesCount - 1 : null,
-                                    // thumbColor: isSliderDifferentFromSelected ? Colors.transparent : null,
-                                    label:
-                                        '${effectiveRange.oldest.dateFormattedOriginalNoYears(effectiveRange.newest)} → ${effectiveRange.newest.dateFormattedOriginalNoYears(effectiveRange.oldest)}',
-                                  ),
-                                ),
-                                _getArrowIcon(
-                                  icon: Broken.arrow_right_3,
-                                  callback: () => selectRangeIndex(currentIndex + 1),
-                                ),
-                                const SizedBox(width: 12.0),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+                        ),
+                      ),
+                      const SizedBox(width: 2.0),
+                      _getArrowIcon(
+                        icon: Broken.arrow_left_2,
+                        callback: () => selectRangeIndex(currentIndex - 1),
+                      ),
+                      Expanded(
+                        child: Slider.adaptive(
+                          min: 0,
+                          max: isSliderDifferentFromSelected ? rangesCount.toDouble() : (rangesCount - 1).toDouble(),
+                          value: currentIndex.toDouble(),
+                          onChangeStart: (value) {
+                            if (isSliderDifferentFromSelected) {
+                              selectRangeIndex((value - 1).round());
+                            }
+                          },
+                          onChanged: (v) {
+                            // -- floor cuz adding index can offset (when isSliderDifferentFromSelected == true)
+                            selectRangeIndex(v.floor());
+                          },
+                          divisions: rangesCount > 1 ? rangesCount - 1 : null,
+                          thumbColor: isSliderDifferentFromSelected ? theme.colorScheme.primary.withOpacityExt(0.4) : null,
+                          label:
+                              '${effectiveRange.oldest.dateFormattedOriginalNoYears(effectiveRange.newest)} → ${effectiveRange.newest.dateFormattedOriginalNoYears(effectiveRange.oldest)}',
+                        ),
+                      ),
+                      _getArrowIcon(
+                        icon: Broken.arrow_right_3,
+                        callback: () => selectRangeIndex(currentIndex + 1),
+                      ),
+                      const SizedBox(width: 12.0),
+                    ],
                   );
 
                   // -- chips design

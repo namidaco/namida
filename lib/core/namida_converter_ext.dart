@@ -2386,6 +2386,13 @@ extension MostPlayedTimeRangeL10n on MostPlayedTimeRange {
     MostPlayedTimeRange.year => lang.year,
     MostPlayedTimeRange.allTime => lang.allTime,
   };
+
+  IconData toIcon() => switch (this) {
+    MostPlayedTimeRange.custom => Broken.calendar_edit,
+    MostPlayedTimeRange.allTime => Broken.calendar,
+    MostPlayedTimeRange.day || MostPlayedTimeRange.day3 || MostPlayedTimeRange.week => Broken.calendar_1,
+    MostPlayedTimeRange.month || MostPlayedTimeRange.month3 || MostPlayedTimeRange.month6 || MostPlayedTimeRange.year => Broken.calendar_2,
+  };
 }
 
 extension HomePageItemsL10n on HomePageItems {
