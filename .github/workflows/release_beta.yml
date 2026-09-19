@@ -36,7 +36,7 @@ jobs:
       version_name: ${{ steps.extract_version.outputs.version_name }}
       target_repo: ${{ steps.set_vars.outputs.target_repo }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
           fetch-depth: ${{ inputs.is_beta && 200 || 0 }} # fetch less commits for beta
@@ -74,7 +74,7 @@ jobs:
           mv combined.md beta_changelog.md
 
       - name: Create Release with Changelog
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ steps.set_vars.outputs.target_repo }}
           make_latest: true
@@ -107,7 +107,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup_matrix.outputs.matrix) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
@@ -175,8 +175,9 @@ jobs:
           flutter pub upgrade
           git submodule update --init --remote --recursive
 
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v5
         with:
+          distribution: "temurin"
           java-version: "17"
 
       - name: Create keystore & key.properties
@@ -199,7 +200,7 @@ jobs:
             build_final/namida-v${{ needs.create_release.outputs.version_name }}${{ matrix.apk_suffix }}-armeabi-v7a.apk
 
       - name: Creating Snapshot Release at ${{ needs.create_release.outputs.target_repo }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
@@ -224,7 +225,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
@@ -329,7 +330,7 @@ jobs:
           Compress-Archive -Path "$releaseDir/*" -DestinationPath "build_final/Namida-${{ matrix.artifact_arch }}-${{ needs.create_release.outputs.version_name }}-Portable.zip"
 
       - name: Upload installer to Snapshot Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
@@ -361,7 +362,7 @@ jobs:
             mpv webkit2gtk-4.1 dpkg rpm-tools
           pacman -Scc --noconfirm
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
@@ -417,7 +418,7 @@ jobs:
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
 
       - name: Upload files to Snapshot Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
@@ -464,7 +465,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
@@ -510,14 +511,14 @@ jobs:
             "build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}.AppImage"
 
       - name: Upload tarball artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: namida-linux-portable
           path: build_final/namida-linux-portable.tar.gz
           retention-days: 3
 
       - name: Upload AppImage to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
@@ -539,11 +540,11 @@ jobs:
       options: --privileged
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           token: ${{ secrets.PAT }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: namida-linux-portable
           path: linux/packaging/flatpak
@@ -563,7 +564,7 @@ jobs:
           upload-artifact: false
 
       - name: Upload Flatpak to Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
