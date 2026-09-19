@@ -40,6 +40,9 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
   final void Function(CommentInfoItem editedComment) Function()? onCommentEdited;
   final void Function() Function()? onCommentDeleted;
 
+  final RxBaseCore<YoutiPieCommentResult?>? commentsListForEdit;
+  final void Function(CommentInfoItem comment)? onRepliesTap;
+
   const YTCommentCard({
     super.key,
     required this.margin,
@@ -52,6 +55,8 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
     this.mainRepliesList,
     this.onCommentEdited,
     this.onCommentDeleted,
+    this.commentsListForEdit,
+    this.onRepliesTap,
   });
 
   @override
@@ -60,6 +65,8 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
 
 class _YTCommentCardState extends State<YTCommentCard> {
   late final _currentLikeStatus = Rxn<LikeStatus>(widget.comment?.likeStatus);
+
+  RxBaseCore<YoutiPieCommentResult?> get _commentsListForEdit => widget.commentsListForEdit ?? YoutubeInfoController.current.currentComments;
 
   @override
   void dispose() {
@@ -88,6 +95,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
   }
 
   void _onRepliesTap({required CommentInfoItem comment, required int? repliesCount}) {
+    final onRepliesTap = widget.onRepliesTap;
+    if (onRepliesTap != null) return onRepliesTap(comment);
+
     final mainList = widget.mainList;
     if (mainList == null) return;
     if (mainList is! YoutiPieCommentResult Function()) return;
@@ -130,7 +140,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
             YTUtils.comments.editComment(
               videoId: widget.videoId ?? '',
               comment: comment,
-              mainList: YoutubeInfoController.current.currentComments,
+              mainList: _commentsListForEdit,
               mainRepliesList: widget.mainRepliesList,
               onEdited: widget.onCommentEdited?.call(),
             );
@@ -144,7 +154,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
             YTUtils.comments.deleteComment(
               videoId: widget.videoId ?? '',
               comment: comment,
-              mainList: YoutubeInfoController.current.currentComments,
+              mainList: _commentsListForEdit,
               mainRepliesList: widget.mainRepliesList,
               onDeleted: widget.onCommentDeleted?.call(),
             );

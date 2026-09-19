@@ -7,6 +7,7 @@ import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -17,6 +18,8 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/pages/youtube_notification_comments_page.dart';
+import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -31,6 +34,7 @@ class YoutubeVideoCardNotification extends StatefulWidget {
   final double thumbnailWidth;
   final double thumbnailHeight;
   final double fontMultiplier;
+  final bool canOpenComments;
 
   const YoutubeVideoCardNotification({
     super.key,
@@ -42,6 +46,7 @@ class YoutubeVideoCardNotification extends StatefulWidget {
     required this.thumbnailWidth,
     required this.thumbnailHeight,
     this.fontMultiplier = 1.0,
+    this.canOpenComments = true,
   });
 
   @override
@@ -76,28 +81,58 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     if (marked == true) _isNowRead.value = true;
   }
 
-  Future<void> _onTapInternal() async {
-    if (widget.notification.isComment) return;
+  void _openCommentsPage() {
+    YoutubeNotificationCommentsPage(
+      notification: widget.notification,
+      mainNotificationsList: widget.mainList,
+      index: widget.index,
+      thumbnailWidth: widget.thumbnailWidth,
+      thumbnailHeight: widget.thumbnailHeight,
+    ).navigate();
+  }
 
+  Future<void> _onTapInternal() async {
     final mainList = widget.mainList();
-    mainList.playNotifications(startAtIndex: widget.index);
+    if (widget.notification.isComment) {
+      if (!widget.canOpenComments) return;
+      _openCommentsPage();
+    } else {
+      mainList.playNotifications(startAtIndex: widget.index);
+    }
     await _markAsRead(mainList);
   }
 
-  FutureOr<List<NamidaPopupItem>> getMenuItems() {
+  FutureOr<List<NamidaPopupItem>> getMenuItems() async {
     final mainList = widget.mainList();
     final videoId = widget.notification.id;
-    final moreMenuChildren = _isNowRead.value == true
-        ? null
-        : [
-            NamidaPopupItem(
-              icon: Broken.notification_status,
-              title: lang.markAsRead,
-              onTap: () => _markAsRead(mainList),
-            ),
-          ];
-    if (videoId.isEmpty || widget.notification.isComment) {
-      return moreMenuChildren ?? [];
+    final isComment = widget.notification.isComment;
+
+    // -- the video menu resolves its own channel, notifications carry none.
+    final channelID = isComment && videoId.isNotEmpty ? await YoutubeInfoController.utils.getVideoChannelID(videoId) : null;
+
+    final moreMenuChildren = [
+      if (isComment) ...[
+        NamidaPopupItem(
+          icon: Broken.export_2,
+          title: lang.open,
+          onTap: _openCommentsPage,
+        ),
+        if (channelID != null && channelID.isNotEmpty)
+          NamidaPopupItem(
+            icon: Broken.user,
+            title: lang.goToChannel,
+            onTap: () => YTChannelSubpage(channelID: channelID).navigate(),
+          ),
+      ],
+      if (_isNowRead.value != true)
+        NamidaPopupItem(
+          icon: Broken.notification_status,
+          title: lang.markAsRead,
+          onTap: () => _markAsRead(mainList),
+        ),
+    ];
+    if (videoId.isEmpty || isComment) {
+      return moreMenuChildren;
     }
 
     return YTUtils.getVideoCardMenuItems(
@@ -115,7 +150,8 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
 
     if (widget.notification.isRead == true && _isNowRead.value == false) _isNowRead.value = true; // after refreshing response and was read outside
 
@@ -143,25 +179,52 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     final videoThumbnail = widget.notification.thumbs.pick()?.url;
     final channelThumbnailUrl = widget.notification.uploaderthumbs.pick()?.url;
 
+    final isComment = widget.notification.isComment;
+    final badgeSize = channelThumbSize * 0.35;
+
     final child = Row(
       children: [
         const SizedBox(width: 8.0),
-        NamidaDummyContainer(
-          width: channelThumbSize,
-          height: channelThumbSize,
-          shimmerEnabled: false,
-          child: YoutubeThumbnail(
-            type: ThumbnailType.channel,
-            key: ValueKey(channelThumbnailUrl),
-            isImportantInCache: false,
-            customUrl: channelThumbnailUrl,
-            width: channelThumbSize,
-            isCircle: true,
-            extractColor: shouldExtractColor,
-            onColorReady: (color) {
-              _borderColor.value = color?.color;
-            },
-          ),
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: AlignmentDirectional.bottomEnd,
+          children: [
+            NamidaDummyContainer(
+              width: channelThumbSize,
+              height: channelThumbSize,
+              shimmerEnabled: false,
+              child: YoutubeThumbnail(
+                type: ThumbnailType.channel,
+                key: ValueKey(channelThumbnailUrl),
+                isImportantInCache: false,
+                customUrl: channelThumbnailUrl,
+                width: channelThumbSize,
+                isCircle: true,
+                extractColor: shouldExtractColor,
+                onColorReady: (color) {
+                  _borderColor.value = color?.color;
+                },
+              ),
+            ),
+            if (isComment)
+              Positioned(
+                bottom: -3.0,
+                right: -3.0,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: theme.scaffoldBackgroundColor,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Icon(
+                      widget.notification.isCommentReply ? Broken.messages_1 : Broken.message_text,
+                      size: badgeSize,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: 8.0),
         Expanded(
@@ -229,29 +292,33 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
 
     final finalChild = Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
-      child: NamidaPopupWrapper(
-        openOnTap: false,
-        childrenDefault: getMenuItems,
-        child: ObxO(
-          rx: _isNowRead,
-          builder: (context, isNowRead) => ObxO(
-            rx: _borderColor,
-            builder: (context, borderColor) => NamidaInkWell(
-              animationDurationMS: 100,
-              decoration: BoxDecoration(
-                border: isNowRead == false
-                    ? Border(
-                        left: BorderSide(
-                          width: 2.0,
-                          color: borderColor ?? Colors.red.withOpacityExt(0.6),
-                        ),
-                      )
-                    : null,
+      child: NamidaHero(
+        tag: widget.notification.notificationId,
+        enabled: widget.notification.isComment && !widget.notification.isCommentReply, // replies page covers it right away
+        child: NamidaPopupWrapper(
+          openOnTap: false,
+          childrenDefault: getMenuItems,
+          child: ObxO(
+            rx: _isNowRead,
+            builder: (context, isNowRead) => ObxO(
+              rx: _borderColor,
+              builder: (context, borderColor) => NamidaInkWell(
+                animationDurationMS: 100,
+                decoration: BoxDecoration(
+                  border: isNowRead == false
+                      ? Border(
+                          left: BorderSide(
+                            width: 2.0,
+                            color: borderColor ?? Colors.red.withOpacityExt(0.6),
+                          ),
+                        )
+                      : null,
+                ),
+                borderRadius: 12.0,
+                onTap: _onTapInternal,
+                height: thumbnailHeight + verticalPadding,
+                child: child,
               ),
-              borderRadius: 12.0,
-              onTap: _onTapInternal,
-              height: thumbnailHeight + verticalPadding,
-              child: child,
             ),
           ),
         ),

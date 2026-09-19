@@ -10,10 +10,12 @@ import 'package:youtipie/class/result_wrapper/comment_result.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -26,11 +28,21 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_comment_card.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
-class YTMiniplayerCommentRepliesSubpage extends StatefulWidget {
+class YTMiniplayerCommentRepliesSubpage extends StatefulWidget with NamidaRouteWidget {
+  @override
+  RouteType get route => RouteType.YOUTUBE_COMMENT_REPLIES_SUBPAGE;
+  @override
+  String? get name => initialComment.commentId;
+
   final String? videoId;
   final CommentInfoItem initialComment;
   final YoutiPieCommentResult Function() mainList;
   final int? repliesCount;
+
+  /// used when [initialComment] has no reply continuation, ex. a highlighted reply from a notification.
+  final YoutiPieCommentReplyResult? initialReplies;
+  final bool displayBackButton;
+  final bool useGlobalPadding;
 
   const YTMiniplayerCommentRepliesSubpage({
     super.key,
@@ -38,6 +50,9 @@ class YTMiniplayerCommentRepliesSubpage extends StatefulWidget {
     required this.initialComment,
     required this.mainList,
     required this.repliesCount,
+    this.initialReplies,
+    this.displayBackButton = true,
+    this.useGlobalPadding = false,
   });
 
   @override
@@ -75,6 +90,13 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   }
 
   Future<void> _initValues() async {
+    if (_currentMainComment.value.replyContinuation == null) {
+      final initialReplies = widget.initialReplies;
+      if (initialReplies != null) {
+        _currentReplies.value = initialReplies;
+        return;
+      }
+    }
     final cachedReplies = await YoutiPie.cacheBuilder.forCommentReplies(commentId: _currentMainComment.value.commentId).read();
     if (cachedReplies != null) {
       _currentReplies.value = cachedReplies;
@@ -126,207 +148,215 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
 
   @override
   Widget build(BuildContext context) {
+    final videoId = widget.videoId;
+    return BackgroundWrapper(
+      child: videoId != null
+          ? _buildBody(context, videoId)
+          : ObxO(
+              rx: Player.inst.currentItem,
+              builder: (context, currentItem) => currentItem is YoutubeID ? _buildBody(context, currentItem.id) : const SizedBox(),
+            ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, String currentId) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final commentsIconColor = theme.iconTheme.color;
     final repliesCount = widget.repliesCount;
-    return BackgroundWrapper(
-      child: ObxO(
-        rx: Player.inst.currentItem,
-        builder: (context, currentItem) {
-          if (currentItem is! YoutubeID) return const SizedBox();
-          final currentId = currentItem.id;
-          return Column(
-            children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      blurRadius: 12.0,
-                      color: theme.secondaryHeaderColor.withOpacityExt(0.5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 6.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        NamidaIconButton(
-                          verticalPadding: 6.0,
-                          horizontalPadding: 12.0,
-                          icon: Broken.arrow_left_2,
-                          onPressed: NamidaNavigator.inst.popPage,
-                        ),
-                        ObxO(
-                          rx: _lastFetchWasCached,
-                          builder: (context, isRepliesFromCache) => (isRepliesFromCache ?? false)
-                              ? StackedIcon(
-                                  baseIcon: Broken.note_2,
-                                  secondaryIcon: Broken.global,
-                                  iconSize: 22.0,
-                                  secondaryIconSize: 12.0,
-                                  baseIconColor: commentsIconColor,
-                                  secondaryIconColor: commentsIconColor,
-                                )
-                              : const Icon(
-                                  Broken.note_2,
-                                  size: 22.0,
-                                ),
-                        ),
-                        const SizedBox(width: 8.0),
-                        Expanded(
-                          child: ObxO(
-                            rx: _currentReplies,
-                            builder: (context, _) {
-                              final currentRepliesCount = _currentMainComment.value.repliesCount;
-                              return Text(
-                                [
-                                  lang.replies,
-                                  if (currentRepliesCount != null) currentRepliesCount.formatDecimalShort(),
-                                ].join(' • '),
-                                style: textTheme.displayMedium,
-                                textAlign: TextAlign.start,
-                              );
-                            },
-                          ),
-                        ),
-                        NamidaInkWellButton(
-                          icon: Broken.message_add_1,
-                          text: '',
-                          onTap: () {
-                            YTUtils.comments.createReply(
-                              videoId: currentId,
-                              mainList: _currentReplies,
-                              mainComment: _currentMainComment.value,
-                              replyingTo: _currentMainComment.value,
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 8.0),
-                      ],
-                    ),
-                    const SizedBox(height: 6.0),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: NamidaScrollbar(
-                  controller: sc,
-                  child: PullToRefresh(
-                    maxDistance: 64.0,
-                    controller: sc,
-                    onRefresh: () async {
-                      if (!ConnectivityController.inst.hasConnection) return;
-                      try {
-                        sc.jumpTo(0);
-                      } catch (_) {}
-                      return _fetchReplies();
-                    },
-                    child: LazyLoadListView(
-                      onReachingEnd: _fetchRepliesNext,
-                      scrollController: sc,
-                      listview: (controller) => SmoothCustomScrollView(
-                        physics: const ClampingScrollPhysicsModified(),
-                        controller: controller,
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: ObxO(
-                              rx: _currentMainComment,
-                              builder: (context, mainComment) => YTCommentCard(
-                                key: Key(mainComment.commentId),
-                                bgAlpha: 200,
-                                showRepliesBox: false,
-                                margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                comment: mainComment,
-                                mainList: widget.mainList,
-                                videoId: currentId,
-                                mainCommentForReplies: () => mainComment,
-                                mainRepliesList: _currentReplies,
-                                onCommentEdited: () =>
-                                    (c) => _currentMainComment.value = c,
-                                onCommentDeleted: () => NamidaNavigator.inst.popPage,
-                              ),
-                            ),
-                          ),
-                          const SliverToBoxAdapter(
-                            child: NamidaContainerDivider(
-                              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                            ),
-                          ),
-                          ObxO(
-                            rx: _isLoadingCurrentReplies,
-                            builder: (context, loadingInitial) {
-                              if (loadingInitial == true) {
-                                return SliverToBoxAdapter(
-                                  child: ShimmerWrapper(
-                                    transparent: false,
-                                    shimmerEnabled: true,
-                                    child: SuperSmoothListView.builder(
-                                      padding: EdgeInsets.zero,
-                                      physics: const NeverScrollableScrollPhysics(),
-                                      itemCount: repliesCount?.withMaximum(20) ?? 10,
-                                      shrinkWrap: true,
-                                      itemBuilder: (context, index) {
-                                        return const YTCommentCard(
-                                          margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                          comment: null,
-                                          mainList: null,
-                                          videoId: null,
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                );
-                              }
-                              return ObxO(
-                                rx: _currentReplies,
-                                builder: (context, replies) {
-                                  if (replies == null) return const SliverToBoxAdapter();
-                                  return SuperSliverList.builder(
-                                    itemCount: replies.length,
-                                    itemBuilder: (context, i) {
-                                      final reply = replies.items[i];
-                                      return YTCommentCard(
-                                        key: Key(reply.commentId),
-                                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                                        comment: reply,
-                                        mainList: () => replies,
-                                        videoId: currentId,
-                                        mainCommentForReplies: () => _currentMainComment.value,
-                                        mainRepliesList: _currentReplies,
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                          ObxO(
-                            rx: _isLoadingMoreReplies,
-                            builder: (context, isLoadingMore) => isLoadingMore == true
-                                ? const SliverPadding(
-                                    padding: EdgeInsets.all(12.0),
-                                    sliver: SliverToBoxAdapter(
-                                      child: Center(
-                                        child: LoadingIndicator(),
-                                      ),
-                                    ),
-                                  )
-                                : const SliverToBoxAdapter(),
-                          ),
-                          const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+    return Column(
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                blurRadius: 12.0,
+                color: theme.secondaryHeaderColor.withOpacityExt(0.5),
               ),
             ],
-          );
-        },
-      ),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 6.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (widget.displayBackButton)
+                    NamidaIconButton(
+                      verticalPadding: 6.0,
+                      horizontalPadding: 12.0,
+                      icon: Broken.arrow_left_2,
+                      onPressed: NamidaNavigator.inst.popPage,
+                    )
+                  else
+                    const SizedBox(width: 12.0),
+                  ObxO(
+                    rx: _lastFetchWasCached,
+                    builder: (context, isRepliesFromCache) => (isRepliesFromCache ?? false)
+                        ? StackedIcon(
+                            baseIcon: Broken.note_2,
+                            secondaryIcon: Broken.global,
+                            iconSize: 22.0,
+                            secondaryIconSize: 12.0,
+                            baseIconColor: commentsIconColor,
+                            secondaryIconColor: commentsIconColor,
+                          )
+                        : const Icon(
+                            Broken.note_2,
+                            size: 22.0,
+                          ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: ObxO(
+                      rx: _currentReplies,
+                      builder: (context, _) {
+                        final currentRepliesCount = _currentMainComment.value.repliesCount;
+                        return Text(
+                          [
+                            lang.replies,
+                            if (currentRepliesCount != null) currentRepliesCount.formatDecimalShort(),
+                          ].join(' • '),
+                          style: textTheme.displayMedium,
+                          textAlign: TextAlign.start,
+                        );
+                      },
+                    ),
+                  ),
+                  NamidaInkWellButton(
+                    icon: Broken.message_add_1,
+                    text: '',
+                    onTap: () {
+                      YTUtils.comments.createReply(
+                        videoId: currentId,
+                        mainList: _currentReplies,
+                        mainComment: _currentMainComment.value,
+                        replyingTo: _currentMainComment.value,
+                      );
+                    },
+                  ),
+                  const SizedBox(width: 8.0),
+                ],
+              ),
+              const SizedBox(height: 6.0),
+            ],
+          ),
+        ),
+        Expanded(
+          child: NamidaScrollbar(
+            controller: sc,
+            child: PullToRefresh(
+              maxDistance: 64.0,
+              controller: sc,
+              onRefresh: () async {
+                if (!ConnectivityController.inst.hasConnection) return;
+                try {
+                  sc.jumpTo(0);
+                } catch (_) {}
+                return _fetchReplies();
+              },
+              child: LazyLoadListView(
+                onReachingEnd: _fetchRepliesNext,
+                scrollController: sc,
+                listview: (controller) => SmoothCustomScrollView(
+                  physics: const ClampingScrollPhysicsModified(),
+                  controller: controller,
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: ObxO(
+                        rx: _currentMainComment,
+                        builder: (context, mainComment) => YTCommentCard(
+                          key: Key(mainComment.commentId),
+                          bgAlpha: 200,
+                          showRepliesBox: false,
+                          margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                          comment: mainComment,
+                          mainList: widget.mainList,
+                          videoId: currentId,
+                          mainCommentForReplies: () => mainComment,
+                          mainRepliesList: _currentReplies,
+                          onCommentEdited: () =>
+                              (c) => _currentMainComment.value = c,
+                          onCommentDeleted: () => NamidaNavigator.inst.popPage,
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(
+                      child: NamidaContainerDivider(
+                        margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      ),
+                    ),
+                    ObxO(
+                      rx: _isLoadingCurrentReplies,
+                      builder: (context, loadingInitial) {
+                        if (loadingInitial == true) {
+                          return SliverToBoxAdapter(
+                            child: ShimmerWrapper(
+                              transparent: false,
+                              shimmerEnabled: true,
+                              child: SuperSmoothListView.builder(
+                                padding: EdgeInsets.zero,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: repliesCount?.withMaximum(20) ?? 10,
+                                shrinkWrap: true,
+                                itemBuilder: (context, index) {
+                                  return const YTCommentCard(
+                                    margin: EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                    comment: null,
+                                    mainList: null,
+                                    videoId: null,
+                                  );
+                                },
+                              ),
+                            ),
+                          );
+                        }
+                        return ObxO(
+                          rx: _currentReplies,
+                          builder: (context, replies) {
+                            if (replies == null) return const SliverToBoxAdapter();
+                            return SuperSliverList.builder(
+                              itemCount: replies.length,
+                              itemBuilder: (context, i) {
+                                final reply = replies.items[i];
+                                return YTCommentCard(
+                                  key: Key(reply.commentId),
+                                  margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                                  comment: reply,
+                                  mainList: () => replies,
+                                  videoId: currentId,
+                                  mainCommentForReplies: () => _currentMainComment.value,
+                                  mainRepliesList: _currentReplies,
+                                );
+                              },
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    ObxO(
+                      rx: _isLoadingMoreReplies,
+                      builder: (context, isLoadingMore) => isLoadingMore == true
+                          ? const SliverPadding(
+                              padding: EdgeInsets.all(12.0),
+                              sliver: SliverToBoxAdapter(
+                                child: Center(
+                                  child: LoadingIndicator(),
+                                ),
+                              ),
+                            )
+                          : const SliverToBoxAdapter(),
+                    ),
+                    widget.useGlobalPadding
+                        ? const SliverPadding(padding: EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal))
+                        : const SliverPadding(padding: EdgeInsets.only(bottom: kYTQueueSheetMinHeight + 12.0)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

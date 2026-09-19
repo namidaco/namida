@@ -21,6 +21,7 @@ class _YTUtilsCommentActions {
           createCommentParams: mainList?.value?.createParams ?? videoPage?.commentResult.createParams,
           content: commentText,
           videoPage: videoPage,
+          videoId: videoId,
         );
 
         if (newComment != null) {
@@ -115,6 +116,7 @@ class _YTUtilsCommentActions {
           mainComment: mainComment is CommentInfoItem ? mainComment : null,
           commentsList: _currentCommentsIfMatch(videoId),
           videoPage: _currentVideoPageIfMatch(videoId),
+          videoId: videoId,
         );
 
         if (newReply == null) {
@@ -162,6 +164,7 @@ class _YTUtilsCommentActions {
           mainList: mainList?.value ?? await YoutiPie.cacheBuilder.forCommentReplies(commentId: mainComment.commentId).read(),
           reply: reply,
           content: replyText,
+          videoId: videoId,
         );
         if (editedComment != null) {
           mainList?.refresh();
