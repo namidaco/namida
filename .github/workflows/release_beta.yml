@@ -67,6 +67,7 @@ jobs:
       version: ${{ steps.extract_version.outputs.version }}
       version_name: ${{ steps.extract_version.outputs.version_name }}
       target_repo: ${{ steps.set_vars.outputs.target_repo }}
+      tag: ${{ steps.set_vars.outputs.tag }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -86,8 +87,10 @@ jobs:
         run: |
           if [ "${{ inputs.is_beta }}" = "false" ]; then
             echo "target_repo=${{ github.repository }}" >> $GITHUB_OUTPUT
+            echo "tag=v${{ steps.extract_version.outputs.version_name }}" >> $GITHUB_OUTPUT
           else
             echo "target_repo=namidaco/namida-snapshots" >> $GITHUB_OUTPUT
+            echo "tag=${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate Changelog
@@ -98,7 +101,7 @@ jobs:
       - name: Generate Downloads Table
         run: |
           bash scripts/gen_downloads_table.sh \
-            "${{ steps.extract_version.outputs.version }}" \
+            "${{ steps.set_vars.outputs.tag }}" \
             "${{ steps.set_vars.outputs.target_repo }}" \
             "${{ inputs.is_beta }}" \
             > downloads_table.md
@@ -111,7 +114,7 @@ jobs:
           repository: ${{ steps.set_vars.outputs.target_repo }}
           make_latest: true
           draft: true
-          tag_name: ${{ steps.extract_version.outputs.version }}
+          tag_name: ${{ steps.set_vars.outputs.tag }}
           body_path: ./beta_changelog.md
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
@@ -237,7 +240,7 @@ jobs:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
           draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
           files: build_final/*
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
@@ -367,7 +370,7 @@ jobs:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
           draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
           files: |
             build_final/*
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
@@ -455,7 +458,7 @@ jobs:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
           draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
           files: |
             build_final/*
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
@@ -555,7 +558,7 @@ jobs:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
           draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
           files: |
             build_final/*.AppImage
             build_final/*.AppImage.zsync
@@ -601,6 +604,6 @@ jobs:
           repository: ${{ needs.create_release.outputs.target_repo }}
           make_latest: true
           draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.version }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
           files: Namida-x86_64-*.flatpak
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}

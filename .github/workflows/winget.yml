@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag in namidaco/namida (e.g. 6.0.1+260418125)"
+        description: "Release tag in namidaco/namida (e.g. v7.1.2)"
         required: true
         type: string
 
@@ -35,6 +35,21 @@ jobs:
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG version=$VERSION"
+
+      - name: Check token
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -z "$WINGET_TOKEN" ]; then
+            echo "::error::WINGET_TOKEN secret is not set, see https://github.com/vedantmgoyal9/winget-releaser#token"
+            exit 1
+          fi
+
+      # komac branches off upstream master, which fails with `CreateRef` when the fork is behind
+      - name: Sync winget-pkgs fork
+        env:
+          GH_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: gh repo sync MSOB7YY/winget-pkgs --source microsoft/winget-pkgs --branch master
 
       - name: Submit to winget-pkgs
         uses: vedantmgoyal9/winget-releaser@v2
