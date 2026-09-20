@@ -5,6 +5,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -244,37 +245,20 @@ class FoldersController<T extends Folder, E extends Track> {
 
   void _sortMap(Map<T, List<dynamic>> map, _FolderNode<T, E> rootNode) {
     final ignorePrefix = settings.ignoreCommonPrefixForTypes.value.contains(TrackSearchFilter.folder);
+    final normalize = SearchSortController.inst.sortKeyNormalizer;
     final namesCache = <T, String>{};
-    String folderToNameCompare(T folder) => namesCache[folder] ??= ignorePrefix ? folder.folderNameLower.ignoreCommonPrefixes() : folder.folderNameLower;
-
-    final parsedMap = _buildParsedMap(map.keys.map((e) => folderToNameCompare(e)));
-
-    int compareNames(String a, String b) {
-      final parsedA = parsedMap[a];
-      final parsedB = parsedMap[b];
-      if (parsedA != null && parsedB != null) {
-        final numbersCompare = parsedA.compare(parsedB);
-        if (numbersCompare != null && numbersCompare != 0) return numbersCompare;
-      }
-      return a.compareTo(b);
-    }
+    String folderToNameCompare(T folder) => namesCache[folder] ??= normalize(ignorePrefix ? folder.folderNameLower.ignoreCommonPrefixes() : folder.folderNameLower);
 
     final sorted = map.entries.toFixedList()
       ..sort(
-        (entryA, entryB) => compareNames(
-          folderToNameCompare(entryA.key),
-          folderToNameCompare(entryB.key),
-        ),
+        (entryA, entryB) => folderToNameCompare(entryA.key).compareTo(folderToNameCompare(entryB.key)),
       );
     map.assignAllEntries(sorted); // we clear after building new sorted one
 
     _FolderNode._walkChildrenRescursive(
       rootNode,
       (map) => map.sort(
-        (a, b) => compareNames(
-          folderToNameCompare(a.key),
-          folderToNameCompare(b.key),
-        ),
+        (a, b) => folderToNameCompare(a.key).compareTo(folderToNameCompare(b.key)),
       ),
     );
 
@@ -297,94 +281,95 @@ class FoldersController<T extends Folder, E extends Track> {
     return (root, allFolders);
   }
 
-  Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {
-    final parsedMap = <String, _ParsedResult?>{};
-    for (final n in names) {
-      parsedMap[n] = _numberInFilename(n) ?? _parseNumberAtEnd(n);
-    }
-    return parsedMap;
-  }
-
-  static final _numberInFilenameRegex = RegExp(r'(.*music\W*)(\d+(\.\d+)?)', caseSensitive: false);
-  static _ParsedResult? _numberInFilename(String text) {
-    final m = _numberInFilenameRegex.firstMatch(text);
-    if (m != null) {
-      final nmbrtxt = m.group(2);
-      if (nmbrtxt != null) {
-        final parsednmbr = num.tryParse(nmbrtxt);
-        if (parsednmbr != null) {
-          int numberStartIndex = m[0]?.indexOf(nmbrtxt) ?? 0;
-          if (numberStartIndex < 0) numberStartIndex = 0;
-          return _ParsedResult(
-            extractedNumber: parsednmbr,
-            charactersCount: nmbrtxt.length,
-            startAtIndex: numberStartIndex,
-            textPart: m.group(1) ?? text.substring(0, numberStartIndex),
-          );
-        }
-      }
-    }
-
-    return null;
-  }
-
-  static _ParsedResult? _parseNumberAtEnd(String text) {
-    final codes = text.codeUnits;
-    final codesL = codes.length;
-    bool wasAddingNumber = false;
-    final charCodes = <int>[];
-    for (int i = codesL - 1; i >= 0; i--) {
-      final code = codes[i];
-      if (code >= 0x0030 && code <= 0x0039) {
-        // -- from 0 to 9
-        wasAddingNumber = true;
-        charCodes.add(code);
-      } else {
-        if (wasAddingNumber) break;
-      }
-    }
-    if (charCodes.isNotEmpty) {
-      final startIndex = codes.length - charCodes.length;
-      try {
-        return _ParsedResult(
-          extractedNumber: num.parse(String.fromCharCodes(charCodes.reversed)),
-          charactersCount: charCodes.length,
-          startAtIndex: startIndex,
-          textPart: text.substring(0, startIndex),
-        );
-      } catch (_) {
-        // -- big numbers and format exception
-      }
-    }
-    return null;
-  }
+  // -- superseded by [SortKey], which orders digit runs anywhere in the name.
+  //   Map<String, _ParsedResult?> _buildParsedMap(Iterable<String> names) {
+  //     final parsedMap = <String, _ParsedResult?>{};
+  //     for (final n in names) {
+  //       parsedMap[n] = _numberInFilename(n) ?? _parseNumberAtEnd(n);
+  //     }
+  //     return parsedMap;
+  //   }
+  //
+  //   static final _numberInFilenameRegex = RegExp(r'(.*music\W*)(\d+(\.\d+)?)', caseSensitive: false);
+  //   static _ParsedResult? _numberInFilename(String text) {
+  //     final m = _numberInFilenameRegex.firstMatch(text);
+  //     if (m != null) {
+  //       final nmbrtxt = m.group(2);
+  //       if (nmbrtxt != null) {
+  //         final parsednmbr = num.tryParse(nmbrtxt);
+  //         if (parsednmbr != null) {
+  //           int numberStartIndex = m[0]?.indexOf(nmbrtxt) ?? 0;
+  //           if (numberStartIndex < 0) numberStartIndex = 0;
+  //           return _ParsedResult(
+  //             extractedNumber: parsednmbr,
+  //             charactersCount: nmbrtxt.length,
+  //             startAtIndex: numberStartIndex,
+  //             textPart: m.group(1) ?? text.substring(0, numberStartIndex),
+  //           );
+  //         }
+  //       }
+  //     }
+  //
+  //     return null;
+  //   }
+  //
+  //   static _ParsedResult? _parseNumberAtEnd(String text) {
+  //     final codes = text.codeUnits;
+  //     final codesL = codes.length;
+  //     bool wasAddingNumber = false;
+  //     final charCodes = <int>[];
+  //     for (int i = codesL - 1; i >= 0; i--) {
+  //       final code = codes[i];
+  //       if (code >= 0x0030 && code <= 0x0039) {
+  //         // -- from 0 to 9
+  //         wasAddingNumber = true;
+  //         charCodes.add(code);
+  //       } else {
+  //         if (wasAddingNumber) break;
+  //       }
+  //     }
+  //     if (charCodes.isNotEmpty) {
+  //       final startIndex = codes.length - charCodes.length;
+  //       try {
+  //         return _ParsedResult(
+  //           extractedNumber: num.parse(String.fromCharCodes(charCodes.reversed)),
+  //           charactersCount: charCodes.length,
+  //           startAtIndex: startIndex,
+  //           textPart: text.substring(0, startIndex),
+  //         );
+  //       } catch (_) {
+  //         // -- big numbers and format exception
+  //       }
+  //     }
+  //     return null;
+  //   }
 }
 
-class _ParsedResult {
-  final num extractedNumber;
-  final int charactersCount;
-  final int startAtIndex;
-  final String textPart;
-
-  const _ParsedResult({
-    required this.extractedNumber,
-    required this.charactersCount,
-    required this.startAtIndex,
-    required this.textPart,
-  });
-
-  int? compare(_ParsedResult parsedB) {
-    final parsedA = this;
-    if (parsedA.startAtIndex == parsedB.startAtIndex) {
-      // -- basically checking textPart is enough to know but we check startAtIndex to speed things up.
-      if (parsedA.textPart == parsedB.textPart) {
-        final numbersCompare = parsedA.extractedNumber.compareTo(parsedB.extractedNumber);
-        if (numbersCompare != 0) return numbersCompare;
-      }
-    }
-    return null;
-  }
-}
+// class _ParsedResult {
+//   final num extractedNumber;
+//   final int charactersCount;
+//   final int startAtIndex;
+//   final String textPart;
+//
+//   const _ParsedResult({
+//     required this.extractedNumber,
+//     required this.charactersCount,
+//     required this.startAtIndex,
+//     required this.textPart,
+//   });
+//
+//   int? compare(_ParsedResult parsedB) {
+//     final parsedA = this;
+//     if (parsedA.startAtIndex == parsedB.startAtIndex) {
+//       // -- basically checking textPart is enough to know but we check startAtIndex to speed things up.
+//       if (parsedA.textPart == parsedB.textPart) {
+//         final numbersCompare = parsedA.extractedNumber.compareTo(parsedB.extractedNumber);
+//         if (numbersCompare != 0) return numbersCompare;
+//       }
+//     }
+//     return null;
+//   }
+// }
 
 class FoldersPageConfig {
   final QueueSource Function(String? name) queueSource;

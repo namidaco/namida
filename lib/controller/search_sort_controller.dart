@@ -22,6 +22,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/sort_key.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 
@@ -247,14 +248,14 @@ class SearchSortController extends SearchPortsProvider {
     }
   }
 
-  String Function(String text) get _sortKeyNormalizer {
-    if (settings.romanizeSorting.value) return (text) => Romanizer.inst.romanizeForSorting(text).toLowerCase();
-    return (text) => text.toLowerCase();
+  String Function(String text) get sortKeyNormalizer {
+    if (settings.romanizeSorting.value) return (text) => SortKey.of(Romanizer.inst.romanizeForSorting(text));
+    return SortKey.of;
   }
 
   Comparable Function(MapEntry<String, List<Track>>)? _getMediaSortingComparable(GroupSortType type, {GroupSortType? overrideKey, TrackSearchFilter? filter}) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
-    final normalize = _sortKeyNormalizer;
+    final normalize = sortKeyNormalizer;
 
     String Function(MapEntry<String, List<Track>> e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
@@ -299,7 +300,7 @@ class SearchSortController extends SearchPortsProvider {
 
   Comparable Function(Track e) getTracksSortingComparables(SortType type) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
-    final normalize = _sortKeyNormalizer;
+    final normalize = sortKeyNormalizer;
     String? normalizeOrNull(String? text) => text == null || text.isEmpty ? null : normalize(text);
     String Function(Track e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
@@ -958,7 +959,7 @@ class SearchSortController extends SearchPortsProvider {
     required void Function(SortType? sortType, bool isReverse) onDone,
   }) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
-    final normalize = _sortKeyNormalizer;
+    final normalize = sortKeyNormalizer;
 
     void sortThis(Comparable Function(Track e) comparable) => list.sortByPrecomputed(comparable, reverse: reverse);
     void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => list.sortByAltsPrecomputed(alternatives, reverse: reverse);
@@ -1156,7 +1157,7 @@ class SearchSortController extends SearchPortsProvider {
 
       for (final s in initialSortTypes) {
         if (s == GroupSortType.album) {
-          final normalize = _sortKeyNormalizer;
+          final normalize = sortKeyNormalizer;
           final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.key.displayAlbumName));
           allComparables.add((e) => mainFn(e));
         } else {
@@ -1286,7 +1287,7 @@ class SearchSortController extends SearchPortsProvider {
 
     switch (sortBy) {
       case GroupSortType.title:
-        final normalize = _sortKeyNormalizer;
+        final normalize = sortKeyNormalizer;
         sortThis((p) => normalize(p.key.translatePlaylistName()));
         break;
       case GroupSortType.creationDate:
