@@ -1,27 +1,29 @@
 part of '../sync_manager.dart';
 
 class YTHistoryListensMessage extends BaseMessage {
-  final Iterable<YoutubeID> videos;
+  final SyncYTListens listens;
 
   const YTHistoryListensMessage({
-    required this.videos,
+    required this.listens,
     required super.messageInfo,
   }) : super(MessageType.ytHistoryListens);
 
   factory YTHistoryListensMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return YTHistoryListensMessage(
-      videos: (map['videos'] as List).map((e) => YoutubeID.fromJson(e)),
+      listens: SyncYTListens.fromMap(map),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => {
-    'videos': videos.map((e) => e.toJson()).toFixedList(),
-  };
+  Map<String, dynamic> _encodeToMap() => listens.toMap();
+
+  @override
+  String toRawInfo() => 'YTHistoryListens(${listens.length} listens)';
 
   @override
   FutureOr<void> executeOnReceived() {
+    final videos = listens.toItems();
     if (SyncUtils.kAllowModification) {
       return YoutubeHistoryController.inst.addTracksToHistoryImportPreventDuplicates(videos);
     } else {
@@ -146,30 +148,29 @@ class YTSubscriptionsGroupsMessage extends BaseMessage {
 }
 
 class YTLikesMessage extends BaseMessage {
-  final Iterable<YoutubeID> videos;
+  final SyncYTListens likes;
 
   const YTLikesMessage({
-    required this.videos,
+    required this.likes,
     required super.messageInfo,
   }) : super(MessageType.ytLikes);
 
   factory YTLikesMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return YTLikesMessage(
-      videos: (map['videos'] as List).map((e) => YoutubeID.fromJson(e)),
+      likes: SyncYTListens.fromMap(map),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => {
-    'videos': videos.map((e) => e.toJson()).toFixedList(),
-  };
+  Map<String, dynamic> _encodeToMap() => likes.toMap();
 
   @override
-  String toRawInfo() => 'YTLikes(${videos.length} videos)';
+  String toRawInfo() => 'YTLikes(${likes.length} videos)';
 
   @override
   FutureOr<void> executeOnReceived() async {
+    final videos = likes.toItems();
     if (SyncUtils.kAllowModification) {
       final favouritesPlaylist = YoutubePlaylistController.inst.favouritesPlaylist.value;
       // -- adds only missing videos, keeping their original date added

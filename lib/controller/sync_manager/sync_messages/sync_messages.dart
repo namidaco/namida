@@ -99,13 +99,15 @@ sealed class BaseMessage {
       ..[0] = type.name
       ..[1] = messageInfo.toMap()
       ..[2] = map;
-    final json = jsonEncode(params);
-    return utf8.encode(json);
+    final bytes = _jsonUtf8Encoder.convert(params);
+    return bytes is Uint8List ? bytes : Uint8List.fromList(bytes);
   }
 
+  static final _jsonUtf8Encoder = JsonUtf8Encoder();
+  static final _jsonUtf8Decoder = const Utf8Decoder().fuse(const JsonDecoder());
+
   static BaseMessage decodeBytes(Uint8List bytes, Set<String> allowedDeviceIds, Set<String> blockedDeviceIds) {
-    final json = utf8.decode(bytes);
-    final params = jsonDecode(json) as List;
+    final params = _jsonUtf8Decoder.convert(bytes) as List;
     final message = _decodeFromList(params, allowedDeviceIds, blockedDeviceIds);
     return message;
   }

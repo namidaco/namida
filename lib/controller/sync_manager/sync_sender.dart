@@ -213,11 +213,11 @@ class SyncSender extends RxNotifier {
   Future<BaseMessage?> _buildMessageForItem(SyncDataItem item, SyncBatchRef batchRef) async {
     return switch (item) {
       SyncDataItem.history => HistoryListensMessage(
-        tracks: HistoryController.inst.historyTracks,
+        listens: SyncTrackListens.fromItems(HistoryController.inst.historyTracks),
         messageInfo: await SyncUtils.createMessageInfo(.add),
       ),
       SyncDataItem.historyYt => YTHistoryListensMessage(
-        videos: YoutubeHistoryController.inst.historyTracks,
+        listens: SyncYTListens.fromItems(YoutubeHistoryController.inst.historyTracks),
         messageInfo: await SyncUtils.createMessageInfo(.add),
       ),
       SyncDataItem.playlists => RequestMessage(
@@ -231,11 +231,11 @@ class SyncSender extends RxNotifier {
         batchRef: batchRef,
       ),
       SyncDataItem.favourites => FavouritesMessage(
-        tracks: PlaylistController.inst.favouritesPlaylist.value.tracks,
+        tracks: SyncTrackListens.fromItems(PlaylistController.inst.favouritesPlaylist.value.tracks),
         messageInfo: await SyncUtils.createMessageInfo(.add),
       ),
       SyncDataItem.favouritesYt => YTLikesMessage(
-        videos: YoutubePlaylistController.inst.favouritesPlaylist.value.tracks,
+        likes: SyncYTListens.fromItems(YoutubePlaylistController.inst.favouritesPlaylist.value.tracks),
         messageInfo: await SyncUtils.createMessageInfo(.add),
       ),
       SyncDataItem.stats => await TrackStatsMessage.createForCurrentDevice(),

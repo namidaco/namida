@@ -1,28 +1,29 @@
 part of '../sync_manager.dart';
 
 class HistoryListensMessage extends BaseMessage {
-  final Iterable<TrackWithDate> tracks;
+  final SyncTrackListens listens;
 
   const HistoryListensMessage({
-    required this.tracks,
+    required this.listens,
     required super.messageInfo,
   }) : super(MessageType.historyListens);
 
   factory HistoryListensMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return HistoryListensMessage(
-      tracks: (map['tracks'] as List).map((e) => TrackWithDate.fromJson(e)),
+      listens: SyncTrackListens.fromMap(map),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => {
-    'tracks': tracks.map((e) => e.toJson()).toFixedList(),
-  };
+  Map<String, dynamic> _encodeToMap() => listens.toMap();
+
+  @override
+  String toRawInfo() => 'HistoryListens(${listens.length} listens)';
 
   @override
   FutureOr<void> executeOnReceived() {
-    final resolved = SyncPathResolver.resolveTracksWithDates(messageInfo.senderDeviceId, tracks);
+    final resolved = listens.resolveItems(messageInfo.senderDeviceId);
     if (SyncUtils.kAllowModification) {
       return HistoryController.inst.addTracksToHistoryImportPreventDuplicates(resolved);
     } else {
@@ -269,7 +270,7 @@ class TrackStatsMessage extends BaseMessage {
 }
 
 class FavouritesMessage extends BaseMessage {
-  final Iterable<TrackWithDate> tracks;
+  final SyncTrackListens tracks;
 
   const FavouritesMessage({
     required this.tracks,
@@ -278,22 +279,20 @@ class FavouritesMessage extends BaseMessage {
 
   factory FavouritesMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return FavouritesMessage(
-      tracks: (map['tracks'] as List).map((e) => TrackWithDate.fromJson(e)),
+      tracks: SyncTrackListens.fromMap(map),
       messageInfo: messageInfo,
     );
   }
 
   @override
-  Map<String, dynamic> _encodeToMap() => {
-    'tracks': tracks.map((e) => e.toJson()).toFixedList(),
-  };
+  Map<String, dynamic> _encodeToMap() => tracks.toMap();
 
   @override
   String toRawInfo() => 'Favourites(${tracks.length} tracks)';
 
   @override
   FutureOr<void> executeOnReceived() async {
-    final resolved = SyncPathResolver.resolveTracksWithDates(messageInfo.senderDeviceId, tracks);
+    final resolved = tracks.resolveItems(messageInfo.senderDeviceId);
     if (SyncUtils.kAllowModification) {
       await PlaylistController.inst.importTracksToPlaylist(
         PlaylistController.inst.favouritesPlaylist.value,
