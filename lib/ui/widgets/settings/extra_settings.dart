@@ -12,6 +12,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -39,8 +40,10 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   filterTracksBy,
   ignoreCommonPrefixesFor,
   searchCleanup,
-  prioritizeEmbeddedLyrics,
+  lyrics,
   lyricsSource,
+  prioritizeEmbeddedLyrics,
+  romanization,
   stretchLyricsDuration,
   simpleLyricsLine,
   imageSource,
@@ -76,8 +79,10 @@ class ExtrasSettings extends SettingSubpageProvider {
     _ExtraSettingsKeys.filterTracksBy: [lang.filterTracksBy],
     _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.ignoreCommonPrefixesWhileSorting],
     _ExtraSettingsKeys.searchCleanup: [lang.enableSearchCleanup, lang.enableSearchCleanupSubtitle],
+    _ExtraSettingsKeys.lyrics: [lang.lyrics],
     _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.prioritizeEmbeddedLyrics],
     _ExtraSettingsKeys.lyricsSource: [lang.lyricsSource],
+    _ExtraSettingsKeys.romanization: [lang.romanization, lang.dictionary],
     _ExtraSettingsKeys.stretchLyricsDuration: [lang.stretchLyricsDuration],
     _ExtraSettingsKeys.simpleLyricsLine: [lang.simpleLyricsLine, lang.simpleLyricsLineSubtitle],
     _ExtraSettingsKeys.imageSource: [lang.imageSource, lang.album, lang.albums],
@@ -607,115 +612,228 @@ class ExtrasSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
-                icon: Broken.mobile_programming,
-                title: lang.prioritizeEmbeddedLyrics,
-                value: settings.prioritizeEmbeddedLyrics.valueR,
-                onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
+            key: _ExtraSettingsKeys.lyrics,
+            child: NamidaExpansionTile(
+              bgColor: getBgColor(_ExtraSettingsKeys.lyrics),
+              bigahh: true,
+              normalRightPadding: true,
+              initiallyExpanded: true,
+              // initiallyExpanded: const [
+              //   _ExtraSettingsKeys.lyrics,
+              //   _ExtraSettingsKeys.lyricsSource,
+              //   _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
+              //   _ExtraSettingsKeys.romanization,
+              // ].contains(initialItem),
+              leading: const StackedIcon(
+                baseIcon: Broken.document,
+                secondaryIcon: Broken.cpu,
+                secondaryIconSize: 13.0,
               ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.lyricsSource,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
-                title: lang.lyricsSource,
-                leading: const StackedIcon(
-                  baseIcon: Broken.mobile_programming,
-                  secondaryIcon: Broken.cpu_setting,
-                ),
-                trailingText: settings.lyricsSource.valueR.toText(),
-                onTap: () {
-                  void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
+              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+              iconColor: context.defaultIconColor(),
+              titleText: lang.lyrics,
+              children: [
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.lyricsSource,
+                  child: Obx(
+                    (context) => CustomListTile(
+                      bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
                       title: lang.lyricsSource,
-                      actions: [
-                        IconButton(
-                          onPressed: () => tileOnTap(LyricsSource.auto),
-                          icon: const Icon(Broken.refresh),
-                        ),
-                        const DoneButton(),
-                      ],
-                      child: ObxO(
-                        rx: settings.lyricsSource,
-                        builder: (context, lyricsSource) => SuperSmoothListView(
-                          padding: EdgeInsets.zero,
-                          shrinkWrap: true,
-                          children: [
-                            ObxO(
-                              rx: settings.enableLyrics,
-                              builder: (context, enableLyrics) => CustomSwitchListTile(
-                                icon: Broken.document,
-                                title: lang.lyrics,
-                                value: enableLyrics,
-                                onChanged: (isTrue) {
-                                  settings.save(enableLyrics: !isTrue);
-                                  final currentItem = Player.inst.currentItem.value;
-                                  if (currentItem != null) {
-                                    Lyrics.inst.updateLyrics(currentItem);
-                                  }
-                                },
+                      leading: const StackedIcon(
+                        baseIcon: Broken.mobile_programming,
+                        secondaryIcon: Broken.cpu_setting,
+                      ),
+                      trailingText: settings.lyricsSource.valueR.toText(),
+                      onTap: () {
+                        void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
+                        NamidaNavigator.inst.navigateDialog(
+                          dialog: CustomBlurryDialog(
+                            title: lang.lyricsSource,
+                            actions: [
+                              IconButton(
+                                onPressed: () => tileOnTap(LyricsSource.auto),
+                                icon: const Icon(Broken.refresh),
+                              ),
+                              const DoneButton(),
+                            ],
+                            child: ObxO(
+                              rx: settings.lyricsSource,
+                              builder: (context, lyricsSource) => SuperSmoothListView(
+                                padding: EdgeInsets.zero,
+                                shrinkWrap: true,
+                                children: [
+                                  ObxO(
+                                    rx: settings.enableLyrics,
+                                    builder: (context, enableLyrics) => CustomSwitchListTile(
+                                      icon: Broken.document,
+                                      title: lang.lyrics,
+                                      value: enableLyrics,
+                                      onChanged: (isTrue) {
+                                        settings.save(enableLyrics: !isTrue);
+                                        final currentItem = Player.inst.currentItem.value;
+                                        if (currentItem != null) {
+                                          Lyrics.inst.updateLyrics(currentItem);
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const NamidaContainerDivider(
+                                    margin: EdgeInsets.symmetric(vertical: 4.0),
+                                  ),
+                                  ...LyricsSource.values.map(
+                                    (e) => Padding(
+                                      padding: const EdgeInsets.all(3.0),
+                                      child: ListTileWithCheckMark(
+                                        active: lyricsSource == e,
+                                        title: e.toText(),
+                                        onTap: () => tileOnTap(e),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            const NamidaContainerDivider(
-                              margin: EdgeInsets.symmetric(vertical: 4.0),
-                            ),
-                            ...LyricsSource.values.map(
-                              (e) => Padding(
-                                padding: const EdgeInsets.all(3.0),
-                                child: ListTileWithCheckMark(
-                                  active: lyricsSource == e,
-                                  title: e.toText(),
-                                  onTap: () => tileOnTap(e),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.romanization,
+                  child: CustomListTile(
+                    bgColor: getBgColor(_ExtraSettingsKeys.romanization),
+                    icon: Broken.translate,
+                    title: lang.romanization,
+                    trailing: const Icon(
+                      Broken.arrow_right_3,
+                      size: 16.0,
+                    ),
+                    onTap: () {
+                      final wasRomanizingSorting = settings.romanizeSorting.value;
+                      final wasDictionaryInstalled = Romanizer.inst.isDictionaryInstalled.value;
+
+                      void resortIfNecessary() {
+                        final isRomanizingSorting = settings.romanizeSorting.value;
+                        final didChange =
+                            wasRomanizingSorting != isRomanizingSorting || (isRomanizingSorting && wasDictionaryInstalled != Romanizer.inst.isDictionaryInstalled.value);
+                        if (didChange) {
+                          Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
+                          SearchSortController.inst.disposeMediaResources(MediaType.track);
+                        }
+                      }
+
+                      NamidaNavigator.inst.navigateDialog(
+                        onDismissing: resortIfNecessary,
+                        dialog: CustomBlurryDialog(
+                          title: lang.romanization,
+                          actions: const [
+                            DoneButton(),
+                          ],
+                          child: SuperSmoothListView(
+                            padding: EdgeInsets.zero,
+                            shrinkWrap: true,
+                            children: [
+                              ObxO(
+                                rx: settings.romanizeLyrics,
+                                builder: (context, romanizeLyrics) => CustomSwitchListTile(
+                                  icon: Broken.document,
+                                  title: '${lang.romanization}: ${lang.lyrics}',
+                                  value: romanizeLyrics,
+                                  onChanged: (isTrue) => Romanizer.inst.setLyricsEnabled(!isTrue),
                                 ),
                               ),
-                            ),
-                          ],
+                              ObxO(
+                                rx: settings.romanizeSorting,
+                                builder: (context, romanizeSorting) => CustomSwitchListTile(
+                                  icon: Broken.sort,
+                                  title: '${lang.romanization}: ${lang.sortBy}',
+                                  value: romanizeSorting,
+                                  onChanged: (isTrue) => Romanizer.inst.setSortingEnabled(!isTrue),
+                                ),
+                              ),
+                              const NamidaContainerDivider(
+                                margin: EdgeInsets.symmetric(vertical: 4.0),
+                              ),
+                              ObxO(
+                                rx: Romanizer.inst.isDictionaryInstalled,
+                                builder: (context, isDictionaryInstalled) => ObxO(
+                                  rx: Romanizer.inst.downloadProgress,
+                                  builder: (context, downloadProgress) => CustomListTile(
+                                    icon: Broken.book,
+                                    title: lang.dictionary,
+                                    subtitle: '日本語 (漢字) • 中文',
+                                    trailingText: downloadProgress != null
+                                        ? '${(downloadProgress * 100).round()}%'
+                                        : isDictionaryInstalled
+                                        ? lang.delete
+                                        : lang.download,
+                                    onTap: () {
+                                      if (downloadProgress != null) {
+                                        Romanizer.inst.cancelDownload();
+                                      } else if (isDictionaryInstalled) {
+                                        Romanizer.inst.deleteDictionary();
+                                      } else {
+                                        Romanizer.inst.downloadDictionary(enableLyrics: true);
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      );
+                    },
+                  ),
+                ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
+                  child: Obx(
+                    (context) => CustomSwitchListTile(
+                      bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
+                      icon: Broken.mobile_programming,
+                      title: lang.prioritizeEmbeddedLyrics,
+                      value: settings.prioritizeEmbeddedLyrics.valueR,
+                      onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.stretchLyricsDuration,
-            child: ObxO(
-              rx: settings.stretchLyricsDuration,
-              builder: (context, stretch) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.stretchLyricsDuration),
-                icon: Broken.arrange_square,
-                title: lang.stretchLyricsDuration,
-                subtitle: 'spedup/slowed/nightcore',
-                value: stretch,
-                onChanged: (val) => settings.save(stretchLyricsDuration: !val),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.simpleLyricsLine,
-            child: ObxO(
-              rx: settings.enableSimpleLyricsLine,
-              builder: (context, enableSimpleLyricsLine) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.simpleLyricsLine),
-                icon: Broken.text,
-                title: lang.simpleLyricsLine,
-                subtitle: lang.simpleLyricsLineSubtitle,
-                value: enableSimpleLyricsLine,
-                onChanged: (isTrue) {
-                  settings.save(enableSimpleLyricsLine: !isTrue);
-                  final currentItem = Player.inst.currentItem.value;
-                  if (currentItem != null) {
-                    Lyrics.inst.updateLyrics(currentItem);
-                  }
-                },
-              ),
+                  ),
+                ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.stretchLyricsDuration,
+                  child: ObxO(
+                    rx: settings.stretchLyricsDuration,
+                    builder: (context, stretch) => CustomSwitchListTile(
+                      bgColor: getBgColor(_ExtraSettingsKeys.stretchLyricsDuration),
+                      icon: Broken.arrange_square,
+                      title: lang.stretchLyricsDuration,
+                      subtitle: 'spedup/slowed/nightcore',
+                      value: stretch,
+                      onChanged: (val) => settings.save(stretchLyricsDuration: !val),
+                    ),
+                  ),
+                ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.simpleLyricsLine,
+                  child: ObxO(
+                    rx: settings.enableSimpleLyricsLine,
+                    builder: (context, enableSimpleLyricsLine) => CustomSwitchListTile(
+                      bgColor: getBgColor(_ExtraSettingsKeys.simpleLyricsLine),
+                      icon: Broken.text,
+                      title: lang.simpleLyricsLine,
+                      subtitle: lang.simpleLyricsLineSubtitle,
+                      value: enableSimpleLyricsLine,
+                      onChanged: (isTrue) {
+                        settings.save(enableSimpleLyricsLine: !isTrue);
+                        final currentItem = Player.inst.currentItem.value;
+                        if (currentItem != null) {
+                          Lyrics.inst.updateLyrics(currentItem);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 

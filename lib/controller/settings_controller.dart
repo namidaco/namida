@@ -194,6 +194,8 @@ class _SettingsController with SettingsFileWriter {
   final enableM3USyncStartup = true.obs;
   final importServerPlaylists = true.obs;
   final prioritizeEmbeddedLyrics = true.obs;
+  final romanizeLyrics = false.obs;
+  final romanizeSorting = false.obs;
   final swipeableDrawer = true.obs;
   final dismissibleMiniplayer = true.obs;
   final enableClipboardMonitoring = false.obs;
@@ -650,6 +652,8 @@ class _SettingsController with SettingsFileWriter {
       enableM3USyncStartup.value = json['enableM3USyncStartup'] ?? enableM3USyncStartup.value;
       importServerPlaylists.value = json['importServerPlaylists'] ?? importServerPlaylists.value;
       prioritizeEmbeddedLyrics.value = json['prioritizeEmbeddedLyrics'] ?? prioritizeEmbeddedLyrics.value;
+      romanizeLyrics.value = json['romanizeLyrics'] ?? romanizeLyrics.value;
+      romanizeSorting.value = json['romanizeSorting'] ?? romanizeSorting.value;
       swipeableDrawer.value = json['swipeableDrawer'] ?? swipeableDrawer.value;
       dismissibleMiniplayer.value = json['dismissibleMiniplayer'] ?? dismissibleMiniplayer.value;
       enableClipboardMonitoring.value = json['enableClipboardMonitoring'] ?? enableClipboardMonitoring.value;
@@ -904,6 +908,8 @@ class _SettingsController with SettingsFileWriter {
     'enableM3USyncStartup': enableM3USyncStartup.value,
     'importServerPlaylists': importServerPlaylists.value,
     'prioritizeEmbeddedLyrics': prioritizeEmbeddedLyrics.value,
+    'romanizeLyrics': romanizeLyrics.value,
+    'romanizeSorting': romanizeSorting.value,
     'swipeableDrawer': swipeableDrawer.value,
     'dismissibleMiniplayer': dismissibleMiniplayer.value,
     'enableClipboardMonitoring': enableClipboardMonitoring.value,
@@ -1105,6 +1111,8 @@ class _SettingsController with SettingsFileWriter {
     bool? enableM3USyncStartup,
     bool? importServerPlaylists,
     bool? prioritizeEmbeddedLyrics,
+    bool? romanizeLyrics,
+    bool? romanizeSorting,
     bool? swipeableDrawer,
     bool? dismissibleMiniplayer,
     bool? enableClipboardMonitoring,
@@ -1364,6 +1372,8 @@ class _SettingsController with SettingsFileWriter {
     if (enableM3USyncStartup != null) this.enableM3USyncStartup.value = enableM3USyncStartup;
     if (importServerPlaylists != null) this.importServerPlaylists.value = importServerPlaylists;
     if (prioritizeEmbeddedLyrics != null) this.prioritizeEmbeddedLyrics.value = prioritizeEmbeddedLyrics;
+    if (romanizeLyrics != null) this.romanizeLyrics.value = romanizeLyrics;
+    if (romanizeSorting != null) this.romanizeSorting.value = romanizeSorting;
     if (swipeableDrawer != null) this.swipeableDrawer.value = swipeableDrawer;
     if (dismissibleMiniplayer != null) this.dismissibleMiniplayer.value = dismissibleMiniplayer;
     if (enableClipboardMonitoring != null) this.enableClipboardMonitoring.value = enableClipboardMonitoring;

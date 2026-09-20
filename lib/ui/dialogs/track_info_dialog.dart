@@ -282,6 +282,8 @@ Future<void> showTrackInfoDialog(
                                             const SizedBox(width: 4.0),
                                             Expanded(
                                               child: Wrap(
+                                                spacing: 4.0,
+                                                runSpacing: 2.0,
                                                 crossAxisAlignment: WrapCrossAlignment.center,
                                                 children: [
                                                   Text(

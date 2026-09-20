@@ -16,6 +16,7 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -247,7 +248,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
       cal,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
       extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
-      romanize: false,
+      romanizer: Romanizer.inst.lyricsRomanizer(lrc),
     );
 
     lyrics = uiInfo.uiLyricsLines;

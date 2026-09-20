@@ -4,6 +4,7 @@ import 'package:lrc/lrc.dart';
 
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/utils.dart';
 
@@ -129,7 +130,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       0,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
       extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
-      romanize: false,
+      romanizer: Romanizer.inst.lyricsRomanizer(lrc),
     );
     _lines = uiInfo.uiLyricsLines;
     _highlightTimestampsMap = uiInfo.highlightTimestampsMap;

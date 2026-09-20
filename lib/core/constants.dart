@@ -882,6 +882,7 @@ class AppDirs {
   static final ABOUT_CACHE = _join(APP_CACHE, 'about');
 
   static final LOGIN = _join(ROOT_DIR, 'login'); // this should never be accessed/backed up etc.
+  static final ROMANIZATION = _join(ROOT_DIR, 'romanization');
 
   // ================= Internal Storage =================
   static final SAVED_ARTWORKS = _join(INTERNAL_STORAGE, 'Artworks');

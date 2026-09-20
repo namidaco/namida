@@ -14,6 +14,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_ports_provider.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -246,8 +247,14 @@ class SearchSortController extends SearchPortsProvider {
     }
   }
 
+  String Function(String text) get _sortKeyNormalizer {
+    if (settings.romanizeSorting.value) return (text) => Romanizer.inst.romanizeForSorting(text).toLowerCase();
+    return (text) => text.toLowerCase();
+  }
+
   Comparable Function(MapEntry<String, List<Track>>)? _getMediaSortingComparable(GroupSortType type, {GroupSortType? overrideKey, TrackSearchFilter? filter}) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+    final normalize = _sortKeyNormalizer;
 
     String Function(MapEntry<String, List<Track>> e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(MapEntry<String, List<Track>> e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
@@ -258,17 +265,17 @@ class SearchSortController extends SearchPortsProvider {
     }
 
     if (type == overrideKey && filter != null) {
-      return encapsulateSortCanIgnorePrefix(filter, (e) => e.key.toLowerCase());
+      return encapsulateSortCanIgnorePrefix(filter, (e) => normalize(e.key));
     }
 
     return switch (type) {
-      GroupSortType.album => encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.value.first.albumsList.join().toLowerCase()),
-      GroupSortType.albumArtist => encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.albumArtist.toLowerCase()),
+      GroupSortType.album => encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.value.first.albumsList.join())),
+      GroupSortType.albumArtist => encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.value.albumArtist)),
       GroupSortType.year => (e) => e.value.yearPreferyyyyMMdd,
-      GroupSortType.artistsList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value.first.artistsList.join().toLowerCase()),
-      GroupSortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.value.first.genresList.join().toLowerCase()),
-      GroupSortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase()),
-      GroupSortType.label => (e) => e.value.recordLabel.toLowerCase(),
+      GroupSortType.artistsList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.value.first.artistsList.join())),
+      GroupSortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => normalize(e.value.first.genresList.join())),
+      GroupSortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.value.composer)),
+      GroupSortType.label => (e) => normalize(e.value.recordLabel),
       GroupSortType.releaseType => (e) => e.value.releaseType.toLowerCase(),
       GroupSortType.bpm => (e) => e.value.getAverageBpm(),
       GroupSortType.dateAdded => (e) => e.value.getDateAddedEffective() ?? 0,
@@ -279,20 +286,21 @@ class SearchSortController extends SearchPortsProvider {
       GroupSortType.firstListen => (e) => e.value.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch,
       GroupSortType.latestPlayed => (e) => -(e.value.getLatestListen() ?? 0),
       GroupSortType.albumSort =>
-        (e) => e.value.albumSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.value.first.albumsList.join().toLowerCase())(e),
+        (e) => normalize(e.value.albumSort).nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.value.first.albumsList.join()))(e),
       GroupSortType.albumArtistSort =>
-        (e) => e.value.albumArtistSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.value.albumArtist.toLowerCase())(e),
+        (e) => normalize(e.value.albumArtistSort).nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.value.albumArtist))(e),
       GroupSortType.artistSort =>
-        (e) =>
-            e.value.artistSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.value.first.artistsList.join().toLowerCase())(e),
+        (e) => normalize(e.value.artistSort).nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.value.first.artistsList.join()))(e),
       GroupSortType.composerSort =>
-        (e) => e.value.composerSort.toLowerCase().nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.value.composer.toLowerCase())(e),
+        (e) => normalize(e.value.composerSort).nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.value.composer))(e),
       _ => null,
     };
   }
 
   Comparable Function(Track e) getTracksSortingComparables(SortType type) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+    final normalize = _sortKeyNormalizer;
+    String? normalizeOrNull(String? text) => text == null || text.isEmpty ? null : normalize(text);
     String Function(Track e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
       if (ignoreCommonPrefix.contains(filter)) {
         return (e) => comparable(e).ignoreCommonPrefixes();
@@ -302,19 +310,19 @@ class SearchSortController extends SearchPortsProvider {
     }
 
     return switch (type) {
-      SortType.title => encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase()),
-      SortType.album => encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.albumsList.join().toLowerCase()),
-      SortType.albumArtist => encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase()),
+      SortType.title => encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title)),
+      SortType.album => encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join())),
+      SortType.albumArtist => encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist)),
       SortType.year => (e) => e.yearPreferyyyyMMdd,
-      SortType.artistsList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase()),
-      SortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => e.genresList.join().toLowerCase()),
+      SortType.artistsList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join())),
+      SortType.genresList => encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (e) => normalize(e.genresList.join())),
       SortType.dateAdded => (e) => e.dateAdded,
       SortType.dateModified => (e) => e.dateModified,
       SortType.bitrate => (e) => e.bitrate,
-      SortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase()),
+      SortType.composer => encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer)),
       SortType.trackNo => (e) => e.trackNo,
       SortType.discNo => (e) => e.discNo,
-      SortType.filename => encapsulateSortCanIgnorePrefix(TrackSearchFilter.filename, (e) => e.filename.toLowerCase()),
+      SortType.filename => encapsulateSortCanIgnorePrefix(TrackSearchFilter.filename, (e) => normalize(e.filename)),
       SortType.path => (e) => e.path,
       SortType.duration => (e) => e.durationMS,
       SortType.sampleRate => (e) => e.sampleRate,
@@ -325,12 +333,12 @@ class SearchSortController extends SearchPortsProvider {
       SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
       SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
-      SortType.titleSort => (e) => e.sortInfo?.title?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase())(e),
-      SortType.albumSort => (e) => e.sortInfo?.album?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.albumsList.join().toLowerCase())(e),
+      SortType.titleSort => (e) => normalizeOrNull(e.sortInfo?.title) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title))(e),
+      SortType.albumSort => (e) => normalizeOrNull(e.sortInfo?.album) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join()))(e),
       SortType.albumArtistSort =>
-        (e) => e.sortInfo?.albumArtist?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase())(e),
-      SortType.artistSort => (e) => e.sortInfo?.artist?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase())(e),
-      SortType.composerSort => (e) => e.sortInfo?.composer?.nullifyEmpty() ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase())(e),
+        (e) => normalizeOrNull(e.sortInfo?.albumArtist) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist))(e),
+      SortType.artistSort => (e) => normalizeOrNull(e.sortInfo?.artist) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join()))(e),
+      SortType.composerSort => (e) => normalizeOrNull(e.sortInfo?.composer) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer))(e),
       SortType.shuffle => _createShuffleComparable(),
     };
   }
@@ -950,6 +958,7 @@ class SearchSortController extends SearchPortsProvider {
     required void Function(SortType? sortType, bool isReverse) onDone,
   }) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
+    final normalize = _sortKeyNormalizer;
 
     void sortThis(Comparable Function(Track e) comparable) => list.sortByPrecomputed(comparable, reverse: reverse);
     void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => list.sortByAltsPrecomputed(alternatives, reverse: reverse);
@@ -972,12 +981,12 @@ class SearchSortController extends SearchPortsProvider {
 
     switch (sortBy) {
       case SortType.title:
-        sortThisCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title));
       case SortType.album:
         final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
         sortThisAlts(
           [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (tr) => tr.albumsList.join().toLowerCase()),
+            encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (tr) => normalize(tr.albumsList.join())),
             ...sameAlbumSorters,
           ],
         );
@@ -986,7 +995,7 @@ class SearchSortController extends SearchPortsProvider {
         final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.albumArtist);
         sortThisAlts(
           [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (tr) => tr.albumArtist.toLowerCase()),
+            encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (tr) => normalize(tr.albumArtist)),
             ...sameAlbumSorters,
           ],
         );
@@ -998,7 +1007,7 @@ class SearchSortController extends SearchPortsProvider {
         final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
         sortThisAlts(
           [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (tr) => tr.artistsList.join().toLowerCase()),
+            encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (tr) => normalize(tr.artistsList.join())),
             ...sameArtistSorters,
           ],
         );
@@ -1007,7 +1016,7 @@ class SearchSortController extends SearchPortsProvider {
         final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
         sortThisAlts(
           [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (tr) => tr.genresList.join().toLowerCase()),
+            encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (tr) => normalize(tr.genresList.join())),
             ...sameGenreSorters,
           ],
         );
@@ -1022,7 +1031,7 @@ class SearchSortController extends SearchPortsProvider {
         sortThis((e) => e.bitrate);
         break;
       case SortType.composer:
-        sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer));
         break;
       case SortType.trackNo:
         sortThis((e) => e.trackNo);
@@ -1031,7 +1040,7 @@ class SearchSortController extends SearchPortsProvider {
         sortThis((e) => e.discNo);
         break;
       case SortType.filename:
-        sortThisCanIgnorePrefix(TrackSearchFilter.filename, (e) => e.filename.toLowerCase());
+        sortThisCanIgnorePrefix(TrackSearchFilter.filename, (e) => normalize(e.filename));
         break;
       case SortType.path:
         sortThis((e) => e.path);
@@ -1065,32 +1074,32 @@ class SearchSortController extends SearchPortsProvider {
         sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch);
       case SortType.titleSort:
         sortThisAlts([
-          (e) => e.sortInfo?.title ?? '',
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => e.title.toLowerCase()),
+          (e) => normalize(e.sortInfo?.title ?? ''),
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title)),
         ]);
         break;
       case SortType.albumSort:
         sortThisAlts([
-          (e) => e.sortInfo?.album ?? '',
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.albumsList.join().toLowerCase()),
+          (e) => normalize(e.sortInfo?.album ?? ''),
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join())),
         ]);
         break;
       case SortType.albumArtistSort:
         sortThisAlts([
-          (e) => e.sortInfo?.albumArtist ?? '',
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => e.albumArtist.toLowerCase()),
+          (e) => normalize(e.sortInfo?.albumArtist ?? ''),
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist)),
         ]);
         break;
       case SortType.artistSort:
         sortThisAlts([
-          (e) => e.sortInfo?.artist ?? '',
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => e.artistsList.join().toLowerCase()),
+          (e) => normalize(e.sortInfo?.artist ?? ''),
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join())),
         ]);
         break;
       case SortType.composerSort:
         sortThisAlts([
-          (e) => e.sortInfo?.composer ?? '',
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => e.composer.toLowerCase()),
+          (e) => normalize(e.sortInfo?.composer ?? ''),
+          encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer)),
         ]);
         break;
 
@@ -1147,7 +1156,8 @@ class SearchSortController extends SearchPortsProvider {
 
       for (final s in initialSortTypes) {
         if (s == GroupSortType.album) {
-          final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => e.key.displayAlbumName.toLowerCase());
+          final normalize = _sortKeyNormalizer;
+          final mainFn = encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.key.displayAlbumName));
           allComparables.add((e) => mainFn(e));
         } else {
           final fn = _getMediaSortingComparable(s);
@@ -1276,7 +1286,8 @@ class SearchSortController extends SearchPortsProvider {
 
     switch (sortBy) {
       case GroupSortType.title:
-        sortThis((p) => p.key.translatePlaylistName().toLowerCase());
+        final normalize = _sortKeyNormalizer;
+        sortThis((p) => normalize(p.key.translatePlaylistName()));
         break;
       case GroupSortType.creationDate:
         sortThis((p) => p.value.creationDate);
