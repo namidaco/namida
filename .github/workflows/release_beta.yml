@@ -94,8 +94,10 @@ jobs:
           fi
 
       - name: Generate Changelog
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          bash scripts/gen_beta_changelog.sh ${{ steps.set_vars.outputs.target_repo }}
+          python3 scripts/chlog.py beta --repo ${{ steps.set_vars.outputs.target_repo }}
           cat ./beta_changelog.md
 
       - name: Generate Downloads Table

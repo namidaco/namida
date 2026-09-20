@@ -1,0 +1,5 @@
+#!/bin/sh
+# rejects commit messages the changelog generator cannot read, see scripts/chlog.py
+
+. "$(dirname "$0")/_chlog.sh"
+exec $CHLOG_PYTHON "$CHLOG_PY" check "$1"

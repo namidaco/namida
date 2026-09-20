@@ -1,0 +1,10 @@
+#!/bin/sh
+# fills an empty commit message with the namida template, see scripts/chlog.py
+
+case "$2" in
+  message|merge|squash|commit) exit 0 ;;
+esac
+
+. "$(dirname "$0")/_chlog.sh"
+$CHLOG_PYTHON "$CHLOG_PY" template "$1"
+exit 0

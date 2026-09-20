@@ -64,11 +64,10 @@ linux/packaging/flatpak/repo/
 
 # Project
 .removed_code.dart
-chlog_hash.dart
-temp_changelog.md
-temp_changelog_hash.md
 test.dart
-CHANGELOG_pretty.txt
+beta_changelog.md
+scripts/.obsolete/CHANGELOG_pretty.txt
+scripts/__pycache__/
 dist/
 scripts/bundle_output*
 lib/core/translations/arb/*
