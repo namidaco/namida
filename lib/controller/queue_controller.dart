@@ -303,7 +303,7 @@ class QueueController {
             if (meta == null) continue;
             q = Queue.fromMeta(meta, decoded.items);
           } else {
-            q = Queue.fromJson(jsonDecode(utf8.decode(bytes)));
+            q = Queue.fromJson(jsonDecodeUtf8(bytes));
           }
           map[q.date] = q;
           if (q.date > newestQueueDate) newestQueueDate = q.date;
@@ -679,7 +679,7 @@ class _QueueSerializer {
 
   static Uint8List encode(List<Playable> items, {List<int>? originalIndices, Map<String, dynamic>? meta}) {
     final count = items.length;
-    final metaBytes = meta == null ? _kEmptyBytes : utf8.encode(jsonEncode(meta));
+    final metaBytes = meta == null ? _kEmptyBytes : jsonEncodeUtf8(meta);
     final payloads = List<Uint8List>.generate(count, (i) => _encodePayload(items[i]), growable: false);
     final indices = originalIndices != null && originalIndices.length == count ? originalIndices : null;
 
@@ -731,7 +731,7 @@ class _QueueSerializer {
       final metaLength = data.getUint32(offset, Endian.little);
       offset += 4;
       if (metaLength > 0) {
-        meta = jsonDecode(utf8.decoder.convert(bytes, offset, offset + metaLength)) as Map<String, dynamic>;
+        meta = jsonDecodeUtf8(Uint8List.sublistView(bytes, offset, offset + metaLength)) as Map<String, dynamic>;
         offset += metaLength;
       }
       final count = data.getUint32(offset, Endian.little);
@@ -762,7 +762,7 @@ class _QueueSerializer {
     final items = <Playable>[];
     List<int>? originalIndices = <int>[];
     try {
-      final list = jsonDecode(utf8.decode(bytes)) as List?;
+      final list = jsonDecodeUtf8(bytes) as List?;
       if (list != null) {
         for (final e in list) {
           final item = buildFromJson(e['t'], e['p']);

@@ -987,7 +987,7 @@ class JsonToHistoryParser {
       if (_isHtmlFile(file)) {
         addItems(_YTTakeoutHtmlParser.splitEntries(file.readAsBytesSync()), _YTTakeoutHtmlParser.parseEntry);
       } else {
-        addItems(jsonDecode(file.readAsStringSync()) as List? ?? const [], _ytTakeoutJsonEntry);
+        addItems(jsonDecodeUtf8(file.readAsBytesSync()) as List? ?? const [], _ytTakeoutJsonEntry);
       }
     }
 
@@ -1320,7 +1320,7 @@ class JsonToHistoryParser {
       params,
       trackSource: TrackSource.spotify,
       loadingProgressCounterFn: JsonToHistoryParser._countJsonObjectsInList,
-      fileToItemsFn: (file) => jsonDecode(file.readAsStringSync()) as List? ?? [],
+      fileToItemsFn: (file) => jsonDecodeUtf8(file.readAsBytesSync()) as List? ?? [],
       itemToInfoFn: (map) {
         final mapMsPlayed = map['ms_played'] as int?;
         if (mapMsPlayed != null && mapMsPlayed == 0) {
@@ -1350,9 +1350,9 @@ class JsonToHistoryParser {
       params,
       trackSource: TrackSource.listenbrainz,
       loadingProgressCounterFn: JsonToHistoryParser._countLinesInFile,
-      fileToItemsFn: (file) => file.readAsLinesSync(),
+      fileToItemsFn: (file) => JsonToHistoryParser._splitLinesBytes(file.readAsBytesSync()),
       itemToInfoFn: (line) {
-        final map = jsonDecode(line) as Map;
+        final map = jsonDecodeUtf8(line) as Map;
 
         final listenedAtSecondsSinceEpoch = map['listened_at'] as int;
         final date = DateTime.fromMillisecondsSinceEpoch(listenedAtSecondsSinceEpoch * 1000);
@@ -1601,6 +1601,20 @@ class JsonToHistoryParser {
       file.writeAsJsonSync(videosMapInStorage.values.toFixedList());
       progressPort.send(updatedIds.length);
     }
+  }
+
+  static List<Uint8List> _splitLinesBytes(Uint8List bytes) {
+    final lines = <Uint8List>[];
+    final length = bytes.length;
+    int start = 0;
+    for (int i = 0; i < length; i++) {
+      if (bytes[i] == 0x0A) {
+        lines.add(Uint8List.sublistView(bytes, start, i));
+        start = i + 1;
+      }
+    }
+    if (start < length) lines.add(Uint8List.sublistView(bytes, start, length));
+    return lines;
   }
 
   static Future<int> _countLinesInFile(File file) async {
