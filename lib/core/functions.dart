@@ -499,7 +499,9 @@ class NamidaOnTaps {
     return map;
   }
 
-  void onQueuesClearIconTap() {
+  void onQueuesClearIconTap() async {
+    await QueueController.inst.loadAllQueues();
+
     final sizesLookupMap = <int, int>{}.obs;
     _getQueuesSize.thready(AppDirs.QUEUES).then((value) => sizesLookupMap.value = value);
     String getSubtitle(Map<int, int> lookup, List<int> datesList) {

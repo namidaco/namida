@@ -807,7 +807,7 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
   }
 
   Future<void> _updateCurrentRecentsSourceTypeAndSetState(QueueSourceEnum? type) async {
-    await QueueController.inst.waitForQueuesLoad;
+    await QueueController.inst.loadAllQueues();
 
     currentRecentsSourceType = type;
 

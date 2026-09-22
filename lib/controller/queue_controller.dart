@@ -31,6 +31,14 @@ class QueueController {
   /// holds all queues mapped & sorted by `date` chronologically & reversly.
   final Rx<SplayTreeMap<int, Queue>> queuesMap = SplayTreeMap<int, Queue>((date1, date2) => date2.compareTo(date1)).obs;
 
+  /// counts the ones not loaded yet into [queuesMap] too.
+  final totalQueuesCount = 0.obs;
+
+  List<int> _unloadedQueuesDates = const [];
+  Future<void>? _loadAllQueuesOperation;
+
+  void _refreshTotalQueuesCount() => totalQueuesCount.value = queuesMap.value.length + _unloadedQueuesDates.length;
+
   Queue? get _latestQueueInMap => queuesMap.value[_latestAddedQueueDate];
 
   /// faster way to access latest queue
@@ -110,6 +118,7 @@ class QueueController {
   Future<void> removeQueue(Queue queue) async {
     queuesMap.value.remove(queue.date);
     queuesMap.refresh();
+    _refreshTotalQueuesCount();
     if (queue.date == _latestAddedQueueDate) _latestAddedQueueDate = 0;
     await _deleteQueueFromStorage(queue);
   }
@@ -120,7 +129,12 @@ class QueueController {
       queuesMap.value.remove(date);
       if (date == _latestAddedQueueDate) hasLatestAdded = true;
     }
+    if (_unloadedQueuesDates.isNotEmpty) {
+      final removedDates = queuesDates.toSet();
+      _unloadedQueuesDates = _unloadedQueuesDates.where((date) => !removedDates.contains(date)).toList();
+    }
     queuesMap.refresh();
+    _refreshTotalQueuesCount();
     if (hasLatestAdded) _latestAddedQueueDate = 0;
     await _deleteQueuesFromStorage(queuesDates);
   }
@@ -134,6 +148,7 @@ class QueueController {
     date ??= queue.date;
     queuesMap.value[date] = queue;
     queuesMap.refresh();
+    _refreshTotalQueuesCount();
   }
 
   Future<bool> toggleFavButton(Queue oldQueue) async {
@@ -280,37 +295,80 @@ class QueueController {
     }
   }
 
+  /// the rest are read on demand by [loadAllQueues].
+  static const _kInitialQueuesLoadCount = 20;
+
   Future<void> prepareAllQueuesFile() async {
-    final mapAndLatest = await _readQueueFilesCompute.thready(AppDirs.QUEUES);
-    queuesMap.value = mapAndLatest.$1;
-    _latestAddedQueueDate = mapAndLatest.$2;
-    _bindSessionQueueDate(mapAndLatest.$2);
+    _loadAllQueuesOperation = null;
+    final res = await _readQueueFilesCompute.thready((AppDirs.QUEUES, _kInitialQueuesLoadCount));
+    queuesMap.value = res.map;
+    _unloadedQueuesDates = res.unloadedDates;
+    _latestAddedQueueDate = res.newestDate;
+    _refreshTotalQueuesCount();
+    _bindSessionQueueDate(res.newestDate);
     _queuesLoad.completeIfWasnt(true);
   }
 
-  static (SplayTreeMap<int, Queue>, int) _readQueueFilesCompute(String path) {
-    int newestQueueDate = 0;
-    final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
+  Future<void> loadAllQueues() => _loadAllQueuesOperation ??= _loadAllQueues();
+
+  Future<void> _loadAllQueues() async {
+    await _queuesLoad.future;
+    final dates = _unloadedQueuesDates;
+    if (dates.isEmpty) return;
+    final map = await _readQueuesForDatesCompute.thready((AppDirs.QUEUES, dates));
+    _unloadedQueuesDates = const [];
+    queuesMap.value.addAll(map);
+    queuesMap.refresh();
+    _refreshTotalQueuesCount();
+  }
+
+  static ({SplayTreeMap<int, Queue> map, int newestDate, List<int> unloadedDates}) _readQueueFilesCompute((String, int) pathAndLoadCount) {
+    final (path, loadCount) = pathAndLoadCount;
+    final dates = <int>[];
     final files = Directory(path).listSyncSafe();
     for (final f in files) {
-      if (f is File && !f.path.endsWith(_kTempFileSuffix)) {
-        try {
-          final bytes = f.readAsBytesSync();
-          final Queue q;
-          if (bytes[0] == _QueueSerializer._kMagic) {
-            final decoded = _QueueSerializer.decode<Track>(bytes);
-            final meta = decoded.meta;
-            if (meta == null) continue;
-            q = Queue.fromMeta(meta, decoded.items);
-          } else {
-            q = Queue.fromJson(jsonDecodeUtf8(bytes));
-          }
-          map[q.date] = q;
-          if (q.date > newestQueueDate) newestQueueDate = q.date;
-        } catch (_) {}
+      if (f is File) {
+        final date = int.tryParse(f.path.getFilenameWOExt);
+        if (date != null) dates.add(date);
       }
     }
-    return (map, newestQueueDate);
+    dates.sort((date1, date2) => date2.compareTo(date1));
+
+    int newestQueueDate = 0;
+    final map = SplayTreeMap<int, Queue>((date1, date2) => date1.compareTo(date2));
+    final loadedCount = dates.length < loadCount ? dates.length : loadCount;
+    for (int i = 0; i < loadedCount; i++) {
+      final q = _readQueueFile(path, dates[i]);
+      if (q == null) continue;
+      map[q.date] = q;
+      if (q.date > newestQueueDate) newestQueueDate = q.date;
+    }
+    return (
+      map: map,
+      newestDate: newestQueueDate,
+      unloadedDates: dates.length > loadedCount ? dates.sublist(loadedCount) : const <int>[],
+    );
+  }
+
+  static Map<int, Queue> _readQueuesForDatesCompute((String, List<int>) pathAndDates) {
+    final (path, dates) = pathAndDates;
+    final map = <int, Queue>{};
+    for (final date in dates) {
+      final q = _readQueueFile(path, date);
+      if (q != null) map[q.date] = q;
+    }
+    return map;
+  }
+
+  static Queue? _readQueueFile(String dirPath, int date) {
+    try {
+      final bytes = File('$dirPath$date.json').readAsBytesSync();
+      if (bytes[0] != _QueueSerializer._kMagic) return Queue.fromJson(jsonDecodeUtf8(bytes));
+      final decoded = _QueueSerializer.decode<Track>(bytes);
+      final meta = decoded.meta;
+      return meta == null ? null : Queue.fromMeta(meta, decoded.items);
+    } catch (_) {}
+    return null;
   }
 
   Future<void> emptyLatestQueue() async {
@@ -446,7 +504,6 @@ class QueueController {
   }
 
   final _queuesLoad = Completer<bool>();
-  Future<bool> get waitForQueuesLoad => _queuesLoad.future;
   bool get isQueuesLoaded => _queuesLoad.isCompleted;
 
   int get playerQueueModifiedTime => _playerQueueModifiedTime;

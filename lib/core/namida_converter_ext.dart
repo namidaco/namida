@@ -1420,8 +1420,8 @@ extension RouteUtils on NamidaRoute {
         break;
       case RouteType.PAGE_queue:
         finalWidget = ObxO(
-          rx: QueueController.inst.queuesMap,
-          builder: (context, qmap) => getTextWidget("${lang.queues} • ${qmap.length}"),
+          rx: QueueController.inst.totalQueuesCount,
+          builder: (context, count) => getTextWidget("${lang.queues} • $count"),
         );
         break;
       case RouteType.PAGE_smartPlaylists:
