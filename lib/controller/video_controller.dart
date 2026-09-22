@@ -316,6 +316,60 @@ class VideoController {
     _videoCacheIDMapDB.deleteEverything();
   }
 
+  /// What video widgets paint. Follows the player, except that `keepVideoFrameOnSwitch` keeps the
+  /// previous frame across a switch, the texture is never torn down between items so it is still there.
+  RxBaseCore<VideoInfoData?> get displayedVideoInfo => _displayedVideoInfo;
+  final _displayedVideoInfo = Rxn<VideoInfoData>();
+
+  /// a local video that didn't render by then isn't worth a stale frame anymore.
+  static const _kVideoFrameHoldTimeout = Duration(seconds: 2);
+
+  Timer? _videoFrameHoldTimer;
+
+  void onVideoInfoChanged(VideoInfoData? info) {
+    if (info != null && info.isInitialized) {
+      _videoFrameHoldTimer?.cancel();
+      _videoFrameHoldTimer = null;
+      _displayedVideoInfo.value = info;
+    } else if (_videoFrameHoldTimer == null) {
+      _displayedVideoInfo.value = null;
+    }
+  }
+
+  void holdVideoFrameFor(Playable item) {
+    if (settings.extra.keepVideoFrameOnSwitch != true) return;
+    if (_displayedVideoInfo.value?.isInitialized != true || !_hasReadyVideoFor(item)) return dropVideoFrameHold();
+    _videoFrameHoldTimer?.cancel();
+    _videoFrameHoldTimer = Timer(_kVideoFrameHoldTimeout, dropVideoFrameHold);
+  }
+
+  void dropVideoFrameHold() {
+    _videoFrameHoldTimer?.cancel();
+    _videoFrameHoldTimer = null;
+    onVideoInfoChanged(Player.inst.videoPlayerInfo.value);
+  }
+
+  /// wether [item] can start rendering without fetching anything, holding over a fetch would stall.
+  bool _hasReadyVideoFor(Playable item) {
+    if (!settings.enableVideoPlayback.value) return false;
+    return item.execute(
+          selectable: (finalItem) {
+            final track = finalItem.track;
+            if (track is Video) return track.isPhysical;
+            final source = settings.videoPlaybackSource.value;
+            if (source != VideoPlaybackSource.local && hasNVCachedFromID(track.youtubeID)) return true;
+            if (source != VideoPlaybackSource.youtube) {
+              for (final path in _getPossibleVideosPathsFromAudioFile(track.path)) {
+                if (_videoPathsInfoMap[path] != null) return true;
+              }
+            }
+            return false;
+          },
+          youtubeID: (finalItem) => !settings.youtube.isAudioOnlyMode.value && hasNVCachedFromID(finalItem.id),
+        ) ??
+        false;
+  }
+
   Future<NamidaVideo?> updateCurrentVideo(Track? track, {bool returnEarly = false, CurrentVideoConfig? configToUpdate}) async {
     configToUpdate ??= this.currentVideoConfig;
 

@@ -767,7 +767,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           );
 
     final finalVideoWidget = ObxO(
-      rx: Player.inst.videoPlayerInfo,
+      rx: VideoController.inst.displayedVideoInfo,
       builder: (context, info) {
         if (info != null && info.isInitialized) {
           return NamidaAspectRatio(

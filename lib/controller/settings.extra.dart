@@ -26,6 +26,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? jellysInvasion;
   bool? jellysPalette;
   bool? mediaWaveHaptic;
+  bool? keepVideoFrameOnSwitch;
   bool? artistAlbumsExpanded;
   bool? artistSinglesExpanded;
   bool? ytStyleButtonSwitcher;
@@ -58,6 +59,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? jellysInvasion,
     bool? jellysPalette,
     bool? mediaWaveHaptic,
+    bool? keepVideoFrameOnSwitch,
     bool? artistAlbumsExpanded,
     bool? artistSinglesExpanded,
     bool? ytStyleButtonSwitcher,
@@ -86,6 +88,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (jellysInvasion != null) this.jellysInvasion = jellysInvasion;
     if (jellysPalette != null) this.jellysPalette = jellysPalette;
     if (mediaWaveHaptic != null) this.mediaWaveHaptic = mediaWaveHaptic;
+    if (keepVideoFrameOnSwitch != null) this.keepVideoFrameOnSwitch = keepVideoFrameOnSwitch;
     if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
     if (ytStyleButtonSwitcher != null) this.ytStyleButtonSwitcher = ytStyleButtonSwitcher;
@@ -159,6 +162,7 @@ class _ExtraSettings with SettingsFileWriter {
       jellysInvasion = json['jellysInvasion'] ?? jellysInvasion;
       jellysPalette = json['jellysPalette'] ?? jellysPalette;
       mediaWaveHaptic = json['mediaWaveHaptic'] ?? mediaWaveHaptic;
+      keepVideoFrameOnSwitch = json['keepVideoFrameOnSwitch'] ?? keepVideoFrameOnSwitch;
       artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
       ytStyleButtonSwitcher = json['ytStyleButtonSwitcher'] ?? ytStyleButtonSwitcher;
@@ -213,6 +217,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (jellysInvasion != null) 'jellysInvasion': jellysInvasion,
     if (jellysPalette != null) 'jellysPalette': jellysPalette,
     if (mediaWaveHaptic != null) 'mediaWaveHaptic': mediaWaveHaptic,
+    if (keepVideoFrameOnSwitch != null) 'keepVideoFrameOnSwitch': keepVideoFrameOnSwitch,
     if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
     if (ytStyleButtonSwitcher != null) 'ytStyleButtonSwitcher': ytStyleButtonSwitcher,

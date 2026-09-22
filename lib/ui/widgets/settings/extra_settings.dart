@@ -1334,6 +1334,13 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'jellys_color_palette'.toUpperCase(),
                 ),
               ],
+              CustomSwitchListTile(
+                icon: Broken.video_play,
+                value: settings.extra.keepVideoFrameOnSwitch ?? false,
+                onChanged: (isTrue) => setState(() => settings.extra.save(keepVideoFrameOnSwitch: !isTrue)),
+                title: 'keep_video_frame_on_switch'.toUpperCase(),
+                subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
+              ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
                 CustomSwitchListTile(
                   icon: Broken.watch_status,

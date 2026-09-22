@@ -235,6 +235,7 @@ class Player {
 
     void videoInfoListener() {
       final info = _audioHandler.videoPlayerInfo.value;
+      VideoController.inst.onVideoInfoChanged(info);
       if (info == null || info.width == -1 || info.height == -1) {
         WakelockController.inst.updateVideoStatus(false);
       } else {
@@ -247,6 +248,7 @@ class Player {
     _audioHandler.videoPlayerInfo.removeListener(videoInfoListener);
     _audioHandler.videoPlayerInfo.addListener(videoInfoListener);
     _audioHandler.onVideoError = (e, _) {
+      VideoController.inst.dropVideoFrameHold();
       if (e is PlatformException) {
         final itemId = currentVideo?.id ?? currentTrack?.track.youtubeID;
         final button = itemId != null ? SnackbarButton(text: lang.clearVideoCache, function: () => const YTUtils().showVideoClearDialog(itemId)) : null;

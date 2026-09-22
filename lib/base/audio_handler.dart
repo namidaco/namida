@@ -675,6 +675,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   FutureOr<void> clearQueue() async {
     videoPlayerInfo.value = null;
+    VideoController.inst.dropVideoFrameHold();
     Lyrics.inst.resetLyrics();
     WaveformController.inst.resetWaveform();
     CurrentColor.inst.resetCurrentPlayingTrack();
@@ -857,6 +858,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // -- but it's not needed for gapless, otherwise the state will stay stuck at this value
       currentState.value = null;
     }
+
+    VideoController.inst.holdVideoFrameFor(item);
 
     // -- should be done here so that if info fetching takes time, crossfade out still works.
     // -- otherwise the previous item would keep playing indefinetly.
@@ -2551,6 +2554,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> onDispose() async {
     mediaItem.add(null);
+    VideoController.inst.dropVideoFrameHold();
     await [
       super.onDispose(),
       if (Platform.isAndroid) AudioService.forceStop(),

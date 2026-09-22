@@ -934,13 +934,13 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
   void initState() {
     super.initState();
     _effective = _resolve();
-    Player.inst.videoPlayerInfo.addListener(_onChange);
+    VideoController.inst.displayedVideoInfo.addListener(_onChange);
     MiniPlayerController.inst.displayIndicesOverride.addListener(_onChange);
   }
 
   @override
   void dispose() {
-    Player.inst.videoPlayerInfo.removeListener(_onChange);
+    VideoController.inst.displayedVideoInfo.removeListener(_onChange);
     MiniPlayerController.inst.displayIndicesOverride.removeListener(_onChange);
     super.dispose();
   }
@@ -951,7 +951,7 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
   }
 
   VideoInfoData? _resolve() {
-    final info = Player.inst.videoPlayerInfo.value;
+    final info = VideoController.inst.displayedVideoInfo.value;
     final initialized = info != null && info.isInitialized;
     final switching = MiniPlayerController.inst.displayIndicesOverride.value != null;
 
