@@ -297,6 +297,7 @@ enum LibraryTab {
   artists,
   genres,
   playlists,
+  smartPlaylists,
   folders,
   foldersMusic,
   foldersVideos,

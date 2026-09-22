@@ -296,23 +296,31 @@ class StatsMiniTile extends StatelessWidget {
               style: textTheme.displayMedium!.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
               child: valueWidget!,
             ),
-            Text(
-              '  $label',
-              style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+            Flexible(
+              child: Text(
+                '  $label',
+                style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ] else
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: value,
-                    style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
-                  ),
-                  TextSpan(
-                    text: '  $label',
-                    style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
-                  ),
-                ],
+            Flexible(
+              child: Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: value,
+                      style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(
+                      text: '  $label',
+                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                    ),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           if (trailing != null) ...[

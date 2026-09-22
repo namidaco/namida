@@ -71,6 +71,7 @@ import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
+import 'package:namida/ui/pages/smart_playlists_page.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
@@ -120,6 +121,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.artists => MediaType.artist,
       LibraryTab.genres => MediaType.genre,
       LibraryTab.playlists => MediaType.playlist,
+      LibraryTab.smartPlaylists => null,
       LibraryTab.folders => MediaType.folder,
       LibraryTab.foldersMusic => MediaType.folderMusic,
       LibraryTab.foldersVideos => MediaType.folderVideo,
@@ -165,6 +167,7 @@ extension LibraryTabUtils on LibraryTab {
         animateTiles: animateTiles,
         enableHero: enableHero,
       ),
+      LibraryTab.smartPlaylists => const SmartPlaylistsPage(),
       LibraryTab.folders => FoldersPage.tracksAndVideos(),
       LibraryTab.foldersMusic => FoldersPage.tracks(),
       LibraryTab.foldersVideos => FoldersPage.videos(),
@@ -1875,6 +1878,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.artists => lang.artists,
     LibraryTab.genres => lang.genres,
     LibraryTab.playlists => lang.playlists,
+    LibraryTab.smartPlaylists => lang.smartPlaylists,
     LibraryTab.folders => lang.folders,
     LibraryTab.foldersMusic => "${lang.folders}: ${lang.tracks}",
     LibraryTab.foldersVideos => "${lang.folders}: ${lang.videos}",
@@ -1899,6 +1903,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.artists => Broken.profile_2user,
     LibraryTab.genres => Broken.smileys,
     LibraryTab.playlists => Broken.music_library_2,
+    LibraryTab.smartPlaylists => Broken.magicpen,
     LibraryTab.folders => Broken.folder,
     LibraryTab.foldersMusic => Broken.folder_2,
     LibraryTab.foldersVideos => Broken.video_play,
