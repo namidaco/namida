@@ -610,7 +610,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   void onIndexChanged(int newIndex, Q newItem) {
     refreshNotification(newItem);
-    settings.extra.save(lastPlayedIndex: newIndex);
+    ArtworkPrefetcher.inst.prefetchAround(newIndex);
+    final gate = partyGate;
+    if (gate == null) {
+      settings.extra.save(lastPlayedIndex: newIndex);
+    } else {
+      gate.onLocalIndexChanged(newIndex);
+    }
     newItem.execute(
       selectable: (finalItem) {
         CurrentColor.inst.updatePlayerColorFromTrack(finalItem, newIndex);

@@ -1013,6 +1013,8 @@ class AppDocsLinks {
   static const SETTINGS_RETURN_YOUTUBE_DISLIKE = AppDocsLinks._('$_SETTINGS_YOUTUBE_RAW#return-youtube-dislike');
   static const SETTINGS_SYNC = AppDocsLinks._('$_SETTINGS_BACKUP_RESTORE_RAW#sync');
 
+  static const PARTY_PRIVACY = AppDocsLinks._('${_FEATURES_RAW}party/#privacy');
+
   static const YT_CACHING = AppDocsLinks._('${_FEATURES_RAW}youtube/#caching');
 
   static AppDocsLinks getForSettingsPage(SettingSubpageEnum page) => switch (page) {
