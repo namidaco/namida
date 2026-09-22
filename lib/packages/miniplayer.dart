@@ -20,6 +20,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -99,24 +100,36 @@ class _MiniPlayerParentBody extends StatelessWidget {
             builder: (context, mixedQueue) => mixedQueue
                 ? const NamidaMiniPlayerMixed()
                 : ObxO(
-                    rx: Player.inst.currentItem,
-                    builder: (context, currentItem) => currentItem is YoutubeID
-                        ? ObxO(
-                            rx: settings.youtube.youtubeStyleMiniplayer,
-                            builder: (context, youtubeStyleMiniplayer) => CustomAnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              child: youtubeStyleMiniplayer
-                                  ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
-                                  : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
-                            ),
-                          )
-                        : currentItem is Selectable
-                        ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
-                        : const SizedBox(key: Key('empty_miniplayer')),
+                    rx: PartyController.inst.forcesMixedQueue,
+                    builder: (context, partyMixedQueue) => partyMixedQueue ? const NamidaMiniPlayerMixed() : const _NamidaMiniPlayerByCurrentItem(),
                   ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _NamidaMiniPlayerByCurrentItem extends StatelessWidget {
+  const _NamidaMiniPlayerByCurrentItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: Player.inst.currentItem,
+      builder: (context, currentItem) => currentItem is YoutubeID
+          ? ObxO(
+              rx: settings.youtube.youtubeStyleMiniplayer,
+              builder: (context, youtubeStyleMiniplayer) => CustomAnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: youtubeStyleMiniplayer
+                    ? YoutubeMiniPlayer(key: YoutubeMiniplayerUiController.inst.ytMiniplayerKey) //
+                    : const NamidaMiniPlayerYoutubeID(key: Key('local_miniplayer_yt')),
+              ),
+            )
+          : currentItem is Selectable
+          ? const NamidaMiniPlayerTrack(key: Key('local_miniplayer'))
+          : const SizedBox(key: Key('empty_miniplayer')),
     );
   }
 }
@@ -131,7 +144,7 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
 
     return NamidaMiniPlayerBase(
       trackTileConfigs: trackConfig.trackTileConfigs,
-      videoTileConfigs: trackConfig.videoTileConfigs,
+      videoTileConfigs: ytConfig.videoTileConfigs,
       queueItemExtent: null,
       queueItemExtentBuilder: (item) {
         return item is Selectable ? trackConfig.queueItemExtent : ytConfig.queueItemExtent;

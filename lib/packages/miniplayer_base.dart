@@ -636,67 +636,76 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final colorScheme = CurrentColor.inst.color;
     final scaffoldBgColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor.withOpacityExt(0.5), context.isDarkMode ? Colors.black : Colors.white);
 
+    Widget buildQueueColumn(Widget header, TrackTileProperties? trackTileProperties, VideoTileProperties? videoTileProperties) {
+      return Column(
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
+                  Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
+                ],
+              ),
+            ),
+            child: header,
+          ),
+          Expanded(
+            child: _QueueListChildWrapper(
+              queueItemExtent: widget.queueItemExtent,
+              queueItemExtentBuilder: widget.queueItemExtentBuilder,
+              itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: trackTileProperties, videoTileProperties: videoTileProperties),
+            ),
+          ),
+        ],
+      );
+    }
+
+    final trackTileConfigs = widget.trackTileConfigs;
+    final videoTileConfigs = widget.videoTileConfigs;
+    final onArrowDownPressed = MiniPlayerController.inst.snapToExpanded;
+
     Widget queueListChild;
-    if (widget.trackTileConfigs != null) {
+    if (trackTileConfigs != null && videoTileConfigs != null) {
+      // -- mixed queue, both kinds of tiles can show up
       queueListChild = TrackTilePropertiesProvider(
-        configs: widget.trackTileConfigs!,
-        builder: (properties) => Column(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
-                  ],
-                ),
-              ),
-              child: LocalQueueChipHeaderRow(
-                addLeftMargin: true,
-                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
-              ),
+        configs: trackTileConfigs,
+        builder: (trackTileProperties) => VideoTilePropertiesProvider(
+          configs: videoTileConfigs,
+          builder: (videoTileProperties) => buildQueueColumn(
+            MixedQueueChipHeaderRow(
+              addLeftMargin: true,
+              onArrowDownPressed: onArrowDownPressed,
             ),
-            Expanded(
-              child: _QueueListChildWrapper(
-                queueItemExtent: widget.queueItemExtent,
-                queueItemExtentBuilder: widget.queueItemExtentBuilder,
-                itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: properties, videoTileProperties: null),
-              ),
-            ),
-          ],
+            trackTileProperties,
+            videoTileProperties,
+          ),
         ),
       );
-    } else if (widget.videoTileConfigs != null) {
+    } else if (trackTileConfigs != null) {
+      queueListChild = TrackTilePropertiesProvider(
+        configs: trackTileConfigs,
+        builder: (properties) => buildQueueColumn(
+          LocalQueueChipHeaderRow(
+            addLeftMargin: true,
+            onArrowDownPressed: onArrowDownPressed,
+          ),
+          properties,
+          null,
+        ),
+      );
+    } else if (videoTileConfigs != null) {
       queueListChild = VideoTilePropertiesProvider(
-        configs: widget.videoTileConfigs!,
-        builder: (properties) => Column(
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.90), colorScheme).withOpacityExt(0.5),
-                    Color.alphaBlend(scaffoldBgColor.withOpacityExt(0.65), colorScheme).withOpacityExt(0.5),
-                  ],
-                ),
-              ),
-              child: YTQueueChipHeaderRow(
-                addLeftMargin: true,
-                onArrowDownPressed: MiniPlayerController.inst.snapToExpanded,
-              ),
-            ),
-            Expanded(
-              child: _QueueListChildWrapper(
-                queueItemExtent: widget.queueItemExtent,
-                queueItemExtentBuilder: widget.queueItemExtentBuilder,
-                itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: null, videoTileProperties: properties),
-              ),
-            ),
-          ],
+        configs: videoTileConfigs,
+        builder: (properties) => buildQueueColumn(
+          YTQueueChipHeaderRow(
+            addLeftMargin: true,
+            onArrowDownPressed: onArrowDownPressed,
+          ),
+          null,
+          properties,
         ),
       );
     } else {

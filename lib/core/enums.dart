@@ -311,6 +311,7 @@ enum LibraryTab {
   tags,
   rating,
   stats,
+  party,
 }
 
 enum TrackPlayMode {
@@ -633,6 +634,7 @@ enum RouteType {
   PAGE_yourYear,
   PAGE_about,
   PAGE_Sync,
+  PAGE_party,
 
   // ----- Subpages -----
   SUBPAGE_recentlyAddedTracks,

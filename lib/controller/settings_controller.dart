@@ -30,6 +30,7 @@ part 'settings.equalizer.dart';
 part 'settings.extra.dart';
 part 'settings.player.dart';
 part 'settings.shortcuts.dart';
+part 'settings.party.dart';
 part 'settings.sync.dart';
 part 'settings.tutorial.dart';
 part 'settings.youtube.dart';
@@ -47,6 +48,7 @@ class _SettingsController with SettingsFileWriter {
       this.youtube.prepareSettingsFile(),
       this.extra.prepareSettingsFile(),
       this.sync.prepareSettingsFile(),
+      this.party.prepareSettingsFile(),
       this.tutorial.prepareSettingsFile(),
       if (isDesktop) this.shortcuts.prepareSettingsFile(),
     ]);
@@ -58,6 +60,7 @@ class _SettingsController with SettingsFileWriter {
   final extra = _ExtraSettings._internal();
   final tutorial = _TutorialSettings._internal();
   final sync = _SyncSettings._internal();
+  final party = _PartySettings._internal();
   final shortcuts = _ShortcutsSettings._internal();
 
   final language = Rxn<NamidaLanguage>();

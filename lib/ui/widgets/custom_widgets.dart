@@ -4734,6 +4734,8 @@ class NamidaInkWellButton extends StatelessWidget {
   final Widget? trailing;
   final BoxDecoration decoration;
   final Color? itemsColor;
+  final AlignmentGeometry? alignment;
+  final bool centered;
 
   const NamidaInkWellButton({
     super.key,
@@ -4753,6 +4755,8 @@ class NamidaInkWellButton extends StatelessWidget {
     this.leading,
     this.trailing,
     this.decoration = const BoxDecoration(),
+    this.alignment,
+    this.centered = false,
   });
 
   @override
@@ -4774,7 +4778,9 @@ class NamidaInkWellButton extends StatelessWidget {
           decoration: decoration,
           onTap: onTap,
           enableSecondaryTap: false,
+          alignment: alignment,
           child: Row(
+            mainAxisAlignment: centered ? MainAxisAlignment.center : MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               ?leading,

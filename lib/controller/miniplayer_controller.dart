@@ -645,6 +645,16 @@ class MiniPlayerController {
   }
 
   Future<void> _snapToAdjacent({required bool forward}) async {
+    if (Player.inst.partyGate?.canSkip == false) {
+      // -- the party will refuse it, animating towards an item we never reach would only flash
+      _snapToCurrent();
+      return forward ? Player.inst.next() : Player.inst.previous();
+    }
+    if (!forward && Player.inst.previousWillReplay) {
+      // -- previous only replays the current item, there is nothing to animate towards.
+      _snapToCurrent();
+      return Player.inst.previous();
+    }
     if (!(forward ? Player.inst.canJumpToNext : Player.inst.canJumpToPrevious)) {
       _snapToCurrent(); // -- snap back if was dragged, settling on whatever is still in flight
       return;

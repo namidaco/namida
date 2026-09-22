@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -60,6 +61,7 @@ class Dimensions {
               route == RouteType.SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS || // bcz has fab
               route == RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE || // bcz has middle button
               route == RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE || // bcz bcz..
+              route == RouteType.PAGE_party || // bcz has chat input
               ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInsideReactive() != true) ||
               (settings.extra.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible.valueR == false);
     return shouldHide;
@@ -79,8 +81,10 @@ class Dimensions {
     final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.miniplayerIsWideScreen ? 0.0 : _getDeviceBottomGesturePaddingOrZero();
 
     final currentItem = Player.inst.currentItem.valueR;
+    // -- a mixed queue shows the regular miniplayer even for a youtube item, it is taller
+    final mixedPlayer = settings.mixedQueue.valueR || PartyController.inst.forcesMixedQueue.valueR;
     return (currentItem is YoutubeID
-            ? settings.youtube.youtubeStyleMiniplayer.valueR
+            ? settings.youtube.youtubeStyleMiniplayer.valueR && !mixedPlayer
                   ? kYoutubeMiniplayerHeight
                   : _kMiniplayerBottomPadding
             : currentItem is Selectable

@@ -31,6 +31,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
@@ -66,6 +67,7 @@ import 'package:namida/ui/pages/genres_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/moods_tags_page.dart';
+import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -133,6 +135,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.tags => null,
       LibraryTab.rating => null,
       LibraryTab.stats => null,
+      LibraryTab.party => null,
     };
   }
 
@@ -180,6 +183,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.tags => const TagsPage(),
       LibraryTab.rating => const RatingsPage(),
       LibraryTab.stats => const StatsPage(isYoutube: false),
+      LibraryTab.party => const NamidaPartyPage(),
     };
   }
 }
@@ -1426,6 +1430,9 @@ extension RouteUtils on NamidaRoute {
       case RouteType.PAGE_discover:
         finalWidget = getTextWidget(lang.discover);
         break;
+      case RouteType.PAGE_party:
+        finalWidget = getTextWidget(lang.partyListeningParty);
+        break;
       default:
         null;
     }
@@ -1534,6 +1541,18 @@ extension RouteUtils on NamidaRoute {
               : const SizedBox(),
         ),
         shouldShow: shouldShowMissingServerDirAuth,
+      ),
+
+      ObxO(
+        rx: PartyController.inst.isActive,
+        builder: (context, isActive) => _getAnimatedCrossFade(
+          child: NamidaAppBarIcon(
+            icon: Broken.people,
+            tooltip: () => lang.partyListeningParty,
+            onPressed: const NamidaPartyPage().navigate,
+          ),
+          shouldShow: isActive && route != RouteType.PAGE_party,
+        ),
       ),
 
       ObxO(
@@ -1871,6 +1890,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.tags => lang.tags,
     LibraryTab.rating => lang.rating,
     LibraryTab.stats => lang.stats,
+    LibraryTab.party => lang.partyListeningParty,
   };
 
   IconData toIcon() => switch (this) {
@@ -1894,6 +1914,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.tags => Broken.tag,
     LibraryTab.rating => Broken.grammerly,
     LibraryTab.stats => Broken.chart_21,
+    LibraryTab.party => Broken.people,
   };
 }
 

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' as fr;
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -48,8 +51,17 @@ class CurrentQueueList extends StatelessWidget {
       rx: Player.inst.currentItem,
       builder: (context, currentItem) {
         if (currentItem == null) return const _EmptyQueue();
-        if (currentItem is YoutubeID) return _YoutubeQueueList(addPageBottomPadding: addPageBottomPadding, showHeaderAndFooter: showHeaderAndFooter);
-        return _LocalQueueList(addPageBottomPadding: addPageBottomPadding, showHeaderAndFooter: showHeaderAndFooter);
+        return ObxO(
+          rx: settings.mixedQueue,
+          builder: (context, mixedQueue) => ObxO(
+            rx: PartyController.inst.forcesMixedQueue,
+            builder: (context, partyMixedQueue) {
+              if (mixedQueue || partyMixedQueue) return _MixedQueueList(addPageBottomPadding: addPageBottomPadding, showHeaderAndFooter: showHeaderAndFooter);
+              if (currentItem is YoutubeID) return _YoutubeQueueList(addPageBottomPadding: addPageBottomPadding, showHeaderAndFooter: showHeaderAndFooter);
+              return _LocalQueueList(addPageBottomPadding: addPageBottomPadding, showHeaderAndFooter: showHeaderAndFooter);
+            },
+          ),
+        );
       },
     );
   }
@@ -82,6 +94,7 @@ class _EmptyQueue extends StatelessWidget {
 
 class _QueueListBase extends StatefulWidget {
   final double itemExtent;
+  final fr.ItemExtentBuilder? itemExtentBuilder;
   final bool addPageBottomPadding;
   final Widget? header;
   final Widget Function(Widget scrollQueueWidget)? utilsRowBuilder;
@@ -89,6 +102,7 @@ class _QueueListBase extends StatefulWidget {
 
   const _QueueListBase({
     required this.itemExtent,
+    this.itemExtentBuilder,
     required this.addPageBottomPadding,
     required this.header,
     required this.utilsRowBuilder,
@@ -162,7 +176,8 @@ class _QueueListBaseState extends State<_QueueListBase> {
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               NamidaSliverReorderableList(
                 itemCount: queueLength,
-                itemExtent: widget.itemExtent,
+                itemExtent: widget.itemExtentBuilder == null ? widget.itemExtent : null,
+                itemExtentBuilder: widget.itemExtentBuilder,
                 onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
                 onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
                 onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
@@ -266,37 +281,39 @@ class _LocalQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue) {
-          final track = queue[i] as Selectable;
-          final key = Key("${i}_${track.track.path}");
-          return _dismissibleWrapper(
-            index: i,
-            childKey: key,
-            child: ObxOSelect(
-              rx: Player.inst.currentIndex,
-              selector: (currentIndex) => i < currentIndex,
-              builder: (context, isPlayed) => TrackTile(
-                properties: properties,
-                key: key,
-                index: i,
-                trackOrTwd: track,
-                tracks: queue,
-                fadeOpacity: isPlayed ? 0.3 : 0.0,
-                onPlaying: () {
-                  // -- to improve performance, skipping process of checking new queues, etc..
-                  if (i == Player.inst.currentIndex.value) {
-                    Player.inst.togglePlayPause();
-                  } else {
-                    Player.inst.skipToQueueItem(i);
-                  }
-                },
-              ),
-            ),
-          );
-        },
+        itemBuilder: (context, i, queue) => _localQueueItem(context, i, queue, properties),
       ),
     );
   }
+}
+
+Widget _localQueueItem(BuildContext context, int i, List<Playable> queue, TrackTileProperties properties) {
+  final track = queue[i] as Selectable;
+  final key = Key("${i}_${track.track.path}");
+  return _dismissibleWrapper(
+    index: i,
+    childKey: key,
+    child: ObxOSelect(
+      rx: Player.inst.currentIndex,
+      selector: (currentIndex) => i < currentIndex,
+      builder: (context, isPlayed) => TrackTile(
+        properties: properties,
+        key: key,
+        index: i,
+        trackOrTwd: track,
+        tracks: queue,
+        fadeOpacity: isPlayed ? 0.3 : 0.0,
+        onPlaying: () {
+          // -- to improve performance, skipping process of checking new queues, etc..
+          if (i == Player.inst.currentIndex.value) {
+            Player.inst.togglePlayPause();
+          } else {
+            Player.inst.skipToQueueItem(i);
+          }
+        },
+      ),
+    ),
+  );
 }
 
 class _YoutubeQueueList extends StatelessWidget {
@@ -333,28 +350,82 @@ class _YoutubeQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue) {
-          final video = queue[i] as YoutubeID;
-          final key = Key("${i}_${video.id}");
-          return _dismissibleWrapper(
-            index: i,
-            childKey: key,
-            child: ObxOSelect(
-              rx: Player.inst.currentIndex,
-              selector: (currentIndex) => i < currentIndex,
-              builder: (context, isPlayed) => YTHistoryVideoCard(
-                properties: properties,
-                key: key,
-                videos: queue,
-                index: i,
-                day: null,
-                thumbnailHeight: Dimensions.youtubeThumbnailHeight,
-                fadeOpacity: isPlayed ? 0.3 : 0.0,
-                preferFetchNewInfo: true,
-              ),
-            ),
-          );
-        },
+        itemBuilder: (context, i, queue) => _youtubeQueueItem(context, i, queue, properties),
+      ),
+    );
+  }
+}
+
+Widget _youtubeQueueItem(BuildContext context, int i, List<Playable> queue, VideoTileProperties properties) {
+  final video = queue[i] as YoutubeID;
+  final key = Key("${i}_${video.id}");
+  return _dismissibleWrapper(
+    index: i,
+    childKey: key,
+    child: ObxOSelect(
+      rx: Player.inst.currentIndex,
+      selector: (currentIndex) => i < currentIndex,
+      builder: (context, isPlayed) => YTHistoryVideoCard(
+        properties: properties,
+        key: key,
+        videos: queue,
+        index: i,
+        day: null,
+        thumbnailHeight: Dimensions.youtubeThumbnailHeight,
+        fadeOpacity: isPlayed ? 0.3 : 0.0,
+        preferFetchNewInfo: true,
+      ),
+    ),
+  );
+}
+
+class _MixedQueueList extends StatelessWidget {
+  final bool addPageBottomPadding;
+  final bool showHeaderAndFooter;
+
+  const _MixedQueueList({required this.addPageBottomPadding, required this.showHeaderAndFooter});
+
+  @override
+  Widget build(BuildContext context) {
+    return TrackTilePropertiesProvider(
+      configs: const TrackTilePropertiesConfigs(
+        displayRightDragHandler: true,
+        draggableThumbnail: true,
+        queueSource: QueueSource.playerQueue,
+      ),
+      builder: (trackTileProperties) => VideoTilePropertiesProvider(
+        configs: const VideoTilePropertiesConfigs(
+          openMenuOnLongPress: false,
+          displayTimeAgo: false,
+          draggingEnabled: true,
+          draggableThumbnail: true,
+          queueSource: QueueSourceYoutubeID.ytPlayerQueue,
+          showMoreIcon: true,
+        ),
+        builder: (videoTileProperties) => _QueueListBase(
+          itemExtent: Dimensions.inst.trackTileItemExtent,
+          itemExtentBuilder: (index, _) {
+            final queue = Player.inst.currentQueue.value;
+            return index < queue.length && queue[index] is Selectable ? Dimensions.inst.trackTileItemExtent : Dimensions.youtubeCardItemExtent;
+          },
+          addPageBottomPadding: addPageBottomPadding,
+          header: showHeaderAndFooter
+              ? const MixedQueueChipHeaderRow(
+                  addLeftMargin: true,
+                  showPlaybackActions: true,
+                  onArrowDownPressed: null,
+                )
+              : null,
+          utilsRowBuilder: showHeaderAndFooter
+              ? (scrollQueueWidget) => QueueUtilsRow(
+                  itemsKeyword: (number) => number.displayTrackKeyword,
+                  onAddItemsTap: () => TracksAddOnTap().onAddTracksTap(context),
+                  scrollQueueWidget: scrollQueueWidget,
+                )
+              : null,
+          itemBuilder: (context, i, queue) =>
+              queue[i] is Selectable ? _localQueueItem(context, i, queue, trackTileProperties) : _youtubeQueueItem(context, i, queue, videoTileProperties),
+        ),
       ),
     );
   }

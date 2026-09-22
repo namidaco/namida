@@ -37,6 +37,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/party/party_player_gate.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -72,6 +73,18 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool getLoudnessEnhancerEnabledTrackValueR() => settings.player.replayGainType.valueR.isLoudnessEnhancerEnabled;
 
   QueueSourceBase<Enum> latestQueueSource = QueueSource.others(null);
+
+  PartyPlayerGate? get partyGate => _partyGate;
+  PartyPlayerGate? _partyGate;
+
+  /// what overrides the user's own choice, null when nothing does.
+  final forcedRepeatMode = Rxn<PlayerRepeatMode>();
+
+  set partyGate(PartyPlayerGate? gate) {
+    _partyGate = gate;
+    // -- the party timeline owns advancement, any other mode would fight it
+    forcedRepeatMode.value = gate == null ? null : PlayerRepeatMode.all;
+  }
 
   bool get _willPlayWhenReady => playWhenReady.value;
 
@@ -432,7 +445,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       final isLike = displayFavouriteButtonAsLikeInNotification;
 
-      final repeat = settings.player.repeatMode.value;
+      final repeat = playerRepeatMode;
       final repeatText = repeat.buildText();
       final repeatIco = trayIcons.forRepeatMode(repeat);
 
@@ -621,11 +634,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       // await pause();
       await [
         onDispose(),
-        QueueController.inst.emptyLatestQueue(),
+        if (partyGate == null) QueueController.inst.emptyLatestQueue(),
       ].execute();
     } else {
       refreshNotification(currentItem.value);
-      await QueueController.inst.updateLatestQueue(currentQueue.value, originalIndices: currentQueue.originalIndices, source: latestQueueSource);
+      // -- a party queue never replaces the user's persisted one
+      if (partyGate == null) await QueueController.inst.updateLatestQueue(currentQueue.value, originalIndices: currentQueue.originalIndices, source: latestQueueSource);
     }
   }
 
@@ -640,7 +654,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<void> beforeQueueAddOrInsert(Iterable<Q> items) async {
-    if (settings.mixedQueue.value) return;
+    if (settings.mixedQueue.value || partyGate?.forcesMixedQueue == true) return;
     if (currentQueue.value.isEmpty) return;
 
     // this is what keeps local & youtube separated. this shall be removed if mixed playback ever got supported.
@@ -1121,6 +1135,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   FutureOr<PlayerConfig?> getPlayerConfigForItem(Playable? item, AVPlayer player) {
+    // -- a different speed or skipped silence would never stay in sync with the party
+    if (partyGate != null) return getDefaultPlayerConfig(null).copyWith(speed: 1.0, skipSilence: false);
     final isPerTrackAudioConfigOverriden = settings.player.isPerTrackAudioConfigOverriden.value;
     if (isPerTrackAudioConfigOverriden) return null;
 
@@ -2269,6 +2285,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> onPlaybackCompleted() {
     VideoController.inst.videoControlsKey.currentState?.showControlsBriefly();
     VideoController.inst.videoControlsKeyFullScreen.currentState?.showControlsBriefly();
+    partyGate?.onLocalItemCompleted();
     return super.onPlaybackCompleted();
   }
 
@@ -2350,7 +2367,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get playerPauseOnVolume0 => settings.player.pauseOnVolume0.value;
 
   @override
-  PlayerRepeatMode get playerRepeatMode => settings.player.repeatMode.value;
+  PlayerRepeatMode get playerRepeatMode => forcedRepeatMode.value ?? settings.player.repeatMode.value;
 
   // @override
   // bool get shuffleReflectInQueue => settings.player.shuffleReflectInQueue.value;
@@ -2397,6 +2414,41 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     } else {
       return play();
     }
+  }
+
+  // -- user entry points (ui, notification, headset..), the only ones a party can take over.
+  // -- internal calls keep using the raw methods.
+
+  Future<void> userPlay() {
+    if (partyGate?.interceptPlay() == true) return Future.value();
+    return play();
+  }
+
+  Future<void> userPause() {
+    if (partyGate?.interceptPause(isUserInitiated: true) == true) return Future.value();
+    return pause();
+  }
+
+  Future<void> userTogglePlayPause() => playWhenReady.value ? userPause() : userPlay();
+
+  Future<void> userSeek(Duration position) {
+    if (partyGate?.interceptSeek(position) == true) return Future.value();
+    return seek(position);
+  }
+
+  Future<void> userSkipToNext() {
+    if (partyGate?.interceptSkip(offset: 1) == true) return Future.value();
+    return skipToNext();
+  }
+
+  Future<void> userSkipToPrevious() {
+    if (partyGate?.interceptSkip(offset: -1) == true) return Future.value();
+    return skipToPrevious();
+  }
+
+  Future<void> userSkipToQueueItem(int index) {
+    if (index != currentIndex.value && partyGate?.interceptSkip(index: index) == true) return Future.value();
+    return skipToQueueItem(index);
   }
 
   @override
@@ -2525,10 +2577,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   Future<void> click([MediaButton button = MediaButton.media]) async {
     if (button == MediaButton.next) {
-      skipToNext();
+      userSkipToNext();
       return;
     } else if (button == MediaButton.previous) {
-      skipToPrevious();
+      userSkipToPrevious();
       return;
     }
 
@@ -2537,11 +2589,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _headsetButtonClickTimer?.cancel();
 
     if (_headsetClicksCount == 1) {
-      _headsetButtonClickTimer = _createHeadsetClicksTimer(_willPlayWhenReady ? pause : play);
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(userTogglePlayPause);
     } else if (_headsetClicksCount == 2) {
-      _headsetButtonClickTimer = _createHeadsetClicksTimer(skipToNext);
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(userSkipToNext);
     } else if (_headsetClicksCount == 3) {
-      _headsetButtonClickTimer = _createHeadsetClicksTimer(skipToPrevious);
+      _headsetButtonClickTimer = _createHeadsetClicksTimer(userSkipToPrevious);
     }
   }
 

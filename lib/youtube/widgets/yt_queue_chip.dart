@@ -10,6 +10,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -25,6 +26,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
+import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
@@ -563,8 +565,33 @@ class YTQueueChipHeaderRow extends StatelessWidget {
   }
 }
 
+class MixedQueueChipHeaderRow extends StatelessWidget {
+  final bool addLeftMargin;
+  final bool showPlaybackActions;
+  final void Function()? onArrowDownPressed;
+  const MixedQueueChipHeaderRow({
+    super.key,
+    this.addLeftMargin = false,
+    this.showPlaybackActions = false,
+    required this.onArrowDownPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return QueueChipHeaderRow(
+      isLocal: true,
+      isMixed: true,
+      addLeftMargin: addLeftMargin,
+      showPlaybackActions: showPlaybackActions,
+      onArrowDownPressed: onArrowDownPressed,
+      durationFormatter: null,
+    );
+  }
+}
+
 class QueueChipHeaderRow extends StatelessWidget {
   final bool isLocal;
+  final bool isMixed;
   final bool addLeftMargin;
   final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
@@ -573,6 +600,7 @@ class QueueChipHeaderRow extends StatelessWidget {
   const QueueChipHeaderRow({
     super.key,
     required this.isLocal,
+    this.isMixed = false,
     required this.addLeftMargin,
     this.showPlaybackActions = false,
     required this.onArrowDownPressed,
@@ -705,6 +733,19 @@ class QueueChipHeaderRow extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           const SizedBox(width: 6.0),
+                          ObxO(
+                            rx: PartyController.inst.isActive,
+                            builder: (context, isActive) => isActive
+                                ? Padding(
+                                    padding: const EdgeInsets.only(right: 6.0),
+                                    child: _ActionItem(
+                                      icon: Broken.people,
+                                      tooltip: '${lang.partyListeningParty}: ${PartyController.inst.state.roomName}',
+                                      onTap: const NamidaPartyPage().navigate,
+                                    ),
+                                  )
+                                : const SizedBox(),
+                          ),
                           if (showPlaybackActions) ...[
                             RepeatModeIconButton(
                               iconSize: _ActionItem.iconSize,
@@ -767,7 +808,7 @@ class QueueChipHeaderRow extends StatelessWidget {
                             },
                           ),
                           const SizedBox(width: 6.0),
-                          if (!isLocal) ...[
+                          if (!isLocal || isMixed) ...[
                             _ActionItem(
                               icon: Broken.import,
                               tooltip: lang.download,

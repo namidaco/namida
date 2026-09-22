@@ -4,3 +4,6 @@
 [submodule "external/ffmpeg_build"]
 	path = external/ffmpeg_build
 	url = https://github.com/MSOB7YY/ffmpeg_build/
+[submodule "external/party_relay"]
+	path = external/party_relay
+	url = https://github.com/namidaco/party_relay.git

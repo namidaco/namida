@@ -36,6 +36,7 @@ import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/platform/app_single_instance/app_single_instance.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -72,6 +73,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/pages/onboarding.dart';
+import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
@@ -866,6 +868,11 @@ class NamidaReceiveIntentManager {
         if (link.startsWith('app://patreonauth.msob7y.namida')) {
           final link = Platform.isAndroid ? linkRaw.replaceAll(r'\', '') : linkRaw;
           YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
+          return;
+        }
+        if (PartyController.parseInvite(link) != null) {
+          PartyController.inst.pendingInvite.value = link;
+          WidgetsBinding.instance.addPostFrameCallback((_) => const NamidaPartyPage().navigate());
           return;
         }
       }

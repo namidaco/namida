@@ -20,6 +20,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/party/party_player_gate.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -215,8 +216,10 @@ class Player {
 
   Future<void> initializePlayer() async {
     if (Platform.isAndroid || Platform.isIOS) {
-      _audioHandler = await AudioService.init(
-        builder: () => NamidaAudioVideoHandler(),
+      final handler = NamidaAudioVideoHandler<Playable>();
+      _audioHandler = handler;
+      await AudioService.init(
+        builder: () => _MediaSessionAudioHandler(handler),
         config: const AudioServiceConfig(
           androidNotificationChannelId: 'com.msob7y.namida',
           androidNotificationChannelName: 'Namida',
@@ -461,10 +464,15 @@ class Player {
   }
 
   void reorderTrack(int oldIndex, int newIndex) {
+    if (_audioHandler.partyGate?.interceptReorder(oldIndex, newIndex) == true) {
+      invokeQueueModifyOnModifyCancel();
+      return;
+    }
     _audioHandler.reorderItems(oldIndex, newIndex);
   }
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
+    if (_audioHandler.partyGate?.interceptQueueRewrite(allTracks ? .shuffleAll : .shuffleNext) == true) return;
     if (allTracks) {
       _audioHandler.shuffleAllItems();
       MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
@@ -474,6 +482,7 @@ class Player {
   }
 
   int removeDuplicatesFromQueue() {
+    if (_audioHandler.partyGate?.interceptQueueRewrite(.removeDuplicates) == true) return 0;
     return _audioHandler.removeDuplicatesFromQueue();
   }
 
@@ -499,11 +508,7 @@ class Player {
               snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);
               return false;
             }
-            await _audioHandler.addToQueue(
-              finalTracks,
-              insertNext: shouldInsertNext,
-              insertAfterLatest: insertAfterLatest,
-            );
+            await _addToQueueGated(finalTracks, insertNext: shouldInsertNext, insertAfterLatest: insertAfterLatest);
             if (showSnackBar) {
               final addins = shouldInsertNext ? lang.inserted : lang.added;
               snackyy(
@@ -524,11 +529,7 @@ class Player {
               snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);
               return false;
             }
-            await _audioHandler.addToQueue(
-              finalVideos,
-              insertNext: shouldInsertNext,
-              insertAfterLatest: insertAfterLatest,
-            );
+            await _addToQueueGated(finalVideos, insertNext: shouldInsertNext, insertAfterLatest: insertAfterLatest);
             if (showSnackBar) {
               final addins = shouldInsertNext ? lang.inserted : lang.added;
               snackyy(
@@ -545,7 +546,13 @@ class Player {
         false;
   }
 
+  FutureOr<void> _addToQueueGated(Iterable<Playable> items, {required bool insertNext, required bool insertAfterLatest}) {
+    if (_audioHandler.partyGate?.interceptAdd(items, insertNext: insertNext || insertAfterLatest) == true) return null;
+    return _audioHandler.addToQueue(items, insertNext: insertNext, insertAfterLatest: insertAfterLatest);
+  }
+
   Future<void> insertInQueue(Iterable<Playable> tracks, int index) async {
+    if (_audioHandler.partyGate?.interceptAdd(tracks, insertNext: false, atIndex: index) == true) return;
     await _audioHandler.insertInQueue(tracks, index);
   }
 
@@ -585,6 +592,10 @@ class Player {
   }
 
   Future<void> removeFromQueue(int index) async {
+    if (_audioHandler.partyGate?.interceptRemove(index, index + 1) == true) {
+      invokeQueueModifyOnModifyCancel();
+      return;
+    }
     // do not modify playWhenReady here, its useless
     await _audioHandler.removeFromQueue(index);
   }
@@ -627,18 +638,28 @@ class Player {
   }
 
   int removeRangeFromQueue(int start, int end) {
+    if (_audioHandler.partyGate?.interceptRemove(start, end) == true) return 0;
     return _audioHandler.removeRangeFromQueue(start, end);
   }
 
   int removeAllPrevious() {
+    if (_audioHandler.partyGate?.interceptRemove(0, currentIndex.value) == true) return 0;
     return _audioHandler.removeAllPrevious();
   }
 
   int removeAllNext() {
+    if (_audioHandler.partyGate?.interceptRemove(currentIndex.value + 1, currentQueue.value.length) == true) return 0;
     return _audioHandler.removeAllNext();
   }
 
   int removeAllQueueExceptCurrent() {
+    final gate = _audioHandler.partyGate;
+    if (gate != null) {
+      // -- next ones first so that previous indices stay valid
+      final nextTaken = gate.interceptRemove(currentIndex.value + 1, currentQueue.value.length);
+      final previousTaken = gate.interceptRemove(0, currentIndex.value);
+      if (nextTaken || previousTaken) return 0;
+    }
     return _audioHandler.removeAllExceptCurrent();
   }
 
@@ -681,7 +702,7 @@ class Player {
   }
 
   Future<void> play() async {
-    await _audioHandler.play();
+    await _audioHandler.userPlay();
   }
 
   Future<void> playRaw() async {
@@ -689,7 +710,7 @@ class Player {
   }
 
   Future<void> pause() async {
-    await _audioHandler.pause();
+    await _audioHandler.userPause();
   }
 
   Future<void> dispose() async {
@@ -697,6 +718,7 @@ class Player {
   }
 
   Future<void> clearQueue() async {
+    if (_audioHandler.partyGate?.interceptQueueRewrite(.clear) == true) return;
     await _audioHandler.onDispose().ignoreError();
     await _audioHandler.clearQueue();
   }
@@ -710,24 +732,26 @@ class Player {
   }
 
   Future<void> togglePlayPause() async {
-    await _audioHandler.togglePlayPause();
+    await _audioHandler.userTogglePlayPause();
   }
 
   Future<void> next() async {
-    await _audioHandler.skipToNext();
+    await _audioHandler.userSkipToNext();
   }
 
   Future<void> previous() async {
-    await _audioHandler.skipToPrevious();
+    await _audioHandler.userSkipToPrevious();
   }
 
+  bool get previousWillReplay => _audioHandler.previousButtonWillReplay;
+
   Future<void> skipToQueueItem(int index) async {
-    _audioHandler.setPlayWhenReady(true);
-    await _audioHandler.skipToQueueItem(index);
+    if (_audioHandler.partyGate == null) _audioHandler.setPlayWhenReady(true);
+    await _audioHandler.userSkipToQueueItem(index);
   }
 
   Future<void> seek(Duration position) async {
-    await _audioHandler.seek(position);
+    await _audioHandler.userSeek(position);
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
@@ -735,7 +759,7 @@ class Player {
     final newSeconds = _secondsToSeek(seconds);
     if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
-    await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
+    await _audioHandler.userSeek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]
@@ -743,7 +767,7 @@ class Player {
     final newSeconds = _secondsToSeek(seconds);
     if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
-    await _audioHandler.seek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
+    await _audioHandler.userSeek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
   }
 
   int _secondsToSeek([int? seconds]) {
@@ -798,6 +822,8 @@ class Player {
       await next();
       return;
     }
+
+    if (_audioHandler.partyGate?.interceptNewQueue(queue, index, startPlaying: startPlaying, shuffle: shuffle, isPlayerQueue: source == QueueSource.playerQueue) == true) return;
 
     void togglePlayPauseExclusive() {
       // -- since `_audioHandler.assignNewQueue` calls setPlayWhenReady(true) by default
@@ -864,6 +890,42 @@ class Player {
             }
           : null,
     );
+  }
+
+  // ------- party, raw operations that never go through the gate -------
+
+  PartyPlayerGate? get partyGate => _audioHandler.partyGate;
+  RxBaseCore<PlayerRepeatMode?> get forcedRepeatMode => _audioHandler.forcedRepeatMode;
+  set partyGate(PartyPlayerGate? gate) => _audioHandler.partyGate = gate;
+
+  Future<void> partyAssignQueue(List<Playable> queue, int index, {required bool startPlaying, required String roomName}) {
+    _audioHandler.latestQueueSource = QueueSource.others(roomName);
+    return _audioHandler.assignNewQueue(playAtIndex: index, queue: queue, startPlaying: startPlaying);
+  }
+
+  Future<void> partyClearQueue() async {
+    await _audioHandler.onDispose().ignoreError();
+    await _audioHandler.clearQueue();
+  }
+
+  Future<void> partyRestoreQueue(List<Playable> queue, int index) {
+    _audioHandler.latestQueueSource = QueueSource.playerQueue;
+    return _audioHandler.assignNewQueue(playAtIndex: index, queue: queue, startPlaying: false);
+  }
+
+  FutureOr<void> partyInsert(List<Playable> items, int index) => _audioHandler.insertInQueue(items, index);
+  FutureOr<void> partyRemoveAt(int index) => _audioHandler.removeFromQueue(index);
+
+  /// [toIndex] is the final index of the item.
+  FutureOr<void> partyMove(int fromIndex, int toIndex) => _audioHandler.reorderItems(fromIndex, toIndex > fromIndex ? toIndex + 1 : toIndex);
+  Future<void> partyReplace(Playable oldItem, Playable newItem) => _audioHandler.replaceAllItemsInQueue(oldItem, newItem);
+
+  Future<void> partyPlay() => _audioHandler.play(checkIfPlaybackEnded: false);
+  Future<void> partyPause() => _audioHandler.pause(isUserInitiated: false);
+  Future<void> partySeek(Duration position) => _audioHandler.seek(position);
+  Future<void> partySkipTo(int index, {required bool startPlaying}) {
+    _audioHandler.setPlayWhenReady(startPlaying);
+    return _audioHandler.skipToQueueItem(index, isManualSkip: false);
   }
 
   Future<void> tryAddingMixPlaylist() async {
@@ -1080,5 +1142,47 @@ class _AudioConfigsManager {
       await _dBManager.put(entry.value, oldValueDB);
       // await _dBManager.delete(entry.key); // preserve just in case
     }
+  }
+}
+
+/// media session callbacks (notification, android auto, wear..) are user actions.
+class _MediaSessionAudioHandler extends CompositeAudioHandler {
+  final NamidaAudioVideoHandler _handler;
+  _MediaSessionAudioHandler(this._handler) : super(_handler);
+
+  @override
+  Future<void> play() {
+    if (_handler.partyGate?.interceptPlay() == true) return Future.value();
+    return super.play();
+  }
+
+  @override
+  Future<void> pause() {
+    if (_handler.partyGate?.interceptPause(isUserInitiated: true) == true) return Future.value();
+    return super.pause();
+  }
+
+  @override
+  Future<void> seek(Duration position) {
+    if (_handler.partyGate?.interceptSeek(position) == true) return Future.value();
+    return super.seek(position);
+  }
+
+  @override
+  Future<void> skipToNext() {
+    if (_handler.partyGate?.interceptSkip(offset: 1) == true) return Future.value();
+    return super.skipToNext();
+  }
+
+  @override
+  Future<void> skipToPrevious() {
+    if (_handler.partyGate?.interceptSkip(offset: -1) == true) return Future.value();
+    return super.skipToPrevious();
+  }
+
+  @override
+  Future<void> skipToQueueItem(int index) {
+    if (index != _handler.currentIndex.value && _handler.partyGate?.interceptSkip(index: index) == true) return Future.value();
+    return super.skipToQueueItem(index);
   }
 }
