@@ -18,6 +18,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -161,6 +162,15 @@ class StorageCacheManager {
 
     final currentSort = _CacheSorting.recommended.obs;
 
+    final prioritiesMap = await VideoController.inst.videosPriorityManager.getAllVideosPriorities();
+    final itemsPerPriority = <CacheVideoPriority, List<T>>{};
+    for (final item in allFiles.value) {
+      final id = itemToYtId(item);
+      itemsPerPriority.addForce((id == null ? null : prioritiesMap[id]) ?? CacheVideoPriority.normal, item);
+    }
+    final prioritiesWithItems = CacheVideoPriority.values.where(itemsPerPriority.containsKey).toFixedList();
+    final selectedPriorities = <CacheVideoPriority>{}.obs;
+
     final localIdTrackMap = includeLocalTracksListens ? Indexer.inst.allTracksMappedByYTID : <String, List<Track>>{};
 
     int getTotalListensForIDLength(String id) {
@@ -250,6 +260,28 @@ class StorageCacheManager {
       );
     }
 
+    void togglePriority(CacheVideoPriority priority) {
+      final items = itemsPerPriority[priority];
+      if (items == null) return;
+      final select = !selectedPriorities.value.contains(priority);
+      int effectiveSize = 0;
+      for (final item in items) {
+        if (select) {
+          if (itemsToDelete.value.add(item)) effectiveSize += sizesMap[itemToPath(item)] ?? 0;
+        } else {
+          if (itemsToDelete.value.remove(item)) effectiveSize -= sizesMap[itemToPath(item)] ?? 0;
+        }
+      }
+      if (select) {
+        selectedPriorities.value.add(priority);
+      } else {
+        selectedPriorities.value.remove(priority);
+      }
+      selectedPriorities.refresh();
+      itemsToDeleteSize.value += effectiveSize;
+      itemsToDelete.refresh();
+    }
+
     sortBy(currentSort.value);
 
     NamidaNavigator.inst.navigateDialog(
@@ -261,6 +293,7 @@ class StorageCacheManager {
         alreadyInLocalLibraryFilesSizeFinal.close();
         allFiles.close();
         currentSort.close();
+        selectedPriorities.close();
       },
       dialog: CustomBlurryDialog(
         horizontalInset: 24.0,
@@ -462,6 +495,37 @@ class StorageCacheManager {
                   ),
                 ),
               ),
+              if (prioritiesWithItems.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: SmoothSingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: ObxO(
+                      rx: selectedPriorities,
+                      builder: (context, selected) => Row(
+                        children: [
+                          const SizedBox(width: 8.0),
+                          Text(
+                            '${lang.priority}:',
+                            style: namida.textTheme.displaySmall,
+                          ),
+                          const SizedBox(width: 8.0),
+                          ...prioritiesWithItems.map(
+                            (e) => Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: _CachePriorityChip(
+                                title: e.toText(),
+                                count: itemsPerPriority[e]!.length,
+                                selected: selected.contains(e),
+                                onTap: () => togglePriority(e),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ObxO(
                 rx: tempFilesSizeFinal,
                 builder: (context, tempfs) => tempfs > 0
@@ -578,6 +642,50 @@ class StorageCacheManager {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _CachePriorityChip extends StatelessWidget {
+  final String title;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CachePriorityChip({
+    required this.title,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return NamidaInkWell(
+      animationDurationMS: 100,
+      borderRadius: 4.0,
+      bgColor: theme.cardTheme.color,
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
+      decoration: BoxDecoration(
+        border: selected ? Border.all(color: theme.colorScheme.primary) : null,
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+      ),
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          NamidaCheckMark(
+            size: 10.0,
+            active: selected,
+          ),
+          const SizedBox(width: 6.0),
+          Text(
+            '$title ($count)',
+            style: theme.textTheme.displaySmall,
+          ),
+        ],
       ),
     );
   }

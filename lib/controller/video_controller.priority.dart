@@ -56,6 +56,17 @@ class VideosPriorityManager {
     }
   }
 
+  /// videos with no saved entry are absent from the map, they default to [CacheVideoPriority.normal].
+  Future<Map<String, CacheVideoPriority>> getAllVideosPriorities() async {
+    final values = CacheVideoPriority.values;
+    final res = await cacheVideosPriorityDB.loadEverythingKeyedResult();
+    for (final entry in res.entries) {
+      final index = entry.value[_priorityKey];
+      if (index is int && index >= 0 && index < values.length) _videosPriorityMap[entry.key] = values[index];
+    }
+    return _videosPriorityMap;
+  }
+
   FutureOr<CacheVideoPriority> getVideoPriority(String videoId) async {
     return _videosPriorityMap[videoId] ??= _mapToPriority(await cacheVideosPriorityDB.get(videoId)) ?? CacheVideoPriority.normal;
   }
