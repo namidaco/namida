@@ -307,6 +307,21 @@ void main() {
     room.host.dispose();
   });
 
+  test('a fallback keeps its approximate flag across the wire', () {
+    final room = _Room();
+    final guest = room.join(2);
+    room.send(1, PartyMsg.add([_local(9)]));
+    room.send(2, PartyMsg.missing([1]));
+    room.host.setFallback(1, 'guessed', approximate: true);
+    expect(guest.entries.first.fallbackYtId, 'guessed');
+    expect(guest.entries.first.fallbackApproximate, true);
+
+    final resent = PartyEntry.fromList(PartyEntry.fromList(guest.entries.first.toList()).toList());
+    expect(resent.fallbackApproximate, true);
+    room.expectConverged();
+    room.host.dispose();
+  });
+
   test('fallback requested once per local entry', () {
     final room = _Room();
     final guest = room.join(2);

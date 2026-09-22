@@ -32,6 +32,7 @@ DEFAULT_SCORES = {"feat": 3, "core": 2, "perf": 2, "chore": 2, "fix": 2}
 TRAILER_KEYS = ("topic", "score", "closes", "ref", "amends", "changelog")
 SUBJECT_MAX = 72
 VARIOUS_TEXT = "various fixes and tweaks"
+GROUP_SCHEMA = 2  # bump when the shape of a .git/chlog-groups file changes, old ones are then refused not misread
 
 H_HIGHLIGHTS = "### ✨ Highlights:"
 H_FEATURES = "### \U0001f389 New Features:"
@@ -70,8 +71,23 @@ def git(*args, check=True):
     return p.stdout
 
 
+def git_ok(*args):
+    return subprocess.run(["git", *args], capture_output=True).returncode == 0
+
+
+_PATHS = {}
+
+
 def repo_root():
-    return git("rev-parse", "--show-toplevel").strip()
+    if "root" not in _PATHS:
+        _PATHS["root"] = git("rev-parse", "--show-toplevel").strip()
+    return _PATHS["root"]
+
+
+def git_dir():
+    if "git" not in _PATHS:
+        _PATHS["git"] = git("rev-parse", "--absolute-git-dir").strip()
+    return _PATHS["git"]
 
 
 def pubspec_version(root):
@@ -783,6 +799,10 @@ def comment_char():
     return (git("config", "core.commentChar", check=False).strip() or "#")[:1]
 
 
+def rejected_path():
+    return os.path.join(git_dir(), "chlog-rejected-msg")
+
+
 SEED_TOPICS = (
     "artwork", "downloads", "equalizer", "history-import", "home", "indexing", "library",
     "lyrics", "most-played", "player", "playlists", "queue", "search", "servers", "settings",
@@ -813,12 +833,21 @@ TEMPLATE_HELP = """{c} known topics, reuse one so the commits merge into a singl
 {c}   closes: #1082
 {c}   ref: namidaco/namida-snapshots#106
 {c}
+{c} one commit per related area, not per change. group everything in the same area
+{c} together, a trivial addition rides along instead of getting its own commit.
+{c}
+{c} name the key changes, do not enumerate. the subject generalises and the bullets
+{c} list the few points worth knowing, whoever wants depth reads the code.
+{c}
 {c} ---------------------------------------------------------------
 {c} <prefix>(<platform>)?: <subject>      lowercase, <= {max} chars, no " - "
 {c}
-{c}   feat   brand new user facing feature
+{c} pick the prefix from what the change is for, not where the files live, and from
+{c} what dominates: mostly fixes is `fix` even with tidy-ups riding along.
+{c}
+{c}   feat   brand new SIGNIFICANT user facing feature, nothing smaller
 {c}   core   internal architecture change, still worth a changelog line
-{c}   chore  small change or behaviour enhancement (default)
+{c}   chore  small change, addition or behaviour enhancement (default)
 {c}   fix    bug fix
 {c}   perf   performance
 {c}
@@ -870,13 +899,17 @@ def cmd_template(args):
         topics="\n".join(listed),
     )
     body = "chore: \n\ntopic: \nscore: 2\n\n%s\n" % help_text
-    if args.file:
-        existing = read(args.file) if os.path.exists(args.file) else ""
-        if any(l.strip() and not l.startswith(c) for l in existing.split("\n")):
-            return
-        write(args.file, body + existing)
-    else:
+    if not args.file:
         print(body)
+        return
+    existing = read(args.file) if os.path.exists(args.file) else ""
+    if any(l.strip() and not l.startswith(c) for l in existing.split("\n")):
+        return
+    rejected = rejected_path()
+    if os.path.exists(rejected):
+        body = "%s\n\n%s rejected message restored, fix it and commit again\n%s\n" % (read(rejected).strip("\n"), c, help_text)
+        os.remove(rejected)
+    write(args.file, body + existing)
 
 
 def cmd_check(args):
@@ -923,7 +956,8 @@ def cmd_check(args):
             break
         tm = TRAILER_RE.match(line.strip())
         if tm and tm.group(1) in TRAILER_KEYS:
-            errors.append("trailers must be the last block, with a blank line before them: %s" % line.strip())
+            errors.append("%r must be in the last block, move the bullets above the trailers "
+                          "and leave one blank line between them (git only reads trailers at the end)" % line.strip())
             break
     if m and ISSUE_TAIL_RE.search(subject):
         errors.append("put issue references in a closes:/ref: trailer, not in the subject")
@@ -946,19 +980,374 @@ def cmd_check(args):
         errors.append("only one topic: trailer per commit")
     if len(trailers.get("score", [])) > 1:
         errors.append("only one score: trailer per commit")
-    if m and m.group("prefix") in CHANGELOG_PREFIXES and not trailers.get("score"):
+    if not errors and m and m.group("prefix") in CHANGELOG_PREFIXES and not trailers.get("score"):
         warnings.append("no score:, defaulting to %d" % DEFAULT_SCORES.get(m.group("prefix"), 2))
     if any("," in v for v in trailers.get("closes", [])):
         warnings.append("one closes: per line, a comma list only closes the first issue")
 
     for w in warnings:
         print("chlog: %s" % w, file=sys.stderr)
-    if errors:
-        print("\ncommit message rejected:", file=sys.stderr)
-        for e in errors:
-            print("  - %s" % e, file=sys.stderr)
-        print("\nrun `python scripts/chlog.py template` to see the format\n", file=sys.stderr)
-        raise SystemExit(1)
+    if not errors:
+        if os.path.exists(rejected_path()):
+            os.remove(rejected_path())
+        return
+    write(rejected_path(), "\n".join(lines).strip("\n") + "\n")
+    print("\ncommit message rejected:", file=sys.stderr)
+    for e in errors:
+        print("  - %s" % e, file=sys.stderr)
+    print("\nyour message is kept, it comes back on the next commit\n", file=sys.stderr)
+    raise SystemExit(1)
+
+
+HUNK_RE = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$")
+
+
+def git_env(index_file):
+    env = dict(os.environ)
+    env["GIT_INDEX_FILE"] = index_file
+    return env
+
+
+def git_in(index_file, *args, check=True):
+    """runs git against a throwaway index, returns None when a checked=False call fails."""
+    p = subprocess.run(["git", *args], capture_output=True, encoding="utf-8", errors="replace", env=git_env(index_file))
+    if p.returncode != 0:
+        if check:
+            raise SystemExit("git %s failed:\n%s" % (" ".join(args), p.stderr.strip()))
+        return None
+    return p.stdout
+
+
+def groups_dir():
+    path = os.path.join(git_dir(), "chlog-groups")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def group_path(name):
+    return os.path.join(groups_dir(), name + ".json")
+
+
+def load_group(name):
+    path = group_path(name)
+    if not os.path.exists(path):
+        raise SystemExit("no group %r, see: chlog group list" % name)
+    data = json.loads(read(path))
+    if data.get("schema") != GROUP_SCHEMA:
+        raise SystemExit("group %r was written by another chlog version, drop it with: chlog group rm %s" % (name, name))
+    return data
+
+
+def save_group(name, data):
+    data["schema"] = GROUP_SCHEMA
+    write(group_path(name), json.dumps(data, indent=2) + "\n")
+
+
+def all_groups():
+    groups = []
+    for name in sorted(f[:-5] for f in os.listdir(groups_dir()) if f.endswith(".json")):
+        try:
+            data = json.loads(read(group_path(name)))
+        except ValueError:
+            continue  # half written by another process, the next run picks it up
+        if data.get("schema") == GROUP_SCHEMA:
+            groups.append((name, data))
+        else:
+            print("chlog: group %r is in an older format, drop it with: chlog group rm %s" % (name, name), file=sys.stderr)
+    return groups
+
+
+def parse_spec(spec):
+    """`lib/a.dart` or `lib/a.dart:1,3` selecting hunks 1 and 3."""
+    path, sep, picked = spec.rpartition(":")
+    if not sep or not re.fullmatch(r"\d+(,\d+)*", picked):
+        return spec.replace("\\", "/"), None
+    return path.replace("\\", "/"), sorted({int(i) for i in picked.split(",")})
+
+
+def rebase_path(spec, cwd, root):
+    path, picked = parse_spec(spec)
+    if os.path.isabs(path) or os.path.abspath(cwd) != os.path.abspath(root):
+        path = os.path.relpath(os.path.join(cwd, path), root).replace("\\", "/")
+    return path if picked is None else "%s:%s" % (path, ",".join(map(str, picked)))
+
+
+def changed_paths():
+    out = git("status", "--porcelain", "-z", "--untracked-files=all")
+    fields, paths = [f for f in out.split("\0") if f], []
+    i = 0
+    while i < len(fields):
+        status, path = fields[i][:2], fields[i][3:]
+        i += 1
+        if status.startswith("R") and i < len(fields):
+            i += 1
+        paths.append(path)
+    return paths
+
+
+def file_hunks(path):
+    diff = git("diff", "--no-ext-diff", "--no-color", "-U3", "HEAD", "--", path)
+    if not diff.strip():
+        return "", []
+    if "\nBinary files " in diff or diff.startswith("Binary files "):
+        raise SystemExit("%s is binary, it cannot be split by hunk" % path)
+    lines = diff.split("\n")
+    first = next((i for i, l in enumerate(lines) if HUNK_RE.match(l)), None)
+    if first is None:
+        return diff, []
+    header, hunks, current = "\n".join(lines[:first]), [], None
+    for line in lines[first:]:
+        if HUNK_RE.match(line):
+            current = [line]
+            hunks.append(current)
+        elif current is not None:
+            current.append(line)
+    return header, ["\n".join(h).rstrip("\n") for h in hunks]
+
+
+def patch_bodies(text):
+    """hunk bodies of a stored patch, headers dropped so line numbers do not affect equality."""
+    bodies, current = [], None
+    for line in text.split("\n"):
+        if HUNK_RE.match(line):
+            current = []
+            bodies.append(current)
+        elif current is not None:
+            current.append(line)
+    return {"\n".join(body).rstrip("\n") for body in bodies}
+
+
+def hunk_body(hunk):
+    return "\n".join(hunk.split("\n")[1:]).rstrip("\n")
+
+
+def snapshot(path, picked):
+    """what a group stores for a file: every current hunk unless specific ones were asked for.
+
+    freezing the hunks means later edits by another agent cannot leak into this group's commit.
+    an untracked or deleted file has no hunks, so it is taken whole at commit time.
+    """
+    header, hunks = file_hunks(path)
+    if not hunks:
+        return None
+    if picked is None:
+        picked = list(range(1, len(hunks) + 1))
+    return {
+        "hunks": picked,
+        "patch": build_patch(path, picked, header, hunks),
+        "full": len(picked) == len(hunks),
+    }
+
+
+def uncovered(path, claims):
+    """hunks the file has now that no claimed patch holds, ie edits made after it was grouped."""
+    _, hunks = file_hunks(path)
+    if not hunks:
+        return []
+    covered = set()
+    for patch in claims:
+        covered |= patch_bodies(patch)
+    return [i for i, hunk in enumerate(hunks, 1) if hunk_body(hunk) not in covered]
+
+
+def build_patch(path, picked, header=None, hunks=None):
+    """a patch holding only the picked hunks, with the new side offsets recomputed."""
+    if hunks is None:
+        header, hunks = file_hunks(path)
+    if not hunks:
+        raise SystemExit("%s has no hunks against HEAD" % path)
+    out, delta = [header], 0
+    for index in picked:
+        if not 1 <= index <= len(hunks):
+            raise SystemExit("%s has %d hunks, %d is out of range" % (path, len(hunks), index))
+        body = hunks[index - 1].split("\n")
+        m = HUNK_RE.match(body[0])
+        old_start, old_count = int(m.group(1)), int(m.group(2) or 1)
+        new_count = int(m.group(4) or 1)
+        body[0] = "@@ -%d,%d +%d,%d @@%s" % (old_start, old_count, old_start + delta, new_count, m.group(5))
+        delta += new_count - old_count
+        out.append("\n".join(body))
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def cmd_group(args):
+    # every path git hands back is repo relative, so work from the root and translate the ones typed in
+    root, cwd = repo_root(), os.getcwd()
+    if args.action in ("add", "rm", "hunks", "revert", "blob"):
+        args.paths = [rebase_path(p, cwd, root) for p in args.paths]
+    if args.action == "hunks" and args.name:
+        args.name = rebase_path(args.name, cwd, root)
+    os.chdir(root)
+
+    if args.action == "list":
+        taken, patches, groups = {}, {}, all_groups()
+        for name, data in groups:
+            listed = []
+            for path, entry in sorted(data["paths"].items()):
+                hunks = None if not entry or entry.get("full") else entry["hunks"]
+                taken.setdefault(path, []).append((name, entry["hunks"] if entry else None))
+                if entry:
+                    patches.setdefault(path, []).append(entry["patch"])
+                listed.append(path if hunks is None else "%s:%s" % (path, ",".join(map(str, hunks))))
+            print("%s  (%d files)%s" % (name, len(listed), "" if data.get("message") else "  [no message yet]"))
+            for entry in listed:
+                print("    %s" % entry)
+        unassigned = [p for p in changed_paths() if p not in taken]
+        if unassigned:
+            print("\nunassigned (%d):" % len(unassigned))
+            for path in unassigned:
+                print("    %s" % path)
+        leftovers = {path: uncovered(path, claims) for path, claims in patches.items()}
+        leftovers = {path: hunks for path, hunks in leftovers.items() if hunks}
+        if leftovers:
+            print("\nedited after being grouped, those hunks are in no commit yet:")
+            for path, hunks in leftovers.items():
+                print("    %s:%s" % (path, ",".join(map(str, hunks))))
+        for path, claims in taken.items():
+            if len(claims) < 2:
+                continue
+            seen, clash = set(), False
+            for _, picked in claims:
+                if picked is None or seen & set(picked):
+                    clash = True
+                    break
+                seen |= set(picked)
+            if clash:
+                print("\nwarning: %s is claimed whole or twice by %s, split it by hunk" % (path, " and ".join(n for n, _ in claims)))
+        if not groups and not unassigned:
+            print("nothing changed, no groups")
+        return
+
+    if args.action == "hunks":
+        for path in ([args.name] if args.name else []) + args.paths:
+            path = path.replace("\\", "/")
+            _, hunks = file_hunks(path)
+            print("%s: %d hunks" % (path, len(hunks)))
+            for i, hunk in enumerate(hunks, 1):
+                print("\n--- %d ---" % i)
+                print(hunk)
+        return
+
+    if not args.name:
+        raise SystemExit("this action needs a group name")
+
+    if args.action == "add":
+        data = load_group(args.name) if os.path.exists(group_path(args.name)) else {"paths": {}, "message": ""}
+        if args.unassigned:
+            claimed = {p for _, other in all_groups() for p in other["paths"]}
+            args.paths = args.paths + [p for p in changed_paths() if p not in claimed]
+        for spec in args.paths:
+            path, picked = parse_spec(spec)
+            data["paths"][path] = snapshot(path, picked)
+        if args.message:
+            data["message"] = args.message
+        save_group(args.name, data)
+        print("%s: %d files" % (args.name, len(data["paths"])))
+        return
+
+    if args.action == "rm":
+        if not args.paths:
+            os.remove(group_path(args.name))
+            print("removed group %s" % args.name)
+            return
+        data = load_group(args.name)
+        for spec in args.paths:
+            data["paths"].pop(parse_spec(spec)[0], None)
+        save_group(args.name, data)
+        print("%s: %d files" % (args.name, len(data["paths"])))
+        return
+
+    if args.action == "blob":
+        data = load_group(args.name)
+        path = args.paths[0]
+        entry = data["paths"].get(path)
+        index_file = os.path.join(groups_dir(), "index-blob")
+        try:
+            git_in(index_file, "read-tree", "HEAD")
+            if entry is None:
+                git_in(index_file, "add", "--", path)
+            else:
+                patch = os.path.join(groups_dir(), "blob.diff")
+                write(patch, entry["patch"])
+                ok = git_in(index_file, "apply", "--cached", "--whitespace=nowarn", patch, check=False)
+                os.remove(patch)
+                if ok is None:
+                    raise SystemExit("the saved hunks for %s no longer apply" % path)
+            sys.stdout.write(git_in(index_file, "show", ":" + path))
+        finally:
+            if os.path.exists(index_file):
+                os.remove(index_file)
+        return
+
+    if args.action == "revert":
+        data = load_group(args.name)
+        for spec in args.paths or list(data["paths"]):
+            path, _ = parse_spec(spec)
+            entry = data["paths"].get(path)
+            if entry is None:
+                git("restore", "--source=HEAD", "--worktree", "--", path)
+            else:
+                patch = os.path.join(groups_dir(), "revert.diff")
+                write(patch, entry["patch"])
+                applied = git_ok("apply", "--reverse", "--whitespace=nowarn", patch)
+                os.remove(patch)
+                if not applied:
+                    raise SystemExit("the saved hunks for %s no longer apply in reverse" % path)
+            data["paths"].pop(path, None)
+        save_group(args.name, data)
+        print("%s: %d files left" % (args.name, len(data["paths"])))
+        return
+
+    if args.action == "show":
+        data = load_group(args.name)
+        for path, entry in sorted(data["paths"].items()):
+            if entry:
+                sys.stdout.write(entry["patch"])
+                continue
+            diff = git("diff", "--no-color", "HEAD", "--", path)
+            sys.stdout.write(diff if diff.strip() else "new file: %s\n" % path)
+        return
+
+    if args.action == "commit":
+        data = load_group(args.name)
+        if not data["paths"]:
+            raise SystemExit("group %s has no files" % args.name)
+        root = repo_root()
+        index_file = os.path.join(groups_dir(), "index-" + args.name)
+        whole = [p for p, entry in data["paths"].items() if not entry]
+        split = [(p, entry["patch"]) for p, entry in data["paths"].items() if entry]
+        staged_elsewhere = [p for p in git("diff", "--name-only", "--cached").split("\n") if p and p in data["paths"]]
+        if staged_elsewhere:
+            print("note: %s is also staged, the working tree version is what gets committed" % ", ".join(staged_elsewhere), file=sys.stderr)
+        try:
+            git_in(index_file, "read-tree", "HEAD")
+            if whole:
+                git_in(index_file, "add", "--", *whole)
+            for path, text in split:
+                patch = os.path.join(groups_dir(), "patch.diff")
+                write(patch, text)
+                if git_in(index_file, "apply", "--cached", "--whitespace=nowarn", patch, check=False) is None:
+                    raise SystemExit("the saved hunks for %s no longer apply, re-add them: chlog group hunks %s" % (path, path))
+                os.remove(patch)
+            if not git_in(index_file, "diff", "--cached", "--name-only", "HEAD").strip():
+                raise SystemExit("group %s has nothing to commit against HEAD" % args.name)
+            command = ["git", "commit"]
+            if args.message:
+                command += ["-m", args.message]
+            elif data.get("message"):
+                message_file = os.path.join(groups_dir(), "msg.txt")
+                write(message_file, data["message"].rstrip("\n") + "\n")
+                command += ["-F", message_file]
+            code = subprocess.run(command, cwd=root, env=git_env(index_file)).returncode
+        finally:
+            if os.path.exists(index_file):
+                os.remove(index_file)
+        if code != 0:
+            raise SystemExit(code)
+        git("reset", "-q", "--", *data["paths"])
+        os.remove(group_path(args.name))
+        print("committed %s and removed the group" % args.name)
+        return
 
 
 def main():
@@ -986,6 +1375,14 @@ def main():
     check = subs.add_parser("check", help="validate a commit message file")
     check.add_argument("file")
     check.set_defaults(func=cmd_check)
+
+    group = subs.add_parser("group", help="commit one change at a time out of a shared working tree")
+    group.add_argument("action", choices=["add", "rm", "list", "show", "hunks", "commit", "revert", "blob"])
+    group.add_argument("name", nargs="?", help="group name, not needed for list and hunks")
+    group.add_argument("paths", nargs="*", help="paths, or path:1,3 to take only those hunks")
+    group.add_argument("-m", "--message", help="commit message, otherwise the editor opens with the template")
+    group.add_argument("-u", "--unassigned", action="store_true", help="add: also take every changed file no group claims yet")
+    group.set_defaults(func=cmd_group)
 
     args = parser.parse_args()
     args.func(args)
