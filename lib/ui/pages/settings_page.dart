@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -11,6 +12,8 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -264,54 +267,132 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const indexer = IndexerSettings();
+    // -- both rows cap their leading tile at the same width, so the two end up identical
+    final maxLeadingWidth = (context.width * 0.6).withMinimum(48.0);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
       child: SizedBox(
         width: Dimensions.inst.availableAppContentWidthContext(context),
-        child: FittedBox(
-          alignment: AlignmentGeometry.centerStart,
-          fit: BoxFit.scaleDown,
-          child: Row(
-            children: [
-              _QuickSuggestionsTile(
-                icon: Broken.folder_add,
-                title: lang.addFolder,
-                subtitle: indexer.getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
-                onTap: indexer.promptAddFolderType,
-              ),
-              const SizedBox(width: 8.0),
-              _QuickSuggestionsTile(
-                expanded: false,
-                icon: null,
-                leading: (color) => RefreshLibraryIcon(
-                  widgetKey: 'quick_suggestions',
-                  size: 20.0,
-                  color: color,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Flexible(
+                  child: Align(
+                    widthFactor: 1,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxLeadingWidth),
+                      child: _QuickSuggestionsTile(
+                        fullWidth: true,
+                        icon: Broken.folder_add,
+                        title: lang.addFolder,
+                        subtitle: indexer.getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
+                        onTap: indexer.promptAddFolderType,
+                      ),
+                    ),
+                  ),
                 ),
-                title: lang.refreshLibrary,
-                subtitle: '',
-                onTap: () {
-                  showRefreshPromptDialog(false, allowBypassing: true);
-                },
-              ),
-              const SizedBox(width: 8.0),
-              _QuickSuggestionsTile(
-                expanded: false,
-                icon: null,
-                leading: (color) => SyncStatusIconWrapper(
-                  iconSize: 20.0,
-                  color: color,
+                const SizedBox(width: 8.0),
+                _QuickSuggestionsTile(
+                  expanded: false,
+                  icon: null,
+                  leading: (color) => RefreshLibraryIcon(
+                    widgetKey: 'quick_suggestions',
+                    size: 20.0,
+                    color: color,
+                  ),
+                  title: lang.refreshLibrary,
+                  subtitle: '',
+                  onTap: () {
+                    showRefreshPromptDialog(false, allowBypassing: true);
+                  },
                 ),
-                title: lang.sync,
-                subtitle: '',
-                onTap: () {
-                  const NamidaSyncManagerPage().navigate();
-                },
-              ),
-            ],
-          ),
+                const SizedBox(width: 8.0),
+                _QuickSuggestionsTile(
+                  expanded: false,
+                  icon: null,
+                  leading: (color) => SyncStatusIconWrapper(
+                    iconSize: 20.0,
+                    color: color,
+                  ),
+                  title: lang.sync,
+                  subtitle: '',
+                  onTap: () {
+                    const NamidaSyncManagerPage().navigate();
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            Row(
+              children: [
+                Flexible(
+                  child: Align(
+                    widthFactor: 1,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxLeadingWidth),
+                      child: _QuickSuggestionsTile(
+                        fullWidth: true,
+                        icon: Broken.people,
+                        title: lang.partyListeningParty,
+                        subtitle: lang.partyListeningPartySubtitle,
+                        onTap: () {
+                          const NamidaPartyPage().navigate();
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                const _SleepTimerQuickTile(),
+                const SizedBox(width: 8.0),
+                SoundControlButton(
+                  builder: (child, tooltipCallback, onTap) => _QuickSuggestionsTile(
+                    expanded: false,
+                    icon: null,
+                    leading: (color) => child,
+                    title: tooltipCallback(),
+                    subtitle: '',
+                    onTap: onTap,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+    );
+  }
+}
+
+/// shows what the timer is set to while it runs, so it can be checked at a glance.
+class _SleepTimerQuickTile extends StatelessWidget {
+  const _SleepTimerQuickTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: Player.inst.sleepTimerConfig,
+      builder: (context, config) {
+        final String subtitle;
+        if (config.enableSleepAfterMins) {
+          subtitle = '${config.sleepAfterMin} ${lang.minutes}';
+        } else if (config.enableSleepAfterItems) {
+          subtitle = config.sleepAfterItems.displayTrackKeyword;
+        } else {
+          subtitle = '';
+        }
+        return _QuickSuggestionsTile(
+          expanded: subtitle.isNotEmpty,
+          icon: Broken.timer_1,
+          title: lang.sleepTimer,
+          subtitle: subtitle,
+          onTap: () => NamidaDrawer.openSleepTimerDialog(context),
+        );
+      },
     );
   }
 }
@@ -323,6 +404,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
   final String subtitle;
   final VoidCallback? onTap;
   final bool expanded;
+  final bool fullWidth;
 
   const _QuickSuggestionsTile({
     required this.icon,
@@ -331,6 +413,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
     required this.subtitle,
     required this.onTap,
     this.expanded = true,
+    this.fullWidth = false,
   });
 
   @override
@@ -379,11 +462,11 @@ class _QuickSuggestionsTile extends StatelessWidget {
             minHeight: 42.0,
             maxHeight: 42.0,
             minWidth: 48.0,
-            maxWidth: (context.width * 0.5).withMinimum(48.0),
+            maxWidth: fullWidth ? double.infinity : (context.width * 0.6).withMinimum(48.0),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: fullWidth ? MainAxisAlignment.start : MainAxisAlignment.center,
+            mainAxisSize: fullWidth ? MainAxisSize.max : MainAxisSize.min,
             children: [
               const SizedBox(width: 4.0),
               leading?.call(iconColor) ??

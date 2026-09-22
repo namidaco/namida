@@ -201,7 +201,7 @@ class NamidaDrawer extends StatelessWidget {
             builder: (context, currentConfig) {
               return Obx(
                 (context) => NamidaButton(
-                  enabled: (minutesRx.valueR > 0 || tracksRx.valueR > 0) && (currentConfig.sleepAfterItems != tracksRx.value || currentConfig.sleepAfterMin != minutesRx.value),
+                  enabled: (minutesRx.valueR > 0 || tracksRx.valueR > 0) && (currentConfig.sleepAfterItems != tracksRx.valueR || currentConfig.sleepAfterMin != minutesRx.valueR),
                   icon: Broken.timer_start,
                   text: hasInitialValues ? lang.update : lang.start,
                   onTap: () {
