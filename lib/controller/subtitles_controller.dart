@@ -7,6 +7,7 @@ import 'package:lrc/lrc.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/subtitle_cue.dart';
 import 'package:namida/class/subtitle_track.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -34,6 +35,9 @@ enum SubtitleRenderMode {
 
   /// parsed on our side, see [Subtitles.currentSubtitle].
   lrc,
+
+  /// parsed on our side, keeping youtube's colors & karaoke, see [Subtitles.currentStyledSubtitle].
+  styled,
 }
 
 /// tracks come from 3 places: the player demuxer (embedded), sidecar files next to local media,
@@ -50,6 +54,9 @@ class Subtitles {
 
   /// lyrics-style parsed subtitle, only used when [renderMode] is [SubtitleRenderMode.lrc].
   final currentSubtitle = Rxn<Lrc>();
+
+  /// styled cues, only used when [renderMode] is [SubtitleRenderMode.styled].
+  final currentStyledSubtitle = Rxn<SubtitleCues>();
 
   /// sidecar files/embedded/youtube in that order, null until the item was looked up.
   final availableTracks = Rxn<List<SubtitleTrack>>();
@@ -310,6 +317,7 @@ class Subtitles {
   Future<void> _apply(SubtitleTrack track, int opId, {required bool notifyFailure}) async {
     selectedTrack.value = track;
     currentSubtitle.value = null;
+    currentStyledSubtitle.value = null;
     renderMode.value = SubtitleRenderMode.none;
     isLoading.value = true;
     try {
@@ -351,6 +359,23 @@ class Subtitles {
     } catch (_) {}
     if (opId != _operationId || file == null) return null;
 
+    String? content;
+
+    // -- youtube ships colors & karaoke as `::cue` classes, which libass drops, so those are drawn by us
+    if (track is SubtitleTrackYoutube) {
+      try {
+        content = await file.readAsString();
+      } catch (_) {}
+      if (opId != _operationId) return null;
+
+      final styledCues = content == null ? null : SubtitleCues.parseVTT(content);
+      if (styledCues != null && styledCues.hasStyling) {
+        _clearPlayerSelection();
+        currentStyledSubtitle.value = styledCues;
+        return SubtitleRenderMode.styled;
+      }
+    }
+
     if (Player.inst.rendersSubtitlesInternally) {
       _playerHoldsSelection = true;
       final loaded = await Player.inst.setExternalSubtitle(file.path);
@@ -363,13 +388,14 @@ class Subtitles {
     // -- drawn by us, the player has no business decoding an embedded one anymore
     _clearPlayerSelection();
 
-    String content = '';
-    try {
-      content = await file.readAsString();
-    } catch (_) {}
-    if (opId != _operationId) return null;
+    if (content == null) {
+      try {
+        content = await file.readAsString();
+      } catch (_) {}
+      if (opId != _operationId) return null;
+    }
 
-    final lrc = content.isEmpty ? null : content.parseLRC();
+    final lrc = content == null || content.isEmpty ? null : content.parseLRC();
     if (lrc == null) return null;
     currentSubtitle.value = lrc;
     return SubtitleRenderMode.lrc;

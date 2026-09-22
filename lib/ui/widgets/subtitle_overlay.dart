@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/subtitles_controller.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/simple_lyrics_line.dart';
+import 'package:namida/ui/widgets/styled_subtitle_line.dart';
 
 class SubtitleOverlay extends StatelessWidget {
   final TextStyle? style;
@@ -26,6 +27,10 @@ class SubtitleOverlay extends StatelessWidget {
           respectEndTimestamps: true,
           maxLines: maxLines,
           softWrap: true,
+          style: style,
+        ),
+        SubtitleRenderMode.styled => StyledSubtitleLineWidget(
+          maxLines: maxLines,
           style: style,
         ),
         SubtitleRenderMode.playerText => ObxO(
