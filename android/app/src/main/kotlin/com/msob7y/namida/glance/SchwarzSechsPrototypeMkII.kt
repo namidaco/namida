@@ -652,7 +652,7 @@ private val kMediaActionParam = ActionParameters.Key<Int>("t")
 private val kCustomActionParam = ActionParameters.Key<String>("c")
 
 /** kept in sync with `HomeWidgetController` on the dart side. */
-private const val kActionShuffle = "namida_widget_shuffle"
+internal const val kActionShuffle = "namida_widget_shuffle"
 private const val kActionCycleRepeat = "namida_widget_repeat"
 
 class MediaButtonAction : ActionCallback {

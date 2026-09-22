@@ -1,11 +1,14 @@
 package com.msob7y.namida
 
+import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.view.KeyEvent
 import androidx.annotation.RequiresApi
+import com.msob7y.namida.glance.kActionShuffle
+import com.msob7y.namida.glance.sendAudioServiceCustomAction
 import com.msob7y.namida.glance.sendMediaButtonIntent
 import com.ryanheise.audioservice.AudioService
 
@@ -72,3 +75,59 @@ fun getAudioServiceInstance(): AudioService? {
     return null
   }
 }
+
+@RequiresApi(Build.VERSION_CODES.N)
+class NamidaShuffleQuickSettingsTile : TileService() {
+
+  override fun onTileAdded() {
+    updateTile()
+  }
+
+  override fun onTileRemoved() {}
+
+  override fun onStartListening() {
+    updateTile()
+  }
+
+  override fun onStopListening() {
+    updateTile()
+  }
+
+  override fun onClick() {
+    // -- shuffle has no media keycode, it goes to the audio service as a custom action,
+    // -- which is a no-op while the service isnt alive, same as the home widget button.
+    if (getAudioServiceInstance() == null) return
+    val isShuffling = getIsShuffling()
+    sendAudioServiceCustomAction(kActionShuffle)
+    updateTile(!isShuffling)
+  }
+
+  private fun updateTile(isNowShuffling: Boolean? = null) {
+    val isShuffling = isNowShuffling ?: getIsShuffling()
+    qsTile?.apply {
+      state = if (isShuffling) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+      icon = Icon.createWithResource(applicationContext, R.drawable.shuffle)
+      val defaultLabel = "Shuffle"
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        label = defaultLabel
+        subtitle = if (isShuffling) "On" else "Off"
+      } else {
+        label = "$defaultLabel ${if (isShuffling) "On" else "Off"}"
+      }
+      updateTile()
+    }
+  }
+
+  // written by `_HomeWidgetsMobile` on the dart side whenever shuffle changes.
+  private fun getIsShuffling(): Boolean {
+    return try {
+      applicationContext
+        .getSharedPreferences(kHomeWidgetPreferences, Context.MODE_PRIVATE)
+        .getBoolean("shuffle", false)
+    } catch (_: Exception) {
+      false
+    }
+  }
+}
+
+private const val kHomeWidgetPreferences = "HomeWidgetPreferences"

@@ -159,6 +159,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       settings.player.shuffleQueue.addListener(
         () => homeWidget.updateShuffle(settings.player.shuffleQueue.value),
       );
+      // -- quick settings tiles read these before anything is ever played.
+      homeWidget.updateRepeatMode(settings.player.repeatMode.value, numberOfRepeats.value);
+      homeWidget.updateShuffle(settings.player.shuffleQueue.value);
     }
 
     final smtc = SMTCController.instance;
