@@ -1396,6 +1396,13 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                 title: 'recent_searches'.toUpperCase(),
                 subtitle: 'saves searches and shows them in the search page',
               ),
+              CustomSwitchListTile(
+                icon: Broken.play_circle,
+                value: settings.extra.resumeUIEnabled.value,
+                onChanged: (isTrue) => setState(() => settings.extra.save(resumeUIEnabled: !isTrue)),
+                title: 'resume_ui'.toUpperCase(),
+                subtitle: 'shows the resume button & highlights the last played item in pages like albums & playlists',
+              ),
 
               if (NamidaFeaturesVisibility.equalizerAvailable)
                 ObxO(

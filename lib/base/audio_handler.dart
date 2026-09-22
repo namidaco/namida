@@ -878,7 +878,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             if (qs != null && qs.supportResuming) {
               QueueController.latestPlayedForSourceManager.update(qs, finalItem);
             }
-            if (QueueSourceEnum.queuePage.supportResuming) {
+            if (QueueSourceEnum.queuePage.supportResuming && QueueSourceBase.resumingEnabled) {
               QueueController.inst.updateLatestPlayedForCurrentQueue(finalItem, alreadyUpdatedSource: qs);
             }
 

@@ -404,6 +404,9 @@ sealed class QueueSourceBase<E extends Enum> {
   bool get supportResuming;
   String toText();
 
+  /// disabling it hides the resume fab, the highlighted item & stops tracking the latest played per source.
+  static bool get resumingEnabled => settings.extra.resumeUIEnabled.value;
+
   final String? title;
   const QueueSourceBase._(this.s, {required this.title});
 

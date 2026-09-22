@@ -15,6 +15,7 @@ class _ExtraSettings with SettingsFileWriter {
   final ytInitialHomePage = YTHomePages.playlists.obs;
   final preferredSearchType = RxnF<SearchType>(fallback: SearchType.auto);
   final recentSearches = <String>[].obs;
+  final resumeUIEnabled = true.obs;
 
   static const _maxRecentSearches = 20;
 
@@ -51,6 +52,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? autoLibraryTab,
     YTHomePages? ytInitialHomePage,
     SearchType? preferredSearchType,
+    bool? resumeUIEnabled,
     bool? tapToScroll,
     bool? enhancedDragToScroll,
     bool? smoothScrolling,
@@ -80,6 +82,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
     if (preferredSearchType != null) this.preferredSearchType.value = preferredSearchType;
+    if (resumeUIEnabled != null) this.resumeUIEnabled.value = resumeUIEnabled;
     if (tapToScroll != null) this.tapToScroll = tapToScroll;
     if (enhancedDragToScroll != null) this.enhancedDragToScroll = enhancedDragToScroll;
     if (smoothScrolling != null) this.smoothScrolling = smoothScrolling;
@@ -151,6 +154,7 @@ class _ExtraSettings with SettingsFileWriter {
       autoLibraryTab.value = autoLibraryTabFinal;
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
       preferredSearchType.value = SearchType.values.getEnum(json['preferredSearchType']) ?? preferredSearchType.value;
+      resumeUIEnabled.value = json['resumeUIEnabled'] ?? resumeUIEnabled.value;
       final recentSearchesInStorage = json['recentSearches'];
       if (recentSearchesInStorage is List) recentSearches.value = recentSearchesInStorage.whereType<String>().toList();
 
@@ -209,6 +213,7 @@ class _ExtraSettings with SettingsFileWriter {
     'ytInitialHomePage': ytInitialHomePage.value.name,
     'preferredSearchType': ?preferredSearchType.value?.name,
     'recentSearches': recentSearches.value,
+    'resumeUIEnabled': resumeUIEnabled.value,
     if (tapToScroll != null) 'tapToScroll': tapToScroll,
     if (enhancedDragToScroll != null) 'enhancedDragToScroll': enhancedDragToScroll,
     if (smoothScrolling != null) 'smoothScrolling': smoothScrolling,
