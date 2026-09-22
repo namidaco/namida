@@ -81,15 +81,23 @@ class NamidaMainActivity : FlutterActivity() {
   private fun shareFilesExternally(paths: List<String>): Boolean {
     if (paths.isEmpty()) return false
     try {
-      val shareDir = File(cacheDir, "share_plus")
-      shareDir.mkdirs()
-      val authority = "$packageName.flutter.share_provider"
+      val authority = "$packageName.fileprovider"
       val uris = ArrayList<Uri>(paths.size)
+      var shareDir: File? = null
       for (path in paths) {
         val source = File(path)
-        val target = File(shareDir, source.name)
-        source.copyTo(target, overwrite = true)
-        uris.add(androidx.core.content.FileProvider.getUriForFile(this, authority, target))
+        val uri =
+            try {
+              // -- served in place, no copy
+              androidx.core.content.FileProvider.getUriForFile(this, authority, source)
+            } catch (_: IllegalArgumentException) {
+              // -- outside every configured root (ex. another volume), fall back to a copy
+              val dir = shareDir ?: File(cacheDir, "share_plus").also { it.mkdirs(); shareDir = it }
+              val target = File(dir, source.name)
+              source.copyTo(target, overwrite = true)
+              androidx.core.content.FileProvider.getUriForFile(this, authority, target)
+            }
+        uris.add(uri)
       }
       val mime = android.webkit.MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(paths[0]).extension.lowercase()) ?: "*/*"
       val intent = Intent().apply {

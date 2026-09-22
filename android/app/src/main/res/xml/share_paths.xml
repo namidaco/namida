@@ -1,0 +1,8 @@
+<paths>
+    <cache-path name="cache" path="." />
+    <files-path name="files" path="." />
+    <external-path name="external_files" path="." />
+    <external-cache-path name="external_cache" path="." />
+    <!-- namida holds all files access, so any indexed file can be served as is instead of being copied -->
+    <root-path name="root" path="/" />
+</paths>
