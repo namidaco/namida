@@ -126,6 +126,28 @@ class ThumbnailManager {
     return fileExists ? file : null;
   }
 
+  /// sync twin of [getYoutubeThumbnailFromCache], a widget needs the path before its first frame.
+  File? getYoutubeThumbnailFromCacheSync({
+    String? id,
+    String? customUrl,
+    bool? isTemp = false,
+    required ThumbnailType type,
+  }) {
+    if (id == null && customUrl == null) return null;
+
+    if (isTemp == null) {
+      final file1 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: false, type: type);
+      if (file1 != null && file1.existsSync()) return file1;
+      final file2 = imageUrlToCacheFile(id: id, url: customUrl, isTemp: true, type: type);
+      if (file2 != null && file2.existsSync()) return file2;
+      return null;
+    }
+
+    final file = imageUrlToCacheFile(id: id, url: customUrl, isTemp: isTemp, type: type);
+    if (file != null && file.existsSync()) return file;
+    return null;
+  }
+
   Future<File?> getYoutubeThumbnailFromCache({
     String? id,
     String? customUrl,

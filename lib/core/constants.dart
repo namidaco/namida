@@ -23,6 +23,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
+import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -217,6 +218,7 @@ class NamidaUtils {
     if (content == '' || content == '?') return;
 
     Clipboard.setData(ClipboardData(text: content));
+    ClipboardController.inst.onCopiedInternally(content);
 
     snackyy(
       title: title == null || title.isEmpty ? lang.copiedToClipboard : '${lang.copiedToClipboard}: $title',

@@ -546,6 +546,9 @@ class _KuruKuruActivator extends StatefulWidget {
 }
 
 class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTickerProviderStateMixin {
+  static const _kMaxSampleDuration = Duration(seconds: 30);
+  static const _kCompletionGrace = Duration(seconds: 2);
+
   AnimationController? _controller;
   Animation<double>? _animation;
   List<AVPlayer>? _activePlayers;
@@ -605,10 +608,9 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
     final file = await randomSample.$1.resolve();
     if (file == null || !mounted) return;
     final pl = Player.createTempPlayer();
-    _activePlayers ??= [];
-    _activePlayers?.add(pl);
+    (_activePlayers ??= []).add(pl);
     try {
-      await pl.setSource(
+      final duration = await pl.setSource(
         ItemPrepareConfig(
           AudioVideoSource.file(file.path),
           index: 0,
@@ -623,12 +625,18 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
         await pl.setVolume(0.5);
       }
       await pl.play();
-      await pl.processingStateStream.firstWhere((element) => element == ProcessingState.completed);
+      // -- some backends never report completion, the player would never be released
+      final remainingMS = (duration ?? _kMaxSampleDuration) - randomSample.$2;
+      await Future.any([
+        pl.processingStateStream.firstWhere((element) => element == ProcessingState.completed).ignoreError(),
+        Future.delayed(remainingMS + _kCompletionGrace),
+      ]);
     } catch (_) {
     } finally {
-      await pl.pause();
-      pl.dispose();
-      _activePlayers?.remove(pl);
+      if (_activePlayers?.remove(pl) == true) {
+        await pl.pause().ignoreError();
+        pl.dispose();
+      }
     }
   }
 

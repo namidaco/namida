@@ -22,6 +22,7 @@ import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/artwork_prefetcher.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
@@ -554,18 +555,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
             icon: trayIcons?.next,
             label: lang.next,
           ),
-          if (isFavourite == true)
-            TrayMenuItem(
-              key: TrayMenuKey.favourite,
-              icon: isLike ? trayIcons?.liked : trayIcons?.favorited,
-              label: isLike ? lang.liked : lang.removeFromFavourites,
-            )
-          else if (isFavourite == false)
-            TrayMenuItem(
-              key: TrayMenuKey.favourite,
-              icon: isLike ? trayIcons?.like : trayIcons?.favorite,
-              label: isLike ? lang.like : lang.addToFavourites,
-            ),
+          // -- always present, the linux tray can only update a menu that kept its shape
+          TrayMenuItem(
+            key: TrayMenuKey.favourite,
+            icon: isFavourite == true ? (isLike ? trayIcons?.liked : trayIcons?.favorited) : (isLike ? trayIcons?.like : trayIcons?.favorite),
+            label: isFavourite == true ? (isLike ? lang.liked : lang.removeFromFavourites) : (isLike ? lang.like : lang.addToFavourites),
+            disabled: isFavourite == null,
+          ),
           TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.showWindow,
@@ -2409,6 +2405,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   bool get previousButtonReplays => settings.previousButtonReplays.value;
 
+  /// wether previous would only restart the current item, the ui shouldn't animate towards another one.
+  bool get previousButtonWillReplay {
+    if (!previousButtonReplays) return false;
+
+    final int secondsToReplay;
+    if (settings.player.isSeekDurationPercentage.value) {
+      final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
+      secondsToReplay = sFromP.toInt();
+    } else {
+      secondsToReplay = settings.player.seekDurationInSeconds.value;
+    }
+
+    return secondsToReplay > 0 && currentPositionMS.value > secondsToReplay * 1000;
+  }
+
   // ------------------------------------------------------------
 
   Future<void> togglePlayPause() {
@@ -2533,19 +2544,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> skipToPrevious({bool isManualSkip = true}) async {
-    if (previousButtonReplays) {
-      final int secondsToReplay;
-      if (settings.player.isSeekDurationPercentage.value) {
-        final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
-        secondsToReplay = sFromP.toInt();
-      } else {
-        secondsToReplay = settings.player.seekDurationInSeconds.value;
-      }
-
-      if (secondsToReplay > 0 && currentPositionMS.value > secondsToReplay * 1000) {
-        await seek(Duration.zero);
-        return;
-      }
+    if (previousButtonWillReplay) {
+      await seek(Duration.zero);
+      return;
     }
 
     await super.skipToPrevious();

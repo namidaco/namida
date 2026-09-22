@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:namida/core/utils.dart';
 
@@ -9,17 +8,16 @@ class ClipboardController {
   static final ClipboardController _instance = ClipboardController._internal();
   ClipboardController._internal();
 
-  Timer? _timer;
+  AppLifecycleListener? _lifecycleListener;
 
+  /// no platform notifies of clipboard changes, but a copy made elsewhere is always followed by a resume.
   void setClipboardMonitoringStatus(bool monitor) {
-    _timer?.cancel();
-    _timer = null;
-
     if (monitor) {
-      _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
-        _checkClipboardChanged();
-      });
+      _lifecycleListener ??= AppLifecycleListener(onResume: _checkClipboardChanged);
+      _checkClipboardChanged();
     } else {
+      _lifecycleListener?.dispose();
+      _lifecycleListener = null;
       _textInControllerEmpty.value = true;
       _lastCopyUsed.value = '';
       _clipboardText.value = '';
@@ -30,6 +28,11 @@ class ClipboardController {
     final newClipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     final text = newClipboardData?.text ?? '';
     _clipboardText.value = text;
+  }
+
+  /// in-app copies never go through a resume.
+  void onCopiedInternally(String text) {
+    if (_lifecycleListener != null) _clipboardText.value = text;
   }
 
   void setLastPasted(String val) {

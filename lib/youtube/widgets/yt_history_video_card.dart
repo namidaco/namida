@@ -221,6 +221,7 @@ class YTHistoryVideoCard extends YTHistoryVideoCardBase {
     super.downloadIndex,
     super.downloadTotalLength,
     super.preferFetchNewInfo,
+    super.deferNetworkFetch,
     required super.properties,
   }) : super(
          mainList: videos,
@@ -257,6 +258,9 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
   final double minimalCardFontMultiplier;
   final bool preferFetchNewInfo;
 
+  /// see [VideoCardInfoFetcherWrapper.networkFetchDelay].
+  final bool deferNetworkFetch;
+
   final VideoTileProperties properties;
 
   const YTHistoryVideoCardBase({
@@ -282,6 +286,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
     this.onTap,
     this.minimalCardFontMultiplier = 1.0,
     this.preferFetchNewInfo = false,
+    this.deferNetworkFetch = false,
     required this.properties,
   });
 
@@ -347,7 +352,11 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
   String videoId = '';
   late YTWatch? videoWatch;
 
-  late final _infoFetcher = VideoCardInfoFetcherWrapper(this, fetchExtraDetails: false);
+  late final _infoFetcher = VideoCardInfoFetcherWrapper(
+    this,
+    fetchExtraDetails: false,
+    networkFetchDelay: widget.deferNetworkFetch ? Duration(milliseconds: 500) : Duration.zero,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -464,7 +473,6 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
                     : _infoFetcher.isVideoUnavailable
                     ? Broken.danger
                     : null,
-                reduceInitialFlashes: configs.draggingEnabled,
                 forceSquared: true, // -- if false, low quality images with black bars would appear
               ),
             ),

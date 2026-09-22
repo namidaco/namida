@@ -543,6 +543,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     )
                   : null,
               children: [
+                const SizedBox(height: 8.0),
                 const SizedBox(height: 12.0),
                 CustomTagTextField(
                   controller: _codeController,
@@ -636,7 +637,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _buildHero(context, membershipType),
-                      const SizedBox(height: 16.0),
+                      const SizedBox(height: 24.0),
                       _buildPatreonCard(context, membershipType),
                       _buildOrDivider(context),
                       _buildCouponCard(context, membershipType),
@@ -768,9 +769,9 @@ class _BenefitsList extends StatelessWidget {
   static String _tierLabel(_Benefit benefit) {
     if (benefit.isFree) return 'Free';
     final usd = switch (benefit.minTier) {
-      MembershipType.cutie => 5,
-      MembershipType.pookie => 10,
-      MembershipType.patootie => 25,
+      MembershipType.cutie => 4,
+      MembershipType.pookie => 7,
+      MembershipType.patootie => 20,
       _ => null,
     };
     final name = benefit.minTier.name.capitalizeFirst();

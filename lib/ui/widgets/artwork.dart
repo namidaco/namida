@@ -183,6 +183,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
   bool _triedDeleting = false;
 
+  /// fading again would blink a card colored box on top of the previous image.
+  bool _displayedImageBefore = false;
+
   bool get _isWaitingForImage {
     final imagePath = _imagePath;
     final bytes = _bytes;
@@ -349,7 +352,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   @override
   Widget build(BuildContext context) {
     final bytes = this._bytes;
-    final key = Key("${widget.key}${_imagePath}_${bytes?.length}");
+    // -- stable across image changes, a new key would drop the frame [ImageAdvanced] keeps painting
+    final key = ValueKey(widget.key);
     final isValidBytes = bytes is Uint8List ? bytes.isNotEmpty : false;
     final goodImagePath = _imagePath?.isNotEmpty == true;
     final canDisplayImage = goodImagePath || isValidBytes;
@@ -452,6 +456,8 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                           height: (info) => widget.staggered ? _staggeredHeight(info, boxWidth, boxHeight) : realWidthAndHeight,
                           frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
                             if (wasSynchronouslyLoaded || frame == null) return child;
+                            if (_displayedImageBefore) return child;
+                            _displayedImageBefore = true;
                             if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
                             if (widget.fadeMilliSeconds == 0) return child;
                             if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;

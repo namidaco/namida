@@ -16,7 +16,10 @@ class VideoCardInfoFetcherWrapper {
   /// publish date, views count, channel thumbnail..
   final bool fetchExtraDetails;
 
-  VideoCardInfoFetcherWrapper(this._state, {required this.fetchExtraDetails});
+  /// skips network for cards scrolled past within it
+  final Duration networkFetchDelay;
+
+  VideoCardInfoFetcherWrapper(this._state, {required this.fetchExtraDetails, this.networkFetchDelay = Duration.zero});
 
   String videoId = '';
 
@@ -32,8 +35,6 @@ class VideoCardInfoFetcherWrapper {
   bool isVideoUnavailable = false;
 
   String? _fetchingVideoId;
-
-  static const _kNetworkFetchDelay = Duration(milliseconds: 500);
 
   String? get channelId => infoVideoFinal?.channelId ?? infoFinal?.channelId ?? infoFinal?.channel?.id;
 
@@ -198,9 +199,8 @@ class VideoCardInfoFetcherWrapper {
       // -- if only title is missing then most likely video is deleted/etc so no need to refetch (unless enforced),
       // -- but missing details for an available video are worth a network request.
       final fromNetwork = preferFetchNewInfo || (detailsMissing && !isVideoUnavailable);
-      if (fromNetwork) {
-        // -- skip cards scrolled past by fast, useful also in most played page when using slider
-        await Future.delayed(_kNetworkFetchDelay);
+      if (fromNetwork && networkFetchDelay > Duration.zero) {
+        await Future.delayed(networkFetchDelay);
         if (_isStale(videoId) || !_state.mounted) return;
       }
       await _fetchNewInfo(videoId, fromNetwork: fromNetwork);

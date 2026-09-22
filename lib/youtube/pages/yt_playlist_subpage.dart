@@ -131,6 +131,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
                   day: null,
                   overrideListens: listens,
                   preferFetchNewInfo: true,
+                  deferNetworkFetch: true, // -- the time range slider rebuilds the whole list so fast
                 );
               },
             );
