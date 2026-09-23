@@ -103,15 +103,28 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       useCachedVersionsIfAvailable: true,
       itemsConfig: itemsConfig,
       groupName: widget.groupName,
-      onFileDownloaded: (downloadedFile) async {
-        if (downloadedFile != null) {
-          refreshState();
-        }
-      },
-      onOldFileDeleted: (deletedFile) async {
-        refreshState();
-      },
+      onFileDownloaded: _onFileDownloaded,
+      onOldFileDeleted: _onOldFileDeleted,
     );
+  }
+
+  void _onRestartTap(YoutubeItemDownloadConfig oldConfig, YoutubeItemDownloadConfig newConfig, DownloadTaskGroupName newGroupName) {
+    YoutubeController.inst.restartDownloadTask(
+      groupName: widget.groupName,
+      oldConfig: oldConfig,
+      newGroupName: newGroupName,
+      newConfig: newConfig,
+      onFileDownloaded: _onFileDownloaded,
+      onOldFileDeleted: _onOldFileDeleted,
+    );
+  }
+
+  Future<void> _onFileDownloaded(File? downloadedFile) async {
+    if (downloadedFile != null) refreshState();
+  }
+
+  Future<void> _onOldFileDeleted(File? deletedFile) async {
+    refreshState();
   }
 
   void _onCancelDeleteDownloadTap(List<YoutubeItemDownloadConfig> itemsConfig, {bool keepInList = false, required bool delete}) {
@@ -269,14 +282,13 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       totalLength: config.totalLength,
       streamInfoItem: config.streamInfoItem,
       playlistId: config.playlistId,
-      initialGroupName: config.groupName.groupName,
+      initialGroupName: widget.groupName.groupName,
       showSpecificFileOptionsInEditTagDialog: false,
       videoId: config.id.videoId,
       initialItemConfig: config,
       confirmButtonText: lang.restart,
-      onConfirmButtonTap: (groupName, newConfig) {
-        _onCancelDeleteDownloadTap([config], keepInList: true, delete: true);
-        _onResumeDownloadTap([newConfig], context);
+      onConfirmButtonTap: (_, newConfig) {
+        _onRestartTap(config, newConfig, newConfig.groupName);
         return true;
       },
     );
@@ -556,10 +568,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                             icon: Broken.refresh,
                                             onTap: () async {
                                               final confirmation = await _confirmOperation(operationTitle: lang.restart);
-                                              if (confirmation.confirmed) {
-                                                _onCancelDeleteDownloadTap([item], keepInList: true, delete: true);
-                                                _onResumeDownloadTap([item], context);
-                                              }
+                                              if (confirmation.confirmed) _onRestartTap(item, item, widget.groupName);
                                             },
                                           )
                                         : willBeDownloaded || isDownloading || isFetching

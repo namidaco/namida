@@ -264,6 +264,7 @@ Future<void> showVideoDownloadOptionsSheet({
                   flex: 5,
                   child: NamidaButton(
                     text: lang.done,
+                    minHeight: NamidaButton.kDefaultMinHeight * 1.2,
                     onTap: Navigator.of(context).pop,
                   ),
                 ),
@@ -386,6 +387,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
           ],
           child: CustomTagTextField(
             controller: c,
+            autofocus: true,
             hintText: '',
             labelText: lang.folder,
             validatorMode: AutovalidateMode.always,

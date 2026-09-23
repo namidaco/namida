@@ -1200,6 +1200,7 @@ class CustomTagTextField extends StatefulWidget {
   final void Function(String value)? onFieldSubmitted;
   final double borderRadius;
   final FocusNode? focusNode;
+  final bool autofocus;
   final bool obscureText;
 
   const CustomTagTextField({
@@ -1220,6 +1221,7 @@ class CustomTagTextField extends StatefulWidget {
     this.onFieldSubmitted,
     this.borderRadius = 16.0,
     this.focusNode,
+    this.autofocus = false,
     this.obscureText = false,
   });
 
@@ -1271,6 +1273,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       obscureText: widget.obscureText,
       onTap: widget.onTap,
       focusNode: widget.focusNode,
+      autofocus: widget.autofocus,
       validator: widget.validator,
       maxLength: widget.maxLength,
       controller: widget.controller,

@@ -795,6 +795,25 @@ class YoutubeController {
     );
   }
 
+  /// partial files live in the group folder, so they are only reused when [newGroupName] is the same.
+  Future<void> restartDownloadTask({
+    required DownloadTaskGroupName groupName,
+    required YoutubeItemDownloadConfig oldConfig,
+    required DownloadTaskGroupName newGroupName,
+    required YoutubeItemDownloadConfig newConfig,
+    Future<void> Function(File? downloadedFile)? onOldFileDeleted,
+    Future<void> Function(File? deletedFile)? onFileDownloaded,
+  }) async {
+    await cancelDownloadTask(itemsConfig: [oldConfig], groupName: groupName, keepInList: newGroupName == groupName, delete: true);
+    await downloadYoutubeVideos(
+      useCachedVersionsIfAvailable: true,
+      itemsConfig: [newConfig],
+      groupName: newGroupName,
+      onOldFileDeleted: onOldFileDeleted,
+      onFileDownloaded: onFileDownloaded,
+    );
+  }
+
   Future<void> _updateDownloadTask({
     required List<YoutubeItemDownloadConfig> itemsConfig,
     required DownloadTaskGroupName groupName,
@@ -1318,15 +1337,15 @@ class YoutubeController {
 
   void _deleteTempFiles(String directoryPath, YoutubeItemDownloadConfig config) {
     final videoStream = config.videoStream;
-    if (videoStream != null) File(_getTempDownloadPath(directoryPath, _kTempVideoPrefix, config.filename, videoStream)).delete().ignoreError();
+    if (videoStream != null) FilesDownloadManager.deleteDownloadFiles(File(_getTempDownloadPath(directoryPath, _kTempVideoPrefix, config.filename, videoStream)));
     final audioStream = config.audioStream;
-    if (audioStream != null) File(_getTempDownloadPath(directoryPath, _kTempAudioPrefix, config.filename, audioStream)).delete().ignoreError();
+    if (audioStream != null) FilesDownloadManager.deleteDownloadFiles(File(_getTempDownloadPath(directoryPath, _kTempAudioPrefix, config.filename, audioStream)));
   }
 
   void _deleteTempFileIfStreamChanged(String directoryPath, String prefix, DownloadTaskFilename filename, StreamBase? oldStream, StreamBase? newStream) {
     if (oldStream == null) return;
     if (newStream != null && oldStream.sizeInBytes == newStream.sizeInBytes && oldStream.codecInfo.container == newStream.codecInfo.container) return;
-    File(_getTempDownloadPath(directoryPath, prefix, filename, oldStream)).delete().ignoreError();
+    FilesDownloadManager.deleteDownloadFiles(File(_getTempDownloadPath(directoryPath, prefix, filename, oldStream)));
   }
 
   static const _kMinimumChapterDurationMS = 1000;
@@ -1951,10 +1970,9 @@ class YoutubeController {
     required void Function(int downloadedBytesLength) downloadingStream,
   }) async {
     // -- stopped while preparing/writing tags etc, where there was no download client to stop.
-    if (_isTaskStopped(groupName, config)) throw const _UserCanceledException();
+    if (_isTaskStopped(groupName, config)) throw const DownloadCanceledException();
 
     final filename = config.filename;
-    int downloadStartRange = 0;
 
     final file = File(destinationFilePath); // -- created by the download isolate if needed
     final fileStat = await file.stat();
@@ -1963,12 +1981,12 @@ class YoutubeController {
     // only download if the download is incomplete, useful sometimes when file 'moving' fails.
     Object? downloadException;
     if (initialFileSizeOnDisk < targetSize) {
-      downloadStartRange = initialFileSizeOnDisk;
       (_downloadClientsMap[groupName] ??= {})[filename] = file;
       downloadException = await _downloadManager.download(
         url: url,
         file: file,
-        downloadStartRange: downloadStartRange,
+        totalBytes: targetSize,
+        threads: settings.youtube.downloadThreadsCount.valueF,
         downloadingStream: downloadingStream,
       );
     }
@@ -2027,7 +2045,6 @@ class YoutubeController {
       } else {
         // only download if the download is incomplete, useful sometimes when file 'moving' fails.
         if (!canStartDownloading()) return null;
-        final downloadStartRange = initialFileSizeOnDisk;
 
         _downloadManager.stopDownload(file: _latestSingleDownloadingFile); // disposing old download process
         _latestSingleDownloadingFile = file;
@@ -2037,7 +2054,8 @@ class YoutubeController {
         final downloadException = await _downloadManager.download(
           url: erabaretaStream.buildUrl(),
           file: file,
-          downloadStartRange: downloadStartRange,
+          totalBytes: erabaretaStreamSizeInBytes,
+          threads: settings.youtube.downloadThreadsCount.valueF,
           downloadingStream: downloadingStream,
           moveTo: newFilePath,
           moveToRequiredBytes: erabaretaStreamSizeInBytes,
@@ -2366,7 +2384,7 @@ class _IsolateFunctions {
     int? getTempFileSize(String directoryPath, String prefix, DownloadTaskFilename filename, StreamBase stream) {
       final path = YoutubeController._getTempDownloadPath(directoryPath, prefix, filename, stream);
       final stat = File(path).statSync();
-      if (stat.type != FileSystemEntityType.notFound) return stat.size;
+      if (stat.type != FileSystemEntityType.notFound) return stat.size + FilesDownloadManager.chunksSizeSync(path);
 
       final legacyFile = File(YoutubeController._getLegacyTempDownloadPath(directoryPath, prefix, filename.filename, stream));
       final legacyStat = legacyFile.statSync();

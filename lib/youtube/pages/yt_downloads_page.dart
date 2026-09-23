@@ -150,9 +150,10 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
         actions: [
           const CancelButton(),
           NamidaButton(
-            text: lang.confirm,
+            text: lang.save,
             onTap: () {
               YoutubeParallelDownloadsHandler.inst.setMaxParallelDownloads(tempCount.value);
+              settings.youtube.save(downloadThreadsCount: tempThreads.value);
               NamidaNavigator.inst.closeDialog();
             },
           ),
