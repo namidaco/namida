@@ -47,7 +47,7 @@ class AlbumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final finalYear = album.year.yearFormatted;
+    final finalYear = album.yearOldest.yearFormatted;
     final name = identifier?.displayAlbumName ?? '';
     final albumArtist = album.albumArtist;
     final imagePath = album.pathToImage;

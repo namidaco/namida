@@ -110,7 +110,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                             title: name,
                             source: queueSource,
                             subtitle: tracks.albumArtist,
-                            thirdLineText: tracks.year.yearFormatted,
+                            thirdLineText: tracks.yearOldest.yearFormatted,
                             heroTag: 'album_${widget.albumIdentifier}',
                             imageBuilder: (size) {
                               final squared = Dimensions.inst.shouldAlbumBeSquared(context);

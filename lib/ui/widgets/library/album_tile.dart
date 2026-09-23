@@ -28,7 +28,7 @@ class AlbumTile extends StatelessWidget {
     final textTheme = theme.textTheme;
     final albumThumbnailSize = settings.albumThumbnailSizeinList.value;
     final albumTileHeight = settings.albumListTileHeight.value;
-    final finalYear = album.year.yearFormatted;
+    final finalYear = album.yearOldest.yearFormatted;
     final name = identifier.displayAlbumName;
     final hero = 'album_$identifier';
 

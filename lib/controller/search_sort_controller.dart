@@ -401,7 +401,7 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.numberOfTracks => (tracks) => tracks.length.toString(),
     GroupSortType.duration => (tracks) => tracks.totalDurationFormatted,
     GroupSortType.albumsCount => (tracks) => tracks.toUniqueAlbums().length.toString(),
-    GroupSortType.year => (tracks) => tracks.year.yearFormatted,
+    GroupSortType.year => (tracks) => tracks.yearOldest.yearFormatted,
     GroupSortType.dateAdded => (tracks) => tracks.getDateAddedEffective()?.dateFormatted,
     GroupSortType.dateModified => (tracks) => tracks.getDateModifiedEffective()?.dateFormatted,
     GroupSortType.playCount => (tracks) => tracks.getTotalListenCount().toString(),

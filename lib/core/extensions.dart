@@ -163,13 +163,19 @@ extension TracksUtils on List<Track> {
     return albums;
   }
 
-  int get year {
-    if (isEmpty) return 0;
-    for (int i = length - 1; i >= 0; i--) {
+  int get yearOldest {
+    int oldest = 0;
+    int oldestAsyyyyMMdd = 0;
+    for (int i = 0; i < length; i++) {
       final y = this[i].year;
-      if (y != 0) return y;
+      if (y == 0) continue;
+      final asyyyyMMdd = y < 10000 ? y * 10000 + 101 : y;
+      if (oldest == 0 || asyyyyMMdd < oldestAsyyyyMMdd) {
+        oldest = y;
+        oldestAsyyyyMMdd = asyyyyMMdd;
+      }
     }
-    return 0;
+    return oldest;
   }
 
   String get yearPreferyyyyMMdd {

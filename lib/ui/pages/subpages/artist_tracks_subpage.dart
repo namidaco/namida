@@ -145,7 +145,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                   bottomPadding: 8.0,
                   title: name,
                   source: queueSource,
-                  subtitle: tracks.year.yearFormatted,
+                  subtitle: tracks._yearsRangeFormatted,
                   heroTag: heroTag,
                   imageBuilder: (size) {
                     final info = NetworkArtworkInfo.artist(name);
@@ -286,5 +286,23 @@ class _AlbumsRow extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+extension _TracksYearsRange on List<Track> {
+  String get _yearsRangeFormatted {
+    int oldest = 0;
+    int newest = 0;
+    for (int i = 0; i < length; i++) {
+      int y = this[i].year;
+      if (y == 0) continue;
+      while (y > 9999) {
+        y ~/= 10;
+      }
+      if (oldest == 0 || y < oldest) oldest = y;
+      if (y > newest) newest = y;
+    }
+    if (oldest == 0) return '';
+    return oldest == newest ? '$oldest' : '$oldest – $newest';
   }
 }
