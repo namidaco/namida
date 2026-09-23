@@ -42,6 +42,7 @@ class YoutubeItemDownloadConfig {
   final bool? deleteOldFile;
   final bool? removeSponsorSegments;
   final bool? splitByChapters;
+  final YoutubeDownloadChapter? chapter;
   final List<String>? sponsorSegmentsCategories;
   final String? localPlaylistName;
   final bool cacheOnly;
@@ -71,6 +72,7 @@ class YoutubeItemDownloadConfig {
     required this.deleteOldFile,
     required this.removeSponsorSegments,
     required this.splitByChapters,
+    required this.chapter,
     required this.sponsorSegmentsCategories,
     required this.localPlaylistName,
     required this.cacheOnly,
@@ -103,6 +105,7 @@ class YoutubeItemDownloadConfig {
        deleteOldFile = null,
        removeSponsorSegments = null,
        splitByChapters = null,
+       chapter = null,
        sponsorSegmentsCategories = null,
        localPlaylistName = null,
        cacheOnly = true;
@@ -153,6 +156,7 @@ class YoutubeItemDownloadConfig {
       deleteOldFile: map['deleteOldFile'] as bool?,
       removeSponsorSegments: map['removeSponsorSegments'] as bool?,
       splitByChapters: map['splitByChapters'] as bool?,
+      chapter: map['chapter'] is Map ? YoutubeDownloadChapter.fromMap(map['chapter'] as Map) : null,
       sponsorSegmentsCategories: (map['sponsorSegmentsCategories'] as List?)?.cast<String>(),
       localPlaylistName: map['localPlaylistName'] as String?,
       cacheOnly: map['cacheOnly'] == true,
@@ -185,6 +189,7 @@ class YoutubeItemDownloadConfig {
       'deleteOldFile': ?deleteOldFile,
       'removeSponsorSegments': ?removeSponsorSegments,
       'splitByChapters': ?splitByChapters,
+      'chapter': ?chapter?.toMap(),
       'sponsorSegmentsCategories': ?sponsorSegmentsCategories,
       'localPlaylistName': ?localPlaylistName,
       if (cacheOnly) 'cacheOnly': true,
@@ -230,6 +235,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     bool? deleteOldFile,
     bool? removeSponsorSegments,
     bool? splitByChapters,
+    YoutubeDownloadChapter? chapter,
     List<String>? sponsorSegmentsCategories,
     String? localPlaylistName,
     bool? cacheOnly,
@@ -259,6 +265,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       deleteOldFile: deleteOldFile ?? this.deleteOldFile,
       removeSponsorSegments: removeSponsorSegments ?? this.removeSponsorSegments,
       splitByChapters: splitByChapters ?? this.splitByChapters,
+      chapter: chapter ?? this.chapter,
       sponsorSegmentsCategories: sponsorSegmentsCategories ?? this.sponsorSegmentsCategories,
       localPlaylistName: localPlaylistName ?? this.localPlaylistName,
       cacheOnly: cacheOnly ?? this.cacheOnly,
@@ -314,5 +321,42 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
         composer: ffmpegTags[FFMPEGTagField.composerSort.tagKey],
       ),
     );
+  }
+}
+
+/// [endMS] is null for the last chapter.
+class YoutubeDownloadChapter {
+  final int startMS;
+  final int? endMS;
+  final String title;
+  final int number;
+  final int total;
+
+  const YoutubeDownloadChapter({
+    required this.startMS,
+    required this.endMS,
+    required this.title,
+    required this.number,
+    required this.total,
+  });
+
+  factory YoutubeDownloadChapter.fromMap(Map map) {
+    return YoutubeDownloadChapter(
+      startMS: map['startMS'] as int? ?? 0,
+      endMS: map['endMS'] as int?,
+      title: map['title'] as String? ?? '',
+      number: map['number'] as int? ?? 1,
+      total: map['total'] as int? ?? 1,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'startMS': startMS,
+      'endMS': ?endMS,
+      'title': title,
+      'number': number,
+      'total': total,
+    };
   }
 }

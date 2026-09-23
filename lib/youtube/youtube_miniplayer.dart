@@ -41,6 +41,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
+import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -64,6 +65,8 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/widgets/yt_video_card.dart';
 import 'package:namida/youtube/yt_miniplayer_comments_subpage.dart';
 import 'package:namida/youtube/yt_utils.dart';
+
+part 'yt_miniplayer_chapters.dart';
 
 const _space2ForThumbnail = 90.0;
 const _extraPaddingForYTMiniplayer = 12.0;
@@ -806,10 +809,13 @@ class _YTMiniplayerInfoBody extends StatelessWidget {
                           );
 
                     final segments = page?.streamSegments;
+                    final videoDurationSeconds = videoInfoStream?.durSeconds;
                     final segmentsRow = segments != null && segments.isNotEmpty
                         ? _StreamSegmentsRow(
+                            key: ValueKey(currentId),
                             videoId: currentId,
                             segments: segments,
+                            videoDurationMS: videoDurationSeconds == null ? null : videoDurationSeconds * 1000,
                           )
                         : null;
                     final epansionTileChildren = descriptionWidget != null || segmentsRow != null
@@ -1877,134 +1883,6 @@ class _RelatedVideosLoadMoreButton extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _StreamSegmentsRow extends StatefulWidget {
-  final String videoId;
-  final List<StreamSegment> segments;
-  const _StreamSegmentsRow({required this.segments, required this.videoId});
-
-  @override
-  State<_StreamSegmentsRow> createState() => _StreamSegmentsRowState();
-}
-
-class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
-  StreamSegment? _currentSegment;
-  late final _controller = NamidaScrollController.create();
-
-  final _segmentKeys = <StreamSegment, GlobalKey>{};
-
-  @override
-  void initState() {
-    for (final s in widget.segments) {
-      _segmentKeys[s] = GlobalKey();
-    }
-    _onPlayerPositionChange();
-    Player.inst.nowPlayingPosition.addListener(_onPlayerPositionChange);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    Player.inst.nowPlayingPosition.removeListener(_onPlayerPositionChange);
-    super.dispose();
-  }
-
-  void _onPlayerPositionChange() {
-    final currentPositionMS = Player.inst.nowPlayingPosition.value;
-    final currentSegment = widget.segments.findByMillisecond(currentPositionMS);
-
-    if (_currentSegment != currentSegment) {
-      if (mounted) {
-        setState(() => _currentSegment = currentSegment);
-        if (currentSegment != null) {
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) {
-              final context = _segmentKeys[currentSegment]?.currentContext;
-              if (context != null) {
-                _controller.position.ensureVisible(
-                  context.findRenderObject()!,
-                  duration: const Duration(milliseconds: 200),
-                  curve: Curves.fastEaseInToSlowEaseOut,
-                  alignment: 0.4,
-                );
-              }
-            },
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final thumbWidth = (context.width * 0.2).withMaximum(128.0);
-    const thumbHorizontalPadding = 1.0;
-    final currentSegment = _currentSegment;
-    return SmoothSingleChildScrollView(
-      controller: _controller,
-      padding: EdgeInsets.symmetric(horizontal: 8.0),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: widget.segments.map(
-          (e) {
-            final url = e.thumbnail?.url;
-            final isCurrentSegment = e == currentSegment;
-            return NamidaInkWell(
-              key: _segmentKeys[e],
-              animationDurationMS: 200,
-              borderRadius: 6.0,
-              width: thumbWidth + thumbHorizontalPadding * 2,
-              bgColor: isCurrentSegment ? context.theme.colorScheme.secondaryContainer : context.theme.cardColor.withOpacityExt(0.4),
-              onTap: () {
-                final startSeconds = e.startSeconds;
-                if (startSeconds != null) {
-                  Player.inst.seek(Duration(milliseconds: (startSeconds * 1000) + 1));
-                }
-              },
-              margin: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(thumbHorizontalPadding),
-                    child: YoutubeThumbnail(
-                      type: ThumbnailType.video,
-                      key: Key('${widget.videoId}_$url'),
-                      borderRadius: 6.0,
-                      isImportantInCache: false,
-                      width: thumbWidth,
-                      height: thumbWidth * 9 / 16,
-                      videoId: widget.videoId,
-                      preferLowerRes: true,
-                      customUrl: url,
-                      smallBoxText: e.startSeconds?.secondsLabel,
-                      smallBoxIcon: isCurrentSegment ? Broken.play : null,
-                      forceSquared: true,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 1.0, left: 4.0, bottom: 3.0),
-                    child: Text(
-                      e.title,
-                      style: context.textTheme.displaySmall?.copyWith(
-                        fontSize: 11.0,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ).toFixedList(),
-      ),
     );
   }
 }

@@ -923,7 +923,8 @@ class YoutubeController {
       final downloadFilesWriteUploadDate = config.downloadFilesWriteUploadDate ?? settings.downloadFilesWriteUploadDate.value;
       final deleteOldFile = config.deleteOldFile ?? settings.downloadOverrideOldFiles.value;
       final removeSponsorSegments = config.removeSponsorSegments ?? settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads;
-      final splitByChapters = config.splitByChapters ?? settings.youtube.splitDownloadsByChapters.value;
+      final chapter = config.chapter;
+      final splitByChapters = chapter == null && (config.splitByChapters ?? settings.youtube.splitDownloadsByChapters.value);
 
       final videoID = config.id;
 
@@ -1101,12 +1102,24 @@ class YoutubeController {
             newTags: newTags,
           );
         },
-        onOutputFileReady: removeSponsorSegments || splitByChapters
+        onOutputFileReady: removeSponsorSegments || splitByChapters || chapter != null
             ? (outputFile) async {
                 final sponsorRanges = removeSponsorSegments
                     ? await SponsorBlockController.inst.getDownloadRemovalRangesMS(videoID.videoId, categoriesNamesOverride: config.sponsorSegmentsCategories)
                     : null;
                 final cutStartPaddingMS = config.videoStream != null ? _kVideoCutPaddingMS : 0;
+
+                if (chapter != null) {
+                  await _trimFileToChapter(
+                    outputFile: outputFile,
+                    chapter: chapter,
+                    sponsorRangesMS: sponsorRanges,
+                    config: config,
+                    thumbnailFile: await getEffectiveThumbnail(),
+                    cutStartPaddingMS: cutStartPaddingMS,
+                  );
+                  return null;
+                }
 
                 final chapters = splitByChapters ? pageResult?.streamSegments : null;
                 if (chapters != null && chapters.length > 1) {
@@ -1492,6 +1505,60 @@ class YoutubeController {
 
     await outputFile.tryDeleting();
     return parts;
+  }
+
+  /// trims before removing [sponsorRangesMS], same as a [_splitFileByChapters] part, so the chapter bounds stay exact.
+  Future<void> _trimFileToChapter({
+    required File outputFile,
+    required YoutubeDownloadChapter chapter,
+    required List<(int, int)>? sponsorRangesMS,
+    required YoutubeItemDownloadConfig config,
+    required File? thumbnailFile,
+    required int cutStartPaddingMS,
+  }) async {
+    final path = outputFile.path;
+    final endMS = chapter.endMS ?? (await NamidaFFMPEG.inst.getMediaDuration(path))?.inMilliseconds;
+    if (endMS == null || endMS <= chapter.startMS) return;
+
+    String ext = '';
+    try {
+      ext = path.getExtension;
+    } catch (_) {}
+
+    final tempFile = FileParts.join(path.getDirectoryPath, '.tempchapter_${path.hashCode}.$ext');
+    final didExtract = await NamidaFFMPEG.inst.extractRange(
+      path: path,
+      startMS: chapter.startMS,
+      endMS: endMS,
+      outputPath: tempFile.path,
+    );
+    if (!didExtract || await tempFile.move(path) == null) {
+      await tempFile.tryDeleting();
+      return;
+    }
+
+    final cutRanges = _cutRangesWithinChapter(sponsorRangesMS, chapter.startMS, endMS);
+    if (cutRanges.isNotEmpty) {
+      await NamidaFFMPEG.inst.removeSegments(
+        path: path,
+        sortedCutRangesMS: cutRanges,
+        cutStartPaddingMS: cutStartPaddingMS,
+      );
+    }
+
+    await NamidaTaggerController.inst.writeTagsRaw(
+      path: path,
+      newTags: config.buildTagsValues(
+        path: path,
+        thumbnailFile: thumbnailFile,
+        chapterOverrides: (
+          title: chapter.title,
+          album: config.ffmpegTags[FFMPEGTagField.title.tagKey] ?? '',
+          trackNumber: '${chapter.number}',
+          trackTotal: '${chapter.total}',
+        ),
+      ),
+    );
   }
 
   /// lowercased since android & windows storages are case insensitive.

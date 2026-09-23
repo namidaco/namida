@@ -141,6 +141,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       deleteOldFile: settings.downloadOverrideOldFiles.value,
       removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
       splitByChapters: settings.youtube.splitDownloadsByChapters.value,
+      chapter: null,
       sponsorSegmentsCategories: _sponsorSegmentsCategories.value,
       localPlaylistName: null,
       cacheOnly: false,

@@ -50,6 +50,7 @@ Future<void> showDownloadVideoBottomSheet({
   required int? totalLength,
   required StreamInfoItem? streamInfoItem,
   String? initialGroupName,
+  YoutubeDownloadChapter? chapter,
 }) async {
   colorScheme ??= CurrentColor.inst.color;
   final context = ctx ?? rootContext;
@@ -59,6 +60,8 @@ Future<void> showDownloadVideoBottomSheet({
   originalIndex ??= initialItemConfig?.originalIndex;
   totalLength ??= initialItemConfig?.totalLength;
   streamInfoItem ??= initialItemConfig?.streamInfoItem;
+  final downloadChapter = chapter ?? initialItemConfig?.chapter;
+  final chapterSuffix = downloadChapter == null ? '' : ' - ${downloadChapter.title}';
 
   final showAudioWebm = settings.youtube.preferOpusFormat.obs;
   final showVideoWebm = settings.youtube.allowExperimentalCodecs.obs;
@@ -115,12 +118,12 @@ Future<void> showDownloadVideoBottomSheet({
         totalLength,
       );
       if (finalFilenameTempRebuilt != null && finalFilenameTempRebuilt.isNotEmpty) {
-        videoOutputFilenameController.text = finalFilenameTempRebuilt;
+        videoOutputFilenameController.text = '$finalFilenameTempRebuilt$chapterSuffix';
         return;
       }
     }
 
-    final videoTitle = videoInfo.value?.title ?? videoId;
+    final videoTitle = '${videoInfo.value?.title ?? videoId}$chapterSuffix';
     if (selectedAudioOnlyStream.value == null && selectedVideoOnlyStream.value == null) {
       videoOutputFilenameController.text = videoTitle;
     } else {
@@ -142,7 +145,8 @@ Future<void> showDownloadVideoBottomSheet({
     updateTagsMap(initialItemConfig.ffmpegTags);
     videoOutputFilenameWasUserEdited = true;
   } else {
-    updatefilenameOutput(customName: settings.youtube.downloadFilenameBuilder.value);
+    final filenameBuilderInSetting = settings.youtube.downloadFilenameBuilder.value;
+    updatefilenameOutput(customName: filenameBuilderInSetting.isEmpty ? '' : '$filenameBuilderInSetting$chapterSuffix');
   }
 
   void onVideoSelectionChanged() {
@@ -500,6 +504,15 @@ Future<void> showDownloadVideoBottomSheet({
                                               }(),
                                             ),
                                           ),
+                                          if (downloadChapter != null) ...[
+                                            const SizedBox(height: 2.0),
+                                            Text(
+                                              '${downloadChapter.number}. ${downloadChapter.title}',
+                                              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),
@@ -810,7 +823,8 @@ Future<void> showDownloadVideoBottomSheet({
                                                     downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
                                                     deleteOldFile: settings.downloadOverrideOldFiles.value,
                                                     removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
-                                                    splitByChapters: settings.youtube.splitDownloadsByChapters.value,
+                                                    splitByChapters: downloadChapter == null && settings.youtube.splitDownloadsByChapters.value,
+                                                    chapter: downloadChapter,
                                                     sponsorSegmentsCategories: sponsorSegmentsCategories.value,
                                                     localPlaylistName: initialItemConfig?.localPlaylistName,
                                                     cacheOnly: false,
