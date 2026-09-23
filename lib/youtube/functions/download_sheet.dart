@@ -77,6 +77,8 @@ Future<void> showDownloadVideoBottomSheet({
 
   String groupName = initialGroupName ?? '';
 
+  final sponsorSegmentsCategories = Rxn<List<String>>();
+
   final tagsMap = <String, String?>{};
   void updateTagsMap(Map<String, String?> map) {
     for (final e in map.entries) {
@@ -514,6 +516,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           videoUploader: videoInfo?.channelName,
                                           tagMaps: tagsMap,
                                           showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
+                                          sponsorSegmentsCategories: sponsorSegmentsCategories,
                                           onDownloadFilenameChanged: (filename) {
                                             updatefilenameOutput(customName: filename);
                                             formKey.currentState?.validate();
@@ -723,13 +726,18 @@ Future<void> showDownloadVideoBottomSheet({
                                     validatorMode: AutovalidateMode.always,
                                     validator: (value) {
                                       if (value == null) return lang.pleaseEnterAName;
-                                      final file = FileParts.join(AppDirs.YOUTUBE_DOWNLOADS, groupName, value);
+                                      // -- the download sanitizes before writing, checking the raw name would miss the collision
+                                      final parentDirPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName);
+                                      final file = FileParts.join(parentDirPath, DownloadTaskFilename.cleanupFilename(value, parentDirPath: parentDirPath));
                                       void updateVal(bool exist) => WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                         filenameExists.value = exist;
                                       });
                                       if (file.existsSync()) {
                                         updateVal(true);
-                                        return "${lang.fileAlreadyExists}, ${lang.downloadingWillOverrideIt} (${file.fileSizeFormatted() ?? 0})";
+                                        final sizeText = '(${file.fileSizeFormatted() ?? 0})';
+                                        return settings.downloadOverrideOldFiles.value
+                                            ? "${lang.fileAlreadyExists}, ${lang.downloadingWillOverrideIt} $sizeText"
+                                            : "${lang.fileAlreadyExists}, ${lang.downloadingWillBeSkipped} $sizeText";
                                       } else {
                                         updateVal(false);
                                       }
@@ -801,6 +809,9 @@ Future<void> showDownloadVideoBottomSheet({
                                                     keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                                     downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
                                                     deleteOldFile: settings.downloadOverrideOldFiles.value,
+                                                    removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
+                                                    splitByChapters: settings.youtube.splitDownloadsByChapters.value,
+                                                    sponsorSegmentsCategories: sponsorSegmentsCategories.value,
                                                   );
                                                   if (onConfirmButtonTap != null) {
                                                     final accept = onConfirmButtonTap(groupName, itemConfig);

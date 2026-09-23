@@ -26,6 +26,7 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/functions/video_download_options.dart';
+import 'package:namida/youtube/widgets/yt_download_sponsorblock_tile.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
@@ -56,6 +57,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _selectedList = <String>[].obs; // sometimes a yt playlist can have duplicates (yt bug) so a Set wont be useful.
   final _configMap = <String, YoutubeItemDownloadConfig>{}.obs;
   final _groupName = DownloadTaskGroupName(groupName: '').obs;
+  final _sponsorSegmentsCategories = Rxn<List<String>>();
 
   final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
 
@@ -86,6 +88,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _selectedList.close();
     _configMap.close();
     _groupName.close();
+    _sponsorSegmentsCategories.close();
     preferredQuality.close();
     super.dispose();
   }
@@ -133,6 +136,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
       keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
       downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
       deleteOldFile: settings.downloadOverrideOldFiles.value,
+      removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
+      splitByChapters: settings.youtube.splitDownloadsByChapters.value,
+      sponsorSegmentsCategories: _sponsorSegmentsCategories.value,
     );
   }
 
@@ -197,6 +203,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     final textTheme = context.textTheme;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
+        horizontalInset: 32.0,
         title: lang.configure,
         titleWidgetInPadding: Row(
           children: [
@@ -263,6 +270,19 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 value: downloadFilesWriteUploadDate,
                 onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
               ),
+            ),
+            ObxO(
+              rx: settings.youtube.splitDownloadsByChapters,
+              builder: (context, splitDownloadsByChapters) => CustomSwitchListTile(
+                icon: Broken.crop,
+                title: lang.splitByChapters,
+                subtitle: lang.splitByChaptersSubtitle,
+                value: splitDownloadsByChapters,
+                onChanged: (isTrue) => settings.youtube.save(splitDownloadsByChapters: !isTrue),
+              ),
+            ),
+            YTDownloadSponsorBlockTile(
+              categoriesOverride: _sponsorSegmentsCategories,
             ),
             ObxO(
               rx: settings.downloadAddAudioToLocalLibrary,
@@ -612,6 +632,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                     keepCachedVersionsIfDownloaded: settings.downloadFilesKeepCachedVersions.value,
                                     downloadFilesWriteUploadDate: settings.downloadFilesWriteUploadDate.value,
                                     deleteOldFile: settings.downloadOverrideOldFiles.value,
+                                    removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
+                                    splitByChapters: settings.youtube.splitDownloadsByChapters.value,
+                                    sponsorSegmentsCategories: _sponsorSegmentsCategories.value,
                                   ) ??
                                   // -- this is not really used since initState() calls onRenameAllTasks() which fills _configMap
                                   _getDummyDownloadConfig(

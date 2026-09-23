@@ -482,6 +482,138 @@ class NamidaFFMPEG {
     ], noTimeout: true);
   }
 
+  /// Cuts [sortedCutRangesMS] out of [path] & stitches the remaining parts back together, without re-encoding.
+  /// Cuts are keyframe aligned, so a video part can start slightly before its requested point.
+  ///
+  /// [sortedCutRangesMS] must be sorted & non-overlapping. [cutStartPaddingMS] delays every cut, to keep
+  /// some room before it for containers whose last packets before a non keyframe boundary go unplayed.
+  ///
+  /// Attached cover arts are dropped, the caller is responsible for re-writing them.
+  Future<bool> removeSegments({
+    required String path,
+    required List<(int, int)> sortedCutRangesMS,
+    int cutStartPaddingMS = 0,
+  }) async {
+    final totalDuration = await getMediaDuration(path);
+    if (totalDuration == null) return false;
+
+    final totalDurationMS = totalDuration.inMilliseconds;
+    final keepRanges = _buildKeepRanges(sortedCutRangesMS, totalDurationMS, cutStartPaddingMS);
+    if (keepRanges.isEmpty) return false; // nothing would be left, the file is kept as is
+    if (keepRanges.length == 1 && keepRanges.first.$1 <= 0 && keepRanges.first.$2 >= totalDurationMS) return false;
+
+    String ext = 'mp4';
+    try {
+      ext = path.getExtension;
+    } catch (_) {}
+
+    // -- kept next to the target so the finished file is a rename away instead of a full cross volume copy
+    final workingDirPath = FileParts.joinPath(path.getDirectoryPath, '.tempcut_${path.hashCode}');
+    final workingDir = Directory(workingDirPath);
+
+    try {
+      await workingDir.create(recursive: true);
+
+      final partsPaths = <String>[];
+      for (int i = 0; i < keepRanges.length; i++) {
+        final range = keepRanges[i];
+        final partPath = FileParts.joinPath(workingDirPath, 'part_$i.$ext');
+        final didExtract = await extractRange(
+          path: path,
+          startMS: range.$1,
+          endMS: range.$2,
+          outputPath: partPath,
+        );
+        if (!didExtract) return false;
+        partsPaths.add(partPath);
+      }
+
+      if (partsPaths.length == 1) {
+        return await _moveResultBack(File(partsPaths.first), path);
+      }
+
+      final listFile = FileParts.join(workingDirPath, 'parts.txt');
+      final partsList = partsPaths.map((p) => "file '${p.replaceAll('\\', '/').replaceAll("'", r"'\''")}'").join('\n');
+      await listFile.writeAsString(partsList);
+
+      final outputPath = FileParts.joinPath(workingDirPath, 'output.$ext');
+      final didConcat = await _executer.ffmpegExecute([
+        '-f',
+        'concat',
+        '-safe',
+        '0',
+        '-i',
+        listFile.path,
+        '-map',
+        '0',
+        '-c',
+        'copy',
+        '-y',
+        outputPath,
+      ], noTimeout: true);
+
+      if (!didConcat) return false;
+      return await _moveResultBack(File(outputPath), path);
+    } catch (_) {
+      return false;
+    } finally {
+      workingDir.delete(recursive: true).ignoreError();
+    }
+  }
+
+  /// Copies `[startMS, endMS]` of [path] into [outputPath] without re-encoding.
+  /// The start snaps back to the closest keyframe, so a part can begin slightly early but never ends late.
+  ///
+  /// Attached cover arts are dropped, the caller is responsible for re-writing them.
+  Future<bool> extractRange({
+    required String path,
+    required int startMS,
+    required int endMS,
+    required String outputPath,
+  }) async {
+    return await _executer.ffmpegExecute([
+      // -- both as input options, so [-to] stays absolute on the source timeline & no wanted content is lost
+      '-ss',
+      '${startMS / 1000}',
+      '-to',
+      '${endMS / 1000}',
+      '-i',
+      path,
+      '-map',
+      '0:V?', // uppercase V to skip cover arts, they would break concat demuxing
+      '-map',
+      '0:a?',
+      '-c',
+      'copy',
+      '-avoid_negative_ts',
+      'make_zero',
+      '-y',
+      outputPath,
+    ], noTimeout: true);
+  }
+
+  static Future<bool> _moveResultBack(File resultFile, String targetPath) async {
+    final resultSize = await resultFile.fileSize();
+    if (resultSize == null || resultSize <= 0) return false;
+    final moved = await resultFile.move(targetPath);
+    return moved != null;
+  }
+
+  static List<(int, int)> _buildKeepRanges(List<(int, int)> sortedCutRangesMS, int totalDurationMS, int cutStartPaddingMS) {
+    const minimumKeepDurationMS = 100;
+    final keepRanges = <(int, int)>[];
+    int cursorMS = 0;
+    for (final cut in sortedCutRangesMS) {
+      final endMS = cut.$2.withMaximum(totalDurationMS);
+      if (endMS <= cursorMS) continue;
+      final startMS = (cut.$1 + cutStartPaddingMS).withMaximum(endMS).withMinimum(cursorMS);
+      if (startMS - cursorMS >= minimumKeepDurationMS) keepRanges.add((cursorMS, startMS));
+      cursorMS = endMS;
+    }
+    if (totalDurationMS - cursorMS >= minimumKeepDurationMS) keepRanges.add((cursorMS, totalDurationMS));
+    return keepRanges;
+  }
+
   Future<bool> convertToWav({
     required String audioPath,
     required String outputPath,

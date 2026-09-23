@@ -12,6 +12,7 @@ import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/stream_base.dart';
+import 'package:youtipie/class/streams/stream_segments.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
@@ -51,6 +52,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_id_stats.dart';
 import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/parallel_downloads_controller.dart';
+import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_ongoing_finished_downloads.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -437,8 +439,7 @@ class YoutubeController {
         failed: false,
       );
       // -- remove progress only if succeeded.
-      downloadsVideoProgressMap.value[videoId]?.remove(filename);
-      downloadsAudioProgressMap.value[videoId]?.remove(filename);
+      _clearDownloadProgress(videoId, filename);
     } else if (isPaused) {
       final audioProgress = downloadsAudioProgressMap.value[videoId]?.value[filename];
       final progressInfo = audioProgress ?? downloadsVideoProgressMap.value[videoId]?.value[filename];
@@ -457,7 +458,9 @@ class YoutubeController {
         isAudio: audioProgress != null,
         speedInBytes: null,
       );
-    } else if (!isStopped) {
+    } else if (isStopped) {
+      _clearDownloadProgress(videoId, filename);
+    } else {
       final image = await _notificationData.imageCallback(videoId);
       NotificationManager.instance.doneDownloadingYoutubeNotification(
         filenameWrapper: filename,
@@ -467,6 +470,11 @@ class YoutubeController {
         failed: true,
       );
     }
+  }
+
+  void _clearDownloadProgress(DownloadTaskVideoId videoId, DownloadTaskFilename filename) {
+    downloadsVideoProgressMap.value[videoId]?.remove(filename);
+    downloadsAudioProgressMap.value[videoId]?.remove(filename);
   }
 
   Timer? _downloadNotificationTimer;
@@ -787,6 +795,7 @@ class YoutubeController {
         _downloadClientsMap[groupName]?.remove(c.filename);
         _breakRetrievingInfoRequest(c);
         NotificationManager.instance.removeDownloadingYoutubeNotification(filenameWrapper: c.filename);
+        _clearDownloadProgress(c.id, c.filename); // -- a canceled task would otherwise keep showing its last progress
         downloadTasksGroupDB.delete(c.filename.key);
         if (!keepInListIfRemoved) {
           youtubeDownloadTasksMap.value[groupName]?.remove(c.filename);
@@ -794,7 +803,9 @@ class YoutubeController {
           _indexRemoveTask(c);
         }
         if (delete) {
-          FileParts.join(directoryPath, c.filename.filename).tryDeleting();
+          final outputFilePath = FileParts.joinPath(directoryPath, c.filename.filename);
+          File(outputFilePath).tryDeleting();
+          if (c.splitByChapters == true) Directory(_getChaptersDirectoryPath(outputFilePath)).delete(recursive: true).ignoreError();
         }
         if (downloadedFilesMap.value[groupName]?[c.filename] != null) {
           downloadedFilesMap[groupName]?[c.filename] = null;
@@ -864,6 +875,8 @@ class YoutubeController {
       final keepCachedVersionsIfDownloaded = config.keepCachedVersionsIfDownloaded ?? settings.downloadFilesKeepCachedVersions.value;
       final downloadFilesWriteUploadDate = config.downloadFilesWriteUploadDate ?? settings.downloadFilesWriteUploadDate.value;
       final deleteOldFile = config.deleteOldFile ?? settings.downloadOverrideOldFiles.value;
+      final removeSponsorSegments = config.removeSponsorSegments ?? settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads;
+      final splitByChapters = config.splitByChapters ?? settings.youtube.splitDownloadsByChapters.value;
 
       final videoID = config.id;
 
@@ -1003,6 +1016,7 @@ class YoutubeController {
       }
 
       FTags? cachedTags;
+      List<File>? chapterFiles;
 
       final downloadedFile = await _downloadYoutubeVideoRaw(
         groupName: groupName,
@@ -1034,6 +1048,49 @@ class YoutubeController {
             newTags: newTags,
           );
         },
+        onOutputFileReady: removeSponsorSegments || splitByChapters
+            ? (outputFile) async {
+                final sponsorRanges = removeSponsorSegments
+                    ? await SponsorBlockController.inst.getDownloadRemovalRangesMS(videoID.videoId, categoriesNamesOverride: config.sponsorSegmentsCategories)
+                    : null;
+                final cutStartPaddingMS = config.videoStream != null ? _kVideoCutPaddingMS : 0;
+
+                final chapters = splitByChapters ? pageResult?.streamSegments : null;
+                if (chapters != null && chapters.length > 1) {
+                  final parts = await _splitFileByChapters(
+                    outputFile: outputFile,
+                    chapters: chapters,
+                    sponsorRangesMS: sponsorRanges,
+                    config: config,
+                    thumbnailFile: await getEffectiveThumbnail(),
+                    cutStartPaddingMS: cutStartPaddingMS,
+                  );
+                  if (parts != null && parts.isNotEmpty) {
+                    chapterFiles = parts;
+                    return parts.first;
+                  }
+                }
+
+                if (sponsorRanges == null) return null;
+
+                final path = outputFile.path;
+                final didRemove = await NamidaFFMPEG.inst.removeSegments(
+                  path: path,
+                  sortedCutRangesMS: sponsorRanges,
+                  cutStartPaddingMS: cutStartPaddingMS,
+                );
+                if (!didRemove) return null;
+
+                // -- cutting drops the cover art & can drop tags depending on the container
+                final thumbnailFile = await getEffectiveThumbnail();
+                final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+                await NamidaTaggerController.inst.writeTagsRaw(
+                  path: path,
+                  newTags: newTags,
+                );
+                return null;
+              }
+            : null,
       );
 
       if (isTempThumbnail) {
@@ -1043,22 +1100,27 @@ class YoutubeController {
         }
       }
 
-      if (downloadFilesWriteUploadDate && downloadedFile != null) {
+      final outputFiles = downloadedFile == null ? null : (chapterFiles ?? [downloadedFile]);
+
+      if (downloadFilesWriteUploadDate && outputFiles != null) {
         final d = config.fileDate;
         if (d != null && d != DateTime(0)) {
-          try {
-            await downloadedFile.setLastAccessed(d);
-            await downloadedFile.setLastModified(d);
-          } catch (_) {}
+          for (final file in outputFiles) {
+            try {
+              await file.setLastAccessed(d);
+              await file.setLastModified(d);
+            } catch (_) {}
+          }
         }
       }
 
-      // -- adding to library, if audio or audio+video downloaded
-      if (addAudioToLocalLibrary && config.audioStream != null && downloadedFile != null) {
-        Indexer.inst.convertPathToTracksAndAddToListsSingle(downloadedFile.path);
-      }
-      if (downloadedFile != null) {
-        Indexer.inst.scanMediaStore(downloadedFile.path);
+      if (outputFiles != null) {
+        // -- adding to library, if audio or audio+video downloaded
+        final addToLocalLibrary = addAudioToLocalLibrary && config.audioStream != null;
+        for (final file in outputFiles) {
+          if (addToLocalLibrary) Indexer.inst.convertPathToTracksAndAddToListsSingle(file.path);
+          Indexer.inst.scanMediaStore(file.path);
+        }
       } else if (!_isTaskStopped(groupName, config)) {
         _registerAutoResumeOnConnectionRestored(groupName, config);
       }
@@ -1118,6 +1180,154 @@ class YoutubeController {
     File(_getTempDownloadPath(directoryPath, prefix, filename, oldStream)).delete().ignoreError();
   }
 
+  static const _kMinimumChapterDurationMS = 1000;
+
+  /// video cuts land on keyframes, so the packets right before one can go unplayed & the cut feels early.
+  static const _kVideoCutPaddingMS = 200;
+
+  /// the folder holding the per chapter parts of a download, derived from the output file so it can be found again on a rescan.
+  static String _getChaptersDirectoryPath(String outputFilePath) {
+    final dotIndex = outputFilePath.lastIndexOf('.');
+    return dotIndex > 0 ? outputFilePath.substring(0, dotIndex) : '$outputFilePath chapters';
+  }
+
+  static File? _findFirstChapterFileSync(String outputFilePath) {
+    File? first;
+    try {
+      final entities = Directory(_getChaptersDirectoryPath(outputFilePath)).listSync();
+      for (final entity in entities) {
+        if (entity is File && (first == null || entity.path.compareTo(first.path) < 0)) first = entity;
+      }
+    } catch (_) {}
+    return first;
+  }
+
+  static List<(int, int, String)> _buildChapterRanges(List<StreamSegment> chapters, int totalDurationMS) {
+    final ranges = <(int, int, String)>[];
+    for (final chapter in chapters) {
+      final startSeconds = chapter.startSeconds;
+      if (startSeconds == null) continue;
+      final startMS = startSeconds * 1000;
+      final previousIndex = ranges.length - 1;
+      if (previousIndex >= 0) {
+        final previous = ranges[previousIndex];
+        if (startMS - previous.$1 < _kMinimumChapterDurationMS) continue;
+        ranges[previousIndex] = (previous.$1, startMS, previous.$3);
+      }
+      ranges.add((startMS, totalDurationMS, chapter.title));
+    }
+    final lastIndex = ranges.length - 1;
+    if (lastIndex >= 0 && ranges[lastIndex].$2 - ranges[lastIndex].$1 < _kMinimumChapterDurationMS) {
+      ranges.removeLast();
+      // -- the dropped tail belongs to the chapter before it rather than to nothing
+      if (lastIndex > 0) {
+        final newLast = ranges[lastIndex - 1];
+        ranges[lastIndex - 1] = (newLast.$1, totalDurationMS, newLast.$3);
+      }
+    }
+    return ranges;
+  }
+
+  /// sponsor ranges translated into a chapter's own timeline, clipped to it. empty when the chapter is untouched.
+  static List<(int, int)> _cutRangesWithinChapter(List<(int, int)>? sortedCutRangesMS, int chapterStartMS, int chapterEndMS) {
+    if (sortedCutRangesMS == null) return const [];
+    final ranges = <(int, int)>[];
+    for (final cut in sortedCutRangesMS) {
+      if (cut.$2 <= chapterStartMS) continue;
+      if (cut.$1 >= chapterEndMS) break;
+      final startMS = cut.$1.withMinimum(chapterStartMS) - chapterStartMS;
+      final endMS = cut.$2.withMaximum(chapterEndMS) - chapterStartMS;
+      if (endMS > startMS) ranges.add((startMS, endMS));
+    }
+    return ranges;
+  }
+
+  /// Splits [outputFile] into one file per youtube chapter inside [_getChaptersDirectoryPath], removing
+  /// [sponsorRangesMS] from each part afterwards so the chapter bounds stay exact.
+  ///
+  /// Returns the produced parts & deletes [outputFile], or `null` when nothing was split.
+  Future<List<File>?> _splitFileByChapters({
+    required File outputFile,
+    required List<StreamSegment> chapters,
+    required List<(int, int)>? sponsorRangesMS,
+    required YoutubeItemDownloadConfig config,
+    required File? thumbnailFile,
+    required int cutStartPaddingMS,
+  }) async {
+    final path = outputFile.path;
+    final totalDuration = await NamidaFFMPEG.inst.getMediaDuration(path);
+    if (totalDuration == null) return null;
+
+    final ranges = _buildChapterRanges(chapters, totalDuration.inMilliseconds);
+    if (ranges.length < 2) return null;
+
+    String ext = '';
+    try {
+      ext = path.getExtension;
+    } catch (_) {}
+
+    final partsDirPath = _getChaptersDirectoryPath(path);
+    final partsDir = Directory(partsDirPath);
+    final albumTitle = config.ffmpegTags[FFMPEGTagField.title.tagKey] ?? '';
+    final trackTotal = ranges.length.toString();
+    final numberPadding = trackTotal.length;
+    final parts = <File>[];
+    bool didSplitAll = true;
+
+    try {
+      // -- a previous split of the same task can hold parts under now outdated chapter names
+      await partsDir.delete(recursive: true).ignoreError();
+      await partsDir.create(recursive: true);
+
+      for (int i = 0; i < ranges.length; i++) {
+        final range = ranges[i];
+        final number = (i + 1).toString().padLeft(numberPadding, '0');
+        final partName = DownloadTaskFilename.cleanupFilename('$number. ${range.$3}.$ext', parentDirPath: partsDirPath);
+        final partPath = FileParts.joinPath(partsDirPath, partName);
+
+        final didExtract = await NamidaFFMPEG.inst.extractRange(
+          path: path,
+          startMS: range.$1,
+          endMS: range.$2,
+          outputPath: partPath,
+        );
+        if (!didExtract) {
+          didSplitAll = false;
+          break;
+        }
+
+        final cutRanges = _cutRangesWithinChapter(sponsorRangesMS, range.$1, range.$2);
+        if (cutRanges.isNotEmpty) {
+          await NamidaFFMPEG.inst.removeSegments(
+            path: partPath,
+            sortedCutRangesMS: cutRanges,
+            cutStartPaddingMS: cutStartPaddingMS,
+          );
+        }
+
+        await NamidaTaggerController.inst.writeTagsRaw(
+          path: partPath,
+          newTags: config.buildTagsValues(
+            path: partPath,
+            thumbnailFile: thumbnailFile,
+            chapterOverrides: (title: range.$3, album: albumTitle, trackNumber: '${i + 1}', trackTotal: trackTotal),
+          ),
+        );
+        parts.add(File(partPath));
+      }
+    } catch (_) {
+      didSplitAll = false;
+    }
+
+    if (!didSplitAll) {
+      partsDir.delete(recursive: true).ignoreError();
+      return null;
+    }
+
+    await outputFile.tryDeleting();
+    return parts;
+  }
+
   /// lowercased since android & windows storages are case insensitive.
   static String _getActiveOutputKey(DownloadTaskGroupName groupName, String filename) => '${groupName.groupName}/${filename.toLowerCase()}';
 
@@ -1140,6 +1350,7 @@ class YoutubeController {
     required Future<void> Function(File videoFile) onVideoFileReady,
     required Future<void> Function(File audioFile) onAudioFileReady,
     required Future<void> Function(File? deletedFile)? onOldFileDeleted,
+    required Future<File?> Function(File outputFile)? onOutputFileReady,
   }) async {
     if (id.videoId.isEmpty) return null;
 
@@ -1453,6 +1664,8 @@ class YoutubeController {
             }
           }
         }
+
+        if (df != null && onOutputFileReady != null) df = await onOutputFileReady(df) ?? df;
 
         // -- [df] can still be valid here, ex: video is unavailable but cached files were used.
         if (downloadErrorDescription != null && downloadErrorDescription.exceptions.isNotEmpty) {
@@ -1974,10 +2187,13 @@ class _IsolateFunctions {
           final ytitem = YoutubeItemDownloadConfig.fromJson(itemMap);
           final saveDirPath = FileParts.joinPath(params.downloadLocation, group.groupName);
           final file = FileParts.join(saveDirPath, ytitem.filename.filename);
-          final fileExists = file.existsSync();
+          var existingFile = file.existsSync() ? file : null;
+          // -- a split download leaves no merged file behind, its chapters folder is what marks it as done
+          if (existingFile == null && ytitem.splitByChapters == true) existingFile = YoutubeController._findFirstChapterFileSync(file.path);
+          final fileExists = existingFile != null;
           final itemFileName = ytitem.filename;
           youtubeDownloadTasksMap[group]![itemFileName] = ytitem;
-          downloadedFilesMap[group]![itemFileName] = fileExists ? file : null;
+          downloadedFilesMap[group]![itemFileName] = existingFile;
           if (!fileExists) {
             final audioStream = ytitem.audioStream;
             final audioSize = audioStream == null ? null : getTempFileSize(saveDirPath, YoutubeController._kTempAudioPrefix, itemFileName, audioStream);

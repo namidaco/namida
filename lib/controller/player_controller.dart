@@ -133,6 +133,8 @@ class Player {
   RxBaseCore<int> get currentIndex => _audioHandler.currentIndex;
   RxBaseCore<int> get nowPlayingPosition => _audioHandler.currentPositionMS;
   int get nowPlayingPositionR => _audioHandler.currentPositionMS.valueR;
+  int get seekCount => _audioHandler.seekCount;
+  int get lastSeekPositionMS => _audioHandler.lastSeekPositionMS;
   RxBaseCore<double> get currentSpeed => _audioHandler.currentSpeed;
   double get userPlayerVolumeForItem => _audioHandler.userPlayerVolumeForItem;
   RxBaseCore<Duration?> get currentItemDuration => _audioHandler.currentItemDuration;

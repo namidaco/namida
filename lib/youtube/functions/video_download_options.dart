@@ -13,6 +13,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/widgets/yt_download_sponsorblock_tile.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 Future<void> showVideoDownloadOptionsSheet({
@@ -23,6 +24,7 @@ Future<void> showVideoDownloadOptionsSheet({
   required void Function(String newGroupName) onDownloadGroupNameChanged,
   required void Function(String filename) onDownloadFilenameChanged,
   required bool showSpecificFileOptions,
+  Rxn<List<String>>? sponsorSegmentsCategories,
   Widget Function(TextEditingController? Function() currentControllerFn, Function(String text) onChanged)? preWidget,
   required String? initialGroupName,
 }) async {
@@ -117,6 +119,19 @@ Future<void> showVideoDownloadOptionsSheet({
                         onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
                       ),
                     ),
+                    Obx(
+                      (context) => CustomSwitchListTile(
+                        icon: Broken.crop,
+                        title: lang.splitByChapters,
+                        subtitle: lang.splitByChaptersSubtitle,
+                        value: settings.youtube.splitDownloadsByChapters.valueR,
+                        onChanged: (isTrue) => settings.youtube.save(splitDownloadsByChapters: !isTrue),
+                      ),
+                    ),
+                    if (sponsorSegmentsCategories != null)
+                      YTDownloadSponsorBlockTile(
+                        categoriesOverride: sponsorSegmentsCategories,
+                      ),
                   ],
                   const SizedBox(height: 8.0),
                   const NamidaContainerDivider(),

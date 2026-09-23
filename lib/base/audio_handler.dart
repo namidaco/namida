@@ -2474,8 +2474,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return skipToQueueItem(index);
   }
 
+  /// lets position listeners tell a seek apart from playback, without hooking into every seek path.
+  int seekCount = 0;
+  int lastSeekPositionMS = 0;
+
   @override
   Future<void> seek(Duration position) async {
+    seekCount++;
+    lastSeekPositionMS = position.inMilliseconds;
     Future<void> plsSeek() => super.seek(position);
 
     await currentItem.value?.execute(

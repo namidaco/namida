@@ -40,6 +40,9 @@ class YoutubeItemDownloadConfig {
   final bool? keepCachedVersionsIfDownloaded;
   final bool? downloadFilesWriteUploadDate;
   final bool? deleteOldFile;
+  final bool? removeSponsorSegments;
+  final bool? splitByChapters;
+  final List<String>? sponsorSegmentsCategories;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -64,6 +67,9 @@ class YoutubeItemDownloadConfig {
     required this.keepCachedVersionsIfDownloaded,
     required this.downloadFilesWriteUploadDate,
     required this.deleteOldFile,
+    required this.removeSponsorSegments,
+    required this.splitByChapters,
+    required this.sponsorSegmentsCategories,
   }) : _filename = filename.obs,
        this.addedAt = addedAt ?? DateTime.now();
 
@@ -111,6 +117,9 @@ class YoutubeItemDownloadConfig {
       keepCachedVersionsIfDownloaded: map['keepCachedVersionsIfDownloaded'] as bool?,
       downloadFilesWriteUploadDate: map['downloadFilesWriteUploadDate'] as bool?,
       deleteOldFile: map['deleteOldFile'] as bool?,
+      removeSponsorSegments: map['removeSponsorSegments'] as bool?,
+      splitByChapters: map['splitByChapters'] as bool?,
+      sponsorSegmentsCategories: (map['sponsorSegmentsCategories'] as List?)?.cast<String>(),
     );
   }
 
@@ -138,6 +147,9 @@ class YoutubeItemDownloadConfig {
       'keepCachedVersionsIfDownloaded': ?keepCachedVersionsIfDownloaded,
       'downloadFilesWriteUploadDate': ?downloadFilesWriteUploadDate,
       'deleteOldFile': ?deleteOldFile,
+      'removeSponsorSegments': ?removeSponsorSegments,
+      'splitByChapters': ?splitByChapters,
+      'sponsorSegmentsCategories': ?sponsorSegmentsCategories,
     };
   }
 
@@ -178,6 +190,9 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     bool? keepCachedVersionsIfDownloaded,
     bool? downloadFilesWriteUploadDate,
     bool? deleteOldFile,
+    bool? removeSponsorSegments,
+    bool? splitByChapters,
+    List<String>? sponsorSegmentsCategories,
   }) {
     return YoutubeItemDownloadConfig(
       id: id ?? this.id,
@@ -202,24 +217,31 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       keepCachedVersionsIfDownloaded: keepCachedVersionsIfDownloaded ?? this.keepCachedVersionsIfDownloaded,
       downloadFilesWriteUploadDate: downloadFilesWriteUploadDate ?? this.downloadFilesWriteUploadDate,
       deleteOldFile: deleteOldFile ?? this.deleteOldFile,
+      removeSponsorSegments: removeSponsorSegments ?? this.removeSponsorSegments,
+      splitByChapters: splitByChapters ?? this.splitByChapters,
+      sponsorSegmentsCategories: sponsorSegmentsCategories ?? this.sponsorSegmentsCategories,
     );
   }
 
-  FTags buildTagsValues({required String path, required File? thumbnailFile}) {
+  FTags buildTagsValues({
+    required String path,
+    required File? thumbnailFile,
+    ({String title, String album, String trackNumber, String trackTotal})? chapterOverrides,
+  }) {
     final ffmpegTags = this.ffmpegTags;
     double? doubleFromString(String? value) => value == null ? null : double.tryParse(ffmpegTags[FFMPEGTagField.rating.tagKey] ?? '');
     return FTags(
       path: path,
       artwork: FArtwork(file: thumbnailFile),
-      title: ffmpegTags[FFMPEGTagField.title.tagKey],
-      album: ffmpegTags[FFMPEGTagField.album.tagKey],
+      title: chapterOverrides?.title ?? ffmpegTags[FFMPEGTagField.title.tagKey],
+      album: chapterOverrides?.album ?? ffmpegTags[FFMPEGTagField.album.tagKey],
       albumArtist: ffmpegTags[FFMPEGTagField.albumArtist.tagKey],
       artist: ffmpegTags[FFMPEGTagField.artist.tagKey],
       composer: ffmpegTags[FFMPEGTagField.composer.tagKey],
       genre: ffmpegTags[FFMPEGTagField.genre.tagKey],
       style: ffmpegTags[FFMPEGTagField.style.tagKey],
-      trackNumber: ffmpegTags[FFMPEGTagField.trackNumber.tagKey],
-      trackTotal: ffmpegTags[FFMPEGTagField.trackTotal.tagKey],
+      trackNumber: chapterOverrides?.trackNumber ?? ffmpegTags[FFMPEGTagField.trackNumber.tagKey],
+      trackTotal: chapterOverrides?.trackTotal ?? ffmpegTags[FFMPEGTagField.trackTotal.tagKey],
       discNumber: ffmpegTags[FFMPEGTagField.discNumber.tagKey],
       discTotal: ffmpegTags[FFMPEGTagField.discTotal.tagKey],
       lyrics: ffmpegTags[FFMPEGTagField.lyrics.tagKey],

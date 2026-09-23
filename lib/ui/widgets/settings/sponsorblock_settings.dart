@@ -51,6 +51,17 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               },
             ),
           ),
+          Obx(
+            (context) => CustomSwitchListTile(
+              icon: Broken.scissor,
+              title: lang.removeSponsorSegmentsFromDownloads,
+              subtitle: lang.removeSponsorSegmentsFromDownloadsSubtitle,
+              value: _currentConfig.valueR.removeSegmentsFromDownloads,
+              onChanged: (isTrue) => settings.youtube.save(
+                sponsorBlockSettings: _currentConfigValue.copyWith(removeSegmentsFromDownloads: !isTrue),
+              ),
+            ),
+          ),
           CustomListTile(
             leading: StackedIcon(
               baseIcon: Broken.forward,
@@ -217,32 +228,51 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
         ],
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: SponsorBlockAction.values.map((action) {
-            if (isPOI && action == SponsorBlockAction.autoSkipOnce) return const SizedBox();
-            final icon = action.toIcon();
-            final text = action.toText();
-            final leading = action == SponsorBlockAction.autoSkipOnce
-                ? StackedIcon(
-                    baseIcon: icon,
-                    secondaryText: '①',
-                    disableColor: true,
-                    secondaryIconSize: 12.0,
-                  )
-                : null;
-            return Padding(
-              padding: const EdgeInsets.all(3.0),
-              child: ListTileWithCheckMark(
-                leading: leading,
-                icon: icon,
-                title: text,
-                active: config.action == action,
-                onTap: () {
-                  onChanged(config.copyWith(action: action));
-                  NamidaNavigator.inst.closeDialog();
+          children: [
+            ...SponsorBlockAction.values.map((action) {
+              if (isPOI && action == SponsorBlockAction.autoSkipOnce) return const SizedBox();
+              final icon = action.toIcon();
+              final text = action.toText();
+              final leading = action == SponsorBlockAction.autoSkipOnce
+                  ? StackedIcon(
+                      baseIcon: icon,
+                      secondaryText: '①',
+                      disableColor: true,
+                      secondaryIconSize: 12.0,
+                    )
+                  : null;
+              return Padding(
+                padding: const EdgeInsets.all(3.0),
+                child: ListTileWithCheckMark(
+                  leading: leading,
+                  icon: icon,
+                  title: text,
+                  active: config.action == action,
+                  onTap: () {
+                    onChanged(config.copyWith(action: action));
+                    NamidaNavigator.inst.closeDialog();
+                  },
+                ),
+              );
+            }),
+            if (category.canBeRemovedFromDownloads) ...[
+              NamidaContainerDivider(
+                margin: EdgeInsets.symmetric(vertical: 8.0),
+              ),
+              Obx(
+                (context) {
+                  final categoryConfig = settings.youtube.sponsorBlockSettings.valueR.configs[category] ?? category.defaultConfig;
+                  return CustomSwitchListTile(
+                    visualDensity: VisualDensity.compact,
+                    icon: Broken.scissor,
+                    title: lang.removeFromDownloads,
+                    value: categoryConfig.removeFromDownloads,
+                    onChanged: (isTrue) => onChanged(categoryConfig.copyWith(removeFromDownloads: !isTrue)),
+                  );
                 },
               ),
-            );
-          }).toFixedList(),
+            ],
+          ],
         ),
       ),
     );
@@ -270,7 +300,7 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return CustomListTile(
       title: category.toText(),
-      subtitle: config.action.toText(),
+      subtitle: config.removeFromDownloads ? '${config.action.toText()} • ${lang.removeFromDownloads}' : config.action.toText(),
       leading: _ColorCircle(
         color: config.color,
         onTap: () => _showColorPicker(context),

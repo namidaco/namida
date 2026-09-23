@@ -78,11 +78,74 @@ class SponsorBlockController {
       details: forceRequest ? ExecuteDetails.kForceRequest : null,
     );
 
+    final segmentsList = newSegments?.segments;
+    if (segmentsList != null && segmentsList.length > 1) segmentsList.sort(_compareByImportance);
     currentSegments.value = newSegments;
 
     if (currentSegments.value == null) {
       clearSegments(); // network error or whatever, reset latest fetched data to refetch next time
     }
+  }
+
+  /// Time ranges to cut out of a downloaded file, sorted & non-overlapping. `null` when there is nothing to cut.
+  Future<List<(int, int)>?> getDownloadRemovalRangesMS(String videoId, {List<String>? categoriesNamesOverride}) async {
+    final sponsorBlockSettings = settings.youtube.sponsorBlockSettings.value;
+    final categoriesNames = categoriesNamesOverride ?? sponsorBlockSettings.downloadsRemovedCategoriesNames;
+    if (categoriesNames.isEmpty) return null;
+
+    // -- the segments cache is keyed by video id only, fetching the union keeps it valid for playback too
+    final categoriesToFetch = <String>{...categoriesNames, ...sponsorBlockSettings.activeCategoriesNames}.toList();
+    final result = await YoutubeInfoController.sponsorblock.getSegments(
+      videoId,
+      categories: categoriesToFetch,
+      serverAddress: sponsorBlockSettings.serverAddress,
+      details: ExecuteDetails.kForceRequest,
+    );
+
+    final segments = result?.segments;
+    if (segments == null || segments.isEmpty) return null;
+
+    final minimumSegmentDurationMS = sponsorBlockSettings.minimumSegmentDurationMS;
+    final ranges = <(int, int)>[];
+    for (final segment in segments) {
+      if (segment.actionType != _kRemovableActionType) continue;
+      if (!categoriesNames.contains(segment.category)) continue;
+      if (segment.durationMS <= 0 || segment.durationMS < minimumSegmentDurationMS) continue;
+      ranges.add((segment.segmentStartMS, segment.segmentEndMS));
+    }
+    if (ranges.isEmpty) return null;
+
+    ranges.sort((a, b) => a.$1.compareTo(b.$1));
+    final merged = <(int, int)>[ranges.first];
+    for (int i = 1; i < ranges.length; i++) {
+      final range = ranges[i];
+      final last = merged.last;
+      if (range.$1 <= last.$2) {
+        if (range.$2 > last.$2) merged[merged.length - 1] = (last.$1, range.$2);
+      } else {
+        merged.add(range);
+      }
+    }
+    return merged;
+  }
+
+  /// least important first, so the seekbar paints the most important segment on top & the skip button picks that same one.
+  int _compareByImportance(SponsorBlockSegment a, SponsorBlockSegment b) {
+    final byImportance = _importanceOf(a.category).compareTo(_importanceOf(b.category));
+    return byImportance != 0 ? byImportance : a.segmentStartMS.compareTo(b.segmentStartMS);
+  }
+
+  int _importanceOf(String categoryName) {
+    final category = _segmentNameToCategory[categoryName];
+    return category == null ? -1 : SponsorBlockCategory.values.length - category.index;
+  }
+
+  /// a seekbar only or disabled segment must not shadow an overlapping one the skip button can act on.
+  bool canActOnSegment(SponsorBlockSegment segment) {
+    return switch (getConfigForSegment(segment.category)?.action) {
+      SponsorBlockAction.autoSkip || SponsorBlockAction.autoSkipOnce || SponsorBlockAction.showSkipButton => true,
+      _ => false,
+    };
   }
 
   bool canShowSkipButton(SponsorBlockSegment segment) {
@@ -120,4 +183,7 @@ class SponsorBlockController {
   }
 
   final _segmentNameToCategory = {for (final e in SponsorBlockCategory.values) e.name: e};
+
+  /// `mute` & `poi` segments have nothing to cut out, `full` would wipe the whole file.
+  static const _kRemovableActionType = 'skip';
 }

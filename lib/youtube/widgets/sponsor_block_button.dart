@@ -23,24 +23,60 @@ class SkipSponsorButton extends StatefulWidget {
 
 class __SkipSponsorButtonState extends State<SkipSponsorButton> {
   SponsorBlockSegment? _currentSegment;
+  int _seenSeekCount = Player.inst.seekCount;
+  int? _seekLandingMS;
+  bool _didReachSeekLanding = false;
+
+  /// the position can settle a bit before the requested one, ex: keyframe snapping.
+  static const _kSeekLandingToleranceMS = 1000;
 
   void _onPositionChange() {
     final posMS = Player.inst.nowPlayingPosition.value;
+    final seekCount = Player.inst.seekCount;
+    if (seekCount != _seenSeekCount) {
+      _seenSeekCount = seekCount;
+      _seekLandingMS = Player.inst.lastSeekPositionMS;
+      _didReachSeekLanding = false;
+    }
+
     final segments = SponsorBlockController.inst.currentSegments.value;
     SponsorBlockSegment? newSegment;
+    bool newSegmentSeekedInto = false;
     if (segments != null) {
       if (segments.segments.isNotEmpty) {
+        final sponsorBlockSettings = settings.youtube.sponsorBlockSettings.value;
+        final hideSkipButtonAfterMS = sponsorBlockSettings.hideSkipButtonAfterMS;
+
+        // -- ticks queued before the seek applied still carry the old position, so a landing is only dropped once reached & left
+        final seekLandingMS = _seekLandingMS;
+        if (seekLandingMS != null) {
+          final isNearLanding = posMS >= seekLandingMS - _kSeekLandingToleranceMS && posMS <= seekLandingMS + hideSkipButtonAfterMS;
+          if (isNearLanding) {
+            _didReachSeekLanding = true;
+          } else if (_didReachSeekLanding) {
+            _seekLandingMS = null;
+            _didReachSeekLanding = false;
+          }
+        }
+
         // -- minor perf boost
         if ((segments.firstMS != null && posMS >= segments.firstMS!) && //
             (segments.lastMS != null && posMS <= segments.lastMS!)) {
-          final minDur = settings.youtube.sponsorBlockSettings.value.minimumSegmentDurationMS;
-          for (final s in segments.segments) {
-            if (minDur > 0 ? s.durationMS > minDur : true) {
-              if (posMS >= s.segmentStartMS && posMS <= s.segmentEndMS && (posMS <= s.segmentStartMS + settings.youtube.sponsorBlockSettings.value.hideSkipButtonAfterMS)) {
-                newSegment = s;
-                break;
-              }
-            }
+          final minDur = sponsorBlockSettings.minimumSegmentDurationMS;
+          final validSeekLandingMS = _didReachSeekLanding ? _seekLandingMS : null;
+          final list = segments.segments;
+          // -- most important is last, same as what the seekbar paints on top
+          for (int i = list.length - 1; i >= 0; i--) {
+            final s = list[i];
+            if (s.durationMS < minDur) continue;
+            if (posMS < s.segmentStartMS || posMS > s.segmentEndMS) continue;
+            final isInStartWindow = posMS <= s.segmentStartMS + hideSkipButtonAfterMS;
+            final seekedInto = !isInStartWindow && validSeekLandingMS != null && validSeekLandingMS > s.segmentStartMS && validSeekLandingMS < s.segmentEndMS;
+            if (!isInStartWindow && !seekedInto) continue;
+            if (!SponsorBlockController.inst.canActOnSegment(s)) continue;
+            newSegment = s;
+            newSegmentSeekedInto = seekedInto;
+            break;
           }
         }
       }
@@ -58,6 +94,9 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
     if (_currentSegment?.uuid != newSegment?.uuid) {
       if (newSegment == null) {
         setState(() => _currentSegment = null);
+      } else if (newSegmentSeekedInto) {
+        // -- seeking in is deliberate, it gets the button rather than being bounced out by an auto skip
+        setState(() => _currentSegment = newSegment);
       } else {
         final didAutoSkip = SponsorBlockController.inst.autoSkipIfEnabled(newSegment);
         if (!didAutoSkip) {
