@@ -160,7 +160,6 @@ dependencies:
 
   # ---- Image Utilities ----
   palette_generator: ^0.3.3
-  photo_view: ^0.15.0
 
   # ---- UI Rendering ----
   flutter_staggered_animations: ^1.1.1

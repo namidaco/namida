@@ -18,7 +18,6 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_tilt/flutter_tilt.dart';
 import 'package:history_manager/history_manager.dart';
 import 'package:like_button/like_button.dart';
-import 'package:photo_view/photo_view.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:selectable_autolink_text/selectable_autolink_text.dart';
 import 'package:sleek_circular_slider/sleek_circular_slider.dart';
@@ -67,6 +66,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/popup_wrapper.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/zoomable_image.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
@@ -7949,7 +7949,7 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
 class NamidaArtworkFullscreen extends StatefulWidget {
   final String title;
   final Widget artwork;
-  final ImageProvider<Object>? imgProvider;
+  final ImageProvider<Object> imgProvider;
   final Object? heroTag;
   final void Function() save;
   final void Function() close;
@@ -8002,18 +8002,11 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
       children: [
         LongPressDetector(
           onLongPress: widget.save,
-          child: PhotoView(
-            heroAttributes: heroTag == null ? null : PhotoViewHeroAttributes(tag: heroTag),
-            gaplessPlayback: true,
-            onTapUp: (context, details, controllerValue) {
-              _toggleAppBars();
-            },
-            tightMode: true,
-            minScale: PhotoViewComputedScale.contained,
-            loadingBuilder: (context, event) => widget.artwork,
-            backgroundDecoration: const BoxDecoration(color: Colors.transparent),
-            filterQuality: FilterQuality.high,
+          child: ZoomableImage(
             imageProvider: widget.imgProvider,
+            placeholder: widget.artwork,
+            heroTag: heroTag,
+            onTap: _toggleAppBars,
           ),
         ),
         Positioned(

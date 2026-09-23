@@ -3,8 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:photo_view/photo_view.dart';
-import 'package:photo_view/photo_view_gallery.dart';
 import 'package:youtipie/class/channels/channel_about_link.dart';
 import 'package:youtipie/class/channels/channel_home_section.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
@@ -47,6 +45,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/zoomable_image.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -305,21 +304,17 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
           // ignore: use_build_context_synchronously
           NamidaOnTaps.inst.showSavedImageInSnack(savePath, context.theme.colorScheme.surface);
         },
-        child: PhotoViewGallery.builder(
-          pageController: pageController,
+        child: PageView.builder(
+          controller: pageController,
           onPageChanged: (index) => fileIndex = index,
-          gaplessPlayback: true,
-          backgroundDecoration: const BoxDecoration(color: Colors.transparent),
           itemCount: files.length,
-          builder: (context, index) {
+          itemBuilder: (context, index) {
             final fileWKey = files[index];
             final file = fileWKey.$2;
-            return PhotoViewGalleryPageOptions(
-              heroAttributes: PhotoViewHeroAttributes(tag: _getHeroTag(channelID, isPfp, fileWKey.$1)),
-              tightMode: true,
-              minScale: PhotoViewComputedScale.contained,
-              filterQuality: FilterQuality.high,
+            return ZoomableImage(
               imageProvider: file != null ? FileImage(file) : NetworkImage(fileWKey.$1),
+              heroTag: _getHeroTag(channelID, isPfp, fileWKey.$1),
+              pagingAxis: Axis.horizontal,
             );
           },
         ),
