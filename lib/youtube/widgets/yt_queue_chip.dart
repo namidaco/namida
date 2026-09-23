@@ -634,13 +634,50 @@ class QueueChipHeaderRow extends StatelessWidget {
             onTap: NamidaNavigator.inst.closeDialog,
           ),
         ],
-        child: _QueueConfigureOptions(isLocal: isLocal),
+        child: _QueueConfigureOptions(isLocal: isLocal && !isMixed),
       ),
     );
   }
 
+  static List<Track> _localQueueTracks() => Player.inst.currentQueue.value.whereType<Selectable>().map((e) => e.track).toList();
+
+  static void _addLocalToPlaylist() => showAddToPlaylistDialog(_localQueueTracks());
+
+  static void _addYoutubeToPlaylist() => showAddToPlaylistSheet(
+    ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
+    idsNamesLookup: const {},
+  );
+
+  static void _showMixedAddToPlaylistMenu(BuildContext context) {
+    int tracksCount = 0;
+    int videosCount = 0;
+    for (final item in Player.inst.currentQueue.value) {
+      if (item is YoutubeID) {
+        videosCount++;
+      } else {
+        tracksCount++;
+      }
+    }
+    NamidaPopupWrapper(
+      childrenDefault: () => [
+        NamidaPopupItem(
+          icon: Broken.music_circle,
+          title: tracksCount.displayTrackKeyword,
+          enabled: tracksCount > 0,
+          onTap: _addLocalToPlaylist,
+        ),
+        NamidaPopupItem(
+          icon: Broken.video_circle,
+          title: videosCount.displayVideoKeyword,
+          enabled: videosCount > 0,
+          onTap: _addYoutubeToPlaylist,
+        ),
+      ],
+    ).showPopupMenu(context);
+  }
+
   void _onMoreTap() {
-    final tracks = Player.inst.currentQueue.value.whereType<Selectable>().map((e) => e.track).toList();
+    final tracks = _localQueueTracks();
     showGeneralPopupDialog(
       tracks,
       tracks.displayTrackKeyword,
@@ -795,15 +832,12 @@ class QueueChipHeaderRow extends StatelessWidget {
                             icon: Broken.music_playlist,
                             tooltip: lang.addToPlaylist,
                             onTap: () {
-                              if (isLocal) {
-                                showAddToPlaylistDialog(
-                                  Player.inst.currentQueue.value.whereType<Selectable>().map((e) => e.track).toList(),
-                                );
+                              if (isMixed) {
+                                _showMixedAddToPlaylistMenu(context);
+                              } else if (isLocal) {
+                                _addLocalToPlaylist();
                               } else {
-                                showAddToPlaylistSheet(
-                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().map((e) => e.id),
-                                  idsNamesLookup: const {},
-                                );
+                                _addYoutubeToPlaylist();
                               }
                             },
                           ),
@@ -813,15 +847,16 @@ class QueueChipHeaderRow extends StatelessWidget {
                               icon: Broken.import,
                               tooltip: lang.download,
                               onTap: () {
+                                final ids = Player.inst.currentQueue.value.whereType<YoutubeID>().toList();
                                 YTPlaylistDownloadPage(
-                                  ids: Player.inst.currentQueue.value.whereType<YoutubeID>().toList(),
+                                  ids: ids,
                                   playlistName: lang.queue,
                                   infoLookup: const {},
                                   playlistInfo: PlaylistBasicInfo(
                                     id: '',
                                     title: lang.queue,
-                                    videosCountText: Player.inst.currentQueue.value.length.toString(),
-                                    videosCount: Player.inst.currentQueue.value.length,
+                                    videosCountText: ids.length.toString(),
+                                    videosCount: ids.length,
                                     thumbnails: [],
                                   ),
                                 ).navigate();

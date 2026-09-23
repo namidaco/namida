@@ -22,6 +22,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -207,6 +208,7 @@ class CurrentColor {
   }
 
   void updatePlayerColorFromTrack(Selectable? track, int? index, {bool updateIndexOnly = false}) async {
+    if (Dimensions.inst.isMixedPlayerQueue) _currentPlayingVideo = null;
     if (!updateIndexOnly && track != null) {
       _updatePlayerColorFromItem(
         getColorPalette: () async => await getTrackColors(track.track, networkArtworkInfo: null),
@@ -229,6 +231,7 @@ class CurrentColor {
     final id = ytIdItem.id;
     if (id == '') return;
 
+    if (Dimensions.inst.isMixedPlayerQueue) currentPlayingTrack.value = null;
     if (_currentPlayingVideo == ytIdItem) return;
     _currentPlayingVideo = ytIdItem;
 

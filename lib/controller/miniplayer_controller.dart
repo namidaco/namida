@@ -29,7 +29,10 @@ import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 class MiniPlayerController {
   static MiniPlayerController get inst => _instance;
   static final MiniPlayerController _instance = MiniPlayerController._internal();
-  MiniPlayerController._internal();
+  MiniPlayerController._internal() {
+    Player.inst.currentIndex.addListener(_onCurrentItemMoved);
+    Player.inst.currentQueue.addListener(_onCurrentItemMoved);
+  }
 
   bool get _immersiveModeEnabled => settings.hideStatusBarInExpandedMiniplayer.value;
   bool get _defaultShouldDismissMiniplayer => settings.dismissibleMiniplayer.value;
@@ -281,9 +284,26 @@ class MiniPlayerController {
 
   double get _currentItemExtent => Player.inst.currentItem.value is YoutubeID ? Dimensions.youtubeCardItemExtent : Dimensions.inst.trackTileItemExtent;
 
+  double? _mixedCurrentItemStart;
+
+  void _onCurrentItemMoved() => _mixedCurrentItemStart = null;
+
+  double _currentItemStart() {
+    final index = Player.inst.currentIndex.value;
+    if (!Dimensions.inst.isMixedPlayerQueue) return _currentItemExtent * index;
+    final cached = _mixedCurrentItemStart;
+    if (cached != null) return cached;
+    final queue = Player.inst.currentQueue.value;
+    int videosCount = 0;
+    for (int i = 0; i < index; i++) {
+      if (queue[i] is YoutubeID) videosCount++;
+    }
+    return _mixedCurrentItemStart = videosCount * Dimensions.youtubeCardItemExtent + (index - videosCount) * Dimensions.inst.trackTileItemExtent;
+  }
+
   void animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
     if (queueScrollController.hasClients) {
-      final trackTileItemScrollOffsetInQueue = _currentItemExtent * Player.inst.currentIndex.value - screenSize.height * 0.2;
+      final trackTileItemScrollOffsetInQueue = _currentItemStart() - screenSize.height * 0.2;
       if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
         return;
       }
@@ -530,7 +550,7 @@ class MiniPlayerController {
   }
 
   void _updateIcon() {
-    final sizeInSettings = _currentItemExtent * Player.inst.currentIndex.value - maxOffset * 0.3;
+    final sizeInSettings = _currentItemStart() - maxOffset * 0.3;
     double pixels;
     try {
       pixels = queueScrollController.positions.first.pixels;

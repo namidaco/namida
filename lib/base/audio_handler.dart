@@ -984,6 +984,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     Lyrics.inst.resetLyrics(hide: false);
     WaveformController.inst.resetWaveform();
     VideoController.inst.currentVideoConfig.resetAll();
+    YoutubeInfoController.current.resetAll();
 
     if (tr.isPhysical) {
       WaveformController.inst.generateWaveform(
@@ -1857,6 +1858,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }) async {
     WaveformController.inst.resetWaveform();
     Lyrics.inst.resetLyrics(hide: false);
+    VideoController.inst.currentVideoConfig.resetAll();
     SponsorBlockController.inst.clearSegmentsIfVideoIsDifferent(item.id);
 
     currentVideoStream.value = null;

@@ -463,7 +463,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                         if (item is Selectable) {
                           NamidaMiniPlayerTrack.openMenu(item.trackWithDate, item.track);
                         } else if (item is YoutubeID) {
-                          NamidaMiniPlayerYoutubeIDState.openMenu(context, item, d);
+                          NamidaMiniPlayerYoutubeID.openMenu(context, item, d);
                         }
                       }
 
@@ -496,7 +496,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                               final textData = item is Selectable
                                   ? NamidaMiniPlayerTrack.textBuilder(item)
                                   : item is YoutubeID
-                                  ? NamidaMiniPlayerYoutubeIDState.textBuilder(context, item)
+                                  ? NamidaMiniPlayerYoutubeID.textBuilder(context, item)
                                   : null;
                               return textData == null
                                   ? Text(

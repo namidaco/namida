@@ -81,6 +81,8 @@ class Dimensions {
 
   static const _kMiniplayerBottomPadding = 90.0;
 
+  bool get isMixedPlayerQueue => settings.mixedQueue.value || PartyController.inst.forcesMixedQueue.value;
+
   /// + active miniplayer padding
   double get globalBottomPaddingEffectiveR {
     final bottomNavHeight = settings.enableBottomNavBar.valueR && !Dimensions.inst.miniplayerIsWideScreen ? 0.0 : _getDeviceBottomGesturePaddingOrZero();

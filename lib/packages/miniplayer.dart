@@ -139,8 +139,8 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final trackConfig = const NamidaMiniPlayerTrack().getMiniPlayerBase(context);
-    final ytConfig = NamidaMiniPlayerYoutubeIDState().getMiniPlayerBase(context);
+    final trackConfig = NamidaMiniPlayerTrack.getMiniPlayerBase(context);
+    final ytConfig = NamidaMiniPlayerYoutubeID.getMiniPlayerBase(context);
 
     return NamidaMiniPlayerBase(
       trackTileConfigs: trackConfig.trackTileConfigs,
@@ -450,7 +450,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     );
   }
 
-  NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+  static NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
     return NamidaMiniPlayerBase<Track, SortType>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
       trackTileConfigs: const TrackTilePropertiesConfigs(
@@ -514,29 +514,10 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 }
 
-class NamidaMiniPlayerYoutubeID extends StatefulWidget {
+class NamidaMiniPlayerYoutubeID extends StatelessWidget {
   const NamidaMiniPlayerYoutubeID({super.key});
 
-  @override
-  State<NamidaMiniPlayerYoutubeID> createState() => NamidaMiniPlayerYoutubeIDState();
-}
-
-class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
-  NamidaMiniPlayerYoutubeIDState();
-
   static final _numberOfRepeats = 1.obs;
-
-  @override
-  void initState() {
-    super.initState();
-    _numberOfRepeats.reInit();
-  }
-
-  @override
-  void dispose() {
-    _numberOfRepeats.close();
-    super.dispose();
-  }
 
   static void openMenu(BuildContext context, YoutubeID video, TapUpDetails details) async {
     final vidpage = await YoutubeInfoController.video.fetchVideoPageCache(video.id);
@@ -738,7 +719,7 @@ class NamidaMiniPlayerYoutubeIDState extends State<NamidaMiniPlayerYoutubeID> {
     );
   }
 
-  NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
+  static NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
     return NamidaMiniPlayerBase<String, YTSortType>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
       videoTileConfigs: const VideoTilePropertiesConfigs(
@@ -843,7 +824,7 @@ class _AdjacentThumbnailScale extends StatelessWidget {
 FocusedMenuOptions? miniplayerFocusedMenuOptionsFor(BuildContext context, Playable item) {
   return item.execute(
     selectable: (_) => NamidaMiniPlayerTrack.buildFocusedMenuOptions(context),
-    youtubeID: (_) => NamidaMiniPlayerYoutubeIDState.buildFocusedMenuOptions(context),
+    youtubeID: (_) => NamidaMiniPlayerYoutubeID.buildFocusedMenuOptions(context),
   );
 }
 
