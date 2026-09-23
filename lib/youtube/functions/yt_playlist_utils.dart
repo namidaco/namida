@@ -51,19 +51,20 @@ class YtUtilsPlaylist {
     initialTitle: null,
     initialDescription: null,
     initialPrivacy: null,
-    onButtonConfirm: (text, _, privacy) => onButtonConfirm(text, privacy),
+    onButtonConfirm: (text, _, privacy, _) => onButtonConfirm(text, privacy),
   );
 
   Future<void> promptEditPlaylist({
     required YoutiPiePlaylistResult playlist,
     required PlaylistInfoItemUser userPlaylist,
-    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
+    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy, bool? newVideosAtTop) onButtonConfirm,
   }) => _promptCreateOrEditPlaylist(
     isEdit: true,
     playlistId: playlist.info.id.isNotEmpty ? playlist.info.id : userPlaylist.id,
     initialTitle: playlist.info.title.isNotEmpty ? playlist.info.title : userPlaylist.title,
     initialDescription: playlist.info.description,
     initialPrivacy: playlist.info.privacy ?? userPlaylist.privacy,
+    initialNewVideosAtTop: playlist.info.hostedParams.addNewVideosToTop.value,
     onButtonConfirm: onButtonConfirm,
   );
 
@@ -73,7 +74,8 @@ class YtUtilsPlaylist {
     required String? initialTitle,
     required String? initialDescription,
     required PlaylistPrivacy? initialPrivacy,
-    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy) onButtonConfirm,
+    bool? initialNewVideosAtTop,
+    required FutureOr<bool> Function(String title, String? description, PlaylistPrivacy? privacy, bool? newVideosAtTop) onButtonConfirm,
   }) async {
     final privacyIconsLookup = {
       PlaylistPrivacy.public: Broken.global,
@@ -81,6 +83,7 @@ class YtUtilsPlaylist {
       PlaylistPrivacy.private: Broken.lock_1,
     };
     final privacyRx = (isEdit ? initialPrivacy : PlaylistPrivacy.private).obs;
+    final newVideosAtTopRx = Rxn<bool>(initialNewVideosAtTop);
     final titleController = TextEditingController(text: initialTitle);
     final descriptionController = isEdit ? TextEditingController(text: initialDescription) : null;
 
@@ -138,44 +141,54 @@ class YtUtilsPlaylist {
       extraItemsBuilder: (formState) => Column(
         children: [
           const SizedBox(height: 12.0),
-          SmoothSingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: ObxO(
-              rx: privacyRx,
-              builder: (context, privacy) => Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: PlaylistPrivacy.values.map(
-                  (e) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                      child: NamidaInkWellButton(
-                        icon: privacyIconsLookup[e],
-                        text: e.toText(),
-                        bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
-                        onTap: () => privacyRx.value = e,
-                        trailing:
-                            const SizedBox(
-                              width: 16.0,
-                              height: 16.0,
-                              child: Checkbox.adaptive(
-                                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(6.0)),
-                                ),
-                                value: true,
-                                onChanged: null,
-                              ),
-                            ).animateEntrance(
-                              showWhen: privacy == e,
-                              allCurves: Curves.fastLinearToSlowEaseIn,
-                              durationMS: 300,
+          Row(
+            children: [
+              Expanded(
+                child: SmoothSingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ObxO(
+                    rx: privacyRx,
+                    builder: (context, privacy) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: PlaylistPrivacy.values.map(
+                        (e) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: NamidaInkWellButton(
+                              icon: privacyIconsLookup[e],
+                              text: e.toText(),
+                              bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
+                              onTap: () => privacyRx.value = e,
+                              trailing:
+                                  const SizedBox(
+                                    width: 16.0,
+                                    height: 16.0,
+                                    child: Checkbox.adaptive(
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.all(Radius.circular(6.0)),
+                                      ),
+                                      value: true,
+                                      onChanged: null,
+                                    ),
+                                  ).animateEntrance(
+                                    showWhen: privacy == e,
+                                    allCurves: Curves.fastLinearToSlowEaseIn,
+                                    durationMS: 300,
+                                  ),
                             ),
-                      ),
-                    );
-                  },
-                ).toFixedList(),
+                          );
+                        },
+                      ).toFixedList(),
+                    ),
+                  ),
+                ),
               ),
-            ),
+              if (isEdit)
+                _PlaylistSettingsMenuButton(
+                  newVideosAtTopRx: newVideosAtTopRx,
+                ),
+            ],
           ),
         ],
       ),
@@ -183,11 +196,17 @@ class YtUtilsPlaylist {
       onButtonTap: (title) async {
         if (title.isEmpty) return false;
         final description = descriptionController?.text;
-        return onButtonConfirm(title, description, privacyRx.value);
+        return onButtonConfirm(
+          title,
+          description,
+          privacyRx.value,
+          newVideosAtTopRx.value == initialNewVideosAtTop ? null : newVideosAtTopRx.value,
+        );
       },
     );
     Future.delayed(const Duration(milliseconds: 2000), () {
       privacyRx.close();
+      newVideosAtTopRx.close();
       try {
         titleController.dispose();
       } catch (_) {}
@@ -562,7 +581,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
             YtUtilsPlaylist().promptEditPlaylist(
               playlist: playlistToFetch,
               userPlaylist: userPlaylist,
-              onButtonConfirm: (playlistTitle, description, privacy) async {
+              onButtonConfirm: (playlistTitle, description, privacy, newVideosAtTop) async {
                 final didEdit = await YoutubeInfoController.userplaylist.editPlaylist(
                   mainList: YtUtilsPlaylist.activeUserPlaylistsList,
                   playlists: YtUtilsPlaylist.activePlaylists,
@@ -570,6 +589,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                   title: playlistTitle,
                   description: description,
                   privacy: privacy,
+                  newVideosAtTop: newVideosAtTop,
                 );
                 return didEdit == true;
               },
@@ -659,5 +679,34 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
         },
       ),
     ];
+  }
+}
+
+class _PlaylistSettingsMenuButton extends StatelessWidget {
+  final Rxn<bool> newVideosAtTopRx;
+
+  const _PlaylistSettingsMenuButton({
+    required this.newVideosAtTopRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: () {
+        final newVideosAtTop = newVideosAtTopRx.value == true;
+        return [
+          NamidaPopupItem(
+            icon: Broken.arrow_square_up,
+            title: lang.newVideosAtTop,
+            selected: newVideosAtTop,
+            onTap: () => newVideosAtTopRx.value = !newVideosAtTop,
+          ),
+        ];
+      },
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+        child: Icon(Broken.setting_3, size: 20.0),
+      ),
+    );
   }
 }

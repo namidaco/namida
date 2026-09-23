@@ -290,6 +290,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     );
   }
 
+  ({String key, Duration position})? _requestedStartPosition;
+
+  /// [position] is used once, and only if [item] is the next item to start playing. any other item discards it.
+  void requestStartPosition(Q item, Duration position) => _requestedStartPosition = (key: item.key, position: position);
+
+  void discardRequestedStartPosition() => _requestedStartPosition = null;
+
+  Duration? _takeRequestedStartPosition(Q item) {
+    final requested = _requestedStartPosition;
+    if (requested == null) return null;
+    _requestedStartPosition = null;
+    return requested.key == item.key ? requested.position : null;
+  }
+
   FutureOr<Duration?> _getItemInitialPosition(Q item, Duration? itemDuration) async {
     final minValueInSetMinutes = settings.player.minTrackDurationToRestoreLastPosInMinutes.value;
 
@@ -857,6 +871,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) {
+    final requestedStartPosition = _takeRequestedStartPosition(item);
     _currentItemDuration.value = null;
     if (!defaultGaplessEnabled) {
       // -- this was added to prevent multiple skips when spamming play/pause at the end of playback
@@ -890,7 +905,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
               QueueController.latestPlayedForSourceManager.update(qs, finalItem);
             }
 
-            await onItemPlayYoutubeID(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo);
+            await onItemPlayYoutubeID(item, finalItem, index, skipItem, preparedItemInfo: preparedItemInfo, requestedStartPosition: requestedStartPosition);
             tryAddingMixPlaylist(finalItem.id);
           },
         );
@@ -1839,6 +1854,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     int index,
     Function skipItem, {
     required ItemPreparedPlayerInfo<Q>? preparedItemInfo,
+    required Duration? requestedStartPosition,
   }) async {
     WaveformController.inst.resetWaveform();
     Lyrics.inst.resetLyrics(hide: false);
@@ -2013,7 +2029,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         config.source,
         item: pi,
         index: index,
-        initialPosition: config.initialPosition,
+        initialPosition: requestedStartPosition ?? config.initialPosition,
         initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         videoOptions: config.videoOptions,
         keepOldVideoSource: false,
@@ -2099,7 +2115,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           disableVideo: _isAudioOnlyPlayback,
           whatToAwait: null,
           // whatToAwait: playerStoppingSeikoo?.future,
-          positionToRestore: config?.initialPosition,
+          positionToRestore: requestedStartPosition ?? config?.initialPosition,
           initialPositionFallback: (duration) => _getItemInitialPosition(pi, duration),
         );
         _isCurrentAudioFromCache = playedFromCacheDetails.audio != null;

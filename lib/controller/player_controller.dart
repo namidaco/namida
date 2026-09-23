@@ -808,6 +808,9 @@ class Player {
 
     /// add items next and play them instead of assigning them as a new queue
     bool gentlePlay = false,
+
+    /// the item at [index] starts from here instead of its restored position.
+    Duration? startPosition,
   }) async {
     if (gentlePlay) {
       if (index == 0 && queue.hasSingleItem()) {
@@ -823,6 +826,7 @@ class Player {
         insertNext: true,
         showSnackBar: false,
       );
+      if (startPosition != null) _audioHandler.requestStartPosition(queue.elementAt(index), startPosition);
       await next();
       return;
     }
@@ -830,6 +834,7 @@ class Player {
     if (_audioHandler.partyGate?.interceptNewQueue(queue, index, startPlaying: startPlaying, shuffle: shuffle, isPlayerQueue: source == QueueSource.playerQueue) == true) return;
 
     void togglePlayPauseExclusive() {
+      _audioHandler.discardRequestedStartPosition(); // -- nothing new started, it would otherwise wait for a later replay of that item
       // -- since `_audioHandler.assignNewQueue` calls setPlayWhenReady(true) by default
       _audioHandler.setPlayWhenReady(isPlaying.value);
       _audioHandler.togglePlayPause();
@@ -864,6 +869,7 @@ class Player {
       );
     }
     _audioHandler.latestQueueSource = source;
+    if (startPosition != null) _audioHandler.requestStartPosition(queue.elementAt(index), startPosition);
     await _audioHandler.assignNewQueue(
       playAtIndex: index,
       queue: queue,

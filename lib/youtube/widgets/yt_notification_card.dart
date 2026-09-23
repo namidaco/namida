@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:youtipie/class/notification_menu_action.dart';
 import 'package:youtipie/class/result_wrapper/notification_result.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item_notification.dart';
+import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -36,6 +39,9 @@ class YoutubeVideoCardNotification extends StatefulWidget {
   final double fontMultiplier;
   final bool canOpenComments;
 
+  /// called after youtube dropped the notification, ex. hiding it or turning off its source.
+  final void Function()? onRemoved;
+
   const YoutubeVideoCardNotification({
     super.key,
     required this.properties,
@@ -47,6 +53,7 @@ class YoutubeVideoCardNotification extends StatefulWidget {
     required this.thumbnailHeight,
     this.fontMultiplier = 1.0,
     this.canOpenComments = true,
+    this.onRemoved,
   });
 
   @override
@@ -80,6 +87,64 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
     );
     if (marked == true) _isNowRead.value = true;
   }
+
+  Future<void> _applyMenuAction(YoutiPieNotificationResult mainList, NotificationMenuAction action) async {
+    final applied = await YoutubeInfoController.notificationsAction.applyMenuAction(
+      mainList: mainList,
+      notification: widget.notification,
+      action: action,
+    );
+    if (applied == true) {
+      widget.onRemoved?.call();
+    } else {
+      snackyy(title: lang.error, message: lang.failed, isError: true);
+    }
+  }
+
+  Future<bool> _confirmMenuAction(NotificationMenuAction action) async {
+    bool confirmed = false;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: "${lang.confirm}: ${action.text}?",
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            colorScheme: Colors.red,
+            text: lang.confirm.toUpperCase(),
+            onTap: () {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+      ),
+    );
+    return confirmed;
+  }
+
+  void _showMenuActionsMenu(YoutiPieNotificationResult mainList) {
+    if (!mounted) return;
+    NamidaPopupWrapper(
+      childrenDefault: () => widget.notification.menuActions.map(
+        (action) => NamidaPopupItem(
+          icon: _menuActionIcon(action),
+          title: action.text,
+          onTap: () async {
+            final confirmed = await _confirmMenuAction(action);
+            if (confirmed) _applyMenuAction(mainList, action);
+          },
+        ),
+      ),
+    ).showPopupMenu(context);
+  }
+
+  static IconData _menuActionIcon(NotificationMenuAction action) => switch (action.iconType) {
+    'VISIBILITY_OFF' => Broken.eye_slash,
+    'NOTIFICATIONS_OFF' => Broken.notification_bing,
+    _ => action.type == NotificationMenuActionType.hide ? Broken.eye_slash : Broken.volume_slash,
+  };
 
   void _openCommentsPage() {
     YoutubeNotificationCommentsPage(
@@ -129,6 +194,14 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
           icon: Broken.notification_status,
           title: lang.markAsRead,
           onTap: () => _markAsRead(mainList),
+        ),
+      // -- youtube decides which of these it offers, the text is already localized by it.
+      if (widget.notification.menuActions.isNotEmpty)
+        NamidaPopupItem(
+          icon: Broken.more_square,
+          title: lang.more,
+          trailing: const Icon(Broken.arrow_right_3, size: 18.0),
+          onTap: () => _showMenuActionsMenu(mainList),
         ),
     ];
     if (videoId.isEmpty || isComment) {

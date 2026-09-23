@@ -108,6 +108,7 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
             playlistID: null,
             mainList: () => list,
             index: index,
+            onRemoved: () => _pageActions?.refreshList(),
           );
         },
       ),

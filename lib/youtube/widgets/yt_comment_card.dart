@@ -237,12 +237,15 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
     final isArtist = comment?.author?.isArtist ?? false;
+    final isMember = comment?.author?.memberBadgeText != null;
 
     final uploadedFromDate = comment?.publishedAt.date;
     String? uploadedFromText = uploadedFromDate == null ? null : TimeAgoController.dateFromNow(uploadedFromDate);
     uploadedFromText ??= comment?.publishedTimeText;
 
     final commentContent = comment?.content;
+    // -- a voice reply carries no content, youtube only serves its transcript.
+    final voiceReplyTranscript = (commentContent?.rawText?.isEmpty ?? true) ? comment?.voiceReplyTranscript : null;
     final isHearted = comment?.isHearted ?? false;
 
     final containerColor = theme.cardColor.withAlpha(widget.bgAlpha);
@@ -358,6 +361,10 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           color: authorTextColor,
                                         ),
                                       ],
+                                      if (isMember) ...[
+                                        const SizedBox(width: 4.0),
+                                        const _MemberBadge(),
+                                      ],
                                       if (isHearted) ...[
                                         const SizedBox(width: 4.0),
                                         const Icon(
@@ -390,6 +397,11 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             ),
                                           ),
                                         ],
+                                      )
+                                    : voiceReplyTranscript != null
+                                    ? _VoiceReplyText(
+                                        transcript: voiceReplyTranscript,
+                                        color: authorTextColor,
                                       )
                                     : commentContent.rawText == null
                                     ? const SizedBox()
@@ -546,6 +558,53 @@ class _YTCommentCardState extends State<YTCommentCard> {
   }
 }
 
+class _MemberBadge extends StatelessWidget {
+  const _MemberBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(
+      Broken.crown_1,
+      size: 12.0,
+      color: Color.fromARGB(220, 62, 142, 245),
+    );
+  }
+}
+
+class _VoiceReplyText extends StatelessWidget {
+  final String transcript;
+  final Color? color;
+
+  const _VoiceReplyText({required this.transcript, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2.0),
+          child: Icon(
+            Broken.microphone,
+            size: 14.0,
+            color: color,
+          ),
+        ),
+        const SizedBox(width: 6.0),
+        Expanded(
+          child: Text(
+            transcript,
+            style: context.textTheme.displaySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class YTCommentCardCompact extends StatelessWidget {
   final CommentInfoItem? comment;
   const YTCommentCardCompact({super.key, required this.comment});
@@ -561,12 +620,14 @@ class YTCommentCardCompact extends StatelessWidget {
     String? uploadedFromText = uploadedFromDate == null ? null : TimeAgoController.dateFromNow(uploadedFromDate);
     uploadedFromText ??= comment?.publishedTimeText;
 
-    final commentTextParsed = comment?.content.rawText;
+    final rawText = comment?.content.rawText;
+    final commentTextParsed = rawText == null || rawText.isEmpty ? comment?.voiceReplyTranscript ?? rawText : rawText;
     final likeCount = comment?.likesCount;
     final repliesCount = comment?.repliesCount;
     final isHearted = comment?.isHearted ?? false;
     final isPinned = comment?.isPinned ?? false;
     final isArtist = comment?.author?.isArtist ?? false;
+    final isMember = comment?.author?.memberBadgeText != null;
 
     final authorTextColor = theme.colorScheme.onSurface.withAlpha(180);
     final authorTextStyle = textTheme.displaySmall?.copyWith(
@@ -636,6 +697,10 @@ class YTCommentCardCompact extends StatelessWidget {
                               size: 12.0,
                               color: authorTextColor,
                             ),
+                          ],
+                          if (isMember) ...[
+                            const SizedBox(width: 4.0),
+                            const _MemberBadge(),
                           ],
                           if (isHearted) ...[
                             const SizedBox(width: 4.0),

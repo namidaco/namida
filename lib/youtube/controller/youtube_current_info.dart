@@ -25,6 +25,7 @@ class _YoutubeCurrentInfoController {
   RxBaseCore<bool> get isLoadingVideoPage => _isLoadingVideoPage;
   RxBaseCore<bool> get isLoadingInitialComments => _isLoadingInitialComments;
   RxBaseCore<bool> get isLoadingMoreComments => _isLoadingMoreComments;
+  RxBaseCore<bool> get isLoadingMoreRelatedVideos => _isLoadingMoreRelatedVideos;
 
   /// Used to keep track of current comments sources, mainly to
   /// prevent fetching next comments when cached version is loaded.
@@ -43,6 +44,7 @@ class _YoutubeCurrentInfoController {
   final _isLoadingVideoPage = false.obs;
   final _isLoadingInitialComments = false.obs;
   final _isLoadingMoreComments = false.obs;
+  final _isLoadingMoreRelatedVideos = false.obs;
   final _isCurrentCommentsFromCache = Rxn<bool>();
 
   String? _initialCommentsContinuation;
@@ -65,6 +67,7 @@ class _YoutubeCurrentInfoController {
     _isLoadingInitialComments.value = false;
     _isLoadingVideoPage.value = false;
     _isLoadingMoreComments.value = false;
+    _isLoadingMoreRelatedVideos.value = false;
     _isCurrentCommentsFromCache.value = null;
   }
 
@@ -290,6 +293,18 @@ class _YoutubeCurrentInfoController {
     if (_canSafelyModifyMetadata(videoId)) {
       _currentRelatedVideos.value = relatedVideos;
     }
+  }
+
+  /// Fetches the next page of related videos, returns wether new items were added.
+  Future<bool> updateCurrentRelatedVideos(String videoId) async {
+    final relatedRes = _currentRelatedVideos.value;
+    if (relatedRes == null || !relatedRes.canFetchNext) return false;
+
+    _isLoadingMoreRelatedVideos.value = true;
+    final didFetch = await relatedRes.fetchNext();
+    if (didFetch && _canSafelyModifyMetadata(videoId)) _currentRelatedVideos.refresh();
+    _isLoadingMoreRelatedVideos.value = false;
+    return didFetch;
   }
 
   Future<void> fetchAndUpdateDislikeCount(String videoId) async {

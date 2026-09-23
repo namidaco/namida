@@ -67,6 +67,7 @@ class YoutubeInfoController {
   static const notificationsAction = YoutiPie.notificationsAction;
   static const search = _SearchInfoController();
   static const feed = YoutiPie.feed;
+  static const hashtag = YoutiPie.hashtag;
   static const channel = _ChannelInfoController();
   static final missingInfo = _MissingInfoController();
   static final sponsorblock = YoutiPie.sponsorblock;

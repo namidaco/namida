@@ -1254,6 +1254,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.YOUTUBE_HISTORY_SUBPAGE => QueueSourceYoutubeID.ytHistory,
       RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE => QueueSourceYoutubeID.ytMostPlayed,
       RouteType.YOUTUBE_CHANNEL_SUBPAGE => QueueSourceYoutubeID.ytChannel(name),
+      RouteType.YOUTUBE_HASHTAG_SUBPAGE => QueueSourceYoutubeID.ytHashtag(name),
       RouteType.YOUTUBE_USER_CHANNELS_PAGE_HOSTED => QueueSourceYoutubeID.ytChannelHosted,
       RouteType.YOUTUBE_HISTORY_HOSTED_SUBPAGE => QueueSourceYoutubeID.ytHistoryHosted,
       // -----------
@@ -2237,6 +2238,7 @@ extension QueueSourceYoutubeIDL10n on QueueSourceYoutubeIDEnum {
     QueueSourceYoutubeIDEnum.ytExternalLink => lang.externalFiles,
     QueueSourceYoutubeIDEnum.ytHomeFeed => lang.home,
     QueueSourceYoutubeIDEnum.ytHomePageItem => lang.home,
+    QueueSourceYoutubeIDEnum.ytHashtag => lang.hashtag,
     QueueSourceYoutubeIDEnum.ytRelatedVideos => lang.relatedVideos,
     QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted => lang.history,
     QueueSourceYoutubeIDEnum.ytSearchHosted => lang.search,

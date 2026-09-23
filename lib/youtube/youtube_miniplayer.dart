@@ -987,7 +987,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
       ),
       builder: (properties) => LazyLoadListView(
         key: keys.bodyLazyLoadList,
-        onReachingEnd: ytTopComments ? () => false : () => YoutubeInfoController.current.updateCurrentComments(currentId),
+        onReachingEnd: ytTopComments
+            ? () => YoutubeInfoController.current.updateCurrentRelatedVideos(currentId)
+            : () => YoutubeInfoController.current.updateCurrentComments(currentId),
         extend: 400,
         scrollController: _scrollController,
         listview: (controller) {
@@ -1722,6 +1724,8 @@ class _YTPlayerInnerPage extends StatelessWidget {
                     ),
             ),
 
+            if (!ytTopComments) _RelatedVideosLoadMoreButton(videoId: currentId),
+
             const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
 
             // --START-- Comments
@@ -1841,6 +1845,38 @@ class _YTPlayerInnerPage extends StatelessWidget {
         ignoring: !canScrollQueue,
         child: body,
       ),
+    );
+  }
+}
+
+class _RelatedVideosLoadMoreButton extends StatelessWidget {
+  final String videoId;
+
+  const _RelatedVideosLoadMoreButton({required this.videoId});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: YoutubeInfoController.current.currentRelatedVideos,
+      builder: (context, relatedVideos) {
+        if (relatedVideos == null || !relatedVideos.canFetchNext) return const SliverToBoxAdapter();
+        return SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+            child: ObxO(
+              rx: YoutubeInfoController.current.isLoadingMoreRelatedVideos,
+              builder: (context, isLoading) => NamidaInkWellButton(
+                icon: Broken.arrow_down_2,
+                text: lang.showMore,
+                enabled: !isLoading,
+                showLoadingWhenDisabled: isLoading,
+                centered: true,
+                onTap: () => YoutubeInfoController.current.updateCurrentRelatedVideos(videoId),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

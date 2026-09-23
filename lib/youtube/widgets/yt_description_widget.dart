@@ -13,6 +13,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/pages/yt_hashtag_subpage.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -89,15 +90,24 @@ class YoutubeDescriptionWidgetManager {
 
   Widget? _latestAttachment;
   InlineSpan _styleWrapperToSpan(StylesWrapper sw, String? videoId, Color linkColor) {
-    if (sw.attachementUrl != null) {
-      _latestAttachment = YoutubeThumbnail(
+    final attachementUrl = sw.attachementUrl;
+    if (attachementUrl != null) {
+      final attachment = YoutubeThumbnail(
         type: ThumbnailType.other,
-        key: Key(sw.attachementUrl ?? ''),
+        key: Key(attachementUrl),
         width: 16.0,
         isImportantInCache: true,
-        customUrl: sw.attachementUrl,
+        customUrl: attachementUrl,
       );
-      return const TextSpan(); // we combining attachment with the next piece
+      if (sw.text.isNotEmpty) {
+        // -- stands in place of its own text, ex. a custom emoji written as `:shortcut:`
+        return WidgetSpan(
+          child: attachment,
+          alignment: PlaceholderAlignment.middle,
+        );
+      }
+      _latestAttachment = attachment; // we combining attachment with the next piece
+      return const TextSpan();
     }
     bool addVMargin = false;
     bool surroundWithBG = false;
@@ -106,8 +116,9 @@ class YoutubeDescriptionWidgetManager {
       addVMargin = true;
     }
     void Function()? onTap;
+    final hashtagParams = sw.hashtagParams;
     if (sw.hashtag != null) {
-      // TODO: onTap for hashtags
+      if (hashtagParams != null) onTap = YTHashtagSubpage(hashtag: sw.text, params: hashtagParams).navigate;
     } else if (sw.videoId != null) {
       surroundWithBG = true;
       onTap = () {
@@ -115,8 +126,14 @@ class YoutubeDescriptionWidgetManager {
           Player.inst.seek(Duration(seconds: sw.videoStartSeconds!));
           VibratorController.light();
         } else {
-          Player.inst.playOrPause(0, [YoutubeID(id: sw.videoId!, playlistID: null)], QueueSourceYoutubeID.ytVideoDescription, gentlePlay: true);
-          // TODO: seek after playing?
+          final startSeconds = sw.videoStartSeconds;
+          Player.inst.playOrPause(
+            0,
+            [YoutubeID(id: sw.videoId!, playlistID: null)],
+            QueueSourceYoutubeID.ytVideoDescription,
+            gentlePlay: true,
+            startPosition: startSeconds == null || startSeconds <= 0 ? null : Duration(seconds: startSeconds),
+          );
         }
       };
     } else if (sw.channelId != null) {
@@ -133,10 +150,8 @@ class YoutubeDescriptionWidgetManager {
       fontSize: onTap != null ? 13.5 : 14.0,
       fontStyle: sw.italic ? FontStyle.italic : FontStyle.normal,
       fontWeight: sw.bold
-          ? FontWeight.w800
-          : sw.medium
           ? FontWeight.w700
-          : FontWeight.w500,
+          : FontWeight.w500, // -- `medium` matches the default weight, youtube uses it for plain text
       decoration: sw.strikethrough ? TextDecoration.lineThrough : null,
     );
 

@@ -35,6 +35,9 @@ abstract class YoutubeMainPageFetcherActions<W> {
   W? get currentList;
   Future<void> forceFetchFeed();
   void updateList(W? list);
+
+  /// for items mutated in place, ex. a notification removed by its own menu.
+  void refreshList();
 }
 
 final _resultsFetchTime = <ValueKey, DateTime>{};
@@ -133,6 +136,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     _currentFeed.value = list;
     _lastFetchWasCached.value = false;
   }
+
+  @override
+  void refreshList() => _currentFeed.refresh();
 
   void _onListUpdated() {
     widget.onListUpdated!(_currentFeed.value);

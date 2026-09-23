@@ -380,6 +380,7 @@ enum QueueSourceYoutubeIDEnum {
   ytExternalLink(true),
   ytHomeFeed(false),
   ytHomePageItem(false),
+  ytHashtag(false),
   ytNotificationsHosted(false),
   ytRelatedVideos(false),
   ytHistoryFilteredHosted(false),
@@ -519,6 +520,7 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   static const ytExternalLink = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytExternalLink);
   static const ytHomeFeed = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomeFeed);
   static const ytHomePageItem = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomePageItem);
+  static QueueSourceYoutubeID ytHashtag(String? hashtag) => QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHashtag, title: hashtag);
   static const ytNotificationsHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytNotificationsHosted);
   static const ytRelatedVideos = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytRelatedVideos);
   static const ytHistoryFilteredHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted);
@@ -679,6 +681,7 @@ enum RouteType {
   YOUTUBE_HISTORY_SUBPAGE,
   YOUTUBE_MOST_PLAYED_SUBPAGE,
   YOUTUBE_CHANNEL_SUBPAGE,
+  YOUTUBE_HASHTAG_SUBPAGE,
   YOUTUBE_USER_CHANNELS_PAGE_HOSTED,
 
   YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE,
