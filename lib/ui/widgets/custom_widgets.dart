@@ -3237,6 +3237,7 @@ class NamidaDrawerListTile extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final bool isCentered;
   final double iconSize;
+  final Widget? trailing;
 
   const NamidaDrawerListTile({
     super.key,
@@ -3250,6 +3251,7 @@ class NamidaDrawerListTile extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 10.0, vertical: 11.0),
     this.isCentered = false,
     this.iconSize = 20.0,
+    this.trailing,
   });
 
   @override
@@ -3301,6 +3303,7 @@ class NamidaDrawerListTile extends StatelessWidget {
                 softWrap: false,
               ),
             ),
+          ?trailing,
         ],
       ),
     );
@@ -4049,10 +4052,11 @@ class NamidaCircularPercentage extends StatelessWidget {
 
 class NamidaReorderableActiveListView<E> extends StatefulWidget {
   final List<E> enumValues;
-  final RxBaseCore<List<E>> rxList;
+  final List<E> activeItems;
   final String Function(E item) toText;
   final IconData Function(E item) toIcon;
   final IconData? Function(E item)? toSecondaryIcon;
+  final Widget? Function(E item, bool active)? belowTitleBuilder;
   final void Function(List<E> activeItems) onSave;
   final void Function(int i, List<E> activeItems)? onItemRemoved;
   final int minimumItems;
@@ -4060,10 +4064,11 @@ class NamidaReorderableActiveListView<E> extends StatefulWidget {
   const NamidaReorderableActiveListView({
     super.key,
     required this.enumValues,
-    required this.rxList,
+    required this.activeItems,
     required this.toText,
     required this.toIcon,
     this.toSecondaryIcon,
+    this.belowTitleBuilder,
     required this.onSave,
     this.onItemRemoved,
     this.minimumItems = 3,
@@ -4084,7 +4089,7 @@ class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableAc
 
   void _initializeList() {
     final combined = LinkedHashSet<({E item, bool active})>(equals: (p0, p1) => p0.item == p1.item, hashCode: (p0) => p0.item.hashCode);
-    for (final e in widget.rxList.value) {
+    for (final e in widget.activeItems) {
       combined.add((item: e, active: true));
     }
     for (final e in widget.enumValues) {
@@ -4141,11 +4146,26 @@ class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableAc
           final (:item, :active) = items[i];
           final mainIcon = widget.toIcon(item);
           final secondaryIcon = widget.toSecondaryIcon?.call(item);
+          final title = "${i + 1}. ${widget.toText(item)}";
+          final belowTitle = widget.belowTitleBuilder?.call(item, active);
           return Padding(
             key: ValueKey(item),
             padding: const EdgeInsets.all(3.0),
             child: ListTileWithCheckMark(
-              title: "${i + 1}. ${widget.toText(item)}",
+              title: title,
+              titleWidget: belowTitle == null
+                  ? null
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: context.textTheme.displayMedium,
+                        ),
+                        belowTitle,
+                      ],
+                    ),
               icon: secondaryIcon == null ? mainIcon : null,
               leading: secondaryIcon == null
                   ? null

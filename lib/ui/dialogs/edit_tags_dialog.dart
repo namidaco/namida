@@ -418,7 +418,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                           height: namida.height * 0.6,
                           child: NamidaReorderableActiveListView(
                             enumValues: TagField.values,
-                            rxList: settings.tagFieldsToEdit,
+                            activeItems: settings.tagFieldsToEdit.value,
                             toText: (item) => item.toText(),
                             toIcon: (item) => item.toIcon(),
                             minimumItems: 3,

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/clipboard_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -30,8 +31,10 @@ import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/search_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/pages/settings_search_page.dart';
+import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
@@ -477,11 +480,24 @@ class MainPageFABResumeButton extends StatelessWidget {
     _jumpToTrack(item, true);
   }
 
+  static LibraryTab _tracksTabForItem(Selectable item) {
+    final libraryTabs = settings.libraryTabs.value;
+    final tab = LibraryTab.tracks.activeVariant(libraryTabs);
+    final isVideo = item.track is Video;
+    final isVideoFilter = tab.isVideoFilter;
+    if (isVideoFilter == null || isVideoFilter == isVideo) return tab;
+    final matchingTab = isVideo ? LibraryTab.tracksVideos : LibraryTab.tracksMusic;
+    return libraryTabs.contains(matchingTab) ? matchingTab : LibraryTab.tracks;
+  }
+
   static bool _jumpToTrack(Selectable item, bool openTracksPage) {
     RouteType? routeType;
     List<Selectable<Object>>? tracks;
+    LibraryTab? tracksTab;
     if (openTracksPage) {
-      routeType = RouteType.PAGE_allTracks;
+      tracksTab = _tracksTabForItem(item);
+      SearchSortController.inst.setActiveTracksTab(tracksTab);
+      routeType = TracksPage.routeOfTab(tracksTab);
       tracks = SearchSortController.inst.trackSearchList.value;
     } else {
       final currentRoute = NamidaNavigator.inst.currentRoute;
@@ -501,7 +517,7 @@ class MainPageFABResumeButton extends StatelessWidget {
     void jumpFn() => MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, routeType!);
 
     if (openTracksPage) {
-      ScrollSearchController.inst.animatePageController(LibraryTab.tracks, jumpToTopIfSamePage: false);
+      ScrollSearchController.inst.animatePageController(tracksTab!, jumpToTopIfSamePage: false);
       // -- waiting for the route transition
       Future.delayed(const Duration(milliseconds: 500), jumpFn);
     } else {
@@ -540,6 +556,8 @@ class MainPageFABResumeButton extends StatelessWidget {
           ? 0.0
           : switch (routeType) {
               RouteType.PAGE_allTracks => 0.0,
+              RouteType.PAGE_allTracks_music => 0.0,
+              RouteType.PAGE_allTracks_videos => 0.0,
               RouteType.PAGE_folders => 0.0,
               RouteType.PAGE_folders_music => 0.0,
               RouteType.PAGE_folders_videos => 0.0,
@@ -936,32 +954,24 @@ class _CustomNavBar extends StatelessWidget {
         builder: (context, libraryTabs) => ObxO(
           rx: settings.extra.selectedLibraryTab,
           builder: (context, selectedLibraryTab) {
+            final navTabs = libraryTabs.toNavTabs();
             final selectedIndex = selectedLibraryTab.toInt().toIf(0, -1);
             return NavigationBar(
               animationDuration: const Duration(seconds: 1),
               elevation: 22,
-              labelBehavior: libraryTabs.length >= 8 ? NavigationDestinationLabelBehavior.alwaysHide : NavigationDestinationLabelBehavior.onlyShowSelected,
+              labelBehavior: navTabs.length >= 8 ? NavigationDestinationLabelBehavior.alwaysHide : NavigationDestinationLabelBehavior.onlyShowSelected,
               height: 64.0,
               selectedIndex: selectedIndex,
               onDestinationSelected: (destinationIndex) {
-                final tab = libraryTabs[destinationIndex];
+                final tab = navTabs[destinationIndex];
                 ScrollSearchController.inst.animatePageController(tab);
               },
               destinations: [
-                ...libraryTabs.mapIndexed(
-                  (e, i) => DefaultTextStyle(
-                    softWrap: false,
-                    overflow: TextOverflow.fade,
-                    style: const TextStyle(
-                      fontSize: 13.0,
-                    ),
-                    child: NavigationDestination(
-                      icon: Icon(
-                        e.toIcon(),
-                        color: selectedIndex == i ? AppThemes.selectedNavigationIconColor : null,
-                      ),
-                      label: e.toText(),
-                    ),
+                ...navTabs.mapIndexed(
+                  (e, i) => _NavBarDestination(
+                    tab: e,
+                    libraryTabs: libraryTabs,
+                    isSelected: selectedIndex == i,
                   ),
                 ),
               ],
@@ -983,6 +993,117 @@ class _CustomNavBar extends StatelessWidget {
                 );
               },
             ),
+    );
+  }
+}
+
+class _NavBarDestination extends StatelessWidget {
+  final LibraryTab tab;
+  final List<LibraryTab> libraryTabs;
+  final bool isSelected;
+
+  const _NavBarDestination({
+    required this.tab,
+    required this.libraryTabs,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final variants = tab.groupVariants.isEmpty ? const <LibraryTab>[] : libraryTabs.enabledVariantsOf(tab.group).toList();
+    final hasVariants = variants.length > 1;
+    final destination = DefaultTextStyle(
+      softWrap: false,
+      overflow: TextOverflow.fade,
+      style: const TextStyle(
+        fontSize: 13.0,
+      ),
+      child: NavigationDestination(
+        icon: Icon(
+          tab.toIcon(),
+          color: isSelected ? AppThemes.selectedNavigationIconColor : null,
+        ),
+        label: tab.toShortText(),
+        tooltip: hasVariants ? '' : null,
+      ),
+    );
+    if (!hasVariants) return destination;
+    return LibraryTabVariantsPopup(
+      tab: tab,
+      variants: variants,
+      openOnTap: false,
+      child: destination,
+    );
+  }
+}
+
+class _RailTabItem extends StatelessWidget {
+  final LibraryTab tab;
+  final List<LibraryTab> libraryTabs;
+  final bool isSelected;
+  final double iconSize;
+  final double iconPadding;
+
+  const _RailTabItem({
+    required this.tab,
+    required this.libraryTabs,
+    required this.isSelected,
+    required this.iconSize,
+    required this.iconPadding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final button = NamidaIconButton(
+      tooltip: () => tab.toText(),
+      padding: EdgeInsets.all(iconPadding),
+      icon: tab.toIcon(),
+      iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
+      iconSize: iconSize,
+      onPressed: () {
+        ScrollSearchController.inst.animatePageController(tab);
+      },
+    );
+    final variants = tab.groupVariants.isEmpty ? const <LibraryTab>[] : libraryTabs.enabledVariantsOf(tab.group).toList();
+    final hasVariants = variants.length > 1;
+    final item = AnimatedDecoration(
+      duration: Duration(milliseconds: 400),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
+        color: isSelected ? theme.colorScheme.secondaryContainer : null,
+      ),
+      child: !hasVariants
+          ? button
+          : Stack(
+              children: [
+                button,
+                Positioned(
+                  right: 0.0,
+                  bottom: 0.0,
+                  child: LibraryTabVariantsPopup(
+                    tab: tab,
+                    variants: variants,
+                    openOnTap: true,
+                    child: Padding(
+                      padding: const EdgeInsets.all(3.0),
+                      child: Icon(
+                        Broken.arrow_right_3,
+                        size: iconSize * 0.4,
+                        color: isSelected ? AppThemes.selectedNavigationIconColor : null,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+    );
+    if (!hasVariants) return item;
+    return LibraryTabVariantsPopup(
+      tab: tab,
+      variants: variants,
+      openOnTap: false,
+      child: item,
     );
   }
 }
@@ -1051,27 +1172,15 @@ class _CustomRailBar extends StatelessWidget {
                               width: itemWidth - 4.0,
                             ),
                             ...libraryTabs
+                                .toNavTabs()
                                 .map(
-                                  (e) {
-                                    final isSelected = selectedLibraryTab == e;
-                                    return AnimatedDecoration(
-                                      duration: Duration(milliseconds: 400),
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
-                                        color: isSelected ? theme.colorScheme.secondaryContainer : null,
-                                      ),
-                                      child: NamidaIconButton(
-                                        tooltip: () => e.toText(),
-                                        padding: EdgeInsets.all(iconPadding),
-                                        icon: e.toIcon(),
-                                        iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
-                                        iconSize: iconSize,
-                                        onPressed: () {
-                                          ScrollSearchController.inst.animatePageController(e);
-                                        },
-                                      ),
-                                    );
-                                  },
+                                  (e) => _RailTabItem(
+                                    tab: e,
+                                    libraryTabs: libraryTabs,
+                                    isSelected: selectedLibraryTab == e,
+                                    iconSize: iconSize,
+                                    iconPadding: iconPadding,
+                                  ),
                                 )
                                 .addSeparators(separator: SizedBox(height: 6.0)),
                           ],

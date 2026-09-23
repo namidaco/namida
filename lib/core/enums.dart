@@ -294,6 +294,8 @@ enum LibraryTab {
   home,
   albums,
   tracks,
+  tracksMusic,
+  tracksVideos,
   artists,
   genres,
   playlists,
@@ -312,7 +314,27 @@ enum LibraryTab {
   tags,
   rating,
   stats,
-  party,
+  party;
+
+  LibraryTab get group => switch (this) {
+    LibraryTab.tracksMusic || LibraryTab.tracksVideos => LibraryTab.tracks,
+    LibraryTab.foldersMusic || LibraryTab.foldersVideos => LibraryTab.folders,
+    _ => this,
+  };
+
+  bool get isGroupHead => group == this;
+
+  List<LibraryTab> get groupVariants => switch (group) {
+    LibraryTab.tracks => const [LibraryTab.tracks, LibraryTab.tracksMusic, LibraryTab.tracksVideos],
+    LibraryTab.folders => const [LibraryTab.folders, LibraryTab.foldersMusic, LibraryTab.foldersVideos],
+    _ => const [],
+  };
+
+  bool? get isVideoFilter => switch (this) {
+    LibraryTab.tracksMusic || LibraryTab.foldersMusic => false,
+    LibraryTab.tracksVideos || LibraryTab.foldersVideos => true,
+    _ => null,
+  };
 }
 
 enum TrackPlayMode {
@@ -621,6 +643,8 @@ enum RouteType {
   // ----- Pages -----
   PAGE_Home,
   PAGE_allTracks,
+  PAGE_allTracks_music,
+  PAGE_allTracks_videos,
   PAGE_albums,
   PAGE_artists,
   PAGE_genres,

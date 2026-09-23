@@ -458,7 +458,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
           height: namida.height * 0.5,
           child: NamidaReorderableActiveListView(
             enumValues: supportedHomePageItems,
-            rxList: homePageItemsRx,
+            activeItems: homePageItemsRx.value,
             toText: (item) => item.toText(),
             toIcon: (item) => item.toMainIcon(),
             toSecondaryIcon: (item) => item.toIcon(),

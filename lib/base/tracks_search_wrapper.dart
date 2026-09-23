@@ -9,6 +9,7 @@ import 'package:nampack/extensions/extensions.dart';
 import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -355,9 +356,9 @@ class TracksSearchWrapper {
     );
   }
 
-  List<Track> filter(String text) {
+  List<Track> filter(String text, {bool? isVideo}) {
     final result = <Track>[];
-    _filter(text, (trExt) => result.add(trExt.track));
+    _filter(text, (trExt) => result.add(trExt.track), isVideo: isVideo);
     return result;
   }
 
@@ -373,7 +374,7 @@ class TracksSearchWrapper {
     return result;
   }
 
-  void _filter(String text, void Function(_CustomTrackExtended trExt) onMatch) {
+  void _filter(String text, void Function(_CustomTrackExtended trExt) onMatch, {bool? isVideo}) {
     final queryProperty = _splitTextCleanedAndCleanedMinor(text.trimAll(), textCleanedForSearch, textCleanedMinorForSearch);
 
     final calculator = _ScoreCalculator(
@@ -385,6 +386,7 @@ class TracksSearchWrapper {
     final scored = <int, List<_CustomTrackExtended>>{};
 
     for (final trExt in _tracksExtended) {
+      if (isVideo != null && (trExt.track is Video) != isVideo) continue;
       final score = calculator.calculate(trExt);
       // -- score must be > 0, otherwise would always show results with high listen counts
       if (score > 0) {

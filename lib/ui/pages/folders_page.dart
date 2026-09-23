@@ -20,6 +20,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 
 class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget with NamidaRouteWidget {
   @override
@@ -96,10 +97,8 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final ScrollController scrollController = tab.scrollController;
-    final highlighedColor = theme.colorScheme.onSurface.withAlpha(40);
+    final highlighedColor = context.theme.colorScheme.onSurface.withAlpha(40);
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
 
@@ -119,201 +118,59 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                 ),
                 builder: (properties) => Stack(
                   children: [
-                    ObxO(
-                      rx: config.enableFoldersHierarchy,
-                      builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
-                          ? Column(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                  child: ObxO(
-                                    rx: foldersController.isHome,
-                                    builder: (context, isHome) => CustomListTile(
-                                      borderR: 16.0,
-                                      icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                      title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
-                                      titleStyle: textTheme.displaySmall,
-                                      onTap: () => foldersController.stepOut(),
-                                      trailingRaw: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          const SizedBox(width: 4.0),
-                                          ObxO(
-                                            rx: config.defaultFolderStartupLocation,
-                                            builder: (context, defaultFolderStartupLocation) {
-                                              final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
-                                              return NamidaIconButton(
-                                                verticalPadding: 8.0,
-                                                horizontalPadding: 4.0,
-                                                tooltip: () => lang.setAsDefault,
-                                                icon: (isDefaultFolderEmpty && isHome)
-                                                    ? Broken.archive_tick
-                                                    : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
-                                                    ? Broken.save_2
-                                                    : Broken.archive_tick,
-                                                iconSize: 22.0,
-                                                onPressed: () => config.onDefaultStartupFolderChanged(),
-                                              );
-                                            },
-                                          ),
-                                          const SizedBox(width: 4.0),
-                                          NamidaIconButton(
-                                            verticalPadding: 8.0,
-                                            horizontalPadding: 4.0,
-                                            icon: Broken.sort,
-                                            onPressed: () {
-                                              NamidaOnTaps.inst.onSubPageTracksSortIconTap(
-                                                mediaType(),
-                                                header: _getSortDialogHeader(),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: NamidaScrollbar(
-                                    controller: scrollController,
-                                    child: ObxO(
-                                      rx: foldersController.isHome,
-                                      builder: (context, isHome) => SmoothCustomScrollView(
-                                        controller: scrollController,
-                                        slivers: [
-                                          ObxO(
-                                            rx: foldersController.currentFolderslist,
-                                            builder: (context, currentFolderslist) => SuperSliverList.builder(
-                                              itemCount: currentFolderslist.length,
-                                              itemBuilder: (context, i) {
-                                                final folder = currentFolderslist[i];
-                                                const isTracksRecursive = true;
-                                                final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
-                                                final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
-                                                return FolderTile(
-                                                  folder: folder,
-                                                  highlightedFolder: highlightedFolder,
-                                                  controller: foldersController,
-                                                  tracks: tracks,
-                                                  isTracksRecursive: isTracksRecursive,
-                                                  dirInsideCount: dirInsideCount,
-                                                  isHome: isHome,
-                                                );
-                                              },
-                                            ),
-                                          ),
-
-                                          SliverFixedExtentList.builder(
-                                            itemCount: folderTracks.length,
-                                            itemExtent: Dimensions.inst.trackTileItemExtent,
-                                            itemBuilder: (context, i) {
-                                              return TrackTile(
-                                                properties: properties,
-                                                index: i,
-                                                trackOrTwd: folderTracks[i],
-                                                tracks: folderTracks,
-                                                bgColor: i == indexToScrollTo ? highlighedColor : null,
-                                              );
-                                            },
-                                          ),
-                                          kBottomPaddingWidgetSliver,
-                                          scrollToiconBottomPaddingSliver,
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          // == All Folders
-                          : ObxO(
-                              rx: foldersController.isHome,
-                              builder: (context, isHome) => Column(
-                                children: [
-                                  CustomListTile(
-                                    borderR: 16.0,
-                                    icon: isHome ? Broken.home_2 : Broken.folder_2,
-                                    title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
-                                    titleStyle: textTheme.displaySmall,
-                                    onTap: () => foldersController.stepOut(),
-                                    trailingRaw: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const SizedBox(width: 4.0),
-                                        NamidaIconButton(
-                                          verticalPadding: 8.0,
-                                          horizontalPadding: 4.0,
-                                          icon: Broken.sort,
-                                          onPressed: () {
-                                            NamidaOnTaps.inst.onSubPageTracksSortIconTap(
-                                              mediaType(),
-                                              header: _getSortDialogHeader(),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  Expanded(
-                                    child: NamidaScrollbar(
-                                      controller: scrollController,
-                                      child: ObxO(
-                                        rx: foldersController.isInside,
-                                        builder: (context, isInside) => SmoothCustomScrollView(
-                                          controller: scrollController,
-                                          slivers: [
-                                            if (!isInside)
-                                              ObxO(
-                                                rx: foldersController.foldersMap,
-                                                builder: (context, mainMap) {
-                                                  final mainMapFoldersKeys = mainMap.keys.toFixedList();
-                                                  return SuperSliverList.builder(
-                                                    itemCount: mainMapFoldersKeys.length,
-                                                    itemBuilder: (context, i) {
-                                                      final folder = mainMapFoldersKeys[i];
-                                                      const isTracksRecursive = false;
-                                                      final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
-                                                      if (tracks.isEmpty) return const SizedBox();
-                                                      final dirInsideCount = foldersController.currentNodeFoldersCount(folder) ?? 0;
-                                                      return FolderTile(
-                                                        folder: folder,
-                                                        highlightedFolder: highlightedFolder,
-                                                        controller: foldersController,
-                                                        title: folder.folderNameAvoidingConflicts(),
-                                                        tracks: tracks,
-                                                        isTracksRecursive: isTracksRecursive,
-                                                        dirInsideCount: dirInsideCount,
-                                                        isHome: true,
-                                                      );
-                                                    },
-                                                  );
-                                                },
-                                              ),
-                                            SliverFixedExtentList.builder(
-                                              itemCount: folderTracks.length,
-                                              itemExtent: Dimensions.inst.trackTileItemExtent,
-                                              itemBuilder: (context, i) {
-                                                final tr = folderTracks[i];
-                                                return TrackTile(
-                                                  properties: properties,
-                                                  index: i,
-                                                  trackOrTwd: tr,
-                                                  tracks: folderTracks,
-                                                  bgColor: i == indexToScrollTo ? highlighedColor : null,
-                                                );
-                                              },
-                                            ),
-                                            kBottomPaddingWidgetSliver,
-                                            scrollToiconBottomPaddingSliver,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                          child: _FoldersHeaderTile(
+                            foldersController: foldersController,
+                            config: config,
+                            tab: tab,
+                            currentFolder: currentFolder,
+                            onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(
+                              mediaType(),
+                              header: _getSortDialogHeader(),
                             ),
+                          ),
+                        ),
+                        Expanded(
+                          child: NamidaScrollbar(
+                            controller: scrollController,
+                            child: SmoothCustomScrollView(
+                              controller: scrollController,
+                              slivers: [
+                                ObxO(
+                                  rx: config.enableFoldersHierarchy,
+                                  builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
+                                      ? _HierarchyFoldersSliver(
+                                          foldersController: foldersController,
+                                          highlightedFolder: highlightedFolder,
+                                        )
+                                      : _AllFoldersSliver(
+                                          foldersController: foldersController,
+                                          highlightedFolder: highlightedFolder,
+                                        ),
+                                ),
+                                SliverFixedExtentList.builder(
+                                  itemCount: folderTracks.length,
+                                  itemExtent: Dimensions.inst.trackTileItemExtent,
+                                  itemBuilder: (context, i) {
+                                    return TrackTile(
+                                      properties: properties,
+                                      index: i,
+                                      trackOrTwd: folderTracks[i],
+                                      tracks: folderTracks,
+                                      bgColor: i == indexToScrollTo ? highlighedColor : null,
+                                    );
+                                  },
+                                ),
+                                kBottomPaddingWidgetSliver,
+                                scrollToiconBottomPaddingSliver,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     indexToScrollTo != null
                         ? Obx(
@@ -336,6 +193,157 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FoldersHeaderTile extends StatelessWidget {
+  final FoldersController foldersController;
+  final FoldersPageConfig config;
+  final LibraryTab tab;
+  final Folder? currentFolder;
+  final VoidCallback onSortTap;
+
+  const _FoldersHeaderTile({
+    required this.foldersController,
+    required this.config,
+    required this.tab,
+    required this.currentFolder,
+    required this.onSortTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentFolder = this.currentFolder;
+    return ObxO(
+      rx: foldersController.isHome,
+      builder: (context, isHome) => CustomListTile(
+        borderR: 16.0,
+        icon: isHome ? Broken.home_2 : Broken.folder_2,
+        title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
+        titleStyle: context.textTheme.displaySmall,
+        onTap: () => foldersController.stepOut(),
+        trailingRaw: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            LibraryTabVariantChip(tab: tab),
+            const SizedBox(width: 4.0),
+            ObxO(
+              rx: config.enableFoldersHierarchy,
+              builder: (context, enableFoldersHierarchy) => !enableFoldersHierarchy
+                  ? const SizedBox()
+                  : ObxO(
+                      rx: config.defaultFolderStartupLocation,
+                      builder: (context, defaultFolderStartupLocation) {
+                        final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
+                        return NamidaIconButton(
+                          verticalPadding: 8.0,
+                          horizontalPadding: 4.0,
+                          tooltip: () => lang.setAsDefault,
+                          icon: (isDefaultFolderEmpty && isHome)
+                              ? Broken.archive_tick
+                              : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
+                              ? Broken.save_2
+                              : Broken.archive_tick,
+                          iconSize: 22.0,
+                          onPressed: () => config.onDefaultStartupFolderChanged(),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(width: 4.0),
+            NamidaIconButton(
+              verticalPadding: 8.0,
+              horizontalPadding: 4.0,
+              icon: Broken.sort,
+              onPressed: onSortTap,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HierarchyFoldersSliver extends StatelessWidget {
+  final FoldersController foldersController;
+  final Folder? highlightedFolder;
+
+  const _HierarchyFoldersSliver({
+    required this.foldersController,
+    required this.highlightedFolder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: foldersController.isHome,
+      builder: (context, isHome) => ObxO(
+        rx: foldersController.currentFolderslist,
+        builder: (context, currentFolderslist) => SuperSliverList.builder(
+          itemCount: currentFolderslist.length,
+          itemBuilder: (context, i) {
+            final folder = currentFolderslist[i];
+            const isTracksRecursive = true;
+            final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
+            final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
+            return FolderTile(
+              folder: folder,
+              highlightedFolder: highlightedFolder,
+              controller: foldersController,
+              tracks: tracks,
+              isTracksRecursive: isTracksRecursive,
+              dirInsideCount: dirInsideCount,
+              isHome: isHome,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _AllFoldersSliver extends StatelessWidget {
+  final FoldersController foldersController;
+  final Folder? highlightedFolder;
+
+  const _AllFoldersSliver({
+    required this.foldersController,
+    required this.highlightedFolder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: foldersController.isInside,
+      builder: (context, isInside) => isInside
+          ? const SliverToBoxAdapter()
+          : ObxO(
+              rx: foldersController.foldersMap,
+              builder: (context, mainMap) {
+                final mainMapFoldersKeys = mainMap.keys.toFixedList();
+                return SuperSliverList.builder(
+                  itemCount: mainMapFoldersKeys.length,
+                  itemBuilder: (context, i) {
+                    final folder = mainMapFoldersKeys[i];
+                    const isTracksRecursive = false;
+                    final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
+                    if (tracks.isEmpty) return const SizedBox();
+                    final dirInsideCount = foldersController.currentNodeFoldersCount(folder) ?? 0;
+                    return FolderTile(
+                      folder: folder,
+                      highlightedFolder: highlightedFolder,
+                      controller: foldersController,
+                      title: folder.folderNameAvoidingConflicts(),
+                      tracks: tracks,
+                      isTracksRecursive: isTracksRecursive,
+                      dirInsideCount: dirInsideCount,
+                      isHome: true,
+                    );
+                  },
+                );
+              },
+            ),
     );
   }
 }

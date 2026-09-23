@@ -27,6 +27,7 @@ class ExpandableBox extends StatefulWidget {
   final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
+  final Widget? leftTextTrailing;
   final void Function()? onFilterIconLongPress;
   final bool enableHero;
 
@@ -46,6 +47,7 @@ class ExpandableBox extends StatefulWidget {
     this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
+    this.leftTextTrailing,
     this.onFilterIconLongPress,
     required this.enableHero,
   });
@@ -156,6 +158,10 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                             softWrap: false,
                                             overflow: TextOverflow.fade,
                                           ),
+                                  if (widget.leftTextTrailing != null) ...[
+                                    const SizedBox(width: 6.0),
+                                    widget.leftTextTrailing!,
+                                  ],
                                   if (widget.displayloadingIndicator) ...[
                                     const SizedBox(width: 8.0),
                                     const LoadingIndicator(),

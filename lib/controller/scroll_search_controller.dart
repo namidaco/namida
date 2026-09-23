@@ -98,6 +98,8 @@ class ScrollSearchController {
       return;
     }
 
+    if (tab.group == LibraryTab.tracks) SearchSortController.inst.setActiveTracksTab(tab);
+
     final isVertical = Dimensions.inst.showNavigationAtSide;
     final isPageNext = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
     final transition = isVertical
@@ -120,7 +122,9 @@ class ScrollSearchController {
   }
 
   void initialize() {
-    _assignScrollController(settings.extra.selectedLibraryTab.value);
+    final tab = settings.extra.selectedLibraryTab.value;
+    _assignScrollController(tab);
+    if (tab.group == LibraryTab.tracks) SearchSortController.inst.setActiveTracksTab(tab);
   }
 
   void _assignScrollController(LibraryTab tab) {

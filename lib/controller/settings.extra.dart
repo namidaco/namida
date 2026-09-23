@@ -11,6 +11,7 @@ class _ExtraSettings with SettingsFileWriter {
 
   final selectedLibraryTab = LibraryTab.tracks.obs;
   final staticLibraryTab = LibraryTab.tracks.obs;
+  final libraryTabGroupVariants = <LibraryTab, LibraryTab>{};
   final autoLibraryTab = true.obs;
   final ytInitialHomePage = YTHomePages.playlists.obs;
   final preferredSearchType = RxnF<SearchType>(fallback: SearchType.auto);
@@ -79,7 +80,10 @@ class _ExtraSettings with SettingsFileWriter {
     bool? windowMaximized,
     Rect? miniLyricsWindowBounds,
   }) {
-    if (selectedLibraryTab != null) this.selectedLibraryTab.value = selectedLibraryTab;
+    if (selectedLibraryTab != null) {
+      this.selectedLibraryTab.value = selectedLibraryTab;
+      libraryTabGroupVariants[selectedLibraryTab.group] = selectedLibraryTab;
+    }
     if (staticLibraryTab != null) this.staticLibraryTab.value = staticLibraryTab;
     if (autoLibraryTab != null) this.autoLibraryTab.value = autoLibraryTab;
     if (ytInitialHomePage != null) this.ytInitialHomePage.value = ytInitialHomePage;
@@ -155,6 +159,14 @@ class _ExtraSettings with SettingsFileWriter {
           ? LibraryTab.values.getEnum(json['selectedLibraryTab']) ?? selectedLibraryTab.value
           : LibraryTab.values.getEnum(json['staticLibraryTab']) ?? staticLibraryTab.value;
       autoLibraryTab.value = autoLibraryTabFinal;
+      final libraryTabGroupVariantsInStorage = json['libraryTabGroupVariants'];
+      if (libraryTabGroupVariantsInStorage is Map) {
+        for (final e in libraryTabGroupVariantsInStorage.entries) {
+          final group = LibraryTab.values.getEnum(e.key);
+          final variant = LibraryTab.values.getEnum(e.value);
+          if (group != null && variant != null) libraryTabGroupVariants[group] = variant;
+        }
+      }
       ytInitialHomePage.value = YTHomePages.values.getEnum(json['ytInitialHomePage']) ?? ytInitialHomePage.value;
       preferredSearchType.value = SearchType.values.getEnum(json['preferredSearchType']) ?? preferredSearchType.value;
       resumeUIEnabled.value = json['resumeUIEnabled'] ?? resumeUIEnabled.value;
@@ -213,6 +225,7 @@ class _ExtraSettings with SettingsFileWriter {
   Object get jsonToWrite => <String, dynamic>{
     'selectedLibraryTab': selectedLibraryTab.value.name,
     'staticLibraryTab': staticLibraryTab.value.name,
+    'libraryTabGroupVariants': libraryTabGroupVariants.map((key, value) => MapEntry(key.name, value.name)),
     'autoLibraryTab': autoLibraryTab.value,
     'ytInitialHomePage': ytInitialHomePage.value.name,
     'preferredSearchType': ?preferredSearchType.value?.name,

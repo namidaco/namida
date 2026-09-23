@@ -32,6 +32,7 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
@@ -295,19 +296,39 @@ class NamidaDrawer extends StatelessWidget {
                 ),
               const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
               ...LibraryTab.values
-                  .where((element) => element != LibraryTab.search)
+                  .where((element) => element != LibraryTab.search && element.isGroupHead)
                   .map(
                     (e) => ObxO(
                       rx: settings.extra.selectedLibraryTab,
-                      builder: (context, selectedLibraryTab) => NamidaDrawerListTile(
-                        enabled: selectedLibraryTab == e,
-                        title: e.toText(),
-                        icon: e.toIcon(),
-                        onTap: () async {
-                          ScrollSearchController.inst.animatePageController(e);
-                          toggleDrawer();
-                        },
-                      ),
+                      builder: (context, selectedLibraryTab) {
+                        final enabled = selectedLibraryTab.group == e;
+                        final variants = e.groupVariants;
+                        return NamidaDrawerListTile(
+                          enabled: enabled,
+                          title: e.toText(),
+                          icon: e.toIcon(),
+                          trailing: variants.isEmpty
+                              ? null
+                              : LibraryTabVariantsPopup(
+                                  tab: enabled ? selectedLibraryTab : e,
+                                  variants: variants,
+                                  openOnTap: true,
+                                  onSelected: toggleDrawer,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    child: Icon(
+                                      Broken.arrow_right_3,
+                                      size: 16.0,
+                                      color: enabled ? Colors.white.withAlpha(200) : null,
+                                    ),
+                                  ),
+                                ),
+                          onTap: () async {
+                            ScrollSearchController.inst.animatePageController(e.activeVariant(settings.libraryTabs.value));
+                            toggleDrawer();
+                          },
+                        );
+                      },
                     ),
                   ),
             ],

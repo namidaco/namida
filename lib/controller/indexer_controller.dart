@@ -424,7 +424,7 @@ class Indexer<T extends Track> {
   void _refreshMediaTracksSubListsAfterSort(Iterable<MediaType> sortedMedias) {
     for (final e in sortedMedias) {
       final fn = switch (e) {
-        MediaType.track => () => SearchSortController.inst.searchTracks(LibraryTab.tracks.textSearchController?.text ?? ''),
+        MediaType.track => SearchSortController.inst.refreshTrackSearchList,
         MediaType.album ||
         MediaType.artist ||
         MediaType.albumArtist ||
@@ -986,7 +986,7 @@ class Indexer<T extends Track> {
 
     if (!alreadyExists) {
       tracksInfoList.add(tr);
-      SearchSortController.inst.trackSearchList.add(tr);
+      SearchSortController.inst.onTrackIndexed(tr);
       allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
     } else {
       final list = allTracksMappedByYTID[trackExt.youtubeID] ??= [];

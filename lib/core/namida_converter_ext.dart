@@ -114,10 +114,43 @@ extension MediaTypeUtils on MediaType {
   }
 }
 
+extension LibraryTabsListUtils on List<LibraryTab> {
+  List<LibraryTab> toNavTabs() {
+    final result = <LibraryTab>[];
+    final seenGroups = <LibraryTab>{};
+    for (final tab in this) {
+      final group = tab.group;
+      if (seenGroups.add(group)) result.add(group.activeVariant(this));
+    }
+    return result;
+  }
+
+  int navIndexOf(LibraryTab tab) {
+    final group = tab.group;
+    final seenGroups = <LibraryTab>{};
+    for (final t in this) {
+      final tGroup = t.group;
+      if (seenGroups.add(tGroup) && tGroup == group) return seenGroups.length - 1;
+    }
+    return -1;
+  }
+
+  Iterable<LibraryTab> enabledVariantsOf(LibraryTab group) => where((e) => e.group == group);
+}
+
 extension LibraryTabUtils on LibraryTab {
+  LibraryTab activeVariant(List<LibraryTab> libraryTabs) {
+    final group = this.group;
+    final selected = settings.extra.selectedLibraryTab.value;
+    if (selected.group == group) return selected;
+    final lastUsed = settings.extra.libraryTabGroupVariants[group];
+    if (lastUsed != null && libraryTabs.contains(lastUsed)) return lastUsed;
+    return libraryTabs.firstWhereEff((e) => e.group == group) ?? group;
+  }
+
   MediaType? toMediaType() {
     return switch (this) {
-      LibraryTab.tracks => MediaType.track,
+      LibraryTab.tracks || LibraryTab.tracksMusic || LibraryTab.tracksVideos => MediaType.track,
       LibraryTab.albums => MediaType.album,
       LibraryTab.artists => MediaType.artist,
       LibraryTab.genres => MediaType.genre,
@@ -142,12 +175,12 @@ extension LibraryTabUtils on LibraryTab {
     };
   }
 
-  int toInt() => settings.libraryTabs.value.indexOf(this);
+  int toInt() => settings.libraryTabs.value.navIndexOf(this);
 
   NamidaRouteWidget toWidget([CountPerRow? gridCount, bool animateTiles = true, bool enableHero = false]) {
     gridCount ??= settings.mediaGridCounts.value.get(this);
     return switch (this) {
-      LibraryTab.tracks => TracksPage(animateTiles: animateTiles),
+      LibraryTab.tracks || LibraryTab.tracksMusic || LibraryTab.tracksVideos => TracksPage(tab: this, animateTiles: animateTiles),
       LibraryTab.albums => AlbumsPage(
         countPerRow: gridCount,
         animateTiles: animateTiles,
@@ -1229,7 +1262,7 @@ extension RouteUtils on NamidaRoute {
 
   QueueSourceBase toQueueSource() {
     return switch (route) {
-      RouteType.PAGE_allTracks => QueueSource.allTracksAll,
+      RouteType.PAGE_allTracks || RouteType.PAGE_allTracks_music || RouteType.PAGE_allTracks_videos => QueueSource.allTracksAll,
       RouteType.PAGE_folders => QueueSource.folder(name),
       RouteType.PAGE_folders_music => QueueSource.folderMusic(name),
       RouteType.PAGE_folders_videos => QueueSource.folderVideos(name),
@@ -1266,7 +1299,7 @@ extension RouteUtils on NamidaRoute {
   /// NOTE: any modification done to this will be reflected in the original list.
   Iterable<Selectable> tracksInside() {
     return switch (route) {
-          RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.value,
+          RouteType.PAGE_allTracks || RouteType.PAGE_allTracks_music || RouteType.PAGE_allTracks_videos => SearchSortController.inst.trackSearchList.value,
           RouteType.PAGE_folders => FoldersController.tracksAndVideos.currentFolderTracksList,
           RouteType.PAGE_folders_music => FoldersController.tracks.currentFolderTracksList,
           RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
@@ -1308,7 +1341,7 @@ extension RouteUtils on NamidaRoute {
 
   Iterable<Selectable> tracksInsideReactive() {
     return switch (route) {
-          RouteType.PAGE_allTracks => SearchSortController.inst.trackSearchList.valueR,
+          RouteType.PAGE_allTracks || RouteType.PAGE_allTracks_music || RouteType.PAGE_allTracks_videos => SearchSortController.inst.trackSearchList.valueR,
           RouteType.PAGE_folders => FoldersController.tracksAndVideos.currentFolderTracksList,
           RouteType.PAGE_folders_music => FoldersController.tracks.currentFolderTracksList,
           RouteType.PAGE_folders_videos => FoldersController.videos.currentFolderTracksList,
@@ -1896,6 +1929,8 @@ extension LibraryTabL10n on LibraryTab {
   String toText() => switch (this) {
     LibraryTab.albums => lang.albums,
     LibraryTab.tracks => lang.tracks,
+    LibraryTab.tracksMusic => "${lang.tracks}: ${lang.audio}",
+    LibraryTab.tracksVideos => "${lang.tracks}: ${lang.videos}",
     LibraryTab.artists => lang.artists,
     LibraryTab.genres => lang.genres,
     LibraryTab.playlists => lang.playlists,
@@ -1918,9 +1953,21 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.party => lang.partyListeningParty,
   };
 
+  String toShortText() => isGroupHead ? toText() : toVariantText();
+
+  String toVariantText() => switch (this) {
+    LibraryTab.tracks || LibraryTab.folders => lang.all,
+    LibraryTab.tracksMusic => lang.audio,
+    LibraryTab.foldersMusic => lang.tracks,
+    LibraryTab.tracksVideos || LibraryTab.foldersVideos => lang.videos,
+    _ => toText(),
+  };
+
   IconData toIcon() => switch (this) {
     LibraryTab.albums => Broken.music_dashboard,
     LibraryTab.tracks => Broken.music_circle,
+    LibraryTab.tracksMusic => Broken.musicnote,
+    LibraryTab.tracksVideos => Broken.video_circle,
     LibraryTab.artists => Broken.profile_2user,
     LibraryTab.genres => Broken.smileys,
     LibraryTab.playlists => Broken.music_library_2,

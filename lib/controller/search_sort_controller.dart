@@ -97,6 +97,21 @@ class SearchSortController extends SearchPortsProvider {
 
   RxList<Track> get _tracksInfoList => Indexer.inst.tracksInfoList;
 
+  LibraryTab _activeTracksTab = LibraryTab.tracks;
+  LibraryTab _trackSearchListTab = LibraryTab.tracks;
+
+  void setActiveTracksTab(LibraryTab tab) {
+    _activeTracksTab = tab;
+    if (_trackSearchListTab != tab) refreshTrackSearchList();
+  }
+
+  void refreshTrackSearchList() => searchTracks(_activeTracksTab.textSearchController?.text ?? '');
+
+  void onTrackIndexed(Track tr) {
+    final isVideo = _trackSearchListTab.isVideoFilter;
+    if (isVideo == null || (tr is Video) == isVideo) trackSearchList.add(tr);
+  }
+
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;
 
   Map get runningTempSearches => _runningTempSearches;
@@ -128,12 +143,12 @@ class SearchSortController extends SearchPortsProvider {
   }
 
   /// null [sendPort] means port dead before it could be used
-  void _sendSearchRequest(MediaType type, SendPortWithCachedMessage? sendPort, String text, bool temp) {
+  void _sendSearchRequest(MediaType type, SendPortWithCachedMessage? sendPort, String text, bool temp, {bool? isVideo}) {
     if (sendPort == null) {
       if (temp) _onTempSearchEnded(type, text);
       return;
     }
-    sendPort.send((text: text, temp: temp));
+    sendPort.send((text: text, temp: temp, isVideo: isVideo));
   }
 
   void searchAll(String text) {
@@ -156,17 +171,22 @@ class SearchSortController extends SearchPortsProvider {
   }
 
   void setTracksSearchTemp(List<Track> tracks) {
-    trackSearchTemp.value = _filterTracksByActiveSearchTypes(tracks);
+    trackSearchTemp.value = _filterTracksKind(tracks, _activeTrSearchIsVideo);
     sortTracksSearch();
   }
 
-  List<Track> _filterTracksByActiveSearchTypes(List<Track> tracks) {
+  bool? get _activeTrSearchIsVideo {
     final activeTypes = settings.activeTrSearch.value;
     final tracksActive = activeTypes[TrackTypeSearch.tr] ?? true;
     final videosActive = activeTypes[TrackTypeSearch.v] ?? true;
-    if (tracksActive && videosActive) return tracks;
-    if (tracksActive) return tracks.where((e) => e is! Video).toList();
-    return <Track>[...tracks.whereType<Video>()];
+    if (tracksActive && videosActive) return null;
+    return videosActive;
+  }
+
+  static List<Track> _filterTracksKind(List<Track> tracks, bool? isVideo) {
+    if (isVideo == null) return tracks;
+    if (isVideo) return <Track>[...tracks.whereType<Video>()];
+    return tracks.where((e) => e is! Video).toList();
   }
 
   List<String> _filterNonEmptyFolders(MediaType type, List<String> folders) {
@@ -496,14 +516,21 @@ class SearchSortController extends SearchPortsProvider {
       onResult: (result) {
         if (result == null) return; // -- prepared
 
-        final r = result as (List<Track>, bool, String);
+        final r = result as (List<Track>, bool, String, bool?);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
         if (isTemp) {
           _onTempSearchEnded(MediaType.track, fetchedQuery);
-          if (fetchedQuery == lastSearchText) setTracksSearchTemp(r.$1);
+          if (fetchedQuery == lastSearchText) {
+            trackSearchTemp.value = r.$1;
+            sortTracksSearch();
+          }
         } else {
-          if (fetchedQuery == LibraryTab.tracks.textSearchController?.text) trackSearchList.value = r.$1;
+          final tab = _activeTracksTab;
+          if (fetchedQuery == tab.textSearchController?.text && r.$4 == tab.isVideoFilter) {
+            trackSearchList.value = r.$1;
+            _trackSearchListTab = tab;
+          }
         }
       },
       isolateFunction: (itemsSendPort) async {
@@ -627,13 +654,21 @@ class SearchSortController extends SearchPortsProvider {
         trackSearchTemp.clear();
         _onTempSearchEnded(MediaType.track, null);
       } else {
-        LibraryTab.tracks.textSearchController?.clear();
-        trackSearchList.assignAll(_tracksInfoList.value);
+        final tab = _activeTracksTab;
+        tab.textSearchController?.clear();
+        final isVideo = tab.isVideoFilter;
+        if (isVideo == null) {
+          trackSearchList.assignAll(_tracksInfoList.value);
+        } else {
+          trackSearchList.value = _filterTracksKind(_tracksInfoList.value, isVideo);
+        }
+        _trackSearchListTab = tab;
       }
       return;
     }
     if (temp) _onTempSearchStarted(MediaType.track, text);
-    _sendSearchRequest(MediaType.track, await _prepareTracksPorts(), text, temp);
+    final isVideo = temp ? _activeTrSearchIsVideo : _activeTracksTab.isVideoFilter;
+    _sendSearchRequest(MediaType.track, await _prepareTracksPorts(), text, temp, isVideo: isVideo);
   }
 
   static void searchTracksIsolate(TracksSearchParams params) {
@@ -654,9 +689,10 @@ class SearchSortController extends SearchPortsProvider {
       p as SearchRequest;
       final text = p.text;
       final temp = p.temp;
+      final isVideo = p.isVideo;
 
-      final result = searchWrapper.filter(text);
-      sendPort.send((result, temp, text));
+      final result = searchWrapper.filter(text, isVideo: isVideo);
+      sendPort.send((result, temp, text, isVideo));
     });
 
     sendPort.send(null);
@@ -899,7 +935,7 @@ class SearchSortController extends SearchPortsProvider {
         reverse: reverse ?? false,
         list: _tracksInfoList.value,
         onDone: (sortType, isReverse) {
-          searchTracks(LibraryTab.tracks.textSearchController?.text ?? '');
+          refreshTrackSearchList();
         },
       );
     } else {

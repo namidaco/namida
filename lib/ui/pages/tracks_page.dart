@@ -23,23 +23,42 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/ui/widgets/stats.dart';
 
 class TracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
-  RouteType get route => RouteType.PAGE_allTracks;
+  RouteType get route => routeOfTab(tab);
 
+  final LibraryTab tab;
   final bool animateTiles;
-  const TracksPage({super.key, required this.animateTiles});
+  const TracksPage({super.key, required this.tab, required this.animateTiles});
+
+  static RouteType routeOfTab(LibraryTab tab) => switch (tab) {
+    LibraryTab.tracksMusic => RouteType.PAGE_allTracks_music,
+    LibraryTab.tracksVideos => RouteType.PAGE_allTracks_videos,
+    _ => RouteType.PAGE_allTracks,
+  };
 
   @override
   State<TracksPage> createState() => _TracksPageState();
 }
 
 class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, PullToRefreshMixin {
-  bool get _shouldAnimate => widget.animateTiles && LibraryTab.tracks.shouldAnimateTiles;
+  bool get _shouldAnimate => widget.animateTiles && widget.tab.shouldAnimateTiles;
+
+  int _totalTracksLengthR() {
+    final allTracksLength = Indexer.inst.tracksInfoList.valueR.length;
+    final isVideo = widget.tab.isVideoFilter;
+    if (isVideo == null) return allTracksLength;
+    var videosLength = 0;
+    for (final videos in Indexer.inst.mainMapFoldersVideos.value.values) {
+      videosLength += videos.length;
+    }
+    return isVideo ? videosLength : allTracksLength - videosLength;
+  }
 
   void _onAddFolderTap(BuildContext context) {
     SettingsSearchController.inst
@@ -52,7 +71,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
     const IndexerSettings().promptAddFolderType();
   }
 
-  final _animationKey = 'tracks_page';
+  late final _animationKey = 'tracks_page_${widget.tab.name}';
 
   @override
   AnimationController get refreshAnimation => RefreshLibraryIconController.getController(_animationKey, this);
@@ -71,10 +90,10 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
 
   @override
   Widget build(BuildContext context) {
-    const libraryTab = LibraryTab.tracks;
+    final libraryTab = widget.tab;
     final scrollController = libraryTab.scrollController;
 
-    const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
+    final listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
 
     return BackgroundWrapper(
       child: Listener(
@@ -90,7 +109,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
           header: Obx(
             (context) {
               final finalTracksLength = SearchSortController.inst.trackSearchList.valueR.length;
-              final totalTracksLength = Indexer.inst.tracksInfoList.valueR.length;
+              final totalTracksLength = _totalTracksLengthR();
               String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${totalTracksLength.displayTrackKeyword}' : finalTracksLength.displayTrackKeyword;
               final isIndexingR = Indexer.inst.isIndexing.valueR;
               return ExpandableBox(
@@ -116,6 +135,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   const SizedBox(width: 10.0),
                 ],
                 leftText: leftText,
+                leftTextTrailing: LibraryTabVariantChip(tab: libraryTab),
                 onLeftTextTap: const StatsPage(isYoutube: false).navigate,
                 onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                 onCloseButtonPressed: () {

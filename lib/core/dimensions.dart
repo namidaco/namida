@@ -63,8 +63,13 @@ class Dimensions {
               route == RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE || // bcz bcz..
               route == RouteType.PAGE_party || // bcz has chat input
               ((fab == FABType.shuffle || fab == FABType.play) && currentRoute?.hasTracksInsideReactive() != true) ||
-              (settings.extra.selectedLibraryTab.valueR == LibraryTab.tracks && LibraryTab.tracks.isBarVisible.valueR == false);
+              _isTracksTabBarHiddenR();
     return shouldHide;
+  }
+
+  bool _isTracksTabBarHiddenR() {
+    final selectedTab = settings.extra.selectedLibraryTab.valueR;
+    return selectedTab.group == LibraryTab.tracks && selectedTab.isBarVisible.valueR == false;
   }
 
   bool get shouldShowSettingsFABR {
