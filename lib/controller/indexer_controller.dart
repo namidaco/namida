@@ -2092,7 +2092,7 @@ class Indexer<T extends Track> {
   //   printy("All Tracks Length From File: ${tracksInfoList.length}");
   // }
 
-  static final _featArtistRegex = RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. \]', caseSensitive: false);
+  static final _featArtistRegex = RegExp(r'\(ft\. |\[ft\. |\(feat\. |\[feat\. ', caseSensitive: false);
   static final _closingBracketRegex = RegExp(r'\)|\]');
 
   static List<String> splitArtist({
@@ -2114,6 +2114,20 @@ class Indexer<T extends Track> {
       }
     }
     return allArtists.toList();
+  }
+
+  static String removeFeatArtistsFromTitle(String title) {
+    final match = _featArtistRegex.firstMatch(title);
+    if (match == null) return title;
+    final closingIndex = title.indexOf(_closingBracketRegex, match.end);
+    var start = match.start;
+    var end = closingIndex == -1 ? title.length : closingIndex + 1;
+    if (start > 0 && title.codeUnitAt(start - 1) == 0x20) {
+      start--;
+    } else if (end < title.length && title.codeUnitAt(end) == 0x20) {
+      end++;
+    }
+    return title.replaceRange(start, end, '');
   }
 
   static List<String> splitGenre(

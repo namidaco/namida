@@ -109,7 +109,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                       if (settings.tracksSortSearchIsAuto.value) {
                         SearchSortController.inst.searchTracks(ScrollSearchController.inst.searchTextEditingController.text, temp: true);
                       } else {
-                        SearchSortController.inst.sortTracksSearch(canSkipSorting: false);
+                        SearchSortController.inst.sortTracksSearch();
                       }
                     },
                   ),
@@ -131,7 +131,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                                 borderRadius: 10.0,
                                 active: isAuto ? false : reversed,
                                 onTap: () {
-                                  SearchSortController.inst.sortTracksSearch(reverse: !reversed, canSkipSorting: false);
+                                  SearchSortController.inst.sortTracksSearch(reverse: !reversed);
                                 },
                               ),
                             ),
@@ -143,7 +143,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                                 trailingIcon: e.toIcon(),
                                 active: (isAuto ? settings.mediaItemsTrackSorting[MediaType.track]?.firstOrNull : tracksSortSearch) == e,
                                 onTap: () {
-                                  SearchSortController.inst.sortTracksSearch(sortBy: e, canSkipSorting: false);
+                                  SearchSortController.inst.sortTracksSearch(sortBy: e);
                                 },
                               ),
                             ),

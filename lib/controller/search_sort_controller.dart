@@ -921,7 +921,7 @@ class SearchSortController extends SearchPortsProvider {
     _tracksInfoList.refresh();
   }
 
-  void sortTracksSearch({SortType? sortBy, bool? reverse, bool canSkipSorting = true}) {
+  void sortTracksSearch({SortType? sortBy, bool? reverse}) {
     final isAuto = settings.tracksSortSearchIsAuto.value;
     if (isAuto) {
       // -- already sorted by most relevant
@@ -930,12 +930,6 @@ class SearchSortController extends SearchPortsProvider {
 
     sortBy ??= settings.tracksSortSearch.value;
     reverse ??= settings.tracksSortSearchReversed.value;
-
-    if (canSkipSorting) {
-      final identicalToMainOne =
-          sortBy == settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull && reverse == settings.mediaItemsTrackSortingReverse.value[MediaType.track];
-      if (identicalToMainOne) return; // since the looped list already has the same order
-    }
 
     _sortTracksRaw(
       sortBy: sortBy,

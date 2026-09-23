@@ -95,6 +95,9 @@ class TracksSearchWrapper {
 
     if (tsf.isEmpty) stitle = true;
 
+    // -- already matched as artists, keeping them would score the title higher than tracks by these artists
+    final removeFeatArtistsFromTitle = stitle && sartist && splitConfig.artistsConfig.addFeatArtist;
+
     final textCleanedForSearch = _functionOfCleanup(cleanup);
     final textCleanedMinorForSearch = cleanup ? _functionOfCleanup(false) : null;
 
@@ -125,7 +128,7 @@ class TracksSearchWrapper {
         _CustomTrackExtended(
           ogIndex: index,
           track: track,
-          splitTitle: splitThis(title, stitle, tryCutBeforeBrackets: true),
+          splitTitle: splitThis(removeFeatArtistsFromTitle ? Indexer.removeFeatArtistsFromTitle(title) : title, stitle, tryCutBeforeBrackets: true),
           splitFilename: splitThis(path.getFilename, sfilename),
           splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
           splitAlbum: salbum
@@ -337,12 +340,12 @@ class TracksSearchWrapper {
       }
     }
 
-    final cleaned = _MatchText(cleanedParts.join(' '), cleanedParts);
+    final cleaned = _MatchText.splitJoined(cleanedParts.join(' '), items: cleanedParts.length > 1 ? cleanedParts : null);
     final cleanedMinor = cleanedMinorParts == null
         ? null
         : identicalToMinor
         ? cleaned
-        : _MatchText(cleanedMinorParts.join(' '), cleanedMinorParts);
+        : _MatchText.splitJoined(cleanedMinorParts.join(' '), items: cleanedMinorParts.length > 1 ? cleanedMinorParts : null);
 
     return _Property._(
       cleaned: cleaned,
@@ -461,7 +464,10 @@ class _MatchText {
   final Uint32List partsLengths;
   final Uint32List partsMasks;
 
-  _MatchText(this.text, this.parts) : length = text.length, mask = charsMaskOf(text), partsLengths = Uint32List(parts.length), partsMasks = Uint32List(parts.length) {
+  /// each value of a multi-value property (ex: artists), null otherwise.
+  final List<String>? items;
+
+  _MatchText(this.text, this.parts, this.items) : length = text.length, mask = charsMaskOf(text), partsLengths = Uint32List(parts.length), partsMasks = Uint32List(parts.length) {
     for (int i = 0; i < parts.length; i++) {
       final part = parts[i];
       partsLengths[i] = part.length;
@@ -469,12 +475,23 @@ class _MatchText {
     }
   }
 
-  factory _MatchText.splitJoined(String joined) {
+  factory _MatchText.splitJoined(String joined, {List<String>? items}) {
     final parts = <String>[];
     for (final part in joined.split(' ')) {
       if (part.isNotEmpty) parts.add(part);
     }
-    return _MatchText(joined, parts);
+    return _MatchText(joined, parts, items);
+  }
+
+  bool matchesExactly(String query) {
+    if (text == query) return true;
+    final items = this.items;
+    if (items != null) {
+      for (final item in items) {
+        if (item == query) return true;
+      }
+    }
+    return false;
   }
 
   static int charsMaskOf(String text) {
@@ -552,14 +569,16 @@ class _ScoreCalculator {
     if (query.length == 0) return;
 
     final cleanedMinor = property.cleanedMinor;
-    final queryMinorText = queryMinor?.text;
+    // -- null when both sides are untouched by cleanup, matching them would repeat the exact same comparisons.
+    final queryMinorToMatch = _queryMinorIsSame && identical(cleanedMinor, cleaned) ? null : queryMinor;
+    final queryMinorText = queryMinorToMatch?.text;
 
-    // -- exact match
-    // -- ex: `"still here"` == `"still here"`
-    if (cleaned.text == query.text) {
+    // -- exact match, or of any single value in multi-value properties
+    // -- ex: `"still here"` == `"still here"`, `"lil texas"` in `["dimitri k", "lil texas"]`
+    if (cleaned.matchesExactly(query.text)) {
       score += 400 * multiplier;
       return;
-    } else if (cleanedMinor != null && cleanedMinor.text == queryMinorText) {
+    } else if (cleanedMinor != null && queryMinorText != null && cleanedMinor.matchesExactly(queryMinorText)) {
       score += 400 * multiplier;
       return;
     }
@@ -581,15 +600,14 @@ class _ScoreCalculator {
     }
 
     final matchingPercentageCleaned = matcher.compareMatchingPercentage(query, cleaned, fuzzy: allowFuzzy ? _queryFuzzy : null);
-    score += (matchingPercentageCleaned * 200).round() * multiplier;
+    if (matchingPercentageCleaned > 0) {
+      score += (matchingPercentageCleaned * 200).round() * multiplier;
+      return;
+    }
 
-    if (score > 0) return;
+    if (cleanedMinor == null || queryMinorToMatch == null) return;
 
-    if (cleanedMinor == null || queryMinor == null) return;
-    // -- both sides are untouched by cleanup, the pass above already did this exact comparison.
-    if (_queryMinorIsSame && identical(cleanedMinor, cleaned)) return;
-
-    final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(queryMinor!, cleanedMinor, fuzzy: allowFuzzy ? _queryMinorFuzzy : null);
+    final matchingPercentageCleanedMinor = matcher.compareMatchingPercentage(queryMinorToMatch, cleanedMinor, fuzzy: allowFuzzy ? _queryMinorFuzzy : null);
     score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
   }
 
@@ -692,7 +710,9 @@ class _StringMatcher {
     // -- ex: query="where go", property: "go"
     // -- so decrease score to allow tracks with "where do we go" to appear
     final queryMorePartsMultiplier = querySplitsLength > propertySplitsLength ? 0.5 : 1.0;
-    final requiredCombinedRatio = requiredRatio * querySplitsLength / queryMorePartsMultiplier;
+    // -- the average ratio is scaled again by the fraction of matched query parts,
+    // -- ex: query="lil texas", property "lil xan" falls far behind one having both parts.
+    final requiredScaledRatio = requiredRatio * querySplitsLength * querySplitsLength / queryMorePartsMultiplier;
 
     final queryLengths = query.partsLengths;
     final queryMasks = query.partsMasks;
@@ -700,9 +720,11 @@ class _StringMatcher {
     final propertyMasks = property.partsMasks;
 
     double combinedRatio = 0.0;
+    int matchedParts = 0;
     for (int qi = 0; qi < querySplitsLength; qi++) {
+      final remainingParts = querySplitsLength - qi;
       // -- even perfect matches for all the remaining parts wouldn't reach the required ratio
-      if (combinedRatio + (querySplitsLength - qi) <= requiredCombinedRatio) return 0.0;
+      if ((combinedRatio + remainingParts) * (matchedParts + remainingParts) <= requiredScaledRatio) return 0.0;
 
       final qLength = queryLengths[qi];
       final qMask = queryMasks[qi];
@@ -719,10 +741,13 @@ class _StringMatcher {
         if (qpRatio > maxRatioForQPart) maxRatioForQPart = qpRatio;
         if (maxRatioForQPart >= 1.0) break;
       }
-      combinedRatio += maxRatioForQPart;
+      if (maxRatioForQPart > 0) {
+        combinedRatio += maxRatioForQPart;
+        matchedParts++;
+      }
     }
 
-    return combinedRatio * queryMorePartsMultiplier / querySplitsLength;
+    return combinedRatio * matchedParts * queryMorePartsMultiplier / (querySplitsLength * querySplitsLength);
   }
 
   double _simpleRatio(

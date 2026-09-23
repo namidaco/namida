@@ -1032,7 +1032,7 @@ class _TracksSectionTitle extends StatelessWidget {
                   NamidaInkWell(
                     onTap: () {
                       if (settings.tracksSortSearchIsAuto.value) return;
-                      SearchSortController.inst.sortTracksSearch(reverse: !settings.tracksSortSearchReversed.value, canSkipSorting: false);
+                      SearchSortController.inst.sortTracksSearch(reverse: !settings.tracksSortSearchReversed.value);
                     },
                     child: Obx(
                       (context) {
