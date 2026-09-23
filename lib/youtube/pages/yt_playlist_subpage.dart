@@ -332,6 +332,17 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                               },
                                             ),
                                           ],
+                                          NamidaPopupItem(
+                                            icon: Broken.document_download,
+                                            title: lang.cache,
+                                            onTap: () => YTPlaylistDownloadPage(
+                                              ids: playlist.tracks,
+                                              playlistName: playlistCurrentName.translatePlaylistName(),
+                                              infoLookup: const {},
+                                              playlistInfo: null,
+                                              cacheOnly: true,
+                                            ).navigate(),
+                                          ),
                                         ],
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 4.0),

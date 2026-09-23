@@ -263,6 +263,7 @@ class _SettingsController with SettingsFileWriter {
   final downloadFilesWriteUploadDate = false.obs;
   final downloadFilesKeepCachedVersions = true.obs;
   final downloadAddAudioToLocalLibrary = true.obs;
+  final downloadAddToLocalPlaylist = false.obs;
   final downloadAudioOnly = false.obs;
   final downloadOverrideOldFiles = false.obs;
   final enablePip = true.obs;
@@ -710,6 +711,7 @@ class _SettingsController with SettingsFileWriter {
       downloadFilesWriteUploadDate.value = json['downloadFilesWriteUploadDate'] ?? downloadFilesWriteUploadDate.value;
       downloadFilesKeepCachedVersions.value = json['downloadFilesKeepCachedVersions'] ?? downloadFilesKeepCachedVersions.value;
       downloadAddAudioToLocalLibrary.value = json['downloadAddAudioToLocalLibrary'] ?? downloadAddAudioToLocalLibrary.value;
+      downloadAddToLocalPlaylist.value = json['downloadAddToLocalPlaylist'] ?? downloadAddToLocalPlaylist.value;
       downloadAudioOnly.value = json['downloadAudioOnly'] ?? downloadAudioOnly.value;
       downloadOverrideOldFiles.value = json['downloadOverrideOldFiles'] ?? downloadOverrideOldFiles.value;
       enablePip.value = json['enablePip'] ?? enablePip.value;
@@ -961,6 +963,7 @@ class _SettingsController with SettingsFileWriter {
     'downloadFilesWriteUploadDate': downloadFilesWriteUploadDate.value,
     'downloadFilesKeepCachedVersions': downloadFilesKeepCachedVersions.value,
     'downloadAddAudioToLocalLibrary': downloadAddAudioToLocalLibrary.value,
+    'downloadAddToLocalPlaylist': downloadAddToLocalPlaylist.value,
     'downloadAudioOnly': downloadAudioOnly.value,
     'downloadOverrideOldFiles': downloadOverrideOldFiles.value,
     'enablePip': enablePip.value,
@@ -1092,6 +1095,7 @@ class _SettingsController with SettingsFileWriter {
     bool? downloadFilesWriteUploadDate,
     bool? downloadFilesKeepCachedVersions,
     bool? downloadAddAudioToLocalLibrary,
+    bool? downloadAddToLocalPlaylist,
     bool? downloadAudioOnly,
     bool? downloadOverrideOldFiles,
     bool? enablePip,
@@ -1350,6 +1354,7 @@ class _SettingsController with SettingsFileWriter {
     if (downloadFilesWriteUploadDate != null) this.downloadFilesWriteUploadDate.value = downloadFilesWriteUploadDate;
     if (downloadFilesKeepCachedVersions != null) this.downloadFilesKeepCachedVersions.value = downloadFilesKeepCachedVersions;
     if (downloadAddAudioToLocalLibrary != null) this.downloadAddAudioToLocalLibrary.value = downloadAddAudioToLocalLibrary;
+    if (downloadAddToLocalPlaylist != null) this.downloadAddToLocalPlaylist.value = downloadAddToLocalPlaylist;
     if (downloadAudioOnly != null) this.downloadAudioOnly.value = downloadAudioOnly;
     if (downloadOverrideOldFiles != null) this.downloadOverrideOldFiles.value = downloadOverrideOldFiles;
     if (enablePip != null) this.enablePip.value = enablePip;

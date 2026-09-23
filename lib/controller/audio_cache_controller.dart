@@ -40,6 +40,8 @@ class AudioCacheController {
     return cachedAudio;
   }
 
+  bool isAvailableOffline(String videoId) => audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true;
+
   void addToCacheMap(String videoId, AudioCacheDetails cacheDetails) {
     audioCacheMap.addForce(videoId, cacheDetails);
   }

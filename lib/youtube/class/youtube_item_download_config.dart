@@ -43,6 +43,8 @@ class YoutubeItemDownloadConfig {
   final bool? removeSponsorSegments;
   final bool? splitByChapters;
   final List<String>? sponsorSegmentsCategories;
+  final String? localPlaylistName;
+  final bool cacheOnly;
 
   YoutubeItemDownloadConfig({
     required this.id,
@@ -70,8 +72,40 @@ class YoutubeItemDownloadConfig {
     required this.removeSponsorSegments,
     required this.splitByChapters,
     required this.sponsorSegmentsCategories,
+    required this.localPlaylistName,
+    required this.cacheOnly,
   }) : _filename = filename.obs,
        this.addedAt = addedAt ?? DateTime.now();
+
+  YoutubeItemDownloadConfig.cache({
+    required this.id,
+    required this.groupName,
+    required String title,
+    required this.streamInfoItem,
+    required bool audioOnly,
+  }) : _filename = DownloadTaskFilename.create(initialFilename: title).obs,
+       ffmpegTags = {},
+       videoStream = null,
+       audioStream = null,
+       prefferedVideoQualityID = null,
+       prefferedAudioQualityID = null,
+       fetchMissingAudio = true,
+       fetchMissingVideo = !audioOnly,
+       originalIndex = null,
+       totalLength = null,
+       playlistId = null,
+       playlistInfo = null,
+       addedAt = DateTime.now(),
+       addAudioToLocalLibrary = null,
+       autoExtractTitleAndArtist = null,
+       keepCachedVersionsIfDownloaded = null,
+       downloadFilesWriteUploadDate = null,
+       deleteOldFile = null,
+       removeSponsorSegments = null,
+       splitByChapters = null,
+       sponsorSegmentsCategories = null,
+       localPlaylistName = null,
+       cacheOnly = true;
 
   /// Using this method is restricted only for the function that will rename all the other instances in other parts.
   @protected
@@ -120,6 +154,8 @@ class YoutubeItemDownloadConfig {
       removeSponsorSegments: map['removeSponsorSegments'] as bool?,
       splitByChapters: map['splitByChapters'] as bool?,
       sponsorSegmentsCategories: (map['sponsorSegmentsCategories'] as List?)?.cast<String>(),
+      localPlaylistName: map['localPlaylistName'] as String?,
+      cacheOnly: map['cacheOnly'] == true,
     );
   }
 
@@ -150,6 +186,8 @@ class YoutubeItemDownloadConfig {
       'removeSponsorSegments': ?removeSponsorSegments,
       'splitByChapters': ?splitByChapters,
       'sponsorSegmentsCategories': ?sponsorSegmentsCategories,
+      'localPlaylistName': ?localPlaylistName,
+      if (cacheOnly) 'cacheOnly': true,
     };
   }
 
@@ -193,6 +231,8 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     bool? removeSponsorSegments,
     bool? splitByChapters,
     List<String>? sponsorSegmentsCategories,
+    String? localPlaylistName,
+    bool? cacheOnly,
   }) {
     return YoutubeItemDownloadConfig(
       id: id ?? this.id,
@@ -220,6 +260,8 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       removeSponsorSegments: removeSponsorSegments ?? this.removeSponsorSegments,
       splitByChapters: splitByChapters ?? this.splitByChapters,
       sponsorSegmentsCategories: sponsorSegmentsCategories ?? this.sponsorSegmentsCategories,
+      localPlaylistName: localPlaylistName ?? this.localPlaylistName,
+      cacheOnly: cacheOnly ?? this.cacheOnly,
     );
   }
 

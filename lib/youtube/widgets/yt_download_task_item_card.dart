@@ -129,7 +129,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
       dialog: VideoInfoDialog(
         videoId: item.id.videoId,
         info: info,
-        saveLocation: FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName, item.filename.filename),
+        saveLocation: _getOutputFilePath(item),
         tags: item.ffmpegTags,
         extraColumnChildren: itemLocalInfoWidgets,
       ),
@@ -140,8 +140,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     required BuildContext context,
   }) async {
     final item = widget.videos[widget.index];
-    final itemDirectoryPath = FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, widget.groupName.groupName);
-    final file = FileParts.join(itemDirectoryPath, item.filename.filename);
+    final outputFilePath = _getOutputFilePath(item);
+    final file = outputFilePath == null ? null : File(outputFilePath);
 
     final videoStream = item.videoStream;
     final audioStream = item.audioStream;
@@ -163,8 +163,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     }
 
     return [
-      getRow(icon: Broken.location, texts: [itemDirectoryPath]),
-      if (await file.exists()) ...[
+      if (file != null) getRow(icon: Broken.location, texts: [file.parent.path]),
+      if (file != null && await file.exists()) ...[
         const SizedBox(height: 6.0),
         getRow(
           icon: Broken.document_code,
@@ -321,6 +321,9 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   }
 
   late Directory directory;
+
+  String? _getOutputFilePath(YoutubeItemDownloadConfig item) =>
+      item.cacheOnly ? YoutubeController.getCacheTaskFilePath(item) : FileParts.joinPath(directory.path, item.filename.filename);
   late YoutubeItemDownloadConfig item;
   late DownloadTaskVideoId videoIdWrapper;
   String videoId = '';
@@ -437,7 +440,8 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
             Expanded(
               child: Obx((context) {
                 final filename = item.filenameR;
-                final downloadedFile = FileParts.join(directory.path, filename.filename);
+                final downloadedFilePath = _getOutputFilePath(item);
+                final downloadedFile = downloadedFilePath == null ? null : File(downloadedFilePath);
                 final isDownloading = YoutubeController.inst.isDownloading[videoIdWrapper]?[filename] ?? false;
                 final isFetchingData = YoutubeController.inst.isFetchingData[videoIdWrapper]?[filename] ?? false;
                 final audioP = YoutubeController.inst.downloadsAudioProgressMap[videoIdWrapper]?[filename];
@@ -587,7 +591,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                         context: context,
                                         title: lang.delete,
                                         icon: Broken.trash,
-                                        betweenBrackets: downloadedFile.fileSizeFormatted() ?? '',
+                                        betweenBrackets: downloadedFile?.fileSizeFormatted() ?? '',
                                         onTap: () async {
                                           final confirmation = await _confirmOperation(
                                             operationTitle: lang.remove,
@@ -613,21 +617,23 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                           }
                                         },
                                       ),
-                                _getChip(
-                                  context: context,
-                                  title: lang.rename,
-                                  icon: Broken.text,
-                                  onTap: () => _onRenameIconTap(
-                                    config: item,
-                                    groupName: widget.groupName,
+                                if (!item.cacheOnly) ...[
+                                  _getChip(
+                                    context: context,
+                                    title: lang.rename,
+                                    icon: Broken.text,
+                                    onTap: () => _onRenameIconTap(
+                                      config: item,
+                                      groupName: widget.groupName,
+                                    ),
                                   ),
-                                ),
-                                _getChip(
-                                  context: context,
-                                  title: lang.edit,
-                                  icon: Broken.edit_2,
-                                  onTap: () => _onEditIconTap(config: item),
-                                ),
+                                  _getChip(
+                                    context: context,
+                                    title: lang.edit,
+                                    icon: Broken.edit_2,
+                                    onTap: () => _onEditIconTap(config: item),
+                                  ),
+                                ],
                                 _getChip(
                                   context: context,
                                   title: lang.info,
@@ -645,8 +651,9 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                           children: [
                             Text(
                               [
+                                if (item.cacheOnly) lang.cache,
                                 item.videoStream?.qualityLabel,
-                                downloadedFile.fileSizeFormatted(),
+                                downloadedFile?.fileSizeFormatted(),
                               ].joinText(),
                               style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                             ),

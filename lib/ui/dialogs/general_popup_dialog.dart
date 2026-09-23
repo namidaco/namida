@@ -52,6 +52,7 @@ import 'package:namida/ui/widgets/stats_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 Future<void> showGeneralPopupDialog(
   List<Track> tracks,
@@ -811,8 +812,11 @@ Future<void> showGeneralPopupDialog(
                   NamidaNavigator.inst.closeDialog();
                   Player.inst.playOrPause(0, availableYoutubeIDs, QueueSource.others(title), gentlePlay: true);
                 },
-                trailing: isSingle && firstVideolId != null
-                    ? FutureBuilder(
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isSingle && firstVideolId != null)
+                      FutureBuilder(
                         future: YoutubeInfoController.utils.getVideoChannelID(firstVideolId),
                         builder: (context, snapshot) {
                           final firstVideoChannelId = snapshot.data;
@@ -829,8 +833,34 @@ Future<void> showGeneralPopupDialog(
                                 )
                               : const SizedBox();
                         },
-                      )
-                    : null,
+                      ),
+                    NamidaPopupWrapper(
+                      childrenDefault: () => isSingle && firstVideolId != null
+                          ? YTUtils.getVideoCardMenuItems(
+                              queueSource: QueueSourceYoutubeID.ytExternalLink,
+                              downloadIndex: null,
+                              totalLength: null,
+                              streamInfoItem: null,
+                              videoId: firstVideolId,
+                              channelID: null,
+                              displayGoToChannel: false,
+                              playlistID: null,
+                              idsNamesLookup: {firstVideolId: tracks.first.title},
+                            )
+                          : YTUtils.getVideosMenuItems(
+                              queueSource: QueueSourceYoutubeID.ytExternalLink,
+                              context: context,
+                              videos: availableYoutubeIDs.toList(),
+                              playlistName: '',
+                            ),
+                      child: MoreIcon(
+                        padding: 8.0,
+                        iconSize: 20.0,
+                        iconColor: iconColor,
+                      ),
+                    ),
+                  ],
+                ),
               )
             : null;
 

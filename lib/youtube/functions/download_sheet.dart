@@ -812,6 +812,8 @@ Future<void> showDownloadVideoBottomSheet({
                                                     removeSponsorSegments: settings.youtube.sponsorBlockSettings.value.removeSegmentsFromDownloads,
                                                     splitByChapters: settings.youtube.splitDownloadsByChapters.value,
                                                     sponsorSegmentsCategories: sponsorSegmentsCategories.value,
+                                                    localPlaylistName: initialItemConfig?.localPlaylistName,
+                                                    cacheOnly: false,
                                                   );
                                                   if (onConfirmButtonTap != null) {
                                                     final accept = onConfirmButtonTap(groupName, itemConfig);

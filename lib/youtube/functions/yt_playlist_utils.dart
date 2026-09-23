@@ -424,6 +424,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
   Future<void> showPlaylistDownloadSheet({
     required bool showProgressSheet,
     required YoutiPiePlaylistResultBase playlistToFetch,
+    bool cacheOnly = false,
   }) async {
     final videoIDs = await fetchAllPlaylistAsYTIDs(showProgressSheet: showProgressSheet, playlistToFetch: playlistToFetch);
     if (videoIDs.isEmpty) return;
@@ -439,6 +440,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       playlistName: playlist.title,
       infoLookup: infoLookup,
       playlistInfo: this,
+      cacheOnly: cacheOnly,
     ).navigate();
   }
 
@@ -521,7 +523,7 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
       if (playlistNameToAddAs != '')
         NamidaPopupItem(
           icon: Broken.add_square,
-          title: "${lang.addAsANewPlaylist} (${lang.local})",
+          title: lang.importPlaylist,
           subtitle: playlistNameToAddAs,
           onTap: () async {
             final fetchRes = await playlist.fetchAllPlaylistStreams(showProgressSheet: showProgressSheet, playlist: playlistToFetch);
@@ -676,6 +678,18 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
           final videos = await fetchAllIDs();
           if (videos.isEmpty) return;
           Player.inst.addToQueue(videos, insertNext: false);
+        },
+      ),
+      NamidaPopupItem(
+        icon: Broken.document_download,
+        title: lang.cache,
+        onTap: () {
+          if (isInFullScreen) NamidaNavigator.inst.exitFullScreen();
+          showPlaylistDownloadSheet(
+            showProgressSheet: showProgressSheet,
+            playlistToFetch: playlistToFetch,
+            cacheOnly: true,
+          );
         },
       ),
     ];

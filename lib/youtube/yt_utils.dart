@@ -27,7 +27,6 @@ import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -45,6 +44,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -174,7 +174,7 @@ class YTUtils {
             Broken.audio_square,
             size: 15.0,
             color: iconsColor?.withValues(
-              alpha: AudioCacheController.inst.audioCacheMap[videoId]?.isNotEmpty == true || Indexer.inst.allTracksMappedByYTID[videoId]?.isNotEmpty == true ? 0.6 : 0.1,
+              alpha: AudioCacheController.inst.isAvailableOffline(videoId) ? 0.6 : 0.1,
             ),
           ),
         ),
@@ -290,6 +290,17 @@ class YTUtils {
           title: lang.deletePlaylist,
           onTap: () => playlistToRemove.promptDelete(name: playlistToRemove.name),
         ),
+      NamidaPopupItem(
+        icon: Broken.document_download,
+        title: lang.cache,
+        onTap: () => YTPlaylistDownloadPage(
+          ids: videos,
+          playlistName: playlistToRemove?.name ?? playlistName,
+          infoLookup: const {},
+          playlistInfo: null,
+          cacheOnly: true,
+        ).navigate(),
+      ),
       NamidaPopupItem(
         icon: Broken.bill,
         title: lang.priority,
@@ -639,6 +650,18 @@ class YTUtils {
           title: lang.removeFromPlaylist,
           subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(playlistName, [videoYTID]),
+        ),
+      if (!AudioCacheController.inst.isAvailableOffline(videoId))
+        NamidaPopupItem(
+          icon: Broken.document_download,
+          title: lang.cache,
+          onTap: () => YoutubeController.inst.cacheYoutubeVideos(
+            groupName: DownloadTaskGroupName(groupName: playlistName.emptyIfHasDefaultPlaylistName()),
+            videoIds: [videoId],
+            infoLookup: {videoId: ?streamInfoItem},
+            audioOnly: settings.downloadAudioOnly.value,
+            preferredQualities: settings.youtubeVideoQualities.value,
+          ),
         ),
       if (clearTile)
         NamidaPopupItem(
