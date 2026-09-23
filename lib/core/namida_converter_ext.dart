@@ -60,6 +60,7 @@ import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
+import 'package:namida/ui/pages/artists_map_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/current_queue_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
@@ -1434,6 +1435,9 @@ extension RouteUtils on NamidaRoute {
       case RouteType.PAGE_discover:
         finalWidget = getTextWidget(lang.discover);
         break;
+      case RouteType.PAGE_artistsMap:
+        finalWidget = getTextWidget(lang.artistsMap);
+        break;
       case RouteType.PAGE_party:
         finalWidget = getTextWidget(lang.partyListeningParty);
         break;
@@ -1641,6 +1645,22 @@ extension RouteUtils on NamidaRoute {
           playlistManager: ytplc.YoutubePlaylistController.inst,
         ),
         shouldShow: route == RouteType.YOUTUBE_PLAYLIST_SUBPAGE || route == RouteType.YOUTUBE_LIKED_SUBPAGE,
+      ),
+
+      _getAnimatedCrossFade(
+        child: NamidaAppBarIcon(
+          icon: Broken.map,
+          tooltip: () => lang.artistsMap,
+          onPressed: () {
+            final type = switch (route) {
+              RouteType.SUBPAGE_albumArtistTracks => MediaType.albumArtist,
+              RouteType.SUBPAGE_composerTracks => MediaType.composer,
+              _ => MediaType.artist,
+            };
+            ArtistsMapPage(type: type, focusArtist: name).navigate();
+          },
+        ),
+        shouldShow: route == RouteType.SUBPAGE_artistTracks || route == RouteType.SUBPAGE_albumArtistTracks || route == RouteType.SUBPAGE_composerTracks,
       ),
 
       _getAnimatedCrossFade(

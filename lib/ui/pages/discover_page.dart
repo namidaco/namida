@@ -16,6 +16,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/pages/artists_map_page.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -248,6 +249,11 @@ class _DiscoverPageState extends State<DiscoverPage> {
                           ),
                         ],
                       ),
+                    ),
+                    NamidaIconButton(
+                      icon: Broken.map,
+                      tooltip: () => lang.artistsMap,
+                      onPressed: () => ArtistsMapPage(type: _artistType).navigate(),
                     ),
                     NamidaIconButton(
                       icon: Broken.shuffle,

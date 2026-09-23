@@ -30,6 +30,7 @@ class _ExtraSettings with SettingsFileWriter {
   bool? keepVideoFrameOnSwitch;
   bool? artistAlbumsExpanded;
   bool? artistSinglesExpanded;
+  bool? artistsMapGraphLayout;
   bool? ytStyleButtonSwitcher;
   bool? recentSearchesEnabled;
 
@@ -64,6 +65,7 @@ class _ExtraSettings with SettingsFileWriter {
     bool? keepVideoFrameOnSwitch,
     bool? artistAlbumsExpanded,
     bool? artistSinglesExpanded,
+    bool? artistsMapGraphLayout,
     bool? ytStyleButtonSwitcher,
     bool? recentSearchesEnabled,
     int? lastPlayedIndex,
@@ -94,6 +96,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (keepVideoFrameOnSwitch != null) this.keepVideoFrameOnSwitch = keepVideoFrameOnSwitch;
     if (artistAlbumsExpanded != null) this.artistAlbumsExpanded = artistAlbumsExpanded;
     if (artistSinglesExpanded != null) this.artistSinglesExpanded = artistSinglesExpanded;
+    if (artistsMapGraphLayout != null) this.artistsMapGraphLayout = artistsMapGraphLayout;
     if (ytStyleButtonSwitcher != null) this.ytStyleButtonSwitcher = ytStyleButtonSwitcher;
     if (recentSearchesEnabled != null) {
       this.recentSearchesEnabled = recentSearchesEnabled;
@@ -169,6 +172,7 @@ class _ExtraSettings with SettingsFileWriter {
       keepVideoFrameOnSwitch = json['keepVideoFrameOnSwitch'] ?? keepVideoFrameOnSwitch;
       artistAlbumsExpanded = json['artistAlbumsExpanded'] ?? artistAlbumsExpanded;
       artistSinglesExpanded = json['artistSinglesExpanded'] ?? artistSinglesExpanded;
+      artistsMapGraphLayout = json['artistsMapGraphLayout'] ?? artistsMapGraphLayout;
       ytStyleButtonSwitcher = json['ytStyleButtonSwitcher'] ?? ytStyleButtonSwitcher;
       recentSearchesEnabled = json['recentSearchesEnabled'] ?? recentSearchesEnabled;
       lastPlayedIndex = json['lastPlayedIndex'] ?? lastPlayedIndex;
@@ -225,6 +229,7 @@ class _ExtraSettings with SettingsFileWriter {
     if (keepVideoFrameOnSwitch != null) 'keepVideoFrameOnSwitch': keepVideoFrameOnSwitch,
     if (artistAlbumsExpanded != null) 'artistAlbumsExpanded': artistAlbumsExpanded,
     if (artistSinglesExpanded != null) 'artistSinglesExpanded': artistSinglesExpanded,
+    if (artistsMapGraphLayout != null) 'artistsMapGraphLayout': artistsMapGraphLayout,
     if (ytStyleButtonSwitcher != null) 'ytStyleButtonSwitcher': ytStyleButtonSwitcher,
     if (recentSearchesEnabled != null) 'recentSearchesEnabled': recentSearchesEnabled,
     'lastPlayedIndex': lastPlayedIndex,

@@ -633,6 +633,7 @@ enum RouteType {
   PAGE_widePlayer,
   PAGE_smartPlaylists,
   PAGE_discover,
+  PAGE_artistsMap,
   PAGE_moods,
   PAGE_tags,
   PAGE_rating,
