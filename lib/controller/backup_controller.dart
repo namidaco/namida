@@ -140,14 +140,15 @@ class BackupController {
     }
   }
 
-  Future<void> createBackupFile(List<String> backupItemsPaths, {String fileSuffix = ''}) async {
+  /// [filenamePrefix] other than the default keeps the file out of auto backup/restore lookups.
+  Future<File?> createBackupFile(List<String> backupItemsPaths, {String filenamePrefix = 'Namida Backup', String fileSuffix = ''}) async {
     if (isCreatingBackup.value) {
       snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
-      return;
+      return null;
     }
 
     final backupDirPath = await _getBackupDirectoryPathEnsured(lang.createBackup);
-    if (backupDirPath == null) return;
+    if (backupDirPath == null) return null;
 
     isCreatingBackup.value = true;
 
@@ -155,7 +156,7 @@ class BackupController {
     final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final date = format.format(DateTime.now().toLocal());
 
-    final backupFile = await FileParts.join(backupDirPath, "Namida Backup - $date$fileSuffix.zip").create();
+    final backupFile = await FileParts.join(backupDirPath, "$filenamePrefix - $date$fileSuffix.zip").create();
     final sourceDir = Directory(AppDirs.USER_DATA);
 
     // prepares files
@@ -166,6 +167,7 @@ class BackupController {
     final List<Directory> dirsOnly = [];
     File? tempAllLocal;
     File? tempAllYoutube;
+    var succeeded = false;
 
     final backupItemsTypes = await backupItemsPaths.mapConcurrent(FileSystemEntity.type);
     for (int i = 0; i < backupItemsPaths.length; i++) {
@@ -216,6 +218,7 @@ class BackupController {
       ];
       await _zipManager.createZip(sourceDir: sourceDir, files: allFiles, zipFile: backupFile);
 
+      succeeded = true;
       snackyy(title: lang.createdBackupSuccessfully, message: lang.createdBackupSuccessfullySub);
     } catch (e) {
       printy(e, isError: true);
@@ -230,6 +233,7 @@ class BackupController {
     }
 
     isCreatingBackup.value = false;
+    return succeeded ? backupFile : null;
   }
 
   Future<void> _ensureDbCheckpointed(File file) async {

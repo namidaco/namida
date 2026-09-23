@@ -15,6 +15,7 @@ import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
@@ -50,14 +51,22 @@ class JsonToHistoryParser {
   final Rx<TrackSource> currentParsingSource = TrackSource.local.obs;
   final _currentOldestDate = Rxn<DateTime>();
   final _currentNewestDate = Rxn<DateTime>();
+  final _importStep = _HistoryImportStep.loadingFiles.obs;
+  final _historyBackupFilename = ''.obs;
+  bool _includesHistoryBackupStep = false;
 
-  String get _parsedProgressR => '${parsedHistoryJson.valueR.formatDecimal()} / ${totalJsonToParse.valueR.formatDecimal()}';
-  String get _parsedProgressPercentageR => '${(_percentageR * 100).round()}%';
-  String get _addedHistoryJsonR => addedHistoryJsonToPlaylist.valueR.formatDecimal();
   double get _percentageR {
     final p = parsedHistoryJson.valueR / totalJsonToParse.valueR;
     return p.isFinite ? p : 0;
   }
+
+  String get _currentImportTitle => switch (currentParsingSource.value) {
+    TrackSource.youtube || TrackSource.youtubeMusic => lang.importYoutubeHistory,
+    TrackSource.lastfm => lang.importLastFmHistory,
+    TrackSource.spotify => lang.importSpotifyHistory,
+    TrackSource.listenbrainz => lang.importListenBrainzHistory,
+    TrackSource.local => lang.extractingInfo,
+  };
 
   bool _isShowingParsingMenu = false;
 
@@ -71,26 +80,20 @@ class JsonToHistoryParser {
 
   void showParsingProgressDialog() {
     if (_isShowingParsingMenu) return;
-    Widget getTextWidget(String text, {TextStyle? style}) {
-      return Text(text, style: style ?? namida.textTheme.displayMedium);
-    }
-
     _isShowingParsingMenu = true;
-    final dateText = _currentNewestDate.value != null ? "(${_currentOldestDate.value!.dateFormattedOriginal} → ${_currentNewestDate.value!.dateFormattedOriginal})" : '';
+
+    final oldestDate = _currentOldestDate.value;
+    final newestDate = _currentNewestDate.value;
+    final dateRangeText = oldestDate != null && newestDate != null ? "${oldestDate.dateFormattedOriginal} → ${newestDate.dateFormattedOriginal}" : null;
 
     NamidaNavigator.inst.navigateDialog(
       onDismissing: _hideParsingDialog,
       dialog: CustomBlurryDialog(
         normalTitleStyle: true,
-        titleWidgetInPadding: Obx(
-          (context) {
-            final title = '${isParsing.valueR ? lang.extractingInfo : lang.done} ($_parsedProgressPercentageR)';
-            return Text(
-              "$title ${isParsing.valueR ? '' : ' ✓'}",
-              style: namida.textTheme.displayLarge,
-            );
-          },
-        ),
+        title: _currentImportTitle,
+        trailingWidgets: const [
+          _ImportDoneCheckMark(),
+        ],
         actions: [
           NamidaTextButton(
             text: lang.confirm,
@@ -98,37 +101,47 @@ class JsonToHistoryParser {
           ),
         ],
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ObxO(
-                rx: _loadingFileProgress,
-                builder: (context, loadingProgress) {
-                  final count = loadingProgress.$1;
-                  final total = loadingProgress.$2;
-                  return getTextWidget(
-                    '${lang.loadingFile}... $count/$total ${count >= total ? lang.done : ''}',
-                  );
-                },
-              ),
-              const SizedBox(height: 10.0),
-              Obx((context) => getTextWidget('$_parsedProgressR ${lang.parsed}')),
-              const SizedBox(height: 10.0),
-              Obx((context) => getTextWidget('$_addedHistoryJsonR ${lang.added}')),
-              const SizedBox(height: 4.0),
-              if (dateText != '') ...[
-                getTextWidget(dateText, style: namida.textTheme.displaySmall),
-                const SizedBox(height: 4.0),
-              ],
-              const SizedBox(height: 4.0),
-              Obx((context) {
-                final shouldShow = currentParsingSource.valueR == TrackSource.youtube || currentParsingSource.valueR == TrackSource.youtubeMusic;
-                return shouldShow
-                    ? getTextWidget('${lang.stats}: ${_updatingYoutubeStatsDirectoryProgress.valueR}/${_updatingYoutubeStatsDirectoryTotal.valueR}')
-                    : const SizedBox();
-              }),
-            ],
+            children:
+                [
+                      _ImportStepTile(
+                        step: _HistoryImportStep.loadingFiles,
+                        title: lang.loadingFile,
+                        trailing: const _LoadingFilesProgressText(),
+                      ),
+                      if (_includesHistoryBackupStep)
+                        _ImportStepTile(
+                          step: _HistoryImportStep.backup,
+                          title: '${lang.createBackup} (${lang.history})',
+                          details: const _HistoryBackupFilenameText(),
+                        ),
+                      _ImportStepTile(
+                        step: _HistoryImportStep.parsing,
+                        title: lang.extractingInfo,
+                        trailing: const _ParsingPercentageText(),
+                        details: _ParsingProgressDetails(
+                          dateRangeText: dateRangeText,
+                        ),
+                      ),
+                      if (currentParsingSource.value == TrackSource.youtube)
+                        _ImportStepTile(
+                          step: _HistoryImportStep.updatingStats,
+                          title: lang.stats,
+                          trailing: const _StatsProgressText(),
+                        ),
+                      _ImportStepTile(
+                        step: _HistoryImportStep.saving,
+                        title: lang.saving,
+                      ),
+                    ]
+                    .addSeparators(
+                      separator: const SizedBox(
+                        height: 14.0,
+                      ),
+                    )
+                    .toFixedList(),
           ),
         ),
       ),
@@ -377,6 +390,8 @@ class JsonToHistoryParser {
     _updatingYoutubeStatsDirectoryTotal.value = 0;
     _currentOldestDate.value = null;
     _currentNewestDate.value = null;
+    _importStep.value = _HistoryImportStep.loadingFiles;
+    _historyBackupFilename.value = '';
   }
 
   Timer? _notificationTimer;
@@ -392,11 +407,16 @@ class JsonToHistoryParser {
     bool ytMatchYTMusic = true,
     DateTime? oldestDate,
     DateTime? newestDate,
+    required bool backupHistoryFirst,
   }) async {
+    final isYT = source == TrackSource.youtube || source == TrackSource.youtubeMusic;
+
     _resetValues();
     isParsing.value = true;
     _currentOldestDate.value = oldestDate;
     _currentNewestDate.value = newestDate;
+    currentParsingSource.value = isYT ? TrackSource.youtube : source;
+    _includesHistoryBackupStep = backupHistoryFirst;
     showParsingProgressDialog();
 
     Directory? tempZipMainDestination;
@@ -412,12 +432,33 @@ class JsonToHistoryParser {
 
       if (files.isEmpty) {
         snackyy(message: 'No related files were found in this directory.', isError: true);
-        _resetValues();
         _closeParsingDialog();
+        _resetValues();
         return;
       }
 
-      // TODO: warning to backup history
+      if (backupHistoryFirst) {
+        _importStep.value = _HistoryImportStep.backup;
+        final backupItems = [
+          ...AppPathsBackupEnumCategories.history,
+          if (isYT) ...[
+            ...AppPathsBackupEnumCategories.history_yt,
+            AppPathsBackupEnum.YT_STATS,
+          ],
+        ];
+        final backupFile = await BackupController.inst.createBackupFile(
+          backupItems.map((e) => e.resolve()).toList(),
+          filenamePrefix: 'Namida History Backup',
+        );
+        if (backupFile == null) {
+          _closeParsingDialog();
+          _resetValues();
+          return;
+        }
+        _historyBackupFilename.value = backupFile.path.getFilename;
+      }
+
+      _importStep.value = _HistoryImportStep.parsing;
 
       await Future.delayed(Duration.zero);
 
@@ -434,7 +475,6 @@ class JsonToHistoryParser {
 
       switch (source) {
         case TrackSource.youtube || TrackSource.youtubeMusic:
-          currentParsingSource.value = TrackSource.youtube;
           final res = await _parseYTHistoryJsonAndAdd(
             files: files,
             isMatchingTypeLink: ytIsMatchingTypeLink,
@@ -453,7 +493,6 @@ class JsonToHistoryParser {
           break;
 
         case TrackSource.lastfm:
-          currentParsingSource.value = TrackSource.lastfm;
           final res = await _addLastFmSource(
             files: files,
             matchAll: matchAll,
@@ -467,7 +506,6 @@ class JsonToHistoryParser {
           break;
 
         case TrackSource.spotify:
-          currentParsingSource.value = TrackSource.spotify;
           final res = await _addSpotifySource(
             files: files,
             matchAll: matchAll,
@@ -480,7 +518,6 @@ class JsonToHistoryParser {
           }
           break;
         case TrackSource.listenbrainz:
-          currentParsingSource.value = TrackSource.listenbrainz;
           final res = await _addListenBrainzSource(
             files: files,
             matchAll: matchAll,
@@ -495,6 +532,8 @@ class JsonToHistoryParser {
         case TrackSource.local:
           break;
       }
+
+      _importStep.value = _HistoryImportStep.saving;
 
       // -- local history --
       HistoryController.inst.removeDuplicatedItems(datesAdded);
@@ -523,8 +562,8 @@ class JsonToHistoryParser {
       printo(e, isError: true);
       _notificationTimer?.cancel();
       NotificationManager.instance.failedImportingHistoryNotification(e.toString());
-      _resetValues();
       _closeParsingDialog();
+      _resetValues();
       snackyy(title: lang.error, message: e.toString(), isError: true);
       logger.error('Error importing history (${source.name})', e: e, st: st);
     } finally {
@@ -720,6 +759,7 @@ class JsonToHistoryParser {
       final mapOfAffectedIds = res.affectedIds;
 
       if (mapOfAffectedIds != null) {
+        _importStep.value = _HistoryImportStep.updatingStats;
         _updatingYoutubeStatsDirectoryTotal.value = mapOfAffectedIds.length;
         await _updateYoutubeStatsDirectory(
           affectedIds: mapOfAffectedIds,
@@ -1959,3 +1999,220 @@ typedef _GeneralSourceParserParams = ({
   SendPort portLoadingProgress,
   SplayTreeMap<int, List<TrackWithDate>> localHistory,
 });
+
+enum _HistoryImportStep {
+  loadingFiles,
+  backup,
+  parsing,
+  updatingStats,
+  saving,
+}
+
+class _ImportDoneCheckMark extends StatelessWidget {
+  const _ImportDoneCheckMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: JsonToHistoryParser.inst.isParsing,
+      builder: (context, isParsing) => NamidaCheckMark(
+        size: 20.0,
+        active: !isParsing,
+      ),
+    );
+  }
+}
+
+class _ImportStepTile extends StatelessWidget {
+  final _HistoryImportStep step;
+  final String title;
+  final Widget? trailing;
+  final Widget? details;
+
+  const _ImportStepTile({
+    required this.step,
+    required this.title,
+    this.trailing,
+    this.details,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final parser = JsonToHistoryParser.inst;
+    return Obx(
+      (context) {
+        final currentStep = parser._importStep.valueR;
+        final isDone = !parser.isParsing.valueR || step.index < currentStep.index;
+        final isActive = !isDone && step == currentStep;
+        final isReached = isDone || isActive;
+        return AnimatedOpacity(
+          duration: const Duration(milliseconds: 250),
+          opacity: isReached ? 1.0 : 0.4,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: SizedBox.square(
+                  dimension: 16.0,
+                  child: isActive
+                      ? const CircularProgressIndicator(
+                          strokeWidth: 2.0,
+                        )
+                      : Icon(
+                          isDone ? Broken.tick_circle : Broken.record,
+                          size: 16.0,
+                          color: isDone ? theme.colorScheme.secondary : null,
+                        ),
+                ),
+              ),
+              const SizedBox(
+                width: 12.0,
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: theme.textTheme.displayMedium,
+                          ),
+                        ),
+                        ?trailing,
+                      ],
+                    ),
+                    if (isReached) ?details,
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LoadingFilesProgressText extends StatelessWidget {
+  const _LoadingFilesProgressText();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: JsonToHistoryParser.inst._loadingFileProgress,
+      builder: (context, progress) => progress.$2 == 0
+          ? const SizedBox()
+          : Text(
+              '${progress.$1.formatDecimal()} / ${progress.$2.formatDecimal()}',
+              style: context.textTheme.displaySmall,
+            ),
+    );
+  }
+}
+
+class _HistoryBackupFilenameText extends StatelessWidget {
+  const _HistoryBackupFilenameText();
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: JsonToHistoryParser.inst._historyBackupFilename,
+      builder: (context, filename) => filename.isEmpty
+          ? const SizedBox()
+          : Text(
+              filename,
+              style: context.textTheme.displaySmall,
+            ),
+    );
+  }
+}
+
+class _ParsingPercentageText extends StatelessWidget {
+  const _ParsingPercentageText();
+
+  @override
+  Widget build(BuildContext context) {
+    final parser = JsonToHistoryParser.inst;
+    return Obx(
+      (context) => parser.totalJsonToParse.valueR == 0
+          ? const SizedBox()
+          : Text(
+              '${(parser._percentageR * 100).round()}%',
+              style: context.textTheme.displaySmall,
+            ),
+    );
+  }
+}
+
+class _ParsingProgressDetails extends StatelessWidget {
+  final String? dateRangeText;
+
+  const _ParsingProgressDetails({
+    required this.dateRangeText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final parser = JsonToHistoryParser.inst;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(
+          height: 8.0,
+        ),
+        Obx(
+          (context) {
+            final isCountingEntries = parser.totalJsonToParse.valueR == 0 && parser.isParsing.valueR && parser._importStep.valueR == _HistoryImportStep.parsing;
+            return LinearProgressIndicator(
+              borderRadius: BorderRadius.circular(99.0),
+              value: isCountingEntries ? null : parser._percentageR,
+              minHeight: 3.0,
+              backgroundColor: theme.colorScheme.onSurface.withOpacityExt(0.1),
+            );
+          },
+        ),
+        const SizedBox(
+          height: 6.0,
+        ),
+        Obx(
+          (context) => Text(
+            '${parser.parsedHistoryJson.valueR.formatDecimal()} / ${parser.totalJsonToParse.valueR.formatDecimal()} ${lang.parsed} • ${parser.addedHistoryJsonToPlaylist.valueR.formatDecimal()} ${lang.added}',
+            style: theme.textTheme.displaySmall,
+          ),
+        ),
+        if (dateRangeText != null)
+          Text(
+            dateRangeText!,
+            style: theme.textTheme.displaySmall,
+          ),
+      ],
+    );
+  }
+}
+
+class _StatsProgressText extends StatelessWidget {
+  const _StatsProgressText();
+
+  @override
+  Widget build(BuildContext context) {
+    final parser = JsonToHistoryParser.inst;
+    return Obx(
+      (context) {
+        final total = parser._updatingYoutubeStatsDirectoryTotal.valueR;
+        return total == 0
+            ? const SizedBox()
+            : Text(
+                '${parser._updatingYoutubeStatsDirectoryProgress.valueR.formatDecimal()} / ${total.formatDecimal()}',
+                style: context.textTheme.displaySmall,
+              );
+      },
+    );
+  }
+}

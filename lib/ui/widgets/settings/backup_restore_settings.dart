@@ -58,7 +58,11 @@ class BackupAndRestore extends SettingSubpageProvider {
   };
 
   bool _canDoImport({required bool isYT}) {
-    if (JsonToHistoryParser.inst.isParsing.value || HistoryController.inst.isLoadingHistory || (isYT && YoutubeHistoryController.inst.isLoadingHistory)) {
+    if (JsonToHistoryParser.inst.isParsing.value ||
+        BackupController.inst.isCreatingBackup.value ||
+        BackupController.inst.isRestoringBackup.value ||
+        HistoryController.inst.isLoadingHistory ||
+        (isYT && YoutubeHistoryController.inst.isLoadingHistory)) {
       snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
       return false;
     }
@@ -553,10 +557,12 @@ class BackupAndRestore extends SettingSubpageProvider {
         final oldestDate = Rxn<DateTime>();
         DateTime? newestDate;
         final matchAll = false.obs;
+        final backupHistoryFirst = true.obs;
         NamidaNavigator.inst.navigateDialog(
           onDisposing: () {
             oldestDate.close();
             matchAll.close();
+            backupHistoryFirst.close();
           },
           dialog: CustomBlurryDialog(
             horizontalInset: 38.0,
@@ -576,6 +582,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                       oldestDate: oldestDate.value,
                       newestDate: newestDate,
                       matchAll: matchAll.value,
+                      backupHistoryFirst: backupHistoryFirst.value,
                     );
                   },
                 ),
@@ -584,6 +591,10 @@ class BackupAndRestore extends SettingSubpageProvider {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _BackupHistoryBeforeImportTile(
+                  activeRx: backupHistoryFirst,
+                ),
+                getDivider(),
                 Obx(
                   (context) => matchAllTracksListTile(
                     active: matchAll.valueR,
@@ -783,6 +794,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                     final matchAll = false.obs;
                     final oldestDate = Rxn<DateTime>();
                     DateTime? newestDate;
+                    final backupHistoryFirst = true.obs;
                     NamidaNavigator.inst.navigateDialog(
                       onDisposing: () {
                         isMatchingTypeLink.close();
@@ -791,6 +803,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                         matchYTMusic.close();
                         matchAll.close();
                         oldestDate.close();
+                        backupHistoryFirst.close();
                       },
                       dialog: CustomBlurryDialog(
                         title: lang.configure,
@@ -812,6 +825,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                                   oldestDate: oldestDate.value,
                                   newestDate: newestDate,
                                   matchAll: matchAll.value,
+                                  backupHistoryFirst: backupHistoryFirst.value,
                                 );
                               },
                             ),
@@ -820,6 +834,10 @@ class BackupAndRestore extends SettingSubpageProvider {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            _BackupHistoryBeforeImportTile(
+                              activeRx: backupHistoryFirst,
+                            ),
+                            getDivider(),
                             getTitleText(lang.source),
                             ListTileWithCheckMark(
                               activeRx: matchYT,
@@ -945,6 +963,24 @@ class BackupAndRestore extends SettingSubpageProvider {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _BackupHistoryBeforeImportTile extends StatelessWidget {
+  final Rx<bool> activeRx;
+
+  const _BackupHistoryBeforeImportTile({
+    required this.activeRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTileWithCheckMark(
+      activeRx: activeRx,
+      icon: Broken.shield_tick,
+      title: lang.backupHistoryBeforeImporting,
+      onTap: activeRx.toggle,
     );
   }
 }
