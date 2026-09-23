@@ -35,6 +35,9 @@ class NotificationManager {
   static const _youtubeDownloadChannelName = 'Downloads';
   static const _youtubeDownloadChannelDescription = 'Downlaod content from youtube';
 
+  static const _serverCachePayload = 'server_cache';
+  static const _serverCacheTag = 'server_cache';
+
   static Future<bool?> init() {
     final didInit = _flutterLocalNotificationsPlugin.initialize(
       settings: InitializationSettings(
@@ -162,6 +165,54 @@ class NotificationManager {
       imagePath: imagePath,
       isInBytes: true,
       tag: key,
+      displayTime: DateTime.now(),
+    );
+  }
+
+  void serverCacheNotification({
+    required String title,
+    required String Function(String progressText) subtitle,
+    required int progress,
+    required int total,
+    required DateTime displayTime,
+    required bool isRunning,
+  }) {
+    _createProgressNotification(
+      id: _youtubeDownloadID,
+      progress: progress,
+      maxProgress: total,
+      title: title,
+      subtitle: subtitle,
+      channelName: _youtubeDownloadChannelName,
+      channelDescription: _youtubeDownloadChannelDescription,
+      payload: _serverCachePayload,
+      isInBytes: true,
+      tag: _serverCacheTag,
+      displayTime: displayTime,
+      ongoing: isRunning,
+    );
+  }
+
+  Future<void> removeServerCacheNotification() async {
+    await _flutterLocalNotificationsPlugin.cancel(id: _youtubeDownloadID, tag: _serverCacheTag);
+  }
+
+  void doneServerCacheNotification({
+    required String title,
+    required String subtitle,
+    required bool failed,
+  }) async {
+    await removeServerCacheNotification();
+    _createNotification(
+      id: _youtubeDownloadID,
+      title: title,
+      body: subtitle,
+      subText: failed ? 'error' : '100% ✓',
+      channelName: _youtubeDownloadChannelName,
+      channelDescription: _youtubeDownloadChannelDescription,
+      payload: _serverCachePayload,
+      isInBytes: false,
+      tag: _serverCacheTag,
       displayTime: DateTime.now(),
     );
   }
@@ -347,6 +398,33 @@ class _NotificationManagerSuppressed extends NotificationManager {
       subtitle: subtitle,
       failed: failed,
       imagePath: imagePath,
+    );
+  }
+
+  @override
+  void serverCacheNotification({
+    required String title,
+    required String Function(String progressText) subtitle,
+    required int progress,
+    required int total,
+    required DateTime displayTime,
+    required bool isRunning,
+  }) {
+    return;
+  }
+
+  @override
+  void doneServerCacheNotification({
+    required String title,
+    required String subtitle,
+    required bool failed,
+  }) async {
+    if (_downloadNotifications == DownloadNotifications.disableAll) return;
+    if (_downloadNotifications == DownloadNotifications.showFailedOnly && !failed) return;
+    super.doneServerCacheNotification(
+      title: title,
+      subtitle: subtitle,
+      failed: failed,
     );
   }
 

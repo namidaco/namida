@@ -17,7 +17,6 @@ import 'package:youtipie/core/enum.dart' show LikeStatus;
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
@@ -3030,8 +3029,7 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
   final id = res.id;
   if (id == null || id.isEmpty) return AudioVideoSource.file('');
 
-  final cleanPath = id.startsWith('/') ? id.substring(1) : res.id;
-  final cacheFile = FileParts.join(AppDirs.APP_CACHE, res.type.name, res.username, cleanPath);
+  final cacheFile = ServerCacheController.cacheFileFor(res.type, res.username, id);
 
   bool stillPlaying(String path) {
     final current = Player.inst.currentItem.value;
@@ -3049,7 +3047,8 @@ Future<UriSource> _buildTrackNetworkAudioSource({required Track tr}) async {
   }
 
   if (await cacheFile.exists()) {
-    if (await cacheFile.fileSize() == tr.size) {
+    // -- kept files stay playable offline even if the server file changed since
+    if (ServerCacheController.inst.isKept(tr) || await cacheFile.fileSize() == tr.size) {
       onFetched(cacheFile);
       return AudioVideoSource.file(cacheFile.path);
     } else {

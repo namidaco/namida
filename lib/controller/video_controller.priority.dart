@@ -15,14 +15,16 @@ class VideosPriorityManager {
     ],
   );
 
-  static DBWrapperAsync _openDb(DbWrapperFileInfo fileInfo) {
+  static DBWrapperAsync openDb(DbWrapperFileInfo fileInfo) {
     return DBWrapper.openFromInfo(
       fileInfo: fileInfo,
       config: _dbConfig,
     );
   }
 
-  late final cacheVideosPriorityDB = _openDb(AppPaths.CACHE_VIDEOS_PRIORITY);
+  static Map<String, dynamic> toDbValue(CacheVideoPriority priority) => {_priorityKey: priority.index};
+
+  late final cacheVideosPriorityDB = openDb(AppPaths.CACHE_VIDEOS_PRIORITY);
 
   final _videosPriorityMap = <String, CacheVideoPriority>{};
 
@@ -75,7 +77,7 @@ class VideosPriorityManager {
     final alreadySet = _videosPriorityMap[videoId] == priority;
     if (!alreadySet) {
       _videosPriorityMap[videoId] = priority;
-      unawaited(cacheVideosPriorityDB.put(videoId, {_priorityKey: priority.index}));
+      unawaited(cacheVideosPriorityDB.put(videoId, toDbValue(priority)));
     }
   }
 

@@ -18,6 +18,7 @@ import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
@@ -620,6 +621,29 @@ Future<void> showGeneralPopupDialog(
                 colorScheme: colorDelightened,
                 source: source,
               );
+            },
+          ),
+        );
+
+  final networkTracksToCache = <Track>[];
+  for (final t in tracks) {
+    if (t.isNetwork && !ServerCacheController.inst.isKept(t)) networkTracksToCache.add(t);
+  }
+
+  final Widget? serverCacheListTile = networkTracksToCache.isEmpty
+      ? null
+      : ObxO(
+          rx: colorDelightened,
+          builder: (context, colorDelightened) => SmallListTile(
+            color: colorDelightened,
+            compact: !isSingle,
+            title: lang.cache,
+            subtitle: isSingle ? null : networkTracksToCache.length.displayTrackKeyword,
+            icon: Broken.document_download,
+            onTap: () {
+              cancelSkipTimer();
+              NamidaNavigator.inst.closeDialog();
+              ServerCacheController.inst.cacheTracks(networkTracksToCache);
             },
           ),
         );
@@ -1350,6 +1374,8 @@ Future<void> showGeneralPopupDialog(
                                       )
                                     : null,
                               ),
+                              ?serverCacheListTile,
+
                               // --- Advanced dialog
                               ?advancedStuffListTile,
 

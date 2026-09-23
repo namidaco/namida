@@ -231,6 +231,7 @@ Future<bool> _mainAppInitialization() async {
       final servers = settings.directoriesToScan.value.allServers();
       if (servers.isNotEmpty) {
         await MusicWebServerAuthDetails.manager.initialize(servers);
+        ServerCacheController.inst.initialize().ignoreError();
       }
     }
   } catch (e, st) {

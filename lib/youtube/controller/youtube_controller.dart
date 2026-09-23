@@ -8,7 +8,6 @@ import 'package:flutter/foundation.dart';
 
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
-import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
 import 'package:youtipie/class/streams/stream_base.dart';
@@ -24,15 +23,14 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/url_utils.dart';
 import 'package:youtipie/youtipie.dart' hide ExecuteDelayedMinUtils, logger;
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
-import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/files_download_manager.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
@@ -497,7 +495,7 @@ class YoutubeController {
 
   Timer? _downloadNotificationTimer;
   DateTime? _downloadNotificationStartTime;
-  int _activeRawDownloadsCount = 0;
+  final activeRawDownloadsCount = 0.obs;
 
   void _startNotificationTimer() {
     if (_downloadNotificationTimer != null) return;
@@ -516,7 +514,7 @@ class YoutubeController {
       await _postDownloadingNotifications(isAudio: false);
       await _postDownloadingNotifications(isAudio: true);
     } finally {
-      if (_activeRawDownloadsCount > 0) {
+      if (activeRawDownloadsCount.value > 0) {
         _scheduleNotificationTick();
       } else {
         _downloadNotificationTimer = null;
@@ -534,12 +532,12 @@ class YoutubeController {
     } else {
       map[filename] = true;
     }
-    _activeRawDownloadsCount++;
+    activeRawDownloadsCount.value++;
     _startNotificationTimer();
   }
 
   void _onRawDownloadEnded(DownloadTaskVideoId id, DownloadTaskFilename filename) {
-    _activeRawDownloadsCount--;
+    activeRawDownloadsCount.value--;
     final map = isDownloading.value[id];
     if (map == null) return;
     map.remove(filename);
@@ -775,7 +773,7 @@ class YoutubeController {
   }
 
   void _breakRetrievingInfoRequest(YoutubeItemDownloadConfig c) {
-    _completersVAI.remove(c)?.completeErrorIfWasnt(const _UserCanceledException());
+    _completersVAI.remove(c)?.completeErrorIfWasnt(const DownloadCanceledException());
   }
 
   Future<void> cancelDownloadTask({
@@ -1012,7 +1010,7 @@ class YoutubeController {
       } catch (e) {
         _completersVAI.remove(config);
         isFetchingData.value[videoID]?[config.filename] = false;
-        if (e is _UserCanceledException) {
+        if (e is DownloadCanceledException) {
           // -- resumed again while the canceled request was still awaited
           if (!_isTaskStopped(groupName, config)) return downloady(config);
           return;
@@ -1550,7 +1548,7 @@ class YoutubeController {
           ),
         );
       }
-    } on _UserCanceledException catch (_) {
+    } on DownloadCanceledException catch (_) {
       cachedFile = null;
     } catch (e, st) {
       cachedFile = null;
@@ -1939,7 +1937,7 @@ class YoutubeController {
           throw downloadErrorDescription;
         }
       }
-    } on _UserCanceledException catch (_) {
+    } on DownloadCanceledException catch (_) {
     } catch (e, st) {
       printy('Error Downloading YT Video: $e', isError: true);
       snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
@@ -1997,7 +1995,7 @@ class YoutubeController {
     return file;
   }
 
-  final _downloadManager = _YTDownloadManager();
+  final _downloadManager = FilesDownloadManager.inst;
   File? _latestSingleDownloadingFile;
   Future<NamidaVideo?> downloadYoutubeVideo({
     required String id,
@@ -2081,7 +2079,7 @@ class YoutubeController {
           bitrate: erabaretaStream.bitrate,
         );
       }
-    } on _UserCanceledException catch (_) {
+    } on DownloadCanceledException catch (_) {
     } catch (e, st) {
       printy('Error Downloading YT Video: $e', isError: true);
       snackyy(title: 'Error Downloading', message: e.toString(), isError: true);
@@ -2107,259 +2105,6 @@ class YoutubeController {
         }
       }
     }
-  }
-}
-
-class _YTDownloadManager with PortsProvider<SendPort> {
-  final _downloadCompleters = <String, Completer<Object?>?>{}; // file path
-  final _progressPorts = <String, RawReceivePort?>{}; // file path
-
-  /// retries that happen inside the isolate, for short network hiccups.
-  /// longer outages are handled by [YoutubeController._registerAutoResumeOnConnectionRestored].
-  static const _kDownloadMaxRetries = 5;
-
-  /// max idle duration between 2 chunks before considering the connection stalled.
-  static const _kDownloadStallTimeout = Duration(seconds: 30);
-
-  /// progress is batched, sending each chunk floods the main isolate, especially with parallel downloads.
-  static const _kProgressReportIntervalMs = 100;
-
-  /// 1s, 2s, 4s, 8s, then 10s.
-  static Duration _getRetryBackoff(int attempt) {
-    const maxSeconds = 10;
-    return Duration(seconds: attempt >= 4 ? maxSeconds : 1 << attempt);
-  }
-
-  static bool _isRetryableDownloadException(Object e) {
-    if (e is RhttpStatusCodeException) return e.statusCode >= 500 || e.statusCode == 408 || e.statusCode == 429;
-    return e is TimeoutException || //
-        e is SocketException ||
-        e is HandshakeException ||
-        e is HttpException ||
-        e is RhttpTimeoutException ||
-        e is RhttpConnectionException ||
-        e is RhttpUnknownException;
-  }
-
-  /// if [file] is temp, u can provide [moveTo] to move/rename the temp file to it.
-  Future<Object?> download({
-    required Uri? url,
-    required File file,
-    String? moveTo,
-    int? moveToRequiredBytes,
-    required int downloadStartRange,
-    required void Function(int downloadedBytesLength) downloadingStream,
-  }) async {
-    if (url == null || url.host.isEmpty) return Exception('Host Empty. url: ${url.toString()}');
-
-    final filePath = file.path;
-    if (_downloadCompleters[filePath] != null) return _downloadCompleters[filePath]!.future;
-    _downloadCompleters[filePath]?.completeIfWasnt(null);
-    _downloadCompleters[filePath] = Completer<Object?>();
-
-    _progressPorts[filePath]?.close();
-    final progressPort = _progressPorts[filePath] = RawReceivePort((message) {
-      downloadingStream(message as int);
-    });
-    final p = {
-      'url': url,
-      'filePath': filePath,
-      'moveTo': moveTo,
-      'moveToRequiredBytes': moveToRequiredBytes,
-      'downloadStartRange': downloadStartRange,
-      'progressPort': progressPort.sendPort,
-    };
-    if (!isInitialized) await initialize();
-    await sendPort(p);
-    final res = await _downloadCompleters[filePath]?.future;
-    _onFileFinish(filePath, res);
-    return res;
-  }
-
-  Future<void> stopDownload({required File? file}) async {
-    if (file == null) return;
-    final filePath = file.path;
-    _onFileFinish(filePath, const _UserCanceledException());
-    final p = {
-      'files': [file],
-      'stop': true,
-    };
-    await sendPort(p);
-  }
-
-  Future<void> stopDownloads({required List<File> files}) async {
-    if (files.isEmpty) return;
-    for (var e in files) {
-      _onFileFinish(e.path, const _UserCanceledException());
-    }
-    final p = {'files': files, 'stop': true};
-    await sendPort(p);
-  }
-
-  static void _prepareDownloadResources(SendPort sendPort) async {
-    await Rhttp.init();
-    final requester = HttpClientWrapper.createSync();
-
-    final recievePort = ReceivePort();
-    sendPort.send(recievePort.sendPort);
-
-    final cancelTokensMap = <String, CancelToken>{}; // filePath
-    final stoppedFilesPaths = <String>{}; // filePath, for stops that happen while retrying
-
-    StreamSubscription? streamSub;
-    streamSub = recievePort.listen((p) async {
-      if (PortsProvider.isDisposeMessage(p)) {
-        for (final canceltoken in cancelTokensMap.values) {
-          canceltoken.cancel();
-        }
-        cancelTokensMap.clear();
-        stoppedFilesPaths.clear();
-        recievePort.close();
-        streamSub?.cancel();
-        return;
-      } else {
-        p as Map;
-        final stop = p['stop'] as bool?;
-        if (stop == true) {
-          final files = p['files'] as List<File>?;
-          if (files != null) {
-            for (final file in files) {
-              var path = file.path;
-              stoppedFilesPaths.add(path);
-              cancelTokensMap.remove(path)?.cancel();
-            }
-          }
-        } else {
-          final filePath = p['filePath'] as String;
-          stoppedFilesPaths.remove(filePath); // fresh request
-          try {
-            final url = p['url'] as Uri;
-            final moveTo = p['moveTo'] as String?;
-            final moveToRequiredBytes = p['moveToRequiredBytes'] as int?;
-            final progressPort = p['progressPort'] as SendPort;
-
-            final file = File(filePath);
-            file.createSync(recursive: true);
-
-            int downloadStartRange = p['downloadStartRange'] as int;
-            Object? downloadException;
-
-            int pendingProgress = 0;
-            final progressStopwatch = Stopwatch()..start();
-            void flushProgress() {
-              if (pendingProgress == 0) return;
-              progressPort.send(pendingProgress);
-              pendingProgress = 0;
-            }
-
-            for (int attempt = 0; ; attempt++) {
-              if (stoppedFilesPaths.remove(filePath)) {
-                downloadException = const _UserCanceledException();
-                break;
-              }
-
-              final cancelToken = cancelTokensMap[filePath] = CancelToken();
-              IOSink? fileStream;
-
-              Future<void> onRequestFinish({bool cancel = false}) async {
-                cancelTokensMap.remove(filePath);
-                if (cancel) await cancelToken.cancel().ignoreError();
-
-                await fileStream?.flush().ignoreError();
-                await fileStream?.close().ignoreError(); // closing file.
-              }
-
-              try {
-                final headers = {'range': 'bytes=$downloadStartRange-'};
-                final response = await requester.getStream(url.toString(), headers: headers, cancelToken: cancelToken);
-
-                // -- server didnt honor our range request, restarting from scratch to not corrupt the file.
-                final serverIgnoredRange = downloadStartRange > 0 && response.statusCode != 206;
-                if (serverIgnoredRange) {
-                  flushProgress();
-                  progressPort.send(-downloadStartRange); // reverting reported progress
-                  downloadStartRange = 0;
-                }
-                fileStream = file.openWrite(mode: serverIgnoredRange ? FileMode.writeOnly : FileMode.writeOnlyAppend);
-
-                await for (final data in response.body.timeout(_kDownloadStallTimeout)) {
-                  fileStream.add(data);
-                  downloadStartRange += data.length;
-                  pendingProgress += data.length;
-                  if (progressStopwatch.elapsedMilliseconds >= _kProgressReportIntervalMs) {
-                    flushProgress();
-                    progressStopwatch.reset();
-                  }
-                }
-                await onRequestFinish(); // flush and close first to avoid issues
-                downloadException = null;
-                break;
-              } on RhttpCancelException catch (_) {
-                // client force closed
-                await onRequestFinish(cancel: true);
-                downloadException = const _UserCanceledException();
-                break;
-              } catch (e) {
-                await onRequestFinish(cancel: true);
-                downloadException = e;
-                if (attempt >= _kDownloadMaxRetries || !_isRetryableDownloadException(e)) break;
-                downloadStartRange = file.fileSizeSync() ?? downloadStartRange; // resuming from whatever was actually written
-              }
-
-              await Future.delayed(_getRetryBackoff(attempt));
-            }
-
-            flushProgress();
-            stoppedFilesPaths.remove(filePath);
-
-            if (downloadException != null) return sendPort.send(MapEntry(filePath, downloadException));
-
-            Object? movedException;
-            if (moveTo != null && moveToRequiredBytes != null) {
-              try {
-                final fileSize = file.fileSizeSync() ?? 0;
-                const allowance = 1024; // 1KB allowance
-                if (fileSize >= moveToRequiredBytes - allowance) {
-                  final movedFile = file.moveSync(
-                    moveTo,
-                    goodBytesIfCopied: (fileLength) => fileLength >= moveToRequiredBytes - allowance,
-                  );
-                  if (movedFile == null) {
-                    movedException = FileSystemException("Error moving $file to $moveTo");
-                  }
-                }
-              } catch (e) {
-                movedException = e;
-              }
-            }
-            return sendPort.send(MapEntry(filePath, movedException));
-          } catch (e) {
-            return sendPort.send(MapEntry(filePath, e)); // general error
-          }
-        }
-      }
-    });
-
-    sendPort.send(null); // prepared
-  }
-
-  @override
-  void onResult(dynamic result) {
-    if (result is MapEntry) {
-      _onFileFinish(result.key, result.value);
-    }
-  }
-
-  @override
-  IsolateFunctionReturnBuild<SendPort> isolateFunction(SendPort port) {
-    return IsolateFunctionReturnBuild(_prepareDownloadResources, port);
-  }
-
-  void _onFileFinish(String path, Object? exception) {
-    _downloadCompleters[path]?.completeIfWasnt(exception);
-    _downloadCompleters[path] = null; // important
-    _progressPorts[path]?.close();
-    _progressPorts[path] = null;
   }
 }
 
@@ -2578,10 +2323,6 @@ extension _RxMapUtils<MK, K, V> on Map<MK, RxMap<K, V>> {
       }
     }
   }
-}
-
-class _UserCanceledException implements Exception {
-  const _UserCanceledException();
 }
 
 class _DownloadErrorDescriptionsWrapper implements Exception {

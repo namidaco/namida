@@ -1,6 +1,7 @@
 // ignore_for_file: implementation_imports
 
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
 
@@ -21,17 +22,21 @@ import 'package:namida/class/media_info.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/files_download_manager.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/music_web_server/server_auth_model.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -43,6 +48,7 @@ import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';
+part 'server_cache_controller.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
@@ -63,6 +69,13 @@ abstract class MusicWebServer {
   Future<List<WebServerPlaylist>?> fetchPlaylists({required int? Function(String remoteId) knownChangedMS}) async => null;
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
+
+  /// the original file, never transcoded.
+  Future<_ServerFileSource?> _getOriginalFileSource(String id) async {
+    final details = await getStreamUrl(id);
+    return details == null ? null : _ServerFileSourceUrl(details);
+  }
+
   void dispose();
 
   static FutureOr<WebStreamUriDetails?> baseUrlToActualUrl(

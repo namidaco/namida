@@ -850,6 +850,7 @@ class AppPaths {
   static final YT_SUBSCRIPTIONS_GROUPS_ALL = _join(AppDirs.YOUTUBE_MAIN_DIRECTORY, 'yt_sub_groups.json');
   static final VIDEO_ID_STATS_DB_INFO = DbWrapperFileInfo(directory: AppDirs.YOUTUBE_MAIN_DIRECTORY, dbName: 'ytid_stats');
   static final CACHE_VIDEOS_PRIORITY = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos_priority');
+  static final CACHE_SERVERS_PRIORITY = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_servers_priority');
 }
 
 /// Directories used by Namida
@@ -877,6 +878,7 @@ class AppDirs {
   static final PALETTES = _join(USER_DATA, 'Palettes');
   static final VIDEOS_CACHE = _join(USER_DATA, 'Videos');
   static final AUDIOS_CACHE = _join(USER_DATA, 'Audios');
+  static final SERVERS_CACHE = _join(USER_DATA, 'Servers Cache');
   static final VIDEOS_CACHE_TEMP = _join(USER_DATA, 'Videos', 'Temp');
   static final THUMBNAILS = _join(USER_DATA, 'Thumbnails'); // extracted video thumbnails
   static final LYRICS = _join(USER_DATA, 'Lyrics');

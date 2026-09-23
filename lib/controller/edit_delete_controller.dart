@@ -7,6 +7,7 @@ import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -258,7 +259,16 @@ extension HasCachedFiles on List<Selectable> {
     return false;
   }
 
-  Future<bool> get hasAnythingCached async => await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached /* || await hasColorCached */;
+  Future<bool> get hasServerCacheCached async {
+    for (final tr in this) {
+      final track = tr.track;
+      if (track.isNetwork && await ServerCacheController.cacheFileForPath(track.path).exists()) return true;
+    }
+    return false;
+  }
+
+  Future<bool> get hasAnythingCached async =>
+      await hasArtworkCached || await hasTXTLyricsCached || await hasLRCLyricsCached || await hasServerCacheCached /* || await hasColorCached */;
 
   Future<bool> _doesAnyPathExist(
     String directory,

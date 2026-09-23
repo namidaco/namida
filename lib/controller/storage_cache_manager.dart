@@ -10,6 +10,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
@@ -38,6 +39,7 @@ class StorageCacheManager {
       _ImageTrimmer()._trimExcessImageCache(priorityDbFileInfo),
       _ImageTrimmer()._trimExcessImageCacheTemp(priorityDbFileInfo),
       _AudioTrimmer()._trimExcessAudioCache(priorityDbFileInfo),
+      if (settings.directoriesToScan.value.hasServer()) ServerCacheController.inst.trimExcessCache(),
     ]);
   }
 

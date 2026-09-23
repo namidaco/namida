@@ -9,6 +9,7 @@ import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -52,6 +53,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
 
   final tracks = tracksMap.keys.toList();
   final isSingle = tracks.length == 1;
+  final serverCacheTotalSize = await ServerCacheController.inst.getCachedSize(tracks);
   final singleVideoId = isSingle ? tracks[0].youtubeID : null;
 
   if (singleVideoId != null && singleVideoId.isNotEmpty) {
@@ -66,6 +68,7 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
     }
 
     final singleTrack = tracks[0];
+    final serverCacheFilePath = serverCacheTotalSize > 0 ? ServerCacheController.cacheFileForPath(singleTrack.path).path : null;
     final localArtworkDetails = magikify(singleTrack.pathToImage, false, false);
     final imageDetailsFuture = await Future.wait(
       [
@@ -96,6 +99,9 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
           // -- reduce artworks number manually if was deleted
           Indexer.inst.updateImageSizesInStorage(removedCount: 1, removedSize: details.$2);
         }
+        if (serverCacheFilePath != null && pathsDeleted[serverCacheFilePath] != null) {
+          await ServerCacheController.inst.removeCached(tracks);
+        }
       },
       extraTiles: (pathsToDelete, totalSizeToDelete, allSelected) {
         return [
@@ -113,6 +119,20 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
             totalSizeToDelete: totalSizeToDelete,
             allSelected: allSelected,
           ),
+          if (serverCacheFilePath != null)
+            NamidaClearDialogExpansionTile<dynamic>(
+              title: lang.serverCache,
+              subtitle: serverCacheTotalSize.fileSizeFormatted,
+              icon: Broken.cloud,
+              items: [serverCacheFilePath],
+              itemBuilder: (_) => (path: serverCacheFilePath, subtitle: serverCacheTotalSize.fileSizeFormatted, title: singleTrack.title),
+              itemSize: (_) => serverCacheTotalSize,
+              tempFilesSize: null,
+              tempFilesDelete: null,
+              pathsToDelete: pathsToDelete,
+              totalSizeToDelete: totalSizeToDelete,
+              allSelected: allSelected,
+            ),
           NamidaClearDialogExpansionTile<dynamic>(
             title: lang.lyrics,
             subtitle: lyricsTotalSize.fileSizeFormatted,
@@ -160,6 +180,17 @@ void showTrackClearDialog(List<Selectable> tracksPre, Color colorScheme) async {
               icon: Broken.audio_square,
               onTap: () async {
                 await EditDeleteController.inst.deleteCachedAudios(tracks);
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+          if (serverCacheTotalSize > 0)
+            CustomListTile(
+              passedColor: colorScheme,
+              title: lang.serverCache,
+              subtitle: serverCacheTotalSize.fileSizeFormatted,
+              icon: Broken.cloud,
+              onTap: () async {
+                await ServerCacheController.inst.removeCached(tracks);
                 NamidaNavigator.inst.closeDialog();
               },
             ),

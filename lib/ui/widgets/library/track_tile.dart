@@ -23,6 +23,7 @@ import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/server_cache_widgets.dart';
 
 class TrackTilePropertiesProvider extends StatelessWidget {
   final TrackTilePropertiesConfigs configs;
@@ -578,6 +579,12 @@ class TrackTile extends StatelessWidget {
                                     icon: track is Video ? Broken.video : Broken.musicnote,
                                     iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
                                     onTopWidgets: [
+                                      if (track.isNetwork)
+                                        Positioned.fill(
+                                          child: ServerCacheTrackIndicator(
+                                            track: track,
+                                          ),
+                                        ),
                                       if (properties.configs.displayTrackNumber)
                                         Positioned(
                                           bottom: 0,

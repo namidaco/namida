@@ -14,6 +14,7 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -41,9 +42,11 @@ enum _AdvancedSettingKeys with SettingKeysBase {
   updateDirPath,
   fixYTDLPBigThumbnail,
   compressImages,
+  maxServerCache,
   maxImageCache,
   maxAudioCache,
   maxVideoCache,
+  clearServerCache,
   clearImageCache,
   clearAudioCache,
   clearVideoCache,
@@ -63,9 +66,11 @@ class AdvancedSettings extends SettingSubpageProvider {
     _AdvancedSettingKeys.updateDirPath: [lang.updateDirectoryPath],
     _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.fixYtdlpBigThumbnailSize],
     _AdvancedSettingKeys.compressImages: [lang.compressImages],
+    _AdvancedSettingKeys.maxServerCache: [lang.maxServerCacheSize],
     _AdvancedSettingKeys.maxImageCache: [lang.maxImageCacheSize],
     _AdvancedSettingKeys.maxAudioCache: [lang.maxAudioCacheSize],
     _AdvancedSettingKeys.maxVideoCache: [lang.maxVideoCacheSize],
+    _AdvancedSettingKeys.clearServerCache: [lang.clearServerCache],
     _AdvancedSettingKeys.clearImageCache: [lang.clearImageCache],
     _AdvancedSettingKeys.clearAudioCache: [lang.clearAudioCache],
     _AdvancedSettingKeys.clearVideoCache: [lang.clearVideoCache],
@@ -527,6 +532,15 @@ class AdvancedSettings extends SettingSubpageProvider {
           ),
 
           _getCacheSliderWidget(
+            stepper: 8 * 32,
+            maxGB: 32,
+            key: _AdvancedSettingKeys.maxServerCache,
+            icon: Broken.cloud,
+            title: lang.maxServerCacheSize,
+            rx: settings.serversMaxCacheInMB,
+            onSave: (val) => settings.save(serversMaxCacheInMB: val),
+          ),
+          _getCacheSliderWidget(
             stepper: 8 * 4,
             maxGB: 4,
             key: _AdvancedSettingKeys.maxImageCache,
@@ -554,6 +568,12 @@ class AdvancedSettings extends SettingSubpageProvider {
             onSave: (val) => settings.save(videosMaxCacheInMB: val),
           ),
 
+          getItemWrapper(
+            key: _AdvancedSettingKeys.clearServerCache,
+            child: _ClearServerCacheListTile(
+              bgColor: getBgColor(_AdvancedSettingKeys.clearServerCache),
+            ),
+          ),
           getItemWrapper(
             key: _AdvancedSettingKeys.clearImageCache,
             child: _ClearImageCacheListTile(
@@ -897,6 +917,120 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
           },
         );
       },
+    );
+  }
+}
+
+class _ClearServerCacheListTile extends StatefulWidget {
+  final Color? bgColor;
+  const _ClearServerCacheListTile({this.bgColor});
+
+  @override
+  State<_ClearServerCacheListTile> createState() => _ClearServerCacheListTileState();
+}
+
+class _ClearServerCacheListTileState extends State<_ClearServerCacheListTile> {
+  ServerCacheStats? _stats;
+
+  @override
+  void initState() {
+    super.initState();
+    _fillStats();
+  }
+
+  void _fillStats() async {
+    final stats = await ServerCacheController.inst.getStats();
+    if (mounted) setState(() => _stats = stats);
+  }
+
+  Future<void> _clear({required bool deleteKept, required bool deleteOthers, required bool deleteTemp}) async {
+    setState(() => _stats = null);
+    await ServerCacheController.inst.clear(keepKept: !deleteKept, deleteOthers: deleteOthers, deleteTemp: deleteTemp);
+    _fillStats();
+  }
+
+  void _onTap(ServerCacheStats stats) {
+    final deleteKept = false.obs;
+    final deleteOthers = true.obs;
+    final deleteTemp = true.obs;
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        deleteKept.close();
+        deleteOthers.close();
+        deleteTemp.close();
+      },
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        title: lang.clearServerCache,
+        actions: [
+          const CancelButton(),
+          Obx(
+            (context) {
+              final size = (deleteKept.valueR ? stats.keptSize : 0) + (deleteOthers.valueR ? stats.otherSize : 0) + (deleteTemp.valueR ? stats.tempSize : 0);
+              return NamidaButton(
+                colorScheme: Colors.red,
+                enabled: size > 0,
+                text: "${lang.delete.toUpperCase()} (${size.fileSizeFormatted})",
+                onTap: () {
+                  NamidaNavigator.inst.closeDialog();
+                  _clear(deleteKept: deleteKept.value, deleteOthers: deleteOthers.value, deleteTemp: deleteTemp.value);
+                },
+              );
+            },
+          ),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTileWithCheckMark(
+              activeRx: deleteKept,
+              icon: Broken.document_download,
+              title: "${lang.cache} (${stats.keptCount})",
+              subtitle: stats.keptSize.fileSizeFormatted,
+              onTap: deleteKept.toggle,
+            ),
+            const SizedBox(
+              height: 8.0,
+            ),
+            ListTileWithCheckMark(
+              activeRx: deleteOthers,
+              icon: Broken.cloud,
+              title: "${lang.others} (${stats.otherCount})",
+              subtitle: stats.otherSize.fileSizeFormatted,
+              onTap: deleteOthers.toggle,
+            ),
+            if (stats.tempSize > 0) ...[
+              const SizedBox(
+                height: 8.0,
+              ),
+              ListTileWithCheckMark(
+                activeRx: deleteTemp,
+                icon: Broken.broom,
+                title: lang.deleteTempFiles,
+                subtitle: stats.tempSize.fileSizeFormatted,
+                onTap: deleteTemp.toggle,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final stats = _stats;
+    return CustomListTile(
+      bgColor: widget.bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.cloud,
+        secondaryIcon: Broken.close_circle,
+      ),
+      title: lang.clearServerCache,
+      trailingText: stats == null ? '?' : stats.totalSize.fileSizeFormatted,
+      onTap: stats == null ? null : () => _onTap(stats),
     );
   }
 }

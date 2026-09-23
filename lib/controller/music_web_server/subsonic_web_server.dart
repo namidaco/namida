@@ -32,14 +32,23 @@ class _SubsonicWebServer extends MusicWebServer {
   }
 
   @override
-  WebStreamUriDetails? getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal}) {
+  WebStreamUriDetails? getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal}) => _buildEndpointUrl('/rest/stream', id);
+
+  /// `/rest/stream` can be transcoded by the server.
+  @override
+  Future<_ServerFileSource?> _getOriginalFileSource(String id) async {
+    final details = _buildEndpointUrl('/rest/download', id);
+    return details == null ? null : _ServerFileSourceUrl(details);
+  }
+
+  WebStreamUriDetails? _buildEndpointUrl(String endpointPath, String id) {
     final api = _api;
     if (api == null) return null;
     final baseUri = _serverUri;
     if (baseUri == null) return null;
 
     final uri = baseUri.buildEndpointUri(
-      '/rest/stream',
+      endpointPath,
       {
         'v': api.version,
         'c': api.clientId,

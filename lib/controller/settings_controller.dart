@@ -182,6 +182,7 @@ class _SettingsController with SettingsFileWriter {
   final waveformTotalBars = 80.obs;
   final videosMaxCacheInMB = (8 * 1024).obs; // 8GB
   final audiosMaxCacheInMB = (4 * 1024).obs; // 4GB
+  final serversMaxCacheInMB = (4 * 1024).obs; // 4GB
   final imagesMaxCacheInMB = (8 * 32).obs; // 256 MB
   final hideStatusBarInExpandedMiniplayer = false.obs;
   final displayFavouriteButtonInNotification = false.obs;
@@ -403,6 +404,7 @@ class _SettingsController with SettingsFileWriter {
     waveformTotalBars.value = 111;
     videosMaxCacheInMB.value = -1;
     audiosMaxCacheInMB.value = -1;
+    serversMaxCacheInMB.value = -1;
     imagesMaxCacheInMB.value = (2 * 1024); // 2GB
     showUnknownFieldsInTrackInfoDialog.value = false;
     dismissibleMiniplayer.value = true;
@@ -455,6 +457,7 @@ class _SettingsController with SettingsFileWriter {
     waveformTotalBars.value = 100;
     videosMaxCacheInMB.value = (24 * 1024); // 8GB
     audiosMaxCacheInMB.value = (12 * 1024); // 4GB
+    serversMaxCacheInMB.value = (12 * 1024);
     imagesMaxCacheInMB.value = (2 * 1024); // 256 MB
   }
 
@@ -641,6 +644,7 @@ class _SettingsController with SettingsFileWriter {
       waveformTotalBars.value = json['waveformTotalBars'] ?? waveformTotalBars.value;
       videosMaxCacheInMB.value = json['videosMaxCacheInMB'] ?? videosMaxCacheInMB.value;
       audiosMaxCacheInMB.value = json['audiosMaxCacheInMB'] ?? audiosMaxCacheInMB.value;
+      serversMaxCacheInMB.value = json['serversMaxCacheInMB'] ?? serversMaxCacheInMB.value;
       imagesMaxCacheInMB.value = json['imagesMaxCacheInMB'] ?? imagesMaxCacheInMB.value;
       hideStatusBarInExpandedMiniplayer.value = json['hideStatusBarInExpandedMiniplayer'] ?? hideStatusBarInExpandedMiniplayer.value;
       displayFavouriteButtonInNotification.value = json['displayFavouriteButtonInNotification'] ?? displayFavouriteButtonInNotification.value;
@@ -898,6 +902,7 @@ class _SettingsController with SettingsFileWriter {
     'waveformTotalBars': waveformTotalBars.value,
     'videosMaxCacheInMB': videosMaxCacheInMB.value,
     'audiosMaxCacheInMB': audiosMaxCacheInMB.value,
+    'serversMaxCacheInMB': serversMaxCacheInMB.value,
     'imagesMaxCacheInMB': imagesMaxCacheInMB.value,
     'hideStatusBarInExpandedMiniplayer': hideStatusBarInExpandedMiniplayer.value,
     'displayFavouriteButtonInNotification': displayFavouriteButtonInNotification.value,
@@ -1103,6 +1108,7 @@ class _SettingsController with SettingsFileWriter {
     int? waveformTotalBars,
     int? videosMaxCacheInMB,
     int? audiosMaxCacheInMB,
+    int? serversMaxCacheInMB,
     int? imagesMaxCacheInMB,
     bool? hideStatusBarInExpandedMiniplayer,
     bool? displayFavouriteButtonInNotification,
@@ -1362,6 +1368,7 @@ class _SettingsController with SettingsFileWriter {
     if (waveformTotalBars != null) this.waveformTotalBars.value = waveformTotalBars;
     if (videosMaxCacheInMB != null) this.videosMaxCacheInMB.value = videosMaxCacheInMB;
     if (audiosMaxCacheInMB != null) this.audiosMaxCacheInMB.value = audiosMaxCacheInMB;
+    if (serversMaxCacheInMB != null) this.serversMaxCacheInMB.value = serversMaxCacheInMB;
     if (imagesMaxCacheInMB != null) this.imagesMaxCacheInMB.value = imagesMaxCacheInMB;
 
     if (hideStatusBarInExpandedMiniplayer != null) this.hideStatusBarInExpandedMiniplayer.value = hideStatusBarInExpandedMiniplayer;

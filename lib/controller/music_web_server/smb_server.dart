@@ -85,18 +85,13 @@ class _SMBServer extends MusicWebServer {
     try {
       final serverPath = id;
 
-      final tempFile = FileParts.joinAll([
-        AppDirs.APP_CACHE,
-        authDetails.dir.type.name,
-        authDetails.auth.username,
-        ...serverPath.split('/'),
-      ]);
+      final cacheFile = ServerCacheController.cacheFileFor(authDetails.dir.type, authDetails.auth.username, serverPath);
 
-      await _downloadFileToCache(serverPath, tempFile);
+      await _downloadFileToCache(serverPath, cacheFile);
 
-      onFetchedIfLocal?.call(tempFile);
+      onFetchedIfLocal?.call(cacheFile);
 
-      final newUri = Uri.file(tempFile.path);
+      final newUri = Uri.file(cacheFile.path);
 
       return WebStreamUriDetails.fromUri(
         newUri,
@@ -105,6 +100,11 @@ class _SMBServer extends MusicWebServer {
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  Future<_ServerFileSource?> _getOriginalFileSource(String id) async {
+    return _ServerFileSourceStream((start) => _openReadStream(id, start));
   }
 
   @override
@@ -374,27 +374,24 @@ class _SMBServer extends MusicWebServer {
     }
   }
 
-  Future<void> _downloadFileToCache(String serverPath, File toFile) async {
+  Future<Stream<List<int>>> _openReadStream(String serverPath, int start) async {
     final connection = await _getConnection();
+    final smbFile = await connection.file(serverPath);
+    return connection.openRead(smbFile, start);
+  }
 
+  Future<void> _downloadFileToCache(String serverPath, File toFile) async {
     await toFile.create(recursive: true);
-
-    RandomAccessFile? raf;
+    final sink = toFile.openWrite();
     try {
-      final smbFile = await connection.file(serverPath);
-      final fileSize = smbFile.size;
-
-      raf = await connection.open(smbFile);
-      final bytes = await raf.read(fileSize);
-
-      await toFile.writeAsBytes(bytes);
+      await sink.addStream(await _openReadStream(serverPath, 0));
     } catch (e, st) {
       if (kDebugMode) {
         printy('_SMBServer._downloadFileToCache error: $e\n$st', isError: true);
       }
       rethrow;
     } finally {
-      unawaited(raf?.close());
+      await sink.close();
     }
   }
 }
