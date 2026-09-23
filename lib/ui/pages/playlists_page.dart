@@ -39,6 +39,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
 import 'package:namida/ui/widgets/library/playlist_tile.dart';
+import 'package:namida/ui/widgets/sliver_cross_axis_extent_builder.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 /// By Default, sending tracks to add (i.e: addToPlaylistDialog) will:
@@ -736,10 +737,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 },
                                               )
                                             : countPerRowResolved > 1
-                                            ? SliverLayoutBuilder(
-                                                builder: (context, constraints) {
+                                            ? SliverCrossAxisExtentBuilder(
+                                                builder: (context, crossAxisExtent) {
                                                   const childAspectRatio = 0.8;
-                                                  final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                                                  final cardWidth = crossAxisExtent / countPerRowResolved;
                                                   final cardHeight = cardWidth / childAspectRatio;
                                                   return SliverGrid.builder(
                                                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -137,6 +138,53 @@ class ArtworkWidget extends StatefulWidget {
       _aspectRatioNotifyScheduled = false;
       aspectRatiosVersion.value++;
     });
+  }
+
+  static ({int longest, int shortest})? _fullQualityDecodeBoxCached;
+  static bool _isFullQualityDecodeBoxFromDisplay = false;
+
+  /// the largest display as `longest x shortest`, so rotating keeps the same cache key.
+  /// while displays are unknown, the largest window seen so far, so split screen/floating windows can't shrink it.
+  static ({int longest, int shortest})? get _fullQualityDecodeBox {
+    if (_isFullQualityDecodeBoxFromDisplay) return _fullQualityDecodeBoxCached;
+    final dispatcher = WidgetsBinding.instance.platformDispatcher;
+
+    final fromDisplays = _largestBoxOf(dispatcher.displays.map((display) => display.size));
+    if (fromDisplays != null) {
+      _isFullQualityDecodeBoxFromDisplay = true;
+      return _fullQualityDecodeBoxCached = fromDisplays;
+    }
+
+    final fromViews = _largestBoxOf(dispatcher.views.map((view) => view.physicalSize));
+    final cached = _fullQualityDecodeBoxCached;
+    if (fromViews == null || cached == null) return _fullQualityDecodeBoxCached ??= fromViews;
+    if (fromViews.longest <= cached.longest && fromViews.shortest <= cached.shortest) return cached;
+    return _fullQualityDecodeBoxCached = (longest: math.max(fromViews.longest, cached.longest), shortest: math.max(fromViews.shortest, cached.shortest));
+  }
+
+  static ({int longest, int shortest})? _largestBoxOf(Iterable<Size> sizes) {
+    var longest = 0.0;
+    var shortest = 0.0;
+    for (final size in sizes) {
+      if (size.isEmpty) continue; // -- unknown sizes come as `-1 x -1`, and `longestSide`/`shortestSide` are absolute
+      if (size.longestSide > longest) longest = size.longestSide;
+      if (size.shortestSide > shortest) shortest = size.shortestSide;
+    }
+    return shortest > 0 ? (longest: longest.round(), shortest: shortest.round()) : null;
+  }
+
+  /// capped to the screen and independent of the drawn size, so every place shares one cache entry.
+  /// a crop (like [BoxFit.cover]) longer than the screen's short side ([croppedLongestSide], physical pixels) can need more, so it stays uncapped.
+  static ImageProvider fullQualityImage(ImageProvider provider, {double croppedLongestSide = 0}) {
+    final box = _fullQualityDecodeBox;
+    if (box == null || croppedLongestSide > box.shortest) return provider;
+    return ResizeImage(provider, width: box.longest, height: box.shortest, policy: ResizeImagePolicy.fit);
+  }
+
+  static Future<void> evictImageFile(File file) async {
+    final provider = FileImage(file);
+    await provider.evict();
+    await fullQualityImage(provider).evict();
   }
 
   @override
@@ -389,14 +437,23 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final realWidthAndHeight = widget.forceSquared ? double.infinity : null;
 
-    int? finalCache;
-    if (widget.compressed) {
-      final pixelRatio = context.pixelRatio;
-      final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
-      final extraMultiplier = (1 + (0.05 / pixelRatio * 15)); // higher for lower pixel ratio, for example 1=>1.75, 3=>1.25
-      final usedHeight = _getThumbnailEffectiveCacheHeight;
-      final refined = usedHeight * cacheMultiplier * extraMultiplier;
-      finalCache = refined.round();
+    ImageProvider? image;
+    if (canDisplayImage && !widget.forceDummyArtwork) {
+      final ImageProvider source = goodImagePath ? FileImage(File(_imagePath!)) : MemoryImage(bytes!);
+      if (widget.compressed) {
+        final pixelRatio = context.pixelRatio;
+        final cacheMultiplier = pixelRatio * settings.artworkCacheHeightMultiplier.value;
+        final extraMultiplier = (1 + (0.05 / pixelRatio * 15)); // higher for lower pixel ratio, for example 1=>1.75, 3=>1.25
+        final usedHeight = _getThumbnailEffectiveCacheHeight;
+        final refined = usedHeight * cacheMultiplier * extraMultiplier;
+        image = ResizeImage.resizeIfNeeded(null, refined.round(), source);
+      } else {
+        final crops = widget.forceSquared && widget.fit != BoxFit.contain && widget.fit != BoxFit.scaleDown;
+        image = ArtworkWidget.fullQualityImage(
+          source,
+          croppedLongestSide: crops ? math.max(boxWidth, boxHeight) * context.pixelRatio : 0,
+        );
+      }
     }
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
@@ -431,13 +488,9 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (canDisplayImage)
+                      if (image != null)
                         ImageAdvanced(
-                          image: ResizeImage.resizeIfNeeded(
-                            null,
-                            finalCache,
-                            (goodImagePath ? FileImage(File(_imagePath!)) : MemoryImage(bytes!)) as ImageProvider,
-                          ),
+                          image: image,
                           gaplessPlayback: true,
                           fit: widget.fit,
                           alignment: widget.alignment,
@@ -491,7 +544,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                                   // -- fallbackToFolderCover should be always true for app cached images.
                                   // -- we are allowed to delete only if specified image is app-generated.
                                   File(fp).tryDeleting();
-                                  FileImage(File(fp)).evict();
+                                  ArtworkWidget.evictImageFile(File(fp));
                                 }
                               }
                             }

@@ -21,6 +21,7 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_card.dart';
+import 'package:namida/ui/widgets/sliver_cross_axis_extent_builder.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class GenresPage extends StatelessWidget with NamidaRouteWidget {
@@ -145,10 +146,10 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     ObxPrefer(
                       enabled: sort.requiresHistory,
                       rx: HistoryController.inst.topTracksMapListens,
-                      builder: (context, _) => SliverLayoutBuilder(
-                        builder: (context, constraints) {
+                      builder: (context, _) => SliverCrossAxisExtentBuilder(
+                        builder: (context, crossAxisExtent) {
                           const childAspectRatio = 0.8;
-                          final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                          final cardWidth = crossAxisExtent / countPerRowResolved;
                           final cardHeight = cardWidth / childAspectRatio;
                           return SliverGrid.builder(
                             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

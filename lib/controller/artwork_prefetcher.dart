@@ -6,6 +6,7 @@ import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -48,10 +49,10 @@ class ArtworkPrefetcher {
     if (fetched != null && isLatest()) _precacheFile(fetched);
   }
 
-  /// [precacheImage] needs a context, the player paints artwork at its natural size
-  /// so the empty configuration lands on the very same cache key.
+  /// [precacheImage] needs a context, the player paints artwork through [ArtworkWidget.fullQualityImage]
+  /// which ignores the configuration, so the empty one lands on the very same cache key.
   void _precacheFile(File file) {
-    final stream = FileImage(file).resolve(ImageConfiguration.empty);
+    final stream = ArtworkWidget.fullQualityImage(FileImage(file)).resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     listener = ImageStreamListener(
       (image, synchronousCall) {

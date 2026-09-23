@@ -46,6 +46,7 @@ class MultiArtworkContainer extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = this.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
+        final innerSize = size - 6.0;
         return Container(
           alignment: Alignment.center,
           margin: margin ?? const EdgeInsets.symmetric(horizontal: 12.0),
@@ -71,25 +72,31 @@ class MultiArtworkContainer extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18.0.multipliedRadius),
               ),
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  if (artworkFile != null || tracks != null)
-                    MultiArtworks(
-                      disableHero: true,
-                      heroTag: heroTag,
-                      tracks: tracks!,
-                      thumbnailSize: size - 6.0,
-                      fallbackToFolderCover: fallbackToFolderCover,
-                      reduceQuality: reduceQuality,
-                      artworkFile: artworkFile,
-                      fallbackIcon: fallbackIcon,
-                      fadeMilliSeconds: fadeMilliSeconds,
-                      wrapArtworkFileInFullscreenOpener: wrapArtworkFileInFullscreenOpener,
-                    ),
-                  ?child,
-                  ?onTopWidget,
-                ],
+              // -- scales with hero flights, otherwise each side keeps its fixed size mid-flight
+              child: FittedBox(
+                child: SizedBox.square(
+                  dimension: innerSize,
+                  child: Stack(
+                    clipBehavior: Clip.hardEdge,
+                    children: [
+                      if (artworkFile != null || tracks != null)
+                        MultiArtworks(
+                          disableHero: true,
+                          heroTag: heroTag,
+                          tracks: tracks!,
+                          thumbnailSize: innerSize,
+                          fallbackToFolderCover: fallbackToFolderCover,
+                          reduceQuality: reduceQuality,
+                          artworkFile: artworkFile,
+                          fallbackIcon: fallbackIcon,
+                          fadeMilliSeconds: fadeMilliSeconds,
+                          wrapArtworkFileInFullscreenOpener: wrapArtworkFileInFullscreenOpener,
+                        ),
+                      ?child,
+                      ?onTopWidget,
+                    ],
+                  ),
+                ),
               ),
             ),
           ),

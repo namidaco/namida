@@ -24,6 +24,7 @@ import com.ryanheise.audioservice.AudioServicePlugin
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.util.ViewUtils
 import io.flutter.Log;
 import java.io.File
 import java.util.concurrent.CompletableFuture
@@ -60,6 +61,9 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
+
+    // -- the engine comes from audio_service without an activity, so flutter never reported the display size (dart sees -1 x -1)
+    ViewUtils.calculateMaximumDisplayMetrics(this, flutterEngine)
 
     currentLifecycle = lifecycle
 

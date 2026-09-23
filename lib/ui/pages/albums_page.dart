@@ -22,6 +22,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/album_tile.dart';
+import 'package:namida/ui/widgets/sliver_cross_axis_extent_builder.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
@@ -168,9 +169,9 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                   );
                                 },
                               )
-                            : SliverLayoutBuilder(
-                                builder: (context, constraints) {
-                                  final cardWidth = constraints.crossAxisExtent / countPerRowResolved;
+                            : SliverCrossAxisExtentBuilder(
+                                builder: (context, crossAxisExtent) {
+                                  final cardWidth = crossAxisExtent / countPerRowResolved;
                                   if (useStaggeredGrid) {
                                     return SliverMasonryGrid.count(
                                       crossAxisCount: countPerRowResolved,

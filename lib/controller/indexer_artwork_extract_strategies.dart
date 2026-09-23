@@ -238,7 +238,7 @@ class _MediaStoreArtworkExtractStrategy extends _ArtworkExtractStrategy {
 
       if (artwork != null) {
         file = File(imagePath);
-        await FileImage(file).evict();
+        await ArtworkWidget.evictImageFile(file);
         await file.writeAsBytes(artwork);
       }
     }
