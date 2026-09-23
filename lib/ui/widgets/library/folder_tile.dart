@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/directory_index.dart';
@@ -41,36 +40,11 @@ class FolderTile extends StatefulWidget {
     this.subtitle,
   });
 
-  static final _infoMap = <Folder, String>{};
-  static Future<String> _fetchFolderExtraInfo(Folder folder) async {
-    final file = FileParts.join(folder.path, '.info.txt');
-    if (await file.exists()) {
-      try {
-        return await file.readAsString();
-      } catch (_) {}
-    }
-    return '';
-  }
-
   @override
   State<FolderTile> createState() => _FolderTileState();
 }
 
 class _FolderTileState extends State<FolderTile> {
-  String? _getFolderExtraInfo(Folder folder) {
-    final valInMap = FolderTile._infoMap[folder];
-    if (valInMap != null) return valInMap;
-    FolderTile._fetchFolderExtraInfo(folder).then(
-      (value) {
-        FolderTile._infoMap[folder] = value;
-        if (value.isNotEmpty) {
-          refreshState();
-        }
-      },
-    );
-    return null;
-  }
-
   void _showFolderDialog({bool? preferRecursive}) {
     bool isRecursive = widget.isTracksRecursive;
     List<Track> tracks = this.widget.tracks;
@@ -101,7 +75,7 @@ class _FolderTileState extends State<FolderTile> {
     final textTheme = theme.textTheme;
     final double iconSize = (settings.trackThumbnailSizeinList.value * 0.85).clampDouble(0, settings.trackListTileHeight.value);
     final double thumbSize = iconSize * 0.7;
-    final extraInfo = _getFolderExtraInfo(widget.folder);
+    final extraInfo = widget.folder.getExtraInfoOrFetch(refreshState);
 
     String folderTitle = widget.title ?? widget.folder.folderNameRaw;
     Widget? trailingWidget;

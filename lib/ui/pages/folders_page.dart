@@ -197,7 +197,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   }
 }
 
-class _FoldersHeaderTile extends StatelessWidget {
+class _FoldersHeaderTile extends StatefulWidget {
   final FoldersController foldersController;
   final FoldersPageConfig config;
   final LibraryTab tab;
@@ -213,54 +213,72 @@ class _FoldersHeaderTile extends StatelessWidget {
   });
 
   @override
+  State<_FoldersHeaderTile> createState() => _FoldersHeaderTileState();
+}
+
+class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
+  @override
   Widget build(BuildContext context) {
-    final currentFolder = this.currentFolder;
+    final currentFolder = widget.currentFolder;
+    final config = widget.config;
     return ObxO(
-      rx: foldersController.isHome,
-      builder: (context, isHome) => CustomListTile(
-        borderR: 16.0,
-        icon: isHome ? Broken.home_2 : Broken.folder_2,
-        title: isHome ? lang.home : currentFolder?.formattedPath() ?? lang.home,
-        titleStyle: context.textTheme.displaySmall,
-        onTap: () => foldersController.stepOut(),
-        trailingRaw: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            LibraryTabVariantChip(tab: tab),
-            const SizedBox(width: 4.0),
-            ObxO(
-              rx: config.enableFoldersHierarchy,
-              builder: (context, enableFoldersHierarchy) => !enableFoldersHierarchy
-                  ? const SizedBox()
-                  : ObxO(
-                      rx: config.defaultFolderStartupLocation,
-                      builder: (context, defaultFolderStartupLocation) {
-                        final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
-                        return NamidaIconButton(
-                          verticalPadding: 8.0,
-                          horizontalPadding: 4.0,
-                          tooltip: () => lang.setAsDefault,
-                          icon: (isDefaultFolderEmpty && isHome)
-                              ? Broken.archive_tick
-                              : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
-                              ? Broken.save_2
-                              : Broken.archive_tick,
-                          iconSize: 22.0,
-                          onPressed: () => config.onDefaultStartupFolderChanged(),
-                        );
-                      },
-                    ),
-            ),
-            const SizedBox(width: 4.0),
-            NamidaIconButton(
-              verticalPadding: 8.0,
-              horizontalPadding: 4.0,
-              icon: Broken.sort,
-              onPressed: onSortTap,
-            ),
-          ],
-        ),
-      ),
+      rx: widget.foldersController.isHome,
+      builder: (context, isHome) {
+        String title = lang.home;
+        String? titleSuffix;
+        String? subtitle;
+        if (!isHome && currentFolder != null) {
+          title = currentFolder.folderNameTryFormatNetwork();
+          final extraInfo = currentFolder.getExtraInfoOrFetch(refreshState);
+          if (extraInfo != null && extraInfo.isNotEmpty) titleSuffix = ' - ($extraInfo)';
+          subtitle = currentFolder.formattedParentPath();
+        }
+        return CustomListTile(
+          borderR: 16.0,
+          icon: isHome ? Broken.home_2 : Broken.folder_2,
+          title: title,
+          titleSuffix: titleSuffix,
+          subtitle: subtitle,
+          onTap: () => widget.foldersController.stepOut(),
+          trailingRaw: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LibraryTabVariantChip(tab: widget.tab),
+              const SizedBox(width: 4.0),
+              ObxO(
+                rx: config.enableFoldersHierarchy,
+                builder: (context, enableFoldersHierarchy) => !enableFoldersHierarchy
+                    ? const SizedBox()
+                    : ObxO(
+                        rx: config.defaultFolderStartupLocation,
+                        builder: (context, defaultFolderStartupLocation) {
+                          final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
+                          return NamidaIconButton(
+                            verticalPadding: 8.0,
+                            horizontalPadding: 4.0,
+                            tooltip: () => lang.setAsDefault,
+                            icon: (isDefaultFolderEmpty && isHome)
+                                ? Broken.archive_tick
+                                : currentFolder == null || isDefaultFolderEmpty || !currentFolder.hasSamePathAs(defaultFolderStartupLocation)
+                                ? Broken.save_2
+                                : Broken.archive_tick,
+                            iconSize: 22.0,
+                            onPressed: () => config.onDefaultStartupFolderChanged(),
+                          );
+                        },
+                      ),
+              ),
+              const SizedBox(width: 4.0),
+              NamidaIconButton(
+                verticalPadding: 8.0,
+                horizontalPadding: 4.0,
+                icon: Broken.sort,
+                onPressed: widget.onSortTap,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

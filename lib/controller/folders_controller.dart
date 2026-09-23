@@ -239,7 +239,7 @@ class FoldersController<T extends Folder, E extends Track> {
       map[folder] ??= <E>[]; // adding missing/new folders
     }
     _sortMap(map, _pathsTreeMapRoot);
-    Folder.invalidateNameCounts();
+    Folder.invalidateCaches();
     if (_config.enableFoldersHierarchy.value) stepIn(_pathsTreeMapCurrent?.parent);
   }
 

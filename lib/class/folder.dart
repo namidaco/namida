@@ -2,6 +2,7 @@
 
 import 'dart:io';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -30,10 +31,12 @@ class Folder {
 
   static final _nameCountsTracks = _FolderNameCounts();
   static final _nameCountsVideos = _FolderNameCounts();
+  static final _extraInfoCache = <Folder, String>{};
 
-  static void invalidateNameCounts() {
+  static void invalidateCaches() {
     _nameCountsTracks.invalidate();
     _nameCountsVideos.invalidate();
+    _extraInfoCache.clear();
   }
 
   static T fromType<T extends Folder>(String path) {
@@ -117,6 +120,33 @@ class Folder {
 
   String formattedPath() {
     return path.formatPath();
+  }
+
+  String formattedParentPath() {
+    final nameStart = path.lastIndexOf(folderNameRaw);
+    return nameStart <= 0 ? '' : path.substring(0, nameStart).formatPath();
+  }
+
+  String? getExtraInfoOrFetch(void Function() onFetched) {
+    final cached = _extraInfoCache[this];
+    if (cached != null) return cached;
+    _fetchExtraInfo().then(
+      (value) {
+        _extraInfoCache[this] = value;
+        if (value.isNotEmpty) onFetched();
+      },
+    );
+    return null;
+  }
+
+  Future<String> _fetchExtraInfo() async {
+    final file = FileParts.join(path, '.info.txt');
+    if (await file.exists()) {
+      try {
+        return await file.readAsString();
+      } catch (_) {}
+    }
+    return '';
   }
 
   @override

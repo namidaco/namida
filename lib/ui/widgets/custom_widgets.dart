@@ -244,6 +244,7 @@ class CustomSwitchListTile extends StatelessWidget {
 class CustomListTile extends StatelessWidget {
   final void Function()? onTap;
   final String title;
+  final String? titleSuffix;
   final String? subtitle;
   final Widget? trailing;
   final Widget? trailingRaw;
@@ -265,6 +266,7 @@ class CustomListTile extends StatelessWidget {
   const CustomListTile({
     super.key,
     required this.title,
+    this.titleSuffix,
     this.subtitle,
     this.trailing,
     this.trailingRaw,
@@ -355,14 +357,24 @@ class CustomListTile extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            title,
+                          Text.rich(
+                            TextSpan(
+                              text: title,
+                              children: titleSuffix == null
+                                  ? null
+                                  : [
+                                      TextSpan(
+                                        text: titleSuffix,
+                                        style: textTheme.displaySmall,
+                                      ),
+                                    ],
+                            ),
                             style: titleStyle ?? (largeTitle ? theme.textTheme.displayLarge : theme.textTheme.displayMedium),
                             maxLines: maxTitleLines ?? (subtitle != null ? 4 : 5),
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (subtitle?.isNotEmpty == true) ...[
-                            const SizedBox(height: 2.0),
+                            if (!(dense || extraDense)) const SizedBox(height: 2.0),
                             Text(
                               subtitle!,
                               style: theme.textTheme.displaySmall,
