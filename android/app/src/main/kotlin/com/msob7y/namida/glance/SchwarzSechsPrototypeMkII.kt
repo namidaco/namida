@@ -238,6 +238,7 @@ private fun RowLayout(
           34.dp * scale,
           spacing,
           interactive,
+          GlanceModifier.fillMaxWidth().padding(end = kControlsTrailingInset),
         )
       }
     }
@@ -283,6 +284,7 @@ private fun CardLayout(
         40.dp * scale,
         spacing,
         interactive,
+        GlanceModifier.fillMaxWidth().padding(end = kControlsTrailingInset),
       )
     }
   }
@@ -306,7 +308,9 @@ private fun CompactLayout(
   val titleSize = (h.value * 0.30f * scale).coerceIn(9f, 17f)
   val maxButtonHeight = minOf(h - padding * 2, 46.dp * scale).clampAtLeast(22.dp)
   val hasTexts = config.showTitle || config.showSubtitle
-  val controlsWidth = if (hasTexts) w * 0.5f else w - padding * 2
+  val widthBesideArtwork =
+    w - padding * 2 - (if (artwork != null) artSize + gap else 0.dp) - (if (hasTexts) gap else 0.dp)
+  val controlsWidth = if (hasTexts) widthBesideArtwork / 2 else widthBesideArtwork
 
   Row(
     verticalAlignment = Alignment.CenterVertically,
@@ -336,7 +340,7 @@ private fun CompactLayout(
         26.dp * scale,
         2.dp,
         interactive,
-        fillWidth = false,
+        GlanceModifier.defaultWeight(),
       )
     }
   }
@@ -504,6 +508,8 @@ private val kControlsDropOrder =
 
 private val kMinButtonSize = 24.dp
 
+private const val kIconVisualCapFraction = 0.85f
+
 /** trailing breathing room so the controls stop just short of the edge. */
 private val kControlsTrailingInset = 12.dp
 
@@ -517,7 +523,7 @@ private fun MediaControls(
   maxIconSize: Dp,
   spacing: Dp,
   interactive: Boolean,
-  fillWidth: Boolean = true,
+  modifier: GlanceModifier,
 ) {
   val enabled = ArrayList<Ctrl>(Ctrl.entries.size)
   if (config.showFavourite) enabled.add(Ctrl.FAVOURITE)
@@ -528,7 +534,7 @@ private fun MediaControls(
   if (config.showShuffle) enabled.add(Ctrl.SHUFFLE)
   if (config.showStop) enabled.add(Ctrl.STOP)
 
-  // -- `availableWidth` comes from LocalSize, which some launchers under-report. it is only
+  // -- `availableWidth` comes from LocalSize, which some launchers misreport. it is only
   // -- used to decide how many buttons fit; the real widths come from weights below.
   fun widthFor(count: Int): Dp = (availableWidth - spacing * (count - 1)) / count
   for (ctrl in kControlsDropOrder) {
@@ -545,22 +551,19 @@ private fun MediaControls(
   // -- ContentScale.Fit sizes the icon by the box's smaller side, so capping the height caps
   // -- the icon without ever capping the hitbox width
   val buttonHeight = minOf(provisionalHeight, maxIconSize + iconPadding * 2)
+  val iconHeight = minOf(buttonHeight - iconPadding * 2, maxIconSize * kIconVisualCapFraction)
+  val iconVerticalPadding = (buttonHeight - iconHeight) / 2
 
   Row(
     verticalAlignment = Alignment.CenterVertically,
     horizontalAlignment = Alignment.Start,
-    modifier =
-      if (fillWidth) GlanceModifier.fillMaxWidth().padding(end = kControlsTrailingInset)
-      else GlanceModifier,
+    modifier = modifier,
   ) {
     enabled.forEachIndexed { index, ctrl ->
       // -- the gap lives inside each cell rather than as a Spacer sibling: glance only has
       // -- generated layouts for up to 10 children per container, and 6 buttons + 5 spacers
       // -- silently kills the whole composition, leaving the widget stuck on its initial layout
       val gap = if (index > 0) spacing else 0.dp
-      val cell =
-        if (fillWidth) GlanceModifier.defaultWeight()
-        else GlanceModifier.width(estimatedWidth + gap)
       MediaControlButton(
         color =
           if (ctrl.isDimmed(payload)) colors.iconsColor.copy(alpha = colors.iconsColor.alpha * 0.4f)
@@ -570,9 +573,10 @@ private fun MediaControls(
         badgeText = ctrl.badgeText(payload),
         contentDescription = ctrl.contentDescription(payload),
         action = ctrl.action(payload),
-        cell = cell.height(buttonHeight).padding(start = gap),
+        cell = GlanceModifier.defaultWeight().height(buttonHeight).padding(start = gap),
         buttonHeight = buttonHeight,
         iconPadding = iconPadding * ctrl.iconPaddingScale(),
+        iconVerticalPadding = iconVerticalPadding * ctrl.iconPaddingScale(),
         interactive = interactive,
       )
     }
@@ -590,6 +594,7 @@ private fun MediaControlButton(
   cell: GlanceModifier,
   buttonHeight: Dp,
   iconPadding: Dp,
+  iconVerticalPadding: Dp,
   interactive: Boolean,
 ) {
   // -- the clickable surface sits inside the cell so the ripple stops at the gap
@@ -616,7 +621,9 @@ private fun MediaControlButton(
         colorFilter = ColorFilter.tint(tint),
         contentDescription = contentDescription,
         contentScale = ContentScale.Fit,
-        modifier = GlanceModifier.fillMaxSize().padding(iconPadding),
+        modifier =
+          GlanceModifier.fillMaxSize()
+            .padding(horizontal = iconPadding, vertical = iconVerticalPadding),
       )
       if (badgeText != null) {
         Text(
