@@ -83,15 +83,6 @@ class MainPage extends StatelessWidget {
       ),
     );
 
-    final fabChild = _MainPageFABButton();
-    late final settingsFabChild = ObxO(
-      rx: SettingsSearchController.inst.canShowSearch,
-      builder: (context, isActive) => NamidaFABButton(
-        tooltip: () => isActive ? lang.clear : '${lang.search}: ${lang.settings}',
-        onTap: () => NamidaSettingSearchBar.globalKey.currentState?.toggle(),
-        icon: isActive ? Broken.shield_slash : Broken.shield_search,
-      ),
-    );
     Widget mainChild = Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: PreferredSize(
@@ -216,7 +207,6 @@ class MainPage extends StatelessWidget {
                   return Obx(
                     (context) {
                       final shouldHide = Dimensions.inst.shouldHideFABR;
-                      final shouldShowSettingsFab = Dimensions.inst.shouldShowSettingsFABR;
                       final bottom = _getReactiveBottomFabOffset(context);
                       return AnimatedPositioned(
                         right: 12.0,
@@ -227,7 +217,7 @@ class MainPage extends StatelessWidget {
                           isHorizontal: true,
                           show: !shouldHide,
                           duration: const Duration(milliseconds: 400),
-                          child: shouldShowSettingsFab ? settingsFabChild : fabChild,
+                          child: const _MainPageFABButton(),
                         ),
                       );
                     },
@@ -398,6 +388,10 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
 
   String _tooltip() => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.clear : settings.floatingActionButton.value.toText();
 
+  void _onSettingsTap() => NamidaSettingSearchBar.globalKey.currentState?.toggle();
+
+  String _settingsTooltip() => SettingsSearchController.inst.canShowSearch.value ? lang.clear : '${lang.search}: ${lang.settings}';
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -412,50 +406,61 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         },
       ),
     );
-    return Builder(
-      builder: (context) => ObxO(
-        rx: ScrollSearchController.inst.isGlobalSearchMenuShown,
-        builder: (context, isGlobalSearchMenuShown) => isGlobalSearchMenuShown
-            ? VerticalDragDetector(
-                onUpdate: (details) {
-                  _dragValue += details.delta.dy * 0.02;
-                },
-                onEnd: (details) {
-                  if (_dragValue < -_dragThreshold) {
-                    _onDragUpwards();
-                  } else if (_dragValue > _dragThreshold) {
-                    _onDragDownwards();
-                  }
-                  _dragValue = 0;
-                },
-                onCancel: () => _dragValue = 0,
-                child: ObxO(
-                  rx: SearchSortController.inst.runningSearchesTempCount,
-                  builder: (context, runningSearchesCount) => Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      ObxO(
-                        rx: ScrollSearchController.inst.currentSearchType,
-                        builder: (context, currentSearchType) => NamidaFABButton(
-                          tooltip: _tooltip,
-                          icon: _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
-                          onTap: _onTap,
-                        ),
-                      ),
-                      if (runningSearchesCount > 0) searchProgressWidget,
-                    ],
+    return Obx(
+      (context) {
+        final isSettingsFab = Dimensions.inst.shouldShowSettingsFABR;
+        if (!isSettingsFab && ScrollSearchController.inst.isGlobalSearchMenuShown.valueR) {
+          return VerticalDragDetector(
+            onUpdate: (details) {
+              _dragValue += details.delta.dy * 0.02;
+            },
+            onEnd: (details) {
+              if (_dragValue < -_dragThreshold) {
+                _onDragUpwards();
+              } else if (_dragValue > _dragThreshold) {
+                _onDragDownwards();
+              }
+              _dragValue = 0;
+            },
+            onCancel: () => _dragValue = 0,
+            child: ObxO(
+              rx: SearchSortController.inst.runningSearchesTempCount,
+              builder: (context, runningSearchesCount) => Stack(
+                alignment: Alignment.center,
+                children: [
+                  ObxO(
+                    rx: ScrollSearchController.inst.currentSearchType,
+                    builder: (context, currentSearchType) => NamidaFABButton(
+                      tooltip: _tooltip,
+                      icon: _shouldShowSubmitSearch && currentSearchType == SearchType.youtube ? Broken.search_normal : Broken.shield_slash,
+                      onTap: _onTap,
+                    ),
                   ),
-                ),
-              )
-            : ObxO(
-                rx: settings.floatingActionButton,
-                builder: (context, fabButton) => NamidaFABButton(
-                  tooltip: _tooltip,
-                  onTap: _onTap,
-                  icon: fabButton.toIcon(),
-                ),
+                  if (runningSearchesCount > 0) searchProgressWidget,
+                ],
               ),
-      ),
+            ),
+          );
+        }
+
+        if (isSettingsFab) {
+          final isSettingsSearchActive = SettingsSearchController.inst.canShowSearch.valueR;
+          return NamidaFABButton(
+            tooltip: _settingsTooltip,
+            onTap: _onSettingsTap,
+            icon: isSettingsSearchActive ? Broken.shield_slash : Broken.shield_search,
+            text: isSettingsSearchActive ? null : lang.search,
+            animateText: true,
+          );
+        }
+
+        return NamidaFABButton(
+          tooltip: _tooltip,
+          onTap: _onTap,
+          icon: settings.floatingActionButton.valueR.toIcon(),
+          animateText: true,
+        );
+      },
     );
   }
 }

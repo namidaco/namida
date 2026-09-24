@@ -822,6 +822,7 @@ class NamidaFABButton extends StatelessWidget {
   final bool? enabled;
   final bool big;
   final bool dim;
+  final bool animateText;
 
   const NamidaFABButton({
     super.key,
@@ -833,6 +834,7 @@ class NamidaFABButton extends StatelessWidget {
     this.enabled,
     this.big = false,
     this.dim = false,
+    this.animateText = false,
   });
 
   @override
@@ -847,9 +849,10 @@ class NamidaFABButton extends StatelessWidget {
       fontSizeMultiplier: fontSizeMultiplier,
       icon: icon,
       text: text,
+      animateText: animateText,
       enabled: enabled,
       opaqueBG: true,
-      isMinimumSquared: text == null,
+      isMinimumSquared: text == null || animateText,
       colors: dim ? NamidaButtonColors.dimmed : NamidaButtonColors.fab,
       iconSize: iconSize,
       onTap: onTap,
@@ -908,6 +911,7 @@ class NamidaButton extends StatelessWidget {
   final IconData? secondaryIcon;
   final double? iconSize;
   final String? text;
+  final bool animateText;
   final double fontSizeMultiplier;
   final Color? colorScheme;
   final double? minHeight;
@@ -935,6 +939,7 @@ class NamidaButton extends StatelessWidget {
     this.secondaryIcon,
     this.iconSize = 20.0,
     this.text,
+    this.animateText = false,
     this.fontSizeMultiplier = 1.0,
     this.colorScheme,
     this.minHeight,
@@ -1012,7 +1017,7 @@ class NamidaButton extends StatelessWidget {
       fontSize: fontSizeMultiplier * (dense ? 15.0 : 15.5),
     );
 
-    final textChild = (text == null || text.isEmpty
+    final textChild = (animateText || text == null || text.isEmpty
         ? null
         : Text(
             text,
@@ -1083,6 +1088,15 @@ class NamidaButton extends StatelessWidget {
             mainAxisSize: .min,
             children: [
               ?iconChild,
+              if (animateText)
+                Flexible(
+                  child: _NamidaButtonAnimatedText(
+                    text: text,
+                    style: textStyle,
+                    direction: direction,
+                    hasIcon: iconChild != null,
+                  ),
+                ),
               if (iconChild != null && textChild != null)
                 switch (direction) {
                   Axis.horizontal => const SizedBox(width: 8.0),
@@ -1143,6 +1157,70 @@ class NamidaButton extends StatelessWidget {
     }
 
     return box;
+  }
+}
+
+class _NamidaButtonAnimatedText extends StatefulWidget {
+  final String? text;
+  final TextStyle? style;
+  final Axis direction;
+  final bool hasIcon;
+
+  const _NamidaButtonAnimatedText({
+    required this.text,
+    required this.style,
+    required this.direction,
+    required this.hasIcon,
+  });
+
+  @override
+  State<_NamidaButtonAnimatedText> createState() => _NamidaButtonAnimatedTextState();
+}
+
+class _NamidaButtonAnimatedTextState extends State<_NamidaButtonAnimatedText> {
+  String? _lastShownText;
+
+  void _updateLastShownText() {
+    final text = widget.text;
+    if (text != null && text.isNotEmpty) _lastShownText = text;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _updateLastShownText();
+  }
+
+  @override
+  void didUpdateWidget(covariant _NamidaButtonAnimatedText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateLastShownText();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = widget.text;
+    final lastShownText = _lastShownText;
+    final isHorizontal = widget.direction == Axis.horizontal;
+    return ClipRect(
+      child: AnimatedShow(
+        show: text != null && text.isNotEmpty,
+        isHorizontal: isHorizontal,
+        duration: const Duration(milliseconds: 400),
+        alignment: isHorizontal ? AlignmentDirectional.centerStart : Alignment.topCenter,
+        child: lastShownText == null
+            ? const SizedBox()
+            : Padding(
+                padding: isHorizontal ? EdgeInsetsDirectional.only(start: widget.hasIcon ? 8.0 : 0.0, end: 6.0) : EdgeInsets.only(top: widget.hasIcon ? 2.0 : 0.0),
+                child: Text(
+                  lastShownText,
+                  style: widget.style,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+      ),
+    );
   }
 }
 
