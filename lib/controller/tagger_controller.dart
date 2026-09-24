@@ -95,10 +95,12 @@ class NamidaTaggerController {
     );
   }
 
-  /// [commentToInsert] is applicable for first track only
+  /// [commentToInsert] is applicable for first track only.
+  /// [editedTagsPerTrack] are merged over [editedTags] for their track.
   Future<void> updateTracksMetadata({
     required List<Track> tracks,
     required Map<TagField, String> editedTags,
+    Map<Track, Map<TagField, String>>? editedTagsPerTrack,
     String imagePath = '',
     String commentToInsert = '',
     void Function(bool didUpdate, String? error, Track track)? onEdit,
@@ -131,52 +133,9 @@ class NamidaTaggerController {
             comment: oldComment.isEmpty ? commentToInsert : '$commentToInsert\n$oldComment',
             artwork: FArtwork(),
           )
-        : FTags.edit(
-            path: '',
-            artwork: FArtwork(file: imageFile),
-            title: editedTags[TagField.title],
-            album: editedTags[TagField.album],
-            artist: editedTags[TagField.artist],
-            albumArtist: editedTags[TagField.albumArtist],
-            composer: editedTags[TagField.composer],
-            genre: editedTags[TagField.genre],
-            style: editedTags[TagField.style],
-            mood: editedTags[TagField.mood],
-            trackNumber: editedTags[TagField.trackNumber],
-            discNumber: editedTags[TagField.discNumber],
-            year: editedTags[TagField.year],
-            comment: editedTags[TagField.comment],
-            description: editedTags[TagField.description],
-            synopsis: editedTags[TagField.synopsis],
-            lyrics: editedTags[TagField.lyrics],
-            remixer: editedTags[TagField.remixer],
-            trackTotal: editedTags[TagField.trackTotal],
-            discTotal: editedTags[TagField.discTotal],
-            lyricist: editedTags[TagField.lyricist],
-            language: editedTags[TagField.language],
-            recordLabel: editedTags[TagField.recordLabel],
-            releaseType: editedTags[TagField.releaseType],
-            country: editedTags[TagField.country],
-            tags: editedTags[TagField.tags],
-            ratingPercentage: () {
-              final ratingString = editedTags[TagField.rating];
-              if (ratingString != null) {
-                return _ratingStringToPercentage(ratingString);
-              }
-              return null;
-            }(),
-            sortInfo: FTagsSortInfo.orNull(
-              title: editedTags[TagField.titleSort],
-              album: editedTags[TagField.albumSort],
-              albumArtist: editedTags[TagField.albumArtistSort],
-              artist: editedTags[TagField.artistSort],
-              composer: editedTags[TagField.composerSort],
-            ),
-          );
+        : _editedTagsToFTags(editedTags, imageFile);
 
     const kStatsFields = {TagField.mood, TagField.tags, TagField.rating};
-    final shouldEditStats = kStatsFields.any((f) => editedTags[f] != null);
-    late final wantedToEditNonStatsTags = editedTags.keys.any((et) => kStatsFields.contains(et));
 
     await _extractor.initializeForWrite();
     final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
@@ -184,16 +143,22 @@ class NamidaTaggerController {
     for (final track in tracks) {
       String? error;
 
+      final trackOnlyEditedTags = editedTagsPerTrack?[track];
+      final trackEditedTags = trackOnlyEditedTags == null ? editedTags : {...editedTags, ...trackOnlyEditedTags};
+      final trackNewTags = trackOnlyEditedTags == null ? newTags : _editedTagsToFTags(trackEditedTags, imageFile);
+      final shouldEditStats = kStatsFields.any((f) => trackEditedTags[f] != null);
+
       if (shouldEditStats && track.isNetwork) {
         final newStats = await Indexer.inst.updateTrackStats(
-          tracks.first,
-          ratingString: editedTags[TagField.rating],
-          moodsString: editedTags[TagField.mood],
-          tagsString: editedTags[TagField.tags],
+          track,
+          ratingString: trackEditedTags[TagField.rating],
+          moodsString: trackEditedTags[TagField.mood],
+          tagsString: trackEditedTags[TagField.tags],
         );
         onStatsEdit?.call(newStats);
 
         if (onEdit != null) {
+          final wantedToEditNonStatsTags = trackEditedTags.keys.any((et) => !kStatsFields.contains(et));
           if (wantedToEditNonStatsTags) {
             error = 'Not Supported for network files';
             onEdit(false, error, track);
@@ -222,7 +187,7 @@ class NamidaTaggerController {
             // -- 1. try tagger
             error = await _extractor.writeTags(
               path: track.path,
-              newTags: newTags,
+              newTags: trackNewTags,
               commentToInsert: commentToInsert,
               oldComment: oldComment,
               displayFFmpegFallbackWarning: displayFFmpegFallbackWarning,
@@ -230,7 +195,7 @@ class NamidaTaggerController {
 
             if (error == null) {
               final trExt = track.toTrackExt();
-              final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+              final newTrExt = trExt.copyWithTag(tag: trackNewTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
               tracksMap[track] = newTrExt;
               if (imageFile != null) await imageFile.copy(newTrExt.pathToImage);
             }
@@ -240,10 +205,10 @@ class NamidaTaggerController {
             // -- update app-related stats even if tags editing failed.
             if (shouldEditStats) {
               final newStats = await Indexer.inst.updateTrackStats(
-                tracks.first,
-                ratingString: editedTags[TagField.rating],
-                moodsString: editedTags[TagField.mood],
-                tagsString: editedTags[TagField.tags],
+                track,
+                ratingString: trackEditedTags[TagField.rating],
+                moodsString: trackEditedTags[TagField.mood],
+                tagsString: trackEditedTags[TagField.tags],
               );
               onStatsEdit?.call(newStats);
             }
@@ -263,6 +228,51 @@ class NamidaTaggerController {
         artworkWasEdited: imageFile != null,
       );
     }
+  }
+
+  FTags _editedTagsToFTags(Map<TagField, String> editedTags, File? imageFile) {
+    return FTags.edit(
+      path: '',
+      artwork: FArtwork(file: imageFile),
+      title: editedTags[TagField.title],
+      album: editedTags[TagField.album],
+      artist: editedTags[TagField.artist],
+      albumArtist: editedTags[TagField.albumArtist],
+      composer: editedTags[TagField.composer],
+      genre: editedTags[TagField.genre],
+      style: editedTags[TagField.style],
+      mood: editedTags[TagField.mood],
+      trackNumber: editedTags[TagField.trackNumber],
+      discNumber: editedTags[TagField.discNumber],
+      year: editedTags[TagField.year],
+      comment: editedTags[TagField.comment],
+      description: editedTags[TagField.description],
+      synopsis: editedTags[TagField.synopsis],
+      lyrics: editedTags[TagField.lyrics],
+      remixer: editedTags[TagField.remixer],
+      trackTotal: editedTags[TagField.trackTotal],
+      discTotal: editedTags[TagField.discTotal],
+      lyricist: editedTags[TagField.lyricist],
+      language: editedTags[TagField.language],
+      recordLabel: editedTags[TagField.recordLabel],
+      releaseType: editedTags[TagField.releaseType],
+      country: editedTags[TagField.country],
+      tags: editedTags[TagField.tags],
+      ratingPercentage: () {
+        final ratingString = editedTags[TagField.rating];
+        if (ratingString != null) {
+          return _ratingStringToPercentage(ratingString);
+        }
+        return null;
+      }(),
+      sortInfo: FTagsSortInfo.orNull(
+        title: editedTags[TagField.titleSort],
+        album: editedTags[TagField.albumSort],
+        albumArtist: editedTags[TagField.albumArtistSort],
+        artist: editedTags[TagField.artistSort],
+        composer: editedTags[TagField.composerSort],
+      ),
+    );
   }
 
   double? _ratingStringToPercentage(String ratingString) {

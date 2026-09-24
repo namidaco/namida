@@ -1005,7 +1005,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
             _tempFilterForTypeMap[_selectedRule?.type] = filter;
             NamidaNavigator.inst.popMenu();
           },
-          child: _FilterInfoRow(
+          child: SmartPlaylistFilterInfoRow(
             filter: filter,
           ),
         ),
@@ -1047,7 +1047,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                 title: lang.filterType,
                 trailing: NamidaPopupWrapper(
                   children: _getFilterTypeChildren,
-                  child: _FilterInfoRow(
+                  child: SmartPlaylistFilterInfoRow(
                     filter: selectedRule?.filter,
                   ),
                 ),
@@ -1193,9 +1193,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
   }
 }
 
-class _FilterInfoRow extends StatelessWidget {
+class SmartPlaylistFilterInfoRow extends StatelessWidget {
   final SmartPlaylistRuleFilter? filter;
-  const _FilterInfoRow({required this.filter});
+  const SmartPlaylistFilterInfoRow({super.key, required this.filter});
 
   @override
   Widget build(BuildContext context) {

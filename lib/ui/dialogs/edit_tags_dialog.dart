@@ -14,6 +14,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/text_suggestions_provider.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -26,6 +27,8 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
@@ -42,12 +45,12 @@ final _editingInProgress = <String, bool>{}.obs;
 ///
 /// SD Card editing on [Android <= 10] requires SAF (Storage Access Framework),
 /// supported in `TagsExtractor.executeWriteWithSafFallback`.
-Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorScheme, {bool instantEditArtwork = false}) async {
+Future<void> showEditTracksTagsDialog(List<PhysicalMedia> tracks, Color? colorScheme, {bool instantEditArtwork = false, bool isAlbum = false}) async {
   if (tracks.isEmpty) return;
   if (tracks.length == 1) {
     _editSingleTrackTagsDialog(tracks.first, colorScheme, instantEditArtwork: instantEditArtwork);
   } else {
-    _editMultipleTracksTags(tracks.uniqued(), instantEditArtwork: instantEditArtwork);
+    _editMultipleTracksTags(tracks.uniqued(), instantEditArtwork: instantEditArtwork, isAlbum: isAlbum);
   }
 }
 
@@ -608,7 +611,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
   );
 }
 
-Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instantEditArtwork = false}) async {
+Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bool instantEditArtwork, required bool isAlbum}) async {
   if (!await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE)) return;
 
   final tracksGoingToBeEditedRx = <PhysicalMedia, bool>{for (final t in tracksPre) t: true}.obs;
@@ -664,55 +667,50 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
     ],
   );
 
+  List<PhysicalMedia> getSelectedTracks() => [
+    for (final e in tracksGoingToBeEditedRx.value.entries)
+      if (e.value) e.key,
+  ];
+
   final canEditTags = false.obs;
   final currentImagePath = ''.obs;
+  final autoTrackNumbersRx = false.obs;
+  final showMoreFieldsRx = false.obs;
 
-  final tagsControllers = <TagField, TextEditingController>{};
   final editedTags = <TagField, String>{};
   final hasEmptyDumbValues = false.obs;
 
-  final availableTagsToEdit = <TagField>[
-    TagField.album,
-    TagField.artist,
-    TagField.genre,
-    TagField.style,
-    TagField.mood,
-    TagField.year,
-    TagField.comment,
-    TagField.description,
-    TagField.synopsis,
-    TagField.albumArtist,
-    TagField.composer,
-    TagField.trackTotal,
-    TagField.discNumber,
-    TagField.discTotal,
-    TagField.tags,
-    TagField.rating,
-    TagField.mood,
-  ];
-
-  /// creating controllers
-  for (var at in availableTagsToEdit) {
-    tagsControllers[at] = TextEditingController();
-  }
-  void checkEmptyValues() {
+  void onFieldEdit(TagField tag, String? value) {
+    value == null ? editedTags.remove(tag) : editedTags[tag] = value;
     hasEmptyDumbValues.value = editedTags.values.any((element) => element.cleanUpForComparison == '');
+    canEditTags.value = true;
   }
+
+  final tracksExtended = tracksPre.map((e) => e.toTrackExt()).toList();
+  final fieldsToEdit = <TagField>{
+    ...settings.tagFieldsToEdit.value.where((f) => f.multiEditVisibility != _MultiEditFieldVisibility.hidden),
+    ...TagField.values.where((f) => f.multiEditVisibility != _MultiEditFieldVisibility.hidden),
+  };
+  final multiFields = fieldsToEdit.map((f) => _MultiTagField.compute(f, tracksExtended, onFieldEdit)).toList();
+  final visibleFields = <_MultiTagField>[];
+  final collapsedFields = <_MultiTagField>[];
+  for (final f in multiFields) {
+    (f.isEmptyForAll && f.tag.multiEditVisibility == _MultiEditFieldVisibility.whenHasValues ? collapsedFields : visibleFields).add(f);
+  }
+
+  final statsEditor = TrackStatsEditController(tracksPre);
+  statsEditor.addChangesListener(() => canEditTags.value = true);
+
+  _MultiTracksEditPlan buildPlan() => _MultiTracksEditPlan.build(
+    selectedTracks: getSelectedTracks(),
+    editedTags: editedTags,
+    fields: multiFields,
+    statsEditor: statsEditor,
+    autoTrackNumbers: autoTrackNumbersRx.value,
+    imagePath: currentImagePath.value,
+  );
 
   final suggestionsProvider = TextSuggestionsProvider();
-
-  Widget getTagTextField(TagField tag) {
-    return _TagTextField(
-      tag: tag,
-      controller: tagsControllers[tag]!,
-      suggestionsProvider: suggestionsProvider,
-      onChanged: (value) {
-        editedTags[tag] = value;
-        checkEmptyValues();
-        canEditTags.value = true;
-      },
-    );
-  }
 
   final formKey = GlobalKey<FormState>();
 
@@ -737,9 +735,12 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
       tracksGoingToBeEditedRx.close();
       canEditTags.close();
       currentImagePath.close();
-      for (final c in tagsControllers.values) {
-        c.dispose();
+      autoTrackNumbersRx.close();
+      showMoreFieldsRx.close();
+      for (final f in multiFields) {
+        f.dispose();
       }
+      statsEditor.dispose();
       hasEmptyDumbValues.close();
     },
     scale: 0.94,
@@ -771,9 +772,6 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                 onTap: () {
                   if (formKey.currentState!.validate() == false) return;
 
-                  for (final k in tracksGoingToBeEditedRx.value.keys) {
-                    _editingInProgress[k.path] = true;
-                  }
                   NamidaNavigator.inst.navigateDialog(
                     dialog: CustomBlurryDialog(
                       title: lang.note,
@@ -791,6 +789,12 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                           text: lang.confirm,
                           onTap: () async {
                             NamidaNavigator.inst.closeDialog();
+
+                            final plan = buildPlan();
+                            final tracksToEdit = plan.tracksToEdit;
+                            for (final tr in tracksToEdit) {
+                              _editingInProgress[tr.path] = true;
+                            }
 
                             final successfullEdits = 0.obs;
                             final RxList<Track> failedEditsTracks = <Track>[].obs;
@@ -896,9 +900,10 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                             String? errorMsg;
                             await NamidaTaggerController.inst
                                 .updateTracksMetadata(
-                                  tracks: tracksGoingToBeEditedRx.value.keys.toList(),
-                                  editedTags: editedTags,
-                                  imagePath: currentImagePath.value,
+                                  tracks: tracksToEdit,
+                                  editedTags: plan.editedTags,
+                                  editedTagsPerTrack: plan.editedTagsPerTrack,
+                                  imagePath: plan.imagePath,
                                   onEdit: (didUpdate, error, track) {
                                     if (didUpdate) {
                                       successfullEdits.value++;
@@ -924,13 +929,25 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                             finishedEditing.value = true;
                             canEditTags.value = false;
 
-                            for (final k in tracksGoingToBeEditedRx.value.keys) {
-                              _editingInProgress[k.path] = false;
+                            for (final tr in tracksToEdit) {
+                              _editingInProgress[tr.path] = false;
                             }
                           },
                         ),
                       ],
-                      child: toBeEditedTracksColumn,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ObxO(
+                            rx: tracksGoingToBeEditedRx,
+                            builder: (context, _) => _MultiTracksEditSummary(
+                              entries: buildPlan().summary,
+                            ),
+                          ),
+                          toBeEditedTracksColumn,
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -964,120 +981,153 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       LayoutWidthProvider(
-                        builder: (context, maxWidth) => SizedBox(
-                          height: namida.height * 0.7,
-                          width: maxWidth,
-                          child: SuperSmoothListView(
-                            padding: EdgeInsets.only(bottom: (namida.viewInsets?.bottom ?? 0) * 0.6),
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Stack(
-                                    alignment: Alignment.bottomRight,
-                                    children: [
-                                      Obx(
-                                        (context) => currentImagePath.valueR != ''
-                                            ? ArtworkWidget(
-                                                key: Key(currentImagePath.valueR),
-                                                extractInternally: false,
-                                                fadeMilliSeconds: 0,
-                                                thumbnailSize: maxWidth * 0.36,
-                                                path: currentImagePath.valueR,
-                                              )
-                                            : MultiArtworkContainer(
-                                                heroTag: 'edittags_artwork',
-                                                fadeMilliSeconds: 0,
-                                                size: maxWidth * 0.36,
-                                                tracks: tracksGoingToBeEdited.toImageTracks(),
-                                                fallbackToFolderCover: false,
-                                                onTopWidget: tracksGoingToBeEdited.length > 3
-                                                    ? Positioned(
-                                                        right: 0,
-                                                        bottom: 0,
-                                                        child: NamidaBlurryContainer(
-                                                          width: maxWidth / 6.2,
-                                                          height: maxWidth / 6.2,
-                                                          borderRadius: BorderRadius.zero,
-                                                          child: Center(
-                                                            child: Text(
-                                                              "+${tracksGoingToBeEdited.length - 3}",
-                                                              style: namida.textTheme.displayLarge,
+                        builder: (context, maxWidth) {
+                          final imageWidth = maxWidth * 0.36;
+                          final innerImageWidth = (imageWidth / 2) - 3.0;
+                          return SizedBox(
+                            height: namida.height * 0.7,
+                            width: maxWidth,
+                            child: SuperSmoothListView(
+                              padding: EdgeInsets.only(bottom: (namida.viewInsets?.bottom ?? 0) * 0.6),
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.bottomRight,
+                                      children: [
+                                        Obx(
+                                          (context) => currentImagePath.valueR != ''
+                                              ? ArtworkWidget(
+                                                  key: Key(currentImagePath.valueR),
+                                                  extractInternally: false,
+                                                  fadeMilliSeconds: 0,
+                                                  thumbnailSize: imageWidth,
+                                                  path: currentImagePath.valueR,
+                                                )
+                                              : MultiArtworkContainer(
+                                                  heroTag: 'edittags_artwork',
+                                                  fadeMilliSeconds: 0,
+                                                  size: imageWidth,
+                                                  tracks: tracksGoingToBeEdited.toImageTracks(),
+                                                  fallbackToFolderCover: false,
+                                                  onTopWidget: tracksGoingToBeEdited.length > 3
+                                                      ? Positioned(
+                                                          right: 0,
+                                                          bottom: 0,
+                                                          child: NamidaBlurryContainer(
+                                                            width: innerImageWidth,
+                                                            height: innerImageWidth,
+                                                            borderRadius: BorderRadius.zero,
+                                                            child: Center(
+                                                              child: Text(
+                                                                "+${tracksGoingToBeEdited.length - 3}",
+                                                                style: namida.textTheme.displayLarge,
+                                                              ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      )
-                                                    : null,
-                                              ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(
-                                    width: 12.0,
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.max,
-                                      children: [
-                                        const SizedBox(
-                                          height: 8.0,
-                                        ),
-                                        SizedBox(
-                                          width: namida.width,
-                                          child: NamidaButton(
-                                            onTap: () {
-                                              NamidaNavigator.inst.navigateDialog(
-                                                dialog: CustomBlurryDialog(
-                                                  title: lang.note,
-                                                  horizontalInset: 42.0,
-                                                  verticalInset: 42.0,
-                                                  contentPadding: EdgeInsets.zero,
-                                                  actions: [
-                                                    NamidaButton(
-                                                      text: lang.confirm,
-                                                      onTap: NamidaNavigator.inst.closeDialog,
-                                                    ),
-                                                  ],
-                                                  child: toBeEditedTracksColumn,
+                                                        )
+                                                      : null,
                                                 ),
-                                              );
-                                            },
-                                            text: tracksGoingToBeEdited.length.displayTrackKeyword,
-                                          ),
-                                        ),
-                                        const SizedBox(
-                                          height: 8.0,
-                                        ),
-                                        SizedBox(
-                                          width: namida.width,
-                                          child: NamidaButton(
-                                            text: lang.editArtwork,
-                                            onTap: onArtworkEditTap,
-                                          ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(
-                                height: 12.0,
-                              ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
-                              ...availableTagsToEdit.map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.only(top: 10.0),
-                                  child: getTagTextField(e),
+                                    const SizedBox(
+                                      width: 12.0,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.max,
+                                        children: [
+                                          const SizedBox(
+                                            height: 8.0,
+                                          ),
+                                          SizedBox(
+                                            width: namida.width,
+                                            child: NamidaButton(
+                                              onTap: () {
+                                                NamidaNavigator.inst.navigateDialog(
+                                                  dialog: CustomBlurryDialog(
+                                                    title: lang.note,
+                                                    horizontalInset: 42.0,
+                                                    verticalInset: 42.0,
+                                                    contentPadding: EdgeInsets.zero,
+                                                    actions: [
+                                                      NamidaButton(
+                                                        text: lang.confirm,
+                                                        onTap: NamidaNavigator.inst.closeDialog,
+                                                      ),
+                                                    ],
+                                                    child: toBeEditedTracksColumn,
+                                                  ),
+                                                );
+                                              },
+                                              text: tracksGoingToBeEdited.length.displayTrackKeyword,
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            height: 8.0,
+                                          ),
+                                          SizedBox(
+                                            width: namida.width,
+                                            child: NamidaButton(
+                                              text: lang.editArtwork,
+                                              onTap: onArtworkEditTap,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(
-                                height: 12.0,
-                              ),
-                            ],
-                          ),
-                        ),
+                                const SizedBox(
+                                  height: 12.0,
+                                ),
+                                if (isAlbum)
+                                  ObxO(
+                                    rx: autoTrackNumbersRx,
+                                    builder: (context, autoTrackNumbers) => CustomSwitchListTile(
+                                      icon: TagField.trackNumber.toIcon(),
+                                      title: lang.autoTrackNumbers,
+                                      subtitle: lang.autoTrackNumbersSubtitle,
+                                      value: autoTrackNumbers,
+                                      onChanged: (isTrue) {
+                                        autoTrackNumbersRx.value = !isTrue;
+                                        canEditTags.value = true;
+                                      },
+                                    ),
+                                  ),
+                                const SizedBox(
+                                  height: 8.0,
+                                ),
+                                ...visibleFields.map(
+                                  (f) => Padding(
+                                    padding: const EdgeInsets.only(top: 10.0),
+                                    child: _MultiTagTextField(
+                                      field: f,
+                                      suggestionsProvider: suggestionsProvider,
+                                    ),
+                                  ),
+                                ),
+                                if (collapsedFields.isNotEmpty)
+                                  _MultiTagMoreFields(
+                                    fields: collapsedFields,
+                                    suggestionsProvider: suggestionsProvider,
+                                    expandedRx: showMoreFieldsRx,
+                                  ),
+                                const SizedBox(
+                                  height: 12.0,
+                                ),
+                                TrackStatsEditSections(
+                                  controller: statsEditor,
+                                ),
+                                const SizedBox(
+                                  height: 12.0,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(
                         height: 12.0,
@@ -1117,6 +1167,414 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {bool instan
   );
 }
 
+class _MultiTagField {
+  final TagField tag;
+  final String? commonValue;
+  final bool hasMultipleValues;
+  final List<TrackExtended> _tracks;
+  final void Function(TagField tag, String? value) _onEdit;
+  final TextEditingController controller;
+  final clearForAllRx = false.obs;
+  final replaceRuleRx = Rxn<_FindReplaceRule>();
+
+  _MultiTagField._(this.tag, this.commonValue, this.hasMultipleValues, this._tracks, this._onEdit) : controller = TextEditingController(text: commonValue);
+
+  factory _MultiTagField.compute(TagField tag, List<TrackExtended> tracks, void Function(TagField tag, String? value) onEdit) {
+    String? commonValue;
+    bool hasMultipleValues = false;
+    for (final trExt in tracks) {
+      final value = tag.libraryValueOf(trExt);
+      if (value == null) break;
+      if (commonValue == null) {
+        commonValue = value;
+      } else if (value != commonValue) {
+        commonValue = null;
+        hasMultipleValues = true;
+        break;
+      }
+    }
+    return _MultiTagField._(tag, commonValue, hasMultipleValues, tracks, onEdit);
+  }
+
+  bool get isUnknown => commonValue == null && !hasMultipleValues;
+
+  bool get isEmptyForAll => !hasMultipleValues && (commonValue?.isEmpty ?? true);
+
+  bool get isChanged => controller.text != (commonValue ?? '') || clearForAllRx.value || replaceRuleRx.value != null;
+
+  bool get isClearing => clearForAllRx.value || (controller.text.isEmpty && commonValue?.isNotEmpty == true);
+
+  String? get originalValueText {
+    if (hasMultipleValues) return '<${lang.multipleValues}>';
+    final value = commonValue;
+    if (value == null) return null;
+    return value.isEmpty ? '<${lang.emptyValue}>' : value;
+  }
+
+  String hintTextFor({required bool clearForAll, required _FindReplaceRule? replaceRule}) {
+    if (replaceRule != null) return replaceRule.description;
+    if (clearForAll) return '<${lang.emptyValue}>';
+    if (hasMultipleValues) return '<${lang.multipleValues}>';
+    return commonValue?.isNotEmpty == true ? '<${lang.emptyValue}>' : '';
+  }
+
+  String describeEdit(String newValue) {
+    final newText = newValue.isEmpty ? '<${lang.emptyValue}>' : newValue;
+    final oldText = originalValueText;
+    return oldText == null ? newText : '$oldText → $newText';
+  }
+
+  late final Map<String, int> valuesCounts = _computeValuesCounts();
+
+  late final List<MapEntry<String, int>> nonEmptyValuesByCount = valuesCounts.entries.where((e) => e.key.isNotEmpty).toList()..sort((a, b) => b.value.compareTo(a.value));
+
+  Map<String, int> _computeValuesCounts() {
+    final counts = <String, int>{};
+    for (final trExt in _tracks) {
+      final value = tag.libraryValueOf(trExt);
+      if (value != null) counts.update(value, (c) => c + 1, ifAbsent: () => 1);
+    }
+    return counts;
+  }
+
+  void onChanged(String text) {
+    clearForAllRx.value = false;
+    replaceRuleRx.value = null;
+    final initialText = commonValue ?? '';
+    _onEdit(tag, text == initialText ? null : text);
+  }
+
+  void apply(String value) {
+    controller.text = value;
+    onChanged(value);
+  }
+
+  void clearForAll() {
+    controller.clear();
+    clearForAllRx.value = commonValue == null;
+    replaceRuleRx.value = null;
+    _onEdit(tag, commonValue == '' ? null : '');
+  }
+
+  void setReplaceRule(_FindReplaceRule rule) {
+    controller.clear();
+    clearForAllRx.value = false;
+    replaceRuleRx.value = rule;
+    _onEdit(tag, null);
+  }
+
+  void undo() {
+    controller.text = commonValue ?? '';
+    clearForAllRx.value = false;
+    replaceRuleRx.value = null;
+    _onEdit(tag, null);
+  }
+
+  void dispose() {
+    controller.dispose();
+    clearForAllRx.close();
+    replaceRuleRx.close();
+  }
+}
+
+class _MultiTracksEditPlan {
+  final List<PhysicalMedia> tracksToEdit;
+  final Map<TagField, String> editedTags;
+  final Map<Track, Map<TagField, String>> editedTagsPerTrack;
+  final String imagePath;
+  final List<_MultiTracksEditSummaryEntry> summary;
+
+  const _MultiTracksEditPlan._({
+    required this.tracksToEdit,
+    required this.editedTags,
+    required this.editedTagsPerTrack,
+    required this.imagePath,
+    required this.summary,
+  });
+
+  factory _MultiTracksEditPlan.build({
+    required List<PhysicalMedia> selectedTracks,
+    required Map<TagField, String> editedTags,
+    required List<_MultiTagField> fields,
+    required TrackStatsEditController statsEditor,
+    required bool autoTrackNumbers,
+    required String imagePath,
+  }) {
+    final summary = <_MultiTracksEditSummaryEntry>[];
+    final editedTagsPerTrack = statsEditor.buildEditedTagsPerTrack(selectedTracks);
+    late final selectedTracksExt = selectedTracks.map((e) => e.toTrackExt()).toList();
+
+    if (imagePath.isNotEmpty) {
+      summary.add(_MultiTracksEditSummaryEntry(icon: Broken.gallery_edit, title: lang.artwork, subtitle: lang.changed));
+    }
+
+    for (final field in fields) {
+      final tag = field.tag;
+      final editedValue = editedTags[tag];
+      if (editedValue != null) {
+        summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: field.describeEdit(editedValue)));
+        continue;
+      }
+      final replaceRule = field.replaceRuleRx.value;
+      if (replaceRule == null) continue;
+      int changedCount = 0;
+      for (int i = 0; i < selectedTracks.length; i++) {
+        final oldValue = tag.libraryValueOf(selectedTracksExt[i]);
+        if (oldValue == null) continue;
+        final newValue = replaceRule.apply(oldValue);
+        if (newValue == oldValue) continue;
+        (editedTagsPerTrack[selectedTracks[i]] ??= {})[tag] = newValue;
+        changedCount++;
+      }
+      summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: replaceRule.description, tracksCount: changedCount));
+    }
+
+    if (autoTrackNumbers) {
+      final groupByDisc = !editedTags.containsKey(TagField.discNumber);
+      final discTotals = <int, int>{};
+      for (final trExt in selectedTracksExt) {
+        discTotals.update(groupByDisc ? trExt.discNo : 0, (c) => c + 1, ifAbsent: () => 1);
+      }
+      final discCounters = <int, int>{};
+      int changedCount = 0;
+      for (int i = 0; i < selectedTracks.length; i++) {
+        final trExt = selectedTracksExt[i];
+        final disc = groupByDisc ? trExt.discNo : 0;
+        final number = discCounters.update(disc, (c) => c + 1, ifAbsent: () => 1);
+        final total = discTotals[disc]!;
+        if (trExt.trackNo == number && trExt.trackTo == total) continue;
+        final trackEditedTags = editedTagsPerTrack[selectedTracks[i]] ??= {};
+        trackEditedTags[TagField.trackNumber] = number.toString();
+        trackEditedTags[TagField.trackTotal] = total.toString();
+        changedCount++;
+      }
+      summary.add(
+        _MultiTracksEditSummaryEntry(
+          icon: TagField.trackNumber.toIcon(),
+          title: lang.autoTrackNumbers,
+          subtitle: discTotals.values.map((total) => '1 → $total').join(', '),
+          tracksCount: changedCount,
+        ),
+      );
+    }
+
+    for (final (tag, changesText) in [
+      (TagField.mood, statsEditor.moodsChangesText),
+      (TagField.tags, statsEditor.tagsChangesText),
+      (TagField.rating, statsEditor.ratingChangesText),
+    ]) {
+      if (changesText == null) continue;
+      final changedCount = editedTagsPerTrack.values.where((e) => e.containsKey(tag)).length;
+      summary.add(_MultiTracksEditSummaryEntry(icon: tag.toIcon(), title: tag.toText(), subtitle: changesText, tracksCount: changedCount));
+    }
+
+    final hasEditsForAll = editedTags.isNotEmpty || imagePath.isNotEmpty;
+    return _MultiTracksEditPlan._(
+      tracksToEdit: hasEditsForAll ? selectedTracks : selectedTracks.where(editedTagsPerTrack.containsKey).toList(),
+      editedTags: editedTags,
+      editedTagsPerTrack: editedTagsPerTrack,
+      imagePath: imagePath,
+      summary: summary,
+    );
+  }
+}
+
+void _showFindReplaceDialog(_MultiTagField field) {
+  final currentRule = field.replaceRuleRx.value;
+  final filterRx = (currentRule?.filter ?? SmartPlaylistRuleFilterText.contains).obs;
+  final findController = TextEditingController(text: currentRule?.find);
+  final replaceController = TextEditingController(text: currentRule?.replaceWith);
+  final matchCaseRx = (currentRule?.matchCase ?? false).obs;
+  final inputsListenable = Listenable.merge([filterRx, findController, replaceController, matchCaseRx]);
+
+  _FindReplaceRule buildRule() => _FindReplaceRule(
+    filter: filterRx.value,
+    find: findController.text,
+    replaceWith: replaceController.text,
+    matchCase: matchCaseRx.value,
+  );
+
+  void onConfirm() {
+    final rule = buildRule();
+    if (!rule.isValid) return;
+    field.setReplaceRule(rule);
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  NamidaNavigator.inst.navigateDialog(
+    onDisposing: () {
+      filterRx.close();
+      findController.dispose();
+      replaceController.dispose();
+      matchCaseRx.close();
+    },
+    dialog: CustomBlurryDialog(
+      icon: Broken.convert,
+      title: '${lang.findAndReplace} (${field.tag.toText()})',
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.confirm,
+          onTap: onConfirm,
+        ),
+      ],
+      child: ObxO(
+        rx: filterRx,
+        builder: (context, filter) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            NamidaPopupWrapper(
+              children: () => SmartPlaylistRuleFilterText.values.map(
+                (f) => _FindReplaceFilterItem(
+                  filter: f,
+                  selected: f == filter,
+                  onTap: () {
+                    filterRx.value = f;
+                    NamidaNavigator.inst.popMenu();
+                  },
+                ),
+              ),
+              child: CustomListTile(
+                icon: Broken.filter_square,
+                title: lang.filterType,
+                trailing: SmartPlaylistFilterInfoRow(
+                  filter: filter,
+                ),
+              ),
+            ),
+            if (filter.requiresDataField) ...[
+              const SizedBox(
+                height: 12.0,
+              ),
+              CustomTagTextField(
+                key: const ValueKey('find'),
+                controller: findController,
+                hintText: filter.isRegex() ? '(.*)' : '',
+                labelText: lang.find,
+                icon: Broken.search_normal,
+                autofocus: true,
+              ),
+            ],
+            const SizedBox(
+              height: 12.0,
+            ),
+            CustomTagTextField(
+              key: const ValueKey('replace'),
+              controller: replaceController,
+              hintText: filter.isRegex() ? r'$1' : '',
+              labelText: lang.replaceWith,
+              icon: field.tag.toIcon(),
+            ),
+            if (filter.requiresDataField) ...[
+              const SizedBox(
+                height: 6.0,
+              ),
+              ObxO(
+                rx: matchCaseRx,
+                builder: (context, matchCase) => CustomSwitchListTile(
+                  icon: Broken.text,
+                  title: lang.matchCase,
+                  value: matchCase,
+                  onChanged: (isTrue) => matchCaseRx.value = !isTrue,
+                ),
+              ),
+            ],
+            const SizedBox(
+              height: 6.0,
+            ),
+            _FindReplacePreview(
+              field: field,
+              listenable: inputsListenable,
+              buildRule: buildRule,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+class _FindReplaceRule {
+  final SmartPlaylistRuleFilterText filter;
+  final String find;
+  final String replaceWith;
+  final bool matchCase;
+
+  _FindReplaceRule({
+    required this.filter,
+    required this.find,
+    required this.replaceWith,
+    required this.matchCase,
+  });
+
+  static final _groupReferenceRegex = RegExp(r'\$(\d+)');
+
+  late final RegExp? _regex = _buildRegex();
+
+  bool get isValid => !filter.requiresDataField || _regex != null;
+
+  RegExp? _buildRegex() {
+    if (find.isEmpty) return null;
+    final escaped = RegExp.escape(find);
+    final pattern = switch (filter) {
+      SmartPlaylistRuleFilterText.isSame || SmartPlaylistRuleFilterText.isNotSame => '^$escaped\$',
+      SmartPlaylistRuleFilterText.contains || SmartPlaylistRuleFilterText.notContains => escaped,
+      SmartPlaylistRuleFilterText.startsWith => '^$escaped',
+      SmartPlaylistRuleFilterText.endsWith => '$escaped\$',
+      SmartPlaylistRuleFilterText.regexMatch || SmartPlaylistRuleFilterText.regexNotMatch => find,
+      SmartPlaylistRuleFilterText.exists || SmartPlaylistRuleFilterText.missing => null,
+    };
+    if (pattern == null) return null;
+    try {
+      return RegExp(pattern, caseSensitive: matchCase);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  String apply(String value) {
+    final regex = _regex;
+    return switch (filter) {
+      SmartPlaylistRuleFilterText.isSame ||
+      SmartPlaylistRuleFilterText.contains ||
+      SmartPlaylistRuleFilterText.startsWith ||
+      SmartPlaylistRuleFilterText.endsWith => regex == null ? value : value.replaceAll(regex, replaceWith),
+      SmartPlaylistRuleFilterText.regexMatch => regex == null ? value : value.replaceAllMapped(regex, _expandGroupReferences),
+      SmartPlaylistRuleFilterText.isNotSame ||
+      SmartPlaylistRuleFilterText.notContains ||
+      SmartPlaylistRuleFilterText.regexNotMatch => regex == null || regex.hasMatch(value) ? value : replaceWith,
+      SmartPlaylistRuleFilterText.exists => value.isEmpty ? value : replaceWith,
+      SmartPlaylistRuleFilterText.missing => value.isEmpty ? replaceWith : value,
+    };
+  }
+
+  String _expandGroupReferences(Match match) => replaceWith.replaceAllMapped(
+    _groupReferenceRegex,
+    (reference) {
+      final groupIndex = int.parse(reference[1]!);
+      return groupIndex <= match.groupCount ? match[groupIndex] ?? '' : reference[0]!;
+    },
+  );
+
+  String get description => filter.requiresDataField ? '${filter.toText()} "$find" → "$replaceWith"' : '${filter.toText()} → "$replaceWith"';
+}
+
+class _MultiTracksEditSummaryEntry {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final int? tracksCount;
+
+  const _MultiTracksEditSummaryEntry({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.tracksCount,
+  });
+}
+
 class _KeepDatesToggleWidget extends StatelessWidget {
   final Color? colorScheme;
   const _KeepDatesToggleWidget({this.colorScheme});
@@ -1147,12 +1605,18 @@ class _TagTextField extends StatelessWidget {
   final TextEditingController controller;
   final TextSuggestionsProvider suggestionsProvider;
   final void Function(String value) onChanged;
+  final String? hintText;
+  final Widget? suffixIcon;
+  final bool markChanged;
 
   const _TagTextField({
     required this.tag,
     required this.controller,
     required this.suggestionsProvider,
     required this.onChanged,
+    this.hintText,
+    this.suffixIcon,
+    this.markChanged = false,
   });
 
   Widget _buildField(FocusNode? focusNode) {
@@ -1160,8 +1624,10 @@ class _TagTextField extends StatelessWidget {
       controller: controller,
       focusNode: focusNode,
       labelText: tag.toText(),
-      hintText: controller.text,
+      hintText: hintText ?? controller.text,
       icon: tag.toIcon(),
+      suffixIcon: suffixIcon,
+      markChanged: markChanged,
       onChanged: onChanged,
       validator: tag == TagField.rating ? _ratingsValidator : null,
       isNumeric: tag.isNumeric,
@@ -1179,6 +1645,314 @@ class _TagTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       builder: (context, focusNode) => _buildField(focusNode),
+    );
+  }
+}
+
+class _MultiTagTextField extends StatelessWidget {
+  final _MultiTagField field;
+  final TextSuggestionsProvider suggestionsProvider;
+
+  const _MultiTagTextField({
+    required this.field,
+    required this.suggestionsProvider,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final clearForAll = field.clearForAllRx.valueR;
+        final replaceRule = field.replaceRuleRx.valueR;
+        return _TagTextField(
+          tag: field.tag,
+          controller: field.controller,
+          suggestionsProvider: suggestionsProvider,
+          onChanged: field.onChanged,
+          hintText: field.hintTextFor(
+            clearForAll: clearForAll,
+            replaceRule: replaceRule,
+          ),
+          suffixIcon: _MultiTagFieldMenuButton(
+            field: field,
+          ),
+          markChanged: clearForAll || replaceRule != null,
+        );
+      },
+    );
+  }
+}
+
+class _MultiTagMoreFields extends StatelessWidget {
+  final List<_MultiTagField> fields;
+  final TextSuggestionsProvider suggestionsProvider;
+  final Rx<bool> expandedRx;
+
+  const _MultiTagMoreFields({
+    required this.fields,
+    required this.suggestionsProvider,
+    required this.expandedRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: expandedRx,
+      builder: (context, expanded) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          NamidaInkWell(
+            margin: const EdgeInsets.only(top: 10.0),
+            padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+            borderRadius: 12.0,
+            onTap: () => expandedRx.value = !expanded,
+            child: Row(
+              children: [
+                Icon(
+                  expanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                  size: 18.0,
+                ),
+                const SizedBox(
+                  width: 8.0,
+                ),
+                Expanded(
+                  child: Text(
+                    '${lang.more} (${fields.length})',
+                    style: context.textTheme.displayMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (expanded)
+            ...fields.map(
+              (f) => Padding(
+                padding: const EdgeInsets.only(top: 10.0),
+                child: _MultiTagTextField(
+                  field: f,
+                  suggestionsProvider: suggestionsProvider,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FindReplacePreview extends StatelessWidget {
+  final _MultiTagField field;
+  final Listenable listenable;
+  final _FindReplaceRule Function() buildRule;
+
+  const _FindReplacePreview({
+    required this.field,
+    required this.listenable,
+    required this.buildRule,
+  });
+
+  static const _maxExamples = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return ListenableBuilder(
+      listenable: listenable,
+      builder: (context, _) {
+        final rule = buildRule();
+        if (!rule.isValid) {
+          if (rule.find.isEmpty) return const SizedBox();
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              '${lang.error}: Regex',
+              style: textTheme.displayMedium,
+            ),
+          );
+        }
+        int changedCount = 0;
+        final examples = <String>[];
+        for (final e in field.valuesCounts.entries) {
+          final value = e.key;
+          final newValue = rule.apply(value);
+          if (newValue == value) continue;
+          changedCount += e.value;
+          if (examples.length < _maxExamples) examples.add('${value.isEmpty ? '<${lang.emptyValue}>' : value} → $newValue');
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                changedCount.displayTrackKeyword,
+                style: textTheme.displayMedium,
+              ),
+              ...examples.map(
+                (e) => Text(
+                  e,
+                  style: textTheme.displaySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FindReplaceFilterItem extends StatelessWidget {
+  final SmartPlaylistRuleFilterText filter;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _FindReplaceFilterItem({
+    required this.filter,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
+      child: NamidaInkWell(
+        borderRadius: 8.0,
+        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+        bgColor: selected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
+        onTap: onTap,
+        child: SmartPlaylistFilterInfoRow(
+          filter: filter,
+        ),
+      ),
+    );
+  }
+}
+
+class _MultiTracksEditSummary extends StatelessWidget {
+  final List<_MultiTracksEditSummaryEntry> entries;
+
+  const _MultiTracksEditSummary({required this.entries});
+
+  @override
+  Widget build(BuildContext context) {
+    if (entries.isEmpty) return const SizedBox();
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: namida.height * 0.3),
+      child: SuperSmoothListView.builder(
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(horizontal: 6.0),
+        itemCount: entries.length,
+        itemBuilder: (context, index) {
+          final entry = entries[index];
+          final tracksCount = entry.tracksCount;
+          return CustomListTile(
+            icon: entry.icon,
+            title: entry.title,
+            subtitle: entry.subtitle,
+            maxSubtitleLines: 3,
+            trailingText: tracksCount?.displayTrackKeyword,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MultiTagFieldMenuButton extends StatelessWidget {
+  final _MultiTagField field;
+
+  const _MultiTagFieldMenuButton({required this.field});
+
+  static const _maxValuesShown = 50;
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      openOnLongPress: false,
+      childrenDefault: () {
+        final currentText = field.controller.text;
+        final countStyle = context.textTheme.displaySmall;
+        final values = field.hasMultipleValues ? field.nonEmptyValuesByCount : const <MapEntry<String, int>>[];
+        return [
+          NamidaPopupItem(
+            icon: Broken.undo,
+            title: lang.undo,
+            subtitle: field.originalValueText ?? '',
+            enabled: field.isChanged,
+            onTap: field.undo,
+          ),
+          NamidaPopupItem(
+            icon: Broken.eraser,
+            title: lang.clear,
+            subtitle: '<${lang.emptyValue}>',
+            enabled: field.commonValue != '',
+            selected: field.isClearing,
+            onTap: field.clearForAll,
+          ),
+          if (!field.isUnknown)
+            NamidaPopupItem(
+              icon: Broken.convert,
+              title: lang.findAndReplace,
+              subtitle: field.replaceRuleRx.value?.description ?? '',
+              selected: field.replaceRuleRx.value != null,
+              onTap: () => _showFindReplaceDialog(field),
+            ),
+          ...values
+              .take(_maxValuesShown)
+              .map(
+                (e) => NamidaPopupItem(
+                  icon: field.tag.toIcon(),
+                  title: e.key,
+                  titleBuilder: (style) => Text(
+                    e.key,
+                    style: style,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: Text(
+                    '${e.value}',
+                    style: countStyle,
+                  ),
+                  selected: e.key == currentText,
+                  onTap: () => field.apply(e.key),
+                ),
+              ),
+          if (values.length > _maxValuesShown)
+            NamidaPopupItem(
+              icon: Broken.more,
+              title: '+${values.length - _maxValuesShown}',
+              enabled: false,
+              onTap: () {},
+            ),
+        ];
+      },
+      child: Container(
+        color: Colors.transparent,
+        height: 42.0,
+        padding: const EdgeInsets.only(left: 6.0, right: 14.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Broken.arrow_down_2,
+              size: 16.0,
+            ),
+            const SizedBox(
+              width: 8.0,
+            ),
+            Icon(
+              field.tag.toIcon(),
+              size: 18.0,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1202,12 +1976,16 @@ class CustomTagTextField extends StatefulWidget {
   final FocusNode? focusNode;
   final bool autofocus;
   final bool obscureText;
+  final Widget? suffixIcon;
+  final bool markChanged;
 
   const CustomTagTextField({
     super.key,
     required this.controller,
     required this.hintText,
     this.icon,
+    this.suffixIcon,
+    this.markChanged = false,
     this.hintMaxLines = 3,
     this.maxLines,
     this.maxLength,
@@ -1286,12 +2064,12 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onFieldSubmitted,
       decoration: InputDecoration(
-        label: widget.labelText != '' ? Text('${widget.labelText} ${didChange ? '(${lang.changed})' : ''}') : null,
+        label: widget.labelText != '' ? Text('${widget.labelText} ${didChange || widget.markChanged ? '(${lang.changed})' : ''}') : null,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintMaxLines: widget.hintMaxLines,
         contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         errorMaxLines: 3,
-        suffixIcon: Icon(widget.icon, size: 18.0),
+        suffixIcon: widget.suffixIcon ?? Icon(widget.icon, size: 18.0),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRS),
           borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
@@ -1321,4 +2099,74 @@ String? _ratingsValidator(String? value) {
   if (intval == null) return lang.nameContainsBadCharacter;
   if (intval < 0 || intval > 100) return '0-100';
   return null;
+}
+
+extension _TagFieldMultiEdit on TagField {
+  _MultiEditFieldVisibility get multiEditVisibility => switch (this) {
+    TagField.artist ||
+    TagField.album ||
+    TagField.albumArtist ||
+    TagField.composer ||
+    TagField.genre ||
+    TagField.style ||
+    TagField.year ||
+    TagField.discNumber ||
+    TagField.comment ||
+    TagField.description ||
+    TagField.synopsis ||
+    TagField.trackTotal ||
+    TagField.discTotal => _MultiEditFieldVisibility.always,
+    TagField.remixer ||
+    TagField.lyricist ||
+    TagField.language ||
+    TagField.recordLabel ||
+    TagField.releaseType ||
+    TagField.country ||
+    TagField.albumSort ||
+    TagField.albumArtistSort ||
+    TagField.artistSort ||
+    TagField.composerSort => _MultiEditFieldVisibility.whenHasValues,
+    TagField.title || TagField.trackNumber || TagField.lyrics || TagField.titleSort => _MultiEditFieldVisibility.hidden,
+    TagField.mood || TagField.tags || TagField.rating => _MultiEditFieldVisibility.hidden, // -- edited by TrackStatsEditSections
+  };
+
+  String? libraryValueOf(TrackExtended trExt) => switch (this) {
+    TagField.title => trExt.title,
+    TagField.artist => _emptyIfUnknown(trExt.originalArtist, UnknownTags.ARTIST),
+    TagField.album => _emptyIfUnknown(trExt.originalAlbum, UnknownTags.ALBUM),
+    TagField.albumArtist => _emptyIfUnknown(trExt.albumArtist, UnknownTags.ALBUMARTIST),
+    TagField.composer => _emptyIfUnknown(trExt.composer, UnknownTags.COMPOSER),
+    TagField.genre => _emptyIfUnknown(trExt.originalGenre, UnknownTags.GENRE),
+    TagField.style => _emptyIfUnknown(trExt.originalStyle, UnknownTags.STYLE),
+    TagField.mood => _emptyIfUnknown(trExt.originalMood, UnknownTags.MOOD),
+    TagField.year => trExt.yearText.isNotEmpty && trExt.yearText != '0' ? trExt.yearText : _emptyIfZero(trExt.year),
+    TagField.trackNumber => _emptyIfZero(trExt.trackNo),
+    TagField.discNumber => _emptyIfZero(trExt.discNo),
+    TagField.comment => trExt.comment,
+    TagField.description => trExt.description,
+    TagField.synopsis => trExt.synopsis,
+    TagField.lyrics => trExt.lyrics,
+    TagField.trackTotal => _emptyIfZero(trExt.trackTo),
+    TagField.discTotal => _emptyIfZero(trExt.discTo),
+    TagField.language => trExt.language,
+    TagField.recordLabel => trExt.label,
+    TagField.releaseType => trExt.releaseType,
+    TagField.rating => _emptyIfZero(trExt.effectiveRating),
+    TagField.tags => trExt.originalTags ?? '',
+    TagField.titleSort => trExt.sortInfo?.title ?? '',
+    TagField.albumSort => trExt.sortInfo?.album ?? '',
+    TagField.albumArtistSort => trExt.sortInfo?.albumArtist ?? '',
+    TagField.artistSort => trExt.sortInfo?.artist ?? '',
+    TagField.composerSort => trExt.sortInfo?.composer ?? '',
+    TagField.remixer || TagField.lyricist || TagField.country => null,
+  };
+
+  static String _emptyIfUnknown(String value, String unknown) => value == unknown ? '' : value;
+  static String _emptyIfZero(int value) => value == 0 ? '' : value.toString();
+}
+
+enum _MultiEditFieldVisibility {
+  always,
+  whenHasValues,
+  hidden,
 }

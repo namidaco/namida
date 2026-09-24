@@ -55,10 +55,10 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
+import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/pages/albums_page.dart';
 import 'package:namida/ui/pages/artists_map_page.dart';
 import 'package:namida/ui/pages/artists_page.dart';
@@ -826,8 +826,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
         item.execute(
           selectable: (finalItem) {
             showSetTrackStatsDialog(
-              firstTrack: finalItem.track,
-              stats: TrackStats.buildEffective(finalItem.track),
+              tracks: [finalItem.track],
             );
           },
           youtubeID: (finalItem) {},
