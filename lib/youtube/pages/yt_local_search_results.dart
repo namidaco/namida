@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -42,6 +44,8 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
     NamidaNavigator.inst.isytLocalSearchInFullPage = false;
     super.dispose();
   }
+
+  static bool _isCached(StreamInfoItem item) => AudioCacheController.inst.isAvailableOffline(item.id) || VideoController.inst.doesVideoExistsInCache(item.id);
 
   Widget getChipButton({
     required BuildContext context,
@@ -149,6 +153,8 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                     icon: Broken.calendar_search,
                     enabled: (sort) => sort == YTLocalSearchController.inst.sortType,
                   ),
+                  const SizedBox(width: 8.0),
+                  const _CachedOnlyChip(),
                 ],
               ),
             ),
@@ -163,62 +169,101 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                 controller: YTLocalSearchController.inst.scrollController,
                 child: ObxO(
                   rx: YTLocalSearchController.inst.searchResults,
-                  builder: (context, searchResults) => SmoothCustomScrollView(
-                    controller: YTLocalSearchController.inst.scrollController,
-                    slivers: [
-                      searchResults == null
-                          ? SliverToBoxAdapter(
-                              child: ShimmerWrapper(
-                                transparent: false,
-                                shimmerEnabled: true,
-                                child: SuperSmoothListView.builder(
-                                  padding: EdgeInsets.zero,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  itemCount: 10,
-                                  shrinkWrap: true,
+                  builder: (context, allSearchResults) => ObxO(
+                    rx: YTLocalSearchController.inst.cachedOnly,
+                    builder: (context, cachedOnly) {
+                      final searchResults = cachedOnly ? allSearchResults?.where(_isCached).toList() : allSearchResults;
+                      return SmoothCustomScrollView(
+                        controller: YTLocalSearchController.inst.scrollController,
+                        slivers: [
+                          searchResults == null
+                              ? SliverToBoxAdapter(
+                                  child: ShimmerWrapper(
+                                    transparent: false,
+                                    shimmerEnabled: true,
+                                    child: SuperSmoothListView.builder(
+                                      padding: EdgeInsets.zero,
+                                      physics: const NeverScrollableScrollPhysics(),
+                                      itemCount: 10,
+                                      shrinkWrap: true,
+                                      itemBuilder: (context, index) {
+                                        return const YoutubeVideoCardDummy(
+                                          shimmerEnabled: true,
+                                          fontMultiplier: 0.9,
+                                          thumbnailHeight: thumbnailHeight,
+                                          thumbnailWidth: thumbnailWidth,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                )
+                              : searchResults.isEmpty
+                              ? const SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 24.0),
+                                    child: NoResultsWidget(),
+                                  ),
+                                )
+                              : SliverFixedExtentList.builder(
+                                  itemExtent: thumbnailItemExtent,
+                                  itemCount: searchResults.length,
                                   itemBuilder: (context, index) {
-                                    return const YoutubeVideoCardDummy(
-                                      shimmerEnabled: true,
+                                    final item = searchResults[index];
+                                    return YoutubeVideoCard(
+                                      properties: properties,
                                       fontMultiplier: 0.9,
                                       thumbnailHeight: thumbnailHeight,
                                       thumbnailWidth: thumbnailWidth,
+                                      isImageImportantInCache: false,
+                                      video: item,
+                                      playlistID: null,
+                                      onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
                                     );
                                   },
                                 ),
-                              ),
-                            )
-                          : searchResults.isEmpty
-                          ? const SliverToBoxAdapter(
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(vertical: 24.0),
-                                child: NoResultsWidget(),
-                              ),
-                            )
-                          : SliverFixedExtentList.builder(
-                              itemExtent: thumbnailItemExtent,
-                              itemCount: searchResults.length,
-                              itemBuilder: (context, index) {
-                                final item = searchResults[index];
-                                return YoutubeVideoCard(
-                                  properties: properties,
-                                  fontMultiplier: 0.9,
-                                  thumbnailHeight: thumbnailHeight,
-                                  thumbnailWidth: thumbnailWidth,
-                                  isImageImportantInCache: false,
-                                  video: item,
-                                  playlistID: null,
-                                  onTap: widget.onVideoTap == null ? null : () => widget.onVideoTap!(item),
-                                );
-                              },
-                            ),
-                      kBottomPaddingWidgetSliver,
-                    ],
+                          kBottomPaddingWidgetSliver,
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CachedOnlyChip extends StatelessWidget {
+  const _CachedOnlyChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return ObxO(
+      rx: YTLocalSearchController.inst.cachedOnly,
+      builder: (context, enabled) => NamidaInkWell(
+        animationDurationMS: 100,
+        borderRadius: 8.0,
+        bgColor: theme.cardTheme.color,
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          border: enabled ? Border.all(color: theme.colorScheme.primary) : null,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        onTap: YTLocalSearchController.inst.toggleCachedOnly,
+        child: Row(
+          children: [
+            Icon(enabled ? Broken.tick_circle : Broken.document_download, size: 18.0),
+            const SizedBox(width: 4.0),
+            Text(
+              lang.cache,
+              style: theme.textTheme.displayMedium,
+            ),
+          ],
+        ),
       ),
     );
   }

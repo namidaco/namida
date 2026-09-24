@@ -4,6 +4,7 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/class/search_filters.dart';
@@ -14,7 +15,6 @@ import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/core/constants.dart';
@@ -41,9 +41,16 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
 
   ScrollController? scrollController;
 
-  String _latestSearch = '';
-  YoutiPieSearchDate? _latestAfter;
-  YoutiPieSearchDate? _latestBefore;
+  _LocalSearchQuery _latestQuery = (text: '', after: null, before: null);
+  int _latestQueryToken = 0;
+
+  final _cachedOnly = false.obs;
+  RxBaseCore<bool> get cachedOnly => _cachedOnly;
+
+  void toggleCachedOnly() {
+    _cachedOnly.value = !_cachedOnly.value;
+    if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
+  }
 
   YTLocalSearchSortType _sortType = YTLocalSearchSortType.mostPlayed;
   YTLocalSearchSortType get sortType => _sortType;
@@ -80,14 +87,14 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
       before ??= parsedDates.before;
     }
 
-    if (text == _latestSearch && after == _latestAfter && before == _latestBefore) {
+    final query = (text: text, after: after, before: before);
+    if (query == _latestQuery) {
       if (searchResults.value == null) searchResults.value = const [];
       return;
     }
 
-    _latestSearch = text;
-    _latestAfter = after;
-    _latestBefore = before;
+    _latestQuery = query;
+    final token = ++_latestQueryToken;
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
     if (text == '') {
       if (searchResults.value == null) searchResults.value = const [];
@@ -99,12 +106,13 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
     } else {
       // -- the port may not exist yet, & the isolate can't answer before filling anyway.
       await initialize();
-      if (text != _latestSearch || after != _latestAfter || before != _latestBefore) return; // -- a newer search took over
+      if (token != _latestQueryToken) return; // -- a newer search took over
       searchResults.value = null;
     }
 
     final possibleID = text.length == 11 ? text : null;
     final p = {
+      'token': token,
       'text': text,
       'possibleID': possibleID,
       'afterMs': ?after?.toDateTimeUtc().millisecondsSinceEpoch,
@@ -115,9 +123,10 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
 
   @override
   void onResult(dynamic result) {
-    result as List<StreamInfoItem>;
-    _sortStreams(result);
-    searchResults.value = result;
+    final (token, streams) = result as (int, List<StreamInfoItem>);
+    if (token != _latestQueryToken) return;
+    _sortStreams(streams);
+    searchResults.value = streams;
   }
 
   @override
@@ -192,7 +201,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         recievePort.close();
         for (final source in sources) {
           source.db.close();
@@ -204,6 +213,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
         return;
       }
       p as Map;
+      final token = p['token'] as int;
       final textPre = p['text'] as String;
       final possibleID = p['possibleID'] as String?;
       final afterMs = p['afterMs'] as int?;
@@ -214,7 +224,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
         if (entry != null) {
           final infos = resolveInfos([entry]);
           if (infos.isNotEmpty) {
-            sendPort.send(infos);
+            sendPort.send((token, infos));
             return;
           }
         }
@@ -242,7 +252,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
         if (isMatch(entry)) matched.add(entry);
       }
 
-      sendPort.send(resolveInfos(matched));
+      sendPort.send((token, resolveInfos(matched)));
     });
     // -- end listening
 
@@ -322,7 +332,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
     } catch (e, st) {
       printo('$e\n$st', isError: true);
     } finally {
-      sendPort.send(null); // finished filling
+      sendPort.send(PortsProviderMessages.prepared); // finished filling
     }
 
     final durationTaken = start.difference(DateTime.now());
@@ -550,3 +560,5 @@ class _LookupSource {
     );
   }
 }
+
+typedef _LocalSearchQuery = ({String text, YoutiPieSearchDate? after, YoutiPieSearchDate? before});
