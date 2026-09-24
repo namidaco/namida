@@ -250,6 +250,10 @@ class Indexer<T extends Track> {
           originalArtist: oldtr.originalArtist,
           config: splitConfig.artistsConfig,
         ),
+        composersList: Indexer.splitComposer(
+          oldtr.composer,
+          config: splitConfig.artistsConfig,
+        ),
         genresList: Indexer.splitGenre(
           oldtr.originalGenre,
           config: splitConfig.genresConfig,
@@ -504,7 +508,9 @@ class Indexer<T extends Track> {
       removeAndDeleteEmpty(mainMapArtists.value, artist);
     }
     removeAndDeleteEmpty(mainMapAlbumArtists.value, trExt.albumArtist);
-    removeAndDeleteEmpty(mainMapComposer.value, trExt.composer);
+    for (var composer in trExt.composersList) {
+      removeAndDeleteEmpty(mainMapComposer.value, composer);
+    }
     for (var genre in trExt.genresList) {
       removeAndDeleteEmpty(mainMapGenres.value, genre);
     }
@@ -604,7 +610,15 @@ class Indexer<T extends Track> {
         removeCustom(MediaType.artist, mainMapArtists, arOld, oldTrack);
       }
       addCustom(MediaType.albumArtist, mainMapAlbumArtists, oldTrack?.albumArtist, newTrack.albumArtist, newTrack);
-      addCustom(MediaType.composer, mainMapComposer, oldTrack?.composer, newTrack.composer, newTrack);
+
+      // -- Assigning Composers
+      final newOldComposers = oldtr == null ? (newtr.composersList, const []) : differenceLists(newtr.composersList, oldtr.composersList);
+      for (final coNew in newOldComposers.$1) {
+        addCustom(MediaType.composer, mainMapComposer, null, coNew, newTrack);
+      }
+      for (final coOld in newOldComposers.$2) {
+        removeCustom(MediaType.composer, mainMapComposer, coOld, oldTrack);
+      }
 
       // -- Assigning Genres
       final newOldGenres = oldtr == null ? (newtr.genresList, const []) : differenceLists(newtr.genresList, oldtr.genresList);
@@ -769,6 +783,7 @@ class Indexer<T extends Track> {
         originalStyle: UnknownTags.STYLE,
         stylesList: [UnknownTags.STYLE],
         composer: UnknownTags.COMPOSER,
+        composersList: const [UnknownTags.COMPOSER],
         originalMood: UnknownTags.MOOD,
         moodList: [UnknownTags.MOOD],
         trackNo: 0,
@@ -833,6 +848,12 @@ class Indexer<T extends Track> {
           config: splittersConfigs.artistsConfig,
         );
 
+        // -- Split Composers
+        final composers = splitComposer(
+          tags.composer,
+          config: splittersConfigs.artistsConfig,
+        );
+
         // -- Split Genres
         final genres = splitGenre(
           tags.genre,
@@ -878,6 +899,7 @@ class Indexer<T extends Track> {
           originalMood: doMagic(tags.mood),
           moodList: moods,
           composer: doMagic(tags.composer),
+          composersList: composers,
           trackNo: trackNoParsed?.$1,
           trackTo: trackNoParsed?.$2 ?? TrackExtended.parseTrackNumber(trackInfo.tags.trackTotal)?.$1,
           durationMS: durationInMS,
@@ -2131,6 +2153,16 @@ class Indexer<T extends Track> {
     return title.replaceRange(start, end, '');
   }
 
+  static List<String> splitComposer(
+    String? originalComposer, {
+    required ArtistsSplitConfig config,
+  }) {
+    return config.splitText(
+      originalComposer,
+      fallback: UnknownTags.COMPOSER,
+    );
+  }
+
   static List<String> splitGenre(
     String? originalGenre, {
     required GenresSplitConfig config,
@@ -2295,6 +2327,10 @@ class Indexer<T extends Track> {
         originalMood: mood ?? '',
         moodList: moods,
         composer: e.composer ?? '',
+        composersList: Indexer.splitComposer(
+          e.composer,
+          config: splitConfig.artistsConfig,
+        ),
         trackNo: e.track ?? 0,
         trackTo: trackTo ?? 0,
         durationMS: e.duration ?? 0, // `e.duration` => milliseconds

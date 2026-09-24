@@ -322,6 +322,7 @@ class TrackExtended {
   final String originalMood;
   final List<String> moodList;
   final String composer;
+  final List<String> composersList;
   final int trackNo;
   final int trackTo;
 
@@ -381,6 +382,7 @@ class TrackExtended {
     required this.originalMood,
     required this.moodList,
     required this.composer,
+    required this.composersList,
     required this.trackNo,
     required this.trackTo,
     required this.durationMS,
@@ -588,6 +590,10 @@ class TrackExtended {
         config: splitConfig.generalConfig,
       ),
       composer: json['composer'] ?? '',
+      composersList: Indexer.splitComposer(
+        json['composer'],
+        config: splitConfig.artistsConfig,
+      ),
       trackNo: json['trackNo'] ?? 0,
       trackTo: json['trackTo'] ?? 0,
       durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
@@ -849,6 +855,12 @@ extension TrackExtUtils on TrackExtended {
             config: splittersConfigs.artistsConfig,
           )
         : artistsList;
+    final finalcomposers = tag.composer != null
+        ? Indexer.splitComposer(
+            tag.composer,
+            config: splittersConfigs.artistsConfig,
+          )
+        : composersList;
     final finalgenres = tag.genre != null
         ? Indexer.splitGenre(
             tag.genre,
@@ -895,6 +907,7 @@ extension TrackExtUtils on TrackExtended {
       originalMood: tag.mood ?? originalMood,
       moodList: finalmoods,
       composer: tag.composer ?? composer,
+      composersList: finalcomposers,
       trackNo: trackNoParsed?.$1 ?? trackNo,
       trackTo: trackNoParsed?.$2 ?? TrackExtended.parseTrackNumber(tag.trackTotal)?.$1 ?? trackTo,
       year: year,
@@ -954,6 +967,7 @@ extension TrackExtUtils on TrackExtended {
     String? originalMood,
     List<String>? moodList,
     String? composer,
+    List<String>? composersList,
     int? trackNo,
     int? trackTo,
 
@@ -1007,6 +1021,7 @@ extension TrackExtUtils on TrackExtended {
       originalMood: originalMood ?? this.originalMood,
       moodList: moodList ?? this.moodList,
       composer: composer ?? this.composer,
+      composersList: composersList ?? this.composersList,
       trackNo: trackNo ?? this.trackNo,
       trackTo: trackTo ?? this.trackTo,
       durationMS: durationMS ?? this.durationMS,
@@ -1074,6 +1089,7 @@ extension TrackUtils on Track {
   List<String> get moodList => toTrackExt().moodList;
   List<String> get tagsList => toTrackExt().tagsList;
   String get composer => toTrackExt().composer;
+  List<String> get composersList => toTrackExt().composersList;
   int get trackNo => toTrackExt().trackNo;
   int get trackTo => toTrackExt().trackTo;
   int get durationMS => toTrackExt().durationMS;

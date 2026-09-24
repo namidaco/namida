@@ -1154,6 +1154,7 @@ final kDummyExtendedTrack = TrackExtended(
   originalMood: "",
   moodList: [],
   composer: "",
+  composersList: [],
   trackNo: 0,
   trackTo: 0,
   durationMS: 0,

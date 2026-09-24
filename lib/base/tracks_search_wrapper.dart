@@ -174,7 +174,16 @@ class TracksSearchWrapper {
                   textCleanedMinorForSearch,
                 )
               : null,
-          splitComposer: splitThis(trMap.composer, scomposer),
+          splitComposer: scomposer
+              ? _mapListCleanedAndCleanedMinor(
+                  Indexer.splitComposer(
+                    trMap.composer,
+                    config: splitConfig.artistsConfig,
+                  ),
+                  textCleanedForSearch,
+                  textCleanedMinorForSearch,
+                )
+              : null,
           splitComment: splitThis(trMap.comment, scomment),
           description: !sdescription ? null : _PropertySimple.orNull(trMap.description),
           splitMoods: smoods

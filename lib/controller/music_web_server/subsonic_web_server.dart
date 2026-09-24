@@ -340,6 +340,7 @@ class _SubsonicWebServer extends MusicWebServer {
       originalMood: '',
       moodList: [],
       composer: '',
+      composersList: const [UnknownTags.COMPOSER],
       trackNo: media.track ?? 0,
       trackTo: 0,
       durationMS: media.duration?.inMilliseconds ?? 0,

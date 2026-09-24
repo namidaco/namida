@@ -61,8 +61,10 @@ class LibraryGroup<T extends Track> {
       // -- Assigning Album Artist
       mainMapAlbumArtists.addForce(trExt.albumArtist, tr);
 
-      // -- Assigning Composer
-      mainMapComposer.addForce(trExt.composer, tr);
+      // -- Assigning Composers
+      for (var composer in trExt.composersList) {
+        mainMapComposer.addForce(composer, tr);
+      }
 
       // -- Assigning Genres
       for (var genre in trExt.genresList) {

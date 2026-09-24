@@ -244,10 +244,14 @@ enum TextSuggestionsSource {
 
   /// whether a single field can hold multiple values separated by [buildSeparators].
   bool get isMultiValue => switch (this) {
-    TextSuggestionsSource.artist || TextSuggestionsSource.genre || TextSuggestionsSource.style || TextSuggestionsSource.mood || TextSuggestionsSource.tags => true,
+    TextSuggestionsSource.artist ||
+    TextSuggestionsSource.composer ||
+    TextSuggestionsSource.genre ||
+    TextSuggestionsSource.style ||
+    TextSuggestionsSource.mood ||
+    TextSuggestionsSource.tags => true,
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
-    TextSuggestionsSource.composer ||
     TextSuggestionsSource.language ||
     TextSuggestionsSource.recordLabel ||
     TextSuggestionsSource.releaseType ||
@@ -260,12 +264,11 @@ enum TextSuggestionsSource {
 
   /// separators used to split a field text into individual values, empty for single-value sources.
   List<String> buildSeparators() => switch (this) {
-    TextSuggestionsSource.artist => settings.trackArtistsSeparators.value,
+    TextSuggestionsSource.artist || TextSuggestionsSource.composer => settings.trackArtistsSeparators.value,
     TextSuggestionsSource.genre || TextSuggestionsSource.style => settings.trackGenresSeparators.value,
     TextSuggestionsSource.mood || TextSuggestionsSource.tags => GeneralSplitConfig.buildSeparatorsSet().toList(),
     TextSuggestionsSource.album ||
     TextSuggestionsSource.albumArtist ||
-    TextSuggestionsSource.composer ||
     TextSuggestionsSource.language ||
     TextSuggestionsSource.recordLabel ||
     TextSuggestionsSource.releaseType ||

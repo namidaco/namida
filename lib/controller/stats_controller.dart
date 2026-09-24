@@ -186,7 +186,7 @@ class _TrackStatsResolver extends HistoryStatsResolver<Track> {
     return switch (type) {
       MediaType.artist => ext.artistsList,
       MediaType.albumArtist => [ext.albumArtist],
-      MediaType.composer => [ext.composer],
+      MediaType.composer => ext.composersList,
       MediaType.album => [ext.originalAlbum],
       MediaType.genre => ext.genresList,
       MediaType.style => ext.stylesList,

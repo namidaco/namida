@@ -211,6 +211,7 @@ class _JellyfinServer extends MusicWebServer {
       originalMood: '',
       moodList: [],
       composer: '',
+      composersList: const [UnknownTags.COMPOSER],
       trackNo: item.indexNumber ?? 0,
       trackTo: 0,
       durationMS: durationMs,
