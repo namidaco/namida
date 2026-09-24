@@ -63,6 +63,8 @@ abstract class NamidaChannel {
 
   Future<bool> shareFiles(List<String> paths) async => false;
 
+  Future<void> logPreviousAbnormalExits() async {}
+
   /// wether the media command (play, next, etc) that woke the app was sent by us (home widget/quick settings tile).
   /// external commands (bluetooth, system media resumption, etc) can be sent without user intention,
   /// so they shouldn't start playback on a cold start.

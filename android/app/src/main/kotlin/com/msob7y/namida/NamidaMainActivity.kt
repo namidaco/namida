@@ -406,6 +406,17 @@ class NamidaMainActivity : FlutterActivity() {
           }
         }
 
+        "consumeExitReports" -> {
+          CoroutineScope(Dispatchers.IO).launch {
+            val reports = try {
+              ProcessExitReporter.consume(context)
+            } catch (_: Exception) {
+              emptyList()
+            }
+            withContext(Dispatchers.Main) { result.success(reports) }
+          }
+        }
+
         "safCopyFile" -> {
           val source = call.argument<String?>("source")
           val dest = call.argument<String?>("dest")
@@ -469,7 +480,8 @@ class NamidaMainActivity : FlutterActivity() {
       currentApplicationContext = getApplicationContext();
     } catch (e: Exception) {
     }
-    
+    ProcessExitReporter.installJavaCrashRecorder(applicationContext)
+
     super.onCreate(savedInstanceState)
     if (intent?.action == NamidaConstants.BABE_WAKE_UP) {
       moveTaskToBack(true)

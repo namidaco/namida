@@ -68,6 +68,16 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<void> logPreviousAbnormalExits() async {
+    final reports = await _channel.invokeListMethod<Map>('consumeExitReports');
+    if (reports == null) return;
+    for (final report in reports) {
+      final time = DateTime.fromMillisecondsSinceEpoch(report['timestamp'] as int);
+      logger.error('previous session ended abnormally at $time', e: report['details']);
+    }
+  }
+
+  @override
   Future<int> getPlatformSdk() async {
     final version = await _channel.invokeMethod<int>('sdk');
     return version!; // if null, the thrown exception is catched and retried eitherways.

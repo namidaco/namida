@@ -311,6 +311,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   try {
     _initializeIntenties();
     _initLifeCycle();
+    NamidaChannel.inst.logPreviousAbnormalExits().catchError(logger.report);
 
     YoutubeAccountController.initialize();
 
