@@ -23,7 +23,7 @@
 
 // import 'package:waveform_extractor/waveform_extractor.dart' as pkgwaveform;
 
-// import 'package:namida/base/ports_provider.dart';
+// import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 // import 'package:namida/class/file_parts.dart';
 // import 'package:namida/controller/ffmpeg_controller.dart';
 // import 'package:namida/controller/logs_controller.dart';

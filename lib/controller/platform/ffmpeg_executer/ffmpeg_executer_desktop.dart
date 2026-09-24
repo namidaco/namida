@@ -101,7 +101,7 @@ class _FFmpegDesktopIsolateManager with PortsProvider<SendPort> {
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         recievePort.close();
         streamSub?.cancel();
         return;
@@ -156,7 +156,7 @@ class _FFmpegDesktopIsolateManager with PortsProvider<SendPort> {
       }
     });
 
-    sendPort.send(null); // prepared
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   @override

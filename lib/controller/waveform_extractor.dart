@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
-import 'package:namida/base/ports_provider.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -98,7 +99,7 @@ class _WaveformIsolateManager with PortsProvider<SendPort> {
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         recievePort.close();
         streamSub?.cancel();
         return;
@@ -138,7 +139,7 @@ class _WaveformIsolateManager with PortsProvider<SendPort> {
       ]);
     });
 
-    sendPort.send(null); // prepared
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   @override

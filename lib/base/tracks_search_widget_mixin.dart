@@ -3,7 +3,8 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
-import 'package:namida/base/ports_provider.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -140,7 +141,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -150,7 +151,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
       sendPort.send((result, text));
     });
 
-    sendPort.send(null);
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   @override

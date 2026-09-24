@@ -8,10 +8,10 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 
 import 'package:lrc/lrc.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rhttp/rhttp.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
@@ -417,7 +417,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         activeSession?.cancel();
         recievePort.close();
         streamSub?.cancel();
@@ -439,7 +439,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
       }
     });
 
-    sendPort.send(null); // prepared
+    sendPort.send(PortsProviderMessages.prepared);
   }
 }
 

@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:rhttp/rhttp.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/download_wrapper.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/core/extensions.dart';
@@ -138,7 +138,7 @@ class FilesDownloadManager with PortsProvider<SendPort> {
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         for (final download in activeDownloads.values) {
           download.wrapper.cancel();
         }
@@ -176,7 +176,7 @@ class FilesDownloadManager with PortsProvider<SendPort> {
       }
     });
 
-    sendPort.send(null); // prepared
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   /// null when the file was fully downloaded (and moved), the error otherwise.

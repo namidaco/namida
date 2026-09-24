@@ -533,7 +533,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
   //   StreamSubscription? streamSub;
   //   streamSub = recievePort.listen((p) async {
-  //     if (PortsProvider.isDisposeMessage(p)) {
+  //     if (p == PortsProviderMessages.disposed) {
   //       recievePort.close();
   //       streamSub?.cancel();
   //       return;

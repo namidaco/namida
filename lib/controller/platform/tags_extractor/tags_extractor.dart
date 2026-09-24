@@ -4,7 +4,8 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 
-import 'package:namida/base/ports_provider.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/taglib_res.dart';

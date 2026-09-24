@@ -4,13 +4,13 @@ import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:youtipie/class/cache_details.dart';
 import 'package:youtipie/class/publish_time.dart';
 import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/generator_base.dart';
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/sensitive_data_key.dart';
 import 'package:namida/core/constants.dart';
@@ -146,7 +146,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     // -- start listening
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) async {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         recievePort.close();
         for (var item in lookupListStreamInfoMapCacheDetails) {
           item.close();
@@ -298,7 +298,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       }
     }
     // -- end filling from playlists
-    sendPort.send(null); // finished filling
+    sendPort.send(PortsProviderMessages.prepared); // finished filling
 
     YoutiPie.cacheManager.closeAll();
     YoutiPie.cacheManagerSync.closeAll();

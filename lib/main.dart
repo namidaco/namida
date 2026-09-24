@@ -20,7 +20,6 @@ import 'package:rhttp/rhttp.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
 import 'package:window_manager/window_manager.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';

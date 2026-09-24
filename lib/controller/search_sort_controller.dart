@@ -4,9 +4,9 @@ import 'dart:math' as math;
 
 import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/track.dart';
@@ -514,8 +514,6 @@ class SearchSortController extends SearchPortsProvider {
     return await super.preparePorts(
       type: MediaType.track,
       onResult: (result) {
-        if (result == null) return; // -- prepared
-
         final r = result as (List<Track>, bool, String, bool?);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -551,8 +549,6 @@ class SearchSortController extends SearchPortsProvider {
     return await super.preparePorts(
       type: MediaType.playlist,
       onResult: (result) {
-        if (result == null) return; // -- prepared
-
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -586,8 +582,6 @@ class SearchSortController extends SearchPortsProvider {
     return await super.preparePorts(
       type: MediaType.album,
       onResult: (result) {
-        if (result == null) return; // -- prepared
-
         final r = result as (List<AlbumIdentifierWrapper>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -614,8 +608,6 @@ class SearchSortController extends SearchPortsProvider {
     return await super.preparePorts(
       type: type,
       onResult: (result) {
-        if (result == null) return; // -- prepared
-
         final r = result as (List<String>, bool, String);
         final isTemp = r.$2;
         final fetchedQuery = r.$3;
@@ -681,7 +673,7 @@ class SearchSortController extends SearchPortsProvider {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -695,7 +687,7 @@ class SearchSortController extends SearchPortsProvider {
       sendPort.send((result, temp, text, isVideo));
     });
 
-    sendPort.send(null);
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   List<AlbumIdentifierWrapper> _modifyAlbumKeys(Iterable<AlbumIdentifierWrapper> original) {
@@ -842,7 +834,7 @@ class SearchSortController extends SearchPortsProvider {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -882,7 +874,7 @@ class SearchSortController extends SearchPortsProvider {
       sendPort.send((results, temp, text));
     });
 
-    sendPort.send(null);
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   Future<void> sortAll() async {
@@ -1402,7 +1394,7 @@ class SearchSortController extends SearchPortsProvider {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -1437,7 +1429,7 @@ class SearchSortController extends SearchPortsProvider {
       sendPort.send((results, temp, text));
     });
 
-    sendPort.send(null);
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   static void _generalSearchIsolate(({List<String> keys, bool cleanup, bool keyIsPath, SendPort sendPort}) parameters) {
@@ -1475,7 +1467,7 @@ class SearchSortController extends SearchPortsProvider {
 
     StreamSubscription? streamSub;
     streamSub = receivePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         receivePort.close();
         streamSub?.cancel();
         return;
@@ -1510,7 +1502,7 @@ class SearchSortController extends SearchPortsProvider {
       sendPort.send((results, temp, text));
     });
 
-    sendPort.send(null);
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   bool get _shouldCleanup => settings.enableSearchCleanup.value;

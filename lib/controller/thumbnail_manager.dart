@@ -6,10 +6,10 @@ import 'dart:isolate';
 
 import 'package:flutter/material.dart';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:rhttp/rhttp.dart';
 import 'package:youtipie/class/thumbnail.dart';
 
-import 'package:namida/base/ports_provider.dart';
 import 'package:namida/class/http_manager.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -472,7 +472,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
 
     StreamSubscription? streamSub;
     streamSub = recievePort.listen((p) {
-      if (PortsProvider.isDisposeMessage(p)) {
+      if (p == PortsProviderMessages.disposed) {
         for (final request in activeRequests.values) {
           request.cancel();
         }
@@ -486,7 +486,7 @@ class _YTThumbnailDownloadManager with PortsProvider<SendPort> {
       }
     });
 
-    sendPort.send(null); // prepared
+    sendPort.send(PortsProviderMessages.prepared);
   }
 
   @override
