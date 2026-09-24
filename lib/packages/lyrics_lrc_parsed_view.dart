@@ -1033,19 +1033,23 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                     onPointerSignal: _onPointerSignal,
                     child: FadeTransition(
                       opacity: _visibility,
-                      child: fullscreen || !widget.allowOverflow
-                          ? Padding(
-                              padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                              child: middleLyricsStackWidget,
-                            )
-                          : OverflowBox(
-                              maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
-                              maxHeight: widget.maxHeight, // -- the panel space, not the artwork box which reshapes per item
-                              child: Padding(
+                      child: _TickerModeWhileVisible(
+                        opacity: mpAnimation,
+                        secondaryOpacity: _visibility,
+                        child: fullscreen || !widget.allowOverflow
+                            ? Padding(
                                 padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
                                 child: middleLyricsStackWidget,
+                              )
+                            : OverflowBox(
+                                maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
+                                maxHeight: widget.maxHeight, // -- the panel space, not the artwork box which reshapes per item
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                                  child: middleLyricsStackWidget,
+                                ),
                               ),
-                            ),
+                      ),
                     ),
                   ),
                 ),
@@ -1279,54 +1283,67 @@ class _TextWithFadingProgress extends StatefulWidget {
 }
 
 class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with TickerProviderStateMixin {
-  /// unbounded; its value is the number of "sung" characters (fractional) of [_fullText].
-  late final AnimationController _fillController;
+  /// position updates arrive every ~200ms, the playback clock is only corrected when it drifts further than this.
+  static const _resyncToleranceMicros = 100 * 1000;
+
+  /// unbounded; the playback position in microseconds, ticking linearly towards the line end between position updates.
+  late final AnimationController _clock;
+
+  final _sungChars = ValueNotifier<double>(0.0);
 
   _ShimmerSweep? _shimmer;
 
   late String _fullText;
   late List<int> _partCharStarts;
   late List<int> _partCharEnds;
+  late List<int> _partStartMicros;
+  late List<int> _partEndMicros;
   int _totalChars = 0;
+  int _activePartHint = 0;
 
-  // -- laid-out painters cached so that per-frame paint() never re-runs layout.
-  // -- relaid only when text / style / width / textScaler actually change.
-  TextPainter? _tpDim;
-  TextPainter? _tpFull;
-  TextPainter? _tpGlow;
-  Color _shimmerColor = const Color(0x00FFFFFF);
-  double _laidOutMaxWidth = -1;
-  TextScaler _laidOutScaler = TextScaler.noScaling;
-  TextStyle? _laidOutStyle;
-  String? _laidOutText;
-  Color? _laidOutAccent;
+  _KaraokeLayout? _layout;
+  _KaraokeLayoutKey? _layoutKey;
 
   @override
   void initState() {
     super.initState();
-    _fillController = AnimationController.unbounded(vsync: this);
+    _clock = AnimationController.unbounded(vsync: this);
+    _clock.addListener(_updateFill);
     if (_LyricsEffects.karaokeShimmer) _shimmer = _ShimmerSweep(this);
     _computeParts();
-    _syncFill();
-    Player.inst.nowPlayingPosition.addListener(_syncFill);
-    Player.inst.playWhenReady.addListener(_syncFill);
+    _syncClock();
+    _updateFill();
+    Player.inst.nowPlayingPosition.addListener(_syncClock);
+    Player.inst.playWhenReady.addListener(_syncClock);
+    Player.inst.currentSpeed.addListener(_onSpeedChanged);
   }
 
   void _computeParts() {
     final parts = widget.parts;
-    _partCharStarts = List.filled(parts.length, 0);
-    _partCharEnds = List.filled(parts.length, 0);
+    final count = parts.length;
+    _partCharStarts = List.filled(count, 0);
+    _partCharEnds = List.filled(count, 0);
+    _partStartMicros = List.filled(count, 0);
+    _partEndMicros = List.filled(count, 0);
     final sb = StringBuffer();
     int offset = 0;
-    for (int i = 0; i < parts.length; i++) {
-      final txt = parts[i].lyrics;
+    for (int i = 0; i < count; i++) {
+      final part = parts[i];
+      final txt = part.lyrics;
       _partCharStarts[i] = offset;
       offset += txt.length;
       _partCharEnds[i] = offset;
       sb.write(txt);
+      final startMicros = part.startTimestamp.inMicroseconds;
+      final endMicros = part.endTimestamp.inMicroseconds;
+      _partStartMicros[i] = startMicros;
+      _partEndMicros[i] = endMicros > startMicros ? endMicros : startMicros + 10000; // -- 10ms min
     }
     _fullText = sb.toString();
     _totalChars = offset;
+    _activePartHint = 0;
+    _layout?.dispose();
+    _layout = null;
   }
 
   @override
@@ -1334,116 +1351,126 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with T
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.parts, widget.parts)) {
       _computeParts();
-      _syncFill();
+      _clock.stop();
+      _syncClock();
+      _updateFill();
     }
   }
 
-  /// Re-targets [_fillController] towards the end of the currently-sung part over the
-  /// time remaining for that part, so the fill sweeps smoothly even though position
-  /// updates are coarse. Called on every position/playWhenReady change.
-  void _syncFill() {
-    final parts = widget.parts;
-    if (parts.isEmpty || _totalChars == 0) return;
-
-    final posMicros = Player.inst.nowPlayingPosition.value * 1000;
-    final playing = Player.inst.playWhenReady.value;
-
-    // -- last part whose start has already been reached
-    int active = -1;
-    for (int i = 0; i < parts.length; i++) {
-      if (parts[i].startTimestamp.inMicroseconds <= posMicros) {
-        active = i;
-      } else {
-        break;
-      }
+  /// last part whose start has been reached, -1 before the first one.
+  int _activePartAt(double micros) {
+    final starts = _partStartMicros;
+    var i = _activePartHint;
+    while (i > 0 && starts[i] > micros) {
+      i--;
     }
+    while (i + 1 < starts.length && starts[i + 1] <= micros) {
+      i++;
+    }
+    _activePartHint = i;
+    return starts[i] <= micros ? i : -1;
+  }
 
-    double exactChars;
-    double targetChars;
-    int remainingMicros = 0;
-    bool heldNote = false;
-
+  void _updateFill() {
+    if (_totalChars == 0) return;
+    final micros = _clock.value;
+    final active = _activePartAt(micros);
     if (active < 0) {
-      exactChars = 0.0;
-      targetChars = 0.0;
-    } else {
-      final startMicros = parts[active].startTimestamp.inMicroseconds;
-      var endMicros = parts[active].endTimestamp.inMicroseconds;
-      if (endMicros <= startMicros) endMicros = startMicros + 10000; // -- 10ms min
-      final startChar = _partCharStarts[active];
-      final endChar = _partCharEnds[active];
-      if (posMicros >= endMicros) {
-        exactChars = endChar.toDouble();
-        targetChars = endChar.toDouble();
-      } else {
-        final frac = ((posMicros - startMicros) / (endMicros - startMicros)).clampDouble(0.0, 1.0);
-        exactChars = startChar + frac * (endChar - startChar);
-        targetChars = endChar.toDouble();
-        remainingMicros = endMicros - posMicros;
-        heldNote = endMicros - startMicros >= _ShimmerSweep.heldNoteMicros;
-      }
+      _sungChars.value = 0.0;
+      return;
     }
-
-    // -- re-sync only on discontinuity (seek); otherwise let the ongoing animation flow
-    if ((exactChars - _fillController.value).abs() > 1.5) {
-      _fillController.value = exactChars;
+    final endMicros = _partEndMicros[active];
+    final endChar = _partCharEnds[active];
+    if (micros >= endMicros) {
+      _sungChars.value = endChar.toDouble();
+      return;
     }
-
-    if (playing && remainingMicros > 0 && targetChars > _fillController.value) {
-      _fillController.animateTo(
-        targetChars,
-        duration: Duration(microseconds: remainingMicros),
-        curve: Curves.linear,
-      );
-    } else {
-      _fillController.stop();
-      _fillController.value = exactChars;
-    }
-
-    _shimmer?.setActive(playing && (heldNote || posMicros > parts.last.endTimestamp.inMicroseconds + _ShimmerSweep.holdDelayMicros));
+    final startMicros = _partStartMicros[active];
+    final startChar = _partCharStarts[active];
+    _sungChars.value = startChar + (micros - startMicros) / (endMicros - startMicros) * (endChar - startChar);
   }
 
-  /// (Re)lays out the cached painters only when an input that affects layout changed.
-  /// Keeps [paint] layout-free (layout is the costly part; painting a laid-out painter is cheap).
-  void _ensurePainters(double maxWidth, TextScaler textScaler) {
-    final style = widget.textStyle;
-    final upToDate =
-        _tpFull != null &&
-        _laidOutMaxWidth == maxWidth &&
-        _laidOutScaler == textScaler &&
-        _laidOutStyle == style &&
-        _laidOutText == _fullText &&
-        _laidOutAccent == widget.accentColor;
-    if (upToDate) return;
+  void _onSpeedChanged() {
+    _clock.stop();
+    _syncClock();
+  }
 
-    _tpDim?.dispose();
-    _tpFull?.dispose();
-    _tpGlow?.dispose();
+  /// the clock keeps running on its own through the whole line, position updates only correct real drift (seeks, stalls).
+  void _syncClock() {
+    if (_totalChars == 0) return;
+
+    final posMicros = Player.inst.nowPlayingPosition.value * 1000.0;
+    final playing = Player.inst.playWhenReady.value;
+    final lineEndMicros = _partEndMicros.last;
+
+    if ((posMicros - _clock.value).abs() > _resyncToleranceMicros) _clock.value = posMicros;
+
+    final remainingMicros = lineEndMicros - _clock.value;
+    if (playing && remainingMicros > 0) {
+      if (!_clock.isAnimating) {
+        final speed = Player.inst.currentSpeed.value;
+        _clock.animateTo(
+          lineEndMicros.toDouble(),
+          duration: Duration(microseconds: (remainingMicros / (speed > 0 ? speed : 1.0)).round()),
+          curve: Curves.linear,
+        );
+      }
+    } else {
+      _clock.stop();
+    }
+
+    final shimmer = _shimmer;
+    if (shimmer != null) {
+      final active = _activePartAt(posMicros);
+      final heldNote = active >= 0 && posMicros < _partEndMicros[active] && _partEndMicros[active] - _partStartMicros[active] >= _ShimmerSweep.heldNoteMicros;
+      shimmer.setActive(playing && (heldNote || posMicros > lineEndMicros + _ShimmerSweep.holdDelayMicros));
+    }
+  }
+
+  /// relaid only when an input that affects layout or colors changed, [_KaraokeTextPainter.paint] never lays out.
+  _KaraokeLayout _ensureLayout(double maxWidth, TextScaler textScaler) {
+    final style = widget.textStyle;
+    final key = (
+      maxWidth: maxWidth,
+      textScaler: textScaler,
+      style: style,
+      accent: widget.accentColor,
+      isDark: widget.isDark,
+      textAlign: widget.textAlign,
+      textDirection: widget.textDirection,
+    );
+    final current = _layout;
+    if (current != null && key == _layoutKey) return current;
+
+    current?.dispose();
     final colors = _KaraokeColors.resolve(
       base: style.color ?? const Color(0xFFFFFFFF),
       accent: widget.accentColor,
       isDark: widget.isDark,
     );
-    _tpDim = _layoutPainter(style.copyWith(color: colors.dim), maxWidth, textScaler);
-    _tpFull = _layoutPainter(style.copyWith(color: colors.sung), maxWidth, textScaler);
     final glowColor = colors.glow;
-    _tpGlow = glowColor == null
-        ? null
-        : _layoutPainter(
-            style.copyWith(
-              foreground: Paint()
-                ..color = glowColor
-                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, _KaraokeColors.glowSigma),
+    final shimmerColor = colors.shimmer;
+    final transparentShimmer = shimmerColor.withValues(alpha: 0.0);
+    _layoutKey = key;
+    return _layout = _KaraokeLayout(
+      dim: _layoutPainter(style.copyWith(color: colors.dim), maxWidth, textScaler),
+      full: _layoutPainter(style.copyWith(color: colors.sung), maxWidth, textScaler),
+      glow: glowColor == null
+          ? null
+          : _layoutPainter(
+              style.copyWith(
+                foreground: Paint()
+                  ..color = glowColor
+                  ..maskFilter = const MaskFilter.blur(BlurStyle.normal, _KaraokeColors.glowSigma),
+              ),
+              maxWidth,
+              textScaler,
             ),
-            maxWidth,
-            textScaler,
-          );
-    _shimmerColor = colors.shimmer;
-    _laidOutMaxWidth = maxWidth;
-    _laidOutScaler = textScaler;
-    _laidOutStyle = style;
-    _laidOutText = _fullText;
-    _laidOutAccent = widget.accentColor;
+      shimmerColors: [transparentShimmer, shimmerColor, transparentShimmer],
+      partStarts: _partCharStarts,
+      partEnds: _partCharEnds,
+      totalChars: _totalChars,
+    );
   }
 
   TextPainter _layoutPainter(TextStyle style, double maxWidth, TextScaler textScaler) {
@@ -1467,13 +1494,13 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with T
 
   @override
   void dispose() {
-    Player.inst.nowPlayingPosition.removeListener(_syncFill);
-    Player.inst.playWhenReady.removeListener(_syncFill);
-    _tpDim?.dispose();
-    _tpFull?.dispose();
-    _tpGlow?.dispose();
+    Player.inst.nowPlayingPosition.removeListener(_syncClock);
+    Player.inst.playWhenReady.removeListener(_syncClock);
+    Player.inst.currentSpeed.removeListener(_onSpeedChanged);
+    _layout?.dispose();
     _shimmer?.dispose();
-    _fillController.dispose();
+    _clock.dispose();
+    _sungChars.dispose();
     super.dispose();
   }
 
@@ -1483,22 +1510,14 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with T
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : double.infinity;
-        _ensurePainters(maxWidth, textScaler);
-        final full = _tpFull!;
+        final layout = _ensureLayout(maxWidth, textScaler);
         return RepaintBoundary(
           child: CustomPaint(
-            size: full.size,
+            size: layout.full.size,
             painter: _KaraokeTextPainter(
-              dim: _tpDim!,
-              full: full,
-              glow: _tpGlow,
-              total: _totalChars,
-              textDirection: widget.textDirection,
-              fill: _fillController,
-              partStarts: _partCharStarts,
-              partEnds: _partCharEnds,
+              layout: layout,
+              fill: _sungChars,
               shimmer: _shimmer,
-              shimmerColor: _shimmerColor,
             ),
           ),
         );
@@ -1507,52 +1526,46 @@ class _TextWithFadingProgressState extends State<_TextWithFadingProgress> with T
   }
 }
 
-/// vertical band + x position of the sweep boundary, resolved once per frame.
-typedef _KaraokeSweep = ({double top, double bottom, double boundaryX, bool ltr});
-
 /// Generated by claude.ai
 /// Reason: no enough experience with deep rendering stuff
 class _KaraokeTextPainter extends CustomPainter {
-  final TextPainter dim;
-  final TextPainter full;
-  final TextPainter? glow;
-  final int total;
-  final TextDirection textDirection;
-  final Animation<double> fill;
-  final List<int> partStarts;
-  final List<int> partEnds;
+  final _KaraokeLayout layout;
+  final ValueListenable<double> fill;
   final _ShimmerSweep? shimmer;
-  final Color shimmerColor;
 
   static const double _featherPx = 20.0;
+  static const _featherColors = [Color(0xFFFFFFFF), Color(0x00FFFFFF)];
+
+  // -- canvas records paint values on each call, so these are safely reused across draws.
+  static final _layerPaint = Paint();
+  static final _featherMaskPaint = Paint()..blendMode = BlendMode.dstIn;
+  static final _clearMaskPaint = Paint()
+    ..blendMode = BlendMode.dstIn
+    ..color = const Color(0x00000000);
+  static final _shimmerPaint = Paint()..blendMode = BlendMode.srcATop;
 
   _KaraokeTextPainter({
-    required this.dim,
-    required this.full,
-    required this.glow,
-    required this.total,
-    required this.textDirection,
+    required this.layout,
     required this.fill,
-    required this.partStarts,
-    required this.partEnds,
     required this.shimmer,
-    required this.shimmerColor,
   }) : super(repaint: shimmer == null ? fill : Listenable.merge([fill, shimmer.listenable]));
 
   @override
   void paint(Canvas canvas, Size size) {
+    final layout = this.layout;
+    final total = layout.totalChars;
     var fillChars = fill.value;
     if (fillChars.isNaN) fillChars = 0.0;
     fillChars = fillChars.clampDouble(0.0, total.toDouble());
 
     final partial = total > 0 && fillChars > 0 && fillChars < total;
-    final sweep = partial ? _resolveSweep(fillChars) : null;
-    final bump = partial && _LyricsEffects.karaokeWordBump ? _KaraokeWordBump.resolve(painter: full, starts: partStarts, ends: partEnds, fillChars: fillChars) : null;
+    final sweep = partial ? layout.sweepAt(fillChars) : null;
+    final bump = partial && _LyricsEffects.karaokeWordBump ? layout.wordBumpAt(fillChars) : null;
 
     // -- layer must contain the glow halo, else it gets cut into a visible box around the text
-    final bounds = glow == null ? Offset.zero & size : (Offset.zero & size).inflate(_KaraokeColors.glowSigma * 3.0);
+    final bounds = layout.hasGlow ? (Offset.zero & size).inflate(_KaraokeLayout.glowPadding) : Offset.zero & size;
     final shimmer = this.shimmer;
-    final shimmerShader = shimmer != null && shimmer.isActive ? shimmer.shader(size.width, shimmerColor) : null;
+    final shimmerShader = shimmer != null && shimmer.isActive ? shimmer.shader(size.width, layout.shimmerColors) : null;
     if (bump == null) {
       _paintLine(canvas, size, fillChars, sweep, bounds, shimmerShader);
       return;
@@ -1574,29 +1587,11 @@ class _KaraokeTextPainter extends CustomPainter {
     canvas.restore();
   }
 
-  _KaraokeSweep? _resolveSweep(double fillChars) {
-    final n = fillChars.floor();
-    // -- the active char's box gives us the boundary line's vertical band + the sweep x position
-    final boxes = full.getBoxesForSelection(
-      TextSelection(baseOffset: n, extentOffset: n + 1),
-      boxHeightStyle: ui.BoxHeightStyle.max,
-    );
-    if (boxes.isEmpty) return null;
-    final box = boxes.first;
-    final rect = box.toRect();
-    final ltr = box.direction == TextDirection.ltr;
-    final frac = fillChars - n;
-    return (
-      top: rect.top,
-      bottom: rect.bottom,
-      boundaryX: ltr ? rect.left + frac * rect.width : rect.right - frac * rect.width,
-      ltr: ltr,
-    );
-  }
-
   void _paintLine(Canvas canvas, Size size, double fillChars, _KaraokeSweep? sweep, Rect layerBounds, Shader? shimmerShader) {
+    final layout = this.layout;
+    final total = layout.totalChars;
     // -- base dimmed layer (whole line)
-    dim.paint(canvas, Offset.zero);
+    layout.dim.paint(canvas, Offset.zero);
 
     if (total == 0 || fillChars <= 0) return;
     if (fillChars >= total) {
@@ -1610,8 +1605,8 @@ class _KaraokeTextPainter extends CustomPainter {
 
     // -- one small saveLayer: paint the full-color line, then carve it down to the sung region
     // -- with a dstIn mask. Lines above the sweep stay opaque, the sweep line feathers, lines below clear.
-    canvas.saveLayer(layerBounds, Paint());
-    glow?.paint(canvas, Offset.zero);
+    canvas.saveLayer(layerBounds, _layerPaint);
+    layout.paintGlow(canvas);
     _paintSungText(canvas, layerBounds, shimmerShader);
 
     final isFirstLine = sweep.top <= 0.5;
@@ -1623,16 +1618,12 @@ class _KaraokeTextPainter extends CustomPainter {
         layerBounds.right,
         isLastLine ? math.max(layerBounds.bottom, sweep.bottom) : sweep.bottom,
       ),
-      Paint()
-        ..blendMode = BlendMode.dstIn
-        ..shader = _featherShader(size.width, sweep.boundaryX, sweep.ltr), // -- feather the sweep line
+      _featherMaskPaint..shader = _featherShader(sweep.boundaryX, sweep.ltr),
     );
     if (!isLastLine) {
       canvas.drawRect(
         Rect.fromLTRB(layerBounds.left, sweep.bottom, layerBounds.right, math.max(layerBounds.bottom, size.height)),
-        Paint()
-          ..blendMode = BlendMode.dstIn
-          ..color = const Color(0x00000000), // -- clear everything below
+        _clearMaskPaint,
       );
     }
     canvas.restore();
@@ -1640,56 +1631,33 @@ class _KaraokeTextPainter extends CustomPainter {
 
   // -- shimmer gets its own layer holding the glyphs only, otherwise srcATop lights up the glow halo too
   void _paintSungText(Canvas canvas, Rect bounds, Shader? shimmerShader) {
+    final full = layout.full;
     if (shimmerShader == null) {
       full.paint(canvas, Offset.zero);
       return;
     }
-    canvas.saveLayer(bounds, Paint());
+    canvas.saveLayer(bounds, _layerPaint);
     full.paint(canvas, Offset.zero);
-    canvas.drawRect(
-      bounds,
-      Paint()
-        ..blendMode = BlendMode.srcATop
-        ..shader = shimmerShader,
-    );
+    canvas.drawRect(bounds, _shimmerPaint..shader = shimmerShader);
     canvas.restore();
   }
 
   void _paintSungWhole(Canvas canvas, Size size, Shader? shimmerShader) {
-    glow?.paint(canvas, Offset.zero);
+    layout.paintGlow(canvas);
     _paintSungText(canvas, Offset.zero & size, shimmerShader);
   }
 
-  Shader _featherShader(double width, double boundaryX, bool ltr) {
-    final w = width <= 0 ? 1.0 : width;
-    const white = Color(0xFFFFFFFF);
-    const clear = Color(0x00FFFFFF);
-    final rect = Rect.fromLTWH(0, 0, w, 1);
-    if (ltr) {
-      final s1 = (boundaryX / w).clampDouble(0.0, 1.0);
-      var s2 = ((boundaryX + _featherPx) / w).clampDouble(0.0, 1.0);
-      if (s2 <= s1) s2 = (s1 + 0.001).clampDouble(0.0, 1.0);
-      return LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: const [white, white, clear],
-        stops: [0.0, s1, s2],
-      ).createShader(rect);
-    } else {
-      final s2 = (boundaryX / w).clampDouble(0.0, 1.0);
-      var s1 = ((boundaryX - _featherPx) / w).clampDouble(0.0, 1.0);
-      if (s1 >= s2) s1 = (s2 - 0.001).clampDouble(0.0, 1.0);
-      return LinearGradient(
-        begin: Alignment.centerLeft,
-        end: Alignment.centerRight,
-        colors: const [clear, white, white],
-        stops: [s1, s2, 1.0],
-      ).createShader(rect);
-    }
+  Shader _featherShader(double boundaryX, bool ltr) {
+    return ui.Gradient.linear(
+      Offset(boundaryX, 0),
+      Offset(ltr ? boundaryX + _featherPx : boundaryX - _featherPx, 0),
+      _featherColors,
+    );
   }
 
   void _paintHardSung(Canvas canvas, int n) {
     if (n <= 0) return;
+    final full = layout.full;
     final boxes = full.getBoxesForSelection(
       TextSelection(baseOffset: 0, extentOffset: n),
       boxHeightStyle: ui.BoxHeightStyle.max,
@@ -1701,7 +1669,7 @@ class _KaraokeTextPainter extends CustomPainter {
       path.addRect(b.toRect());
     }
     canvas.clipPath(path);
-    glow?.paint(canvas, Offset.zero);
+    layout.paintGlow(canvas);
     full.paint(canvas, Offset.zero);
 
     canvas.restore();
@@ -1709,7 +1677,141 @@ class _KaraokeTextPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _KaraokeTextPainter old) {
-    return old.dim != dim || old.full != full || old.glow != glow || old.total != total || old.textDirection != textDirection || old.shimmerColor != shimmerColor;
+    return old.layout != layout || old.fill != fill || old.shimmer != shimmer;
+  }
+}
+
+/// a karaoke line laid out once per text/style/width, so a frame never lays out, blurs glyphs or re-queries boxes.
+class _KaraokeLayout {
+  /// the blur halo reaches ~3 sigma past the glyphs.
+  static const glowPadding = _KaraokeColors.glowSigma * 3.0;
+  static final _glowPaint = Paint()..filterQuality = FilterQuality.low;
+
+  final TextPainter dim;
+  final TextPainter full;
+  final List<Color> shimmerColors;
+  final int totalChars;
+  final List<int> _partStarts;
+  final List<int> _partEnds;
+  final ui.Image? _glow;
+
+  _KaraokeLayout({
+    required this.dim,
+    required this.full,
+    required TextPainter? glow,
+    required this.shimmerColors,
+    required this._partStarts,
+    required this._partEnds,
+    required this.totalChars,
+  }) : _glow = glow == null ? null : _rasterizeGlow(glow);
+
+  bool get hasGlow => _glow != null;
+
+  _KaraokeClusters? _clusters;
+  int _sweepClusterHint = 0;
+
+  int _bumpPart = -1;
+  Rect? _bumpRect;
+
+  /// the glow is a blur, so a logical-pixel image upscaled by the gpu looks the same as blurring the glyphs every frame.
+  static ui.Image _rasterizeGlow(TextPainter painter) {
+    final recorder = ui.PictureRecorder();
+    painter.paint(Canvas(recorder), const Offset(glowPadding, glowPadding));
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(
+      (painter.width + glowPadding * 2).ceil(),
+      (painter.height + glowPadding * 2).ceil(),
+    );
+    picture.dispose();
+    painter.dispose();
+    return image;
+  }
+
+  void paintGlow(Canvas canvas) {
+    final glow = _glow;
+    if (glow != null) canvas.drawImage(glow, const Offset(-glowPadding, -glowPadding), _glowPaint);
+  }
+
+  /// swept per rendered cluster, a single code unit inside a conjunct/matra has no box of its own.
+  _KaraokeSweep? sweepAt(double fillChars) {
+    final clusters = _clusters ??= _KaraokeClusters.of(full);
+    final starts = clusters.starts;
+    final count = starts.length;
+    if (count == 0) return null;
+
+    var i = _sweepClusterHint;
+    while (i > 0 && starts[i] > fillChars) {
+      i--;
+    }
+    while (i + 1 < count && starts[i + 1] <= fillChars) {
+      i++;
+    }
+    _sweepClusterHint = i;
+
+    final start = starts[i];
+    final end = i + 1 < count ? starts[i + 1] : totalChars;
+    final progress = end > start ? ((fillChars - start) / (end - start)).clampDouble(0.0, 1.0) : 0.0;
+    final box = clusters.boxes[i];
+    final ltr = box.direction == TextDirection.ltr;
+    final advance = progress * (box.right - box.left);
+    return (
+      top: box.top,
+      bottom: box.bottom,
+      boundaryX: ltr ? box.left + advance : box.right - advance,
+      ltr: ltr,
+    );
+  }
+
+  _KaraokeWordBump? wordBumpAt(double fillChars) {
+    final part = _activePart(fillChars);
+    if (part < 0) return null;
+    final start = _partStarts[part];
+    final end = _partEnds[part];
+    final span = end - start;
+    if (span <= 0) return null;
+
+    final amount = math.sin(((fillChars - start) / span).clampDouble(0.0, 1.0) * math.pi);
+    final step = (amount * _KaraokeWordBump.scaleSteps).round();
+    if (step == 0) return null;
+
+    if (part != _bumpPart) {
+      _bumpPart = part;
+      _bumpRect = _partRect(start, end);
+    }
+    final rect = _bumpRect;
+    if (rect == null) return null;
+    return _KaraokeWordBump(rect, 1.0 + _KaraokeWordBump.scaleAmount * step / _KaraokeWordBump.scaleSteps);
+  }
+
+  int _activePart(double fillChars) {
+    final cached = _bumpPart;
+    if (cached >= 0 && fillChars >= _partStarts[cached] && fillChars < _partEnds[cached]) return cached;
+    for (int i = 0; i < _partStarts.length; i++) {
+      if (fillChars >= _partStarts[i] && fillChars < _partEnds[i]) return i;
+    }
+    return -1;
+  }
+
+  Rect? _partRect(int start, int end) {
+    final boxes = full.getBoxesForSelection(
+      TextSelection(baseOffset: start, extentOffset: end),
+      boxHeightStyle: ui.BoxHeightStyle.max,
+    );
+    if (boxes.isEmpty) return null;
+    var rect = boxes.first.toRect();
+    for (int i = 1; i < boxes.length; i++) {
+      final other = boxes[i].toRect();
+      if ((other.top - rect.top).abs() > 0.5) return null; // -- part wrapped onto another line
+      rect = rect.expandToInclude(other);
+    }
+    if (rect.width <= 0 || rect.height <= 0) return null;
+    return rect;
+  }
+
+  void dispose() {
+    dim.dispose();
+    full.dispose();
+    _glow?.dispose();
   }
 }
 
@@ -1824,53 +1926,52 @@ class _KaraokeColors {
   }
 }
 
+/// the boxes glyphs are actually drawn in: graphemes merged when shaping puts them in one box (conjuncts, ligatures),
+/// zero-width ones folded into the previous cluster.
+class _KaraokeClusters {
+  final Int32List starts;
+  final List<TextBox> boxes;
+
+  const _KaraokeClusters._(this.starts, this.boxes);
+
+  factory _KaraokeClusters.of(TextPainter painter) {
+    final starts = <int>[];
+    final boxes = <TextBox>[];
+    var start = 0;
+    for (final grapheme in painter.plainText.characters) {
+      final end = start + grapheme.length;
+      final graphemeBoxes = painter.getBoxesForSelection(
+        TextSelection(baseOffset: start, extentOffset: end),
+        boxHeightStyle: ui.BoxHeightStyle.max,
+      );
+      if (graphemeBoxes.isNotEmpty) {
+        final box = graphemeBoxes.first;
+        if (boxes.isEmpty || !_sameBox(boxes.last, box)) {
+          starts.add(start);
+          boxes.add(box);
+        }
+      }
+      start = end;
+    }
+    return _KaraokeClusters._(Int32List.fromList(starts), boxes);
+  }
+
+  static bool _sameBox(TextBox a, TextBox b) {
+    return (a.left - b.left).abs() < 0.5 && (a.right - b.right).abs() < 0.5 && (a.top - b.top).abs() < 0.5;
+  }
+}
+
 /// slight scale of the syllable the karaoke sweep is currently crossing.
 class _KaraokeWordBump {
-  static const _scaleAmount = 0.02;
+  static const scaleAmount = 0.02;
+
+  /// the scale moves in steps too small to see, so glyphs aren't rasterized at a new size every frame.
+  static const scaleSteps = 8;
 
   final Rect rect;
   final double scale;
 
-  const _KaraokeWordBump._(this.rect, this.scale);
-
-  static _KaraokeWordBump? resolve({
-    required TextPainter painter,
-    required List<int> starts,
-    required List<int> ends,
-    required double fillChars,
-  }) {
-    int active = -1;
-    for (int i = 0; i < starts.length; i++) {
-      if (fillChars >= starts[i] && fillChars < ends[i]) {
-        active = i;
-        break;
-      }
-    }
-    if (active < 0) return null;
-
-    final start = starts[active];
-    final end = ends[active];
-    final span = end - start;
-    if (span <= 0) return null;
-
-    final amount = math.sin(((fillChars - start) / span).clampDouble(0.0, 1.0) * math.pi);
-    if (amount <= 0.01) return null;
-
-    final boxes = painter.getBoxesForSelection(
-      TextSelection(baseOffset: start, extentOffset: end),
-      boxHeightStyle: ui.BoxHeightStyle.max,
-    );
-    if (boxes.isEmpty) return null;
-    var rect = boxes.first.toRect();
-    for (int i = 1; i < boxes.length; i++) {
-      final other = boxes[i].toRect();
-      if ((other.top - rect.top).abs() > 0.5) return null; // -- part wrapped onto another line
-      rect = rect.expandToInclude(other);
-    }
-    if (rect.width <= 0 || rect.height <= 0) return null;
-
-    return _KaraokeWordBump._(rect, 1.0 + _scaleAmount * amount);
-  }
+  const _KaraokeWordBump(this.rect, this.scale);
 }
 
 /// travelling highlight band, only ticking during a long held syllable or a line held past its last one.
@@ -1879,6 +1980,7 @@ class _ShimmerSweep {
   static const heldNoteMicros = 1000 * 1000;
   static const _period = Duration(milliseconds: 1300);
   static const _band = 0.2;
+  static const _stops = [0.0, 0.5, 1.0];
 
   final AnimationController _controller;
 
@@ -1897,21 +1999,13 @@ class _ShimmerSweep {
     }
   }
 
-  Shader? shader(double width, Color color) {
+  /// [colors] is transparent, highlight, transparent.
+  Shader? shader(double width, List<Color> colors) {
     if (width <= 0) return null;
-    final center = -_band + _controller.value * (1.0 + _band * 2);
-    var s0 = (center - _band).clampDouble(0.0, 1.0);
-    var s1 = center.clampDouble(0.0, 1.0);
-    var s2 = (center + _band).clampDouble(0.0, 1.0);
-    if (s1 <= s0) s1 = (s0 + 0.001).clampDouble(0.0, 1.0);
-    if (s2 <= s1) s2 = (s1 + 0.001).clampDouble(0.0, 1.0);
-    if (s0 >= s2) return null;
-    return LinearGradient(
-      begin: Alignment.centerLeft,
-      end: Alignment.centerRight,
-      colors: [color.withValues(alpha: 0.0), color, color.withValues(alpha: 0.0)],
-      stops: [s0, s1, s2],
-    ).createShader(Rect.fromLTWH(0, 0, width, 1));
+    final center = (-_band + _controller.value * (1.0 + _band * 2)) * width;
+    final halfBand = _band * width;
+    if (center + halfBand <= 0 || center - halfBand >= width) return null;
+    return ui.Gradient.linear(Offset(center - halfBand, 0), Offset(center + halfBand, 0), colors, _stops);
   }
 
   void dispose() => _controller.dispose();
@@ -1971,7 +2065,9 @@ class _LyricsFocalEffectState extends State<_LyricsFocalEffect> with SingleTicke
       alignment: widget.alignment,
       scrollTick: widget.scrollTick,
       pop: _pop,
-      child: widget.child,
+      child: RepaintBoundary(
+        child: widget.child,
+      ),
     );
   }
 }
@@ -2275,6 +2371,72 @@ class _LyricsInterludeDotsPainter extends CustomPainter {
   bool shouldRepaint(covariant _LyricsInterludeDotsPainter old) => old.color != color || old.dotRadius != dotRadius;
 }
 
+/// hidden lyrics would otherwise keep ticking behind a zero opacity, producing frames on whatever page is shown.
+class _TickerModeWhileVisible extends StatefulWidget {
+  final Animation<double> opacity;
+  final Animation<double> secondaryOpacity;
+  final Widget child;
+
+  const _TickerModeWhileVisible({
+    required this.opacity,
+    required this.secondaryOpacity,
+    required this.child,
+  });
+
+  @override
+  State<_TickerModeWhileVisible> createState() => _TickerModeWhileVisibleState();
+}
+
+class _TickerModeWhileVisibleState extends State<_TickerModeWhileVisible> {
+  late bool _visible = _isVisible();
+
+  bool _isVisible() => widget.opacity.value > 0.0 && widget.secondaryOpacity.value > 0.0;
+
+  void _onOpacityChanged() {
+    final visible = _isVisible();
+    if (visible != _visible) setState(() => _visible = visible);
+  }
+
+  void _listen(_TickerModeWhileVisible widget) {
+    widget.opacity.addListener(_onOpacityChanged);
+    widget.secondaryOpacity.addListener(_onOpacityChanged);
+  }
+
+  void _unlisten(_TickerModeWhileVisible widget) {
+    widget.opacity.removeListener(_onOpacityChanged);
+    widget.secondaryOpacity.removeListener(_onOpacityChanged);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _listen(widget);
+  }
+
+  @override
+  void didUpdateWidget(covariant _TickerModeWhileVisible oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (identical(oldWidget.opacity, widget.opacity) && identical(oldWidget.secondaryOpacity, widget.secondaryOpacity)) return;
+    _unlisten(oldWidget);
+    _listen(widget);
+    _visible = _isVisible();
+  }
+
+  @override
+  void dispose() {
+    _unlisten(widget);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TickerMode(
+      enabled: _visible,
+      child: widget.child,
+    );
+  }
+}
+
 class _LyricsList extends StatefulWidget {
   final double verticalPadding;
   final int itemCount;
@@ -2434,3 +2596,8 @@ class LyricsOverlayBackdrop extends StatelessWidget {
     );
   }
 }
+
+/// vertical band + x position of the sweep boundary, resolved once per frame.
+typedef _KaraokeSweep = ({double top, double bottom, double boundaryX, bool ltr});
+
+typedef _KaraokeLayoutKey = ({double maxWidth, TextScaler textScaler, TextStyle style, Color accent, bool isDark, TextAlign textAlign, TextDirection textDirection});
