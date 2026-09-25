@@ -633,6 +633,27 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     bool pathExists(String path) => File(path).existsSync();
 
+    String closestPathBySuffix(List<String> candidates, String lowerPath) {
+      if (candidates.length == 1) return candidates[0];
+      var best = candidates[0];
+      var bestMatchedLength = -1;
+      for (final candidate in candidates) {
+        final candidateLower = candidate.toLowerCase();
+        var i = candidateLower.length;
+        var j = lowerPath.length;
+        while (i > 0 && j > 0 && candidateLower.codeUnitAt(i - 1) == lowerPath.codeUnitAt(j - 1)) {
+          i--;
+          j--;
+        }
+        final matchedLength = lowerPath.length - j;
+        if (matchedLength > bestMatchedLength) {
+          bestMatchedLength = matchedLength;
+          best = candidate;
+        }
+      }
+      return best;
+    }
+
     late final libraryPathsByLowerFilename = () {
       final index = <String, List<String>>{};
       for (final trackPath in libraryTracksPaths) {
@@ -683,13 +704,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             final normalizedLowerPath = p.normalize(line).toLowerCase();
             final candidates = libraryPathsByLowerFilename[normalizedLowerPath.getFilename];
             if (candidates != null) {
-              for (final trackPath in candidates) {
-                if (trackPath.toLowerCase().endsWith(normalizedLowerPath)) {
-                  fullPath = trackPath;
-                  // if (pathExists(fullPath)) fileExists = true; // no further checks
-                  break;
-                }
-              }
+              fullPath = closestPathBySuffix(candidates, normalizedLowerPath);
+              // if (pathExists(fullPath)) fileExists = true; // no further checks
             }
           }
           if (Platform.isWindows) {

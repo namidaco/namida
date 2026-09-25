@@ -215,7 +215,7 @@ class TagLibPropertiesWrapper {
     final val = propertiesMap[field];
     if (val == null || val.isEmpty) return null;
     if (val.length == 1) return val[0];
-    return val.join(', ');
+    return val.join('; ');
   }
 
   String? _getPropertyFirst(String field) {

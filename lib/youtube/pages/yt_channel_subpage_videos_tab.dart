@@ -4,6 +4,8 @@ class YTChannelVideosTab extends StatefulWidget {
   final YoutiPieChannelPageResult? channelInfo;
   final ScrollController scrollController;
   final YoutubeSubscription localChannel;
+  final Future<void> Function(Future<void> Function() fetch) tabFetcher;
+  final bool Function() shouldForceRequest;
   final void Function() onSuccessFetch;
 
   const YTChannelVideosTab({
@@ -11,6 +13,8 @@ class YTChannelVideosTab extends StatefulWidget {
     required this.scrollController,
     required this.channelInfo,
     required this.localChannel,
+    required this.tabFetcher,
+    required this.shouldForceRequest,
     required this.onSuccessFetch,
   });
 
@@ -43,6 +47,18 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
   void initState() {
     channel = widget.localChannel;
     super.initState();
+    _fetchOnMount();
+  }
+
+  Future<void> _fetchOnMount() async {
+    final channelInfo = widget.channelInfo;
+    if (channelInfo == null) return;
+    if (widget.shouldForceRequest()) {
+      await widget.tabFetcher(() => fetchChannelStreams(channelInfo, forceRequest: true));
+    } else {
+      await cachedStreamsLoad;
+      if (mounted && channelVideoTab == null) await fetchChannelStreams(channelInfo);
+    }
   }
 
   @override

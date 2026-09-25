@@ -73,10 +73,12 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   bool isLoadingInitialStreams = true;
 
+  late final Future<void> cachedStreamsLoad;
+
   @override
   void initState() {
     super.initState();
-    _initValues();
+    cachedStreamsLoad = _initValues();
   }
 
   @override

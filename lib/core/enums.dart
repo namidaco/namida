@@ -9,6 +9,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -441,7 +442,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   @override
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
-  bool get supportResuming => s.supportResuming;
+  bool get supportResuming => s.supportResuming && QueueSourceBase.resumingEnabled;
   @override
   String toText() => s.toText();
 
@@ -525,7 +526,7 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   @override
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
-  bool get supportResuming => s.supportResuming;
+  bool get supportResuming => s.supportResuming && QueueSourceBase.resumingEnabled;
   @override
   String toText() => s.toText();
 

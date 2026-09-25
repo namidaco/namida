@@ -202,7 +202,7 @@ class _YoutubeNotificationCommentsPageState extends State<YoutubeNotificationCom
             ),
             child: Column(
               children: [
-                const SizedBox(height: 6.0),
+                const SizedBox(height: 12.0),
                 Row(
                   children: [
                     const SizedBox(width: 12.0),

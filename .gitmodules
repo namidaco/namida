@@ -1,9 +1,12 @@
 [submodule "external/language"]
 	path = external/language
 	url = https://github.com/namidaco/namida-translations.git
+	ignore = all
 [submodule "external/ffmpeg_build"]
 	path = external/ffmpeg_build
 	url = https://github.com/MSOB7YY/ffmpeg_build/
+	ignore = all
 [submodule "external/party_relay"]
 	path = external/party_relay
 	url = https://github.com/namidaco/party_relay.git
+	ignore = all

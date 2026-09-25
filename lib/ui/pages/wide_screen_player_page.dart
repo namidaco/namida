@@ -440,11 +440,14 @@ class _RightPane extends StatelessWidget {
                       allowOverflow: false,
                       largeText: true,
                       fadeOnEmptyLine: false,
+                      showJumpButton: true,
                       baseFontSize: (constraints.maxWidth * 0.03).clampDouble(15.0, 26.0),
                     ),
                     const HeroMode(
                       enabled: false,
-                      child: CurrentQueueList(addPageBottomPadding: false),
+                      child: ClipRect(
+                        child: CurrentQueueList(addPageBottomPadding: false),
+                      ),
                     ),
                   ],
                 ),

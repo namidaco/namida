@@ -204,13 +204,22 @@ Win32Window::MessageHandler(HWND hwnd,
         MoveWindow(child_content_, rect.left, rect.top, rect.right - rect.left,
                    rect.bottom - rect.top, TRUE);
       }
+      // activation while minimized can't focus the child, and restoring
+      // doesn't re-activate, leaving all keyboard input lost.
+      if (wparam != SIZE_MINIMIZED && GetActiveWindow() == hwnd) {
+        EnsureChildContentFocused();
+      }
       return 0;
     }
 
     case WM_ACTIVATE:
-      if (child_content_ != nullptr) {
-        SetFocus(child_content_);
+      if (LOWORD(wparam) != WA_INACTIVE) {
+        EnsureChildContentFocused();
       }
+      return 0;
+
+    case WM_SETFOCUS:
+      EnsureChildContentFocused();
       return 0;
 
     case WM_DWMCOLORIZATIONCOLORCHANGED:
@@ -246,6 +255,17 @@ void Win32Window::SetChildContent(HWND content) {
   MoveWindow(content, frame.left, frame.top, frame.right - frame.left,
              frame.bottom - frame.top, true);
 
+  SetFocus(child_content_);
+}
+
+void Win32Window::EnsureChildContentFocused() {
+  if (child_content_ == nullptr || IsIconic(window_handle_)) {
+    return;
+  }
+  HWND focused = GetFocus();
+  if (focused == child_content_ || IsChild(child_content_, focused)) {
+    return;
+  }
   SetFocus(child_content_);
 }
 

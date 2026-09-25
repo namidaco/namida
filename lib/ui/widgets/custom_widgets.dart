@@ -246,6 +246,7 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String? titleSuffix;
   final String? subtitle;
+  final bool subtitleAbove;
   final Widget? trailing;
   final Widget? trailingRaw;
   final String? trailingText;
@@ -268,6 +269,7 @@ class CustomListTile extends StatelessWidget {
     required this.title,
     this.titleSuffix,
     this.subtitle,
+    this.subtitleAbove = false,
     this.trailing,
     this.trailingRaw,
     this.trailingText,
@@ -292,12 +294,14 @@ class CustomListTile extends StatelessWidget {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     final iconColor = context.defaultIconColor(passedColor);
+    final subtitle = this.subtitle;
+    final hasSubtitle = subtitle != null && subtitle.isNotEmpty;
 
     final baseDensity = VisualDensity.compact.baseSizeAdjustment;
     var minTileHeight =
         6.0 +
         baseDensity.dy +
-        switch ((subtitle?.isNotEmpty == true)) {
+        switch (hasSubtitle) {
           true => dense ? 60.0 : 62.0, // 2 lines
           false => dense ? 50.0 : 56.0, // 1 line
         };
@@ -310,6 +314,15 @@ class CustomListTile extends StatelessWidget {
       verticalPadding = 1.0;
       borderR *= 0.8;
     }
+
+    final subtitleText = hasSubtitle
+        ? Text(
+            subtitle,
+            style: theme.textTheme.displaySmall,
+            maxLines: maxSubtitleLines,
+            overflow: TextOverflow.ellipsis,
+          )
+        : null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1.0),
@@ -357,6 +370,10 @@ class CustomListTile extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (subtitleText != null && subtitleAbove) ...[
+                            subtitleText,
+                            if (!(dense || extraDense)) const SizedBox(height: 2.0),
+                          ],
                           Text.rich(
                             TextSpan(
                               text: title,
@@ -373,14 +390,9 @@ class CustomListTile extends StatelessWidget {
                             maxLines: maxTitleLines ?? (subtitle != null ? 4 : 5),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (subtitle?.isNotEmpty == true) ...[
+                          if (subtitleText != null && !subtitleAbove) ...[
                             if (!(dense || extraDense)) const SizedBox(height: 2.0),
-                            Text(
-                              subtitle!,
-                              style: theme.textTheme.displaySmall,
-                              maxLines: maxSubtitleLines,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                            subtitleText,
                           ],
                         ],
                       ),
@@ -639,7 +651,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.normalTitleStyle = false,
     this.bodyText,
     this.isWarning = false,
-    this.horizontalInset = 50.0,
+    this.horizontalInset = 42.0,
     this.verticalInset = 32.0,
     this.scrollable = true,
     this.contentPadding = const EdgeInsets.all(14.0),
@@ -6411,7 +6423,56 @@ class SoundControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tooltip = lang.soundControl;
     final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
-    final child = Obx(
+    final child = SoundControlButtonRaw(
+      iconSize: iconSize,
+      iconColor: iconColor,
+    );
+
+    if (builder != null) {
+      return builder!(child, _buildTooltip, _onTap);
+    }
+
+    return compact
+        ? NamidaIconButton(
+            tooltip: () => tooltip,
+            icon: null,
+            verticalPadding: 2.0,
+            horizontalPadding: 4.0,
+            padding: EdgeInsets.zero,
+            iconSize: iconSize,
+            onPressed: () {
+              onPressed?.call();
+              _onTap();
+            },
+            child: child,
+          )
+        : IconButton(
+            visualDensity: VisualDensity.compact,
+            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
+            tooltip: tooltip,
+            onPressed: () {
+              onPressed?.call();
+              _onTap();
+            },
+            icon: child,
+          );
+  }
+}
+
+class SoundControlButtonRaw extends StatelessWidget {
+  final double iconSize;
+  final Color iconColor;
+
+  const SoundControlButtonRaw({
+    super.key,
+    required this.iconSize,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
       (context) {
         PlayerConfigModificationScale? soundModificationScale;
         final currentItem = Player.inst.currentItem.valueR;
@@ -6447,36 +6508,6 @@ class SoundControlButton extends StatelessWidget {
               );
       },
     );
-
-    if (builder != null) {
-      return builder!(child, _buildTooltip, _onTap);
-    }
-
-    return compact
-        ? NamidaIconButton(
-            tooltip: () => tooltip,
-            icon: null,
-            verticalPadding: 2.0,
-            horizontalPadding: 4.0,
-            padding: EdgeInsets.zero,
-            iconSize: iconSize,
-            onPressed: () {
-              onPressed?.call();
-              _onTap();
-            },
-            child: child,
-          )
-        : IconButton(
-            visualDensity: VisualDensity.compact,
-            style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-            padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
-            tooltip: tooltip,
-            onPressed: () {
-              onPressed?.call();
-              _onTap();
-            },
-            icon: child,
-          );
   }
 }
 

@@ -140,9 +140,11 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
 
   void _showParallelDownloadsDialog() {
     final tempCount = settings.youtube.downloadParallelCount.valueF.obs;
+    final tempThreads = settings.youtube.downloadThreadsCount.valueF.obs;
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         tempCount.close();
+        tempThreads.close();
       },
       dialog: CustomBlurryDialog(
         title: lang.configure,
@@ -165,6 +167,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
             CustomListTile(
               icon: Broken.flash,
               title: lang.parallelDownloads,
+              subtitle: lang.performanceNote,
               trailing: Obx(
                 (context) {
                   final temp = tempCount.valueR;
@@ -172,6 +175,22 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                     max: 10,
                     initValue: temp,
                     onValueChanged: (val) => tempCount.value = val.withMinimum(1),
+                    text: temp.toString(),
+                  );
+                },
+              ),
+            ),
+            CustomListTile(
+              icon: Broken.cpu,
+              title: lang.threadsPerDownload,
+              subtitle: lang.performanceNote,
+              trailing: Obx(
+                (context) {
+                  final temp = tempThreads.valueR;
+                  return NamidaWheelSlider(
+                    max: 8,
+                    initValue: temp,
+                    onValueChanged: (val) => tempThreads.value = val.withMinimum(1),
                     text: temp.toString(),
                   );
                 },

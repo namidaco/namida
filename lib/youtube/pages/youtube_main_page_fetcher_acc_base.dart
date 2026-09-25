@@ -401,7 +401,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     final refreshIconWidget = ObxO(
       rx: _refreshButtonShown,
       builder: (context, value) => value
-          ? NamidaIconButton(
+          ? YoutubeMainPageHeaderIconButton(
               icon: Broken.refresh,
               onPressed: _fetchFeed,
             )
@@ -430,10 +430,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
             refreshIconWidget,
             if (widget.headerTrailing != null) widget.headerTrailing!,
             if (searchBoxManager != null)
-              NamidaIconButton(
-                horizontalPadding: 5.0,
+              YoutubeMainPageHeaderIconButton(
                 icon: Broken.filter_search,
-                iconSize: 22.0,
                 onPressed: searchBoxManager.toggleSearchBoxVisibility,
               ),
             if (widget.onHeaderTap != null) const SizedBox(width: 12.0),
@@ -666,6 +664,31 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     }
 
     return page;
+  }
+}
+
+class YoutubeMainPageHeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final void Function() onPressed;
+  final String Function()? tooltip;
+
+  const YoutubeMainPageHeaderIconButton({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      horizontalPadding: 6.0,
+      icon: icon,
+      iconSize: 22.0,
+      iconColor: context.defaultIconColor(),
+      tooltip: tooltip,
+      onPressed: onPressed,
+    );
   }
 }
 

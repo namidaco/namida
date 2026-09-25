@@ -10,7 +10,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
@@ -71,18 +70,13 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
         headerTrailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            NamidaIconButton(
-              horizontalPadding: 8.0,
+            YoutubeMainPageHeaderIconButton(
               icon: Broken.play_circle,
-              iconColor: context.defaultIconColor(),
               tooltip: () => lang.playAll,
               onPressed: _onPlayAllUnread,
             ),
-            const SizedBox(width: 2.0),
-            NamidaIconButton(
-              horizontalPadding: 8.0,
+            YoutubeMainPageHeaderIconButton(
               icon: Broken.setting_4,
-              iconColor: context.defaultIconColor(),
               tooltip: () => lang.configure,
               onPressed: _showFlagsDialog,
             ),

@@ -259,7 +259,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                 onReachingEnd: _fetchRepliesNext,
                 scrollController: sc,
                 listview: (controller) => SmoothCustomScrollView(
-                  physics: const ClampingScrollPhysicsModified(),
+                  physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysicsModified()),
                   controller: controller,
                   slivers: [
                     SliverToBoxAdapter(

@@ -209,8 +209,8 @@ jobs:
       - name: Setup dependencies
         run: |
           flutter clean
-          flutter pub upgrade
           git submodule update --init --remote --recursive
+          flutter pub upgrade
 
       - uses: actions/setup-java@v5
         with:
@@ -318,8 +318,8 @@ jobs:
       - name: Setup dependencies
         run: |
           flutter clean
-          flutter pub upgrade
           git submodule update --init --remote --recursive
+          flutter pub upgrade
 
       - name: Rust diagnostics (arm64 only)
         if: matrix.arch == 'arm64'
@@ -435,8 +435,8 @@ jobs:
         run: |
           export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
           flutter clean
-          flutter pub upgrade
           git submodule update --init --remote --recursive
+          flutter pub upgrade
 
       - name: Install fastforge
         run: |
@@ -526,8 +526,8 @@ jobs:
       - name: Setup dependencies
         run: |
           flutter clean
-          flutter pub upgrade
           git submodule update --init --remote --recursive
+          flutter pub upgrade
 
       - name: Build Linux App
         run: |

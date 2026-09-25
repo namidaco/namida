@@ -95,7 +95,7 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
                       extend: 400,
                       scrollController: sc,
                       listview: (controller) => SmoothCustomScrollView(
-                        physics: const ClampingScrollPhysicsModified(),
+                        physics: const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysicsModified()),
                         controller: controller,
                         slivers: [
                           ObxO(

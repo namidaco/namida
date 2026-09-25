@@ -1,3 +1,4 @@
+// by claude
 part of '../sync_manager.dart';
 
 class _SyncTable<T extends Object> {

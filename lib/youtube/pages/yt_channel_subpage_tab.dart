@@ -79,7 +79,11 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
         _initCompleter = null;
       },
     );
-    if (widget.shouldForceRequest()) widget.tabFetcher(fetchTabAndUpdate);
+    if (widget.shouldForceRequest()) {
+      widget.tabFetcher(fetchTabAndUpdate);
+    } else {
+      fetchTabAndUpdate(forceRequest: false);
+    }
     super.initState();
   }
 

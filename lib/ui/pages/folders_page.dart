@@ -239,6 +239,7 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
           title: title,
           titleSuffix: titleSuffix,
           subtitle: subtitle,
+          subtitleAbove: true,
           onTap: () => widget.foldersController.stepOut(),
           trailingRaw: Row(
             mainAxisSize: MainAxisSize.min,

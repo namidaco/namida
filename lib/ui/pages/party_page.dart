@@ -1,3 +1,4 @@
+// party page and all its parts by claude
 import 'dart:async';
 
 import 'package:flutter/material.dart';

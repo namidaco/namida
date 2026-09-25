@@ -432,35 +432,36 @@ class _CreateCardState extends State<_CreateCard> {
             value: _hostOnThisDevice,
             onChanged: (isTrue) => setState(() => _hostOnThisDevice = !isTrue),
           ),
-          NamidaExpansionTile(
-            icon: Broken.driver_2,
-            titleText: lang.partyCustomServer,
-            subtitleText: lang.partyServerPasswordSubtitle,
-            borderless: true,
-            iconColor: context.defaultIconColor(),
-            children: [
-              _FieldPadding(
-                child: CustomTagTextField(
-                  controller: _serverController,
-                  hintText: PartyController.defaultServer.toString(),
-                  labelText: lang.partyServerUrl,
-                  icon: Broken.global,
-                  keyboardType: TextInputType.url,
-                  maxLines: 1,
+          if (!_hostOnThisDevice)
+            NamidaExpansionTile(
+              icon: Broken.driver_2,
+              titleText: lang.partyCustomServer,
+              subtitleText: lang.partyServerPasswordSubtitle,
+              borderless: true,
+              iconColor: context.defaultIconColor(),
+              children: [
+                _FieldPadding(
+                  child: CustomTagTextField(
+                    controller: _serverController,
+                    hintText: PartyController.defaultServer.toString(),
+                    labelText: lang.partyServerUrl,
+                    icon: Broken.global,
+                    keyboardType: TextInputType.url,
+                    maxLines: 1,
+                  ),
                 ),
-              ),
-              _FieldPadding(
-                child: CustomTagTextField(
-                  controller: _serverPasswordController,
-                  hintText: lang.partyServerPassword,
-                  labelText: '',
-                  icon: Broken.password_check,
-                  obscureText: true,
-                  maxLines: 1,
+                _FieldPadding(
+                  child: CustomTagTextField(
+                    controller: _serverPasswordController,
+                    hintText: lang.partyServerPassword,
+                    labelText: '',
+                    icon: Broken.password_check,
+                    obscureText: true,
+                    maxLines: 1,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(height: 4.0),
           if (!_hostOnThisDevice)
             _MembershipTile(
@@ -511,6 +512,7 @@ class _JoinCardState extends State<_JoinCard> {
     if (pending == null) return;
     PartyController.inst.pendingInvite.value = null;
     _inviteController.text = pending;
+    _join();
   }
 
   @override

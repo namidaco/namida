@@ -164,7 +164,7 @@ class _JellyfinServer extends MusicWebServer {
     );
     final albumArtist = item.albumArtist ?? '';
 
-    final originalArtist = item.artists.join(', ');
+    final originalArtist = item.artists.join('; ');
     final artistsList = _splitAll(
       item.artists,
       (p) => Indexer.splitArtist(
@@ -174,7 +174,7 @@ class _JellyfinServer extends MusicWebServer {
       ),
     ).toList();
 
-    final originalGenre = item.genres.join(', ');
+    final originalGenre = item.genres.join('; ');
     final genresList = _splitAll(
       item.genres,
       (p) => Indexer.splitGenre(

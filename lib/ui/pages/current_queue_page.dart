@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart' as fr;
 
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -94,7 +93,7 @@ class _EmptyQueue extends StatelessWidget {
 
 class _QueueListBase extends StatefulWidget {
   final double itemExtent;
-  final fr.ItemExtentBuilder? itemExtentBuilder;
+  final double Function(int index)? itemExtentOf;
   final bool addPageBottomPadding;
   final Widget? header;
   final Widget Function(Widget scrollQueueWidget)? utilsRowBuilder;
@@ -102,7 +101,7 @@ class _QueueListBase extends StatefulWidget {
 
   const _QueueListBase({
     required this.itemExtent,
-    this.itemExtentBuilder,
+    this.itemExtentOf,
     required this.addPageBottomPadding,
     required this.header,
     required this.utilsRowBuilder,
@@ -116,32 +115,59 @@ class _QueueListBase extends StatefulWidget {
 class _QueueListBaseState extends State<_QueueListBase> {
   late final _scrollController = NamidaScrollController.create();
   late final _arrowIcon = Broken.cd.obs;
+  double? _mixedCurrentItemStart;
 
   @override
   void initState() {
     super.initState();
-    if (widget.utilsRowBuilder != null) _scrollController.addListener(_updateArrowIcon);
+    _scrollController.addListener(_updateArrowIcon);
+    Player.inst.currentIndex.addListener(_onCurrentItemMoved);
+    Player.inst.currentQueue.addListener(_onCurrentItemMoved);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateArrowIcon();
+    });
   }
 
   @override
   void dispose() {
+    Player.inst.currentIndex.removeListener(_onCurrentItemMoved);
+    Player.inst.currentQueue.removeListener(_onCurrentItemMoved);
     _scrollController.dispose();
     _arrowIcon.close();
     super.dispose();
+  }
+
+  void _onCurrentItemMoved() {
+    _mixedCurrentItemStart = null;
+    _updateArrowIcon();
+  }
+
+  double _currentItemStart() {
+    final index = Player.inst.currentIndex.value;
+    final itemExtentOf = widget.itemExtentOf;
+    if (itemExtentOf == null) return widget.itemExtent * index;
+    final cached = _mixedCurrentItemStart;
+    if (cached != null) return cached;
+    double start = 0.0;
+    for (int i = 0; i < index; i++) {
+      start += itemExtentOf(i);
+    }
+    return _mixedCurrentItemStart = start;
   }
 
   /// clamped, otherwise the icon never settles on [Broken.cd] for items near the edges.
   double? _currentItemScrollOffset() {
     final position = _scrollController.positions.lastOrNull;
     if (position == null) return null;
-    final offset = widget.itemExtent * Player.inst.currentIndex.value - position.viewportDimension * 0.2;
+    final offset = _currentItemStart() - position.viewportDimension * 0.2;
     return offset.clampDouble(position.minScrollExtent, position.maxScrollExtent);
   }
 
   void _updateArrowIcon() {
-    final target = _currentItemScrollOffset();
-    if (target == null) return;
-    final pixels = _scrollController.positions.last.pixels;
+    final position = _scrollController.positions.lastOrNull;
+    if (position == null || !position.hasContentDimensions) return;
+    final target = _currentItemScrollOffset()!;
+    final pixels = position.pixels;
     _arrowIcon.value = pixels > target
         ? Broken.arrow_up_1
         : pixels < target
@@ -168,6 +194,7 @@ class _QueueListBaseState extends State<_QueueListBase> {
         if (queueLength == 0) return const _EmptyQueue();
         final header = widget.header;
         final utilsRowBuilder = widget.utilsRowBuilder;
+        final itemExtentOf = widget.itemExtentOf;
         Widget listChild = NamidaScrollbar(
           controller: _scrollController,
           child: SmoothCustomScrollView(
@@ -176,8 +203,8 @@ class _QueueListBaseState extends State<_QueueListBase> {
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               NamidaSliverReorderableList(
                 itemCount: queueLength,
-                itemExtent: widget.itemExtentBuilder == null ? widget.itemExtent : null,
-                itemExtentBuilder: widget.itemExtentBuilder,
+                itemExtent: itemExtentOf == null ? widget.itemExtent : null,
+                itemExtentBuilder: itemExtentOf == null ? null : (index, _) => itemExtentOf(index),
                 onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
                 onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
                 onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
@@ -188,6 +215,24 @@ class _QueueListBaseState extends State<_QueueListBase> {
             ],
           ),
         );
+        if (utilsRowBuilder == null) {
+          listChild = Stack(
+            children: [
+              listChild,
+              Positioned(
+                bottom: 12.0,
+                right: 12.0,
+                child: ObxO(
+                  rx: _arrowIcon,
+                  builder: (context, arrowIcon) => _FloatingJumpButton(
+                    arrowIcon: arrowIcon,
+                    onTap: _animateToCurrentItem,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
         if (header != null || utilsRowBuilder != null) {
           listChild = Column(
             crossAxisAlignment: .end,
@@ -222,6 +267,44 @@ class _QueueListBaseState extends State<_QueueListBase> {
         }
         return listChild;
       },
+    );
+  }
+}
+
+class _FloatingJumpButton extends StatelessWidget {
+  final IconData arrowIcon;
+  final void Function() onTap;
+
+  const _FloatingJumpButton({required this.arrowIcon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return DelayedAnimatedShow(
+      show: arrowIcon != Broken.cd,
+      showDelay: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 600),
+      child: NamidaInkWell(
+        borderRadius: 10.0,
+        onTap: onTap,
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.3),
+        child: Row(
+          mainAxisSize: .min,
+          children: [
+            const SizedBox(width: 12.0),
+            Icon(
+              arrowIcon,
+              size: 18.0,
+            ),
+            const SizedBox(width: 6.0),
+            Text(
+              lang.jump,
+              style: context.textTheme.displayMedium,
+            ),
+            const SizedBox(width: 12.0),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -404,7 +487,7 @@ class _MixedQueueList extends StatelessWidget {
         ),
         builder: (videoTileProperties) => _QueueListBase(
           itemExtent: Dimensions.inst.trackTileItemExtent,
-          itemExtentBuilder: (index, _) {
+          itemExtentOf: (index) {
             final queue = Player.inst.currentQueue.value;
             return index < queue.length && queue[index] is Selectable ? Dimensions.inst.trackTileItemExtent : Dimensions.youtubeCardItemExtent;
           },

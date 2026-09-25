@@ -9,6 +9,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -349,15 +350,16 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
                 const SizedBox(width: 8.0),
                 const _SleepTimerQuickTile(),
                 const SizedBox(width: 8.0),
-                SoundControlButton(
-                  builder: (child, tooltipCallback, onTap) => _QuickSuggestionsTile(
-                    expanded: false,
-                    icon: null,
-                    leading: (color) => child,
-                    title: tooltipCallback(),
-                    subtitle: '',
-                    onTap: onTap,
+                _QuickSuggestionsTile(
+                  expanded: false,
+                  icon: null,
+                  leading: (color) => SoundControlButtonRaw(
+                    iconColor: color,
+                    iconSize: _QuickSuggestionsTile.kIconSize,
                   ),
+                  title: lang.soundControl,
+                  subtitle: '',
+                  onTap: NamidaOnTaps.inst.openSoundControl,
                 ),
               ],
             ),
@@ -368,7 +370,6 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
   }
 }
 
-/// shows what the timer is set to while it runs, so it can be checked at a glance.
 class _SleepTimerQuickTile extends StatelessWidget {
   const _SleepTimerQuickTile();
 
@@ -415,6 +416,8 @@ class _QuickSuggestionsTile extends StatelessWidget {
     this.expanded = true,
     this.fullWidth = false,
   });
+
+  static const kIconSize = 20.0;
 
   @override
   Widget build(BuildContext context) {
@@ -472,7 +475,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
               leading?.call(iconColor) ??
                   Icon(
                     icon,
-                    size: 20.0,
+                    size: kIconSize,
                     color: iconColor,
                   ),
               if (title.isNotEmpty || subtitle.isNotEmpty) ...[

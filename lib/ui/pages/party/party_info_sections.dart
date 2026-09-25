@@ -884,11 +884,9 @@ void _showQrCode(String inviteLink) {
             ),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
-              child: QrImageView(
+              child: _CrispQr(
                 data: inviteLink,
-                size: 220.0,
-                backgroundColor: Colors.white,
-                padding: EdgeInsets.zero,
+                maxSize: 220.0,
               ),
             ),
           ),
@@ -990,11 +988,10 @@ class _InviteSection extends StatelessWidget {
                   borderRadius: 10.0,
                   padding: const EdgeInsets.all(6.0),
                   child: RepaintBoundary(
-                    child: QrImageView(
+                    child: _CrispQr(
                       data: link,
-                      size: 64.0 + 12.0,
+                      maxSize: 102.0,
                       backgroundColor: Colors.white.withOpacityExt(0.8),
-                      padding: EdgeInsets.zero,
                     ),
                   ),
                 ),
@@ -1002,6 +999,62 @@ class _InviteSection extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _CrispQr extends StatefulWidget {
+  final String data;
+  final double maxSize;
+  final Color backgroundColor;
+
+  const _CrispQr({
+    required this.data,
+    required this.maxSize,
+    this.backgroundColor = Colors.white,
+  });
+
+  @override
+  State<_CrispQr> createState() => _CrispQrState();
+}
+
+class _CrispQrState extends State<_CrispQr> {
+  late int _modules;
+  late QrPainter _painter;
+
+  @override
+  void initState() {
+    super.initState();
+    _encode();
+  }
+
+  @override
+  void didUpdateWidget(covariant _CrispQr oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data != widget.data) _encode();
+  }
+
+  void _encode() {
+    final qr = QrCode.fromData(data: widget.data, errorCorrectLevel: QrErrorCorrectLevel.L);
+    _modules = qr.moduleCount;
+    _painter = QrPainter.withQr(qr: qr, gapless: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final modulePhysicalPx = (widget.maxSize * dpr / _modules).floorToDouble();
+    return SizedBox.square(
+      dimension: _modules * modulePhysicalPx / dpr,
+      child: FittedBox(
+        child: ColoredBox(
+          color: widget.backgroundColor,
+          child: CustomPaint(
+            size: Size.square(_modules.toDouble()),
+            painter: _painter,
+          ),
+        ),
       ),
     );
   }

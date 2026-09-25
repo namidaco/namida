@@ -48,6 +48,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final bool largeText;
   final bool insideMiniplayerCard;
   final bool fadeOnEmptyLine;
+  final bool showJumpButton;
   final double? baseFontSize;
 
   /// receives the overlay's animated visibility, so siblings can match its backdrop.
@@ -65,6 +66,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.largeText = false,
     this.insideMiniplayerCard = false,
     this.fadeOnEmptyLine = true,
+    this.showJumpButton = false,
     this.baseFontSize,
     this.visibilityNotifier,
     this.maxWidth,
@@ -1061,7 +1063,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                   child: fullscreenIconButton,
                 ),
 
-              if (fullscreen)
+              if (fullscreen || widget.showJumpButton)
                 Positioned(
                   bottom: 12.0,
                   right: 12.0,

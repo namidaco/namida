@@ -166,10 +166,12 @@ void showAddToPlaylistSheet({
                       ),
                     ],
                   ),
-                  _PlaylistsForVideoPage(
-                    videoIds: ids,
-                    maxWidth: maxWidth,
-                  ),
+                  ids.isEmpty
+                      ? const SizedBox()
+                      : _PlaylistsForVideoPage(
+                          videoIds: ids,
+                          maxWidth: maxWidth,
+                        ),
                 ],
               ),
             ),
@@ -319,27 +321,15 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   }
 
   void _fillPlaylistsLookup(YoutiPieUserPlaylistsResult res) {
-    if (res.items.isEmpty || !mounted) return;
-    setState(() {
-      for (final item in res.items) {
-        _playlistsLookup[item.id] = item;
-      }
-    });
+    for (final item in res.items) {
+      _playlistsLookup[item.id] = item;
+    }
   }
 
-  Future<void> _fetchNormalPlaylistsResult() async {
-    final cacheReader = YoutiPie.cacheBuilder.forUserPlaylists().withMaxPeriod(
-      allowedDuration: const Duration(hours: 12),
-    );
-    final cached = await cacheReader.readRaw();
-    if (cached != null) {
-      final cachedRes = cached.$1;
-      await YoutiPie.userplaylist.injectDefaultPlaylistsInUserPlaylists(cachedRes);
-      _fillPlaylistsLookup(cachedRes);
-      if (cached.$2) return; // -- cache still fresh
-    }
+  Future<void> _refetchNormalPlaylistsResult() async {
     final res = await YoutiPie.userplaylist.getUserPlaylists(details: ExecuteDetails.forceRequest());
-    if (res != null) _fillPlaylistsLookup(res);
+    if (res == null || res.items.isEmpty || !mounted) return;
+    setState(() => _fillPlaylistsLookup(res));
   }
 
   void _onUserPlaylistUpdated(PlaylistInfoItemUser newInfo) => _playlistsLookup[newInfo.id] = newInfo;
@@ -347,7 +337,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   @override
   void initState() {
     _fetchPlaylistsForVideo(firstVideoId);
-    _fetchNormalPlaylistsResult();
+    final cached = YoutiPie.cacheBuilder.forUserPlaylists().withMaxPeriod(allowedDuration: const Duration(hours: 12)).readSyncRaw();
+    if (cached != null) _fillPlaylistsLookup(cached.$1);
+    if (cached == null || !cached.$2) _refetchNormalPlaylistsResult();
     super.initState();
   }
 

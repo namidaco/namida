@@ -1,3 +1,4 @@
+// all party logic by claude
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -30,66 +31,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
-
-class PartyJoinRequest {
-  final String id;
-  final String name;
-  final String deviceId;
-  const PartyJoinRequest(this.id, this.name, this.deviceId);
-}
-
-/// a room this device was in, kept so it can be rejoined or closed later.
-class PartyRoomMemory {
-  final String code;
-  final Uri server;
-  final String? token;
-  final String name;
-  final bool hosted;
-  final int atMS;
-
-  const PartyRoomMemory({
-    required this.code,
-    required this.server,
-    required this.token,
-    required this.name,
-    required this.hosted,
-    required this.atMS,
-  });
-
-  /// rooms die on their own after a day, a stale entry would only fail to reconnect.
-  static const _maxAgeMS = 24 * 60 * 60 * 1000;
-
-  bool get isStale => DateTime.now().millisecondsSinceEpoch - atMS > _maxAgeMS;
-
-  static PartyRoomMemory? fromMap(Map<String, dynamic> map) {
-    final code = map['c'];
-    final server = Uri.tryParse(map['s'] as String? ?? '');
-    if (code is! String || server == null || !server.hasScheme) return null;
-    return PartyRoomMemory(
-      code: code,
-      server: server,
-      token: map['t'] as String?,
-      name: map['n'] as String? ?? '',
-      hosted: map['h'] == true,
-      atMS: map['at'] as int? ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toMap() => {
-    'c': code,
-    's': server.toString(),
-    't': ?token,
-    'n': name,
-    'h': hosted,
-    'at': atMS,
-  };
-}
-
-class PartyInvite {
-  final Uri server;
-  final String code;
-  const PartyInvite(this.server, this.code);
-}
 
 class PartyController implements PartyConnectionListener, PartyHostDelegate, PartyBinderDelegate, PartyStateListener {
   static final inst = PartyController._();
@@ -1175,4 +1116,64 @@ class _RoomCloser implements PartyConnectionListener {
   void onData(int route, int senderN, Uint8List payload) {}
   @override
   void onRelayError(String code) {}
+}
+
+class PartyJoinRequest {
+  final String id;
+  final String name;
+  final String deviceId;
+  const PartyJoinRequest(this.id, this.name, this.deviceId);
+}
+
+/// a room this device was in, kept so it can be rejoined or closed later.
+class PartyRoomMemory {
+  final String code;
+  final Uri server;
+  final String? token;
+  final String name;
+  final bool hosted;
+  final int atMS;
+
+  const PartyRoomMemory({
+    required this.code,
+    required this.server,
+    required this.token,
+    required this.name,
+    required this.hosted,
+    required this.atMS,
+  });
+
+  /// rooms die on their own after a day, a stale entry would only fail to reconnect.
+  static const _maxAgeMS = 24 * 60 * 60 * 1000;
+
+  bool get isStale => DateTime.now().millisecondsSinceEpoch - atMS > _maxAgeMS;
+
+  static PartyRoomMemory? fromMap(Map<String, dynamic> map) {
+    final code = map['c'];
+    final server = Uri.tryParse(map['s'] as String? ?? '');
+    if (code is! String || server == null || !server.hasScheme) return null;
+    return PartyRoomMemory(
+      code: code,
+      server: server,
+      token: map['t'] as String?,
+      name: map['n'] as String? ?? '',
+      hosted: map['h'] == true,
+      atMS: map['at'] as int? ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'c': code,
+    's': server.toString(),
+    't': ?token,
+    'n': name,
+    'h': hosted,
+    'at': atMS,
+  };
+}
+
+class PartyInvite {
+  final Uri server;
+  final String code;
+  const PartyInvite(this.server, this.code);
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/party/party_player_gate.dart';
 import 'package:namida/controller/party/party_protocol.dart';
 import 'package:namida/controller/party/party_state.dart';
@@ -145,7 +146,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   }
 
   void _run(Future<void> Function() action) {
-    _chain = _chain.then((_) => _bound ? action() : null).catchError((_) {});
+    _chain = _chain.then((_) => _bound ? action() : null).catchError((Object e, StackTrace st) => logger.error('party binder action failed', e: e, st: st));
   }
 
   // ------------------------------------------------------------ entries <-> playables

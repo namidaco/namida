@@ -168,15 +168,14 @@ class QueueController {
   Future<void> updateLatestQueue(List<Playable> items, {required List<int>? originalIndices, required QueueSourceBase<Enum> source, HomePageItems? homePageItem}) async {
     _sessionQueueDate = 0;
     _playerQueueModifiedTime = _pendingSyncQueueTimestamp ?? currentTimeMS;
-    final validOriginalIndices = originalIndices != null && _isValidOriginalIndices(originalIndices, items.length) ? originalIndices : null;
     // -- some actions in ui would wait for this (ex: scrolling to current item in queue right after modifying queue)
     // -- hopefully this doesn't cause other issues (pls)
     unawaited(
       Future.wait([
-        _saveLatestQueueToStorage(items, validOriginalIndices),
+        _saveLatestQueueToStorage(items, originalIndices),
         if (await _allowSavingQueue(items.length))
           _updateLatestQueueInsideMap(
-            validOriginalIndices == null ? items : _toOriginalOrder(items, validOriginalIndices),
+            originalIndices == null ? items : _toOriginalOrder(items, originalIndices),
             source: source,
             homePageItem: homePageItem,
           ),
@@ -425,9 +424,7 @@ class QueueController {
     );
   }
 
-  /// [originalIndices] must be a permutation of `0..length-1`, otherwise [_toOriginalOrder]
-  /// would either throw or silently drop items. a partially decodable queue file could hand us
-  /// indices of a longer original list
+  /// a partially decodable queue file could hand us indices of a longer original list
   static bool _isValidOriginalIndices(List<int> originalIndices, int length) {
     if (originalIndices.length != length) return false;
     final seen = List<bool>.filled(length, false);
@@ -439,11 +436,29 @@ class QueueController {
     return true;
   }
 
+  /// [originalIndices] can be stale (live player list), items without a valid unique index go to the end.
   static List<Playable> _toOriginalOrder(List<Playable> items, List<int> originalIndices) {
+    final length = items.length;
+    final indicesLength = originalIndices.length;
     final ordered = List<Playable>.of(items);
-    for (int i = 0; i < items.length; i++) {
-      ordered[originalIndices[i]] = items[i];
+    final placed = Uint8List(length);
+    List<Playable>? misplaced;
+    for (int i = 0; i < length; i++) {
+      final index = i < indicesLength ? originalIndices[i] : -1;
+      if (index >= 0 && index < length && placed[index] == 0) {
+        placed[index] = 1;
+        ordered[index] = items[i];
+      } else {
+        (misplaced ??= <Playable>[]).add(items[i]);
+      }
     }
+    if (misplaced == null) return ordered;
+
+    int writeIndex = 0;
+    for (int i = 0; i < length; i++) {
+      if (placed[i] == 1) ordered[writeIndex++] = ordered[i];
+    }
+    ordered.setAll(writeIndex, misplaced);
     return ordered;
   }
 
@@ -683,6 +698,7 @@ class _LatestPlayedForSourceManager {
 /// Binary layout: `magic u8, flags u8, metaLength u32, meta utf8 json, count u32, items...`
 /// item: `type u8, [originalIndex u32], length u32, payload bytes`
 /// payload is the raw path for tracks/videos, utf8 json otherwise.
+// optimizations by claude
 class _QueueSerializer {
   const _QueueSerializer();
 

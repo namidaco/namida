@@ -106,6 +106,7 @@ class JsonToHistoryParser {
             crossAxisAlignment: CrossAxisAlignment.start,
             children:
                 [
+                      const SizedBox(height: 8.0),
                       _ImportStepTile(
                         step: _HistoryImportStep.loadingFiles,
                         title: lang.loadingFile,

@@ -61,9 +61,8 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
       isSortable: true,
       searchTextResolver: (playlist) => playlist.title,
       searchHintText: lang.filterPlaylists,
-      headerTrailing: NamidaIconButton(
+      headerTrailing: YoutubeMainPageHeaderIconButton(
         icon: Broken.add_circle,
-        iconSize: 22.0,
         onPressed: () {
           YtUtilsPlaylist().promptCreatePlaylist(
             onButtonConfirm: (playlistTitle, privacy) async {
