@@ -431,6 +431,29 @@ class NamidaNavigator {
     return res;
   }
 
+  Future<bool> _confirmDiscardChanges() async {
+    bool discard = false;
+    await navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        bodyText: lang.discardChanges,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            colorScheme: Colors.red,
+            text: lang.discard.toUpperCase(),
+            onTap: () {
+              discard = true;
+              closeDialog();
+            },
+          ),
+        ],
+      ),
+    );
+    return discard;
+  }
+
   Future<void> closeDialog([int count = 1]) async {
     if (_openedNumbersManager._currentDialogNumber == 0) return;
     int closeCount = count.withMaximum(_openedNumbersManager._currentDialogNumber);
@@ -454,6 +477,7 @@ class NamidaNavigator {
     bool isDismissible = true,
     bool? showDragHandle,
     Color? backgroundColor,
+    bool Function()? hasUnsavedChanges,
   }) async {
     await Future.delayed(Duration.zero); // delay bcz sometimes doesnt show
 
@@ -469,6 +493,7 @@ class NamidaNavigator {
             showDragHandle: showDragHandle,
             isDismissible: isDismissible,
             backgroundColor: backgroundColor,
+            hasUnsavedChanges: hasUnsavedChanges,
             builder: (context) {
               final bottomMargin = MediaQuery.viewInsetsOf(context).bottom;
               final bottomPadding = MediaQuery.paddingOf(context).bottom;
@@ -566,7 +591,7 @@ class NamidaNavigator {
     if (_openedNumbersManager._currentMenusNumber > 0) {
       this.popMenu();
     } else if (_openedNumbersManager._currentSheetNumber > 0) {
-      _rootNav.currentState?.pop();
+      _rootNav.currentState?.maybePop();
     } else if (_openedNumbersManager._currentDialogNumber > 0) {
       closeDialog();
     } else {
@@ -1013,14 +1038,34 @@ class _OpenedNumbersManager {
 
 class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
   final double backgroundBlur;
+  final bool Function()? hasUnsavedChanges;
+
   _CustomModalBottomSheetRoute({
     this.backgroundBlur = 0,
     required super.isScrollControlled,
     super.showDragHandle,
     super.isDismissible,
     super.backgroundColor,
+    this.hasUnsavedChanges,
     required super.builder,
   });
+
+  bool _discardConfirmed = false;
+
+  @override
+  bool didPop(T? result) {
+    if (_discardConfirmed || hasUnsavedChanges?.call() != true) return super.didPop(result);
+    controller?.forward(); // -- a drag dismiss would have already started closing the sheet
+    scheduleMicrotask(() => _confirmDiscardThenPop(result)); // -- navigator is locked during didPop
+    return false;
+  }
+
+  Future<void> _confirmDiscardThenPop(T? result) async {
+    final discard = await NamidaNavigator.inst._confirmDiscardChanges();
+    if (!discard || !isCurrent) return;
+    _discardConfirmed = true;
+    navigator?.pop(result);
+  }
 
   @override
   Widget buildPage(

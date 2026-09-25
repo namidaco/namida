@@ -218,6 +218,7 @@ class _YTUtilsCommentActions {
 
     await showNamidaBottomSheetWithTextField(
       displayAccountThumbnail: true,
+      confirmDiscardingEdits: true,
       title: author,
       subtitle: subtitle == null ? null : '-> $subtitle',
       textfieldConfig: BottomSheetTextFieldConfig(

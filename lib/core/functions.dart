@@ -1091,8 +1091,10 @@ Future<String?> showNamidaBottomSheetWithTextField({
   Widget Function(FormState formState)? extraPreItemsBuilder,
   Rx<bool>? isInitiallyLoading,
   bool displayAccountThumbnail = false,
+  bool confirmDiscardingEdits = false,
 }) async {
   final localController = textfieldConfig is BottomSheetTextFieldConfigWC ? textfieldConfig.controller : TextEditingController(text: textfieldConfig.initalControllerText);
+  final initialText = localController.text;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
   final focusNode = FocusNode();
@@ -1103,6 +1105,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
   await NamidaNavigator.inst.showSheet(
     showDragHandle: showDragHandle,
     isScrollControlled: isScrollControlled,
+    hasUnsavedChanges: confirmDiscardingEdits ? () => finalText == null && localController.text != initialText : null,
     builder: (context, bottomPadding, maxWidth, maxHeight) {
       final textTheme = context.textTheme;
       final child = Padding(
