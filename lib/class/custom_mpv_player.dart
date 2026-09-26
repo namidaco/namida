@@ -677,12 +677,14 @@ class CustomMPVPlayer implements AVPlayer {
       _playerPositionStreamSub?.cancel(),
       _playerAudioTracksStreamSub?.cancel(),
       _playerLogStreamSub?.cancel(),
-      _videoInfoStreamController.close(),
-      _playerProcessingStateStreamController.close(),
-      _playerPositionStreamController.close(),
-      _audioTracksStreamController.close(),
-      _textTracksStreamController.close(),
     ].execute();
+
+    // -- not awaited, closing a controller that was never listened to never completes (temp players).
+    _videoInfoStreamController.close();
+    _playerProcessingStateStreamController.close();
+    _playerPositionStreamController.close();
+    _audioTracksStreamController.close();
+    _textTracksStreamController.close();
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
     _videoControllerRaw?.rect.removeListener(_videoControllerListener);

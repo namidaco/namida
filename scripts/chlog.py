@@ -187,13 +187,20 @@ def split_trailers(lines):
 
 
 def parse_bullets(lines):
+    """`- ` bullets are changelog sub points, `* ` bullets are internal notes that stay in git log only."""
     bullets = []
+    internal = False
     for line in lines:
         s = line.strip()
         if not s:
             continue
-        if s.startswith(("- ", "* ")):
+        if s.startswith("* "):
+            internal = True
+        elif s.startswith("- "):
+            internal = False
             bullets.append(s[2:].strip())
+        elif internal:
+            continue
         elif bullets:
             bullets[-1] += " " + s
         else:
@@ -783,11 +790,15 @@ def cmd_beta(args):
         rev = "%s..HEAD" % tag if tag else None
     commits = load_commits(rev_range=rev, after=after)
     cross_repo = bool(args.repo) and args.repo != MAIN_REPO
+    shown = sorted(
+        (c for c in reversed(commits) if c.prefix in CHANGELOG_PREFIXES and c.effective_score > 0),
+        key=lambda c: (CHANGELOG_PREFIXES.index(c.prefix), -c.effective_score),
+    )
     lines, closed, referenced = [], {}, {}
-    for c in reversed(commits):
-        text = "(%s) %s" % (c.platform, c.text) if c.platform else c.text
-        lines.append("- %s%s %s" % (COMMIT_URL, c.hash, text))
-        lines.extend("     - %s" % b for b in c.bullets)
+    for c in shown:
+        prefix = "%s(%s)" % (c.prefix, c.platform) if c.platform else c.prefix
+        lines.append("- %s%s %s: %s" % (COMMIT_URL, c.hash, prefix, c.override or c.text))
+    for c in commits:
         closed.update(dict.fromkeys(c.closes))
         referenced.update(dict.fromkeys(c.refs))
     for issue in closed:
@@ -807,7 +818,7 @@ def cmd_beta(args):
         sys.stdout.write(text)
     else:
         write(os.path.join(root, args.out), text)
-    print("%d commits since %s" % (len(commits), after or rev or "start"), file=sys.stderr)
+    print("%d of %d commits since %s" % (len(shown), len(commits), after or rev or "start"), file=sys.stderr)
 
 
 def comment_char():
@@ -841,6 +852,7 @@ TEMPLATE_HELP = """{c} known topics, reuse one so the commits merge into a singl
 {c}
 {c}   - rework header to be simpler
 {c}   - button to pick a single day with days radius
+{c}   * stats are computed once per day instead of per rebuild
 {c}
 {c}   topic: most-played
 {c}   score: 2
@@ -876,7 +888,9 @@ TEMPLATE_HELP = """{c} known topics, reuse one so the commits merge into a singl
 {c} (platform) only when the change is platform specific:
 {c}   {platforms}
 {c}
-{c} body: one "- " bullet per sub point, they become changelog sub points
+{c} body: "- " bullets become changelog sub points, only for what a user notices and
+{c}       the subject does not already say. most commits need none or a few.
+{c}       "* " bullets are internal notes (implementation, refactors), git log only.
 {c}
 {c} trailers, lowercase, last block, blank line before them. delete the ones you don't use:
 {c}

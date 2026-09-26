@@ -7,6 +7,8 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
+import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class ZoomableImage extends StatefulWidget {
@@ -32,27 +34,12 @@ class ZoomableImage extends StatefulWidget {
 }
 
 class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateMixin {
-  static const _imageKey = ValueKey('image');
+  static const _kImageKey = ValueKey('image');
 
   final _transform = _ZoomTransform();
   _ImageLevels? _levels;
   bool _hasImage = false;
-
-  late final AnimationController _zoomAnimation = AnimationController(vsync: this, duration: const Duration(milliseconds: 260))..addListener(_onZoomTick);
-  late final AnimationController _flingAnimation = AnimationController.unbounded(vsync: this)..addListener(_onFlingTick);
-
-  double _zoomFromScale = 1.0;
-  double _zoomToScale = 1.0;
-  Offset _zoomFromTranslation = Offset.zero;
-  Offset _zoomToTranslation = Offset.zero;
-
-  Offset _flingStart = Offset.zero;
-  Offset _flingDirection = Offset.zero;
-
-  double _gestureStartScale = 1.0;
-  Offset _gestureStartFocal = Offset.zero;
-  Offset _gestureStartTranslation = Offset.zero;
-  Offset _doubleTapPosition = Offset.zero;
+  bool _hasContentSize = false;
 
   @override
   void initState() {
@@ -75,7 +62,9 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
       _releaseLevels();
       _transform.reset();
       _hasImage = false;
-      _acquireLevels(View.of(context).physicalSize);
+      _hasContentSize = false;
+      final view = View.of(context);
+      _acquireLevels(view.physicalSize);
     }
   }
 
@@ -94,6 +83,7 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     _levels = levels;
     _syncFromLevels();
     _hasImage = _transform.image != null;
+    _hasContentSize = !_transform.contentSize.isEmpty;
   }
 
   void _releaseLevels() {
@@ -107,30 +97,48 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
   void _onLevelsChanged() {
     _syncFromLevels();
     final hasImage = _transform.image != null;
-    if (hasImage != _hasImage) setState(() => _hasImage = hasImage);
+    final hasContentSize = !_transform.contentSize.isEmpty;
+    if (hasImage == _hasImage && hasContentSize == _hasContentSize) return;
+    setState(() {
+      _hasImage = hasImage;
+      _hasContentSize = hasContentSize;
+    });
   }
 
   void _syncFromLevels() {
     final levels = _levels;
-    if (levels == null || levels.base == null) return;
-    if (_transform.contentSize.isEmpty) {
-      _transform.setContent(Size(levels.nativeWidth.toDouble(), levels.nativeHeight.toDouble()));
+    if (levels == null) return;
+    final preview = levels.preview;
+    if (levels.nativeWidth > 0) {
+      final nativeSize = Size(levels.nativeWidth.toDouble(), levels.nativeHeight.toDouble());
+      _transform.setContent(nativeSize, isNative: true);
+    } else if (preview != null) {
+      final previewSize = Size(preview.width.toDouble(), preview.height.toDouble());
+      _transform.setContent(previewSize, isNative: false);
     }
     _updateLevel();
   }
 
   int _levelFor(double scale) {
     final t = _transform;
-    return _levels!.levelForWidthPx(t.contentSize.width * scale * t.devicePixelRatio);
+    final requiredWidthPx = t.contentSize.width * scale * t.devicePixelRatio;
+    return _levels!.levelForWidthPx(requiredWidthPx);
   }
 
   void _updateLevel() {
     final levels = _levels;
-    if (levels == null || levels.base == null || _transform.contentSize.isEmpty) return;
+    if (levels == null || _transform.contentSize.isEmpty) return;
     final level = _levelFor(_transform.scale);
     levels.ensureLevel(level);
-    _transform.image = level == 0 ? levels.base : levels.highest;
+    final leveledImage = level == 0 ? levels.base : levels.highest;
+    _transform.image = leveledImage ?? levels.preview;
   }
+
+  late final AnimationController _zoomAnimation = AnimationController(vsync: this, duration: const Duration(milliseconds: 260))..addListener(_onZoomTick);
+  double _zoomFromScale = 1.0;
+  double _zoomToScale = 1.0;
+  Offset _zoomFromTranslation = Offset.zero;
+  Offset _zoomToTranslation = Offset.zero;
 
   void _animateTo(double scale, Offset translation) {
     _flingAnimation.stop();
@@ -144,22 +152,29 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
 
   void _onZoomTick() {
     final progress = Curves.easeOutCubic.transform(_zoomAnimation.value);
-    _transform.set(
-      ui.lerpDouble(_zoomFromScale, _zoomToScale, progress)!,
-      Offset.lerp(_zoomFromTranslation, _zoomToTranslation, progress)!,
-    );
+    final scale = ui.lerpDouble(_zoomFromScale, _zoomToScale, progress)!;
+    final translation = Offset.lerp(_zoomFromTranslation, _zoomToTranslation, progress)!;
+    _transform.set(scale, translation);
     _updateLevel();
   }
+
+  late final AnimationController _flingAnimation = AnimationController.unbounded(vsync: this)..addListener(_onFlingTick);
+  Offset _flingStart = Offset.zero;
+  Offset _flingDirection = Offset.zero;
 
   void _onFlingTick() {
     final t = _transform;
     final unclamped = _flingStart + _flingDirection * _flingAnimation.value;
     final clamped = t.clampTranslation(unclamped, t.scale);
     t.set(t.scale, clamped);
-    final blockedX = _flingDirection.dx == 0.0 || clamped.dx != unclamped.dx;
-    final blockedY = _flingDirection.dy == 0.0 || clamped.dy != unclamped.dy;
-    if (blockedX && blockedY) _flingAnimation.stop();
+    final isBlockedX = _flingDirection.dx == 0.0 || clamped.dx != unclamped.dx;
+    final isBlockedY = _flingDirection.dy == 0.0 || clamped.dy != unclamped.dy;
+    if (isBlockedX && isBlockedY) _flingAnimation.stop();
   }
+
+  double _gestureStartScale = 1.0;
+  Offset _gestureStartFocal = Offset.zero;
+  Offset _gestureStartTranslation = Offset.zero;
 
   void _onScaleStart(ScaleStartDetails details) {
     _zoomAnimation.stop();
@@ -180,16 +195,14 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     } else if (scale > maxScale) {
       scale = maxScale * math.pow(scale / maxScale, 0.4);
     }
-    t.set(
-      scale,
-      t.anchoredTranslation(
-        anchorPosition: _gestureStartFocal,
-        fromScale: _gestureStartScale,
-        fromTranslation: _gestureStartTranslation,
-        toScale: scale,
-        toPosition: details.localFocalPoint,
-      ),
+    final translation = t.anchoredTranslation(
+      anchorPosition: _gestureStartFocal,
+      fromScale: _gestureStartScale,
+      fromTranslation: _gestureStartTranslation,
+      toScale: scale,
+      toPosition: details.localFocalPoint,
     );
+    t.set(scale, translation);
     _updateLevel();
   }
 
@@ -197,9 +210,10 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     final t = _transform;
     if (t.contentSize.isEmpty) return;
     final scale = t.scale;
-    final clampedScale = scale.clamp(t.minScale, t.maxScale);
+    final clampedScale = scale.clampDouble(t.minScale, t.maxScale);
     if (clampedScale != scale) {
-      _animateTo(clampedScale, t.clampTranslation(t.translation * (clampedScale / scale), clampedScale));
+      final translation = t.clampTranslation(t.translation * (clampedScale / scale), clampedScale);
+      _animateTo(clampedScale, translation);
       return;
     }
     if (scale != _gestureStartScale) return;
@@ -220,20 +234,22 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     final t = _transform;
     _zoomAnimation.stop();
     _flingAnimation.stop();
-    final scale = (t.scale * math.exp((event as PointerScrollEvent).scrollDelta.dy * -0.002)).clamp(t.minScale, t.maxScale);
+    final scrollDelta = (event as PointerScrollEvent).scrollDelta.dy;
+    final zoomFactor = math.exp(scrollDelta * -0.002);
+    final scale = (t.scale * zoomFactor).clampDouble(t.minScale, t.maxScale);
     final position = event.localPosition;
-    t.set(
-      scale,
-      t.anchoredTranslation(
-        anchorPosition: position,
-        fromScale: t.scale,
-        fromTranslation: t.translation,
-        toScale: scale,
-        toPosition: position,
-      ),
+    final translation = t.anchoredTranslation(
+      anchorPosition: position,
+      fromScale: t.scale,
+      fromTranslation: t.translation,
+      toScale: scale,
+      toPosition: position,
     );
+    t.set(scale, translation);
     _updateLevel();
   }
+
+  Offset _doubleTapPosition = Offset.zero;
 
   void _onDoubleTapDown(TapDownDetails details) {
     _doubleTapPosition = details.localPosition;
@@ -246,17 +262,16 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
       _animateTo(t.minScale, Offset.zero);
       return;
     }
-    final target = math.max(t.coverScale, t.minScale * 2.5).clamp(t.minScale, t.maxScale);
-    _animateTo(
-      target,
-      t.anchoredTranslation(
-        anchorPosition: _doubleTapPosition,
-        fromScale: t.scale,
-        fromTranslation: t.translation,
-        toScale: target,
-        toPosition: _doubleTapPosition,
-      ),
+    final zoomedScale = math.max(t.coverScale, t.minScale * 2.5);
+    final target = zoomedScale.clampDouble(t.minScale, t.maxScale);
+    final translation = t.anchoredTranslation(
+      anchorPosition: _doubleTapPosition,
+      fromScale: t.scale,
+      fromTranslation: t.translation,
+      toScale: target,
+      toPosition: _doubleTapPosition,
     );
+    _animateTo(target, translation);
   }
 
   @override
@@ -274,12 +289,22 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     }
     final placeholder = widget.placeholder;
     if (placeholder != null) {
+      final contentSize = _transform.contentSize;
+      final placeholderWidget = !_hasContentSize
+          ? placeholder
+          : AspectRatio(
+              aspectRatio: contentSize.aspectRatio,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: placeholder,
+              ),
+            );
       child = Stack(
         alignment: Alignment.center,
         children: [
-          if (!_hasImage) placeholder,
+          if (!_hasImage) placeholderWidget,
           KeyedSubtree(
-            key: _imageKey,
+            key: _kImageKey,
             child: child,
           ),
         ],
@@ -346,9 +371,11 @@ class _ZoomableImageRenderWidget extends LeafRenderObjectWidget {
 }
 
 class _RenderZoomableImage extends RenderBox {
-  _RenderZoomableImage(this._transform, FilterQuality filterQuality) : _paint = Paint()..filterQuality = filterQuality;
+  _RenderZoomableImage(this._transform, this._filterQuality);
 
-  final Paint _paint;
+  static const _kNearestSamplingMinPhysicalPxPerImagePx = 2.0;
+
+  final _paint = Paint();
 
   _ZoomTransform _transform;
   set transform(_ZoomTransform value) {
@@ -361,9 +388,10 @@ class _RenderZoomableImage extends RenderBox {
     markNeedsPaint();
   }
 
+  FilterQuality _filterQuality;
   set filterQuality(FilterQuality value) {
-    if (_paint.filterQuality == value) return;
-    _paint.filterQuality = value;
+    if (_filterQuality == value) return;
+    _filterQuality = value;
     markNeedsPaint();
   }
 
@@ -411,6 +439,10 @@ class _RenderZoomableImage extends RenderBox {
       (visible.right - dst.left) * srcPerDstX,
       (visible.bottom - dst.top) * srcPerDstY,
     );
+    final physicalPxPerImagePx = _transform.devicePixelRatio / srcPerDstX;
+    final isNativeLevel = _transform.isContentNative && image.width == _transform.contentSize.width;
+    final shouldSampleNearest = isNativeLevel && physicalPxPerImagePx >= _kNearestSamplingMinPhysicalPxPerImagePx;
+    _paint.filterQuality = shouldSampleNearest ? FilterQuality.none : _filterQuality;
     context.canvas.drawImageRect(image, src, visible.shift(offset), _paint);
   }
 }
@@ -431,7 +463,9 @@ class _ZoomGestureRecognizer extends ScaleGestureRecognizer {
         if (!event.synthesized) {
           final previousFocal = _focalPoint();
           _pointers[event.pointer] = event.position;
-          if (_pointers.length > 1 || transform.canPan(_focalPoint() - previousFocal, axis)) acceptGesture(event.pointer);
+          final focalDelta = _focalPoint() - previousFocal;
+          final shouldAccept = _pointers.length > 1 || transform.canPan(focalDelta, axis);
+          if (shouldAccept) acceptGesture(event.pointer);
         }
       } else if (event is PointerDownEvent) {
         _pointers[event.pointer] = event.position;
@@ -465,6 +499,8 @@ class _ZoomGestureRecognizer extends ScaleGestureRecognizer {
 }
 
 class _ZoomTransform extends ChangeNotifier {
+  static const _kMaxPhysicalPxPerImagePx = 32.0;
+
   double devicePixelRatio = 1.0;
   VoidCallback? onViewportChanged;
 
@@ -476,9 +512,11 @@ class _ZoomTransform extends ChangeNotifier {
   double _scale = 1.0;
   Offset _translation = Offset.zero;
   ui.Image? _image;
-  bool _fitted = false;
+  bool _didFit = false;
+  bool _isContentNative = false;
 
   Size get contentSize => _contentSize;
+  bool get isContentNative => _isContentNative;
   double get minScale => _minScale;
   double get maxScale => _maxScale;
   double get coverScale => _coverScale;
@@ -493,17 +531,21 @@ class _ZoomTransform extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setContent(Size size) {
+  void setContent(Size size, {required bool isNative}) {
+    if (_contentSize == size && _isContentNative == isNative) return;
+    final wasAtMin = _scale <= _minScale;
+    if (!_contentSize.isEmpty) _scale *= _contentSize.width / size.width;
     _contentSize = size;
-    _fitted = false;
-    _recomputeBounds();
+    _isContentNative = isNative;
+    _recomputeBounds(shouldRefit: !_didFit || wasAtMin);
     notifyListeners();
   }
 
   void setViewport(Size size) {
     if (_viewport == size) return;
+    final wasAtMin = _scale <= _minScale;
     _viewport = size;
-    _recomputeBounds();
+    _recomputeBounds(shouldRefit: !_didFit || wasAtMin);
     onViewportChanged?.call();
   }
 
@@ -512,7 +554,8 @@ class _ZoomTransform extends ChangeNotifier {
     _image = null;
     _scale = 1.0;
     _translation = Offset.zero;
-    _fitted = false;
+    _didFit = false;
+    _isContentNative = false;
     notifyListeners();
   }
 
@@ -523,36 +566,36 @@ class _ZoomTransform extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _recomputeBounds() {
+  void _recomputeBounds({required bool shouldRefit}) {
     if (_contentSize.isEmpty || _viewport.isEmpty) return;
-    final wasAtMin = _scale <= _minScale;
     final fitWidth = _viewport.width / _contentSize.width;
     final fitHeight = _viewport.height / _contentSize.height;
     _minScale = math.min(fitWidth, fitHeight);
     _coverScale = math.max(fitWidth, fitHeight);
-    _maxScale = math.max(math.max(_minScale * 4.0, 4.0 / devicePixelRatio), _coverScale);
-    if (!_fitted || wasAtMin) {
-      _fitted = true;
+    final pixelZoomScale = _kMaxPhysicalPxPerImagePx / devicePixelRatio;
+    final maxScale = math.max(_minScale * 4.0, pixelZoomScale);
+    _maxScale = maxScale.withMinimum(_coverScale);
+    if (shouldRefit) {
+      _didFit = true;
       _scale = _minScale;
       _translation = Offset.zero;
     } else {
-      _scale = _scale.clamp(_minScale, _maxScale);
+      _scale = _scale.clampDouble(_minScale, _maxScale);
       _translation = clampTranslation(_translation, _scale);
     }
   }
 
   Offset _maxTranslation(double scale) {
-    return Offset(
-      math.max(0.0, (_contentSize.width * scale - _viewport.width) / 2),
-      math.max(0.0, (_contentSize.height * scale - _viewport.height) / 2),
-    );
+    final overflowX = (_contentSize.width * scale - _viewport.width) / 2;
+    final overflowY = (_contentSize.height * scale - _viewport.height) / 2;
+    return Offset(overflowX.withMinimum(0.0), overflowY.withMinimum(0.0));
   }
 
   Offset clampTranslation(Offset translation, double scale) {
     final max = _maxTranslation(scale);
     return Offset(
-      translation.dx.clamp(-max.dx, max.dx),
-      translation.dy.clamp(-max.dy, max.dy),
+      translation.dx.clampDouble(-max.dx, max.dx),
+      translation.dy.clampDouble(-max.dy, max.dy),
     );
   }
 
@@ -616,13 +659,14 @@ class _ImageLevels extends ChangeNotifier {
   final Size _baseTargetPx;
 
   int _refCount = 1;
-  bool _released = false;
-  bool _loadingBase = false;
-  bool _decoding = false;
+  bool _isReleased = false;
+  bool _isLoadingBase = false;
+  bool _isDecoding = false;
   int _wantedLevel = 0;
 
   ImageStream? _baseStream;
   late final _baseListener = ImageStreamListener(_onBase, onError: _onError);
+  late final _previewListener = ImageStreamListener(_onPreview);
   ui.ImmutableBuffer? _buffer;
   ui.ImageDescriptor? _descriptor;
 
@@ -631,6 +675,7 @@ class _ImageLevels extends ChangeNotifier {
   int baseWidth = 0;
   int maxLevel = 0;
 
+  ui.Image? preview;
   ui.Image? base;
   ui.Image? highest;
   int highestLevel = 0;
@@ -640,9 +685,11 @@ class _ImageLevels extends ChangeNotifier {
     _refCount--;
     if (_refCount > 0) return;
     _cache.remove(_provider);
-    _released = true;
+    _isReleased = true;
+    preview?.dispose();
     base?.dispose();
     if (highestLevel != 0) highest?.dispose();
+    preview = null;
     base = null;
     highest = null;
     _disposeNativeIfIdle();
@@ -650,7 +697,7 @@ class _ImageLevels extends ChangeNotifier {
   }
 
   void _disposeNativeIfIdle() {
-    if (!_released || _loadingBase || _decoding) return;
+    if (!_isReleased || _isLoadingBase || _isDecoding) return;
     _descriptor?.dispose();
     _buffer?.dispose();
     _descriptor = null;
@@ -658,14 +705,40 @@ class _ImageLevels extends ChangeNotifier {
   }
 
   void _load() {
-    _loadingBase = true;
-    final stream = _LevelsImageProvider(_provider, _decodeBase).resolve(ImageConfiguration.empty);
+    _takeCachedPreview();
+    _isLoadingBase = true;
+    final provider = _LevelsImageProvider(_provider, _decodeBase);
+    final stream = provider.resolve(ImageConfiguration.empty);
     _baseStream = stream;
     stream.addListener(_baseListener);
   }
 
+  void _takeCachedPreview() {
+    final cachedProvider = ArtworkWidget.fullQualityImage(_provider);
+    Object? resolvedKey;
+    cachedProvider.obtainKey(ImageConfiguration.empty).then((key) => resolvedKey = key);
+    final cacheKey = resolvedKey;
+    if (cacheKey == null) return;
+    final imageCache = PaintingBinding.instance.imageCache;
+    final status = imageCache.statusForKey(cacheKey);
+    final isDecoded = !status.pending && (status.keepAlive || status.live);
+    if (!isDecoded) return;
+    final completer = imageCache.putIfAbsent(cacheKey, () => throw StateError('cached image entry vanished'));
+    if (completer == null) return;
+    completer.addListener(_previewListener);
+    completer.removeListener(_previewListener);
+  }
+
+  void _onPreview(ImageInfo info, bool synchronousCall) {
+    if (!synchronousCall || preview != null) {
+      info.image.dispose();
+      return;
+    }
+    preview = info.image;
+  }
+
   void _stopLoadingBase() {
-    _loadingBase = false;
+    _isLoadingBase = false;
     _baseStream?.removeListener(_baseListener);
     _baseStream = null;
   }
@@ -676,10 +749,13 @@ class _ImageLevels extends ChangeNotifier {
     _descriptor = descriptor;
     nativeWidth = descriptor.width;
     nativeHeight = descriptor.height;
+    if (!_isReleased) notifyListeners();
     final targetPx = _baseTargetPx;
-    final fit = targetPx.isEmpty ? 1.0 : math.min(1.0, math.min(targetPx.width / nativeWidth, targetPx.height / nativeHeight));
-    baseWidth = math.max(1, (nativeWidth * fit).round());
-    final baseHeight = math.max(1, (nativeHeight * fit).round());
+    final fitWidth = targetPx.width / nativeWidth;
+    final fitHeight = targetPx.height / nativeHeight;
+    final fit = targetPx.isEmpty ? 1.0 : math.min(fitWidth, fitHeight).withMaximum(1.0);
+    baseWidth = (nativeWidth * fit).round().withMinimum(1);
+    final baseHeight = (nativeHeight * fit).round().withMinimum(1);
     int level = 0;
     for (int width = baseWidth; width < nativeWidth; width <<= 1) {
       level++;
@@ -690,7 +766,7 @@ class _ImageLevels extends ChangeNotifier {
 
   void _onBase(ImageInfo info, bool synchronousCall) {
     _stopLoadingBase();
-    if (_released) {
+    if (_isReleased) {
       info.image.dispose();
       _disposeNativeIfIdle();
       return;
@@ -698,13 +774,15 @@ class _ImageLevels extends ChangeNotifier {
     base = info.image;
     highest = base;
     highestLevel = 0;
+    preview?.dispose();
+    preview = null;
     notifyListeners();
     if (_wantedLevel > 0) _decodeWanted();
   }
 
   void _onError(Object e, StackTrace? st) {
     _stopLoadingBase();
-    if (_released) {
+    if (_isReleased) {
       _disposeNativeIfIdle();
       return;
     }
@@ -723,18 +801,19 @@ class _ImageLevels extends ChangeNotifier {
   void ensureLevel(int level) {
     if (level > maxLevel) level = maxLevel;
     _wantedLevel = level;
-    if (base == null || _decoding || level <= highestLevel) return;
+    if (base == null || _isDecoding || level <= highestLevel) return;
     _decodeWanted();
   }
 
   Future<void> _decodeWanted() async {
     final descriptor = _descriptor;
     if (descriptor == null) return;
-    _decoding = true;
-    while (!_released && _wantedLevel > highestLevel) {
+    _isDecoding = true;
+    while (!_isReleased && _wantedLevel > highestLevel) {
       final level = _wantedLevel;
       final width = math.min(nativeWidth, baseWidth << level);
-      final height = width == nativeWidth ? nativeHeight : math.max(1, (nativeHeight * width / nativeWidth).round());
+      final scaledHeight = (nativeHeight * width / nativeWidth).round().withMinimum(1);
+      final height = width == nativeWidth ? nativeHeight : scaledHeight;
       final ui.Image image;
       try {
         final codec = await descriptor.instantiateCodec(targetWidth: width, targetHeight: height);
@@ -745,7 +824,7 @@ class _ImageLevels extends ChangeNotifier {
         maxLevel = highestLevel;
         break;
       }
-      if (_released) {
+      if (_isReleased) {
         image.dispose();
         break;
       }
@@ -754,7 +833,7 @@ class _ImageLevels extends ChangeNotifier {
       highestLevel = level;
       notifyListeners();
     }
-    _decoding = false;
+    _isDecoding = false;
     _disposeNativeIfIdle();
   }
 }

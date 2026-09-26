@@ -481,11 +481,10 @@ class PlaylistsMessage extends BaseMessage {
     final resolved = playlists.map(
       (pl) => pl.copyWith(
         tracks: SyncPathResolver.resolveTracksWithDates(senderDeviceId, pl.tracks).toList(),
-        m3uPath: '', // -- sender's file path, meaningless here & would get it dropped on the next m3u rescan
       ),
     );
     if (SyncUtils.kAllowModification) {
-      await PlaylistController.inst.importPlaylistsIfNewer(resolved);
+      await PlaylistController.inst.importSyncedPlaylists(resolved);
     } else {
       snackyy(message: 'Importing ${resolved.length} playlists | ${resolved.map((e) => e.name).toFixedList()}');
     }

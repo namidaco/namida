@@ -51,6 +51,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     String name, {
     List<Track> tracks = const <Track>[],
     int? creationDate,
+    int? modifiedDate,
     String comment = '',
     List<String> moods = const [],
     String? m3uPath,
@@ -63,6 +64,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       track: e,
     ),
     creationDate: creationDate,
+    modifiedDate: modifiedDate,
     comment: comment,
     moods: moods,
     m3uPath: m3uPath,
@@ -293,28 +295,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   final _m3uPlaylistsCompleter = Completer<bool>();
   Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
 
-  bool _addedM3UPlaylists = false;
   Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true}) async {
-    if (forPaths.isEmpty && addAsM3U && !settings.enableM3USyncStartup.value) {
-      if (_addedM3UPlaylists) removeM3UPlaylists();
-
-      _addedM3UPlaylists = false;
-      return null;
-    }
-
-    if (addAsM3U) _addedM3UPlaylists = true;
-
     try {
-      var allm3uPaths = <String>{};
-      if (forPaths.isEmpty) {
-        final dirsFilterer = DirsFileFilterSimple(
-          extensions: NamidaFileExtensionsWrapper.m3u,
-        );
-        final result = await dirsFilterer.filter();
-        allm3uPaths = result.allPaths;
-      } else {
-        allm3uPaths.addAll(forPaths);
-      }
+      final allm3uPaths = forPaths.isEmpty ? await _listAllM3UFiles() : forPaths;
 
       _ParseM3UPlaylistFilesResult? resBoth;
       if (allm3uPaths.isNotEmpty) {
@@ -338,7 +321,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           final plName = e.key;
           final m3uPath = e.value.path;
           final trs = e.value.tracks;
-          final creationDate = (await File(m3uPath).stat()).creationDate.millisecondsSinceEpoch;
+          final stat = await File(m3uPath).stat();
+          final creationDate = stat.creationDate.millisecondsSinceEpoch;
+          final fileModifiedMS = stat.modified.millisecondsSinceEpoch;
+          final modifiedDate = addAsM3U ? _m3uDateFloor(fileModifiedMS) : null;
           final plAlreadyExisting = playlistsMap.value[plName];
           if (plAlreadyExisting != null) {
             this.updatePropertyInPlaylist(
@@ -347,6 +333,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
               convertItem: (e, dateAdded) => TrackWithDate(dateAdded: dateAdded, track: e),
               m3uPath: addAsM3U ? m3uPath : null,
               creationDate: creationDate,
+              modifiedDate: modifiedDate,
               tracksFromNewSource: true,
             );
           } else {
@@ -355,6 +342,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
               tracks: trs,
               m3uPath: addAsM3U ? m3uPath : null,
               creationDate: creationDate,
+              modifiedDate: modifiedDate,
               actionIfAlreadyExists: PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist, // we already check here tho
             );
           }
@@ -373,6 +361,88 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     } catch (_) {}
     return null;
   }
+
+  Future<Set<String>> _listAllM3UFiles() async {
+    final ownDir = AppDirs.M3UPlaylists;
+    final allPaths = <String>{};
+    if (settings.enableM3USyncStartup.value) {
+      final dirsFilterer = DirsFileFilterSimple(
+        extensions: NamidaFileExtensionsWrapper.m3u,
+      );
+      final result = await dirsFilterer.filter();
+      for (final path in result.allPaths) {
+        if (!p.isWithin(ownDir, path)) allPaths.add(path);
+      }
+    }
+    // -- m3u playlists have no json copy, own folder must load regardless of indexer folders/setting
+    try {
+      await for (final entity in Directory(ownDir).list(recursive: true)) {
+        final path = entity.path;
+        if (entity is File && NamidaFileExtensionsWrapper.m3u.isPathValid(path)) allPaths.add(path);
+      }
+    } catch (_) {}
+    return allPaths;
+  }
+
+  /// [playlists] tracks must be already resolved for this device, their m3uPath is only checked for existence.
+  Future<void> importSyncedPlaylists(Iterable<LocalPlaylist> playlists) async {
+    final preparing = playlists.map(_prepareSyncedPlaylist);
+    final prepared = await Future.wait(preparing);
+    final toImport = prepared.nonNulls;
+    if (toImport.isNotEmpty) await importPlaylistsIfNewer(toImport);
+  }
+
+  Future<LocalPlaylist?> _prepareSyncedPlaylist(LocalPlaylist incoming) async {
+    final existing = playlistsMap.value[incoming.name];
+    if (existing != null && existing.modifiedDate > incoming.modifiedDate) return null;
+
+    final m3uPath = await _resolveSyncedM3UPath(incoming, existing);
+    if (m3uPath == null) return null;
+    if (m3uPath.isEmpty) return incoming.copyWith(m3uPath: '');
+
+    final m3uModifiedDate = _m3uDateCeil(incoming.modifiedDate);
+    final m3uPlaylist = incoming.copyWith(m3uPath: m3uPath, modifiedDate: m3uModifiedDate);
+    final didWrite = await _writeSyncedM3UFile(m3uPlaylist, m3uPath);
+    return didWrite ? m3uPlaylist : null;
+  }
+
+  /// null when it can't be stored, empty for a json playlist.
+  Future<String?> _resolveSyncedM3UPath(LocalPlaylist incoming, LocalPlaylist? existing) async {
+    if (existing != null) {
+      final existingM3UPath = existing.m3uPath;
+      if (existingM3UPath == null || existingM3UPath.isEmpty) return '';
+      final canOverwrite = settings.enableM3USync.value || p.isWithin(AppDirs.M3UPlaylists, existingM3UPath);
+      return canOverwrite ? existingM3UPath : null;
+    }
+    if (incoming.m3uPath?.isNotEmpty != true) return '';
+    final m3uPath = getUnusedM3uFilePathInStorage(incoming.name);
+    final isTakenByAnotherPlaylist = await File(m3uPath).exists();
+    return isTakenByAnotherPlaylist ? '' : m3uPath;
+  }
+
+  Future<bool> _writeSyncedM3UFile(LocalPlaylist playlist, String m3uPath) async {
+    _m3uWriteTimers.remove(m3uPath)?.cancel();
+    final entries = _buildM3UEntries(playlist.tracks);
+    try {
+      await _saveM3UPlaylistToFile.thready((
+        path: m3uPath,
+        entries: entries,
+        artworkUrl: _artworkUrlForM3uInfoMap[m3uPath],
+        relative: true,
+      ));
+    } catch (_) {
+      return false;
+    }
+    final modifiedDate = DateTime.fromMillisecondsSinceEpoch(playlist.modifiedDate);
+    try {
+      await File(m3uPath).setLastModified(modifiedDate);
+    } catch (_) {}
+    return true;
+  }
+
+  // -- m3u modified date is the file date, which is only second-precise
+  static int _m3uDateFloor(int ms) => ms ~/ 1000 * 1000;
+  static int _m3uDateCeil(int ms) => (ms + 999) ~/ 1000 * 1000;
 
   void _ensureM3UArtUrlObtained(String playlistName, String m3uPath, String? artUrl) async {
     if (artUrl == null) return;

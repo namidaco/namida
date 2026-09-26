@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/smart_playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -27,89 +30,109 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     return BackgroundWrapper(
-      child: NamidaScrollbarWithController(
-        child: (sc) => AnimationLimiter(
-          child: SmoothCustomScrollView(
-            controller: sc,
-            slivers: [
-              const SliverPadding(padding: EdgeInsets.only(top: 6.0)),
-              ObxO(
-                rx: SmartPlaylistsController.inst.smartPlaylistsList,
-                builder: (context, smartPlaylists) {
-                  return NamidaSliverReorderableList(
-                    longPressToDrag: false,
-                    itemCount: smartPlaylists.length,
-                    itemExtent: _tileItemExtent,
-                    onReorder: SmartPlaylistsController.inst.reorder,
-                    itemBuilder: (context, i) {
-                      final smplWrapper = smartPlaylists[i];
-                      final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
-                      return AnimatingTile(
-                        key: ValueKey(smplWrapper),
-                        position: i,
-                        allowTilting: true,
-                        child: NamidaInkWell(
-                          margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          borderRadius: 12.0,
-                          bgColor: context.theme.cardColor.withOpacityExt(0.6),
-                          onTap: () {
-                            SmartPlaylistTracksPage(
-                              smartPlaylistWrapper: smplWrapper,
-                            ).navigate();
-                          },
-                          onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
-                          child: Row(
-                            children: [
-                              NamidaReordererableListener(
-                                index: i,
-                                durationMs: 100,
-                                child: const ColoredBox(
-                                  color: Colors.transparent,
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 10.0),
-                                    child: ThreeLineSmallContainers(
-                                      enabled: true,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              ArtworkWidget(
-                                key: ValueKey(imgFile),
-                                track: null,
-                                thumbnailSize: _tileItemExtent - 14.0,
-                                path: imgFile.path,
-                                forceSquared: true,
-                                icon: Broken.magicpen,
-                              ),
-                              const SizedBox(width: 12.0),
-                              Expanded(
-                                child: Text(
-                                  smplWrapper.value.name,
-                                  maxLines: 1,
-                                  softWrap: false,
-                                  overflow: TextOverflow.fade,
-                                  style: textTheme.displayMedium,
-                                ),
-                              ),
-                              const SizedBox(width: 8.0),
-                              MoreIcon(
-                                iconSize: 20.0,
-                                onPressed: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
-                              ),
-                              const SizedBox(width: 8.0),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+      child: Column(
+        children: [
+          SizedBox(
+            width: context.width,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+              child: NamidaButton(
+                icon: Broken.add,
+                text: lang.create,
+                tooltip: () => lang.createNewSmartPlaylist,
+                iconSize: 20.0,
+                onTap: () => NamidaNavigator.inst.navigateDialog(
+                  dialog: const CreateSmartPlaylistDialog(),
+                ),
               ),
-              kBottomPaddingWidgetSliver,
-            ],
+            ),
           ),
-        ),
+          Expanded(
+            child: NamidaScrollbarWithController(
+              child: (sc) => AnimationLimiter(
+                child: SmoothCustomScrollView(
+                  controller: sc,
+                  slivers: [
+                    ObxO(
+                      rx: SmartPlaylistsController.inst.smartPlaylistsList,
+                      builder: (context, smartPlaylists) {
+                        return NamidaSliverReorderableList(
+                          longPressToDrag: false,
+                          itemCount: smartPlaylists.length,
+                          itemExtent: _tileItemExtent,
+                          onReorder: SmartPlaylistsController.inst.reorder,
+                          itemBuilder: (context, i) {
+                            final smplWrapper = smartPlaylists[i];
+                            final imgFile = SmartPlaylistsController.inst.getArtworkFileForPlaylist(smplWrapper.value);
+                            return AnimatingTile(
+                              key: ValueKey(smplWrapper),
+                              position: i,
+                              allowTilting: true,
+                              child: NamidaInkWell(
+                                margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                borderRadius: 12.0,
+                                bgColor: context.theme.cardColor.withOpacityExt(0.6),
+                                onTap: () {
+                                  SmartPlaylistTracksPage(
+                                    smartPlaylistWrapper: smplWrapper,
+                                  ).navigate();
+                                },
+                                onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
+                                child: Row(
+                                  children: [
+                                    NamidaReordererableListener(
+                                      index: i,
+                                      durationMs: 100,
+                                      child: const ColoredBox(
+                                        color: Colors.transparent,
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(horizontal: 10.0),
+                                          child: ThreeLineSmallContainers(
+                                            enabled: true,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    ArtworkWidget(
+                                      key: ValueKey(imgFile),
+                                      track: null,
+                                      thumbnailSize: _tileItemExtent - 14.0,
+                                      path: imgFile.path,
+                                      forceSquared: true,
+                                      icon: Broken.magicpen,
+                                    ),
+                                    const SizedBox(width: 12.0),
+                                    Expanded(
+                                      child: Text(
+                                        smplWrapper.value.name,
+                                        maxLines: 1,
+                                        softWrap: false,
+                                        overflow: TextOverflow.fade,
+                                        style: textTheme.displayMedium,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                    MoreIcon(
+                                      iconSize: 20.0,
+                                      onPressed: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
+                                    ),
+                                    const SizedBox(width: 8.0),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    kBottomPaddingWidgetSliver,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

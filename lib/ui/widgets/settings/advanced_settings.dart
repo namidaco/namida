@@ -709,11 +709,10 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
     AppDirs.YT_THUMBNAILS_CHANNELS,
   };
 
-  final dirsMap = <String, int>{}.obs;
+  final dirsMapRx = <String, int>{}.obs;
+  final totalBytesRx = (-1).obs;
 
   final dirsChoosen = <String>[].obs;
-
-  int get totalBytes => dirsMap.values.fold(0, (previousValue, element) => previousValue + element);
 
   @override
   void initState() {
@@ -727,14 +726,15 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
 
   @override
   void dispose() {
-    dirsMap.close();
+    dirsMapRx.close();
     dirsChoosen.close();
     super.dispose();
   }
 
   void _fillSizes() async {
     final res = await _fillSizesIsolate.thready(mainDirs);
-    dirsMap.value = res;
+    dirsMapRx.value = res;
+    totalBytesRx.value = res.values.fold(0, (previousValue, element) => previousValue + element);
   }
 
   static Map<String, int> _fillSizesIsolate(Set<String> dirs) {
@@ -747,15 +747,16 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) => CustomListTile(
+    return ObxO(
+      rx: totalBytesRx,
+      builder: (context, totalBytes) => CustomListTile(
         bgColor: widget.bgColor,
         leading: const StackedIcon(
           baseIcon: Broken.image,
           secondaryIcon: Broken.close_circle,
         ),
         title: lang.clearImageCache,
-        trailingText: dirsMap.isEmpty ? '?' : totalBytes.fileSizeFormatted,
+        trailingText: totalBytes < 0 ? '?' : totalBytes.fileSizeFormatted,
         onTap: () {
           NamidaNavigator.inst.navigateDialog(
             dialog: CustomBlurryDialog(
@@ -765,7 +766,7 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                 const CancelButton(),
                 Obx(
                   (context) {
-                    final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMap[element] ?? 0));
+                    final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMapRx.valueR[element] ?? 0));
                     return NamidaButton(
                       colorScheme: Colors.red,
                       text: "${lang.clear.toUpperCase()} (${total.fileSizeFormatted})",
@@ -787,37 +788,40 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
                   },
                 ),
               ],
-              child: Column(
-                children: [
-                  ...mainDirs.map(
-                    (e) {
-                      final bytes = dirsMap[e] ?? 0;
-                      final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';
-                      final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
-                      return Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Obx(
-                          (context) => ListTileWithCheckMark(
-                            active: dirsChoosen.contains(e),
-                            dense: true,
-                            icon: Broken.cpu_setting,
-                            title:
-                                e.splitLastM(
-                                  Platform.pathSeparator,
-                                  onMatch: (part) {
-                                    if (part.isNotEmpty) return part;
-                                    return null;
-                                  },
-                                ) ??
-                                e,
-                            subtitle: subtitle,
-                            onTap: () => dirsChoosen.addOrRemove(e),
+              child: ObxO(
+                rx: dirsMapRx,
+                builder: (context, dirsMap) => Column(
+                  children: [
+                    ...mainDirs.map(
+                      (e) {
+                        final bytes = dirsMap[e] ?? 0;
+                        final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';
+                        final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
+                        return Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Obx(
+                            (context) => ListTileWithCheckMark(
+                              active: dirsChoosen.contains(e),
+                              dense: true,
+                              icon: Broken.cpu_setting,
+                              title:
+                                  e.splitLastM(
+                                    Platform.pathSeparator,
+                                    onMatch: (part) {
+                                      if (part.isNotEmpty) return part;
+                                      return null;
+                                    },
+                                  ) ??
+                                  e,
+                              subtitle: subtitle,
+                              onTap: () => dirsChoosen.addOrRemove(e),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           );

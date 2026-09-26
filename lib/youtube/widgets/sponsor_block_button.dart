@@ -23,6 +23,7 @@ class SkipSponsorButton extends StatefulWidget {
 
 class __SkipSponsorButtonState extends State<SkipSponsorButton> {
   SponsorBlockSegment? _currentSegment;
+  String? _evaluatedSegmentUuid;
   int _seenSeekCount = Player.inst.seekCount;
   int? _seekLandingMS;
   bool _didReachSeekLanding = false;
@@ -91,21 +92,23 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
         }
       }
     }
-    if (_currentSegment?.uuid != newSegment?.uuid) {
-      if (newSegment == null) {
-        setState(() => _currentSegment = null);
-      } else if (newSegmentSeekedInto) {
+    // -- acting once per segment keeps ticks queued before an auto skip's seek from skipping again
+    final newSegmentUuid = newSegment?.uuid;
+    if (newSegmentUuid == _evaluatedSegmentUuid) return;
+    _evaluatedSegmentUuid = newSegmentUuid;
+
+    SponsorBlockSegment? segmentToShow;
+    if (newSegment != null) {
+      if (newSegmentSeekedInto) {
         // -- seeking in is deliberate, it gets the button rather than being bounced out by an auto skip
-        setState(() => _currentSegment = newSegment);
+        segmentToShow = newSegment;
       } else {
         final didAutoSkip = SponsorBlockController.inst.autoSkipIfEnabled(newSegment);
-        if (!didAutoSkip) {
-          if (SponsorBlockController.inst.canShowSkipButton(newSegment)) {
-            setState(() => _currentSegment = newSegment);
-          }
-        }
+        final canShowButton = !didAutoSkip && SponsorBlockController.inst.canShowSkipButton(newSegment);
+        if (canShowButton) segmentToShow = newSegment;
       }
     }
+    if (segmentToShow?.uuid != _currentSegment?.uuid) setState(() => _currentSegment = segmentToShow);
   }
 
   @override
