@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rhttp/rhttp.dart';
@@ -14,6 +15,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -28,6 +30,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/namida_markdown.dart';
@@ -446,6 +449,11 @@ class _AboutPageState extends State<AboutPage> {
                     NamidaUtils.shareFiles(filePaths);
                   },
                 ),
+                NamidaAboutListTile(
+                  icon: Broken.message_question,
+                  title: lang.reportAnIssue,
+                  onTap: () => NamidaNavigator.inst.navigateDialog(dialog: const _ReportIssueDialog()),
+                ),
               ],
             ),
           ),
@@ -519,6 +527,153 @@ class NamidaAboutListTile extends StatelessWidget {
           },
     );
   }
+}
+
+class _ReportIssueDialog extends StatelessWidget {
+  const _ReportIssueDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomBlurryDialog(
+      icon: Broken.message_question,
+      title: lang.reportAnIssue,
+      normalTitleStyle: true,
+      actions: const [
+        CancelButton(),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ..._IssueTemplate.values.map(
+            (template) => CustomListTile(
+              icon: template.toIcon(),
+              title: template.toText(),
+              onTap: () {
+                NamidaNavigator.inst.closeDialog();
+                _IssueReporter.open(template);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IssueReporter {
+  static final _exportedLogsDirectory = FileParts.joinPath(AppDirs.INTERNAL_STORAGE, 'Logs');
+
+  static Future<void> open(_IssueTemplate template) async {
+    final query = {
+      'template': template.fileName,
+      if (template.includeEnvironment) ..._environmentFields(),
+    };
+
+    if (template.attachLogs) {
+      final unrevealedZipPath = await _prepareLogsZipAndGetUnrevealedPath();
+      if (unrevealedZipPath != null) query['logs'] = '📦 attach $unrevealedZipPath';
+    }
+
+    final newIssueUri = Uri.parse('${AppSocial.GITHUB_ISSUES}/new');
+    final url = newIssueUri.replace(queryParameters: query).toString();
+    await NamidaLinkUtils.openLink(url);
+  }
+
+  static Map<String, String> _environmentFields() {
+    final platformName = NamidaPlatformBuilder.init(
+      android: () => 'Android',
+      windows: () => 'Windows',
+      linux: () => 'Linux',
+    );
+    final fields = <String, String>{
+      'platforms': platformName,
+    };
+
+    final package = NamidaDeviceInfo.packageInfo;
+    if (package != null) {
+      final needsBuildNumber = package.buildNumber.isNotEmpty && !package.version.contains('+');
+      fields['version'] = needsBuildNumber ? '${package.version}+${package.buildNumber}' : package.version;
+    }
+
+    switch (NamidaDeviceInfo.deviceInfo) {
+      case AndroidDeviceInfo info:
+        fields['os'] = 'Android ${info.version.release} (SDK ${info.version.sdkInt})';
+        fields['device'] = '${info.manufacturer} ${info.model}';
+
+      case WindowsDeviceInfo info:
+        final isWindows11 = info.buildNumber >= 22000;
+        var productName = info.productName;
+        if (isWindows11) productName = productName.replaceFirst('Windows 10', 'Windows 11');
+        final memoryGB = info.systemMemoryInMegabytes ~/ 1024;
+        fields['os'] = '$productName ${info.displayVersion} (build ${info.buildNumber})';
+        fields['device'] = '${info.numberOfCores} cores, $memoryGB GB RAM';
+
+      case LinuxDeviceInfo info:
+        final env = Platform.environment;
+        final desktopName = env['XDG_CURRENT_DESKTOP'];
+        final sessionType = env['XDG_SESSION_TYPE'];
+        final sessionInfo = [?desktopName, ?sessionType].join(', ');
+        fields['os'] = sessionInfo.isEmpty ? info.prettyName : '${info.prettyName} ($sessionInfo)';
+
+        if (env.containsKey('FLATPAK_ID')) {
+          fields['source'] = 'Flatpak';
+        } else if (env.containsKey('APPIMAGE')) {
+          fields['source'] = 'AppImage';
+        }
+    }
+
+    return fields;
+  }
+
+  static Future<String?> _prepareLogsZipAndGetUnrevealedPath() async {
+    final canReveal = NamidaChannel.inst.canOpenFileInExplorer;
+    final outputDirectory = canReveal ? null : _exportedLogsDirectory;
+
+    if (outputDirectory != null) {
+      final granted = await requestManageStoragePermission(directoryToCreate: outputDirectory);
+      if (!granted) return null;
+    }
+
+    final zipPaths = await AppPaths.getAllExistingLogsAndSettingsAsZip(outputDirectory: outputDirectory);
+    final zipPath = zipPaths.first;
+    if (canReveal) NamidaChannel.inst.openFileInExplorer(zipPath);
+
+    snackyy(
+      icon: Broken.clipboard_text,
+      message: '${lang.savedIn}: $zipPath',
+      displayDuration: SnackDisplayDuration.tutorial,
+    );
+
+    return canReveal ? null : zipPath;
+  }
+}
+
+enum _IssueTemplate {
+  bug('bug-report.yml', includeEnvironment: true, attachLogs: true),
+  youtube('youtube.yml', includeEnvironment: true, attachLogs: true),
+  feature('feature_request.yml', includeEnvironment: false, attachLogs: false),
+  question('question.yml', includeEnvironment: true, attachLogs: false),
+  ;
+
+  final String fileName;
+  final bool includeEnvironment;
+  final bool attachLogs;
+
+  const _IssueTemplate(this.fileName, {required this.includeEnvironment, required this.attachLogs});
+
+  String toText() => switch (this) {
+    _IssueTemplate.bug => lang.bugReport,
+    _IssueTemplate.youtube => lang.youtube,
+    _IssueTemplate.feature => lang.featureRequest,
+    _IssueTemplate.question => lang.question,
+  };
+
+  IconData toIcon() => switch (this) {
+    _IssueTemplate.bug => Broken.danger,
+    _IssueTemplate.youtube => Broken.video_square,
+    _IssueTemplate.feature => Broken.lamp_charge,
+    _IssueTemplate.question => Broken.message_question,
+  };
 }
 
 class _EnabledAppIconBuilder extends StatelessWidget {

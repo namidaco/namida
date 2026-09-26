@@ -682,7 +682,7 @@ class AppPaths {
   static final VIDEOS_CACHE_OLD = _join(_USER_DATA, 'cache_videos.json');
   // ---------
 
-  static Future<List<String>> getAllExistingLogsAndSettingsAsZip() async {
+  static Future<List<String>> getAllExistingLogsAndSettingsAsZip({String? outputDirectory}) async {
     final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final dateText = format.format(DateTime.now());
     final tmpDirParentPath = FileParts.joinPath((await pp.getTemporaryDirectory()).path, 'namida_logs_$dateText');
@@ -690,12 +690,14 @@ class AppPaths {
     final tmpDirContents = await Directory(tmpDirContentsPath).create(recursive: true);
     await _copyAllExistingLogAndSettingsTo(tmpDirPath: tmpDirContentsPath);
     final zipper = ZipManager.platform();
-    final zipFile = FileParts.join(tmpDirParentPath, 'namida_logs_$dateText.zip');
+    final zipDirectoryPath = outputDirectory ?? tmpDirParentPath;
+    final zipFile = FileParts.join(zipDirectoryPath, 'namida_logs_$dateText.zip');
     await zipper.createZipFromDirectory(
       sourceDir: tmpDirContents,
       zipFile: zipFile,
     );
-    tmpDirContents.delete(recursive: true);
+    final leftoverDirectory = outputDirectory == null ? tmpDirContents : Directory(tmpDirParentPath);
+    leftoverDirectory.delete(recursive: true);
     return [zipFile.path];
   }
 
@@ -719,32 +721,55 @@ class AppPaths {
         existingPaths.add(permissionsInfoFile);
       } catch (_) {}
     }
+    final redactor = _LogsRedactor();
     for (final p in [
       AppPaths.LOGS,
       AppPaths.LOGS_FALLBACK,
       AppPaths.LOGS_TAGGER,
-      if (includeSettings) ...[
-        AppPaths.SETTINGS,
-        AppPaths.SETTINGS_EQUALIZER,
-        AppPaths.SETTINGS_PLAYER,
-        AppPaths.SETTINGS_YOUTUBE,
-        AppPaths.SETTINGS_EXTRA,
-        AppPaths.SETTINGS_SYNC,
-        AppPaths.SETTINGS_PARTY,
-        AppPaths.SETTINGS_TUTORIAL,
-        AppPaths.SETTINGS_SHORTCUTS,
-      ],
     ]) {
       final file = File(p);
       if (await file.exists()) {
-        final copy = await file.copy(FileParts.joinPath(tmpDirPath, p.getFilename));
+        final destination = FileParts.join(tmpDirPath, p.getFilename);
+        final copy = await redactor.copyRedacted(file, destination);
         final size = await copy.fileSize();
         if (size != null && size > 0) {
           existingPaths.add(copy);
         }
       }
     }
+    if (includeSettings) {
+      final settingsFile = await _writeAllSettingsRedacted(redactor, tmpDirPath: tmpDirPath);
+      if (settingsFile != null) existingPaths.add(settingsFile);
+    }
     return existingPaths;
+  }
+
+  static Future<File?> _writeAllSettingsRedacted(_LogsRedactor redactor, {required String tmpDirPath}) async {
+    final settingsPaths = [
+      AppPaths.SETTINGS,
+      AppPaths.SETTINGS_EQUALIZER,
+      AppPaths.SETTINGS_PLAYER,
+      AppPaths.SETTINGS_YOUTUBE,
+      AppPaths.SETTINGS_EXTRA,
+      AppPaths.SETTINGS_SYNC,
+      AppPaths.SETTINGS_PARTY,
+      AppPaths.SETTINGS_TUTORIAL,
+      AppPaths.SETTINGS_SHORTCUTS,
+    ];
+    final settingsReads = settingsPaths.map(_LogsRedactor.readRedactedSettings);
+    final settingsList = await Future.wait(settingsReads);
+
+    final allSettings = <String, dynamic>{};
+    for (int i = 0; i < settingsPaths.length; i++) {
+      final settings = settingsList[i];
+      if (settings == null) continue;
+      final settingsName = settingsPaths[i].getFilenameWOExt;
+      allSettings[settingsName] = settings;
+    }
+    if (allSettings.isEmpty) return null;
+
+    final destination = FileParts.join(tmpDirPath, 'settings.json');
+    return redactor.writeRedactedJson(allSettings, destination);
   }
 
   static String get LOGS_FALLBACK => _getFallbackLogsFilePath();
@@ -808,15 +833,7 @@ class AppPaths {
     final deviceMap = device?.data;
     final packageMap = package?.data;
 
-    // -- android
-    deviceMap?.remove('supported32BitAbis');
-    deviceMap?.remove('supported64BitAbis');
-    deviceMap?.remove('systemFeatures');
-    // -----------
-
-    // -- windows
-    deviceMap?.remove('digitalProductId');
-    // -----------
+    if (deviceMap != null) _LogsRedactor.removeExcludedDeviceInfo(deviceMap);
 
     final encoder = JsonEncoder.withIndent(
       "  ",
@@ -851,6 +868,83 @@ class AppPaths {
   static final VIDEO_ID_STATS_DB_INFO = DbWrapperFileInfo(directory: AppDirs.YOUTUBE_MAIN_DIRECTORY, dbName: 'ytid_stats');
   static final CACHE_VIDEOS_PRIORITY = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos_priority');
   static final CACHE_SERVERS_PRIORITY = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_servers_priority');
+}
+
+// by claude
+class _LogsRedactor {
+  static const _redactedValue = '<redacted>';
+  static const _redactedHomeDirectory = '~';
+  static const _indentedJsonEncoder = JsonEncoder.withIndent('  ');
+
+  static const _excludedDeviceInfoKeys = {
+    'supported32BitAbis', 'supported64BitAbis', 'systemFeatures', //
+    'name', 'computerName', 'hostName', 'userName', 'registeredOwner', //
+    'deviceId', 'productId', 'digitalProductId', 'installDate', 'machineId', 'systemGUID', //
+  };
+
+  static final _sensitiveSettingsKeys = {
+    AppPaths.SETTINGS_SYNC: const {
+      'id', 'customDeviceName', 'deviceIdNames', //
+      'allowedDeviceIds', 'blockedClientIds', 'allowedServerIds', 'manualServerAddresses', //
+    },
+    AppPaths.SETTINGS_PARTY: const {
+      'hiddenOwners', 'recentRooms', //
+    },
+  };
+
+  final _homeDirectoryRegex = _buildHomeDirectoryRegex();
+
+  static void removeExcludedDeviceInfo(Map<String, dynamic> deviceMap) {
+    for (final key in _excludedDeviceInfoKeys) {
+      deviceMap.remove(key);
+    }
+  }
+
+  static RegExp? _buildHomeDirectoryRegex() {
+    if (Platform.isAndroid) return null;
+
+    final homeEnvKey = Platform.isWindows ? 'USERPROFILE' : 'HOME';
+    final home = Platform.environment[homeEnvKey];
+    if (home == null) return null;
+
+    final isFilesystemRoot = Directory(home).parent.path == home;
+    if (isFilesystemRoot) return null;
+
+    final jsonEscapedHome = home.replaceAll(r'\', r'\\');
+    final forwardSlashesHome = home.replaceAll(r'\', '/');
+    final variants = {home, jsonEscapedHome, forwardSlashesHome};
+    final pattern = variants.map(RegExp.escape).join('|');
+    return RegExp(pattern, caseSensitive: !Platform.isWindows);
+  }
+
+  static Future<dynamic> readRedactedSettings(String path) async {
+    final settings = await File(path).readAsJson();
+    final sensitiveKeys = _sensitiveSettingsKeys[path];
+    if (sensitiveKeys == null || settings is! Map<String, dynamic>) return settings;
+
+    for (final key in sensitiveKeys) {
+      if (settings.containsKey(key)) settings[key] = _redactedValue;
+    }
+    return settings;
+  }
+
+  Future<File> copyRedacted(File source, File destination) async {
+    final homeDirectoryRegex = _homeDirectoryRegex;
+    if (homeDirectoryRegex == null) return source.copy(destination.path);
+
+    final text = await source.readAsString();
+    final redactedText = text.replaceAll(homeDirectoryRegex, _redactedHomeDirectory);
+    return destination.writeAsString(redactedText);
+  }
+
+  Future<File?> writeRedactedJson(Map<String, dynamic> json, File destination) async {
+    final homeDirectoryRegex = _homeDirectoryRegex;
+    if (homeDirectoryRegex == null) return destination.writeAsJson(json);
+
+    final text = _indentedJsonEncoder.convert(json);
+    final redactedText = text.replaceAll(homeDirectoryRegex, _redactedHomeDirectory);
+    return destination.writeAsString(redactedText);
+  }
 }
 
 /// Directories used by Namida

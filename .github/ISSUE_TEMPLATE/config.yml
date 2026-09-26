@@ -1,8 +1,14 @@
 blank_issues_enabled: false
 contact_links:
-  - name: 📚 Documentation
-    url: https://docs.namida.app
-    about: Most questions are already answered here, please check before opening an issue.
+  - name: 🔥 Hot Issues
+    url: https://github.com/namidaco/namida/issues?q=is%3Aissue%20state%3Aopen%20sort%3Areactions-%2B1-desc
+    about: the most 👍'd open issues, yours might be sitting right there. a 👍 counts more than a new issue
   - name: 🧪 Beta Version
     url: https://github.com/namidaco/namida-snapshots/releases
-    about: Your problem may already be fixed in the latest beta, please try it first.
+    about: fixes land here first, your problem might be gone already
+  - name: 📚 Documentation
+    url: https://docs.namida.app
+    about: lots of answers live here
+  - name: 🌍 Translations
+    url: https://github.com/namidaco/namida-translations
+    about: wanna fix or add a translation? it all happens here

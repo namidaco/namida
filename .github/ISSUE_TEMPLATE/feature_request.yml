@@ -1,51 +1,73 @@
-name: 💡 Feature request
-description: Suggest an idea for this project
-title: "[FEATURE REQUEST]  Write the title here"
+name: 💡 Feature Request
+description: got an idea? spill it
 labels:
   - feature request
+type: Feature
 
 body:
   - type: markdown
     attributes:
       value: |
-        **this template is **ONLY** used for requesting features, use other templates for other stuff**
+        ooh an idea 👀 tell me everything
   - type: checkboxes
+    id: checks
     attributes:
-      label: Before requesting
+      label: before we start
       options:
-        - label: I have searched the existing issues
+        - label: i searched the [existing issues](https://github.com/namidaco/namida/issues?q=is%3Aissue) (closed ones too), nobody asked for this yet
           required: true
-        - label: I have checked the [documentation](https://docs.namida.app), the feature doesn't already exist
-          required: true
-        - label: I have tried the latest [beta version](https://github.com/namidaco/namida-snapshots/releases), it may already be there
+        - label: i checked the latest [beta](https://github.com/namidaco/namida-snapshots/releases), it's not there already
           required: true
   - type: textarea
+    id: problem
     attributes:
-      label: Is your feature request related to a problem? Please describe.
-      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
-    validations:
-      required: false
+      label: what's bugging you
+      description: the problem behind the idea, if there is one
+      placeholder: i'm always frustrated when ...
   - type: textarea
+    id: idea
     attributes:
-      label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
+      label: your idea
+      description: what should namida do? mockups & sketches are very welcome
     validations:
       required: true
-  - type: textarea
+  - type: dropdown
+    id: area
     attributes:
-      label: Describe alternatives you've considered
-      description: A clear and concise description of any alternative solutions or features you've considered.
-    validations:
-      required: false
-  - type: textarea
+      label: where in the app
+      options:
+        - Library & indexing
+        - Playback & queue
+        - Player & miniplayer
+        - Playlists & history
+        - Tags editor
+        - Lyrics
+        - YouTube
+        - Downloads
+        - Sync
+        - Widgets & notification
+        - Settings & backups
+        - other / not sure
+  - type: dropdown
+    id: platforms
     attributes:
-      label: Additional context
-      description: Add any other context or screenshots about the feature request here.
-    validations:
-      required: false
+      label: platforms
+      description: where do you want it
+      multiple: true
+      options:
+        - Android
+        - Windows
+        - Linux
   - type: textarea
+    id: alternatives
     attributes:
-      label: Apps
-      description: Add any other known apps/service that does this in a good way
-    validations:
-      required: false
+      label: other ways you thought of
+  - type: textarea
+    id: other_apps
+    attributes:
+      label: apps that do this well
+      description: links or screenshots of how others did it
+  - type: textarea
+    id: extra
+    attributes:
+      label: anything else

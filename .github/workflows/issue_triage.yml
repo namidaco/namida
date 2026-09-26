@@ -1,0 +1,28 @@
+name: issue_triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: issue-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    if: github.event.issue.state == 'open' && (github.event.action == 'opened' || github.event.changes.body || github.event.changes.title)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/scripts
+
+      - uses: actions/github-script@v8
+        with:
+          script: |
+            const triage = require('./.github/scripts/issue_triage.js');
+            await triage({ github, context, core });

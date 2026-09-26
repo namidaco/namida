@@ -1,5 +1,5 @@
-name: 🐛 Bug Report
-description: something's broken, crashing or just acting weird
+name: 📺 YouTube Problem
+description: videos won't play, downloads fail, sign in acting up, etc
 labels:
   - bug
 type: Bug
@@ -8,7 +8,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        heyy thanks for taking the time 🤎
+        youtube loves breaking stuff, so thanks for the heads up 🤎
 
         psst, **Settings > About > Report an issue** opens this form with your version & device already filled in, and gets the logs zip ready for you
   - type: checkboxes
@@ -16,9 +16,11 @@ body:
     attributes:
       label: before we start
       options:
-        - label: i searched the [existing issues](https://github.com/namidaco/namida/issues?q=is%3Aissue) (closed ones too), nobody reported this yet
+        - label: i searched the [existing issues](https://github.com/namidaco/namida/issues?q=is%3Aissue%20label%3A%22area%3A%20youtube%22) (closed ones too), nobody reported this yet
           required: true
-        - label: i tried the latest [beta](https://github.com/namidaco/namida-snapshots/releases) and it still happens there
+        - label: i tried the latest [beta](https://github.com/namidaco/namida-snapshots/releases) and it still happens there, youtube fixes land there first
+          required: true
+        - label: i tried signing in again (yes, even if i was already signed in), or i don't use sign in
           required: true
   - type: input
     id: version
@@ -66,58 +68,63 @@ body:
         - portable / tarball
         - somewhere else
   - type: dropdown
-    id: severity
+    id: yt_problem
     attributes:
-      label: how bad is it
+      label: what's broken on youtube
       options:
-        - 💥 crash / app won't open
-        - 🚫 something doesn't work
-        - 🤏 small glitch / looks off
+        - ▶️ videos won't play / keep buffering
+        - ⬇️ downloads fail
+        - 🔑 sign in / memberships
+        - 🔎 search, home feed or channel pages
+        - 💬 comments
+        - 📃 playlists / history
+        - 🤷 something else
     validations:
       required: true
   - type: dropdown
-    id: area
+    id: yt_scope
     attributes:
-      label: where does it happen
+      label: which videos
       options:
-        - Library & indexing
-        - Playback & queue
-        - Player & miniplayer
-        - Playlists & history
-        - Tags editor
-        - Lyrics
-        - YouTube
-        - Downloads
-        - Sync
-        - Widgets & notification
-        - Settings & backups
-        - other / not sure
+        - every video
+        - some videos
+        - just one
     validations:
       required: true
+  - type: dropdown
+    id: yt_signed_in
+    attributes:
+      label: signed in?
+      options:
+        - "yes"
+        - "no"
+        - tried both, same thing
+    validations:
+      required: true
+  - type: textarea
+    id: yt_links
+    attributes:
+      label: video links
+      description: a couple of links where it happens
+      placeholder: https://youtu.be/...
   - type: textarea
     id: what_happened
     attributes:
       label: what happened
-      placeholder: i pressed play and namida started speaking french
+      placeholder: tapped a video, spinner spun forever 🌀
     validations:
       required: true
   - type: textarea
-    id: expected
+    id: yt_error
     attributes:
-      label: what did you expect instead
-    validations:
-      required: true
-  - type: textarea
-    id: steps
+      label: error message
+      description: copy it exactly if namida showed one
+      render: text
+  - type: input
+    id: yt_region
     attributes:
-      label: how to make it happen
-      description: the clearer the steps, the faster the fix
-      placeholder: |
-        1. open ...
-        2. tap ...
-        3. boom
-    validations:
-      required: true
+      label: country
+      description: optional, only matters for region locked stuff
   - type: textarea
     id: logs
     attributes:
@@ -142,8 +149,3 @@ body:
     attributes:
       label: screenshots / video
       description: a quick screen recording makes things sooo much easier
-  - type: textarea
-    id: fix_idea
-    attributes:
-      label: any idea how to fix it?
-      description: totally optional, big brain moves welcome
