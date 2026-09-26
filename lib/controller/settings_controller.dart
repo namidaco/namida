@@ -497,7 +497,14 @@ class _SettingsController with SettingsFileWriter {
       }
 
       final libraryListFromStorage = json['libraryTabs'];
-      if (libraryListFromStorage is List) libraryTabs.value = libraryListFromStorage.map((e) => LibraryTab.values.getEnum(e)).toListy();
+      if (libraryListFromStorage is List) {
+        final libraryGroups = <LibraryTab>{};
+        for (final e in libraryListFromStorage) {
+          final tab = LibraryTab.values.getEnum(e);
+          if (tab != null) libraryGroups.add(tab.group);
+        }
+        libraryTabs.value = libraryGroups.toList();
+      }
 
       final homePageItemsFromStorage = json['homePageItems'];
       if (homePageItemsFromStorage is List) homePageItems.value = homePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();

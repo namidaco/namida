@@ -304,7 +304,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         control: true,
         callback: () {
           try {
-            final tab = settings.libraryTabs.value.toNavTabs()[i - 1];
+            final tab = settings.libraryTabs.value[i - 1].activeVariant();
             ScrollSearchController.inst.animatePageController(tab);
           } catch (_) {
             // -- index larger than tabs length

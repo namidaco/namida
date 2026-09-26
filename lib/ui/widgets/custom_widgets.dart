@@ -4158,7 +4158,6 @@ class NamidaReorderableActiveListView<E> extends StatefulWidget {
   final String Function(E item) toText;
   final IconData Function(E item) toIcon;
   final IconData? Function(E item)? toSecondaryIcon;
-  final Widget? Function(E item, bool active)? belowTitleBuilder;
   final void Function(List<E> activeItems) onSave;
   final void Function(int i, List<E> activeItems)? onItemRemoved;
   final int minimumItems;
@@ -4170,7 +4169,6 @@ class NamidaReorderableActiveListView<E> extends StatefulWidget {
     required this.toText,
     required this.toIcon,
     this.toSecondaryIcon,
-    this.belowTitleBuilder,
     required this.onSave,
     this.onItemRemoved,
     this.minimumItems = 3,
@@ -4248,26 +4246,11 @@ class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableAc
           final (:item, :active) = items[i];
           final mainIcon = widget.toIcon(item);
           final secondaryIcon = widget.toSecondaryIcon?.call(item);
-          final title = "${i + 1}. ${widget.toText(item)}";
-          final belowTitle = widget.belowTitleBuilder?.call(item, active);
           return Padding(
             key: ValueKey(item),
             padding: const EdgeInsets.all(3.0),
             child: ListTileWithCheckMark(
-              title: title,
-              titleWidget: belowTitle == null
-                  ? null
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: context.textTheme.displayMedium,
-                        ),
-                        belowTitle,
-                      ],
-                    ),
+              title: "${i + 1}. ${widget.toText(item)}",
               icon: secondaryIcon == null ? mainIcon : null,
               leading: secondaryIcon == null
                   ? null

@@ -1053,7 +1053,7 @@ class ExtrasSettings extends SettingSubpageProvider {
           bgColor: getBgColor(_ExtraSettingsKeys.libraryTabs),
           icon: Broken.color_swatch,
           title: lang.libraryTabs,
-          subtitle: libraryTabs.map((e) => e.toShortText()).join(', '),
+          subtitle: libraryTabs.map((e) => e.toText()).join(', '),
           trailingText: "${libraryTabs.length}",
           onTap: () => NamidaNavigator.inst.navigateDialog(
             scale: 1.0,
@@ -1067,26 +1067,15 @@ class ExtrasSettings extends SettingSubpageProvider {
                 height: namida.height * 0.5,
                 child: NamidaReorderableActiveListView(
                   enumValues: LibraryTab.values.where((e) => e.isGroupHead).toList(),
-                  activeItems: libraryTabs.toNavTabs().map((e) => e.group).toList(),
+                  activeItems: libraryTabs,
                   toText: (item) => item.toText(),
                   toIcon: (item) => item.toIcon(),
-                  belowTitleBuilder: (item, active) => active && item.groupVariants.isNotEmpty && settings.includeVideos.value ? _LibraryTabVariantsToggles(group: item) : null,
                   minimumItems: 2,
                   onItemRemoved: (i, activeItems) {
                     settings.extra.save(selectedLibraryTab: settings.libraryTabs.value.first);
                   },
-                  onSave: (activeGroups) {
-                    final currentTabs = settings.libraryTabs.value;
-                    final newTabs = <LibraryTab>[];
-                    for (final group in activeGroups) {
-                      final enabledVariants = currentTabs.enabledVariantsOf(group);
-                      if (enabledVariants.isEmpty) {
-                        newTabs.add(group);
-                      } else {
-                        newTabs.addAll(enabledVariants);
-                      }
-                    }
-                    settings.libraryTabs.value = newTabs;
+                  onSave: (activeItems) {
+                    settings.libraryTabs.value = activeItems;
                     settings.save(libraryTabs: null);
                   },
                 ),
@@ -1524,63 +1513,6 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LibraryTabVariantsToggles extends StatelessWidget {
-  final LibraryTab group;
-
-  const _LibraryTabVariantsToggles({required this.group});
-
-  void _toggle(LibraryTab variant, List<LibraryTab> libraryTabs) {
-    if (libraryTabs.contains(variant)) {
-      if (libraryTabs.enabledVariantsOf(group).length <= 1) return;
-      settings.removeFromList(libraryTab1: variant);
-      if (settings.extra.selectedLibraryTab.value == variant) settings.extra.save(selectedLibraryTab: settings.libraryTabs.value.first);
-    } else {
-      final lastVariantIndex = libraryTabs.lastIndexWhere((e) => e.group == group);
-      settings.insertInList(lastVariantIndex + 1, libraryTab1: variant);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return ObxO(
-      rx: settings.libraryTabs,
-      builder: (context, libraryTabs) => Padding(
-        padding: const EdgeInsets.only(top: 6.0),
-        child: Wrap(
-          spacing: 6.0,
-          runSpacing: 4.0,
-          children: group.groupVariants.map(
-            (variant) {
-              final active = libraryTabs.contains(variant);
-              return NamidaInkWell(
-                borderRadius: 8.0,
-                bgColor: active ? theme.colorScheme.secondary.withOpacityExt(0.2) : theme.cardColor,
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                onTap: () => _toggle(variant, libraryTabs),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      variant.toIcon(),
-                      size: 14.0,
-                    ),
-                    const SizedBox(width: 4.0),
-                    Text(
-                      variant.toVariantText(),
-                      style: theme.textTheme.displaySmall,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ).toList(),
         ),
       ),
     );

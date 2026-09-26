@@ -300,35 +300,38 @@ class NamidaDrawer extends StatelessWidget {
                   .map(
                     (e) => ObxO(
                       rx: settings.extra.selectedLibraryTab,
-                      builder: (context, selectedLibraryTab) {
-                        final enabled = selectedLibraryTab.group == e;
-                        final variants = e.groupVariants;
-                        return NamidaDrawerListTile(
-                          enabled: enabled,
-                          title: e.toText(),
-                          icon: e.toIcon(),
-                          trailing: variants.isEmpty
-                              ? null
-                              : LibraryTabVariantsPopup(
-                                  tab: enabled ? selectedLibraryTab : e,
-                                  variants: variants,
-                                  openOnTap: true,
-                                  onSelected: toggleDrawer,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                    child: Icon(
-                                      Broken.arrow_right_3,
-                                      size: 16.0,
-                                      color: enabled ? Colors.white.withAlpha(200) : null,
+                      builder: (context, selectedLibraryTab) => ObxO(
+                        rx: settings.includeVideos,
+                        builder: (context, includeVideos) {
+                          final enabled = selectedLibraryTab.group == e;
+                          final variants = e.availableVariants(includeVideos);
+                          return NamidaDrawerListTile(
+                            enabled: enabled,
+                            title: e.toText(),
+                            icon: e.toIcon(),
+                            trailing: variants.isEmpty
+                                ? null
+                                : LibraryTabVariantsPopup(
+                                    tab: enabled ? selectedLibraryTab : e,
+                                    variants: variants,
+                                    openOnTap: true,
+                                    onSelected: toggleDrawer,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                      child: Icon(
+                                        Broken.arrow_right_3,
+                                        size: 16.0,
+                                        color: enabled ? Colors.white.withAlpha(200) : null,
+                                      ),
                                     ),
                                   ),
-                                ),
-                          onTap: () async {
-                            ScrollSearchController.inst.animatePageController(e.activeVariant(settings.libraryTabs.value));
-                            toggleDrawer();
-                          },
-                        );
-                      },
+                            onTap: () async {
+                              ScrollSearchController.inst.animatePageController(e.activeVariant());
+                              toggleDrawer();
+                            },
+                          );
+                        },
+                      ),
                     ),
                   ),
             ],

@@ -53,10 +53,10 @@ class LibraryTabVariantChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: settings.libraryTabs,
-      builder: (context, libraryTabs) {
-        final variants = libraryTabs.enabledVariantsOf(tab.group).toList();
-        if (variants.length < 2) return const SizedBox();
+      rx: settings.includeVideos,
+      builder: (context, includeVideos) {
+        final variants = tab.availableVariants(includeVideos);
+        if (variants.isEmpty) return const SizedBox();
         final theme = context.theme;
         return LibraryTabVariantsPopup(
           tab: tab,

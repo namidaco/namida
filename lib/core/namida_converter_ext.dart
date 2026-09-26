@@ -115,37 +115,22 @@ extension MediaTypeUtils on MediaType {
 }
 
 extension LibraryTabsListUtils on List<LibraryTab> {
-  List<LibraryTab> toNavTabs() {
-    final result = <LibraryTab>[];
-    final seenGroups = <LibraryTab>{};
-    for (final tab in this) {
-      final group = tab.group;
-      if (seenGroups.add(group)) result.add(group.activeVariant(this));
-    }
-    return result;
-  }
-
-  int navIndexOf(LibraryTab tab) {
-    final group = tab.group;
-    final seenGroups = <LibraryTab>{};
-    for (final t in this) {
-      final tGroup = t.group;
-      if (seenGroups.add(tGroup) && tGroup == group) return seenGroups.length - 1;
-    }
-    return -1;
-  }
-
-  Iterable<LibraryTab> enabledVariantsOf(LibraryTab group) => where((e) => e.group == group);
+  List<LibraryTab> toNavTabs() => map((e) => e.activeVariant()).toFixedList();
 }
 
 extension LibraryTabUtils on LibraryTab {
-  LibraryTab activeVariant(List<LibraryTab> libraryTabs) {
+  List<LibraryTab> availableVariants(bool includeVideos) {
+    if (!includeVideos && group == LibraryTab.tracks) return const [];
+    return groupVariants;
+  }
+
+  LibraryTab activeVariant() {
     final group = this.group;
+    final variants = availableVariants(settings.includeVideos.value);
+    if (variants.isEmpty) return group;
     final selected = settings.extra.selectedLibraryTab.value;
     if (selected.group == group) return selected;
-    final lastUsed = settings.extra.libraryTabGroupVariants[group];
-    if (lastUsed != null && libraryTabs.contains(lastUsed)) return lastUsed;
-    return libraryTabs.firstWhereEff((e) => e.group == group) ?? group;
+    return settings.extra.libraryTabGroupVariants[group] ?? group;
   }
 
   MediaType? toMediaType() {
@@ -175,7 +160,7 @@ extension LibraryTabUtils on LibraryTab {
     };
   }
 
-  int toInt() => settings.libraryTabs.value.navIndexOf(this);
+  int toInt() => settings.libraryTabs.value.indexOf(group);
 
   NamidaRouteWidget toWidget([CountPerRow? gridCount, bool animateTiles = true, bool enableHero = false]) {
     gridCount ??= settings.mediaGridCounts.value.get(this);
