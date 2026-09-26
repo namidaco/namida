@@ -133,6 +133,16 @@ class NamidaMainActivity : FlutterActivity() {
     channel.setMethodCallHandler { call, result ->
       when (call.method) {
         "sdk" -> result.success(Build.VERSION.SDK_INT)
+        "consumeExitReports" -> {
+          CoroutineScope(Dispatchers.IO).launch {
+            val reports = try {
+              ProcessExitReporter.consume(context)
+            } catch (_: Exception) {
+              emptyList()
+            }
+            withContext(Dispatchers.Main) { result.success(reports) }
+          }
+        }
         "setMulticastLock" -> {
           val enabled = call.argument<Boolean>("enabled") ?: false
           try {
@@ -403,17 +413,6 @@ class NamidaMainActivity : FlutterActivity() {
               showToast(e.message, 3)
               result.success(false)
             }
-          }
-        }
-
-        "consumeExitReports" -> {
-          CoroutineScope(Dispatchers.IO).launch {
-            val reports = try {
-              ProcessExitReporter.consume(context)
-            } catch (_: Exception) {
-              emptyList()
-            }
-            withContext(Dispatchers.Main) { result.success(reports) }
           }
         }
 

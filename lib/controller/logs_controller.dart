@@ -4,27 +4,19 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:logger/logger.dart';
-
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 
 final logger = _Log();
 
 class _Log {
-  final _printer = PrettyPrinter(
-    colors: kDebugMode ? true : false,
-    printEmojis: true,
-    methodCount: 48,
-    errorMethodCount: 48,
-  );
-
   final _entries = HashMap<int, _LogEntry>();
 
   _LogsFile? _file;
 
   /// origin frames only, deeper frames vary with the rebuild/call path of the same error.
   static const _keyStackFrames = 8;
+  static const _maxStackFrames = 48;
   static const _fnvOffset = 0xcbf29ce484222325;
   static const _fnvPrime = 0x100000001b3;
 
@@ -72,15 +64,33 @@ class _Log {
 
     final entry = _LogEntry();
     _entries[key] = entry;
-    final lines = _printer.log(
-      LogEvent(
-        Level.error,
-        message,
-        error: e,
-        stackTrace: stString == null ? null : StackTrace.fromString(stString),
-      ),
-    );
-    file.append(entry, lines);
+    final text = _formatEntry(message, e, stString);
+    file.append(entry, text);
+  }
+
+  static String _formatEntry(dynamic message, Object? e, String? stString) {
+    final timestamp = DateTime.now().toString().substring(0, 19);
+    final buffer = StringBuffer(' ');
+    buffer.writeln(timestamp);
+    if (e != null) buffer.writeln(e);
+    final messageText = message?.toString() ?? '';
+    if (messageText.isNotEmpty) buffer.writeln(messageText);
+    if (stString != null) buffer.writeln(_trimStackTrace(stString));
+    buffer.writeln();
+    return buffer.toString();
+  }
+
+  static String _trimStackTrace(String st) {
+    var end = st.length;
+    if (end > 0 && st.codeUnitAt(end - 1) == 0x0A) end--;
+    var lines = 0;
+    for (var i = 0; i < end; i++) {
+      if (st.codeUnitAt(i) == 0x0A && ++lines == _maxStackFrames) {
+        end = i;
+        break;
+      }
+    }
+    return end == st.length ? st : st.substring(0, end);
   }
 
   void report(Object? e, StackTrace? st) => error('', e: e, st: st);
@@ -113,11 +123,11 @@ class _LogsFile {
     _chain = _chain.then((_) => op());
   }
 
-  void append(_LogEntry entry, List<String> lines) {
+  void append(_LogEntry entry, String text) {
     _enqueue(() async {
       final raf = _raf;
       if (raf == null) return;
-      final bytes = utf8.encode("${_counterText(1)}\n${lines.join('\n')}\n\n");
+      final bytes = utf8.encode('${_counterText(1)}$text');
       entry.counterOffset = _endOffset;
       try {
         await raf.writeFrom(bytes);
