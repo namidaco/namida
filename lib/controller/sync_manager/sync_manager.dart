@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
@@ -44,6 +46,7 @@ import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart'
 
 part 'sync_actions_log.dart';
 part 'sync_batch.dart';
+part 'sync_diagnostics.dart';
 part 'sync_discovery.dart';
 part 'sync_enums.dart';
 part 'sync_exceptions.dart';

@@ -185,6 +185,18 @@ class SyncUtils {
     return id.isEmpty ? 'namida.$kDefaultDomain' : 'namida-$id.$kDefaultDomain';
   }
 
+  static Future<Stream<ServiceEntry>> _queryServers(NetworkInterface? preferredInterface, {void Function(String message)? logger}) {
+    return MDNSClient.query(
+      QueryParams(
+        service: kDefaultServiceType,
+        timeout: const Duration(seconds: 3),
+        networkInterface: preferredInterface,
+        wantUnicastResponse: true, // -- replies come directly to us, bypassing routers that filter multicast
+        logger: logger,
+      ),
+    );
+  }
+
   static Future<Set<String>> getLocalInterfaceAddresses() async {
     final localeInterfaces = await NetworkInterface.list(type: InternetAddressType.IPv4);
     final localeInterfacesSet = <String>{};

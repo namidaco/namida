@@ -7,6 +7,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/vibrator_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -14,6 +15,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -175,6 +177,18 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
     );
   }
 
+  void _openConnectByIpDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: const _ConnectByIpDialog(),
+    );
+  }
+
+  void _openDiagnosticsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: const _SyncDiagnosticsDialog(),
+    );
+  }
+
   void _editDeviceName() async {
     final currentName = settings.sync.customDeviceName.value?.nullifyEmpty() ?? await SyncUtils.currentDeviceName;
     final controller = TextEditingController(text: currentName);
@@ -276,6 +290,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                       CustomListTile(
                         icon: Broken.global_search,
                         title: lang.search,
+                        subtitle: client.lastDiscoveryError == null ? null : '${lang.discoveryFailedTryReenablingNetworkAdapter}\n${client.lastDiscoveryError}',
                         onTap: client.startSearchForServers,
                         trailing: client.allowAutoRetryDiscovery
                             ? NamidaButton(
@@ -344,6 +359,28 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                       _SectionTitle(
                         title: lang.availableDevices,
                         count: availableNotKnown.length,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            NamidaIconButton(
+                              icon: Broken.health,
+                              iconColor: context.defaultIconColor(),
+                              iconSize: 16.0,
+                              horizontalPadding: 4.0,
+                              tooltip: () => lang.diagnostics,
+                              onPressed: _openDiagnosticsDialog,
+                            ),
+                            const SizedBox(width: 4.0),
+                            NamidaIconButton(
+                              icon: Broken.link_21,
+                              iconColor: context.defaultIconColor(),
+                              iconSize: 16.0,
+                              horizontalPadding: 4.0,
+                              tooltip: () => lang.connectByIp,
+                              onPressed: _openConnectByIpDialog,
+                            ),
+                          ],
+                        ),
                       ),
                       ...availableNotKnown.map(
                         (serverDevice) => _AvailableDeviceCard(
@@ -1527,7 +1564,7 @@ class _AvailableDeviceCard extends StatelessWidget {
               NamidaButton(
                 icon: Broken.link,
                 text: lang.connect,
-                onTap: () => SyncDiscovery.client.connectToServer(serverDevice),
+                onTap: () => SyncDiscovery.client.connectToServer(serverDevice).catchError(_showConnectErrorSnack),
               ),
             ],
           ),
@@ -1560,6 +1597,148 @@ class _BlockedDevicesTile extends StatelessWidget {
             ),
           )
           .toList(),
+    );
+  }
+}
+
+void _showConnectErrorSnack(Object error) {
+  snackyy(
+    title: lang.error,
+    message: '$error',
+    isError: true,
+  );
+}
+
+class _ConnectByIpDialog extends StatefulWidget {
+  const _ConnectByIpDialog();
+
+  @override
+  State<_ConnectByIpDialog> createState() => _ConnectByIpDialogState();
+}
+
+class _ConnectByIpDialogState extends State<_ConnectByIpDialog> {
+  final _controller = TextEditingController();
+  bool _isConnecting = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _connect() async {
+    final host = _controller.text.trim();
+    if (host.isEmpty || _isConnecting) return;
+    setState(() => _isConnecting = true);
+    try {
+      await SyncDiscovery.client.connectToAddress(host);
+      NamidaNavigator.inst.closeDialog();
+      snackyy(
+        icon: Broken.link_21,
+        message: lang.waitingForTheOtherDeviceToAccept,
+        isError: false,
+      );
+    } catch (e) {
+      _showConnectErrorSnack(e);
+    } finally {
+      if (mounted) setState(() => _isConnecting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomBlurryDialog(
+      icon: Broken.link_21,
+      title: lang.connectByIp,
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.connect,
+          isLoading: _isConnecting,
+          onTap: _connect,
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Text(
+              lang.enterTheAddressShownOnTheOtherDevice,
+              style: context.theme.textTheme.displaySmall,
+            ),
+          ),
+          const SizedBox(height: 12.0),
+          const SizedBox(height: 8.0),
+          CustomTagTextField(
+            controller: _controller,
+            hintText: '192.168.1.5',
+            labelText: lang.address,
+            keyboardType: TextInputType.url,
+            autofocus: true,
+            onFieldSubmitted: (_) => _connect(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SyncDiagnosticsDialog extends StatefulWidget {
+  const _SyncDiagnosticsDialog();
+
+  @override
+  State<_SyncDiagnosticsDialog> createState() => _SyncDiagnosticsDialogState();
+}
+
+class _SyncDiagnosticsDialogState extends State<_SyncDiagnosticsDialog> {
+  late final _reportFuture = SyncDiagnostics.run();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<String>(
+      future: _reportFuture,
+      builder: (context, snapshot) {
+        final report = snapshot.data ?? (snapshot.hasError ? '${snapshot.error}' : null);
+        return CustomBlurryDialog(
+          icon: Broken.health,
+          title: lang.diagnostics,
+          normalTitleStyle: true,
+          actions: [
+            NamidaButton(
+              icon: Broken.share,
+              text: lang.share,
+              enabled: report != null,
+              onTap: () => NamidaUtils.shareText(report!),
+            ),
+            NamidaButton(
+              icon: Broken.copy,
+              text: lang.copy,
+              enabled: report != null,
+              onTap: () => NamidaUtils.copyToClipboard(content: report!),
+            ),
+          ],
+          child: SizedBox(
+            height: namida.height * 0.5,
+            width: namida.width,
+            child: report == null
+                ? Center(
+                    child: ThreeArchedCircle(
+                      color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
+                      size: 48.0,
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: SelectableText(
+                      report,
+                      style: context.theme.textTheme.displaySmall?.copyWith(fontFamily: 'monospace'),
+                    ),
+                  ),
+          ),
+        );
+      },
     );
   }
 }

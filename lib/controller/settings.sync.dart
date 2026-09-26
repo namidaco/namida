@@ -8,6 +8,8 @@ class _SyncSettings with SettingsFileWriter {
   final customDeviceName = Rxn<String>();
   final allowedServerIds = <String>{};
 
+  final manualServerAddresses = <String, String>{};
+
   final allowedDeviceIds = <String>{};
   final blockedClientIds = <String>{};
 
@@ -35,6 +37,14 @@ class _SyncSettings with SettingsFileWriter {
     }
   }
 
+  void updateManualServerAddress(String id, String address) {
+    final current = manualServerAddresses[id];
+    if (current != null && current != address) {
+      manualServerAddresses[id] = address;
+      _writeToStorage();
+    }
+  }
+
   void save({
     String? uniqueId,
   }) {
@@ -55,6 +65,9 @@ class _SyncSettings with SettingsFileWriter {
       allowedServerIds
         ..clear()
         ..addAll((json['allowedServerIds'] as List?)?.cast<String>() ?? <String>[]);
+      manualServerAddresses
+        ..clear()
+        ..addAll((json['manualServerAddresses'] as Map?)?.cast<String, String>() ?? <String, String>{});
       allowedDeviceIds
         ..clear()
         ..addAll((json['allowedDeviceIds'] as List?)?.cast<String>() ?? <String>[]);
@@ -85,6 +98,7 @@ class _SyncSettings with SettingsFileWriter {
     'id': ?uniqueId,
     'customDeviceName': ?customDeviceName.value,
     'allowedServerIds': allowedServerIds.toFixedList(),
+    'manualServerAddresses': manualServerAddresses,
     'allowedDeviceIds': allowedDeviceIds.toFixedList(),
     'blockedClientIds': blockedClientIds.toFixedList(),
     'deviceIdNames': deviceIdNames,

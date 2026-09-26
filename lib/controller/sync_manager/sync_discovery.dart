@@ -125,48 +125,11 @@ class _ServerSide extends RxNotifier {
     final serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, SyncUtils.kDefaultNamidaPort);
     serverSocket.listen((socket) {
       final reader = _FrameReader();
-      final dispatcher = _FrameDispatcher();
-      reader.frames.listen(
-        (frame) {
-          final msg = dispatcher.onFrame(frame);
-          if (msg != null) {
-            final senderDeviceId = msg.messageInfo.senderDeviceId;
-            final existing = _clientsSockets[senderDeviceId];
-            if (existing == null || existing._socket != socket) {
-              if (existing != null) {
-                // -- device reconnected on a new socket while the old one never closed
-                // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
-                // -- fingerprints tracking & completes stale log entries.
-                SyncSender.inst.onDeviceDisconnected(senderDeviceId);
-                try {
-                  existing._socket.destroy();
-                } catch (_) {}
-              }
-              final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
-              _clientsSockets[senderDeviceId] = wrapper;
-              SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
-              SyncDiscovery._updateConnectionFlags();
-              _refresh();
-            }
-          }
-        },
-        onError: (_) {
-          // -- malformed/desynced stream, nothing more can be read off this socket.
-          try {
-            socket.destroy();
-          } catch (_) {}
-        },
-      );
-      socket.listen(
-        reader.addBytes,
-        onDone: () {
-          reader.close();
-          _removeClientBySocket(socket);
-        },
-        onError: (_) {
-          reader.close();
-          _removeClientBySocket(socket);
-        },
+      _SocketWrapper._listen(
+        socket,
+        reader,
+        _FrameDispatcher((msg) => _onClientMessage(msg, socket, reader)),
+        onClosed: () => _removeClientBySocket(socket),
       );
     });
 
@@ -178,6 +141,26 @@ class _ServerSide extends RxNotifier {
       settings.sync.modify((syncSettings) => syncSettings.serverWasRunning = true);
     }
 
+    _refresh();
+  }
+
+  void _onClientMessage(BaseMessage msg, Socket socket, _FrameReader reader) {
+    final senderDeviceId = msg.messageInfo.senderDeviceId;
+    final existing = _clientsSockets[senderDeviceId];
+    if (existing != null && existing._socket == socket) return;
+    if (existing != null) {
+      // -- device reconnected on a new socket while the old one never closed
+      // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
+      // -- fingerprints tracking & completes stale log entries.
+      SyncSender.inst.onDeviceDisconnected(senderDeviceId);
+      try {
+        existing._socket.destroy();
+      } catch (_) {}
+    }
+    final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
+    _clientsSockets[senderDeviceId] = wrapper;
+    SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
+    SyncDiscovery._updateConnectionFlags();
     _refresh();
   }
 
@@ -306,6 +289,7 @@ class _ClientSide extends RxNotifier {
   bool get isDiscovering => _isDiscovering;
   bool get allowAutoRetryDiscovery => _allowAutoRetryDiscovery;
   int get connectedDevicesCount => _connectedServers.length;
+  Object? get lastDiscoveryError => _lastDiscoveryError;
 
   bool isConnectedToServer(NetworkDevice device) => _connectedServers.containsKey(device.deviceId);
 
@@ -314,6 +298,7 @@ class _ClientSide extends RxNotifier {
   var _availableServers = <NetworkDevice>[];
   bool _isDiscovering = false;
   bool _allowAutoRetryDiscovery = true;
+  Object? _lastDiscoveryError;
   final _connectedServers = <String, _SocketWrapper>{};
 
   Timer? _autoDiscoveryTimer;
@@ -335,6 +320,8 @@ class _ClientSide extends RxNotifier {
     SyncDiscovery._updateMulticastLock();
     _refresh();
 
+    _reconnectManualServers();
+
     final newAvailableServers = <NetworkDevice>[];
     void onFinish([Object? error]) {
       _autoDiscoveryTimer?.cancel();
@@ -348,6 +335,7 @@ class _ClientSide extends RxNotifier {
       if (_isDiscovering) {
         _isDiscovering = false;
         _availableServers = newAvailableServers;
+        _lastDiscoveryError = error;
         SyncDiscovery._updateMulticastLock();
         _refresh();
       }
@@ -362,14 +350,13 @@ class _ClientSide extends RxNotifier {
       return false;
     }
 
-    final preferredInterface = await SyncUtils.getPreferredInterface();
-    final params = QueryParams(
-      service: SyncUtils.kDefaultServiceType,
-      timeout: const Duration(seconds: 3),
-      networkInterface: preferredInterface,
-      wantUnicastResponse: true, // -- replies come directly to us, bypassing routers that filter multicast
-    );
-    final stream = await MDNSClient.query(params);
+    final Stream<ServiceEntry> stream;
+    try {
+      stream = await SyncUtils._queryServers(await SyncUtils.getPreferredInterface());
+    } catch (e) {
+      onFinish(e);
+      return;
+    }
     stream.listen(
       (service) async {
         final device = NetworkDevice.fromService(service);
@@ -384,6 +371,7 @@ class _ClientSide extends RxNotifier {
         }
 
         settings.sync.updateDeviceName(device.deviceId, device.deviceName);
+        settings.sync.updateManualServerAddress(device.deviceId, device.address);
 
         // -- keep reconnect info fresh in case the device address changed
         SyncDiscovery.sessionDevices[device.deviceId]?.networkDevice = device;
@@ -393,6 +381,40 @@ class _ClientSide extends RxNotifier {
       onDone: onFinish,
       onError: onFinish,
     );
+  }
+
+  void _reconnectManualServers() {
+    for (final e in settings.sync.manualServerAddresses.entries) {
+      _autoReconnectIfKnown(NetworkDevice._fromAddress(e.value, deviceId: e.key));
+    }
+  }
+
+  Future<void> connectToAddress(String host) async {
+    await _SocketWrapper.connectToAddress(
+      host,
+      SyncUtils.kDefaultNamidaPort,
+      request: await ConnectionRequestMessage.createForCurrentDevice(.connect),
+      onIdentified: (wrapper, reply) => _onAddressConnectionIdentified(wrapper, reply, host),
+      onClosed: _onSocketClosed,
+    );
+  }
+
+  void _onAddressConnectionIdentified(_SocketWrapper wrapper, BaseMessage reply, String host) {
+    final serverDeviceId = wrapper.deviceId;
+    if (reply is ConnectionRequestMessage) settings.sync.updateDeviceName(serverDeviceId, reply.senderDeviceName);
+
+    // -- the server replaces its side with the newest socket, so the old one is dead anyway
+    final existing = _connectedServers[serverDeviceId];
+    _connectedServers[serverDeviceId] = wrapper;
+    existing?._socket.destroy();
+
+    settings.sync.modify((syncSettings) {
+      syncSettings.allowedServerIds.add(serverDeviceId);
+      syncSettings.manualServerAddresses[serverDeviceId] = host;
+    });
+    SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: NetworkDevice._fromAddress(host, deviceId: serverDeviceId), asClient: true);
+    SyncDiscovery._updateConnectionFlags();
+    _refresh();
   }
 
   Future<void> stopSearch() async {
@@ -423,7 +445,7 @@ class _ClientSide extends RxNotifier {
 
     final wrapper = await _SocketWrapper.connect(
       serverDevice,
-      onClosed: () => _onSocketClosed(serverDeviceId),
+      onClosed: _onSocketClosed,
     );
     _connectedServers[serverDeviceId] = wrapper;
     SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: serverDevice, asClient: true);
@@ -433,14 +455,14 @@ class _ClientSide extends RxNotifier {
   }
 
   /// socket died without an explicit disconnect (server stopped, network lost, we got kicked..)
-  void _onSocketClosed(String serverDeviceId) {
+  void _onSocketClosed(_SocketWrapper wrapper) {
+    final serverDeviceId = wrapper.deviceId;
+    if (_connectedServers[serverDeviceId] != wrapper) return; // -- already replaced by a newer socket
     _autoReconnectAttempted.remove(serverDeviceId); // -- can auto reconnect when discovered again
-    final removed = _connectedServers.remove(serverDeviceId);
-    if (removed != null) {
-      SyncSender.inst.onDeviceDisconnected(serverDeviceId);
-      SyncDiscovery._updateConnectionFlags();
-      _refresh();
-    }
+    _connectedServers.remove(serverDeviceId);
+    SyncSender.inst.onDeviceDisconnected(serverDeviceId);
+    SyncDiscovery._updateConnectionFlags();
+    _refresh();
   }
 
   Future<void> connectToServer(NetworkDevice serverDevice, {bool forceReconnect = false}) async {
@@ -452,7 +474,7 @@ class _ClientSide extends RxNotifier {
     }
 
     if (forceReconnect) {
-      await disconnectFromServer(serverDeviceId);
+      await disconnectFromServer(serverDeviceId, removeFromAutoReconnect: false);
     }
 
     final socket = await _getOrConnect(serverDevice);
@@ -463,11 +485,14 @@ class _ClientSide extends RxNotifier {
     _refresh();
   }
 
-  Future<void> disconnectFromServer(String serverDeviceId) async {
+  Future<void> disconnectFromServer(String serverDeviceId, {bool removeFromAutoReconnect = true}) async {
     _autoReconnectAttempted.remove(serverDeviceId);
-    settings.sync.modify(
-      (syncSettings) => syncSettings.allowedServerIds.remove(serverDeviceId),
-    );
+    if (removeFromAutoReconnect) {
+      settings.sync.modify((syncSettings) {
+        syncSettings.allowedServerIds.remove(serverDeviceId);
+        syncSettings.manualServerAddresses.remove(serverDeviceId);
+      });
+    }
 
     SyncDiscovery.clearProgressFor(serverDeviceId);
 
@@ -581,9 +606,10 @@ class _SocketWrapper {
   _SocketWrapper.simple(
     this.deviceId,
     this._socket, [
-    // ignore: unused_element_parameter
     this._reader,
   ]) : _writer = _FrameWriter(_socket);
+
+  static const _kConnectTimeout = Duration(seconds: 5);
 
   String? get remoteAddressSafe {
     try {
@@ -593,16 +619,43 @@ class _SocketWrapper {
     }
   }
 
-  static Future<_SocketWrapper> connect(NetworkDevice device, {void Function()? onClosed}) {
-    return _connectInternal(device, onClosed);
+  static Future<_SocketWrapper> connect(NetworkDevice device, {required void Function(_SocketWrapper wrapper) onClosed}) async {
+    final socket = await Socket.connect(device.address, device.port, timeout: _kConnectTimeout);
+    final reader = _FrameReader();
+    final wrapper = _SocketWrapper.simple(device.deviceId, socket, reader);
+    _listen(socket, reader, _FrameDispatcher(), onClosed: () => onClosed(wrapper));
+    return wrapper;
   }
 
-  static Future<_SocketWrapper> _connectInternal(NetworkDevice device, void Function()? onClosed) async {
-    final socket = await Socket.connect(device.address, device.port);
-    final writer = _FrameWriter(socket);
-
+  /// the server id is only known from its reply, [onIdentified] registers the socket before that reply executes.
+  static Future<void> connectToAddress(
+    String host,
+    int port, {
+    required BaseMessage request,
+    required void Function(_SocketWrapper wrapper, BaseMessage reply) onIdentified,
+    required void Function(_SocketWrapper wrapper) onClosed,
+  }) async {
+    final socket = await Socket.connect(host, port, timeout: _kConnectTimeout);
     final reader = _FrameReader();
-    final dispatcher = _FrameDispatcher();
+    final writer = _FrameWriter(socket);
+    _SocketWrapper? wrapper;
+    _listen(
+      socket,
+      reader,
+      _FrameDispatcher((reply) {
+        if (wrapper != null) return;
+        final identified = wrapper = _SocketWrapper(deviceId: reply.messageInfo.senderDeviceId, socket: socket, writer: writer, reader: reader);
+        onIdentified(identified, reply);
+      }),
+      onClosed: () {
+        final identified = wrapper;
+        if (identified != null) onClosed(identified);
+      },
+    );
+    await writer.sendMessage(request);
+  }
+
+  static void _listen(Socket socket, _FrameReader reader, _FrameDispatcher dispatcher, {required void Function() onClosed}) {
     reader.frames.listen(
       dispatcher.onFrame,
       onError: (_) {
@@ -612,24 +665,16 @@ class _SocketWrapper {
         } catch (_) {}
       },
     );
-
     socket.listen(
       reader.addBytes,
       onDone: () {
         reader.close();
-        onClosed?.call();
+        onClosed();
       },
       onError: (_) {
         reader.close();
-        onClosed?.call();
+        onClosed();
       },
-    );
-
-    return _SocketWrapper(
-      socket: socket,
-      writer: writer,
-      reader: reader,
-      deviceId: device.deviceId,
     );
   }
 
@@ -647,20 +692,23 @@ class _SocketWrapper {
 /// per-connection frame dispatcher: decodes json frames, and attaches raw
 /// binary frames to their preceding [BinaryPayloadMessage] before executing it.
 class _FrameDispatcher {
+  final void Function(BaseMessage msg)? _onDecodedBeforeExecute;
+
+  _FrameDispatcher([this._onDecodedBeforeExecute]);
+
   BinaryPayloadMessage? _pendingBinaryMessage;
 
-  /// returns the decoded message for json frames only.
-  BaseMessage? onFrame((int, Uint8List) frame) {
+  void onFrame((int, Uint8List) frame) {
     final (kind, bytes) = frame;
     if (kind == _FrameWriter.kFrameKindJson) return _onJsonFrame(bytes);
     if (kind == _FrameWriter.kFrameKindBinary) return _onBinaryFrame(bytes);
     if (_kEnableSyncDebug) _debugNotify('X Unknown frame kind $kind (${bytes.length.fileSizeFormatted})', isError: true);
-    return null;
   }
 
-  BaseMessage? _onJsonFrame(Uint8List data) {
+  void _onJsonFrame(Uint8List data) {
     try {
       final msg = BaseMessage.decodeBytes(data, settings.sync.allowedDeviceIds, settings.sync.blockedClientIds);
+      _onDecodedBeforeExecute?.call(msg);
       SyncActionsLog.inst.onMessageActivity(.received, msg, msg.messageInfo.senderDeviceId, _FrameWriter.kFrameHeaderSize + data.length);
       if (msg is BinaryPayloadMessage) {
         // -- execution is deferred until its binary payload frame arrives
@@ -675,7 +723,6 @@ class _FrameDispatcher {
         });
       }
       if (_kEnableSyncDebug) _debugNotify('✔ Received | ${msg.runtimeType}(${data.length.fileSizeFormatted}):\n${msg.toRawInfo()}');
-      return msg;
     } on NonAllowedMessageException catch (e) {
       if (_kEnableSyncDebug) _debugNotify('X Not Allowed | _(${data.length.fileSizeFormatted}): $e');
     } on BlockedMessageException catch (e) {
@@ -684,16 +731,15 @@ class _FrameDispatcher {
       if (_kEnableSyncDebug) _debugNotify('X Error | _(${data.length.fileSizeFormatted}): $e');
       logger.error('Error decoding message from frame', e: e, st: st);
     }
-    return null;
   }
 
-  BaseMessage? _onBinaryFrame(Uint8List data) {
+  void _onBinaryFrame(Uint8List data) {
     final pending = _pendingBinaryMessage;
     _pendingBinaryMessage = null;
     if (pending == null) {
       // -- owning message got rejected or never sent, drop the payload
       if (_kEnableSyncDebug) _debugNotify('X Binary frame with no owning message (${data.length.fileSizeFormatted})', isError: true);
-      return null;
+      return;
     }
     SyncActionsLog.inst.onMessageActivity(.received, pending, pending.messageInfo.senderDeviceId, _FrameWriter.kFrameHeaderSize + data.length, isExtraPayload: true);
     // -- no copy needed, the reader detaches its buffer for binary frames
@@ -704,7 +750,6 @@ class _FrameDispatcher {
     });
 
     if (_kEnableSyncDebug) _debugNotify('✔ Received binary payload (${data.length.fileSizeFormatted}) for ${pending.runtimeType}');
-    return null;
   }
 }
 

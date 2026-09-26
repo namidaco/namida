@@ -32,9 +32,16 @@ class ServerWrapper {
       MDNSServerConfig(
         zone: service,
         networkInterface: preferredInterface,
+        logger: SyncDiagnostics._onServerLog,
       ),
     );
-    await broadcast.start();
+    SyncDiagnostics._serverStartLog.clear();
+    SyncDiagnostics._isServerStarting = true;
+    try {
+      await broadcast.start();
+    } finally {
+      SyncDiagnostics._isServerStarting = false;
+    }
 
     return ServerWrapper(
       broadcast: broadcast,
@@ -55,15 +62,16 @@ extension on MDNSService {
   String buildText({required String? deviceName, bool simple = true}) {
     final parts = <String>[];
 
-    final hostNameCleaned = hostName.endsWith('.') ? hostName.substring(0, hostName.length - 1) : hostName;
     if (deviceName != null) parts.add('${lang.name}: $deviceName');
-    parts.add('${lang.host}: $hostNameCleaned');
+    final ipv4Text = ips.where((e) => e.type == InternetAddressType.IPv4).map((e) => e.address).join(' | ');
+    if (ipv4Text.isNotEmpty) parts.add('${lang.address}: $ipv4Text');
     if (port > 0) parts.add('${lang.port}: $port');
 
     if (!simple) {
+      final hostNameCleaned = hostName.endsWith('.') ? hostName.substring(0, hostName.length - 1) : hostName;
+      parts.add('${lang.host}: $hostNameCleaned');
       parts.add('Domain: $domain');
       parts.add('Service: $service');
-      parts.add(ips.map((e) => e.address).join(' | '));
     }
 
     return parts.join('\n');

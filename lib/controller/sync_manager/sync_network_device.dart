@@ -34,6 +34,16 @@ class NetworkDevice {
     );
   }
 
+  factory NetworkDevice._fromAddress(String address, {required String deviceId}) {
+    return NetworkDevice(
+      name: address,
+      address: address,
+      port: SyncUtils.kDefaultNamidaPort,
+      deviceName: settings.sync.deviceIdNames[deviceId] ?? deviceId,
+      deviceId: deviceId,
+    );
+  }
+
   factory NetworkDevice.fromMap(Map<String, dynamic> map) {
     return NetworkDevice(
       name: map['name'] as String,
