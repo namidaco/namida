@@ -337,6 +337,8 @@ extension SettingsControllerDebugKeys on _SettingsController {
     onTrackSwipeRight,
     artworkTapAction,
     artworkLongPressAction,
+    thumbnailTapAction,
+    thumbnailLongPressAction,
     displayThirdRow,
     displayThirdItemInEachRow,
     trackTileSeparator,

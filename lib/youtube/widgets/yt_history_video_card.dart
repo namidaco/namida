@@ -16,6 +16,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -72,57 +73,67 @@ class VideoTilePropertiesProvider extends StatelessWidget {
       rx: settings.onTrackSwipeLeft,
       builder: (context, onTrackSwipeLeft) => ObxO(
         rx: settings.onTrackSwipeRight,
-        builder: (context, onTrackSwipeRight) => ObxPrefer(
-          enabled: queueSupportResuming,
-          rx: QueueController.latestPlayedForSourceManager.map,
-          builder: (context, latestPlayedForSource) {
-            YoutubeID? currentHighlightedVideo;
-            final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
-            if (currentHighlightedPlayable is YoutubeID) currentHighlightedVideo = currentHighlightedPlayable;
-            return ObxO(
-              rx: Player.inst.currentIndex,
-              builder: (context, currentPlayingIndex) => Obx(
-                (context) {
-                  int? sleepingIndex;
-                  if (comingFromQueue) {
-                    final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                    if (sleepconfig.enableSleepAfterItems) {
-                      final repeatMode = settings.player.repeatMode.valueR;
-                      if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                        sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+        builder: (context, onTrackSwipeRight) => ObxO(
+          rx: settings.thumbnailTapAction,
+          builder: (context, thumbnailTapAction) => ObxO(
+            rx: settings.thumbnailLongPressAction,
+            builder: (context, thumbnailLongPressAction) => ObxPrefer(
+              enabled: queueSupportResuming,
+              rx: QueueController.latestPlayedForSourceManager.map,
+              builder: (context, latestPlayedForSource) {
+                YoutubeID? currentHighlightedVideo;
+                final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
+                if (currentHighlightedPlayable is YoutubeID) currentHighlightedVideo = currentHighlightedPlayable;
+                return ObxO(
+                  rx: Player.inst.currentIndex,
+                  builder: (context, currentPlayingIndex) => Obx(
+                    (context) {
+                      int? sleepingIndex;
+                      if (comingFromQueue) {
+                        final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+                        if (sleepconfig.enableSleepAfterItems) {
+                          final repeatMode = settings.player.repeatMode.valueR;
+                          if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+                            sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
+                          }
+                        }
                       }
-                    }
-                  }
-                  final currentPlayingVideo = Player.inst.currentVideoR;
-                  final pageColorScheme = CurrentColor.inst.currentColorScheme;
+                      final currentPlayingVideo = Player.inst.currentVideoR;
+                      final pageColorScheme = CurrentColor.inst.currentColorScheme;
 
-                  final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR ? CurrentColor.inst.miniplayerColor : pageColorScheme; // always follow track color
+                      final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
+                          ? CurrentColor.inst.miniplayerColor
+                          : pageColorScheme; // always follow track color
 
-                  final properties = VideoTileProperties(
-                    threeLines: threeLines,
-                    threeLinesPlaying: threeLinesPlaying,
-                    itemsColor7: itemsColor7,
-                    itemsColor6: itemsColor6,
-                    itemsColor5: itemsColor5,
-                    pageColorScheme: pageColorScheme,
-                    backgroundColorPlaying: backgroundColorPlaying,
-                    backgroundColorNotPlaying: backgroundColorNotPlaying,
-                    highlightColorLayer: highlightColorLayer,
-                    currentPlayingVideo: currentPlayingVideo,
-                    currentPlayingIndex: currentPlayingIndex,
-                    currentHighlightedVideo: currentHighlightedVideo,
-                    sleepingIndex: sleepingIndex,
-                    comingFromQueue: comingFromQueue,
-                    configs: configs,
-                    canHaveDuplicates: canHaveDuplicates,
-                    allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                    allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                  );
-                  return builder(properties);
-                },
-              ),
-            );
-          },
+                      final properties = VideoTileProperties(
+                        threeLines: threeLines,
+                        threeLinesPlaying: threeLinesPlaying,
+                        itemsColor7: itemsColor7,
+                        itemsColor6: itemsColor6,
+                        itemsColor5: itemsColor5,
+                        pageColorScheme: pageColorScheme,
+                        backgroundColorPlaying: backgroundColorPlaying,
+                        backgroundColorNotPlaying: backgroundColorNotPlaying,
+                        highlightColorLayer: highlightColorLayer,
+                        currentPlayingVideo: currentPlayingVideo,
+                        currentPlayingIndex: currentPlayingIndex,
+                        currentHighlightedVideo: currentHighlightedVideo,
+                        sleepingIndex: sleepingIndex,
+                        comingFromQueue: comingFromQueue,
+                        configs: configs,
+                        canHaveDuplicates: canHaveDuplicates,
+                        allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                        allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                        thumbnailTapAction: thumbnailTapAction,
+                        thumbnailLongPressAction: thumbnailLongPressAction,
+                      );
+                      return builder(properties);
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -179,6 +190,8 @@ class VideoTileProperties {
 
   final bool allowSwipeLeft;
   final bool allowSwipeRight;
+  final TrackExecuteActions thumbnailTapAction;
+  final TrackExecuteActions thumbnailLongPressAction;
 
   const VideoTileProperties({
     required this.configs,
@@ -199,6 +212,8 @@ class VideoTileProperties {
     required this.canHaveDuplicates,
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
+    required this.thumbnailTapAction,
+    required this.thumbnailLongPressAction,
   });
 }
 
@@ -358,6 +373,15 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     networkFetchDelay: widget.deferNetworkFetch ? Duration(milliseconds: 500) : Duration.zero,
   );
 
+  void _executeThumbnailAction(TrackExecuteActions action) => action.execute(
+    itemToYTIDPlay(item),
+    info: SwipeQueueAddTileInfo(
+      queueSource: widget.properties.configs.queueSource,
+      heroTag: null,
+      videoTitle: _infoFetcher.videoTitle,
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -449,6 +473,39 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
       threeLines = properties.threeLines;
     }
 
+    Widget thumbnail = YoutubeThumbnail(
+      type: ThumbnailType.video,
+      key: Key(videoId),
+      borderRadius: YTHistoryVideoCardBase.kDefaultBorderRadiusThumbnail,
+      isImportantInCache: widget.isImportantInCache,
+      width: thumbWidth,
+      height: thumbHeight,
+      videoId: videoId,
+      preferLowerRes: true,
+      customUrl: _infoFetcher.infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
+      smallBoxText: duration,
+      smallBoxIcon: willSleepAfterThis
+          ? Broken.timer_1
+          : _infoFetcher.isVideoUnavailable
+          ? Broken.danger
+          : null,
+      forceSquared: true, // -- if false, low quality images with black bars would appear
+    );
+    if (!widget.minimalCard) {
+      final thumbnailTapAction = properties.thumbnailTapAction;
+      final thumbnailLongPressAction = properties.thumbnailLongPressAction;
+      final hasThumbnailTap = thumbnailTapAction != TrackExecuteActions.none;
+      final hasThumbnailLongPress = thumbnailLongPressAction != TrackExecuteActions.none;
+      if (hasThumbnailTap || hasThumbnailLongPress) {
+        thumbnail = GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: hasThumbnailTap ? () => _executeThumbnailAction(thumbnailTapAction) : null,
+          onLongPress: hasThumbnailLongPress ? () => _executeThumbnailAction(thumbnailLongPressAction) : null,
+          child: thumbnail,
+        );
+      }
+    }
+
     final children = [
       ?threeLines,
       Stack(
@@ -457,24 +514,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
           Center(
             child: Padding(
               padding: widget.minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
-              child: YoutubeThumbnail(
-                type: ThumbnailType.video,
-                key: Key(videoId),
-                borderRadius: YTHistoryVideoCardBase.kDefaultBorderRadiusThumbnail,
-                isImportantInCache: widget.isImportantInCache,
-                width: thumbWidth,
-                height: thumbHeight,
-                videoId: videoId,
-                preferLowerRes: true,
-                customUrl: _infoFetcher.infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
-                smallBoxText: duration,
-                smallBoxIcon: willSleepAfterThis
-                    ? Broken.timer_1
-                    : _infoFetcher.isVideoUnavailable
-                    ? Broken.danger
-                    : null,
-                forceSquared: true, // -- if false, low quality images with black bars would appear
-              ),
+              child: thumbnail,
             ),
           ),
           ?draggingThumbWidget,

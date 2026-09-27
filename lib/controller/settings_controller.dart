@@ -272,6 +272,8 @@ class _SettingsController extends _SettingsKeysWriter {
   late final onTrackSwipeRight = _keyEnum('onTrackSwipeRight', TrackExecuteActions.openinfo, TrackExecuteActions.values);
   late final artworkTapAction = _keyEnum('artworkTapAction', TrackExecuteActions.none, TrackExecuteActions.values);
   late final artworkLongPressAction = _keyEnum('artworkLongPressAction', TrackExecuteActions.none, TrackExecuteActions.values);
+  late final thumbnailTapAction = _keyEnum('thumbnailTapAction', TrackExecuteActions.none, TrackExecuteActions.values);
+  late final thumbnailLongPressAction = _keyEnum('thumbnailLongPressAction', TrackExecuteActions.none, TrackExecuteActions.values);
 
   /// Track Items
   late final displayThirdRow = _key('displayThirdRow', true);
