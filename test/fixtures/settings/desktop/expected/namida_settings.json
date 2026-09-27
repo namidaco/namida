@@ -222,7 +222,7 @@
   "refreshOnStartup": false,
   "alwaysExpandedSearchbar": true,
   "mixedQueue": false,
-  "bypassRefreshPrompt": false,
+  "bypassRefreshPrompt_v2": false,
   "desktopTitlebar": true,
   "desktopTitlebarType": "auto",
   "tagFieldsToEdit": [

@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/progress_percentage.dart';
 import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
@@ -43,6 +44,7 @@ class JsonToHistoryParser {
 
   final parsedHistoryJson = 0.obs;
   final totalJsonToParse = 0.obs;
+  late final parsingProgress = ProgressPercentage(parsedHistoryJson, totalJsonToParse);
   final addedHistoryJsonToPlaylist = 0.obs;
   final isParsing = false.obs;
   final _loadingFileProgress = (0, 0).obs;

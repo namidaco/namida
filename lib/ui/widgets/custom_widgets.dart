@@ -4094,7 +4094,7 @@ class DefaultPlaylistCard extends StatelessWidget {
 
 class NamidaCircularPercentage extends StatelessWidget {
   final double size;
-  final double percentage;
+  final RxBaseCore<int?> percentageRx;
   final String heroTag;
   final bool hero;
 
@@ -4102,7 +4102,7 @@ class NamidaCircularPercentage extends StatelessWidget {
     super.key,
     this.size = 48.0,
     required this.hero,
-    required this.percentage,
+    required this.percentageRx,
     required this.heroTag,
   });
 
@@ -4110,6 +4110,7 @@ class NamidaCircularPercentage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final textStyle = textTheme.displaySmall?.copyWith(fontSize: size / 3.2);
     final circularSlider = SleekCircularSlider(
       appearance: CircularSliderAppearance(
         customWidths: CustomSliderWidths(
@@ -4142,11 +4143,17 @@ class NamidaCircularPercentage extends StatelessWidget {
                 child: circularSlider,
               )
             : circularSlider,
-        if (percentage.isFinite)
-          Text(
-            "${((percentage).clampDouble(0.01, 1.0) * 100).toStringAsFixed(0)}%",
-            style: textTheme.displaySmall?.copyWith(fontSize: size / 3.2),
-          ),
+        ObxO(
+          rx: percentageRx,
+          builder: (context, percentage) {
+            if (percentage == null) return const SizedBox();
+            final percentageShown = percentage.withMinimum(1);
+            return Text(
+              "$percentageShown%",
+              style: textStyle,
+            );
+          },
+        ),
       ],
     );
   }

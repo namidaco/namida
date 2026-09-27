@@ -144,6 +144,24 @@ class _SubsonicWebServer extends MusicWebServer {
     return null;
   }
 
+  Future<List<AlbumModel>>? _albumsForNextFetch;
+
+  @override
+  Future<int?> prepareTracksCount() async {
+    final api = _api;
+    if (api == null) return null;
+
+    final albumsFuture = _fetchAllAlbums(api);
+    _albumsForNextFetch = albumsFuture;
+    final albums = await albumsFuture;
+
+    int tracksCount = 0;
+    for (final album in albums) {
+      tracksCount += album.songCount ?? 0;
+    }
+    return tracksCount;
+  }
+
   @override
   Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final api = _api;
@@ -154,40 +172,38 @@ class _SubsonicWebServer extends MusicWebServer {
 
     final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
+    final albumsFuture = _albumsForNextFetch ?? _fetchAllAlbums(api);
+    _albumsForNextFetch = null;
+    final albums = await albumsFuture;
+
+    final stream = _fetchSongsForAlbumsBatch(
+      api: api,
+      server: server,
+      serverUriParsed: serverUriParsed,
+      albums: albums,
+      splitConfig: splitConfig,
+    );
+
+    await for (final trExt in stream) {
+      callback(trExt);
+    }
+  }
+
+  Future<List<AlbumModel>> _fetchAllAlbums(SubsonicApi api) async {
+    final allAlbums = <AlbumModel>[];
     const batchSize = 400;
     int offset = 0;
-    bool hasMore = true;
-    while (hasMore) {
+    while (true) {
       final albumsRes = await api.api.getAlbumList('newest', size: batchSize, offset: offset);
-      if (_checkResError(authDetails.dir, albumsRes)) {
-        break;
-      }
+      if (_checkResError(authDetails.dir, albumsRes)) break;
+
       final albums = albumsRes.response.data?.albums ?? [];
+      allAlbums.addAll(albums);
 
-      if (albums.isEmpty) {
-        hasMore = false;
-        break;
-      }
-
-      final stream = _fetchSongsForAlbumsBatch(
-        api: api,
-        server: server,
-        serverUriParsed: serverUriParsed,
-        albums: albums,
-        splitConfig: splitConfig,
-      );
-
-      await for (final trExt in stream) {
-        callback(trExt);
-      }
-
+      if (albums.length < batchSize) break;
       offset += batchSize;
-
-      if (albums.length < batchSize) {
-        hasMore = false;
-        break;
-      }
     }
+    return allAlbums;
   }
 
   @override

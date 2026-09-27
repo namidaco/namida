@@ -194,8 +194,8 @@ class _WebDAVServer extends MusicWebServer {
             path: serverPath,
             trackInfo: res.$1,
             stats: FileStatsAdv(
-              creationDate: file.cTime,
-              modified: file.mTime,
+              creationDateMS: file.cTime?.millisecondsSinceEpoch,
+              modifiedMS: file.mTime?.millisecondsSinceEpoch,
               size: file.size,
             ),
             server: server,

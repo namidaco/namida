@@ -63,6 +63,9 @@ abstract class MusicWebServer {
 
   Future<MusicWebServerError?> ping();
   Future<Set<ServerShareWrapper>?> getAvailableShares() async => null;
+
+  /// null when unknown before fetching, what it fetches is reused by the next [fetchAllMusicAndProcess].
+  Future<int?> prepareTracksCount() async => null;
   Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex});
 
   /// Supply [knownChangedMS] to allow skipping fetching playlist again if didn't change

@@ -34,6 +34,9 @@ class _JellyfinServer extends MusicWebServer {
   Future<Uint8List?> getImage(String id) => _wrapper.getImage(id);
 
   @override
+  Future<int?> prepareTracksCount() => _wrapper.fetchAllMediaCount();
+
+  @override
   Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final wrapper = _wrapper;
 
@@ -566,6 +569,27 @@ class _JellyfinClientWrapper {
     return items;
   }
 
+  Future<int?> fetchAllMediaCount() async {
+    if (!await ensureAuthenticated()) return null;
+    final itemTypes = _JellyfinItemKind.values.map((e) => e.value).join(',');
+    try {
+      final res = await _api.dio.get<Map<String, dynamic>>(
+        '/Items',
+        queryParameters: {
+          'UserId': _userId,
+          if (_libraryId != null) 'ParentId': _libraryId,
+          'IncludeItemTypes': itemTypes,
+          'Recursive': true,
+          'Limit': 1,
+          'EnableTotalRecordCount': true,
+        },
+      );
+      return res.data?['TotalRecordCount'] as int?;
+    } on DioException catch (_) {
+      return null;
+    }
+  }
+
   Stream<_JellyfinItem> fetchAllMedia({
     int batchSize = 400,
     required bool Function(Response<dynamic>? res) checkResError,
@@ -583,6 +607,7 @@ class _JellyfinClientWrapper {
             'Recursive': true,
             'StartIndex': offset,
             'Limit': batchSize,
+            'EnableTotalRecordCount': false,
             'Fields': _JellyfinItemField.values.map((e) => e.value).join(','),
           },
         );

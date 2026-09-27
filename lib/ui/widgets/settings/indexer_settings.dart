@@ -1105,14 +1105,19 @@ class IndexerSettings extends SettingSubpageProvider {
                 builder: (context, allAudioFiles) => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ObxO(
-                      rx: Indexer.inst.tracksInfoList,
-                      builder: (context, tracksInfoList) => StatsContainer(
-                        icon: Broken.info_circle,
-                        title: '${lang.tracksInfo}:',
-                        value: tracksInfoList.length.formatDecimal(),
-                        total: allAudioFiles.isEmpty ? null : allAudioFiles.length.formatDecimal(),
-                      ),
+                    Obx(
+                      (context) {
+                        final tracksCount = Indexer.inst.tracksInfoList.valueR.length;
+                        final networkTracksCount = Indexer.inst.networkTracksCount.valueR;
+                        final filesCount = allAudioFiles.length + networkTracksCount;
+                        final filesCountText = filesCount == 0 ? null : filesCount.formatDecimal();
+                        return StatsContainer(
+                          icon: Broken.info_circle,
+                          title: '${lang.tracksInfo}:',
+                          value: tracksCount.formatDecimal(),
+                          total: filesCountText,
+                        );
+                      },
                     ),
                     ObxO(
                       rx: Indexer.inst.artworksInStorage,
@@ -1769,7 +1774,7 @@ class _ChipsEditorDialog extends StatelessWidget {
 Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing = false}) async {
   // [didModifyFolder] was mainly used to force recheck libraries, now it will always recheck.
   RefreshLibraryIconController.repeat();
-  final currentFiles = await Indexer.inst.getAudioFiles();
+  final currentFiles = await Indexer.inst.getAudioFilesForRefresh();
   RefreshLibraryIconController.fling().ignoreError().whenComplete(RefreshLibraryIconController.stop);
 
   Widget? bypassWidget;
@@ -1792,11 +1797,12 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
 
   final pathsDifference = Indexer.inst.getPathsDifference(currentFiles);
   final newPaths = pathsDifference.newPaths;
+  final modifiedPaths = pathsDifference.modifiedPaths;
   final deletedPath = pathsDifference.deletedPaths;
 
   final settingsServers = settings.directoriesToScan.value.allServers();
   final hasServer = settingsServers.isNotEmpty || allTracksInLibrary.any((element) => element.isNetwork);
-  final noLocalChanges = newPaths.isEmpty && deletedPath.isEmpty;
+  final noLocalChanges = newPaths.isEmpty && modifiedPaths.isEmpty && deletedPath.isEmpty;
   if (!hasServer && noLocalChanges) {
     snackyy(title: lang.note, message: lang.noChangesFound);
   } else {
@@ -1839,6 +1845,12 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
                     label: lang.newLabel,
                     colorScheme: Colors.green,
                     paths: newPaths,
+                  ),
+                  _LocalFilesSmallChip(
+                    icon: Broken.edit_2,
+                    label: lang.changed,
+                    colorScheme: Colors.orange,
+                    paths: modifiedPaths,
                   ),
                   _LocalFilesSmallChip(
                     icon: Broken.eraser_1,

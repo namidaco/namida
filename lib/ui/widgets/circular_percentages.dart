@@ -13,15 +13,17 @@ class IndexingPercentage extends _PercentageWithHeroWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) => Indexer.inst.isIndexing.valueR
-          ? NamidaCircularPercentage(
-              hero: hero,
-              heroTag: defaultHeroTag,
-              percentage: Indexer.inst.tracksInfoList.valueR.length / Indexer.inst.allAudioFiles.valueR.length,
-              size: size,
-            ).animateEntrance(showWhen: Indexer.inst.isIndexing.valueR)
-          : const SizedBox(),
+    return ObxO(
+      rx: Indexer.inst.isIndexing,
+      builder: (context, isIndexing) {
+        if (!isIndexing) return const SizedBox();
+        return NamidaCircularPercentage(
+          hero: hero,
+          heroTag: defaultHeroTag,
+          percentageRx: Indexer.inst.indexingProgress.percentageRx,
+          size: size,
+        ).animateEntrance(showWhen: isIndexing);
+      },
     );
   }
 }
@@ -40,7 +42,7 @@ class ParsingJsonPercentage extends _PercentageWithHeroWidget {
               child: NamidaCircularPercentage(
                 hero: hero,
                 heroTag: defaultHeroTag,
-                percentage: JsonToHistoryParser.inst.parsedHistoryJson.valueR / JsonToHistoryParser.inst.totalJsonToParse.valueR,
+                percentageRx: JsonToHistoryParser.inst.parsingProgress.percentageRx,
                 size: size,
               ),
             )
@@ -59,7 +61,7 @@ class VideosExtractingPercentage extends _PercentageWithHeroWidget {
           ? NamidaCircularPercentage(
               hero: hero,
               heroTag: defaultHeroTag,
-              percentage: VideoController.inst.videosCountExtractingProgress.valueR / VideoController.inst.videosCountExtractingTotal.valueR,
+              percentageRx: VideoController.inst.videosExtractingProgress.percentageRx,
               size: size,
             )
           : const SizedBox(),

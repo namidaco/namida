@@ -13,6 +13,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
+import 'package:namida/class/progress_percentage.dart';
 import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -23,9 +24,9 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -175,6 +176,7 @@ class VideoController {
 
   final videosCountExtractingProgress = 0.obs;
   final videosCountExtractingTotal = 0.obs;
+  late final videosExtractingProgress = ProgressPercentage(videosCountExtractingProgress, videosCountExtractingTotal);
 
   final currentBrigthnessDim = 1.0.obs;
 

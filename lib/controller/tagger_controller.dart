@@ -215,6 +215,14 @@ class NamidaTaggerController {
           },
           keepStats: keepFileDates ?? _defaultKeepFileDates,
         );
+
+        final newTrExt = tracksMap[track];
+        if (newTrExt != null) {
+          // -- otherwise refreshing the library sees the file as modified
+          final newStat = await file.stat();
+          final newDateModified = newStat.modified.millisecondsSinceEpoch;
+          tracksMap[track] = newTrExt.copyWith(size: newStat.size, dateModified: newDateModified, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+        }
       }
     }
 
