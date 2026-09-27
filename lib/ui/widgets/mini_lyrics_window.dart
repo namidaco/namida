@@ -132,6 +132,7 @@ class _MiniLyricsText extends StatelessWidget {
           textAlign: TextAlign.center,
           maxLines: 3,
           softWrap: true,
+          maxSecondaryLines: 2,
           style: textTheme.displayMedium?.copyWith(
             fontSize: 17.0,
             fontWeight: FontWeight.w600,

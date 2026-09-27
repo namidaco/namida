@@ -799,8 +799,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             final videoInfo = Player.inst.videoPlayerInfo.valueR;
             final showSimpleLyricsLine = settings.enableSimpleLyricsLine.valueR && !settings.enableLyrics.valueR;
-            final simpleLyricsBandHeight = showSimpleLyricsLine && Lyrics.inst.currentLyricsLRC.valueR != null
+            final simpleLyricsLRC = showSimpleLyricsLine ? Lyrics.inst.currentLyricsLRC.valueR : null;
+            final simpleLyricsBandHeight = simpleLyricsLRC != null
                 ? SimpleLyricsLineWidget.fittedMaxHeight(
+                    lrc: simpleLyricsLRC,
                     fontSize: _kSimpleLyricsLineFontSize,
                     maxLines: 1,
                     textScaler: MediaQuery.textScalerOf(context),
@@ -841,7 +843,13 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
 
             if (settings.artworkTapAction.valueR != TrackExecuteActions.none) {
               currentImage = TapDetector(
-                onTap: () => settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI),
+                onTap: () {
+                  // -- taps missing a lyrics line (gaps, mid-scroll, faded out) belong to the lyrics
+                  final isShowingLyricsView = Lyrics.inst.lrcViewKey.currentState != null;
+                  final hasLyrics = Lyrics.inst.currentLyricsLRC.value != null || Lyrics.inst.currentLyricsText.value.text.isNotEmpty;
+                  if (isShowingLyricsView && hasLyrics) return;
+                  settings.artworkTapAction.value.executePlayingItem(currentItemAnimationUI);
+                },
                 child: currentImage,
               );
             }
