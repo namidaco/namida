@@ -7,6 +7,7 @@ import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -31,6 +32,11 @@ class EditDeleteController {
     if (files.isEmpty) return;
     await Isolate.run(() => _deleteAllIsolate(files));
     await Indexer.inst.removeTracksFromLibrary(tracksToDelete, isFromDelete: true);
+    final deleteLyricsIn = settings.lyricsDeleteWithTrackIn.value;
+    if (deleteLyricsIn.isNotEmpty) {
+      final libraryPaths = Indexer.inst.allTracksMappedByPath.keys.toFixedList();
+      await LrcSearchUtilsSelectable.deleteLyricsOfDeletedTracks(files, libraryPaths, deleteLyricsIn);
+    }
   }
 
   Future<void> deleteCachedVideos(List<Selectable> tracks) async {

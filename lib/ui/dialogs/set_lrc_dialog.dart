@@ -80,17 +80,16 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     );
   }
 
-  // only pick first file, since uppercase variants may also appear duplicated
-  // and usually one doesn't have more than 1 lrc file for a track
-  final deviceLrcFile = await lrcUtils.firstDeviceLRCFile();
-  if (deviceLrcFile != null) {
+  final deviceLyricsFiles = await lrcUtils.allDeviceLyricsFiles();
+  for (final deviceFile in deviceLyricsFiles) {
+    final deviceLyrics = await deviceFile.readLrcString();
     availableLyrics.add(
       LyricsModel(
-        lyrics: await deviceLrcFile.readLrcString(),
-        synced: true,
+        lyrics: deviceLyrics,
+        synced: deviceLyrics.isValidLRC(),
         fromInternet: false,
         isInCache: false,
-        file: deviceLrcFile,
+        file: deviceFile,
         isEmbedded: false,
       ),
     );
@@ -99,6 +98,15 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   void markRequiresUpdating() {
     // -- mark dirty instead, otherwise can interfere with the selection process
     requiresUpdatingLyrics = true;
+  }
+
+  // -- saving again writes to the same file
+  void addSavedLyrics(LyricsModel l) {
+    final savedPath = l.file?.path;
+    availableLyrics.value.removeWhere((element) => element.file?.path == savedPath);
+    availableLyrics.value.add(l);
+    availableLyrics.refresh();
+    markRequiresUpdating();
   }
 
   void updateEditLyrics(LyricsModel l, LyricsModel newL) {
@@ -221,14 +229,14 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   language: lrc.language,
                 );
                 final lyricsString = newLRC.format();
-                await lrcUtils.saveLyricsToCache(lyricsString, true);
+                final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, lyricsString, true);
                 final newLModel = LyricsModel(
                   lyrics: lyricsString,
                   synced: l.synced,
-                  isInCache: l.isInCache,
+                  isInCache: lrcUtils.isCacheFile(file),
                   fromInternet: l.fromInternet,
                   isEmbedded: l.isEmbedded,
-                  file: l.file,
+                  file: file,
                 );
                 updateEditLyrics(l, newLModel);
               }
@@ -360,19 +368,16 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     if (path != null) {
       final text = await File(path).readLrcString();
       final synced = text.isValidLRC();
-      final file = await lrcUtils.saveLyricsToCache(text, synced);
+      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
       final lrcModel = LyricsModel(
         lyrics: text,
         synced: synced,
-        isInCache: true,
+        isInCache: lrcUtils.isCacheFile(file),
         fromInternet: false,
         file: file,
         isEmbedded: false,
       );
-      availableLyrics.value.removeWhere((element) => element.file?.path == file.path);
-      availableLyrics.value.add(lrcModel);
-      availableLyrics.refresh();
-      markRequiresUpdating();
+      addSavedLyrics(lrcModel);
       // selectedLyrics.value = lrcModel;
     }
   }
@@ -384,18 +389,17 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       text ??= pasteTextController.text;
       final synced = text.isValidLRC();
 
-      final file = await lrcUtils.saveLyricsToCache(text, synced);
+      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
 
       final lrcModel = LyricsModel(
         lyrics: text,
         synced: synced,
-        isInCache: true,
+        isInCache: lrcUtils.isCacheFile(file),
         fromInternet: false,
         file: file,
         isEmbedded: false,
       );
-      availableLyrics.add(lrcModel);
-      markRequiresUpdating();
+      addSavedLyrics(lrcModel);
       // selectedLyrics.value = lrcModel;
 
       NamidaNavigator.inst.closeDialog();
@@ -475,12 +479,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       final text = editTextController.text;
       final synced = text.isValidLRC();
 
-      final file = await lrcUtils.saveLyricsToCache(text, synced);
+      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
 
       final lrcModel = LyricsModel(
         lyrics: text,
         synced: synced,
-        isInCache: l.isInCache,
+        isInCache: lrcUtils.isCacheFile(file),
         fromInternet: l.fromInternet,
         file: file,
         isEmbedded: l.isEmbedded,
@@ -609,7 +613,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 if (canAddToCache) {
                   final selected = selectedLyrics.value;
                   if (selected != null) {
-                    await lrcUtils.saveLyricsToCache(selected.lyrics, selected.synced);
+                    await Lyrics.inst.saveLyricsByUser(lrcUtils, selected.lyrics, selected.synced);
                     markRequiresUpdating();
                   }
                 }

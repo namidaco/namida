@@ -6,6 +6,7 @@ import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -25,6 +26,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
@@ -46,6 +48,8 @@ enum _ExtraSettingsKeys with SettingKeysBase {
   romanization,
   stretchLyricsDuration,
   simpleLyricsLine,
+  lyricsSaveLocation,
+  lyricsFolders,
   imageSource,
   imageSourceAlbum,
   imageSourceArtist,
@@ -85,6 +89,8 @@ class ExtrasSettings extends SettingSubpageProvider {
     _ExtraSettingsKeys.romanization: [lang.romanization, lang.dictionary],
     _ExtraSettingsKeys.stretchLyricsDuration: [lang.stretchLyricsDuration],
     _ExtraSettingsKeys.simpleLyricsLine: [lang.simpleLyricsLine, lang.simpleLyricsLineSubtitle],
+    _ExtraSettingsKeys.lyricsSaveLocation: [lang.lyricsSaveLocation, lang.lyricsSaveLocationSubtitle, lang.lyricsDeleteWithTrack],
+    _ExtraSettingsKeys.lyricsFolders: [lang.lyricsFolders, lang.lyricsFoldersSubtitle],
     _ExtraSettingsKeys.imageSource: [lang.imageSource, lang.album, lang.albums],
     _ExtraSettingsKeys.imageSourceAlbum: [lang.imageSource, lang.album, lang.albums],
     _ExtraSettingsKeys.imageSourceArtist: [lang.imageSource, lang.artist, lang.artists],
@@ -819,6 +825,19 @@ class ExtrasSettings extends SettingSubpageProvider {
                     ),
                   ),
                 ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.lyricsSaveLocation,
+                  child: _LyricsSaveLocationTile(
+                    bgColor: getBgColor(_ExtraSettingsKeys.lyricsSaveLocation),
+                  ),
+                ),
+                getItemWrapper(
+                  key: _ExtraSettingsKeys.lyricsFolders,
+                  child: _LyricsFoldersTile(
+                    bgColor: getBgColor(_ExtraSettingsKeys.lyricsFolders),
+                    initiallyExpanded: initialItem == _ExtraSettingsKeys.lyricsFolders,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1539,4 +1558,196 @@ class _ExtrasFlagsOptions extends StatelessWidget {
       ),
     );
   }
+}
+
+class _LyricsSaveLocationTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _LyricsSaveLocationTile({required this.bgColor});
+
+  void _onLocationTap(LyricsSaveLocation location) async {
+    if (location != LyricsSaveLocation.cache) {
+      final hasPermission = await requestManageStoragePermission();
+      if (!hasPermission) return;
+    }
+    final needsFolder = location == LyricsSaveLocation.customFolder && settings.lyricsFolders.value.isEmpty;
+    if (needsFolder) {
+      NamidaNavigator.inst.closeDialog();
+      final didAdd = await _addLyricsFolder();
+      if (!didAdd) return;
+    }
+    settings.lyricsSaveLocation.save(location);
+  }
+
+  void _openLocationsDialog() {
+    final saveFolder = settings.lyricsFolders.value.firstOrNull ?? '';
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.lyricsSaveLocation,
+        normalTitleStyle: true,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...LyricsSaveLocation.values.map(
+              (e) => _LyricsSaveLocationOption(
+                location: e,
+                subtitle: e == LyricsSaveLocation.customFolder ? saveFolder : '',
+                onTap: () => _onLocationTap(e),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.lyricsSaveLocation,
+      builder: (context, saveLocation) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.document_download,
+        title: lang.lyricsSaveLocation,
+        subtitle: lang.lyricsSaveLocationSubtitle,
+        trailingText: saveLocation.toText(),
+        onTap: _openLocationsDialog,
+      ),
+    );
+  }
+}
+
+class _LyricsSaveLocationOption extends StatelessWidget {
+  final LyricsSaveLocation location;
+  final String subtitle;
+  final void Function() onTap;
+
+  const _LyricsSaveLocationOption({
+    required this.location,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  void _onDeleteWithTrackTap() {
+    settings.lyricsDeleteWithTrackIn.update((deleteIn) {
+      final wasEnabled = deleteIn.remove(location);
+      if (!wasEnabled) deleteIn.add(location);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Padding(
+      padding: const EdgeInsets.all(3.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: ObxO(
+              rx: settings.lyricsSaveLocation,
+              builder: (context, saveLocation) => ListTileWithCheckMark(
+                active: saveLocation == location,
+                title: location.toText(),
+                subtitle: subtitle,
+                onTap: onTap,
+              ),
+            ),
+          ),
+          const SizedBox(width: 4.0),
+          ObxO(
+            rx: settings.lyricsDeleteWithTrackIn,
+            builder: (context, deleteIn) {
+              final isEnabled = deleteIn.contains(location);
+              return NamidaIconButton(
+                tooltip: () => '${lang.lyricsDeleteWithTrack}\n${lang.lyricsDeleteWithTrackSubtitle}',
+                icon: Broken.trash,
+                iconSize: 20.0,
+                iconColor: isEnabled ? Colors.red : theme.disabledColor,
+                onPressed: _onDeleteWithTrackTap,
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LyricsFoldersTile extends StatelessWidget {
+  final Color? bgColor;
+  final bool initiallyExpanded;
+
+  const _LyricsFoldersTile({
+    required this.bgColor,
+    required this.initiallyExpanded,
+  });
+
+  void _onRemoveTap(String folder) {
+    settings.lyricsFolders.update((list) => list.remove(folder));
+    final isSaveFolderGone = settings.lyricsFolders.value.isEmpty && settings.lyricsSaveLocation.value == LyricsSaveLocation.customFolder;
+    if (isSaveFolderGone) settings.lyricsSaveLocation.save(LyricsSaveLocation.cache);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return Obx(
+      (context) {
+        final lyricsFolders = settings.lyricsFolders.valueR;
+        final isSavingInFolder = settings.lyricsSaveLocation.valueR == LyricsSaveLocation.customFolder;
+        final saveFolder = isSavingInFolder ? lyricsFolders.firstOrNull : null;
+        return NamidaExpansionTile(
+          bgColor: bgColor,
+          bigahh: false,
+          compact: false,
+          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+          initiallyExpanded: initiallyExpanded,
+          icon: Broken.folder_2,
+          titleText: lang.lyricsFolders,
+          subtitleText: lang.lyricsFoldersSubtitle,
+          textColor: textTheme.displayLarge!.color,
+          trailingBuilder: (iconWidget) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NamidaButton(
+                icon: Broken.folder_add,
+                text: lang.add,
+                opaqueBG: true,
+                onTap: _addLyricsFolder,
+              ),
+              iconWidget,
+            ],
+          ),
+          children: [
+            ...lyricsFolders.map(
+              (e) => CustomListTile(
+                extraDense: true,
+                icon: Broken.folder,
+                title: e,
+                subtitle: e == saveFolder ? lang.lyricsSaveLocation : null,
+                trailingRaw: NamidaTextButton(
+                  minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
+                  onTap: () => _onRemoveTap(e),
+                  text: lang.remove.toUpperCase(),
+                  fontSizeMultiplier: 0.92,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+Future<bool> _addLyricsFolder() async {
+  final hasPermission = await requestManageStoragePermission();
+  if (!hasPermission) return false;
+  final path = await NamidaFileBrowser.getDirectory(note: lang.lyricsFolders);
+  if (path == null) return false;
+  settings.lyricsFolders.update((list) => list.addNoDuplicates(path));
+  return true;
 }

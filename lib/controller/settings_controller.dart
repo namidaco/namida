@@ -185,6 +185,9 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enableSubtitles = _key('enableSubtitles', false);
   late final subtitlesLanguages = _keyList<String>('subtitlesLanguages', const []);
   late final lyricsSource = _keyEnum('lyricsSource', LyricsSource.auto, LyricsSource.values);
+  late final lyricsSaveLocation = _keyEnum('lyricsSaveLocation', LyricsSaveLocation.cache, LyricsSaveLocation.values, sync: false);
+  late final lyricsFolders = _keyList<String>('lyricsFolders', const [], sync: false);
+  late final lyricsDeleteWithTrackIn = _keySet<LyricsSaveLocation>('lyricsDeleteWithTrackIn', const {}, item: LyricsSaveLocation.values.asCodec(), sync: false);
   late final videoPlaybackSource = _keyEnum('videoPlaybackSource', VideoPlaybackSource.auto, VideoPlaybackSource.values);
   late final youtubeVideoQualities = _keyList<String>('youtubeVideoQualities', const ['480p', '360p', '240p', '144p']);
   late final animatingThumbnailScaleMultiplier = _key('animatingThumbnailScaleMultiplier', 1.0);

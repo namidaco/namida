@@ -37,7 +37,16 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   File get cachedLRCFile => File(p.join(mainLyricsCacheDirectory, "${video.id}.lrc"));
 
   @override
-  Future<File?> firstDeviceLRCFile() => Future.value(null);
+  Future<LyricsFiles> firstDeviceFiles() => Future.value(kNoLyricsFiles);
+
+  @override
+  Future<List<File>> allDeviceLyricsFiles() => Future.value(const []);
+
+  @override
+  bool shouldPreferDeviceFiles() => false;
+
+  @override
+  Future<File?> saveLyricsToDevice(String formatted, bool isSynced, {void Function(File deviceFile)? onFailed}) => Future.value(null);
 
   @override
   Future<int> getItemDurationMS() async {

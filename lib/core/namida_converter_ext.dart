@@ -2397,6 +2397,14 @@ extension LyricsSourceL10n on LyricsSource {
   };
 }
 
+extension LyricsSaveLocationL10n on LyricsSaveLocation {
+  String toText() => switch (this) {
+    LyricsSaveLocation.cache => lang.cache,
+    LyricsSaveLocation.trackFolder => lang.trackFolder,
+    LyricsSaveLocation.customFolder => lang.lyricsFolders,
+  };
+}
+
 extension LyricsProviderL10n on LyricsProvider {
   String toText() => switch (this) {
     LyricsProvider.lrclib => 'LRCLIB',

@@ -38,6 +38,7 @@ class TracksSearchWrapper {
     final addMoods = filters.contains(TrackSearchFilter.moods);
     final addTags = filters.contains(TrackSearchFilter.tags);
     final maxListensCount = topTracksMapListens.values.firstOrNull?.length;
+    final lyricsLocations = addLyrics ? LyricsLocations.fromSettings() : null;
     return (
       tracks: tracks
           .map(
@@ -65,6 +66,7 @@ class TracksSearchWrapper {
       filters: filters,
       cleanup: settings.enableSearchCleanup.value,
       lyricsCacheDirectory: AppDirs.LYRICS,
+      lyricsLocations: lyricsLocations,
       maxListensCount: maxListensCount,
       sendPort: sendPort,
     );
@@ -76,6 +78,7 @@ class TracksSearchWrapper {
     final tsf = params.filters;
     final cleanup = params.cleanup;
     final lyricsCacheDirectory = params.lyricsCacheDirectory;
+    final lyricsLocations = params.lyricsLocations;
     final maxListensCount = params.maxListensCount ?? 0;
 
     var stitle = tsf.contains(TrackSearchFilter.title);
@@ -209,12 +212,13 @@ class TracksSearchWrapper {
                     textCleanedMinorForSearch,
                   ).cleaned.text,
                 ),
-          lyrics: !slyrics
+          lyrics: !slyrics || lyricsLocations == null
               ? null
               : _fillAllAvailableLyrics(
                   track,
                   trMap.lyrics ?? '',
                   lyricsCacheDirectory,
+                  lyricsLocations,
                 ),
           listensCount: listensCount,
           listensScore: listensScore,
@@ -233,11 +237,12 @@ class TracksSearchWrapper {
     );
   }
 
-  static _PropertySimple? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory) {
+  static _PropertySimple? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory, LyricsLocations lyricsLocations) {
     final lyricsBuffer = StringBuffer();
 
     final lrcUtils = LrcSearchUtilsSelectableIsolate(
       mainLyricsCacheDirectory: lyricsCacheDirectory,
+      locations: lyricsLocations,
       kDummyExtendedTrack,
       track,
     );
@@ -250,14 +255,15 @@ class TracksSearchWrapper {
       lrcContent = embedded;
     }
     if (lrcContent == null) {
-      final deviceLrcFile = lrcUtils.firstDeviceLRCFileSync();
-      lrcContent = deviceLrcFile?.readLrcStringSync();
-    }
-    if (lrcContent == null) {
-      final textInCache = lrcUtils.cachedTxtFile;
-      if (textInCache.existsAndValidSync()) {
-        lrcContent = textInCache.readLrcStringSync();
+      final deviceFiles = lrcUtils.firstDeviceFilesSync();
+      lrcContent = deviceFiles.lrc?.readLrcStringSync();
+      if (lrcContent == null) {
+        final textInCache = lrcUtils.cachedTxtFile;
+        if (textInCache.existsAndValidSync()) {
+          lrcContent = textInCache.readLrcStringSync();
+        }
       }
+      lrcContent ??= deviceFiles.txt?.readLrcStringSync();
     }
     if (lrcContent != null) {
       final lrc = lrcContent.parseLRC();
@@ -817,6 +823,7 @@ typedef TracksSearchParams = ({
   List<TrackSearchFilter> filters,
   bool cleanup,
   String lyricsCacheDirectory,
+  LyricsLocations? lyricsLocations,
   int? maxListensCount,
   SendPort sendPort,
 });

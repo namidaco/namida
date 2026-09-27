@@ -753,6 +753,12 @@ enum LyricsSource {
   internet,
 }
 
+enum LyricsSaveLocation {
+  cache,
+  trackFolder,
+  customFolder,
+}
+
 enum LyricsProvider {
   lrclib,
   kugou,

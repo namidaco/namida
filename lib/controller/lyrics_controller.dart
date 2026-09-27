@@ -3,6 +3,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/material.dart';
@@ -28,8 +29,10 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 
 class Lyrics {
   static Lyrics get inst => _instance;
@@ -55,6 +58,23 @@ class Lyrics {
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
   final _lrcSearchManager = _LRCSearchManager();
+
+  /// items that had nothing online, to not search again each time they play.
+  final _notFoundOnlineMS = <Object, int>{};
+  static const _kNotFoundOnlineRetryMS = 6 * 60 * 60 * 1000;
+
+  static Object _onlineLookupKey(Playable item) {
+    if (item is Selectable) return item.track;
+    if (item is YoutubeID) return item.id;
+    return item;
+  }
+
+  bool _wasNotFoundOnlineRecently(Object lookupKey) {
+    final notFoundMS = _notFoundOnlineMS[lookupKey];
+    if (notFoundMS == null) return false;
+    final elapsedMS = DateTime.now().millisecondsSinceEpoch - notFoundMS;
+    return elapsedMS < _kNotFoundOnlineRetryMS;
+  }
 
   void _updateWidgets(Lrc? lrc, LrcText? txt) {
     WakelockController.inst.updateLRCStatus(lrc != null);
@@ -141,14 +161,19 @@ class Lyrics {
       return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(embedded)), canBeAvailable: true);
     }
 
-    /// 1. device lrc
-    /// 2. cached lrc
-    /// 3. track embedded lrc
+    final source = _lyricsSource;
+    final lookupKey = _onlineLookupKey(item);
+    final canSearchOnline = source != LyricsSource.local && !_wasNotFoundOnlineRecently(lookupKey);
+
+    /// 1. cached/device lrc, the location lyrics are saved in goes first
+    /// 2. track embedded lrc
+    /// 3. cached/device txt
     /// 4. database.
     final lrcLyrics = await _fetchLRCBasedLyrics(
       lrcUtils,
       embedded,
-      _lyricsSource,
+      source,
+      canSearchOnline: canSearchOnline,
       // -- nothing local, hide now instead of holding an empty overlay for the whole network request.
       onBeforeNetwork: () {
         if (!checkInterrupted()) _updateWidgets(null, null);
@@ -157,17 +182,23 @@ class Lyrics {
 
     if (checkInterrupted()) return null;
 
-    if (lrcLyrics.$1 != null) return (lrc: lrcLyrics.$1, txt: null, canBeAvailable: true);
-    if (lrcLyrics.$2 != null) return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(lrcLyrics.$2!)), canBeAvailable: true);
+    final lrc = lrcLyrics.lrc;
+    if (lrc != null) return (lrc: lrc, txt: null, canBeAvailable: true);
+    final lrcAsText = lrcLyrics.txt;
+    if (lrcAsText != null) return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(lrcAsText)), canBeAvailable: true);
 
-    /// 1. cached txt lyrics
+    /// 1. cached/device txt
     /// 2. track embedded txt
     /// 3. google search
-    final textLyrics = await _fetchTextBasedLyrics(lrcUtils, embedded, _lyricsSource);
+    final textLyrics = await _fetchTextBasedLyrics(lrcUtils, source, canSearchOnline: canSearchOnline);
 
     if (checkInterrupted()) return null;
 
-    if (textLyrics != '') return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(textLyrics)), canBeAvailable: true);
+    final text = textLyrics.txt;
+    if (text != '') return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(text)), canBeAvailable: true);
+
+    final didSearchFail = lrcLyrics.didSearchFail || textLyrics.didSearchFail;
+    if (canSearchOnline && !didSearchFail) _notFoundOnlineMS[lookupKey] = DateTime.now().millisecondsSinceEpoch;
     return (lrc: null, txt: null, canBeAvailable: false);
   }
 
@@ -183,6 +214,27 @@ class Lyrics {
       if (customQuery.isEmpty) return [];
     }
 
+    final res = await _searchLRCLyricsFromInternet(
+      lrcUtils: lrcUtils,
+      customQuery: customQuery,
+      allProviders: allProviders,
+      onPartial: onPartial,
+    );
+    return res.lyrics;
+  }
+
+  Future<_LRCSearchResult> _searchLRCLyricsFromInternet({
+    required LrcSearchUtils lrcUtils,
+    String? customQuery,
+    bool allProviders = false,
+    void Function(List<LyricsModel> lyrics)? onPartial,
+  }) async {
+    final searchTries = lrcUtils.searchDetailsQueries();
+    if (searchTries.isEmpty) {
+      customQuery ??= lrcUtils.initialSearchTextHint;
+      if (customQuery.isEmpty) return _LRCSearchResult.empty;
+    }
+
     return await _lrcSearchManager.search(
       queries: searchTries,
       customQuery: customQuery,
@@ -192,99 +244,133 @@ class Lyrics {
     );
   }
 
-  Future<(Lrc?, String?)> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source, {void Function()? onBeforeNetwork}) async {
+  /// a save made by the user asks for the storage permission when the location couldn't be written to, before going for the cache.
+  Future<File> saveLyricsByUser(LrcSearchUtils lrcUtils, String lyrics, bool isSynced) async {
+    File? failedFile;
+    File? deviceFile = await lrcUtils.saveLyricsToDevice(lyrics, isSynced, onFailed: (file) => failedFile = file);
+    final failed = failedFile;
+    if (failed != null) {
+      final hasPermission = await requestManageStoragePermission(showError: false);
+      if (hasPermission) deviceFile = await lrcUtils.saveLyricsToDevice(lyrics, isSynced);
+      if (deviceFile == null) {
+        snackyy(
+          title: lang.lyricsSaveLocationNotWritable,
+          message: failed.path,
+          isError: true,
+        );
+      }
+    }
+    if (deviceFile != null) return deviceFile;
+    return lrcUtils.saveLyricsToCache(lyrics, isSynced);
+  }
+
+  /// with [LyricsSource.internet] nothing local was looked up, a lyrics file that is already there must not get replaced.
+  Future<void> _saveFetchedLyrics(LrcSearchUtils lrcUtils, String lyrics, bool isSynced, LyricsSource source) async {
+    if (source == LyricsSource.internet) {
+      await lrcUtils.saveLyricsToCache(lyrics, isSynced);
+    } else {
+      await lrcUtils.saveLyrics(lyrics, isSynced);
+    }
+  }
+
+  Future<_LRCFetchResult> _fetchLRCBasedLyrics(
+    LrcSearchUtils lrcUtils,
+    String trackLyrics,
+    LyricsSource source, {
+    required bool canSearchOnline,
+    void Function()? onBeforeNetwork,
+  }) async {
     String? lrcContent;
 
-    /// 1. device lrc
-    /// 2. cached lrc
-    /// 3. track embedded
+    /// 1. cached/device lrc
+    /// 2. track embedded
+    /// 3. cached/device txt
     if (source != LyricsSource.internet) {
-      final syncedInCache = lrcUtils.cachedLRCFile;
-      if (await syncedInCache.existsAndValid()) {
-        lrcContent = await syncedInCache.readLrcString();
-      }
+      final files = await lrcUtils.firstLyricsFiles(includeTxt: trackLyrics == '');
+      lrcContent = await files.lrc?.readLrcString();
 
-      if (lrcContent == null) {
-        final deviceLrcFile = await lrcUtils.firstDeviceLRCFile();
-        lrcContent = await deviceLrcFile?.readLrcString();
-      }
       if (lrcContent == null && trackLyrics != '') {
         lrcContent = trackLyrics;
       }
       // -- this should be prioritized before searching network again
-      // -- if txt is in cache, then either the user has chosen a file or lrc wasn't found
+      // -- if txt is there, then either the user has chosen a file or lrc wasn't found
       // -- so it has to be a good reason why this is here
       // -- turning this off will cost time and network each time trynna fetch lyrics
-      if (lrcContent == null) {
-        final textInCache = lrcUtils.cachedTxtFile;
-        if (await textInCache.existsAndValid()) {
-          lrcContent = await textInCache.readLrcString();
-        }
-      }
+      lrcContent ??= await files.txt?.readLrcString();
     }
 
     /// 4. if still null, fetch from database.
-    if (source != LyricsSource.local && lrcContent == null) {
+    bool didSearchFail = false;
+    if (canSearchOnline && lrcContent == null) {
       onBeforeNetwork?.call();
-      final lyrics = await searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
-      final lyricsModelToUse = lyrics.firstOrNull;
+      final res = await _searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
+      didSearchFail = res.hadFailure;
+      final lyricsModelToUse = res.lyrics.firstOrNull;
       if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
         final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
+        final isSynced = parsedLrc != null;
+        await _saveFetchedLyrics(lrcUtils, lyricsModelToUse.lyrics, isSynced, source);
         if (parsedLrc != null) {
-          final syncedInCache = lrcUtils.cachedLRCFile;
-          await syncedInCache.writeAsString(lyricsModelToUse.lyrics);
-          return (parsedLrc, null);
+          return (lrc: parsedLrc, txt: null, didSearchFail: false);
         } else {
-          final plainInCache = lrcUtils.cachedTxtFile;
-          await plainInCache.writeAsString(lyricsModelToUse.lyrics);
-          return (null, lyricsModelToUse.lyrics);
+          return (lrc: null, txt: lyricsModelToUse.lyrics, didSearchFail: false);
         }
       }
     }
 
     final lrc = lrcContent?.parseLRC();
     if (lrc != null && lrc.lyrics.isNotEmpty) {
-      return (lrc, null);
+      return (lrc: lrc, txt: null, didSearchFail: didSearchFail);
     } else {
-      return (null, lrcContent);
+      return (lrc: null, txt: lrcContent, didSearchFail: didSearchFail);
     }
   }
 
-  Future<String> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, String trackLyrics, LyricsSource source) async {
-    final lyricsFile = lrcUtils.cachedTxtFile;
+  Future<_TextFetchResult> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source, {required bool canSearchOnline}) async {
+    // -- [_fetchLRCBasedLyrics] already returns the txt file and the embedded lyrics, looking again only costs io.
+    // final lyricsFile = lrcUtils.cachedTxtFile;
+    // if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
+    //   return await lyricsFile.readLrcString();
+    // } else if (source != LyricsSource.internet && trackLyrics != '') {
+    //   return trackLyrics;
+    // }
 
-    /// get from storage
-    if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
-      return await lyricsFile.readLrcString();
-    } else if (source != LyricsSource.internet && trackLyrics != '') {
-      return trackLyrics;
-    }
     /// download lyrics
-    else if (source != LyricsSource.local) {
+    if (canSearchOnline) {
       final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
+      if (lyrics == null) return (txt: '', didSearchFail: true);
       if (lyrics != '') {
         final formattedText = lyrics.replaceAll(_htmlTagRegex, '');
-        await lyricsFile.writeAsString(formattedText);
-        return formattedText;
+        await _saveFetchedLyrics(lrcUtils, formattedText, false, source);
+        return (txt: formattedText, didSearchFail: false);
       }
     }
-    return '';
+    return (txt: '', didSearchFail: false);
   }
 
-  Future<String> _fetchLyricsGoogle(List<String> possibleQueries) async {
+  /// null when nothing was found and a request has failed.
+  Future<String?> _fetchLyricsGoogle(List<String> possibleQueries) async {
     if (possibleQueries.isEmpty) return '';
     return await _fetchLyricsGoogleIsolate.thready(possibleQueries);
   }
 
-  static Future<String> _fetchLyricsGoogleIsolate(List<String> searches) async {
+  static Future<String?> _fetchLyricsGoogleIsolate(List<String> searches) async {
     const url = "https://www.google.com/search?client=safari&rls=en&ie=UTF-8&oe=UTF-8&q=";
     const delimiter1 = '</div></div></div></div><div class="hwc"><div class="BNeawe tAd8D AP7Wnd"><div><div class="BNeawe tAd8D AP7Wnd">';
     const delimiter2 = '</div></div></div></div></div><div><span class="hwc"><div class="BNeawe uEec3 AP7Wnd">';
 
+    bool hadFailure = false;
+
     Future<String> requestQuery(String searchText) async {
+      String body;
       try {
         final res = await Rhttp.get(Uri.encodeFull("$url$searchText")).timeout(const Duration(seconds: 10));
-        final body = res.body;
+        body = res.body;
+      } catch (_) {
+        hadFailure = true;
+        return '';
+      }
+      try {
         final lyricsRes = body.substring(body.indexOf(delimiter1) + delimiter1.length, body.lastIndexOf(delimiter2));
         if (lyricsRes.contains('<meta charset="UTF-8">')) return '';
         if (lyricsRes.contains('please enable javascript on your web browser')) return '';
@@ -302,6 +388,8 @@ class Lyrics {
       lyrics = await requestQuery(q);
       if (lyrics != '') break;
     }
+
+    if (lyrics == '' && hadFailure) return null;
 
     // final List<String> split = lyrics.split('\n');
     // String result = '';
@@ -334,36 +422,43 @@ class _LRCSearchResult {
   final List<LyricsModel> lyrics;
   final bool done;
 
+  /// a request has failed, empty [lyrics] don't mean there are none.
+  final bool hadFailure;
+
   const _LRCSearchResult({
     required this.token,
     required this.lyrics,
     required this.done,
+    required this.hadFailure,
   });
+
+  static const empty = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: false);
+  static const interrupted = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: true);
 }
 
 class _LRCSearchManager with PortsProvider<SendPort> {
   _LRCSearchManager();
 
   int _latestToken = 0;
-  Completer<List<LyricsModel>>? _completer;
+  Completer<_LRCSearchResult>? _completer;
   void Function(List<LyricsModel> lyrics)? _onPartial;
 
-  Future<List<LyricsModel>> search({
+  Future<_LRCSearchResult> search({
     required List<LRCSearchDetails> queries,
     String? customQuery,
     required List<LyricsProvider> providers,
     required bool allProviders,
     void Function(List<LyricsModel> lyrics)? onPartial,
   }) async {
-    if (providers.isEmpty) return [];
+    if (providers.isEmpty) return _LRCSearchResult.empty;
 
     final token = ++_latestToken;
-    _completer?.completeIfWasnt([]);
-    final completer = _completer = Completer<List<LyricsModel>>();
+    _completer?.completeIfWasnt(_LRCSearchResult.interrupted);
+    final completer = _completer = Completer<_LRCSearchResult>();
     _onPartial = onPartial;
 
     if (!isInitialized) await initialize();
-    if (token != _latestToken) return [];
+    if (token != _latestToken) return _LRCSearchResult.interrupted;
 
     final request = _LRCSearchRequest(
       token: token,
@@ -381,7 +476,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
     result as _LRCSearchResult;
     if (result.token != _latestToken) return;
     if (result.done) {
-      _completer?.completeIfWasnt(result.lyrics);
+      _completer?.completeIfWasnt(result);
       _completer = null;
       _onPartial = null;
     } else {
@@ -430,7 +525,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
         void send(List<LyricsModel> lyrics, bool done) {
           if (session.cancelled) return;
-          sendPort.send(_LRCSearchResult(token: p.token, lyrics: lyrics, done: done));
+          sendPort.send(_LRCSearchResult(token: p.token, lyrics: lyrics, done: done, hadFailure: session.hadFailure));
         }
 
         final lyrics = await searcher.search(session, onPartial: (lyrics) => send(lyrics, false));
@@ -449,12 +544,15 @@ class _LRCSearchSession {
 
   bool _cancelled = false;
   bool _requestIssued = false;
+  bool _hadFailure = false;
 
   bool get cancelled => _cancelled;
+  bool get hadFailure => _hadFailure;
 
   _LRCSearchSession(this.request);
 
   void markRequestIssued() => _requestIssued = true;
+  void markFailure() => _hadFailure = true;
 
   void cancel() {
     if (_cancelled) return;
@@ -529,6 +627,7 @@ class _LRCProvidersSearcher {
         LyricsProvider.kugou => await _fetchKuGou(session, details: details, customQuery: customQuery, limit: kugouLimit),
       };
     } catch (_) {
+      session.markFailure();
       return [];
     }
   }
@@ -722,7 +821,9 @@ class _LRCProvidersSearcher {
         final durMS = c['duration'] is num ? (c['duration'] as num).round() : targetMS;
         final lyrics = lrc.contains('[length:') || durMS <= 0 ? lrc : '[length:${_formatLength(durMS)}]\n$lrc';
         fetched.add(_model(lyrics, true, LyricsProvider.kugou));
-      } catch (_) {}
+      } catch (_) {
+        session.markFailure();
+      }
     }
     LyricsModel.removeDuplicateLyrics(fetched);
     return fetched;
@@ -871,3 +972,5 @@ class LrcText {
 }
 
 typedef _LyricsResolveResult = ({Lrc? lrc, LrcText? txt, bool canBeAvailable});
+typedef _LRCFetchResult = ({Lrc? lrc, String? txt, bool didSearchFail});
+typedef _TextFetchResult = ({String txt, bool didSearchFail});
