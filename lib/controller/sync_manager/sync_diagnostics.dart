@@ -31,6 +31,7 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     await _writeInterfaces(report, preferredInterface);
     _writeServer(report);
     if (Platform.isWindows) await _writeWindowsNetwork(report);
+    if (Platform.isLinux) await _writeLinuxFirewall(report);
     await _writeDiscovery(report, preferredInterface);
 
     return report.toString().trimRight();
@@ -73,6 +74,46 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
       report.writeln(await _runPowershell(_kWindowsNetworkScript.replaceFirst('{exe}', exePath)));
     } catch (e) {
       report.writeln('failed: $e');
+    }
+  }
+
+  static Future<void> _writeLinuxFirewall(StringBuffer report) async {
+    report.writeln('\n== linux firewall ==');
+    final isFlatpak = Platform.environment.containsKey('FLATPAK_ID');
+    final ufwEnabled = await _isUfwEnabled(isFlatpak);
+    final firewalldActive = isFlatpak ? null : await _isFirewalldActive();
+    final ufwStatus = ufwEnabled ?? 'unknown';
+    final firewalldStatus = firewalldActive ?? 'unknown';
+    final flatpakSuffix = isFlatpak ? ' | flatpak' : '';
+    report.writeln('ufw: $ufwStatus | firewalld: $firewalldStatus$flatpakSuffix');
+    const port = SyncUtils.kDefaultNamidaPort;
+    if (ufwEnabled == true) report.writeln('! ufw blocks incoming connections by default, allow sync with: sudo ufw allow $port/tcp');
+    if (firewalldActive == true) {
+      report.writeln('! firewalld may block incoming connections, allow sync with: sudo firewall-cmd --permanent --add-port=$port/tcp && sudo firewall-cmd --reload');
+    }
+  }
+
+  static final _ufwEnabledRegex = RegExp(r'^ENABLED\s*=\s*yes', multiLine: true, caseSensitive: false);
+
+  static Future<bool?> _isUfwEnabled(bool isFlatpak) async {
+    final configPath = isFlatpak ? '/run/host/etc/ufw/ufw.conf' : '/etc/ufw/ufw.conf';
+    try {
+      final config = await File(configPath).readAsString();
+      return _ufwEnabledRegex.hasMatch(config);
+    } on PathNotFoundException {
+      return isFlatpak ? null : false;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<bool?> _isFirewalldActive() async {
+    try {
+      final result = await Process.run('systemctl', ['is-active', 'firewalld']);
+      final status = (result.stdout as String).trim();
+      return status == 'active';
+    } catch (_) {
+      return null;
     }
   }
 
@@ -141,7 +182,7 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
       socket.destroy();
       return 'ok (${sw.elapsedMilliseconds}ms)';
     } catch (e) {
-      return 'failed: $e';
+      return 'failed: $e\n! a timeout usually means a firewall on that device blocks tcp ${SyncUtils.kDefaultNamidaPort}, other errors can be temporary, retry';
     }
   }
 

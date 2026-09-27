@@ -363,7 +363,7 @@ class NamidaDrawer extends StatelessWidget {
               openSleepTimerDialog(context);
             },
           ),
-          SizedBox(height: gap6),
+          SizedBox(height: gap6 * 0.25),
         ],
         LayoutBuilder(
           builder: (context, constraints) {

@@ -866,6 +866,11 @@ TEMPLATE_HELP = """{c} known topics, reuse one so the commits merge into a singl
 {c} name the key changes, do not enumerate. the subject generalises and the bullets
 {c} list the few points worth knowing, whoever wants depth reads the code.
 {c}
+{c} very concise, users read this. a bullet is a few words saying what the user gets,
+{c} no how or why, and it does not repeat the subject. "* " only when really important.
+{c}   bad:  - thin line on snackbars showing the time left before they close
+{c}   good: - thin line showing time left
+{c}
 {c} ---------------------------------------------------------------
 {c} <prefix>(<platform>)?: <subject>      lowercase, <= {max} chars, no " - "
 {c}

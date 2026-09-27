@@ -1223,7 +1223,7 @@ class _NamidaButtonAnimatedTextState extends State<_NamidaButtonAnimatedText> {
         child: lastShownText == null
             ? const SizedBox()
             : Padding(
-                padding: isHorizontal ? EdgeInsetsDirectional.only(start: widget.hasIcon ? 8.0 : 0.0, end: 6.0) : EdgeInsets.only(top: widget.hasIcon ? 2.0 : 0.0),
+                padding: isHorizontal ? EdgeInsetsDirectional.only(start: widget.hasIcon ? 8.0 : 0.0, end: 4.0) : EdgeInsets.only(top: widget.hasIcon ? 2.0 : 0.0),
                 child: Text(
                   lastShownText,
                   style: widget.style,
