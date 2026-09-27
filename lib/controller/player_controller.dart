@@ -525,12 +525,19 @@ class Player {
             await _addToQueueGated(finalTracks, insertNext: shouldInsertNext, insertAfterLatest: insertAfterLatest);
             if (showSnackBar) {
               final addins = shouldInsertNext ? lang.inserted : lang.added;
+              final addinsCapitalized = addins.capitalizeFirst();
+              String toMessage(int total) => '$addinsCapitalized: ${total.displayTrackKeyword}';
               snackyy(
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-                message: '${addins.capitalizeFirst()}: ${finalTracks.displayTrackKeyword}',
+                message: toMessage(finalTracks.length),
                 top: false,
                 displayDuration: SnackDisplayDuration.mediumLow,
                 animationDurationMS: 400,
+                merge: SnackbarMerge(
+                  group: shouldInsertNext ? .queueInsertTracks : .queueAddTracks,
+                  count: finalTracks.length,
+                  toMessage: toMessage,
+                ),
               );
             }
             return true;
@@ -546,12 +553,19 @@ class Player {
             await _addToQueueGated(finalVideos, insertNext: shouldInsertNext, insertAfterLatest: insertAfterLatest);
             if (showSnackBar) {
               final addins = shouldInsertNext ? lang.inserted : lang.added;
+              final addinsCapitalized = addins.capitalizeFirst();
+              String toMessage(int total) => '$addinsCapitalized: ${total.displayVideoKeyword}';
               snackyy(
                 icon: shouldInsertNext ? Broken.redo : Broken.add_circle,
-                message: '${addins.capitalizeFirst()}: ${finalVideos.length.displayVideoKeyword}',
+                message: toMessage(finalVideos.length),
                 top: false,
                 displayDuration: SnackDisplayDuration.mediumLow,
                 animationDurationMS: 400,
+                merge: SnackbarMerge(
+                  group: shouldInsertNext ? .queueInsertVideos : .queueAddVideos,
+                  count: finalVideos.length,
+                  toMessage: toMessage,
+                ),
               );
             }
             return true;

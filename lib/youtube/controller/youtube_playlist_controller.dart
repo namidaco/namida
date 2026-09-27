@@ -86,12 +86,22 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
 
     if (addedVideosLength == null) return;
 
+    String toMessage(int total) => "${lang.added}: ${total.displayVideoKeyword}";
+    final didAddVideos = addedVideosLength > 0;
     snackyy(
-      message: "${lang.added}: ${addedVideosLength.displayVideoKeyword}",
-      button: addedVideosLength > 0
+      message: toMessage(addedVideosLength),
+      button: didAddVideos
           ? SnackbarButton(
               text: lang.undo,
               function: () async => await updatePropertyInPlaylist(playlist.name, tracks: oldVideosList, modifiedDate: originalModifyDate),
+            )
+          : null,
+      merge: didAddVideos
+          ? SnackbarMerge(
+              group: .playlistAddVideos,
+              id: playlist.name,
+              count: addedVideosLength,
+              toMessage: toMessage,
             )
           : null,
     );

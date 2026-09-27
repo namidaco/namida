@@ -131,6 +131,7 @@ extension SyncSettingsDebugKeys on _SyncSettings {
 extension TutorialSettingsDebugKeys on _TutorialSettings {
   List<RxBase<Object?>> get allKeys => [
     lyricsFullscreenTipSeen,
+    snackbarDismissHintCount,
   ];
 }
 

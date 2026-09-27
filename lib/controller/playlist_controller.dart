@@ -96,12 +96,22 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     if (addedTracksLength == null) return;
 
+    String toMessage(int total) => "${lang.added}: ${total.displayTrackKeyword}";
+    final didAddTracks = addedTracksLength > 0;
     snackyy(
-      message: "${lang.added}: ${addedTracksLength.displayTrackKeyword}",
-      button: addedTracksLength > 0
+      message: toMessage(addedTracksLength),
+      button: didAddTracks
           ? SnackbarButton(
               text: lang.undo,
               function: () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
+            )
+          : null,
+      merge: didAddTracks
+          ? SnackbarMerge(
+              group: .playlistAddTracks,
+              id: playlist.name,
+              count: addedTracksLength,
+              toMessage: toMessage,
             )
           : null,
     );

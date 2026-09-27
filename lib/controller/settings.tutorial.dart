@@ -4,6 +4,7 @@ class _TutorialSettings extends _SettingsKeysWriter {
   _TutorialSettings._internal();
 
   late final lyricsFullscreenTipSeen = _key('llpfsSeen', false);
+  late final snackbarDismissHintCount = _key('snackDismissHints', 0);
 
   @override
   void _migrateLegacy() {
