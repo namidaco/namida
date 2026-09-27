@@ -1,0 +1,125 @@
+{
+  "preset_v2": null,
+  "equalizerEnabled": false,
+  "equalizer": {
+    "910.0": 0.0,
+    "3600.0": -0.7493401018229421,
+    "14000.0": -0.42168073757164803,
+    "60.0": 0.0
+  },
+  "loudnessEnhancerEnabled": false,
+  "loudnessEnhancer": 0.0,
+  "uiTapToUpdate": false,
+  "eqPresets": [
+    {
+      "name": "Flat",
+      "gains": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Bass Boost",
+      "gains": [
+        6.0,
+        4.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Treble Boost",
+      "gains": [
+        0.0,
+        0.0,
+        0.0,
+        4.0,
+        6.0
+      ]
+    },
+    {
+      "name": "Rock",
+      "gains": [
+        4.0,
+        2.0,
+        -1.0,
+        2.0,
+        4.0
+      ]
+    },
+    {
+      "name": "Pop",
+      "gains": [
+        -1.0,
+        2.0,
+        4.0,
+        2.0,
+        -1.0
+      ]
+    },
+    {
+      "name": "Jazz",
+      "gains": [
+        3.0,
+        2.0,
+        0.0,
+        2.0,
+        3.0
+      ]
+    },
+    {
+      "name": "Classical",
+      "gains": [
+        4.0,
+        3.0,
+        0.0,
+        3.0,
+        4.0
+      ]
+    },
+    {
+      "name": "Dance",
+      "gains": [
+        5.0,
+        3.0,
+        0.0,
+        -1.0,
+        -2.0
+      ]
+    },
+    {
+      "name": "Vocal",
+      "gains": [
+        -2.0,
+        0.0,
+        4.0,
+        3.0,
+        -1.0
+      ]
+    },
+    {
+      "name": "Bass Reduce",
+      "gains": [
+        -6.0,
+        -4.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "name": "Treble Reduce",
+      "gains": [
+        0.0,
+        0.0,
+        0.0,
+        -4.0,
+        -6.0
+      ]
+    }
+  ]
+}

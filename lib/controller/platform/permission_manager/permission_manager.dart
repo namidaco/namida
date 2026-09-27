@@ -67,7 +67,7 @@ class PermissionManager {
 
     final granted = await Permission.ignoreBatteryOptimizations.isGranted;
     if (granted) return true;
-    if (!settings.canAskForBatteryOptimizations) return false;
+    if (!settings.canAskForBatteryOptimizations.value) return false;
 
     snackyy(
       message: lang.ignoreBatteryOptimizationsSubtitle,
@@ -76,7 +76,7 @@ class PermissionManager {
       isError: true,
       button: SnackbarButton(
         text: lang.dontAskAgain,
-        function: () => settings.save(canAskForBatteryOptimizations: false),
+        function: () => settings.canAskForBatteryOptimizations.save(false),
       ),
     );
     await Future.delayed(const Duration(seconds: 1));

@@ -78,8 +78,8 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
         : QueueSource.artist(name);
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
-    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded ?? true;
-    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded ?? false; // cuz no space
+    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value ?? true;
+    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value ?? false; // cuz no space
     final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
     final heroTag = 'artist_$name';
     return AnimationLimiter(
@@ -104,7 +104,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                         icon: Broken.music_dashboard,
                         identifiers: widget.albumIdentifiers,
                         initiallyExpanded: albumsInitiallyExpanded,
-                        onExpansionChanged: (value) => settings.extra.save(artistAlbumsExpanded: value),
+                        onExpansionChanged: (value) => settings.extra.artistAlbumsExpanded.save(value),
                       ),
                     ],
                     if (widget.singlesIdentifiers.isNotEmpty) ...[
@@ -114,7 +114,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                         icon: Broken.music_square,
                         identifiers: widget.singlesIdentifiers,
                         initiallyExpanded: singlesInitiallyExpanded,
-                        onExpansionChanged: (value) => settings.extra.save(artistSinglesExpanded: value),
+                        onExpansionChanged: (value) => settings.extra.artistSinglesExpanded.save(value),
                       ),
                     ],
                     if (widget.extrasIdentifiers.isNotEmpty) ...[

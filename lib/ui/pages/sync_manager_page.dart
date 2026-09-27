@@ -59,11 +59,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
   }
 
   void _modifySyncItems(void Function(Set<SyncDataItem> syncItems) modifier) {
-    settings.sync.modify((syncSettings) {
-      final syncItems = syncSettings.syncItems.value ??= {...SyncDataItem.essentialsSet};
-      modifier(syncItems);
-      syncSettings.syncItems.refresh();
-    });
+    settings.sync.syncItems.update(modifier);
   }
 
   void _toggleItem(SyncDataItem item) {
@@ -90,12 +86,12 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
   }
 
   List<SyncDataItem> get _selectedItemsSorted {
-    final syncItems = settings.sync.syncItems.valueF;
+    final syncItems = settings.sync.syncItems.value;
     return SyncDataItem.values.where(syncItems.contains).toList();
   }
 
   bool _ensureItemsSelected() {
-    final syncItems = settings.sync.syncItems.valueF;
+    final syncItems = settings.sync.syncItems.value;
     if (syncItems.isEmpty) {
       showMinimumItemsSnack(1);
       return false;
@@ -202,7 +198,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
             text: lang.save,
             onTap: () async {
               final newName = controller.text.trim();
-              settings.sync.modify((syncSettings) => syncSettings.customDeviceName.value = newName.isEmpty ? null : newName);
+              settings.sync.customDeviceName.save(newName.nullifyEmpty());
               NamidaNavigator.inst.closeDialog();
 
               // -- restart to broadcast the new name
@@ -234,7 +230,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
             for (final device in devices.values) {
               if (device.isConnected) connectedCount++;
             }
-            final blockedClientIds = settings.sync.blockedClientIds;
+            final blockedClientIds = settings.sync.blockedClientIds.value;
 
             return SuperSmoothListView(
               padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
@@ -303,21 +299,18 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                                 onTap: client.startSearchForServers,
                               ),
                       ),
-                      ObxOF(
+                      ObxO(
                         rx: settings.sync.autoReconnect,
-                        builder: (context, autoReconnectDevices, fallback) => CustomSwitchListTile(
+                        builder: (context, autoReconnectDevices) => CustomSwitchListTile(
                           icon: Broken.refresh_circle,
                           title: '${lang.auto} ${lang.reconnect}',
-                          value: autoReconnectDevices ?? fallback,
-                          onChanged: (isTrue) => settings.sync.modify(
-                            (syncSettings) => syncSettings.autoReconnect.value = !isTrue,
-                          ),
+                          value: autoReconnectDevices,
+                          onChanged: (isTrue) => settings.sync.autoReconnect.save(!isTrue),
                         ),
                       ),
-                      ObxOF(
+                      ObxO(
                         rx: settings.sync.autoSyncIntervalMinutes,
-                        builder: (context, intervalN, fallback) {
-                          final intervalMinutes = intervalN ?? fallback;
+                        builder: (context, intervalMinutes) {
                           return CustomListTile(
                             icon: Broken.timer,
                             title: lang.autoSyncInterval,
@@ -325,9 +318,8 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                               max: _kAutoSyncMaxSteps,
                               initValue: intervalMinutes <= 0 ? 0 : intervalMinutes ~/ 30,
                               onValueChanged: (val) {
-                                settings.sync.modify(
-                                  (syncSettings) => syncSettings.autoSyncIntervalMinutes.value = val <= 0 ? -1 : val * 30,
-                                );
+                                final intervalMinutes = val <= 0 ? -1 : val * 30;
+                                settings.sync.autoSyncIntervalMinutes.save(intervalMinutes);
                                 SyncSender.inst.setupAutoSync();
                               },
                               text: _autoSyncIntervalText(intervalMinutes),
@@ -399,7 +391,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                         rx: settings.sync.syncItems,
                         builder: (context, syncItems) => _SectionTitle(
                           title: lang.dataToSendAndReceive,
-                          count: syncItems?.length ?? settings.sync.syncItems.fallback.length,
+                          count: syncItems.length,
                           total: SyncDataItem.values.length,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -418,13 +410,12 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                           ),
                         ),
                       ),
-                      ObxOF(
+                      ObxO(
                         rx: settings.sync.syncItemsAdvancedView,
-                        builder: (context, advancedView, advancedViewF) => ObxO(
+                        builder: (context, advancedView) => ObxO(
                           rx: settings.sync.syncItems,
-                          builder: (context, syncItemsN) {
-                            final syncItems = syncItemsN ?? SyncDataItem.essentialsSet;
-                            return (advancedView ?? advancedViewF)
+                          builder: (context, syncItems) {
+                            return advancedView
                                 ? _SyncItemsAdvancedList(
                                     syncItems: syncItems,
                                     sizesMap: _sizesMap,
@@ -454,7 +445,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                                     minHeight: NamidaButton.kDefaultMinHeight * 1.25,
                                     borderRadius: 18.0,
                                     text: connectedCount > 1 ? '${lang.sendToAllDevices} ($connectedCount)' : lang.send,
-                                    enabled: connectedCount > 0 && (syncItems == null || syncItems.isNotEmpty),
+                                    enabled: connectedCount > 0 && syncItems.isNotEmpty,
                                     isLoading: sender.isSendingAny,
                                     onTap: _sendToAll,
                                   ),
@@ -542,15 +533,14 @@ class _AdvancedViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ObxOF(
+    return ObxO(
       rx: settings.sync.syncItemsAdvancedView,
-      builder: (context, advancedViewN, advancedViewF) {
-        final advancedView = advancedViewN ?? advancedViewF;
+      builder: (context, advancedView) {
         return NamidaInkWell(
           borderRadius: 8.0,
           bgColor: advancedView ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.5) : null,
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-          onTap: () => settings.sync.modify((syncSettings) => syncSettings.syncItemsAdvancedView.value = !advancedView),
+          onTap: () => settings.sync.syncItemsAdvancedView.save(!advancedView),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -650,6 +640,12 @@ class _SyncItemsGroupedList extends StatelessWidget {
         icon: Broken.play_cricle,
         title: lang.playbackSetting,
         items: const [SyncDataItem.playerQueue, SyncDataItem.playback],
+      ),
+      _SyncItemsGroup(
+        icon: Broken.setting_2,
+        title: lang.settings,
+        items: const [SyncDataItem.settingsGeneral, SyncDataItem.settingsPlayer],
+        itemsYt: const [SyncDataItem.settingsYoutube],
       ),
       _SyncItemsGroup(
         icon: Broken.music_library_2,
@@ -824,7 +820,7 @@ class _SyncActionEntryTile extends StatelessWidget {
       SyncActionStatus.failed => Colors.red,
     };
     final colorScheme = Color.alphaBlend(statusColor.withOpacityExt(0.5), theme.colorScheme.onSurface);
-    final deviceName = settings.sync.deviceIdNames[entry.deviceId] ?? entry.deviceId;
+    final deviceName = settings.sync.deviceIdNames.value[entry.deviceId] ?? entry.deviceId;
     final isSent = entry.type == SyncActionType.sent;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
@@ -1158,7 +1154,7 @@ class _DeviceCard extends StatelessWidget {
   // Iterable<NamidaPopupItem> _actionsMenuItems() {
   //   final deviceId = device.deviceId;
   //   final networkDevice = device.networkDevice;
-  //   final isBlocked = settings.sync.blockedClientIds.contains(deviceId);
+  //   final isBlocked = settings.sync.blockedClientIds.value.contains(deviceId);
   //   return [
   //     NamidaPopupItem(
   //       icon: Broken.link_1,
@@ -1193,7 +1189,7 @@ class _DeviceCard extends StatelessWidget {
     final deviceId = device.deviceId;
     final networkDevice = device.networkDevice;
     final details = networkDevice != null ? '${networkDevice.address}:${networkDevice.port}' : device.remoteAddress;
-    final isBlocked = settings.sync.blockedClientIds.contains(deviceId);
+    final isBlocked = settings.sync.blockedClientIds.value.contains(deviceId);
     // final statusCocolorSchemelor = device.isConnected ? Color.alphaBlend(Colors.green.withOpacityExt(0.5), context.theme.colorScheme.onSurface) : context.theme.colorScheme.onSurface;
     final colorScheme = context.theme.colorScheme.primary;
     return Padding(
@@ -1588,7 +1584,7 @@ class _BlockedDevicesTile extends StatelessWidget {
           .map(
             (deviceId) => CustomListTile(
               icon: Broken.forbidden_2,
-              title: settings.sync.deviceIdNames[deviceId] ?? deviceId,
+              title: settings.sync.deviceIdNames.value[deviceId] ?? deviceId,
               subtitle: deviceId,
               trailingRaw: NamidaButton(
                 text: lang.unblock,

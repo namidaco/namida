@@ -19,6 +19,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
@@ -745,28 +746,22 @@ class AppPaths {
   }
 
   static Future<File?> _writeAllSettingsRedacted(_LogsRedactor redactor, {required String tmpDirPath}) async {
-    final settingsPaths = [
-      AppPaths.SETTINGS,
-      AppPaths.SETTINGS_EQUALIZER,
-      AppPaths.SETTINGS_PLAYER,
-      AppPaths.SETTINGS_YOUTUBE,
-      AppPaths.SETTINGS_EXTRA,
-      AppPaths.SETTINGS_SYNC,
-      AppPaths.SETTINGS_PARTY,
-      AppPaths.SETTINGS_TUTORIAL,
-      AppPaths.SETTINGS_SHORTCUTS,
+    final settingsWriters = <SettingsFileWriter>[
+      settings,
+      settings.equalizer,
+      settings.player,
+      settings.youtube,
+      settings.extra,
+      settings.sync,
+      settings.party,
+      settings.tutorial,
+      settings.shortcuts,
     ];
-    final settingsReads = settingsPaths.map(_LogsRedactor.readRedactedSettings);
-    final settingsList = await Future.wait(settingsReads);
-
     final allSettings = <String, dynamic>{};
-    for (int i = 0; i < settingsPaths.length; i++) {
-      final settings = settingsList[i];
-      if (settings == null) continue;
-      final settingsName = settingsPaths[i].getFilenameWOExt;
-      allSettings[settingsName] = settings;
+    for (final writer in settingsWriters) {
+      final settingsName = writer.filePath.getFilenameWOExt;
+      allSettings[settingsName] = writer.redactedJson();
     }
-    if (allSettings.isEmpty) return null;
 
     final destination = FileParts.join(tmpDirPath, 'settings.json');
     return redactor.writeRedactedJson(allSettings, destination);
@@ -872,7 +867,6 @@ class AppPaths {
 
 // by claude
 class _LogsRedactor {
-  static const _redactedValue = '<redacted>';
   static const _redactedHomeDirectory = '~';
   static const _indentedJsonEncoder = JsonEncoder.withIndent('  ');
 
@@ -880,16 +874,6 @@ class _LogsRedactor {
     'supported32BitAbis', 'supported64BitAbis', 'systemFeatures', //
     'name', 'computerName', 'hostName', 'userName', 'registeredOwner', //
     'deviceId', 'productId', 'digitalProductId', 'installDate', 'machineId', 'systemGUID', //
-  };
-
-  static final _sensitiveSettingsKeys = {
-    AppPaths.SETTINGS_SYNC: const {
-      'id', 'customDeviceName', 'deviceIdNames', //
-      'allowedDeviceIds', 'blockedClientIds', 'allowedServerIds', 'manualServerAddresses', //
-    },
-    AppPaths.SETTINGS_PARTY: const {
-      'hiddenOwners', 'recentRooms', //
-    },
   };
 
   final _homeDirectoryRegex = _buildHomeDirectoryRegex();
@@ -915,17 +899,6 @@ class _LogsRedactor {
     final variants = {home, jsonEscapedHome, forwardSlashesHome};
     final pattern = variants.map(RegExp.escape).join('|');
     return RegExp(pattern, caseSensitive: !Platform.isWindows);
-  }
-
-  static Future<dynamic> readRedactedSettings(String path) async {
-    final settings = await File(path).readAsJson();
-    final sensitiveKeys = _sensitiveSettingsKeys[path];
-    if (sensitiveKeys == null || settings is! Map<String, dynamic>) return settings;
-
-    for (final key in sensitiveKeys) {
-      if (settings.containsKey(key)) settings[key] = _redactedValue;
-    }
-    return settings;
   }
 
   Future<File> copyRedacted(File source, File destination) async {

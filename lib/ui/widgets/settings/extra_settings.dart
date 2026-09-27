@@ -100,7 +100,7 @@ class ExtrasSettings extends SettingSubpageProvider {
     required _ExtraSettingsKeys key,
     required String title,
     required IconData icon,
-    required RxList<LibraryImageSource> settingsKey,
+    required RxBaseCore<List<LibraryImageSource>> settingsKey,
     required Function(LibraryImageSource sources) onAdd,
     required Function(LibraryImageSource sources) onRemove,
   }) => getItemWrapper(
@@ -222,7 +222,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 subtitle: lang.enableBottomNavBarSubtitle,
                 value: settings.enableBottomNavBar.valueR,
                 onChanged: (p0) {
-                  settings.save(enableBottomNavBar: !p0);
+                  settings.enableBottomNavBar.save(!p0);
                   MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(!p0);
                 },
               ),
@@ -237,7 +237,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 title: lang.enablePictureInPicture,
                 value: settings.enablePip.valueR,
                 onChanged: (isTrue) {
-                  settings.save(enablePip: !isTrue);
+                  settings.enablePip.save(!isTrue);
                   NamidaChannel.inst.setCanEnterPip(!isTrue);
                 },
               ),
@@ -271,7 +271,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       title: e.toText(),
                                       icon: e.toIcon(),
                                       active: floatingActionButton == e,
-                                      onTap: () => settings.save(floatingActionButton: e),
+                                      onTap: () => settings.floatingActionButton.save(e),
                                     ),
                                   ),
                                 ),
@@ -309,9 +309,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                               (context) => ListTileWithCheckMark(
                                 title: lang.auto,
                                 icon: Broken.recovery_convert,
-                                onTap: () => settings.extra.save(
-                                  autoLibraryTab: !settings.extra.autoLibraryTab.value,
-                                ),
+                                onTap: () => settings.extra.autoLibraryTab.save(!settings.extra.autoLibraryTab.value),
                                 active: settings.extra.autoLibraryTab.valueR,
                               ),
                             ),
@@ -325,11 +323,11 @@ class ExtrasSettings extends SettingSubpageProvider {
                                   title: "${index + 1}. ${tab.toText()}",
                                   icon: tab.toIcon(),
                                   onTap: () {
-                                    settings.extra.save(
-                                      selectedLibraryTab: tab,
-                                      staticLibraryTab: tab,
-                                      autoLibraryTab: false,
-                                    );
+                                    settings.extra.transaction(() {
+                                      settings.extra.setSelectedLibraryTab(tab);
+                                      settings.extra.staticLibraryTab.save(tab);
+                                      settings.extra.autoLibraryTab.save(false);
+                                    });
                                   },
                                   active: !settings.extra.autoLibraryTab.valueR && settings.extra.selectedLibraryTab.valueR == tab,
                                 ),
@@ -352,7 +350,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_ExtraSettingsKeys.filterTracksBy),
                 icon: Broken.filter_search,
                 title: lang.filterTracksBy,
-                trailingText: "${settings.trackSearchFilter.length}",
+                trailingText: "${settings.trackSearchFilter.valueR.length}",
                 onTap: () {
                   final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
 
@@ -372,16 +370,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           icon: const Icon(Broken.refresh),
                           tooltip: lang.restoreDefaults,
                           onPressed: () {
-                            settings.removeFromList(trackSearchFilterAll: TrackSearchFilter.values);
-
-                            settings.save(
-                              trackSearchFilter: [
-                                TrackSearchFilter.filename,
-                                TrackSearchFilter.title,
-                                TrackSearchFilter.artist,
-                                TrackSearchFilter.album,
-                              ],
-                            );
+                            settings.trackSearchFilter.reset();
                           },
                         ),
                         DoneButton(
@@ -403,7 +392,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       title: e.toText(),
                                       subtitle: e.canAffectPerformance ? lang.performanceNote : '',
                                       onTap: () => _trackFilterOnTap(e),
-                                      active: settings.trackSearchFilter.contains(e),
+                                      active: settings.trackSearchFilter.valueR.contains(e),
                                     ),
                                   ),
                                 ),
@@ -427,7 +416,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 icon: Broken.message_remove,
                 title: lang.ignoreCommonPrefixesWhileSorting,
                 subtitle: settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', '),
-                trailingText: "${settings.ignoreCommonPrefixForTypes.length}",
+                trailingText: "${settings.ignoreCommonPrefixForTypes.valueR.length}",
                 onTap: () {
                   final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
 
@@ -456,8 +445,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                           icon: const Icon(Broken.refresh),
                           tooltip: lang.restoreDefaults,
                           onPressed: () {
-                            settings.removeFromList(ignoreCommonPrefixForTypesAll: TrackSearchFilter.values);
-                            settings.save(ignoreCommonPrefixForTypes: []);
+                            settings.ignoreCommonPrefixForTypes.reset();
                           },
                         ),
                         DoneButton(
@@ -483,10 +471,9 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       ),
                                       child: InkWell(
                                         onTap: () {
-                                          if (settings.commonPrefixes.length <= 1) return showMinimumItemsSnack(1);
+                                          if (settings.commonPrefixes.value.length <= 1) return showMinimumItemsSnack(1);
 
-                                          settings.commonPrefixes.remove(e);
-                                          settings.save(commonPrefixes: settings.commonPrefixes.value);
+                                          settings.commonPrefixes.update((prefixes) => prefixes.remove(e));
                                         },
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -518,7 +505,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       onTap: () {
                                         final controller = TextEditingController();
                                         void onAdd(String value) {
-                                          settings.save(commonPrefixes: [value.toLowerCase()]);
+                                          settings.commonPrefixes.update((list) => list.addNoDuplicates(value.toLowerCase()));
                                           NamidaNavigator.inst.closeDialog();
                                         }
 
@@ -532,8 +519,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                               IconButton(
                                                 tooltip: lang.restoreDefaults,
                                                 onPressed: () {
-                                                  settings.commonPrefixes.clear();
-                                                  settings.save(commonPrefixes: ['the ', 'a ', 'an ']);
+                                                  settings.commonPrefixes.reset();
                                                   NamidaNavigator.inst.closeDialog();
                                                 },
                                                 icon: const Icon(Broken.refresh),
@@ -581,7 +567,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                   (context) => ListTileWithCheckMark(
                                     title: e.toText(),
                                     onTap: () => _ignoreCommonPrefixForTypeFilterOnTap(e),
-                                    active: settings.ignoreCommonPrefixForTypes.contains(e),
+                                    active: settings.ignoreCommonPrefixForTypes.valueR.contains(e),
                                   ),
                                 ),
                               ),
@@ -605,7 +591,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 subtitle: lang.enableSearchCleanupSubtitle,
                 value: settings.enableSearchCleanup.valueR,
                 onChanged: (p0) {
-                  settings.save(enableSearchCleanup: !p0);
+                  settings.enableSearchCleanup.save(!p0);
                   SearchSortController.inst.disposeResources();
                 },
               ),
@@ -645,7 +631,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       ),
                       trailingText: settings.lyricsSource.valueR.toText(),
                       onTap: () {
-                        void tileOnTap(LyricsSource val) => settings.save(lyricsSource: val);
+                        void tileOnTap(LyricsSource val) => settings.lyricsSource.save(val);
                         NamidaNavigator.inst.navigateDialog(
                           dialog: CustomBlurryDialog(
                             title: lang.lyricsSource,
@@ -669,7 +655,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                                       title: lang.lyrics,
                                       value: enableLyrics,
                                       onChanged: (isTrue) {
-                                        settings.save(enableLyrics: !isTrue);
+                                        settings.enableLyrics.save(!isTrue);
                                         final currentItem = Player.inst.currentItem.value;
                                         if (currentItem != null) {
                                           Lyrics.inst.updateLyrics(currentItem);
@@ -795,7 +781,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       icon: Broken.mobile_programming,
                       title: lang.prioritizeEmbeddedLyrics,
                       value: settings.prioritizeEmbeddedLyrics.valueR,
-                      onChanged: (p0) => settings.save(prioritizeEmbeddedLyrics: !p0),
+                      onChanged: (p0) => settings.prioritizeEmbeddedLyrics.save(!p0),
                     ),
                   ),
                 ),
@@ -809,7 +795,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       title: lang.stretchLyricsDuration,
                       subtitle: 'spedup/slowed/nightcore',
                       value: stretch,
-                      onChanged: (val) => settings.save(stretchLyricsDuration: !val),
+                      onChanged: (val) => settings.stretchLyricsDuration.save(!val),
                     ),
                   ),
                 ),
@@ -824,7 +810,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       subtitle: lang.simpleLyricsLineSubtitle,
                       value: enableSimpleLyricsLine,
                       onChanged: (isTrue) {
-                        settings.save(enableSimpleLyricsLine: !isTrue);
+                        settings.enableSimpleLyricsLine.save(!isTrue);
                         final currentItem = Player.inst.currentItem.value;
                         if (currentItem != null) {
                           Lyrics.inst.updateLyrics(currentItem);
@@ -858,16 +844,16 @@ class ExtrasSettings extends SettingSubpageProvider {
                   settingsKey: settings.imageSourceAlbum,
                   title: lang.albums,
                   icon: LibraryTab.albums.toIcon(),
-                  onAdd: (s) => settings.insertInList(0, imageSourceAlbum1: s),
-                  onRemove: (s) => settings.removeFromList(imageSourceAlbum1: s),
+                  onAdd: (s) => settings.imageSourceAlbum.update((list) => list.insertSafe(0, s)),
+                  onRemove: (s) => settings.imageSourceAlbum.update((list) => list.remove(s)),
                 ),
                 _getImageSourceTile(
                   key: _ExtraSettingsKeys.imageSourceArtist,
                   settingsKey: settings.imageSourceArtist,
                   title: lang.artists,
                   icon: LibraryTab.artists.toIcon(),
-                  onAdd: (s) => settings.insertInList(0, imageSourceArtist1: s),
-                  onRemove: (s) => settings.removeFromList(imageSourceArtist1: s),
+                  onAdd: (s) => settings.imageSourceArtist.update((list) => list.insertSafe(0, s)),
+                  onRemove: (s) => settings.imageSourceArtist.update((list) => list.remove(s)),
                 ),
               ],
             ),
@@ -884,7 +870,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 value: settings.hideStatusBarInExpandedMiniplayer.valueR,
                 onChanged: (isTrue) {
                   final newValue = !isTrue;
-                  settings.save(hideStatusBarInExpandedMiniplayer: newValue);
+                  settings.hideStatusBarInExpandedMiniplayer.save(newValue);
                   MiniPlayerController.inst.setImmersiveMode(newValue);
                 },
               ),
@@ -899,7 +885,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 title: lang.swipeToOpenDrawer,
                 value: settings.swipeableDrawer.valueR,
                 onChanged: (isTrue) {
-                  settings.save(swipeableDrawer: !isTrue);
+                  settings.swipeableDrawer.save(!isTrue);
                   NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(!isTrue);
                 },
               ),
@@ -919,7 +905,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 title: lang.alwaysExpandedSearchbar,
                 value: settings.alwaysExpandedSearchbar.valueR,
                 onChanged: (isTrue) {
-                  settings.save(alwaysExpandedSearchbar: !isTrue);
+                  settings.alwaysExpandedSearchbar.save(!isTrue);
                   ScrollSearchController.inst.searchBarKey.currentState?.setAlwaysExpanded(!isTrue);
                 },
               ),
@@ -935,7 +921,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 subtitle: lang.enableClipboardMonitoringSubtitle,
                 value: settings.enableClipboardMonitoring.valueR,
                 onChanged: (isTrue) {
-                  settings.save(enableClipboardMonitoring: !isTrue);
+                  settings.enableClipboardMonitoring.save(!isTrue);
                 },
               ),
             ),
@@ -954,7 +940,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                 childrenDefault: () => VibrationType.values.map(
                   (e) {
                     void onTap() {
-                      settings.save(vibrationType: e);
+                      settings.vibrationType.save(e);
                       NamidaNavigator.inst.popMenu();
                     }
 
@@ -1072,11 +1058,10 @@ class ExtrasSettings extends SettingSubpageProvider {
                   toIcon: (item) => item.toIcon(),
                   minimumItems: 2,
                   onItemRemoved: (i, activeItems) {
-                    settings.extra.save(selectedLibraryTab: settings.libraryTabs.value.first);
+                    settings.extra.setSelectedLibraryTab(settings.libraryTabs.value.first);
                   },
                   onSave: (activeItems) {
-                    settings.libraryTabs.value = activeItems;
-                    settings.save(libraryTabs: null);
+                    settings.libraryTabs.replace(activeItems);
                   },
                 ),
               ),
@@ -1088,24 +1073,24 @@ class ExtrasSettings extends SettingSubpageProvider {
   }
 
   void _trackFilterOnTap(TrackSearchFilter type) {
-    final canRemove = settings.trackSearchFilter.length > 1;
+    final canRemove = settings.trackSearchFilter.value.length > 1;
 
     if (settings.trackSearchFilter.value.contains(type)) {
       if (canRemove) {
-        settings.removeFromList(trackSearchFilter1: type);
+        settings.trackSearchFilter.update((list) => list.remove(type));
       } else {
         showMinimumItemsSnack(1);
       }
     } else {
-      settings.save(trackSearchFilter: [type]);
+      settings.trackSearchFilter.update((list) => list.addNoDuplicates(type));
     }
   }
 
   void _ignoreCommonPrefixForTypeFilterOnTap(TrackSearchFilter type) {
     if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
-      settings.removeFromList(ignoreCommonPrefixForTypes1: type);
+      settings.ignoreCommonPrefixForTypes.update((list) => list.remove(type));
     } else {
-      settings.save(ignoreCommonPrefixForTypes: [type]);
+      settings.ignoreCommonPrefixForTypes.update((list) => list.addNoDuplicates(type));
     }
   }
 }
@@ -1176,21 +1161,16 @@ class _LoadingIndicatorState extends State<LoadingIndicator> with SingleTickerPr
   }
 }
 
-class _ExtrasFlagsOptions extends StatefulWidget {
+class _ExtrasFlagsOptions extends StatelessWidget {
   const _ExtrasFlagsOptions();
 
-  @override
-  State<_ExtrasFlagsOptions> createState() => _ExtrasFlagsOptionsState();
-}
-
-class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
-  Iterable<Widget> _getTitlebarIconsTypeChildren() {
+  static Iterable<Widget> _getTitlebarIconsTypeChildren() {
     final buttonWidth = 18.0;
     final buttonHeight = 18.0;
     return DesktopTitlebarIconsType.values.map(
       (e) {
         void onTap() {
-          settings.save(desktopTitlebarType: e);
+          settings.desktopTitlebarType.save(e);
           NamidaNavigator.inst.popMenu();
         }
 
@@ -1253,7 +1233,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
         title: e.name,
         selected: e == settings.extra.preferredSearchType.value,
         onTap: () {
-          settings.extra.save(preferredSearchType: e);
+          settings.extra.preferredSearchType.save(e);
           onSave?.call();
         },
       ),
@@ -1273,94 +1253,127 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             children: [
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.row_vertical,
-                  secondaryIcon: Broken.cd,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.extra.tapToScroll,
+                builder: (context, tapToScroll) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.cd,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: tapToScroll ?? false,
+                  onChanged: (isTrue) => settings.extra.tapToScroll.save(!isTrue),
+                  title: 'tap_to_scroll'.toUpperCase(),
+                  subtitle: 'tap anywhere on the scroll track to scroll',
                 ),
-                value: settings.extra.tapToScroll ?? false,
-                onChanged: (isTrue) => setState(() => settings.extra.save(tapToScroll: !isTrue)),
-                title: 'tap_to_scroll'.toUpperCase(),
-                subtitle: 'tap anywhere on the scroll track to scroll',
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.row_vertical,
-                  secondaryIcon: Broken.arrow_swap,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.extra.enhancedDragToScroll,
+                builder: (context, enhancedDragToScroll) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.arrow_swap,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: enhancedDragToScroll ?? true,
+                  onChanged: (isTrue) => settings.extra.enhancedDragToScroll.save(!isTrue),
+                  title: 'enhanced_drag_to_scroll'.toUpperCase(),
+                  subtitle: 'drag anywhere on the scroll track to scroll',
                 ),
-                value: settings.extra.enhancedDragToScroll ?? true,
-                onChanged: (isTrue) => setState(() => settings.extra.save(enhancedDragToScroll: !isTrue)),
-                title: 'enhanced_drag_to_scroll'.toUpperCase(),
-                subtitle: 'drag anywhere on the scroll track to scroll',
               ),
               if (NamidaFeaturesVisibility.smoothScrolling)
-                CustomSwitchListTile(
-                  icon: Broken.coin,
-                  rotateIcon: 2,
-                  value: settings.extra.smoothScrolling ?? true,
-                  onChanged: (isTrue) => setState(() => settings.extra.save(smoothScrolling: !isTrue)),
-                  title: 'smooth_scrolling'.toUpperCase(),
+                ObxO(
+                  rx: settings.extra.smoothScrolling,
+                  builder: (context, smoothScrolling) => CustomSwitchListTile(
+                    icon: Broken.coin,
+                    rotateIcon: 2,
+                    value: smoothScrolling ?? true,
+                    onChanged: (isTrue) => settings.extra.smoothScrolling.save(!isTrue),
+                    title: 'smooth_scrolling'.toUpperCase(),
+                  ),
                 ),
               if (NamidaFeaturesVisibility.floatingArtworkEffect)
-                CustomSwitchListTile(
-                  icon: Broken.recovery_convert,
-                  value: settings.extra.floatingArtworkEffect ?? false,
-                  onChanged: (isTrue) => setState(() => settings.extra.save(floatingArtworkEffect: !isTrue)),
-                  title: 'floating_artwork_effect'.toUpperCase(),
-                  subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
+                ObxO(
+                  rx: settings.extra.floatingArtworkEffect,
+                  builder: (context, floatingArtworkEffect) => CustomSwitchListTile(
+                    icon: Broken.recovery_convert,
+                    value: floatingArtworkEffect ?? false,
+                    onChanged: (isTrue) => settings.extra.floatingArtworkEffect.save(!isTrue),
+                    title: 'floating_artwork_effect'.toUpperCase(),
+                    subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
+                  ),
                 ),
               if (NamidaFeaturesVisibility.tiltingCardsEffect)
-                CustomSwitchListTile(
-                  icon: Broken.d_rotate,
-                  value: settings.extra.tiltingCardsEffect ?? false,
-                  onChanged: (isTrue) => setState(() => settings.extra.save(tiltingCardsEffect: !isTrue)),
-                  title: 'tilting_cards_effect'.toUpperCase(),
-                  subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
+                ObxO(
+                  rx: settings.extra.tiltingCardsEffect,
+                  builder: (context, tiltingCardsEffect) => CustomSwitchListTile(
+                    icon: Broken.d_rotate,
+                    value: tiltingCardsEffect ?? false,
+                    onChanged: (isTrue) => settings.extra.tiltingCardsEffect.save(!isTrue),
+                    title: 'tilting_cards_effect'.toUpperCase(),
+                    subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
+                  ),
                 ),
               if (kAllowJellysInvasion) ...[
-                CustomSwitchListTile(
-                  leading: const JellyMascot(height: 30.0),
-                  value: settings.extra.jellysInvasion ?? false,
-                  onChanged: (isTrue) => setState(() => NamidaJellys.setInvasion(!isTrue, paletteFollows: true)),
-                  title: 'jellys_invasion'.toUpperCase(),
-                  subtitle: 'Let jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}',
+                ObxO(
+                  rx: settings.extra.jellysInvasion,
+                  builder: (context, jellysInvasion) => CustomSwitchListTile(
+                    leading: const JellyMascot(height: 30.0),
+                    value: jellysInvasion ?? false,
+                    onChanged: (isTrue) => NamidaJellys.setInvasion(!isTrue, paletteFollows: true),
+                    title: 'jellys_invasion'.toUpperCase(),
+                    subtitle: 'Let jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}',
+                  ),
                 ),
-                CustomSwitchListTile(
-                  icon: Broken.color_swatch,
-                  value: settings.extra.jellysPalette ?? false,
-                  onChanged: (isTrue) => setState(() => NamidaJellys.setPaletteHijack(!isTrue)),
-                  title: 'jellys_color_palette'.toUpperCase(),
+                ObxO(
+                  rx: settings.extra.jellysPalette,
+                  builder: (context, jellysPalette) => CustomSwitchListTile(
+                    icon: Broken.color_swatch,
+                    value: jellysPalette ?? false,
+                    onChanged: (isTrue) => NamidaJellys.setPaletteHijack(!isTrue),
+                    title: 'jellys_color_palette'.toUpperCase(),
+                  ),
                 ),
               ],
-              CustomSwitchListTile(
-                icon: Broken.video_play,
-                value: settings.extra.keepVideoFrameOnSwitch ?? false,
-                onChanged: (isTrue) => setState(() => settings.extra.save(keepVideoFrameOnSwitch: !isTrue)),
-                title: 'keep_video_frame_on_switch'.toUpperCase(),
-                subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
+              ObxO(
+                rx: settings.extra.keepVideoFrameOnSwitch,
+                builder: (context, keepVideoFrameOnSwitch) => CustomSwitchListTile(
+                  icon: Broken.video_play,
+                  value: keepVideoFrameOnSwitch ?? false,
+                  onChanged: (isTrue) => settings.extra.keepVideoFrameOnSwitch.save(!isTrue),
+                  title: 'keep_video_frame_on_switch'.toUpperCase(),
+                  subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
+                ),
               ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
-                CustomSwitchListTile(
-                  icon: Broken.watch_status,
-                  value: settings.extra.mediaWaveHaptic ?? false,
-                  onChanged: (isTrue) => setState(() => settings.extra.save(mediaWaveHaptic: !isTrue)),
-                  title: 'media_wave_haptic'.toUpperCase(),
-                  subtitle: 'Haptic feedback following the rhythm.\nMight affect battery usage.',
+                ObxO(
+                  rx: settings.extra.mediaWaveHaptic,
+                  builder: (context, mediaWaveHaptic) => CustomSwitchListTile(
+                    icon: Broken.watch_status,
+                    value: mediaWaveHaptic ?? false,
+                    onChanged: (isTrue) => settings.extra.mediaWaveHaptic.save(!isTrue),
+                    title: 'media_wave_haptic'.toUpperCase(),
+                    subtitle: 'Haptic feedback following the rhythm.\nMight affect battery usage.',
+                  ),
                 ),
-              CustomSwitchListTile(
-                icon: Broken.colors_square,
-                value: settings.gradientTiles.value,
-                onChanged: (isTrue) => setState(() => settings.save(gradientTiles: !isTrue)),
-                title: 'gradient_tiles_and_cards'.toUpperCase(),
+              ObxO(
+                rx: settings.gradientTiles,
+                builder: (context, gradientTiles) => CustomSwitchListTile(
+                  icon: Broken.colors_square,
+                  value: gradientTiles,
+                  onChanged: (isTrue) => settings.gradientTiles.save(!isTrue),
+                  title: 'gradient_tiles_and_cards'.toUpperCase(),
+                ),
               ),
               if (isDesktop)
-                CustomSwitchListTile(
-                  icon: Broken.card_tick_1,
-                  value: settings.desktopTitlebar.value,
-                  onChanged: (isTrue) => setState(() => settings.save(desktopTitlebar: !isTrue)),
-                  title: 'show_desktop_title_bar'.toUpperCase(),
+                ObxO(
+                  rx: settings.desktopTitlebar,
+                  builder: (context, desktopTitlebar) => CustomSwitchListTile(
+                    icon: Broken.card_tick_1,
+                    value: desktopTitlebar,
+                    onChanged: (isTrue) => settings.desktopTitlebar.save(!isTrue),
+                    title: 'show_desktop_title_bar'.toUpperCase(),
+                  ),
                 ),
               if (isDesktop && !Platform.isWindows)
                 NamidaPopupWrapper(
@@ -1382,26 +1395,35 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   ),
                 ),
 
-              CustomSwitchListTile(
-                icon: Broken.video_octagon,
-                value: settings.extra.ytStyleButtonSwitcher ?? false,
-                onChanged: (isTrue) => setState(() => settings.extra.save(ytStyleButtonSwitcher: !isTrue)),
-                title: 'yt_style_player_button_switcher'.toUpperCase(),
-                subtitle: 'shows a button to switch between local style player and youtube style player',
+              ObxO(
+                rx: settings.extra.ytStyleButtonSwitcher,
+                builder: (context, ytStyleButtonSwitcher) => CustomSwitchListTile(
+                  icon: Broken.video_octagon,
+                  value: ytStyleButtonSwitcher ?? false,
+                  onChanged: (isTrue) => settings.extra.ytStyleButtonSwitcher.save(!isTrue),
+                  title: 'yt_style_player_button_switcher'.toUpperCase(),
+                  subtitle: 'shows a button to switch between local style player and youtube style player',
+                ),
               ),
-              CustomSwitchListTile(
-                icon: Broken.search_status,
-                value: settings.extra.recentSearchesEnabled ?? false,
-                onChanged: (isTrue) => setState(() => settings.extra.save(recentSearchesEnabled: !isTrue)),
-                title: 'recent_searches'.toUpperCase(),
-                subtitle: 'saves searches and shows them in the search page',
+              ObxO(
+                rx: settings.extra.recentSearchesEnabled,
+                builder: (context, recentSearchesEnabled) => CustomSwitchListTile(
+                  icon: Broken.search_status,
+                  value: recentSearchesEnabled ?? false,
+                  onChanged: (isTrue) => settings.extra.setRecentSearchesEnabled(!isTrue),
+                  title: 'recent_searches'.toUpperCase(),
+                  subtitle: 'saves searches and shows them in the search page',
+                ),
               ),
-              CustomSwitchListTile(
-                icon: Broken.play_circle,
-                value: settings.extra.resumeUIEnabled.value,
-                onChanged: (isTrue) => setState(() => settings.extra.save(resumeUIEnabled: !isTrue)),
-                title: 'resume_ui'.toUpperCase(),
-                subtitle: 'shows the resume button & highlights the last played item in pages like albums & playlists',
+              ObxO(
+                rx: settings.extra.resumeUIEnabled,
+                builder: (context, resumeUIEnabled) => CustomSwitchListTile(
+                  icon: Broken.play_circle,
+                  value: resumeUIEnabled,
+                  onChanged: (isTrue) => settings.extra.resumeUIEnabled.save(!isTrue),
+                  title: 'resume_ui'.toUpperCase(),
+                  subtitle: 'shows the resume button & highlights the last played item in pages like albums & playlists',
+                ),
               ),
 
               if (NamidaFeaturesVisibility.equalizerAvailable)
@@ -1423,7 +1445,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                             IconButton(
                               tooltip: lang.restoreDefaults,
                               onPressed: () {
-                                settings.save(customEQPackage: '');
+                                settings.customEQPackage.reset();
                                 NamidaNavigator.inst.closeDialog();
                               },
                               icon: const Icon(Broken.refresh),
@@ -1432,7 +1454,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                             NamidaButton(
                               text: lang.save,
                               onTap: () {
-                                settings.save(customEQPackage: controller.text);
+                                settings.customEQPackage.save(controller.text);
                                 NamidaNavigator.inst.closeDialog();
                               },
                             ),
@@ -1461,7 +1483,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                     max: 200,
                     onValueChanged: (val) {
                       final ms = val * 10;
-                      settings.save(visualDelayMS: ms);
+                      settings.visualDelayMS.save(ms);
                     },
                     text: '$visualDelayMS ms',
                   ),
@@ -1486,7 +1508,7 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                       max: maxYears,
                       onValueChanged: (val) {
                         final actualYears = val - offset;
-                        settings.save(timeCapsuleYears: actualYears);
+                        settings.timeCapsuleYears.save(actualYears);
                       },
                       text: timeCapsuleYears > 0 ? '+$timeCapsuleYears' : '$timeCapsuleYears',
                     ),
@@ -1500,10 +1522,10 @@ class _ExtrasFlagsOptionsState extends State<_ExtrasFlagsOptions> {
                   title: 'preferred_search_tab'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
                     childrenDefault: _getSearchTypeChildren,
-                    child: ObxOF(
+                    child: ObxO(
                       rx: settings.extra.preferredSearchType,
-                      builder: (context, type, fallback) => Text(
-                        (type ?? fallback).name,
+                      builder: (context, type) => Text(
+                        type.name,
                         style: context.textTheme.displayMedium,
                         textAlign: TextAlign.end,
                       ),

@@ -744,7 +744,7 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
       _play(longerVer: playLongerVer);
 
       if (kAllowJellysInvasion && playLongerVer) {
-        if (settings.extra.jellysInvasion != true) NamidaJellys.setInvasion(true);
+        if (settings.extra.jellysInvasion.value != true) NamidaJellys.setInvasion(true);
       }
     }
   }

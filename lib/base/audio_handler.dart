@@ -222,7 +222,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   VideoSourceOptions? _latestVideoOptions;
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
-    settings.youtube.save(isAudioOnlyMode: audioOnly);
+    settings.youtube.isAudioOnlyMode.save(audioOnly);
     if (audioOnly) {
       await super.setVideo(null);
     } else {
@@ -621,7 +621,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     ArtworkPrefetcher.inst.prefetchAround(newIndex);
     final gate = partyGate;
     if (gate == null) {
-      settings.extra.save(lastPlayedIndex: newIndex);
+      settings.extra.lastPlayedIndex.save(newIndex);
     } else {
       gate.onLocalIndexChanged(newIndex);
     }
@@ -1818,7 +1818,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
         includeFirstVideo: false,
-        userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+        userPersonalized: settings.youtube.personalizedMixPlaylists.value,
         details: ExecuteDetails.kForceRequest,
       );
 

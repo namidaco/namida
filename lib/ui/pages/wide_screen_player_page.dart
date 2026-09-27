@@ -51,7 +51,7 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
   @override
   void initState() {
     super.initState();
-    final savedIndex = settings.extra.widePlayerPageIndex;
+    final savedIndex = settings.extra.widePlayerPageIndex.value;
     final savedPane = savedIndex != null && savedIndex >= 0 && savedIndex < _WidePlayerPane.values.length ? _WidePlayerPane.values[savedIndex] : _WidePlayerPane.lyrics;
     _selectedPane = savedPane.obs;
     if (savedPane == _WidePlayerPane.lyrics && !settings.enableLyrics.value) {
@@ -87,20 +87,20 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
   void _enableLyrics() {
     final currentItem = Player.inst.currentItem.value;
     if (currentItem == null) return;
-    settings.save(enableLyrics: true);
+    settings.enableLyrics.save(true);
     Lyrics.inst.updateLyrics(currentItem);
   }
 
   void _onPaneChanged(_WidePlayerPane pane) {
     if (_selectedPane.value == pane) return;
     _selectedPane.value = pane;
-    settings.extra.save(widePlayerPageIndex: pane.index);
+    settings.extra.widePlayerPageIndex.save(pane.index);
 
     if (pane == .lyrics) {
       if (!settings.enableLyrics.value) {
         final currentItem = Player.inst.currentItem.value;
         if (currentItem == null) return;
-        settings.save(enableLyrics: true);
+        settings.enableLyrics.save(true);
         Lyrics.inst.updateLyrics(currentItem);
       }
     }
@@ -337,7 +337,7 @@ class _PlayerActionsRow extends StatelessWidget {
                 // -- we already in view that is for lyrics.. if they don't want then just select queue and disable lyrics outside
                 showLRCSetDialog(currentItem, CurrentColor.inst.miniplayerColor);
 
-                // settings.save(enableLyrics: !settings.enableLyrics.value);
+                // settings.enableLyrics.save(!settings.enableLyrics.value);
                 // Lyrics.inst.updateLyrics(currentItem);
               },
               icon: NamidaMiniPlayerBase.getLrcButton(

@@ -47,11 +47,11 @@ class TrackTilePropertiesProvider extends StatelessWidget {
     final selectionColorLayer = theme.focusColor;
     final highlightColorLayer = queueSupportResuming ? theme.focusColor.withOpacityExt(0.2) : null;
 
-    final listenToTopHistoryItems = settings.trackItem.values.any(
+    final listenToTopHistoryItems = settings.trackItem.value.values.any(
       (element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate,
     );
 
-    final listenToStatsMap = settings.trackItem.values.any(
+    final listenToStatsMap = settings.trackItem.value.values.any(
       (element) => element == TrackTileItem.rating || element == TrackTileItem.moods || element == TrackTileItem.tags,
     );
 

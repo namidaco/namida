@@ -129,7 +129,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     var initialSearchType = settings.extra.preferredSearchType.value;
-    if (initialSearchType == null || initialSearchType == .auto) {
+    if (initialSearchType == .auto) {
       initialSearchType = ScrollSearchController.inst.currentSearchType.value;
     }
     return BackgroundWrapper(
@@ -552,7 +552,7 @@ class _RecentSearchesView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (settings.extra.recentSearchesEnabled != true) return const SizedBox.expand();
+    if (settings.extra.recentSearchesEnabled.value != true) return const SizedBox.expand();
     final theme = context.theme;
     final chipBgColor = theme.colorScheme.secondary.withOpacityExt(0.12);
     final chipTextStyle = theme.textTheme.displayMedium?.copyWith(fontSize: 13.0);
@@ -1062,7 +1062,7 @@ class _TracksSectionTitle extends StatelessWidget {
                           title: e.toText(),
                           selected: e == settings.trackPlayMode.value,
                           onTap: () {
-                            settings.save(trackPlayMode: e);
+                            settings.trackPlayMode.save(e);
                             NamidaNavigator.inst.popMenu();
                           },
                         ),

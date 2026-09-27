@@ -68,6 +68,7 @@ sealed class BaseMessage {
       MessageType.latestPlayedForSource => LatestPlayedForSourceMessage.fromMap,
       MessageType.audioConfigs => AudioConfigsMessage.fromMap,
       MessageType.smartPlaylists => SmartPlaylistsMessage.fromMap,
+      MessageType.settings => SettingsMessage.fromMap,
       MessageType.trackStats => TrackStatsMessage.fromMap,
       MessageType.favourites => FavouritesMessage.fromMap,
       MessageType.playlistsManifestResponse => PlaylistsManifestResponseMessage.fromMap,
@@ -425,7 +426,7 @@ class ConnectionRequestMessage extends BaseMessage {
           );
           return;
         }
-        if (settings.sync.autoReconnect.valueF && settings.sync.allowedDeviceIds.contains(senderDeviceId)) {
+        if (settings.sync.autoReconnect.value && settings.sync.allowedDeviceIds.value.contains(senderDeviceId)) {
           // -- device was accepted before, silently accept again (blocked devices are ignored in _FrameDispatcher)
           await SyncDiscovery.server.acceptConnection(senderDeviceId);
           return;

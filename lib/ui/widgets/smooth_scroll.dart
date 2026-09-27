@@ -102,7 +102,7 @@ class NamidaScrollController {
   }) {
     if (NamidaFeaturesVisibility.smoothScrolling) {
       return SmoothScrollController(
-        smooth: () => settings.extra.smoothScrolling ?? true,
+        smooth: () => settings.extra.smoothScrolling.value ?? true,
         initialScrollOffset: initialScrollOffset,
         keepScrollOffset: keepScrollOffset,
         debugLabel: debugLabel,

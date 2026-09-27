@@ -707,7 +707,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   void toggleGlowBehindVideo() {
     final newValueEnabled = !settings.enableGlowBehindVideo.value;
-    settings.save(enableGlowBehindVideo: newValueEnabled);
+    settings.enableGlowBehindVideo.save(newValueEnabled);
     if (newValueEnabled) {
       snackyy(title: lang.warning, message: lang.performanceNote, icon: Broken.danger);
     }
@@ -958,7 +958,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
         setControlsVisibily(true);
       },
       children: () => [
-        ...settings.player.speeds.map(
+        ...settings.player.speeds.value.map(
           (speed) => ObxO(
             rx: Player.inst.currentSpeed,
             builder: (context, selectedSpeed) {
@@ -969,7 +969,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   final isSelected = Player.inst.currentSpeed.value == speed;
                   if (!isSelected) {
                     Player.inst.setSpeed(speed);
-                    settings.player.save(speed: speed);
+                    settings.player.speed.save(speed);
                     NamidaNavigator.inst.popMenu();
                   }
                 },
@@ -1267,7 +1267,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           streams = YoutubeInfoController.current.currentYTStreams.value;
         }
         final ytQualities = streams?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
-          allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
+          allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs.value,
         );
         final cachedQualitiesAll = widget.isLocal ? VideoController.inst.currentVideoConfig.currentPossibleLocalVideos : YoutubeInfoController.current.currentCachedQualities;
         final cachedQualities = List<NamidaVideo>.from(cachedQualitiesAll.value);
@@ -1312,7 +1312,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               onPlay: (isSelected) {
                 Player.inst.setAudioOnlyPlayback(true);
                 VideoController.inst.currentVideo.value = null;
-                settings.save(enableVideoPlayback: false);
+                settings.enableVideoPlayback.save(false);
               },
               selected: (widget.isLocal ? VideoController.inst.currentVideo.valueR == null : settings.youtube.isAudioOnlyMode.valueR),
               isCached: false,
@@ -1570,7 +1570,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 NamidaPopupItem(
                   icon: Broken.card_tick,
                   title: lang.showVideoEndcards,
-                  onTap: () => settings.youtube.save(showVideoEndcards: !settings.youtube.showVideoEndcards.value),
+                  onTap: () => settings.youtube.showVideoEndcards.save(!settings.youtube.showVideoEndcards.value),
                   trailing: ObxO(
                     rx: settings.youtube.showVideoEndcards,
                     builder: (context, active) => CustomSwitch(
@@ -1585,7 +1585,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   icon: Broken.profile_circle,
                   secondaryIcon: Broken.drop,
                   title: lang.showChannelWatermarkInFullscreen,
-                  onTap: () => settings.youtube.save(showChannelWatermarkFullscreen: !settings.youtube.showChannelWatermarkFullscreen.value),
+                  onTap: () => settings.youtube.showChannelWatermarkFullscreen.save(!settings.youtube.showChannelWatermarkFullscreen.value),
                   trailing: ObxO(
                     rx: settings.youtube.showChannelWatermarkFullscreen,
                     builder: (context, active) => CustomSwitch(
@@ -2116,7 +2116,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               child: TapDetector(
                                                 behavior: HitTestBehavior.translucent,
                                                 onTap: () {
-                                                  settings.player.save(displayRemainingDurInsteadOfTotal: !settings.player.displayRemainingDurInsteadOfTotal.value);
+                                                  settings.player.displayRemainingDurInsteadOfTotal.save(!settings.player.displayRemainingDurInsteadOfTotal.value);
                                                 },
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
@@ -2198,7 +2198,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     const SizedBox(width: 10.0),
                                                   ],
 
-                                                  if (!isFullScreen && settings.extra.ytStyleButtonSwitcher == true) ...[
+                                                  if (!isFullScreen && settings.extra.ytStyleButtonSwitcher.value == true) ...[
                                                     NamidaIconButton(
                                                       verticalPadding: 2.0,
                                                       horizontalPadding: 4.0,
@@ -2207,7 +2207,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       icon: Broken.video_octagon,
                                                       iconColor: itemsColor,
                                                       onPressed: () {
-                                                        settings.youtube.save(youtubeStyleMiniplayer: false);
+                                                        settings.youtube.youtubeStyleMiniplayer.save(false);
                                                         MiniPlayerController.inst.snapToExpanded(haptic: false);
                                                         Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
                                                       },
@@ -2563,7 +2563,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
       ),
     );
 
-    if (settings.youtube.whiteVideoBGInLightMode && context.isDarkMode == false) {
+    if (settings.youtube.whiteVideoBGInLightMode.value && context.isDarkMode == false) {
       videoControlsWidget = ColoredBox(
         color: context.theme.scaffoldBackgroundColor,
         child: videoControlsWidget,
@@ -2643,7 +2643,7 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Wrap(
-              children: settings.player.speeds
+              children: settings.player.speeds.value
                   .map(
                     (e) => IgnorePointer(
                       ignoring: e == 1.0,
@@ -2662,12 +2662,13 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                                 snackyy(message: lang.error); // we already ignore tap but uh
                                 return;
                               }
-                              if (settings.player.speeds.length <= 4) return showMinimumItemsSnack(4);
+                              if (settings.player.speeds.value.length <= 4) return showMinimumItemsSnack(4);
 
-                              settings.player.speeds
-                                ..remove(e)
-                                ..sort();
-                              settings.player.save(speeds: settings.player.speeds);
+                              settings.player.speeds.update(
+                                (speeds) => speeds
+                                  ..remove(e)
+                                  ..sort(),
+                              );
                               setState(() {});
                             },
                             child: Row(
@@ -2699,11 +2700,12 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                   value ??= '';
                   if (value.isEmpty) return lang.emptyValue;
                   final sp = double.parse(speedsController.text);
-                  if (settings.player.speeds.contains(sp)) return lang.error;
-                  settings.player.speeds
-                    ..add(sp)
-                    ..sort();
-                  settings.player.save(speeds: settings.player.speeds);
+                  if (settings.player.speeds.value.contains(sp)) return lang.error;
+                  settings.player.speeds.update(
+                    (speeds) => speeds
+                      ..add(sp)
+                      ..sort(),
+                  );
                   speedsController.clear();
                   setState(() {});
                   return null;

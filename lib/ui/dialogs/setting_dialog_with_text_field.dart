@@ -58,40 +58,40 @@ Future<void> showSettingDialogWithTextField({
             tooltip: lang.restoreDefaults,
             onPressed: () {
               if (trackThumbnailSizeinList) {
-                settings.save(trackThumbnailSizeinList: 70.0);
+                settings.trackThumbnailSizeinList.reset();
                 showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
                 onTTSetChange();
               }
               if (trackListTileHeight) {
-                settings.save(trackListTileHeight: 70.0);
+                settings.trackListTileHeight.reset();
                 showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
                 Dimensions.inst.updateTrackTileDimensions();
                 onTTSetChange();
               }
               if (albumThumbnailSizeinList) {
-                settings.save(albumThumbnailSizeinList: 90.0);
+                settings.albumThumbnailSizeinList.reset();
                 showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}", title: title);
               }
               if (albumListTileHeight) {
-                settings.save(albumListTileHeight: 90.0);
+                settings.albumListTileHeight.reset();
                 showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
                 Dimensions.inst.updateAlbumTileDimensions();
               }
               if (borderRadiusMultiplier) {
-                settings.save(borderRadiusMultiplier: 1.0);
+                settings.borderRadiusMultiplier.reset();
                 showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
               }
               if (fontScaleFactor) {
-                settings.save(fontScaleFactor: 0.9);
+                settings.fontScaleFactor.reset();
                 showResetToDefaultSnackBar("${settings.fontScaleFactor.value.toInt() * 100}%", title: title);
               }
               if (dateTimeFormat) {
-                settings.save(dateTimeFormat: 'MMM yyyy');
+                settings.dateTimeFormat.reset();
                 showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
                 onTIPropChange();
               }
               if (trackTileSeparator) {
-                settings.save(trackTileSeparator: '•');
+                settings.trackTileSeparator.reset();
                 showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
                 onTTSetChange();
                 onTIPropChange();
@@ -108,34 +108,34 @@ Future<void> showSettingDialogWithTextField({
             onTap: () {
               if (formKey.currentState!.validate()) {
                 if (trackThumbnailSizeinList) {
-                  settings.save(trackThumbnailSizeinList: double.parse(controller.text));
+                  settings.trackThumbnailSizeinList.save(double.parse(controller.text));
                   onTTSetChange();
                 }
                 if (trackListTileHeight) {
-                  settings.save(trackListTileHeight: double.parse(controller.text));
+                  settings.trackListTileHeight.save(double.parse(controller.text));
                   Dimensions.inst.updateTrackTileDimensions();
                   onTTSetChange();
                 }
                 if (albumThumbnailSizeinList) {
-                  settings.save(albumThumbnailSizeinList: double.parse(controller.text));
+                  settings.albumThumbnailSizeinList.save(double.parse(controller.text));
                 }
                 if (albumListTileHeight) {
-                  settings.save(albumListTileHeight: double.parse(controller.text));
+                  settings.albumListTileHeight.save(double.parse(controller.text));
                   Dimensions.inst.updateAlbumTileDimensions();
                 }
                 if (borderRadiusMultiplier) {
-                  settings.save(borderRadiusMultiplier: double.parse(controller.text));
+                  settings.borderRadiusMultiplier.save(double.parse(controller.text));
                 }
                 if (fontScaleFactor) {
-                  settings.save(fontScaleFactor: double.parse(controller.text) / 100);
+                  settings.fontScaleFactor.save(double.parse(controller.text) / 100);
                 }
                 if (dateTimeFormat) {
-                  settings.save(dateTimeFormat: controller.text);
+                  settings.dateTimeFormat.save(controller.text);
                   onTTSetChange();
                   onTIPropChange();
                 }
                 if (trackTileSeparator) {
-                  settings.save(trackTileSeparator: controller.text);
+                  settings.trackTileSeparator.save(controller.text);
                   onTTSetChange();
                   onTIPropChange();
                 }

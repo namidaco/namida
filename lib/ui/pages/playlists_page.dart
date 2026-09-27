@@ -206,7 +206,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 ),
                 title: lang.playlistsImportM3uSyncedAutoImport,
                 subtitle: lang.playlistsImportM3uSynced,
-                onChanged: (isTrue) => settings.save(enableM3USyncStartup: !isTrue),
+                onChanged: (isTrue) => settings.enableM3USyncStartup.save(!isTrue),
                 value: m3usyncstartup,
               ),
             ),
@@ -220,7 +220,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                 ),
                 title: lang.playlistsImportServerAutoImport,
                 subtitle: lang.playlistsImportServer,
-                onChanged: (isTrue) => settings.save(importServerPlaylists: !isTrue),
+                onChanged: (isTrue) => settings.importServerPlaylists.save(!isTrue),
                 value: importServerPlaylists,
               ),
             ),
@@ -275,7 +275,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       PlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
       if (settings.playlistSort.value != GroupSortType.custom || settings.playlistSortReversed.value) {
         // -- for consistent order while enabling/disabling
-        settings.save(playlistSort: GroupSortType.custom, playlistSortReversed: false);
+        settings.transaction(() {
+          settings.playlistSort.save(GroupSortType.custom);
+          settings.playlistSortReversed.save(false);
+        });
         PlaylistController.inst.sortPlaylists();
       }
     }
@@ -632,7 +635,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 onReorderEnd: (index) => super.enablePullToRefresh = true,
                                 onReorder: (oldIndex, newIndex) async {
                                   if (settings.playlistSort.value != GroupSortType.custom) {
-                                    settings.save(playlistSort: GroupSortType.custom);
+                                    settings.playlistSort.save(GroupSortType.custom);
                                   }
                                   PlaylistController.inst.onPlaylistReorder(oldIndex, newIndex);
                                 },

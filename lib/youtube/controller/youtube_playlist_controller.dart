@@ -129,7 +129,10 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     _performSortYTPlaylists(playlistList, sortBy: sortBy, reverse: reverse, customIndicesOrder: customIndicesOrderRx.value);
     playlistsMap.assignAllEntries(playlistList);
 
-    settings.save(ytPlaylistSort: sortBy, ytPlaylistSortReversed: reverse);
+    settings.transaction(() {
+      settings.ytPlaylistSort.save(sortBy);
+      settings.ytPlaylistSortReversed.save(reverse);
+    });
   }
 
   static void _performSortYTPlaylists(

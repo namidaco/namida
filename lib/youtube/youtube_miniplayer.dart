@@ -41,8 +41,8 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
-import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/class/youtube_item_download_config.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -111,7 +111,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void startDimTimer({Brightness? brightness}) {
     _dimTimer?.cancel();
-    if (settings.youtube.enableDimInLightMode == false && (brightness ?? namida.context?.brightness) != Brightness.dark) {
+    if (settings.youtube.enableDimInLightMode.value == false && (brightness ?? namida.context?.brightness) != Brightness.dark) {
       _canDimMiniplayer.value = false;
       return;
     }
@@ -320,7 +320,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                   verticalPadding: 64.0,
                                   bottomPadding: const SizedBox(height: kYTQueueSheetMinHeight),
                                   onCloseFullscreenButtonTap: () {
-                                    settings.save(enableLyrics: false);
+                                    settings.enableLyrics.save(false);
                                     Lyrics.inst.resetLyrics();
                                   },
                                 ),
@@ -1104,7 +1104,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 children:
                                     [
                                           if (videoViewCount != null) (videoViewCount.formatDecimalShort(), Broken.eye),
-                                          if (uploadDate != null) (uploadDate!, Broken.calendar),
+                                          if (uploadDate != null) (uploadDate!, Broken.calendar), // keep date first cuz width more stable
                                           if (uploadDateAgo != null) (uploadDateAgo!, Broken.clock),
                                         ]
                                         .map(

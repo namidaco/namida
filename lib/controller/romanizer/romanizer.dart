@@ -63,7 +63,7 @@ class Romanizer {
   }
 
   void setLyricsEnabled(bool enabled) {
-    settings.save(romanizeLyrics: enabled);
+    settings.romanizeLyrics.save(enabled);
     if (enabled && !isDictionaryInstalled.value) {
       downloadDictionary();
     } else {
@@ -72,12 +72,12 @@ class Romanizer {
   }
 
   void setSortingEnabled(bool enabled) {
-    settings.save(romanizeSorting: enabled);
+    settings.romanizeSorting.save(enabled);
     if (enabled && !isDictionaryInstalled.value) downloadDictionary();
   }
 
   Future<bool> downloadDictionary({bool enableLyrics = false}) async {
-    if (enableLyrics) settings.save(romanizeLyrics: true);
+    if (enableLyrics) settings.romanizeLyrics.save(true);
     if (downloadProgress.value != null) return false;
     downloadProgress.value = 0.0;
 

@@ -139,8 +139,8 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
   }
 
   void _showParallelDownloadsDialog() {
-    final tempCount = settings.youtube.downloadParallelCount.valueF.obs;
-    final tempThreads = settings.youtube.downloadThreadsCount.valueF.obs;
+    final tempCount = settings.youtube.downloadParallelCount.value.obs;
+    final tempThreads = settings.youtube.downloadThreadsCount.value.obs;
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         tempCount.close();
@@ -155,7 +155,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
             text: lang.save,
             onTap: () {
               YoutubeParallelDownloadsHandler.inst.setMaxParallelDownloads(tempCount.value);
-              settings.youtube.save(downloadThreadsCount: tempThreads.value);
+              settings.youtube.downloadThreadsCount.save(tempThreads.value);
               NamidaNavigator.inst.closeDialog();
             },
           ),
@@ -269,11 +269,11 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                           icon: null,
                           tooltip: () => lang.parallelDownloads,
                           onPressed: _showParallelDownloadsDialog,
-                          child: ObxOF(
+                          child: ObxO(
                             rx: settings.youtube.downloadParallelCount,
-                            builder: (context, parallelCount, f) => StackedIcon(
+                            builder: (context, parallelCount) => StackedIcon(
                               baseIcon: Broken.flash,
-                              secondaryText: (parallelCount ?? f).toString(),
+                              secondaryText: parallelCount.toString(),
                             ),
                           ),
                         ),

@@ -17,7 +17,7 @@ class YoutubeParallelDownloadsHandler {
   int _runningCount = 0;
 
   void setMaxParallelDownloads(int count) {
-    settings.youtube.save(downloadParallelCount: count.withMinimum(1));
+    settings.youtube.downloadParallelCount.save(count.withMinimum(1));
     _startQueued();
   }
 
@@ -53,7 +53,7 @@ class YoutubeParallelDownloadsHandler {
   }
 
   void _startQueued() {
-    final maxCount = settings.youtube.downloadParallelCount.valueF;
+    final maxCount = settings.youtube.downloadParallelCount.value;
     while (_runningCount < maxCount && _queue.isNotEmpty) {
       final task = _queue.removeFirst();
       if (task.shouldSkip(task.config)) {

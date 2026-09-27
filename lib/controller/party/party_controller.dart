@@ -183,7 +183,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   /// newest first, stale ones dropped.
   static List<PartyRoomMemory> recentRooms() {
     final rooms = <PartyRoomMemory>[];
-    for (final map in settings.party.recentRooms) {
+    for (final map in settings.party.recentRooms.value) {
       final room = PartyRoomMemory.fromMap(map);
       if (room != null && !room.isStale) rooms.add(room);
     }
@@ -191,8 +191,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   static void _rememberRoom(PartyRoomMemory room) {
-    final stored = settings.party.recentRooms;
-    settings.party.modify((_) {
+    settings.party.recentRooms.update((stored) {
       stored.removeWhere((e) => e['c'] == room.code && e['s'] == room.server.toString());
       stored.insert(0, room.toMap());
       stored.removeWhere((e) {
@@ -204,8 +203,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   static void forgetRoom(PartyRoomMemory room) {
-    final stored = settings.party.recentRooms;
-    settings.party.modify((_) => stored.removeWhere((e) => e['c'] == room.code && e['s'] == room.server.toString()));
+    settings.party.recentRooms.update((stored) => stored.removeWhere((e) => e['c'] == room.code && e['s'] == room.server.toString()));
   }
 
   Future<void> rejoin(PartyRoomMemory room, {required bool listening}) async {
@@ -261,7 +259,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
 
     final serverToRemember = server == defaultServer ? null : server.toString();
     if (settings.party.serverUrl.value != serverToRemember) {
-      settings.party.modify((partySettings) => partySettings.serverUrl.value = serverToRemember);
+      settings.party.serverUrl.save(serverToRemember);
     }
 
     _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
@@ -507,7 +505,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       final map = await _getJson(uri);
       final rooms = map?['rooms'];
       if (rooms is! List) return null;
-      final hidden = settings.party.hiddenOwners;
+      final hidden = settings.party.hiddenOwners.value;
       final parsed = <PartyPublicRoom>[];
       for (final raw in rooms) {
         final room = PartyPublicRoom.fromMap(raw);
@@ -574,7 +572,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     if (!isHost || _opts?.isPublic != true) return;
     final name = _state.roomName;
     // -- without it the summary only changes with the room itself, which is a handful of pushes per party
-    final entry = settings.party.sharePlaying.valueF ? _state.currentEntry : null;
+    final entry = settings.party.sharePlaying.value ? _state.currentEntry : null;
     final title = entry?.title ?? '';
     final artist = entry?.artist ?? '';
     if (!force && name == _sentSummaryName && title == _sentSummaryTitle && artist == _sentSummaryArtist) return;
@@ -620,8 +618,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   void unban(String banId) => _connection?.unban(banId);
   void transferHost(int n) => _connection?.transferHost(n);
   void setSharePlaying(bool share) {
-    if (settings.party.sharePlaying.valueF == share) return;
-    settings.party.modify((partySettings) => partySettings.sharePlaying.value = share);
+    if (settings.party.sharePlaying.value == share) return;
+    settings.party.sharePlaying.save(share);
     _pushSummary(force: true);
   }
 

@@ -28,7 +28,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     await _restoreBounds();
     // -- before first frame, so it renders at the final size. resizing after it can also crash flutter linux (x11), https://github.com/namidaco/namida/issues/1212
     // -- maximizing shows the window on windows, the runner keeps it cloaked until first frame
-    await _syncMaximized(settings.extra.windowMaximized);
+    await _syncMaximized(settings.extra.windowMaximized.value);
 
     if (Platform.isLinux) {
       // -- window_manager on linux doesnt support some methods.
@@ -60,7 +60,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     }
 
     // -- read once, the window events fired below would otherwise flip it mid-way
-    final shouldBeMaximized = settings.extra.windowMaximized;
+    final shouldBeMaximized = settings.extra.windowMaximized.value;
 
     // -- bounds first, they are what the window unmaximizes to
     if (restoreBounds) await _restoreBounds();
@@ -71,7 +71,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   }
 
   Future<void> _restoreBounds() async {
-    final bounds = settings.extra.windowBounds;
+    final bounds = settings.extra.windowBounds.value;
     if (bounds == null) return;
     // -- making sure window is in bounds with the current screen/s max size
     // -- for example: after disconnecting a second screen
@@ -96,12 +96,16 @@ class _WindowManagerDesktop extends NamidaWindowManager {
 
     final wasMaximized = await windowManager.isMaximized();
     if (wasMaximized) {
-      settings.extra.save(windowMaximized: true);
+      settings.extra.windowMaximized.save(true);
     } else {
-      settings.extra.save(windowMaximized: false, windowBounds: await windowManager.getBounds());
+      final bounds = await windowManager.getBounds();
+      settings.extra.transaction(() {
+        settings.extra.windowMaximized.save(false);
+        settings.extra.windowBounds.save(bounds);
+      });
     }
 
-    settings.save(enableLyrics: true);
+    settings.enableLyrics.save(true);
 
     NamidaWindowManager.isMiniLyricsMode.value = true;
 
@@ -124,7 +128,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   Future<void> exitMiniLyricsMode() async {
     if (!NamidaWindowManager.isMiniLyricsMode.value) return;
 
-    settings.extra.save(miniLyricsWindowBounds: await windowManager.getBounds());
+    settings.extra.miniLyricsWindowBounds.save(await windowManager.getBounds());
 
     NamidaWindowManager.isMiniLyricsMode.value = false;
 
@@ -146,7 +150,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   }
 
   Future<Rect> _resolveMiniLyricsBounds() async {
-    final saved = settings.extra.miniLyricsWindowBounds;
+    final saved = settings.extra.miniLyricsWindowBounds.value;
     if (saved != null) return await _ensureBoundsWithinScreenSizeShift(saved);
 
     const size = NamidaWindowManager.kMiniLyricsDefaultSize;
@@ -254,23 +258,23 @@ class _NamidaWindowListener with WindowListener {
   Future<void> _saveBounds() async {
     if (NamidaWindowManager.isMiniLyricsMode.value) {
       final currentBounds = await windowManager.getBounds();
-      if (currentBounds != settings.extra.miniLyricsWindowBounds) {
-        settings.extra.save(miniLyricsWindowBounds: currentBounds);
+      if (currentBounds != settings.extra.miniLyricsWindowBounds.value) {
+        settings.extra.miniLyricsWindowBounds.save(currentBounds);
       }
       return;
     }
     // -- maximized bounds would replace the size the window restores to
     if (await windowManager.isMaximized()) return;
     final currentBounds = await windowManager.getBounds();
-    if (currentBounds != settings.extra.windowBounds) {
-      settings.extra.save(windowBounds: currentBounds);
+    if (currentBounds != settings.extra.windowBounds.value) {
+      settings.extra.windowBounds.save(currentBounds);
     }
   }
 
   void _saveMaximized({required bool isNowMaximized}) {
     if (NamidaWindowManager.isMiniLyricsMode.value) return;
-    if (isNowMaximized != settings.extra.windowMaximized) {
-      settings.extra.save(windowMaximized: isNowMaximized);
+    if (isNowMaximized != settings.extra.windowMaximized.value) {
+      settings.extra.windowMaximized.save(isNowMaximized);
     }
   }
 

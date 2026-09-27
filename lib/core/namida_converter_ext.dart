@@ -130,7 +130,7 @@ extension LibraryTabUtils on LibraryTab {
     if (variants.isEmpty) return group;
     final selected = settings.extra.selectedLibraryTab.value;
     if (selected.group == group) return selected;
-    return settings.extra.libraryTabGroupVariants[group] ?? group;
+    return settings.extra.libraryTabGroupVariants.value[group] ?? group;
   }
 
   MediaType? toMediaType() {
@@ -1093,39 +1093,37 @@ extension PerformanceModeUtils on PerformanceMode {
   Future<void> executeAndSave() async {
     switch (this) {
       case PerformanceMode.highPerformance:
-        settings.save(
-          performanceMode: PerformanceMode.highPerformance,
-          enableBlurEffect: false,
-          enableGlowEffect: false,
-          enableMiniplayerParallaxEffect: false,
-          artworkCacheHeightMultiplier: 0.8,
-          autoColor: false,
-          animatedTheme: false,
-        );
+        settings.transaction(() {
+          settings.performanceMode.save(PerformanceMode.highPerformance);
+          settings.enableBlurEffect.save(false);
+          settings.enableGlowEffect.save(false);
+          settings.enableMiniplayerParallaxEffect.save(false);
+          settings.artworkCacheHeightMultiplier.save(0.8);
+          settings.autoColor.save(false);
+          settings.animatedTheme.save(false);
+        });
       case PerformanceMode.balanced:
-        settings.save(
-          performanceMode: PerformanceMode.balanced,
-          enableBlurEffect: false,
-          enableGlowEffect: false,
-          enableMiniplayerParallaxEffect: true,
-          artworkCacheHeightMultiplier: 0.9,
-          autoColor: true,
-          animatedTheme: false,
-        );
+        settings.transaction(() {
+          settings.performanceMode.save(PerformanceMode.balanced);
+          settings.enableBlurEffect.save(false);
+          settings.enableGlowEffect.save(false);
+          settings.enableMiniplayerParallaxEffect.save(true);
+          settings.artworkCacheHeightMultiplier.save(0.9);
+          settings.autoColor.save(true);
+          settings.animatedTheme.save(false);
+        });
       case PerformanceMode.goodLooking:
-        settings.save(
-          performanceMode: PerformanceMode.goodLooking,
-          enableBlurEffect: true,
-          enableGlowEffect: true,
-          enableMiniplayerParallaxEffect: true,
-          artworkCacheHeightMultiplier: 1.0,
-          autoColor: true,
-          animatedTheme: true,
-        );
+        settings.transaction(() {
+          settings.performanceMode.save(PerformanceMode.goodLooking);
+          settings.enableBlurEffect.save(true);
+          settings.enableGlowEffect.save(true);
+          settings.enableMiniplayerParallaxEffect.save(true);
+          settings.artworkCacheHeightMultiplier.save(1.0);
+          settings.autoColor.save(true);
+          settings.animatedTheme.save(true);
+        });
       case PerformanceMode.custom:
-        settings.save(
-          performanceMode: PerformanceMode.custom,
-        );
+        settings.performanceMode.save(PerformanceMode.custom);
     }
   }
 }
@@ -1877,6 +1875,9 @@ extension SyncDataItemL10n on SyncDataItem {
     SyncDataItem.thumbnailsChannelsYt => '${lang.thumbnails} • ${lang.channels} (${lang.youtube})',
     SyncDataItem.playerQueue => lang.queue,
     SyncDataItem.playback => lang.playbackSetting,
+    SyncDataItem.settingsGeneral => lang.settings,
+    SyncDataItem.settingsPlayer => '${lang.settings} (${lang.playbackSetting})',
+    SyncDataItem.settingsYoutube => '${lang.settings} (${lang.youtube})',
   };
 
   IconData toIcon() => switch (this) {
@@ -1906,6 +1907,9 @@ extension SyncDataItemL10n on SyncDataItem {
     SyncDataItem.thumbnailsChannelsYt => Broken.image,
     SyncDataItem.playerQueue => Broken.rotate_left_1,
     SyncDataItem.playback => Broken.play,
+    SyncDataItem.settingsGeneral => Broken.setting_2,
+    SyncDataItem.settingsPlayer => Broken.setting_2,
+    SyncDataItem.settingsYoutube => Broken.setting_2,
   };
 }
 

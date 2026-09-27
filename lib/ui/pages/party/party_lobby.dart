@@ -131,7 +131,7 @@ class _DeviceNameCardState extends State<_DeviceNameCard> {
   void _save() {
     final name = _typedName;
     if (name == settings.sync.customDeviceName.value) return;
-    settings.sync.modify((syncSettings) => syncSettings.customDeviceName.value = name);
+    settings.sync.customDeviceName.save(name);
     _isDirty.value = false;
   }
 
@@ -252,12 +252,12 @@ class _CreateCardState extends State<_CreateCard> {
   final _serverController = TextEditingController(text: PartyController.preferredServer.toString());
   final _serverPasswordController = TextEditingController();
 
-  bool _listening = settings.party.listenOnThisDevice.valueF;
+  bool _listening = settings.party.listenOnThisDevice.value;
   bool _approval = false;
   bool _seedQueue = true;
   bool _hostOnThisDevice = false;
-  bool _isPublic = settings.party.createPublic.valueF;
-  bool _sharePlaying = settings.party.sharePlaying.valueF;
+  bool _isPublic = settings.party.createPublic.value;
+  bool _sharePlaying = settings.party.sharePlaying.value;
   bool _isLoading = false;
   bool _canRetryAfterMembership = false;
   bool _awaitingMembership = false;
@@ -388,7 +388,7 @@ class _CreateCardState extends State<_CreateCard> {
             subtitle: lang.partyListenOnThisDeviceSubtitle,
             value: _listening,
             onChanged: (isTrue) {
-              settings.party.modify((partySettings) => partySettings.listenOnThisDevice.value = !isTrue);
+              settings.party.listenOnThisDevice.save(!isTrue);
               setState(() => _listening = !isTrue);
             },
           ),
@@ -410,7 +410,7 @@ class _CreateCardState extends State<_CreateCard> {
             subtitle: lang.partyPublicRoomSubtitle,
             value: _isPublic,
             onChanged: (isTrue) {
-              settings.party.modify((partySettings) => partySettings.createPublic.value = !isTrue);
+              settings.party.createPublic.save(!isTrue);
               setState(() => _isPublic = !isTrue);
             },
           ),
@@ -421,7 +421,7 @@ class _CreateCardState extends State<_CreateCard> {
               subtitle: lang.partySharePlayingSubtitle,
               value: _sharePlaying,
               onChanged: (isTrue) {
-                settings.party.modify((partySettings) => partySettings.sharePlaying.value = !isTrue);
+                settings.party.sharePlaying.save(!isTrue);
                 setState(() => _sharePlaying = !isTrue);
               },
             ),
@@ -497,7 +497,7 @@ class _JoinCardState extends State<_JoinCard> {
   final _inviteController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _listening = settings.party.listenOnThisDevice.valueF;
+  bool _listening = settings.party.listenOnThisDevice.value;
   bool _isLoading = false;
 
   @override
@@ -574,7 +574,7 @@ class _JoinCardState extends State<_JoinCard> {
             subtitle: lang.partyListenOnThisDeviceSubtitle,
             value: _listening,
             onChanged: (isTrue) {
-              settings.party.modify((partySettings) => partySettings.listenOnThisDevice.value = !isTrue);
+              settings.party.listenOnThisDevice.save(!isTrue);
               setState(() => _listening = !isTrue);
             },
           ),
@@ -612,7 +612,7 @@ class _BrowseSectionState extends State<_BrowseSection> {
       server: PartyController.preferredServer,
       code: room.code,
       password: password,
-      listening: settings.party.listenOnThisDevice.valueF,
+      listening: settings.party.listenOnThisDevice.value,
     );
     if (mounted) setState(() => _isLoading = false);
   }
@@ -689,7 +689,7 @@ class _RejoinCardState extends State<_RejoinCard> {
   Future<void> _rejoin(PartyRoomMemory room) async {
     if (_isLoading) return;
     setState(() => _isLoading = true);
-    await PartyController.inst.rejoin(room, listening: settings.party.listenOnThisDevice.valueF);
+    await PartyController.inst.rejoin(room, listening: settings.party.listenOnThisDevice.value);
     if (!mounted) return;
     setState(() {
       _isLoading = false;

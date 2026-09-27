@@ -148,7 +148,7 @@ class WaveformController {
 
   void _onPositionChangedHaptic() {
     if (_currentScaleMaxIndex < 0) return;
-    if (settings.extra.mediaWaveHaptic != true) return;
+    if (settings.extra.mediaWaveHaptic.value != true) return;
     _vibrateHaptic(getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value));
   }
 

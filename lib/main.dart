@@ -225,7 +225,7 @@ Future<bool> _mainAppInitialization() async {
 
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
-      settings.save(directoriesToScan: defaultDirs.toList());
+      settings.directoriesToScan.update((list) => list.addAllNoDuplicates(defaultDirs.toList()));
     } else {
       final servers = settings.directoriesToScan.value.allServers();
       if (servers.isNotEmpty) {

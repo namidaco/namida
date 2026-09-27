@@ -199,11 +199,11 @@ class SearchSortController extends SearchPortsProvider {
 
   void toggleSearchMediaType(MediaType type) async {
     if (settings.activeSearchMediaTypes.value.contains(type)) {
-      settings.removeFromList(activeSearchMediaTypes1: type);
+      settings.activeSearchMediaTypes.update((list) => list.remove(type));
       _clearTempResults(type);
       await disposeMediaResources(type);
     } else {
-      settings.save(activeSearchMediaTypes: [type]);
+      settings.activeSearchMediaTypes.update((list) => list.addNoDuplicates(type));
       await prepareResources();
       searchAll(ScrollSearchController.inst.searchTextEditingController.text);
     }
@@ -966,7 +966,10 @@ class SearchSortController extends SearchPortsProvider {
       onDone: (sortType, isReverse) {
         if (!isAuto) {
           if (sortBy != settings.tracksSortSearch.value || reverse != settings.tracksSortSearchReversed.value) {
-            settings.save(tracksSortSearch: sortType, tracksSortSearchReversed: isReverse);
+            settings.transaction(() {
+              settings.tracksSortSearch.save(sortType);
+              settings.tracksSortSearchReversed.save(isReverse);
+            });
           }
         }
         trackSearchTemp.refresh();
@@ -1146,7 +1149,10 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.refresh();
 
     if (sortBy != settings.albumSort.value || reverse != settings.albumSortReversed.value) {
-      settings.save(albumSort: sortBy, albumSortReversed: reverse);
+      settings.transaction(() {
+        settings.albumSort.save(sortBy);
+        settings.albumSortReversed.save(reverse);
+      });
     }
 
     _searchAlbums(LibraryTab.albums.textSearchController?.text ?? '');
@@ -1252,7 +1258,10 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.refresh();
 
     if (sortBy != settings.artistSort.value || reverse != settings.artistSortReversed.value) {
-      settings.save(artistSort: sortBy, artistSortReversed: reverse);
+      settings.transaction(() {
+        settings.artistSort.save(sortBy);
+        settings.artistSortReversed.save(reverse);
+      });
     }
 
     _searchMediaType(type: artistType, text: LibraryTab.artists.textSearchController?.text ?? '');
@@ -1286,7 +1295,10 @@ class SearchSortController extends SearchPortsProvider {
     finalMap.refresh();
 
     if (sortBy != settings.genreSort.value || reverse != settings.genreSortReversed.value) {
-      settings.save(genreSort: sortBy, genreSortReversed: reverse);
+      settings.transaction(() {
+        settings.genreSort.save(sortBy);
+        settings.genreSortReversed.save(reverse);
+      });
     }
     _searchMediaType(type: genreType, text: LibraryTab.genres.textSearchController?.text ?? '');
   }
@@ -1354,7 +1366,10 @@ class SearchSortController extends SearchPortsProvider {
     playlistsMap.refresh();
 
     if (sortBy != settings.playlistSort.value || reverse != settings.playlistSortReversed.value) {
-      settings.save(playlistSort: sortBy, playlistSortReversed: reverse);
+      settings.transaction(() {
+        settings.playlistSort.save(sortBy);
+        settings.playlistSortReversed.save(reverse);
+      });
     }
 
     _searchPlaylists(LibraryTab.playlists.textSearchController?.text ?? '');

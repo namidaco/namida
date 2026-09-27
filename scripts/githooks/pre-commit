@@ -1,0 +1,9 @@
+#!/bin/sh
+# keeps lib/controller/settings.debug_keys.dart in sync with the settings keys, see scripts/gen_settings_debug_keys.py
+
+if ! git diff --cached --name-only | grep -q '^lib/controller/settings'; then
+  exit 0
+fi
+
+. "$(dirname "$0")/_chlog.sh"
+exec $CHLOG_PYTHON "$CHLOG_ROOT/scripts/gen_settings_debug_keys.py" --check

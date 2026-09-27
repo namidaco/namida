@@ -43,7 +43,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
 
   List<NamidaPopupItem> _getTypeChooserChildren() {
     void onTap(MediaType type) {
-      settings.save(activeGenreType: type);
+      settings.activeGenreType.save(type);
       SearchSortController.inst.sortMedia(type, reverse: null);
     }
 

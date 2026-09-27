@@ -1,115 +1,39 @@
 part of 'settings_controller.dart';
 
-class _SyncSettings with SettingsFileWriter {
+class _SyncSettings extends _SettingsKeysWriter {
   _SyncSettings._internal();
 
-  String? uniqueId;
+  late final uniqueId = _key<String?>('id', null);
+  late final customDeviceName = _key<String?>('customDeviceName', null);
+  late final deviceIdNames = _keyMap<String, String>('deviceIdNames', const {});
 
-  final customDeviceName = Rxn<String>();
-  final allowedServerIds = <String>{};
+  late final allowedServerIds = _keySet<String>('allowedServerIds', const {});
+  late final allowedDeviceIds = _keySet<String>('allowedDeviceIds', const {});
+  late final blockedClientIds = _keySet<String>('blockedClientIds', const {});
+  late final manualServerAddresses = _keyMap<String, String>('manualServerAddresses', const {});
 
-  final manualServerAddresses = <String, String>{};
-
-  final allowedDeviceIds = <String>{};
-  final blockedClientIds = <String>{};
-
-  final deviceIdNames = <String, String>{};
-
-  // null == all selected
-  final syncItems = RxnF<Set<SyncDataItem>>(fallback: {...SyncDataItem.essentialsSet});
-
-  final syncItemsAdvancedView = RxnF<bool>(fallback: false);
-  final autoReconnect = RxnF<bool>(fallback: true);
-
-  final autoSyncIntervalMinutes = RxnF<int>(fallback: -1);
-
-  bool serverWasRunning = false;
-
-  void modify(void Function(_SyncSettings syncSettings) callback) {
-    callback(this);
-    _writeToStorage();
-  }
+  late final autoReconnect = _key('autoReconnect', true);
+  late final serverWasRunning = _key('serverWasRunning', false);
+  late final autoSyncIntervalMinutes = _key('autoSyncIntervalMinutes', -1);
+  late final syncItems = _keySet('selectedSyncItems', SyncDataItem.essentialsSet, item: SyncDataItem.values.asCodec());
+  late final syncItemsAdvancedView = _key('syncItemsAdvancedView', false);
 
   void updateDeviceName(String id, String name) {
-    if (deviceIdNames[id] != name) {
-      deviceIdNames[id] = name;
-      _writeToStorage();
-    }
+    if (deviceIdNames.value[id] == name) return;
+    deviceIdNames.update((names) => names[id] = name);
   }
 
   void updateManualServerAddress(String id, String address) {
-    final current = manualServerAddresses[id];
-    if (current != null && current != address) {
-      manualServerAddresses[id] = address;
-      _writeToStorage();
-    }
-  }
-
-  void save({
-    String? uniqueId,
-  }) {
-    if (uniqueId != null) this.uniqueId = uniqueId;
-    _writeToStorage();
+    final current = manualServerAddresses.value[id];
+    if (current == null || current == address) return;
+    manualServerAddresses.update((addresses) => addresses[id] = address);
   }
 
   @override
-  void applyKuruSettings() {}
-
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json is! Map) return;
-
-    try {
-      uniqueId = json['id'];
-      customDeviceName.value = json['customDeviceName'];
-      allowedServerIds
-        ..clear()
-        ..addAll((json['allowedServerIds'] as List?)?.cast<String>() ?? <String>[]);
-      manualServerAddresses
-        ..clear()
-        ..addAll((json['manualServerAddresses'] as Map?)?.cast<String, String>() ?? <String, String>{});
-      allowedDeviceIds
-        ..clear()
-        ..addAll((json['allowedDeviceIds'] as List?)?.cast<String>() ?? <String>[]);
-      blockedClientIds
-        ..clear()
-        ..addAll((json['blockedClientIds'] as List?)?.cast<String>() ?? <String>[]);
-      deviceIdNames
-        ..clear()
-        ..addAll((json['deviceIdNames'] as Map?)?.cast<String, String>() ?? <String, String>{});
-      final syncItemsInStorage = (json['selectedSyncItems'] as List?)?.map((e) => SyncDataItem.lookupMap[e]).whereType<SyncDataItem>();
-      if (syncItemsInStorage != null && syncItemsInStorage.isNotEmpty) {
-        (syncItems.value ??= <SyncDataItem>{})
-          ..clear()
-          ..addAll(syncItemsInStorage);
-      }
-      syncItemsAdvancedView.value = json['syncItemsAdvancedView'] as bool?;
-      autoReconnect.value = json['autoReconnect'] as bool?;
-      autoSyncIntervalMinutes.value = json['autoSyncIntervalMinutes'] as int?;
-      serverWasRunning = json['serverWasRunning'] ?? false;
-    } catch (e, st) {
-      printy(e, isError: true);
-      logger.report(e, st);
-    }
-  }
-
-  @override
-  Object get jsonToWrite => <String, dynamic>{
-    'id': ?uniqueId,
-    'customDeviceName': ?customDeviceName.value,
-    'allowedServerIds': allowedServerIds.toFixedList(),
-    'manualServerAddresses': manualServerAddresses,
-    'allowedDeviceIds': allowedDeviceIds.toFixedList(),
-    'blockedClientIds': blockedClientIds.toFixedList(),
-    'deviceIdNames': deviceIdNames,
-    'selectedSyncItems': ?syncItems.value?.map((e) => e.name).toFixedList(),
-    'syncItemsAdvancedView': ?syncItemsAdvancedView.value,
-    'autoReconnect': autoReconnect.value,
-    'autoSyncIntervalMinutes': ?autoSyncIntervalMinutes.value,
-    'serverWasRunning': serverWasRunning,
+  Set<String> get sensitiveKeys => const {
+    'id', 'customDeviceName', 'deviceIdNames', //
+    'allowedDeviceIds', 'blockedClientIds', 'allowedServerIds', 'manualServerAddresses', //
   };
-
-  Future<void> _writeToStorage() async => await writeToStorage();
 
   @override
   String get filePath => AppPaths.SETTINGS_SYNC;

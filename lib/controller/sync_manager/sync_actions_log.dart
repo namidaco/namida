@@ -90,6 +90,7 @@ class SyncActionsLog extends RxNotifier {
       PlaybackStateMessage() => SyncDataItem.playback,
       AudioConfigsMessage() => SyncDataItem.audioConfigs,
       SmartPlaylistsMessage() => SyncDataItem.smartPlaylists,
+      SettingsMessage m => m.item,
       YTSubscriptionsMessage() || YTSubscriptionsGroupsMessage() => SyncDataItem.subscriptionsYt,
       PingMessage() ||
       ConnectionRequestMessage() ||

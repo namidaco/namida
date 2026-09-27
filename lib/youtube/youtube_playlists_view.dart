@@ -136,7 +136,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
       if (settings.ytPlaylistSort.value != GroupSortType.custom || settings.ytPlaylistSortReversed.value) {
         // -- for consistent order while enabling/disabling
-        settings.save(ytPlaylistSort: GroupSortType.custom, ytPlaylistSortReversed: false);
+        settings.transaction(() {
+          settings.ytPlaylistSort.save(GroupSortType.custom);
+          settings.ytPlaylistSortReversed.save(false);
+        });
         YoutubePlaylistController.inst.sortPlaylists();
       }
     }
@@ -532,7 +535,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       itemExtent: playlistsItemExtent,
                       onReorder: (oldIndex, newIndex) async {
                         if (settings.ytPlaylistSort.value != GroupSortType.custom) {
-                          settings.save(ytPlaylistSort: GroupSortType.custom);
+                          settings.ytPlaylistSort.save(GroupSortType.custom);
                         }
                         YoutubePlaylistController.inst.onPlaylistReorder(oldIndex, newIndex);
                       },

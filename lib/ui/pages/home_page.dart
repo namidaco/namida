@@ -704,8 +704,7 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
 
   @override
   void saveHomePageItems(List<HomePageItems> activeItems) {
-    settings.homePageItems.value = activeItems;
-    settings.save(homePageItems: null);
+    settings.homePageItems.replace(activeItems);
   }
 
   @override
@@ -1100,7 +1099,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
 
   @override
   void saveHomePageItems(List<HomePageItems> activeItems) {
-    settings.youtube.save(ytHomePageItems: activeItems);
+    settings.youtube.ytHomePageItems.replace(activeItems);
   }
 
   @override

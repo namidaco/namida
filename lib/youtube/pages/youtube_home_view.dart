@@ -41,7 +41,7 @@ class YouTubeHomeView extends StatelessWidget with NamidaRouteWidget {
             )
             .toList(),
         onIndexChanged: (index) {
-          settings.extra.save(ytInitialHomePage: YTHomePages.values[index]);
+          settings.extra.ytInitialHomePage.save(YTHomePages.values[index]);
         },
         children: const [
           _HomePage(),
@@ -61,8 +61,8 @@ class _HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SplitPage(
-      initialIndex: settings.extra.ytHomePageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
-      onIndexChanged: (index) => settings.extra.save(ytHomePageIndex: index),
+      initialIndex: settings.extra.ytHomePageIndex.value ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
+      onIndexChanged: (index) => settings.extra.ytHomePageIndex.save(index),
       pages: [
         SplitPageInfo(
           title: lang.local,
@@ -83,8 +83,8 @@ class _ChannelsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SplitPage(
-      initialIndex: settings.extra.ytChannelsPageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
-      onIndexChanged: (index) => settings.extra.save(ytChannelsPageIndex: index),
+      initialIndex: settings.extra.ytChannelsPageIndex.value ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
+      onIndexChanged: (index) => settings.extra.ytChannelsPageIndex.save(index),
       pages: [
         SplitPageInfo(
           title: lang.local,
@@ -105,8 +105,8 @@ class _PlaylistsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SplitPage(
-      initialIndex: settings.extra.ytPlaylistsPageIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
-      onIndexChanged: (index) => settings.extra.save(ytPlaylistsPageIndex: index),
+      initialIndex: settings.extra.ytPlaylistsPageIndex.value ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
+      onIndexChanged: (index) => settings.extra.ytPlaylistsPageIndex.save(index),
       pages: [
         SplitPageInfo(
           title: lang.local,

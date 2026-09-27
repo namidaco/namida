@@ -65,7 +65,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
         default:
           null;
       }
-      settings.save(activeArtistType: type);
+      settings.activeArtistType.save(type);
       SearchSortController.inst.sortMedia(type, groupSortBy: newArtistSort, reverse: null);
     }
 

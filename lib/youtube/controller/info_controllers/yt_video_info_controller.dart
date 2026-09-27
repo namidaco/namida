@@ -13,9 +13,9 @@ class _VideoInfoController {
   static final _defaultClient = InnertubeClients.tv;
   static const _defaultRequiresJSPlayer = true;
 
-  InnertubeClients get _usedClient => settings.youtube.innertubeClient ?? _defaultClient;
+  InnertubeClients get _usedClient => settings.youtube.innertubeClient.value ?? _defaultClient;
   bool get _requiresJSPlayer {
-    final userSpecified = settings.youtube.innertubeClient;
+    final userSpecified = settings.youtube.innertubeClient.value;
     if (userSpecified == null) return _defaultRequiresJSPlayer;
     return userSpecified.configuration.requireJSPlayer == true;
   }
@@ -34,7 +34,7 @@ class _VideoInfoController {
   String? getJSPlayerVersion() => YoutiPie.cipher.jsPlayerVersion;
 
   Future<LikeStatus?> fetchLikeStatusForVideoCardInstant(String videoId, {ExecuteDetails? details}) async {
-    if (settings.youtube.showLikeStatusOnCards.valueF) {
+    if (settings.youtube.showLikeStatusOnCards.value) {
       final page = await this.fetchVideoPage(videoId, details: details);
       return page?.videoInfo?.engagement?.likeStatus ?? LikeStatus.unknown;
     }

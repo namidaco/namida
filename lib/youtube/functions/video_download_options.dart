@@ -100,7 +100,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         icon: Broken.tick_circle,
                         title: lang.keepCachedVersions,
                         value: settings.downloadFilesKeepCachedVersions.valueR,
-                        onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                        onChanged: (isTrue) => settings.downloadFilesKeepCachedVersions.save(!isTrue),
                       ),
                     ),
                     Obx(
@@ -108,7 +108,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         icon: Broken.document_code,
                         title: lang.setFileLastModifiedAsVideoUploadDate,
                         value: settings.downloadFilesWriteUploadDate.valueR,
-                        onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                        onChanged: (isTrue) => settings.downloadFilesWriteUploadDate.save(!isTrue),
                       ),
                     ),
                     Obx(
@@ -116,7 +116,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         icon: Broken.music_library_2,
                         title: lang.addAudioToLocalLibrary,
                         value: settings.downloadAddAudioToLocalLibrary.valueR,
-                        onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
+                        onChanged: (isTrue) => settings.downloadAddAudioToLocalLibrary.save(!isTrue),
                       ),
                     ),
                     Obx(
@@ -125,7 +125,7 @@ Future<void> showVideoDownloadOptionsSheet({
                         title: lang.splitByChapters,
                         subtitle: lang.splitByChaptersSubtitle,
                         value: settings.youtube.splitDownloadsByChapters.valueR,
-                        onChanged: (isTrue) => settings.youtube.save(splitDownloadsByChapters: !isTrue),
+                        onChanged: (isTrue) => settings.youtube.splitDownloadsByChapters.save(!isTrue),
                       ),
                     ),
                     if (sponsorSegmentsCategories != null)

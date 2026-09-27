@@ -1,0 +1,72 @@
+{
+  "showChannelWatermarkFullscreen": false,
+  "showVideoEndcards": true,
+  "autoStartRadio": false,
+  "personalizedRelatedVideos": false,
+  "searchCleanup": true,
+  "ytDownloadLocation": "/storage/emulated/0/Namida/Downloads/",
+  "ytMiniplayerDimAfterSeconds": 0,
+  "ytMiniplayerDimOpacity": 0.5,
+  "youtubeStyleMiniplayer": true,
+  "preferNewComments": false,
+  "autoExtractVideoTagsFromInfo": true,
+  "fallbackExtractInfoDescription": false,
+  "isAudioOnlyMode": false,
+  "dataSaverMode": "medium",
+  "dataSaverModeMobile": "medium",
+  "rememberAudioOnly": true,
+  "topComments": false,
+  "enableStreamSegments": true,
+  "splitDownloadsByChapters": false,
+  "enableHeatMap": true,
+  "onYoutubeLinkOpen": "alwaysAsk",
+  "tapToSeek": "expandedMiniplayer",
+  "dragToSeek": "all",
+  "horizontalDrag": "fullscreen",
+  "ytHomePageItems": [
+    "mixes",
+    "recentListens",
+    "topRecentListens",
+    "lostMemories"
+  ],
+  "ytVisibleShorts": {
+    "relatedVideos": false,
+    "history": false,
+    "search": false,
+    "homeFeed": false
+  },
+  "ytVisibleMixes": {
+    "homeFeed": true,
+    "search": true,
+    "relatedVideos": true
+  },
+  "downloadFilenameBuilder": "[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s",
+  "downloadParallelCount_v2": null,
+  "downloadThreadsCount": null,
+  "downloadNotifications": "showFailedOnly",
+  "sponsorBlockSettings": {
+    "enabled": true,
+    "trackSkipCount": false,
+    "serverAddress": null,
+    "hideSkipButtonAfterMS": 3000,
+    "minimumSegmentDurationMS": 0,
+    "removeSegmentsFromDownloads": false,
+    "configs": {}
+  },
+  "ryd": {
+    "enabled": false
+  },
+  "initialDefaultMetadataTags": {
+    "artist": "%(artist)s"
+  },
+  "markVideoWatched": true,
+  "linkLikeButtonWithFavourites": true,
+  "preferLikeButtonOverFavourite": true,
+  "innertubeClient_v2": null,
+  "whiteVideoBGInLightMode": true,
+  "enableDimInLightMode": false,
+  "allowExperimentalCodecs": false,
+  "preferOpusFormat": false,
+  "enableGifThumbnails": false,
+  "maxPageCacheDurationMin_v2": 129600
+}

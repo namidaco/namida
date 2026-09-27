@@ -36,7 +36,7 @@ class ReturnYoutubeDislikeSettingsPage extends StatelessWidget {
                 value: isEnabled,
                 onChanged: (isTrue) {
                   final newConfigs = _currentConfigValue.copyWith(enabled: !isTrue);
-                  settings.youtube.save(ryd: newConfigs);
+                  settings.youtube.ryd.save(newConfigs);
 
                   if (newConfigs.enabled) {
                     final currentItem = Player.inst.currentItem.value;

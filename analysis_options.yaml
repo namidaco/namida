@@ -11,6 +11,7 @@ analyzer:
   # plugins:
   #   - custom_lint
   errors:
+    invalid_use_of_protected_member: error
     unnecessary_this: ignore
     use_string_in_part_of_directives: ignore
 

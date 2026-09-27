@@ -176,10 +176,10 @@ class NamidaOnTaps {
 
   Future<void> onMostPlayedPlaylistTap({MostPlayedTimeRange? mptr, DateRange? dateCustom}) async {
     if (mptr != null) {
-      settings.save(
-        mostPlayedTimeRange: mptr,
-        mostPlayedCustomDateRange: dateCustom,
-      );
+      settings.transaction(() {
+        settings.mostPlayedTimeRange.save(mptr);
+        settings.mostPlayedCustomDateRange.save(dateCustom);
+      });
       HistoryController.inst.updateTempMostPlayedPlaylist(
         mptr: mptr,
         customDateRange: dateCustom,
@@ -283,10 +283,10 @@ class NamidaOnTaps {
       currentReverse: settings.mediaItemsTrackSortingReverse.value[media] ?? false,
       allowCustom: false,
       onSortChange: (activeSorters) {
-        settings.updateMediaItemsTrackSorting(media, activeSorters);
+        settings.mediaItemsTrackSorting.update((sorting) => sorting[media] = activeSorters);
       },
       onSortReverseChange: (reverse) {
-        settings.updateMediaItemsTrackSortingReverse(media, reverse);
+        settings.mediaItemsTrackSortingReverse.update((reverseMap) => reverseMap[media] = reverse);
       },
       onDone: () {
         Indexer.inst.sortMediaTracksSubLists([media]);
@@ -387,7 +387,8 @@ class NamidaOnTaps {
     resortVisualItems();
 
     void resortMedia() {
-      onSortChange(sorters.value);
+      final activeSorts = sorters.value.toList();
+      onSortChange(activeSorts);
       onDone();
     }
 
@@ -405,7 +406,7 @@ class NamidaOnTaps {
             icon: const Icon(Broken.refresh),
             tooltip: lang.restoreDefaults,
             onPressed: () {
-              sorters.value = defaultSorts;
+              sorters.value = defaultSorts.toList();
               onSortChange(defaultSorts);
             },
           ),
@@ -441,7 +442,7 @@ class NamidaOnTaps {
                       allSorts.refresh();
 
                       final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
-                      sorters.value = activeSorts;
+                      sorters.value = activeSorts.toList();
                       onSortChange(activeSorts);
                     },
                     itemBuilder: (context, i) {
@@ -2055,7 +2056,7 @@ class TracksAddOnTap {
                   final mixPlaylist = await YoutubeInfoController.playlist.getMixPlaylist(
                     videoId: currentVideoId,
                     includeFirstVideo: false,
-                    userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+                    userPersonalized: settings.youtube.personalizedMixPlaylists.value,
                     details: ExecuteDetails.kForceRequest,
                   );
                   isLoadingMixPlaylist.value = false;
@@ -2263,16 +2264,14 @@ class TracksAddOnTap {
             NamidaButton(
               text: lang.save,
               onTap: () {
-                settings.updateQueueInsertion(
-                  insertionType,
-                  QueueInsertion(
-                    numberOfTracks: tracksNo.value,
-                    insertNext: insertN.value,
-                    sample: sampleRx.value,
-                    sampleDays: sampleDaysRx.value,
-                    sortBy: sortBy.value,
-                  ),
+                final insertion = QueueInsertion(
+                  numberOfTracks: tracksNo.value,
+                  insertNext: insertN.value,
+                  sample: sampleRx.value,
+                  sampleDays: sampleDaysRx.value,
+                  sortBy: sortBy.value,
                 );
+                settings.queueInsertion.update((insertions) => insertions[insertionType] = insertion);
                 NamidaNavigator.inst.closeDialog();
               },
             ),
@@ -2468,7 +2467,7 @@ class SussyBaka {
     final membership = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
     if (membership != null && membership.index >= MembershipType.cutie.index) {
       // -- also remember it for future
-      settings.save(didSupportNamida: true);
+      settings.didSupportNamida = true;
       return onEnable();
     }
     NamidaNavigator.inst.navigateDialog(
@@ -2480,7 +2479,7 @@ class SussyBaka {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DoubleTapDetector(
-              onDoubleTap: () => settings.save(didSupportNamida: true),
+              onDoubleTap: () => settings.didSupportNamida = true,
               child: const Text('a- ano...'),
             ),
             const Text(

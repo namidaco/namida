@@ -6,7 +6,7 @@ class SyncUtils {
   static const kDefaultNamidaPort = 62310; // 2023-10, v1 of namida
 
   /// increment this only when introducing breaking changes
-  static const kSyncVersion = 3;
+  static const kSyncVersion = 4;
 
   /// if enabled, will directly edit library on receiving valid data
   /// if disabled, will only display a snackbar with the received info
@@ -73,10 +73,10 @@ class SyncUtils {
   }
 
   static String _getUniqueIDSync() {
-    var id = settings.sync.uniqueId;
+    var id = settings.sync.uniqueId.value;
     if (id == null) {
       id = Uuid().v4();
-      settings.sync.save(uniqueId: id);
+      settings.sync.uniqueId.save(id);
     }
     return id;
   }

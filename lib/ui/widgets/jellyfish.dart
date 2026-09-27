@@ -1301,8 +1301,8 @@ const _kJellyHandPivot = Offset(0.655, 0.716);
 
 abstract class NamidaJellys {
   /// Whether jellyfishes are allowed to invade the ui.
-  static bool get enabled => kAllowJellysInvasion && settings.extra.jellysInvasion == true;
-  static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette == true;
+  static bool get enabled => kAllowJellysInvasion && settings.extra.jellysInvasion.value == true;
+  static bool get enableColorPaletteHijack => kAllowJellysInvasion && settings.extra.jellysPalette.value == true;
 
   /// [enabled] as a listenable, for the jellies already on screen when it is flipped.
   ///
@@ -1312,19 +1312,22 @@ abstract class NamidaJellys {
 
   /// Outside the flags page the invasion and the palette are offered as one thing.
   static void setInvasion(bool enabled, {bool paletteFollows = false}) {
-    settings.extra.save(jellysInvasion: enabled, jellysPalette: paletteFollows ? enabled : null);
+    settings.extra.transaction(() {
+      settings.extra.jellysInvasion.save(enabled);
+      if (paletteFollows) settings.extra.jellysPalette.save(enabled);
+    });
     enabledRx.value = enabled;
     _refreshColors(enabled);
   }
 
   static void setPaletteHijack(bool enabled) {
-    settings.extra.save(jellysPalette: enabled);
+    settings.extra.jellysPalette.save(enabled);
     _refreshColors(enabled);
   }
 
   static void _refreshColors(bool paletteEnabled) {
     if (paletteEnabled) {
-      settings.save(forceMiniplayerTrackColor: false);
+      settings.forceMiniplayerTrackColor.save(false);
       CurrentColor.inst.updatePlayerColorFromColor(namida.isDarkMode ? paletteDark : paletteLight, false);
     } else {
       CurrentColor.inst.refreshColorsOfCurrentItem();
@@ -1351,8 +1354,8 @@ abstract class NamidaJellys {
   /// A null flag is the only proof the offer was never made, so declining is written down as a
   /// plain `false` instead of spending a second key on remembering it.
   static void promptEnableOnce() {
-    if (!kAllowJellysInvasion || settings.extra.jellysInvasion != null) return;
-    settings.extra.save(jellysInvasion: false);
+    if (!kAllowJellysInvasion || settings.extra.jellysInvasion.value != null) return;
+    settings.extra.jellysInvasion.save(false);
     promptEnable('The jellyfishes want to invade namida');
   }
 

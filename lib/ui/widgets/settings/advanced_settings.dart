@@ -134,10 +134,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                   title: lang.enableBlurEffect,
                   subtitle: lang.performanceNote,
                   onChanged: (p0) {
-                    settings.save(
-                      enableBlurEffect: !p0,
-                      performanceMode: PerformanceMode.custom,
-                    );
+                    settings.transaction(() {
+                      settings.enableBlurEffect.save(!p0);
+                      settings.performanceMode.save(PerformanceMode.custom);
+                    });
                   },
                   value: enableBlurEffect,
                 ),
@@ -149,10 +149,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                   title: lang.enableGlowEffect,
                   subtitle: lang.performanceNote,
                   onChanged: (p0) {
-                    settings.save(
-                      enableGlowEffect: !p0,
-                      performanceMode: PerformanceMode.custom,
-                    );
+                    settings.transaction(() {
+                      settings.enableGlowEffect.save(!p0);
+                      settings.performanceMode.save(PerformanceMode.custom);
+                    });
                   },
                   value: enableGlowEffect,
                 ),
@@ -163,10 +163,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                   icon: Broken.maximize,
                   title: lang.enableParallaxEffect,
                   subtitle: lang.performanceNote,
-                  onChanged: (isTrue) => settings.save(
-                    enableMiniplayerParallaxEffect: !isTrue,
-                    performanceMode: PerformanceMode.custom,
-                  ),
+                  onChanged: (isTrue) => settings.transaction(() {
+                    settings.enableMiniplayerParallaxEffect.save(!isTrue);
+                    settings.performanceMode.save(PerformanceMode.custom);
+                  }),
                   value: enableMiniplayerParallaxEffect,
                 ),
               ),
@@ -183,10 +183,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                     initValue: (artworkCacheHeightMultiplier * artworkPartsMultiplier).round(),
                     text: '${artworkCacheHeightMultiplier}x',
                     onValueChanged: (val) {
-                      settings.save(
-                        artworkCacheHeightMultiplier: (val / artworkPartsMultiplier).roundDecimals(2),
-                        performanceMode: PerformanceMode.custom,
-                      );
+                      settings.transaction(() {
+                        settings.artworkCacheHeightMultiplier.save((val / artworkPartsMultiplier).roundDecimals(2));
+                        settings.performanceMode.save(PerformanceMode.custom);
+                      });
                     },
                   ),
                 ),
@@ -538,7 +538,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             icon: Broken.cloud,
             title: lang.maxServerCacheSize,
             rx: settings.serversMaxCacheInMB,
-            onSave: (val) => settings.save(serversMaxCacheInMB: val),
+            onSave: (val) => settings.serversMaxCacheInMB.save(val),
           ),
           _getCacheSliderWidget(
             stepper: 8 * 4,
@@ -547,7 +547,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             icon: Broken.gallery,
             title: lang.maxImageCacheSize,
             rx: settings.imagesMaxCacheInMB,
-            onSave: (val) => settings.save(imagesMaxCacheInMB: val),
+            onSave: (val) => settings.imagesMaxCacheInMB.save(val),
           ),
           _getCacheSliderWidget(
             stepper: 8 * 4,
@@ -556,7 +556,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             icon: Broken.audio_square,
             title: lang.maxAudioCacheSize,
             rx: settings.audiosMaxCacheInMB,
-            onSave: (val) => settings.save(audiosMaxCacheInMB: val),
+            onSave: (val) => settings.audiosMaxCacheInMB.save(val),
           ),
           _getCacheSliderWidget(
             stepper: 8 * 32,
@@ -565,7 +565,7 @@ class AdvancedSettings extends SettingSubpageProvider {
             icon: Broken.video,
             title: lang.maxVideoCacheSize,
             rx: settings.videosMaxCacheInMB,
-            onSave: (val) => settings.save(videosMaxCacheInMB: val),
+            onSave: (val) => settings.videosMaxCacheInMB.save(val),
           ),
 
           getItemWrapper(

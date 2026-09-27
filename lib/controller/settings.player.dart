@@ -1,257 +1,76 @@
 part of 'settings_controller.dart';
 
-class _PlayerSettings with SettingsFileWriter {
+class _PlayerSettings extends _SettingsKeysWriter {
   _PlayerSettings._internal();
 
-  final enableVolumeFadeOnPlayPause = true.obs;
-  final playFadeDurInMilli = 300.obs;
-  final pauseFadeDurInMilli = 300.obs;
+  late final enableVolumeFadeOnPlayPause = _key('enableVolumeFadeOnPlayPause', true);
+  late final playFadeDurInMilli = _key('playFadeDurInMilli', 300);
+  late final pauseFadeDurInMilli = _key('pauseFadeDurInMilli', 300);
 
-  final volume = 1.0.obs;
-  final speed = 1.0.obs;
-  final pitch = 1.0.obs;
-  final longPressSpeed = 1.5.obs;
-  final linkSpeedPitch = false.obs;
-  final useSemitones = false.obs;
-  final isPerTrackAudioConfigOverriden = false.obs;
+  late final volume = _key('volume', 1.0, sync: false);
+  late final speed = _key('speed', 1.0);
+  late final pitch = _key('pitch', 1.0);
+  late final longPressSpeed = _key('longPressSpeed', 1.5);
+  late final linkSpeedPitch = _key('linkSpeedPitch', false);
+  late final useSemitones = _key('useSemitones', false);
+  late final isPerTrackAudioConfigOverriden = _key('isPerTrackAudioConfigOverriden', false);
+  late final speeds = _keyList<double>('speeds', const [0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0]);
 
-  var speeds = <double>[0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0];
+  late final seekDurationInSeconds = _key('seekDurationInSeconds', 5);
+  late final seekDurationInPercentage = _key('seekDurationInPercentage', 2);
+  late final isSeekDurationPercentage = _key('isSeekDurationPercentage', false);
+  late final minTrackDurationToRestoreLastPosInMinutes = _key('minTrackDurationToRestoreLastPosInMinutes', 20);
+  late final interruptionResumeThresholdMin = _key('interruptionResumeThresholdMin', 2);
+  late final volume0ResumeThresholdMin = _key('volume0ResumeThresholdMin', 5);
+  late final connectWiredResumeThresholdMin = _key('connectWiredResumeThresholdMin', -1);
+  late final connectWirelessResumeThresholdMin = _key('connectWirelessResumeThresholdMin', -1);
+  late final enableGaplessPlayback = _key('enableGaplessPlayback', false);
+  late final enableCrossFade = _key('enableCrossFade', isKuru ? true : false);
+  late final crossFadeDurationMS = _key('crossFadeDurationMS', isKuru ? 1500 : 500);
+  late final crossFadeAutoTriggerSeconds = _key('crossFadeAutoTriggerSeconds', isKuru ? 0 : 5);
+  late final playOnNextPrev = _key('playOnNextPrev', isKuru ? false : true);
+  late final skipSilenceEnabled = _key('skipSilenceEnabled', false);
+  late final pauseOnVolume0 = _key('pauseOnVolume0', true);
+  late final jumpToFirstTrackAfterFinishingQueue = _key('jumpToFirstTrackAfterFinishingQueue', false);
+  late final repeatMode = _keyEnum('repeatMode', PlayerRepeatMode.none, PlayerRepeatMode.values, sync: false);
+  late final shuffleQueue = _key('shuffleQueue', false, sync: false);
+  late final infiniyQueueOnNextPrevious = _key('infiniyQueueOnNextPrevious', true);
+  late final displayRemainingDurInsteadOfTotal = _key('displayRemainingDurInsteadOfTotal', false);
+  late final displayActualPositionWhenSeeking = _key('displayActualPositionWhenSeeking', false);
+  late final killAfterDismissingApp = _keyEnum('killAfterDismissingApp', isKuru ? KillAppMode.never : KillAppMode.ifNotPlaying, KillAppMode.values);
+  late final lockscreenArtwork = _key('lockscreenArtwork', true);
+  late final replayGainType = _keyEnum('replayGainType', isKuru ? ReplayGainType.volume : ReplayGainType.platform_default, ReplayGainType.values, sync: false);
+  late final internalPlayer = _keyEnum('internalPlayer', InternalPlayerType.auto, InternalPlayerType.getAvailableForCurrentPlatform(), sync: false);
 
-  final seekDurationInSeconds = 5.obs;
-  final seekDurationInPercentage = 2.obs;
-  final isSeekDurationPercentage = false.obs;
-  final minTrackDurationToRestoreLastPosInMinutes = 20.obs;
-  final interruptionResumeThresholdMin = 2.obs;
-  final volume0ResumeThresholdMin = 5.obs;
-  final connectWiredResumeThresholdMin = (-1).obs;
-  final connectWirelessResumeThresholdMin = (-1).obs;
-  final enableGaplessPlayback = false.obs;
-  final enableCrossFade = false.obs;
-  final crossFadeDurationMS = 500.obs;
-  final crossFadeAutoTriggerSeconds = 5.obs;
-  final playOnNextPrev = true.obs;
-  final skipSilenceEnabled = false.obs;
-  final pauseOnVolume0 = true.obs;
-  final jumpToFirstTrackAfterFinishingQueue = false.obs;
-  final repeatMode = PlayerRepeatMode.none.obs;
-  final shuffleQueue = false.obs;
-  final infiniyQueueOnNextPrevious = true.obs;
-  final displayRemainingDurInsteadOfTotal = false.obs;
-  final displayActualPositionWhenSeeking = false.obs;
-  final killAfterDismissingApp = KillAppMode.ifNotPlaying.obs;
-  final lockscreenArtwork = true.obs;
-  final replayGainType = ReplayGainType.platform_default.obs;
-  final internalPlayer = InternalPlayerType.auto.obs;
-
-  final onInterrupted = <InterruptionType, InterruptionAction>{
-    InterruptionType.shouldPause: InterruptionAction.pause,
-    InterruptionType.shouldDuck: InterruptionAction.duckAudio,
-    InterruptionType.unknown: InterruptionAction.pause,
-  }.obs;
-
-  void save({
-    bool? enableVolumeFadeOnPlayPause,
-    bool? infiniyQueueOnNextPrevious,
-    bool? displayRemainingDurInsteadOfTotal,
-    bool? displayActualPositionWhenSeeking,
-    double? volume,
-    double? speed,
-    double? pitch,
-    double? longPressSpeed,
-    bool? linkSpeedPitch,
-    bool? useSemitones,
-    bool? isPerTrackAudioConfigOverriden,
-    List<double>? speeds,
-    int? seekDurationInSeconds,
-    int? seekDurationInPercentage,
-    bool? isSeekDurationPercentage,
-    int? playFadeDurInMilli,
-    int? pauseFadeDurInMilli,
-    int? minTrackDurationToRestoreLastPosInMinutes,
-    int? interruptionResumeThresholdMin,
-    int? volume0ResumeThresholdMin,
-    int? connectWiredResumeThresholdMin,
-    int? connectWirelessResumeThresholdMin,
-    bool? enableGaplessPlayback,
-    bool? enableCrossFade,
-    int? crossFadeDurationMS,
-    int? crossFadeAutoTriggerSeconds,
-    bool? playOnNextPrev,
-    bool? skipSilenceEnabled,
-    bool? pauseOnVolume0,
-    bool? jumpToFirstTrackAfterFinishingQueue,
-    PlayerRepeatMode? repeatMode,
-    bool? shuffleQueue,
-    KillAppMode? killAfterDismissingApp,
-    bool? lockscreenArtwork,
-    ReplayGainType? replayGainType,
-    InternalPlayerType? internalPlayer,
-  }) {
-    if (enableVolumeFadeOnPlayPause != null) this.enableVolumeFadeOnPlayPause.value = enableVolumeFadeOnPlayPause;
-    if (infiniyQueueOnNextPrevious != null) this.infiniyQueueOnNextPrevious.value = infiniyQueueOnNextPrevious;
-    if (displayRemainingDurInsteadOfTotal != null) this.displayRemainingDurInsteadOfTotal.value = displayRemainingDurInsteadOfTotal;
-    if (displayActualPositionWhenSeeking != null) this.displayActualPositionWhenSeeking.value = displayActualPositionWhenSeeking;
-    if (volume != null) this.volume.value = volume;
-    if (speed != null) this.speed.value = speed;
-    if (pitch != null) this.pitch.value = pitch;
-    if (longPressSpeed != null) this.longPressSpeed.value = longPressSpeed;
-    if (linkSpeedPitch != null) this.linkSpeedPitch.value = linkSpeedPitch;
-    if (useSemitones != null) this.useSemitones.value = useSemitones;
-    if (isPerTrackAudioConfigOverriden != null) this.isPerTrackAudioConfigOverriden.value = isPerTrackAudioConfigOverriden;
-    if (speeds != null) this.speeds = speeds;
-    if (seekDurationInSeconds != null) this.seekDurationInSeconds.value = seekDurationInSeconds;
-    if (seekDurationInPercentage != null) this.seekDurationInPercentage.value = seekDurationInPercentage;
-    if (isSeekDurationPercentage != null) this.isSeekDurationPercentage.value = isSeekDurationPercentage;
-    if (playFadeDurInMilli != null) this.playFadeDurInMilli.value = playFadeDurInMilli;
-    if (pauseFadeDurInMilli != null) this.pauseFadeDurInMilli.value = pauseFadeDurInMilli;
-    if (minTrackDurationToRestoreLastPosInMinutes != null) this.minTrackDurationToRestoreLastPosInMinutes.value = minTrackDurationToRestoreLastPosInMinutes;
-    if (interruptionResumeThresholdMin != null) this.interruptionResumeThresholdMin.value = interruptionResumeThresholdMin;
-    if (volume0ResumeThresholdMin != null) this.volume0ResumeThresholdMin.value = volume0ResumeThresholdMin;
-    if (connectWiredResumeThresholdMin != null) this.connectWiredResumeThresholdMin.value = connectWiredResumeThresholdMin;
-    if (connectWirelessResumeThresholdMin != null) this.connectWirelessResumeThresholdMin.value = connectWirelessResumeThresholdMin;
-    if (enableGaplessPlayback != null) this.enableGaplessPlayback.value = enableGaplessPlayback;
-    if (enableCrossFade != null) this.enableCrossFade.value = enableCrossFade;
-    if (crossFadeDurationMS != null) this.crossFadeDurationMS.value = crossFadeDurationMS;
-    if (crossFadeAutoTriggerSeconds != null) this.crossFadeAutoTriggerSeconds.value = crossFadeAutoTriggerSeconds;
-    if (playOnNextPrev != null) this.playOnNextPrev.value = playOnNextPrev;
-    if (skipSilenceEnabled != null) this.skipSilenceEnabled.value = skipSilenceEnabled;
-    if (pauseOnVolume0 != null) this.pauseOnVolume0.value = pauseOnVolume0;
-    if (jumpToFirstTrackAfterFinishingQueue != null) this.jumpToFirstTrackAfterFinishingQueue.value = jumpToFirstTrackAfterFinishingQueue;
-    if (repeatMode != null) this.repeatMode.value = repeatMode;
-    if (shuffleQueue != null) this.shuffleQueue.value = shuffleQueue;
-    if (killAfterDismissingApp != null) this.killAfterDismissingApp.value = killAfterDismissingApp;
-    if (lockscreenArtwork != null) this.lockscreenArtwork.value = lockscreenArtwork;
-    if (replayGainType != null) this.replayGainType.value = replayGainType;
-    if (internalPlayer != null) this.internalPlayer.value = internalPlayer;
-    _writeToStorage();
-  }
-
-  void updatePlayerInterruption(InterruptionType type, InterruptionAction action) {
-    onInterrupted[type] = action;
-    _writeToStorage();
-  }
+  late final onInterrupted = _keyMap<InterruptionType, InterruptionAction>(
+    'onInterrupted',
+    const {
+      InterruptionType.shouldPause: InterruptionAction.pause,
+      InterruptionType.shouldDuck: InterruptionAction.duckAudio,
+      InterruptionType.unknown: InterruptionAction.pause,
+    },
+    key: InterruptionType.values.asCodec(),
+    value: InterruptionAction.values.asCodec(),
+  );
 
   @override
-  void applyKuruSettings() {
-    enableCrossFade.value = true;
-    crossFadeDurationMS.value = 1500;
-    crossFadeAutoTriggerSeconds.value = 0;
-    playOnNextPrev.value = false;
-    jumpToFirstTrackAfterFinishingQueue.value = false;
-    killAfterDismissingApp.value = KillAppMode.never;
-    replayGainType.value = ReplayGainType.volume;
-  }
-
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json is! Map) return;
-
-    try {
-      enableVolumeFadeOnPlayPause.value = json['enableVolumeFadeOnPlayPause'] ?? enableVolumeFadeOnPlayPause.value;
-      volume.value = json['volume'] ?? volume.value;
-      speed.value = json['speed'] ?? speed.value;
-      pitch.value = json['pitch'] ?? pitch.value;
-      longPressSpeed.value = json['longPressSpeed'] ?? longPressSpeed.value;
-      linkSpeedPitch.value = json['linkSpeedPitch'] ?? linkSpeedPitch.value;
-      useSemitones.value = json['useSemitones'] ?? useSemitones.value;
-      isPerTrackAudioConfigOverriden.value = json['isPerTrackAudioConfigOverriden'] ?? isPerTrackAudioConfigOverriden.value;
-      speeds = (json['speeds'] as List?)?.cast<double>() ?? speeds;
-      seekDurationInSeconds.value = json['seekDurationInSeconds'] ?? seekDurationInSeconds.value;
-      seekDurationInPercentage.value = json['seekDurationInPercentage'] ?? seekDurationInPercentage.value;
-      isSeekDurationPercentage.value = json['isSeekDurationPercentage'] ?? isSeekDurationPercentage.value;
-      playFadeDurInMilli.value = json['playFadeDurInMilli'] ?? playFadeDurInMilli.value;
-      pauseFadeDurInMilli.value = json['pauseFadeDurInMilli'] as int? ?? pauseFadeDurInMilli.value;
-      minTrackDurationToRestoreLastPosInMinutes.value = json['minTrackDurationToRestoreLastPosInMinutes'] ?? minTrackDurationToRestoreLastPosInMinutes.value;
-      interruptionResumeThresholdMin.value = json['interruptionResumeThresholdMin'] ?? interruptionResumeThresholdMin.value;
-      volume0ResumeThresholdMin.value = json['volume0ResumeThresholdMin'] ?? volume0ResumeThresholdMin.value;
-      connectWiredResumeThresholdMin.value = json['connectWiredResumeThresholdMin'] ?? connectWiredResumeThresholdMin.value;
-      connectWirelessResumeThresholdMin.value = json['connectWirelessResumeThresholdMin'] ?? connectWirelessResumeThresholdMin.value;
-      enableGaplessPlayback.value = json['enableGaplessPlayback'] ?? enableGaplessPlayback.value;
-      enableCrossFade.value = json['enableCrossFade'] ?? enableCrossFade.value;
-      crossFadeDurationMS.value = json['crossFadeDurationMS'] ?? crossFadeDurationMS.value;
-      crossFadeAutoTriggerSeconds.value = json['crossFadeAutoTriggerSeconds'] ?? crossFadeAutoTriggerSeconds.value;
-      playOnNextPrev.value = json['playOnNextPrev'] ?? playOnNextPrev.value;
-      skipSilenceEnabled.value = json['skipSilenceEnabled'] ?? skipSilenceEnabled.value;
-      pauseOnVolume0.value = json['pauseOnVolume0'] ?? pauseOnVolume0.value;
-      jumpToFirstTrackAfterFinishingQueue.value = json['jumpToFirstTrackAfterFinishingQueue'] ?? jumpToFirstTrackAfterFinishingQueue.value;
-      repeatMode.value = PlayerRepeatMode.values.getEnum(json['repeatMode']) ?? repeatMode.value;
-      shuffleQueue.value = json['shuffleQueue'] ?? shuffleQueue.value;
-      // -- backwards compatibility
-      if (json['repeatMode'] == 'shuffle') {
-        repeatMode.value = PlayerRepeatMode.all;
-        shuffleQueue.value = true;
-      }
-      infiniyQueueOnNextPrevious.value = json['infiniyQueueOnNextPrevious'] ?? infiniyQueueOnNextPrevious.value;
-      displayRemainingDurInsteadOfTotal.value = json['displayRemainingDurInsteadOfTotal'] ?? displayRemainingDurInsteadOfTotal.value;
-      displayActualPositionWhenSeeking.value = json['displayActualPositionWhenSeeking'] ?? displayActualPositionWhenSeeking.value;
-      killAfterDismissingApp.value = KillAppMode.values.getEnum(json['killAfterDismissingApp']) ?? killAfterDismissingApp.value;
-      lockscreenArtwork.value = json['lockscreenArtwork'] ?? lockscreenArtwork.value;
-      replayGainType.value = ReplayGainType.values.getEnum(json['replayGainType']) ?? replayGainType.value;
-      // -- backwards compatibility
-      if (json['replayGain'] is bool) {
-        replayGainType.value = json['replayGain'] == true ? ReplayGainType.getPlatformDefault() : ReplayGainType.off;
-      }
-      internalPlayer.value = InternalPlayerType.getAvailableForCurrentPlatform().getEnum(json['internalPlayer']) ?? internalPlayer.value;
-      onInterrupted
-        ..value.addAll(
-          getEnumMap_(
-                json['onInterrupted'],
-                InterruptionType.values,
-                InterruptionType.unknown,
-                InterruptionAction.values,
-                InterruptionAction.doNothing,
-              ) ??
-              onInterrupted.map((key, value) => MapEntry(key, value)),
-        )
-        ..refresh();
-    } catch (e, st) {
-      printy(e, isError: true);
-      logger.report(e, st);
+  void _migrateLegacy() {
+    if (_raw['repeatMode'] == 'shuffle') {
+      _raw['repeatMode'] = PlayerRepeatMode.all.name;
+      _raw['shuffleQueue'] = true;
     }
+    _migrateKey('replayGain', 'replayGainType', (json) {
+      if (json is! bool) return null;
+      final type = json ? ReplayGainType.getPlatformDefault() : ReplayGainType.off;
+      return type.name;
+    });
+    _dropKey('resumeAfterOnVolume0Pause');
+    _dropKey('resumeAfterWasInterrupted');
+    _dropKey('shuffleAllTracks');
   }
 
   @override
-  Object get jsonToWrite => <String, dynamic>{
-    'enableVolumeFadeOnPlayPause': enableVolumeFadeOnPlayPause.value,
-    'volume': volume.value,
-    'speed': speed.value,
-    'pitch': pitch.value,
-    'longPressSpeed': longPressSpeed.value,
-    'linkSpeedPitch': linkSpeedPitch.value,
-    'useSemitones': useSemitones.value,
-    'isPerTrackAudioConfigOverriden': isPerTrackAudioConfigOverriden.value,
-    'speeds': speeds,
-    'seekDurationInSeconds': seekDurationInSeconds.value,
-    'seekDurationInPercentage': seekDurationInPercentage.value,
-    'isSeekDurationPercentage': isSeekDurationPercentage.value,
-    'playFadeDurInMilli': playFadeDurInMilli.value,
-    'pauseFadeDurInMilli': pauseFadeDurInMilli.value,
-    'minTrackDurationToRestoreLastPosInMinutes': minTrackDurationToRestoreLastPosInMinutes.value,
-    'interruptionResumeThresholdMin': interruptionResumeThresholdMin.value,
-    'volume0ResumeThresholdMin': volume0ResumeThresholdMin.value,
-    'connectWiredResumeThresholdMin': connectWiredResumeThresholdMin.value,
-    'connectWirelessResumeThresholdMin': connectWirelessResumeThresholdMin.value,
-    'enableGaplessPlayback': enableGaplessPlayback.value,
-    'enableCrossFade': enableCrossFade.value,
-    'crossFadeDurationMS': crossFadeDurationMS.value,
-    'crossFadeAutoTriggerSeconds': crossFadeAutoTriggerSeconds.value,
-    'playOnNextPrev': playOnNextPrev.value,
-    'skipSilenceEnabled': skipSilenceEnabled.value,
-    'pauseOnVolume0': pauseOnVolume0.value,
-    'jumpToFirstTrackAfterFinishingQueue': jumpToFirstTrackAfterFinishingQueue.value,
-    'repeatMode': repeatMode.value.name,
-    'shuffleQueue': shuffleQueue.value,
-    'killAfterDismissingApp': killAfterDismissingApp.value.name,
-    'lockscreenArtwork': lockscreenArtwork.value,
-    'replayGainType': replayGainType.value.name,
-    'internalPlayer': internalPlayer.value.name,
-    'infiniyQueueOnNextPrevious': infiniyQueueOnNextPrevious.value,
-    'displayRemainingDurInsteadOfTotal': displayRemainingDurInsteadOfTotal.value,
-    'displayActualPositionWhenSeeking': displayActualPositionWhenSeeking.value,
-    'onInterrupted': onInterrupted.map((key, value) => MapEntry(key.name, value.name)),
-  };
-
-  Future<void> _writeToStorage() async => await writeToStorage();
+  bool get syncable => true;
 
   @override
   String get filePath => AppPaths.SETTINGS_PLAYER;

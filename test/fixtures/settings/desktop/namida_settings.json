@@ -1,0 +1,418 @@
+{
+  "language": {
+    "code": "en",
+    "name": "English",
+    "country": "United States"
+  },
+  "themeMode": "system",
+  "pitchBlack": false,
+  "autoColor": true,
+  "animatedTheme": true,
+  "staticColor_v2": 4290289021,
+  "staticColorDark_v2": 4282594859,
+  "libraryTabs": [
+    "home",
+    "tracks",
+    "artists",
+    "playlists",
+    "folders",
+    "youtube"
+  ],
+  "homePageItems": [
+    "mixes",
+    "lostMemories",
+    "recentListens",
+    "topRecentListens",
+    "recentQueues",
+    "recentlyAdded",
+    "recentAlbums",
+    "recentArtists"
+  ],
+  "activeArtistType": "composer",
+  "activeGenreType": "genre",
+  "activeSearchMediaTypes": [
+    "track",
+    "folder",
+    "artist",
+    "album"
+  ],
+  "albumIdentifiers": [
+    "albumName",
+    "albumArtist"
+  ],
+  "borderRadiusMultiplier": 0.9,
+  "fontScaleFactor": 0.85,
+  "artworkCacheHeightMultiplier": 1.0,
+  "trackThumbnailSizeinList": 90.0,
+  "trackListTileHeight": 60.0,
+  "albumThumbnailSizeinList": 90.0,
+  "albumListTileHeight": 90.0,
+  "useMediaStore_v2": false,
+  "includeVideos": true,
+  "cacheArtworks": true,
+  "displayTrackNumberinAlbumPage": true,
+  "albumCardTopRightDate": true,
+  "forceSquaredTrackThumbnail": false,
+  "forceSquaredAlbumThumbnail": false,
+  "useAlbumStaggeredGridView": false,
+  "useSettingCollapsedTiles": true,
+  "mediaGridCounts": {
+    "albums": -1,
+    "artists": null,
+    "genres": -1,
+    "playlists": 1
+  },
+  "activeAlbumTypes": {
+    "single": true,
+    "normal": true
+  },
+  "activeTrSearch": {
+    "tr": true,
+    "v": true
+  },
+  "enableBlurEffect": false,
+  "enableGlowEffect": false,
+  "enableGlowBehindVideo": false,
+  "hourFormat12": true,
+  "dateTimeFormat": "[dd.MM.yyyy] EEE",
+  "trackArtistsSeparators": [
+    "&",
+    ",",
+    ";",
+    "//",
+    " ft. ",
+    " x "
+  ],
+  "trackGenresSeparators": [
+    "&",
+    ",",
+    ";",
+    "//",
+    " x "
+  ],
+  "trackArtistsSeparatorsBlacklist": [
+    "T & Sugah",
+    "Miles & Miles"
+  ],
+  "trackGenresSeparatorsBlacklist": [],
+  "extensionsBlacklist": null,
+  "fileBrowserSort": "name",
+  "fileBrowserSortReversed": false,
+  "tracksSortSearch": "mostPlayed",
+  "tracksSortSearchReversed": false,
+  "tracksSortSearchIsAuto_v2": true,
+  "albumSort": "numberOfTracks",
+  "albumSortReversed": false,
+  "artistSort": "numberOfTracks",
+  "artistSortReversed": false,
+  "genreSort": "genresList",
+  "genreSortReversed": false,
+  "playlistSort": "custom",
+  "playlistSortReversed": false,
+  "ytPlaylistSort": "dateModified",
+  "ytPlaylistSortReversed": true,
+  "indexMinDurationInSec": 5,
+  "indexMinFileSizeInB": 102400,
+  "trackSearchFilter": [
+    "filename",
+    "title",
+    "artist",
+    "album",
+    "comment",
+    "year"
+  ],
+  "ignoreCommonPrefixForTypes": [],
+  "commonPrefixes": [
+    "the ",
+    "a ",
+    "an "
+  ],
+  "playlistSearchFilter": [
+    "name",
+    "creationDate",
+    "modifiedDate",
+    "moods",
+    "comment"
+  ],
+  "directoriesToScan": [
+    {
+      "source": "C:\\Music"
+    },
+    {
+      "source": "C:\\Namida"
+    },
+    {
+      "source": "C:\\Videos"
+    },
+    {
+      "source": "http://localhost:8080/",
+      "type": "webdav",
+      "u": "user"
+    }
+  ],
+  "directoriesToExclude": [],
+  "preventDuplicatedTracks": false,
+  "respectNoMedia": false,
+  "defaultBackupLocation_v2": null,
+  "autoBackupIntervalDays": 1,
+  "defaultFolderStartupLocation": "C:\\",
+  "defaultFolderStartupLocationVideos": "C:\\",
+  "enableFoldersHierarchy": true,
+  "enableFoldersHierarchyTracks": true,
+  "enableFoldersHierarchyVideos": true,
+  "displayArtistBeforeTitle": true,
+  "heatmapListensView": false,
+  "reverseListensView": true,
+  "backupItemslist_v2": null,
+  "enableVideoPlayback": false,
+  "enableLyrics": false,
+  "enableSimpleLyricsLine": true,
+  "enableSubtitles": false,
+  "subtitlesLanguages": [
+    "en",
+    "eng",
+    "ara"
+  ],
+  "lyricsSource": "auto",
+  "videoPlaybackSource": "auto",
+  "youtubeVideoQualities": [
+    "480p",
+    "360p",
+    "240p",
+    "144p"
+  ],
+  "animatingThumbnailScaleMultiplier": 1.0,
+  "animatingThumbnailIntensity": 25,
+  "animatingThumbnailIntensityLyrics": 10,
+  "animatingThumbnailIntensityMinimized": 10,
+  "animatingThumbnailInversed": false,
+  "enablePartyModeInMiniplayer": false,
+  "enablePartyModeColorSwap": true,
+  "enableMiniplayerParticles": true,
+  "enableMiniplayerParallaxEffect": true,
+  "forceMiniplayerTrackColor": false,
+  "isTrackPlayedSecondsCount": 25,
+  "isTrackPlayedPercentageCount": 25,
+  "waveformTotalBars": 111,
+  "videosMaxCacheInMB": -1,
+  "audiosMaxCacheInMB": -1,
+  "serversMaxCacheInMB": 12288,
+  "imagesMaxCacheInMB": 2048,
+  "hideStatusBarInExpandedMiniplayer": false,
+  "displayFavouriteButtonInNotification": false,
+  "displayStopButtonInNotification": true,
+  "enableSearchCleanup": true,
+  "enableBottomNavBar": true,
+  "displayAudioInfoMiniplayer": false,
+  "showUnknownFieldsInTrackInfoDialog_v2": false,
+  "extractFeatArtistFromTitle": true,
+  "groupArtworksByAlbum": false,
+  "uniqueArtworkHash": false,
+  "enableM3USync": false,
+  "enableM3USyncStartup": true,
+  "importServerPlaylists": true,
+  "prioritizeEmbeddedLyrics": false,
+  "romanizeLyrics": true,
+  "romanizeSorting": false,
+  "swipeableDrawer": true,
+  "dismissibleMiniplayer": true,
+  "enableClipboardMonitoring": false,
+  "artworkGestureDoubleTapLRC": true,
+  "previousButtonReplays": false,
+  "refreshOnStartup": false,
+  "alwaysExpandedSearchbar": true,
+  "mixedQueue": false,
+  "bypassRefreshPrompt": false,
+  "desktopTitlebar": true,
+  "desktopTitlebarType": "auto",
+  "tagFieldsToEdit": [
+    "trackNumber",
+    "year",
+    "title",
+    "artist",
+    "album",
+    "genre",
+    "comment",
+    "description",
+    "lyrics",
+    "composer"
+  ],
+  "stretchLyricsDuration": true,
+  "visualDelayMS": 0,
+  "timeCapsuleYears": null,
+  "playlistAddTracksAtBeginning": false,
+  "playlistAddTracksAtBeginningYT": false,
+  "wakelockMode": "expandedAndVideo",
+  "localVideoMatchingType": "auto",
+  "localVideoMatchingCheckSameDir": false,
+  "trackPlayMode": "selectedTrack",
+  "onNotificationTapAction": "openApp",
+  "performanceMode": "custom",
+  "floatingActionButton": "search",
+  "vibrationType": "vibration",
+  "mostPlayedTimeRange": "custom",
+  "mostPlayedCustomDateRange": {
+    "oldest": 1773957600000000,
+    "newest": 1805493600000000
+  },
+  "mostPlayedCustomisStartOfDay": true,
+  "ytMostPlayedTimeRange": "month3",
+  "ytMostPlayedCustomDateRange": {
+    "oldest": 1782856800000000,
+    "newest": 1789834197571849
+  },
+  "ytMostPlayedCustomisStartOfDay": true,
+  "onTrackSwipeLeft": "playafter",
+  "onTrackSwipeRight": "openinfo",
+  "artworkTapAction": "none",
+  "artworkLongPressAction": "focus",
+  "displayThirdRow": true,
+  "displayThirdItemInEachRow": false,
+  "trackTileSeparator": "•",
+  "displayFavouriteIconInListTile": true,
+  "gradientTiles": true,
+  "editTagsKeepFileDates": true,
+  "downloadFilesWriteUploadDate": false,
+  "downloadFilesKeepCachedVersions": false,
+  "downloadAddAudioToLocalLibrary": true,
+  "downloadAddToLocalPlaylist": true,
+  "downloadAudioOnly": false,
+  "downloadOverrideOldFiles": false,
+  "enablePip": true,
+  "pickColorsFromDeviceWallpaper": false,
+  "trackItem": {
+    "row1Item1": "title",
+    "row1Item2": "none",
+    "row1Item3": "none",
+    "row2Item1": "artists",
+    "row2Item2": "none",
+    "row2Item3": "none",
+    "row3Item1": "album",
+    "row3Item2": "firstListenDate",
+    "row3Item3": "none",
+    "rightItem1": "duration",
+    "rightItem2": "none"
+  },
+  "queueInsertion": {
+    "moreAlbum": {
+      "numberOfTracks": 10,
+      "insertNext": false,
+      "sortBy": "random"
+    },
+    "moreArtist": {
+      "numberOfTracks": 10,
+      "insertNext": false,
+      "sortBy": "random"
+    },
+    "moreFolder": {
+      "numberOfTracks": 10,
+      "insertNext": false,
+      "sortBy": "random"
+    },
+    "random": {
+      "numberOfTracks": 10,
+      "insertNext": false,
+      "sortBy": "none"
+    },
+    "listenTimeRange": {
+      "numberOfTracks": 0,
+      "insertNext": true,
+      "sortBy": "none"
+    },
+    "mood": {
+      "numberOfTracks": 20,
+      "insertNext": true,
+      "sortBy": "listenCount"
+    },
+    "rating": {
+      "numberOfTracks": 20,
+      "insertNext": false,
+      "sortBy": "rating"
+    },
+    "sameReleaseDate": {
+      "numberOfTracks": 30,
+      "insertNext": true,
+      "sortBy": "listenCount"
+    },
+    "algorithm": {
+      "numberOfTracks": 20,
+      "insertNext": true,
+      "sortBy": "none"
+    },
+    "algorithmDiscoverDate": {
+      "numberOfTracks": 20,
+      "insertNext": true,
+      "sortBy": "listenCount"
+    },
+    "algorithmTimeRange": {
+      "numberOfTracks": 20,
+      "insertNext": true,
+      "sortBy": "none"
+    },
+    "mix": {
+      "numberOfTracks": 0,
+      "insertNext": true,
+      "sortBy": "none"
+    }
+  },
+  "mediaItemsTrackSorting": {
+    "track": [
+      "title"
+    ],
+    "album": [
+      "discNo",
+      "trackNo",
+      "year",
+      "title"
+    ],
+    "artist": [
+      "year",
+      "title"
+    ],
+    "albumArtist": [
+      "year",
+      "title"
+    ],
+    "composer": [
+      "year",
+      "title"
+    ],
+    "genre": [
+      "year",
+      "title"
+    ],
+    "style": [
+      "year",
+      "title"
+    ],
+    "folder": [
+      "filename"
+    ],
+    "folderMusic": [
+      "filename"
+    ],
+    "folderVideo": [
+      "filename"
+    ]
+  },
+  "mediaItemsTrackSortingReverse": {
+    "track": false,
+    "album": false,
+    "artist": false,
+    "genre": false,
+    "style": false,
+    "folder": false,
+    "folderMusic": false,
+    "folderVideo": false
+  },
+  "imageSourceAlbum": [
+    "local"
+  ],
+  "imageSourceArtist": [
+    "lastfm",
+    "local"
+  ],
+  "fontScaleLRC": 1.0,
+  "fontScaleLRCFull": 1.0,
+  "canAskForBatteryOptimizations": true
+}

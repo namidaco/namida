@@ -33,6 +33,7 @@ enum MessageType {
 
   playerQueue(isDataTransfer: true, carriesSenderPaths: true, isManifestResponse: false, isManifestRequest: false),
   playback(isDataTransfer: true, carriesSenderPaths: false, isManifestResponse: false, isManifestRequest: false),
+  settings(isDataTransfer: true, carriesSenderPaths: false, isManifestResponse: false, isManifestRequest: false),
   ;
 
   /// wether this message carries actual data (not pings/connection/manifest/etc).

@@ -160,10 +160,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.enableBlurEffect,
                 subtitle: lang.performanceNote,
                 onChanged: (p0) {
-                  settings.save(
-                    enableBlurEffect: !p0,
-                    performanceMode: PerformanceMode.custom,
-                  );
+                  settings.transaction(() {
+                    settings.enableBlurEffect.save(!p0);
+                    settings.performanceMode.save(PerformanceMode.custom);
+                  });
                 },
                 value: enableBlurEffect,
               ),
@@ -179,10 +179,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.enableGlowEffect,
                 subtitle: lang.performanceNote,
                 onChanged: (p0) {
-                  settings.save(
-                    enableGlowEffect: !p0,
-                    performanceMode: PerformanceMode.custom,
-                  );
+                  settings.transaction(() {
+                    settings.enableGlowEffect.save(!p0);
+                    settings.performanceMode.save(PerformanceMode.custom);
+                  });
                 },
                 value: enableGlowEffect,
               ),
@@ -197,10 +197,10 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.maximize,
                 title: lang.enableParallaxEffect,
                 subtitle: lang.performanceNote,
-                onChanged: (isTrue) => settings.save(
-                  enableMiniplayerParallaxEffect: !isTrue,
-                  performanceMode: PerformanceMode.custom,
-                ),
+                onChanged: (isTrue) => settings.transaction(() {
+                  settings.enableMiniplayerParallaxEffect.save(!isTrue);
+                  settings.performanceMode.save(PerformanceMode.custom);
+                }),
                 value: enableMiniplayerParallaxEffect,
               ),
             ),
@@ -249,7 +249,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.clock,
                 title: lang.hourFormat12,
                 onChanged: (p0) {
-                  settings.save(hourFormat12: !p0);
+                  settings.hourFormat12.save(!p0);
                   TrackTileManager.onTrackItemPropChange();
                 },
                 value: settings.hourFormat12.valueR,
@@ -287,7 +287,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                     subtitle: e.key,
                                     icon: settings.dateTimeFormat.value == e.key ? Broken.arrow_circle_right : Broken.arrow_right_3,
                                     onTap: () {
-                                      settings.save(dateTimeFormat: e.key);
+                                      settings.dateTimeFormat.save(e.key);
                                       TrackTileManager.onTrackItemPropChange();
                                       NamidaNavigator.inst.closeDialog();
                                     },
@@ -311,7 +311,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayRemainingDur),
                 icon: Broken.timer,
                 title: lang.displayRemainingDurationInsteadOfTotal,
-                onChanged: (isTrue) => settings.player.save(displayRemainingDurInsteadOfTotal: !isTrue),
+                onChanged: (isTrue) => settings.player.displayRemainingDurInsteadOfTotal.save(!isTrue),
                 value: settings.player.displayRemainingDurInsteadOfTotal.valueR,
               ),
             ),
@@ -323,7 +323,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayActualPosition),
                 icon: Broken.settings,
                 title: lang.displayActualPositionInsteadOfDifferenceWhileSeeking,
-                onChanged: (isTrue) => settings.player.save(displayActualPositionWhenSeeking: !isTrue),
+                onChanged: (isTrue) => settings.player.displayActualPositionWhenSeeking.save(!isTrue),
                 value: settings.player.displayActualPositionWhenSeeking.valueR,
               ),
             ),
@@ -461,7 +461,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.displayTrackNumberInAlbumPage,
                 subtitle: lang.displayTrackNumberInAlbumPageSubtitle,
                 value: settings.displayTrackNumberinAlbumPage.valueR,
-                onChanged: (p0) => settings.save(displayTrackNumberinAlbumPage: !p0),
+                onChanged: (p0) => settings.displayTrackNumberinAlbumPage.save(!p0),
               ),
             ),
           ),
@@ -475,7 +475,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.notification_status,
                 title: lang.displayAlbumCardTopRightDate,
                 subtitle: lang.displayAlbumCardTopRightDateSubtitle,
-                onChanged: (p0) => settings.save(albumCardTopRightDate: !p0),
+                onChanged: (p0) => settings.albumCardTopRightDate.save(!p0),
                 value: settings.albumCardTopRightDate.valueR,
               ),
             ),
@@ -491,7 +491,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.forceSquaredAlbumThumbnail,
                 value: settings.forceSquaredAlbumThumbnail.valueR,
                 onChanged: (p0) {
-                  settings.save(forceSquaredAlbumThumbnail: !p0);
+                  settings.forceSquaredAlbumThumbnail.save(!p0);
                   if (!p0 && settings.albumThumbnailSizeinList.value.toInt() != settings.albumListTileHeight.value.toInt()) {
                     NamidaNavigator.inst.navigateDialog(
                       dialog: CustomBlurryDialog(
@@ -503,7 +503,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           NamidaButton(
                             text: lang.confirm,
                             onTap: () {
-                              settings.save(albumThumbnailSizeinList: settings.albumListTileHeight.value);
+                              settings.albumThumbnailSizeinList.save(settings.albumListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
                             },
                           ),
@@ -525,7 +525,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.element_4,
                 title: lang.staggeredAlbumGridView,
                 value: settings.useAlbumStaggeredGridView.valueR,
-                onChanged: (p0) => settings.save(useAlbumStaggeredGridView: !p0),
+                onChanged: (p0) => settings.useAlbumStaggeredGridView.save(!p0),
               ),
             ),
           ),
@@ -599,7 +599,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.forceSquaredTrackThumbnail,
                 value: settings.forceSquaredTrackThumbnail.valueR,
                 onChanged: (value) {
-                  settings.save(forceSquaredTrackThumbnail: !value);
+                  settings.forceSquaredTrackThumbnail.save(!value);
                   Player.inst.refreshRxVariables();
                   _onSettingsChanged();
                   if (!value && settings.trackThumbnailSizeinList.value.toInt() != settings.trackListTileHeight.value.toInt()) {
@@ -613,7 +613,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           NamidaButton(
                             text: lang.confirm,
                             onTap: () {
-                              settings.save(trackThumbnailSizeinList: settings.trackListTileHeight.value);
+                              settings.trackThumbnailSizeinList.save(settings.trackListTileHeight.value);
                               NamidaNavigator.inst.closeDialog();
                             },
                           ),
@@ -680,7 +680,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   title: lang.leftAction,
                   icon: Broken.arrow_left_1,
                   rx: settings.onTrackSwipeLeft,
-                  onSave: (newItem) => settings.save(onTrackSwipeLeft: newItem),
+                  onSave: (newItem) => settings.onTrackSwipeLeft.save(newItem),
                 ),
                 _getSwipeActionTileWidget(
                   context: context,
@@ -690,7 +690,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   title: lang.rightAction,
                   icon: Broken.arrow_right,
                   rx: settings.onTrackSwipeRight,
-                  onSave: (newItem) => settings.save(onTrackSwipeRight: newItem),
+                  onSave: (newItem) => settings.onTrackSwipeRight.save(newItem),
                 ),
               ],
             ),
@@ -704,7 +704,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 rotateIcon: 1,
                 title: lang.displayThirdRowInTrackTile,
                 onChanged: (isTrue) {
-                  settings.save(displayThirdRow: !isTrue);
+                  settings.displayThirdRow.save(!isTrue);
                   _onSettingsChanged();
                 },
                 value: settings.displayThirdRow.valueR,
@@ -720,7 +720,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 rotateIcon: 3,
                 title: lang.displayThirdItemInRowInTrackTile,
                 onChanged: (isTrue) {
-                  settings.save(displayThirdItemInEachRow: !isTrue);
+                  settings.displayThirdItemInEachRow.save(!isTrue);
                   _onSettingsChanged();
                 },
                 value: settings.displayThirdItemInEachRow.valueR,
@@ -735,7 +735,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.heart,
                 title: lang.displayFavouriteIconInTrackTile,
                 onChanged: (isTrue) {
-                  settings.save(displayFavouriteIconInListTile: !isTrue);
+                  settings.displayFavouriteIconInListTile.save(!isTrue);
                   _onSettingsChanged();
                 },
                 value: settings.displayFavouriteIconInListTile.valueR,
@@ -807,7 +807,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                     .map(
                                       (e) => TrackItemSmallBox(
                                         position: e,
-                                        text: settings.trackItem[e]?.label,
+                                        text: settings.trackItem.valueR[e]?.label,
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
@@ -828,7 +828,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                     .map(
                                       (e) => TrackItemSmallBox(
                                         position: e,
-                                        text: settings.trackItem[e]?.label,
+                                        text: settings.trackItem.valueR[e]?.label,
                                       ),
                                     )
                                     .addSeparators(separator: const SizedBox(width: 6.0))
@@ -850,7 +850,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                                       .map(
                                         (e) => TrackItemSmallBox(
                                           position: e,
-                                          text: settings.trackItem[e]?.label,
+                                          text: settings.trackItem.valueR[e]?.label,
                                         ),
                                       )
                                       .addSeparators(separator: const SizedBox(width: 6.0))
@@ -874,7 +874,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           .map(
                             (e) => TrackItemSmallBox(
                               position: e,
-                              text: settings.trackItem[e]?.label,
+                              text: settings.trackItem.valueR[e]?.label,
                             ),
                           )
                           .addSeparators(separator: const SizedBox(height: 3.0)),
@@ -926,8 +926,8 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.enablePartyMode,
                 subtitle: lang.enablePartyModeSubtitle,
                 onChanged: (value) {
-                  if (value) return settings.save(enablePartyModeInMiniplayer: false);
-                  SussyBaka.monetize(onEnable: () => settings.save(enablePartyModeInMiniplayer: true));
+                  if (value) return settings.enablePartyModeInMiniplayer.save(false);
+                  SussyBaka.monetize(onEnable: () => settings.enablePartyModeInMiniplayer.save(true));
                 },
                 value: settings.enablePartyModeInMiniplayer.valueR,
               ),
@@ -942,7 +942,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.colors_square,
                 title: lang.edgeColorsSwitching,
                 onChanged: (value) {
-                  settings.save(enablePartyModeColorSwap: !value);
+                  settings.enablePartyModeColorSwap.save(!value);
                   CurrentColor.inst.switchColorPalettes(swapEnabled: !value);
                 },
                 value: settings.enablePartyModeColorSwap.valueR,
@@ -956,7 +956,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.movingParticles),
                 icon: Broken.buy_crypto,
                 title: lang.enableMiniplayerParticles,
-                onChanged: (value) => settings.save(enableMiniplayerParticles: !value),
+                onChanged: (value) => settings.enableMiniplayerParticles.save(!value),
                 value: settings.enableMiniplayerParticles.valueR,
               ),
             ),
@@ -983,7 +983,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensity.valueR,
-                        onValueChanged: (val) => settings.save(animatingThumbnailIntensity: val),
+                        onValueChanged: (val) => settings.animatingThumbnailIntensity.save(val),
                         text: "${(settings.animatingThumbnailIntensity.valueR * 4).toStringAsFixed(0)}%",
                       ),
                     ),
@@ -1004,7 +1004,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensityLyrics.valueR,
-                        onValueChanged: (val) => settings.save(animatingThumbnailIntensityLyrics: val),
+                        onValueChanged: (val) => settings.animatingThumbnailIntensityLyrics.save(val),
                         text: "${(settings.animatingThumbnailIntensityLyrics.valueR * 4).toStringAsFixed(0)}%",
                       ),
                     ),
@@ -1025,7 +1025,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       trailing: NamidaWheelSlider(
                         max: 25,
                         initValue: settings.animatingThumbnailIntensityMinimized.valueR,
-                        onValueChanged: (val) => settings.save(animatingThumbnailIntensityMinimized: val),
+                        onValueChanged: (val) => settings.animatingThumbnailIntensityMinimized.save(val),
                         text: "${(settings.animatingThumbnailIntensityMinimized.valueR * 4).toStringAsFixed(0)}%",
                       ),
                     ),
@@ -1043,7 +1043,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 title: lang.animatingThumbnailInversed,
                 subtitle: lang.animatingThumbnailInversedSubtitle,
                 onChanged: (value) {
-                  settings.save(animatingThumbnailInversed: !value);
+                  settings.animatingThumbnailInversed.save(!value);
                 },
                 value: settings.animatingThumbnailInversed.valueR,
               ),
@@ -1067,12 +1067,12 @@ class CustomizationSettings extends SettingSubpageProvider {
                     icon: Broken.refresh,
                     iconSize: 20.0,
                     onPressed: () {
-                      settings.save(
-                        artworkGestureDoubleTapLRC: true,
-                        animatingThumbnailScaleMultiplier: 1.0,
-                        artworkTapAction: TrackExecuteActions.none,
-                        artworkLongPressAction: TrackExecuteActions.none,
-                      );
+                      settings.transaction(() {
+                        settings.artworkGestureDoubleTapLRC.reset();
+                        settings.animatingThumbnailScaleMultiplier.reset();
+                        settings.artworkTapAction.reset();
+                        settings.artworkLongPressAction.reset();
+                      });
                     },
                   ),
                   const SizedBox(width: 4.0),
@@ -1096,7 +1096,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                           min: 50,
                           max: 150,
                           initValue: valueHundred,
-                          onValueChanged: (val) => settings.save(animatingThumbnailScaleMultiplier: val / 100),
+                          onValueChanged: (val) => settings.animatingThumbnailScaleMultiplier.save(val / 100),
                           text: "$valueHundred%",
                         ),
                       );
@@ -1117,7 +1117,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                       title: lang.doubleTapToToggleLyrics,
                       value: settings.artworkGestureDoubleTapLRC.valueR,
                       onChanged: (value) {
-                        settings.save(artworkGestureDoubleTapLRC: !value);
+                        settings.artworkGestureDoubleTapLRC.save(!value);
                       },
                     ),
                   ),
@@ -1129,7 +1129,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   title: lang.tapAction,
                   icon: Broken.cd,
                   rx: settings.artworkTapAction,
-                  onSave: (newItem) => settings.save(artworkTapAction: newItem),
+                  onSave: (newItem) => settings.artworkTapAction.save(newItem),
                 ),
                 _getSwipeActionTileWidget(
                   context: context,
@@ -1138,7 +1138,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   title: lang.longPressAction,
                   icon: Broken.story,
                   rx: settings.artworkLongPressAction,
-                  onSave: (newItem) => settings.save(artworkLongPressAction: newItem),
+                  onSave: (newItem) => settings.artworkLongPressAction.save(newItem),
                 ),
                 const SizedBox(height: 6.0),
               ],
@@ -1157,7 +1157,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                   max: 400,
                   initValue: settings.waveformTotalBars.valueR,
                   onValueChanged: (val) {
-                    settings.save(waveformTotalBars: val);
+                    settings.waveformTotalBars.save(val);
                     WaveformController.inst.calculateUIWaveform();
                   },
                   text: settings.waveformTotalBars.valueR.toString(),
@@ -1172,7 +1172,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_CustomizationSettingsKeys.displayAudioInfo),
                 icon: Broken.text_block,
                 title: lang.displayAudioInfoInMiniplayer,
-                onChanged: (value) => settings.save(displayAudioInfoMiniplayer: !value),
+                onChanged: (value) => settings.displayAudioInfoMiniplayer.save(!value),
                 value: settings.displayAudioInfoMiniplayer.valueR,
               ),
             ),
@@ -1185,7 +1185,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 icon: Broken.align_left,
                 title: lang.displayArtistBeforeTitle,
                 onChanged: (value) {
-                  settings.save(displayArtistBeforeTitle: !value);
+                  settings.displayArtistBeforeTitle.save(!value);
                   Player.inst.refreshRxVariables();
                 },
                 value: settings.displayArtistBeforeTitle.valueR,
@@ -1221,7 +1221,7 @@ class TrackItemSmallBox extends StatelessWidget {
           trailingIcon: e.toIcon(),
           active: trackItemMap[position] == e,
           onTap: () {
-            settings.updateTrackItemList(position, e);
+            settings.trackItem.update((items) => items[position] = e);
             TrackTileManager.onTrackItemPropChange();
             NamidaNavigator.inst.popMenu();
           },

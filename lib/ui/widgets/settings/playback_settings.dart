@@ -118,7 +118,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                 void onTap() async {
                   NamidaNavigator.inst.popMenu();
 
-                  settings.player.save(replayGainType: e);
+                  settings.player.replayGainType.save(e);
 
                   // -- safer to disable all first
                   Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(0);
@@ -195,7 +195,7 @@ class PlaybackSettings extends SettingSubpageProvider {
   //           onTap: () {
   //             void tileOnTap(InternalPlayerType val) async {
   //               if (val == settings.player.internalPlayer.value) return;
-  //               settings.player.save(internalPlayer: val);
+  //               settings.player.internalPlayer.save(val);
   //             }
 
   //             NamidaNavigator.inst.navigateDialog(
@@ -250,7 +250,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             secondaryIcon: Broken.record,
           ),
           title: lang.playAfterNextPrev,
-          onChanged: (value) => settings.player.save(playOnNextPrev: !value),
+          onChanged: (value) => settings.player.playOnNextPrev.save(!value),
           value: settings.player.playOnNextPrev.valueR,
         ),
       ),
@@ -266,7 +266,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           icon: Broken.repeat,
           title: lang.infinityQueueOnNextPrev,
           subtitle: lang.infinityQueueOnNextPrevSubtitle,
-          onChanged: (value) => settings.player.save(infiniyQueueOnNextPrevious: !value),
+          onChanged: (value) => settings.player.infiniyQueueOnNextPrevious.save(!value),
           value: settings.player.infiniyQueueOnNextPrevious.valueR,
         ),
       ),
@@ -281,7 +281,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
           icon: Broken.rotate_left,
           title: lang.jumpToFirstTrackAfterQueueFinish,
-          onChanged: (value) => settings.player.save(jumpToFirstTrackAfterFinishingQueue: !value),
+          onChanged: (value) => settings.player.jumpToFirstTrackAfterFinishingQueue.save(!value),
           value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
         ),
       ),
@@ -301,7 +301,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
           title: lang.previousButtonReplays,
           subtitle: lang.previousButtonReplaysSubtitle,
-          onChanged: (value) => settings.save(previousButtonReplays: !value),
+          onChanged: (value) => settings.previousButtonReplays.save(!value),
           value: settings.previousButtonReplays.valueR,
         ),
       ),
@@ -334,7 +334,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.scroll,
             trailingText: settings.videoPlaybackSource.valueR.toText(),
             onTap: () {
-              void tileOnTap(VideoPlaybackSource val) => settings.save(videoPlaybackSource: val);
+              void tileOnTap(VideoPlaybackSource val) => settings.videoPlaybackSource.save(val);
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
                   title: lang.videoPlaybackSource,
@@ -383,17 +383,16 @@ class PlaybackSettings extends SettingSubpageProvider {
             onTap: () {
               void tileOnTap(String val, int index) {
                 if (settings.youtubeVideoQualities.value.contains(val)) {
-                  if (settings.youtubeVideoQualities.length == 1) {
+                  if (settings.youtubeVideoQualities.value.length == 1) {
                     showMinimumItemsSnack(1);
                   } else {
-                    settings.removeFromList(youtubeVideoQualities1: val);
+                    settings.youtubeVideoQualities.update((list) => list.remove(val));
                   }
                 } else {
-                  settings.save(youtubeVideoQualities: [val]);
+                  settings.youtubeVideoQualities.update((list) => list.addNoDuplicates(val));
                 }
                 // sorts and saves dec
-                settings.youtubeVideoQualities.sortByReverse((e) => kStockVideoQualities.indexOf(e));
-                settings.save(youtubeVideoQualities: settings.youtubeVideoQualities.value);
+                settings.youtubeVideoQualities.update((list) => list.sortByReverse((e) => kStockVideoQualities.indexOf(e)));
               }
 
               NamidaNavigator.inst.navigateDialog(
@@ -479,7 +478,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                                   title: e.toText(),
                                   selected: e == settings.localVideoMatchingType.value,
                                   onTap: () {
-                                    settings.save(localVideoMatchingType: e);
+                                    settings.localVideoMatchingType.save(e);
                                     NamidaNavigator.inst.popMenu();
                                   },
                                 ),
@@ -494,7 +493,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                           icon: Broken.folder,
                           title: lang.sameDirectoryOnly,
                           value: settings.localVideoMatchingCheckSameDir.valueR,
-                          onChanged: (isTrue) => settings.save(localVideoMatchingCheckSameDir: !isTrue),
+                          onChanged: (isTrue) => settings.localVideoMatchingCheckSameDir.save(!isTrue),
                         ),
                       ),
                     ],
@@ -521,7 +520,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     title: e.toText(),
                     selected: e == settings.wakelockMode.value,
                     onTap: () {
-                      settings.save(wakelockMode: e);
+                      settings.wakelockMode.save(e);
                       WakelockController.inst.onSettingChanged();
                       NamidaNavigator.inst.popMenu();
                     },
@@ -542,7 +541,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.heart_tick,
             value: settings.displayFavouriteButtonInNotification.valueR,
             onChanged: (val) {
-              settings.save(displayFavouriteButtonInNotification: !val);
+              settings.displayFavouriteButtonInNotification.save(!val);
               Player.inst.refreshNotification();
               if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
                 snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
@@ -560,7 +559,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.close_circle,
             value: settings.displayStopButtonInNotification.valueR,
             onChanged: (val) {
-              settings.save(displayStopButtonInNotification: !val);
+              settings.displayStopButtonInNotification.save(!val);
               Player.inst.refreshNotification();
             },
           ),
@@ -578,7 +577,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             ),
             value: settings.player.lockscreenArtwork.valueR,
             onChanged: (val) {
-              settings.player.save(lockscreenArtwork: !val);
+              settings.player.lockscreenArtwork.save(!val);
               AudioService.setLockScreenArtwork(!val).then((_) => Player.inst.refreshNotification());
             },
           ),
@@ -599,7 +598,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     title: e.toText(),
                     selected: e == settings.player.killAfterDismissingApp.value,
                     onTap: () {
-                      settings.player.save(killAfterDismissingApp: e);
+                      settings.player.killAfterDismissingApp.save(e);
                       NamidaNavigator.inst.popMenu();
                     },
                   ),
@@ -627,7 +626,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     title: e.toText(),
                     selected: e == settings.onNotificationTapAction.value,
                     onTap: () {
-                      settings.save(onNotificationTapAction: e);
+                      settings.onNotificationTapAction.save(e);
                       NamidaNavigator.inst.popMenu();
                     },
                   ),
@@ -647,7 +646,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             bgColor: getBgColor(_PlaybackSettingsKeys.dismissibleMiniplayer),
             icon: Broken.sidebar_bottom,
             title: lang.dismissibleMiniplayer,
-            onChanged: (value) => settings.save(dismissibleMiniplayer: !value),
+            onChanged: (value) => settings.dismissibleMiniplayer.save(!value),
             value: settings.dismissibleMiniplayer.valueR,
           ),
         ),
@@ -663,7 +662,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             title: lang.skipSilence,
             onChanged: (value) async {
               final willBeTrue = !value;
-              settings.player.save(skipSilenceEnabled: willBeTrue);
+              settings.player.skipSilenceEnabled.save(willBeTrue);
               await Player.inst.setSkipSilenceEnabled(willBeTrue);
             },
             value: skipSilenceEnabled,
@@ -678,7 +677,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.blend_2,
             title: "${lang.gaplessPlayback} (${lang.beta})",
             onChanged: (value) {
-              settings.player.save(enableGaplessPlayback: !value);
+              settings.player.enableGaplessPlayback.save(!value);
               Player.inst.resetGaplessPlaybackData();
             },
             value: settings.player.enableGaplessPlayback.valueR,
@@ -704,9 +703,9 @@ class PlaybackSettings extends SettingSubpageProvider {
           titleText: lang.enableCrossfadeEffect,
           onExpansionChanged: (wasCollapsed) {
             if (wasCollapsed) {
-              SussyBaka.monetize(onEnable: () => settings.player.save(enableCrossFade: true));
+              SussyBaka.monetize(onEnable: () => settings.player.enableCrossFade.save(true));
             } else {
-              settings.player.save(enableCrossFade: false);
+              settings.player.enableCrossFade.save(false);
             }
           },
           trailingBuilder: (_) => Obx((context) {
@@ -726,7 +725,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     max: 10000,
                     stepper: 100,
                     initValue: crossFadeDurationMS,
-                    onValueChanged: (val) => settings.player.save(crossFadeDurationMS: val),
+                    onValueChanged: (val) => settings.player.crossFadeDurationMS.save(val),
                     text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
                   ),
                 );
@@ -747,7 +746,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                       trailing: NamidaWheelSlider(
                         max: 30,
                         initValue: crossFadeAutoTriggerSeconds,
-                        onValueChanged: (val) => settings.player.save(crossFadeAutoTriggerSeconds: val),
+                        onValueChanged: (val) => settings.player.crossFadeAutoTriggerSeconds.save(val),
                         text: "${crossFadeAutoTriggerSeconds}s",
                       ),
                     ),
@@ -775,7 +774,7 @@ class PlaybackSettings extends SettingSubpageProvider {
           iconColor: context.defaultIconColor(),
           titleText: lang.enableFadeEffectOnPlayPause,
           onExpansionChanged: (value) {
-            settings.player.save(enableVolumeFadeOnPlayPause: value);
+            settings.player.enableVolumeFadeOnPlayPause.save(value);
             Player.inst.setVolume(Player.inst.userPlayerVolumeForItem);
           },
           trailingBuilder: (_) => Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
@@ -790,7 +789,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   max: 2000,
                   stepper: 50,
                   initValue: settings.player.playFadeDurInMilli.valueR,
-                  onValueChanged: (val) => settings.player.save(playFadeDurInMilli: val),
+                  onValueChanged: (val) => settings.player.playFadeDurInMilli.save(val),
                   text: "${settings.player.playFadeDurInMilli.valueR}ms",
                 ),
               ),
@@ -805,7 +804,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   max: 2000,
                   stepper: 50,
                   initValue: settings.player.pauseFadeDurInMilli.valueR,
-                  onValueChanged: (val) => settings.player.save(pauseFadeDurInMilli: val),
+                  onValueChanged: (val) => settings.player.pauseFadeDurInMilli.save(val),
                   text: "${settings.player.pauseFadeDurInMilli.valueR}ms",
                 ),
               ),
@@ -830,7 +829,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               (context) => CustomSwitchListTile(
                 icon: Broken.pause_circle,
                 title: lang.pausePlayback,
-                onChanged: (value) => settings.player.save(pauseOnVolume0: !value),
+                onChanged: (value) => settings.player.pauseOnVolume0.save(!value),
                 value: settings.player.pauseOnVolume0.valueR,
               ),
             ),
@@ -849,7 +848,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                     extraValue: true,
                     initValue: valInSet,
                     onValueChanged: (val) {
-                      settings.player.save(volume0ResumeThresholdMin: val);
+                      settings.player.volume0ResumeThresholdMin.save(val);
                     },
                     text: valInSet == 0
                         ? lang.always
@@ -875,7 +874,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               initValue: (longPressSpeed * 100).round(),
               max: 2 * 100,
               onValueChanged: (val) {
-                settings.player.save(longPressSpeed: val / 100);
+                settings.player.longPressSpeed.save(val / 100);
               },
               text: "${longPressSpeed}x",
             ),
@@ -905,12 +904,12 @@ class PlaybackSettings extends SettingSubpageProvider {
                         icon: action.toIcon(),
                         title: action.toText(),
                         selected: action == settings.player.onInterrupted.value[type],
-                        onTap: () => settings.player.updatePlayerInterruption(type, action),
+                        onTap: () => settings.player.onInterrupted.update((actions) => actions[type] = action),
                       ),
                     ),
                     child: Obx(
                       (context) {
-                        final actionInSetting = settings.player.onInterrupted[type] ?? InterruptionAction.pause;
+                        final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
                         return Text(
                           actionInSetting.toText(),
                           style: context.textTheme.displayMedium,
@@ -937,7 +936,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   extraValue: true,
                   initValue: valInSet,
                   onValueChanged: (val) {
-                    settings.player.save(interruptionResumeThresholdMin: val);
+                    settings.player.interruptionResumeThresholdMin.save(val);
                   },
                   text: valInSet == 0
                       ? lang.always
@@ -981,7 +980,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   extraValue: true,
                   initValue: valInSet,
                   onValueChanged: (val) {
-                    settings.player.save(connectWiredResumeThresholdMin: val);
+                    settings.player.connectWiredResumeThresholdMin.save(val);
                   },
                   text: valInSet == 0
                       ? lang.always
@@ -1010,7 +1009,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   extraValue: true,
                   initValue: valInSet,
                   onValueChanged: (val) {
-                    settings.player.save(connectWirelessResumeThresholdMin: val);
+                    settings.player.connectWirelessResumeThresholdMin.save(val);
                   },
                   text: valInSet == 0
                       ? lang.always
@@ -1033,18 +1032,18 @@ class PlaybackSettings extends SettingSubpageProvider {
             icon: Broken.forward_5_seconds,
             title: "${lang.seekDuration} (${settings.player.isSeekDurationPercentage.valueR ? lang.percentage : lang.seconds})",
             subtitle: lang.seekDurationInfo,
-            onTap: () => settings.player.save(isSeekDurationPercentage: !settings.player.isSeekDurationPercentage.value),
+            onTap: () => settings.player.isSeekDurationPercentage.save(!settings.player.isSeekDurationPercentage.value),
             trailing: settings.player.isSeekDurationPercentage.valueR
                 ? NamidaWheelSlider(
                     max: 50,
                     initValue: settings.player.seekDurationInPercentage.valueR,
-                    onValueChanged: (val) => settings.player.save(seekDurationInPercentage: val),
+                    onValueChanged: (val) => settings.player.seekDurationInPercentage.save(val),
                     text: "${settings.player.seekDurationInPercentage.valueR}%",
                   )
                 : NamidaWheelSlider(
                     max: 120,
                     initValue: settings.player.seekDurationInSeconds.valueR,
-                    onValueChanged: (val) => settings.player.save(seekDurationInSeconds: val),
+                    onValueChanged: (val) => settings.player.seekDurationInSeconds.save(val),
                     text: "${settings.player.seekDurationInSeconds.valueR}s",
                   ),
           ),
@@ -1062,7 +1061,7 @@ class PlaybackSettings extends SettingSubpageProvider {
               trailing: NamidaWheelSlider(
                 max: 120,
                 initValue: valInSet,
-                onValueChanged: (val) => settings.player.save(minTrackDurationToRestoreLastPosInMinutes: val),
+                onValueChanged: (val) => settings.player.minTrackDurationToRestoreLastPosInMinutes.save(val),
                 extraValue: true,
                 text: valInSet == 0
                     ? lang.alwaysRestore
@@ -1104,7 +1103,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                             min: 20,
                             max: 180,
                             initValue: settings.isTrackPlayedSecondsCount.valueR,
-                            onValueChanged: (val) => settings.save(isTrackPlayedSecondsCount: val),
+                            onValueChanged: (val) => settings.isTrackPlayedSecondsCount.save(val),
                             text: "${settings.isTrackPlayedSecondsCount.valueR}s",
                             topText: lang.seconds.capitalizeFirst(),
                             textPadding: 8.0,
@@ -1117,7 +1116,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                             min: 20,
                             max: 100,
                             initValue: settings.isTrackPlayedPercentageCount.valueR,
-                            onValueChanged: (val) => settings.save(isTrackPlayedPercentageCount: val),
+                            onValueChanged: (val) => settings.isTrackPlayedPercentageCount.save(val),
                             text: "${settings.isTrackPlayedPercentageCount.valueR}%",
                             topText: lang.percentage,
                             textPadding: 8.0,

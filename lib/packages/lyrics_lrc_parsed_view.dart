@@ -356,7 +356,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   late final bool _largeText = widget.isFullScreenView || widget.largeText;
   late double _previousFontMultiplier = _fontMultiplier;
-  late double _fontMultiplier = _largeText ? settings.fontScaleLRCFull : settings.fontScaleLRC;
+  late double _fontMultiplier = _getInitialFontMultiplier();
+
+  double _getInitialFontMultiplier() {
+    final normalMultiplier = settings.fontScaleLRC.value;
+    if (!_largeText) return normalMultiplier;
+    return settings.fontScaleLRCFull.value ?? normalMultiplier;
+  }
 
   void _setFontMultiplier(double value) {
     value = value.clampDouble(0.5, 2.0);
@@ -365,7 +371,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   }
 
   void _saveFontMultiplier() {
-    _largeText ? settings.save(fontScaleLRCFull: _fontMultiplier) : settings.save(fontScaleLRC: _fontMultiplier);
+    _largeText ? settings.fontScaleLRCFull.save(_fontMultiplier) : settings.fontScaleLRC.save(_fontMultiplier);
   }
 
   @override

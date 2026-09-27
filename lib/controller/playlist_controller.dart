@@ -908,7 +908,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
               enabled: didRead,
               text: lang.confirm,
               onTap: () {
-                settings.save(enableM3USync: true);
+                settings.enableM3USync.save(true);
                 NamidaNavigator.inst.closeDialog();
               },
             ),

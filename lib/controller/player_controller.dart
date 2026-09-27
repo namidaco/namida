@@ -357,7 +357,7 @@ class Player {
     final val = settings.player.volume.value;
     final newVal = (val + 0.05).withMaximum(1.0);
     setVolume(newVal);
-    settings.player.save(volume: newVal);
+    settings.player.volume.save(newVal);
     return newVal;
   }
 
@@ -365,7 +365,7 @@ class Player {
     final val = settings.player.volume.value;
     final newVal = (val - 0.05).withMinimum(0.0);
     setVolume(newVal);
-    settings.player.save(volume: newVal);
+    settings.player.volume.save(newVal);
     return newVal;
   }
 

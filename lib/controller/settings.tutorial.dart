@@ -1,38 +1,14 @@
 part of 'settings_controller.dart';
 
-class _TutorialSettings with SettingsFileWriter {
+class _TutorialSettings extends _SettingsKeysWriter {
   _TutorialSettings._internal();
 
-  bool lyricsLongPressFullScreen = true;
-
-  void save({
-    bool? lyricsLongPressFullScreen,
-  }) {
-    if (lyricsLongPressFullScreen != null) this.lyricsLongPressFullScreen = lyricsLongPressFullScreen;
-    _writeToStorage();
-  }
+  late final lyricsFullscreenTipSeen = _key('llpfsSeen', false);
 
   @override
-  void applyKuruSettings() {}
-
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json is! Map) return;
-
-    try {
-      lyricsLongPressFullScreen = json['llpfs'] ?? lyricsLongPressFullScreen;
-    } catch (e, st) {
-      printy(e, isError: true);
-      logger.report(e, st);
-    }
+  void _migrateLegacy() {
+    _migrateKey('llpfs', 'llpfsSeen', (json) => json == false ? true : null);
   }
-
-  @override
-  Object get jsonToWrite => <String, dynamic>{
-    'llpfs': lyricsLongPressFullScreen,
-  };
-
-  Future<void> _writeToStorage() async => await writeToStorage();
 
   @override
   String get filePath => AppPaths.SETTINGS_TUTORIAL;

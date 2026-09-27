@@ -38,7 +38,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               value: _currentConfig.valueR.enabled,
               onChanged: (isTrue) {
                 final newConfigs = _currentConfigValue.copyWith(enabled: !isTrue);
-                settings.youtube.save(sponsorBlockSettings: newConfigs);
+                settings.youtube.sponsorBlockSettings.save(newConfigs);
 
                 if (newConfigs.enabled) {
                   final currentItem = Player.inst.currentItem.value;
@@ -57,9 +57,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               title: lang.removeSponsorSegmentsFromDownloads,
               subtitle: lang.removeSponsorSegmentsFromDownloadsSubtitle,
               value: _currentConfig.valueR.removeSegmentsFromDownloads,
-              onChanged: (isTrue) => settings.youtube.save(
-                sponsorBlockSettings: _currentConfigValue.copyWith(removeSegmentsFromDownloads: !isTrue),
-              ),
+              onChanged: (isTrue) => settings.youtube.sponsorBlockSettings.save(_currentConfigValue.copyWith(removeSegmentsFromDownloads: !isTrue)),
             ),
           ),
           CustomListTile(
@@ -77,11 +75,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
                   max: 15000,
                   stepper: 100,
                   initValue: hideMS,
-                  onValueChanged: (val) => settings.youtube.save(
-                    sponsorBlockSettings: _currentConfigValue.copyWith(
-                      hideSkipButtonAfterMS: val,
-                    ),
-                  ),
+                  onValueChanged: (val) => settings.youtube.sponsorBlockSettings.save(_currentConfigValue.copyWith(hideSkipButtonAfterMS: val)),
                   text: hideMS >= 1000 ? "${hideMS / 1000}s" : "${hideMS}ms",
                 );
               },
@@ -98,11 +92,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
                   max: 60000,
                   stepper: 100,
                   initValue: minDur,
-                  onValueChanged: (val) => settings.youtube.save(
-                    sponsorBlockSettings: _currentConfigValue.copyWith(
-                      minimumSegmentDurationMS: val,
-                    ),
-                  ),
+                  onValueChanged: (val) => settings.youtube.sponsorBlockSettings.save(_currentConfigValue.copyWith(minimumSegmentDurationMS: val)),
                   text: minDur >= 1000 ? "${minDur / 1000}s" : "${minDur}ms",
                 );
               },
@@ -122,7 +112,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
                     final configMap = _currentConfigValue.configs;
                     configMap[category] = newConfigs;
                     final newSponsorBlockSettings = _currentConfigValue.copyWith(configs: configMap);
-                    settings.youtube.save(sponsorBlockSettings: newSponsorBlockSettings);
+                    settings.youtube.sponsorBlockSettings.save(newSponsorBlockSettings);
                   },
                 );
               },
@@ -139,7 +129,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               value: _currentConfig.valueR.trackSkipCount,
               onChanged: (isTrue) {
                 final newConfigs = _currentConfigValue.copyWith(trackSkipCount: !isTrue);
-                settings.youtube.save(sponsorBlockSettings: newConfigs);
+                settings.youtube.sponsorBlockSettings.save(newConfigs);
               },
             ),
           ),
@@ -160,7 +150,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
                         text: lang.save,
                         onTap: () {
                           final newConfigs = _currentConfigValue.copyWith(serverAddress: controller.text);
-                          settings.youtube.save(sponsorBlockSettings: newConfigs);
+                          settings.youtube.sponsorBlockSettings.save(newConfigs);
                           NamidaNavigator.inst.closeDialog();
                         },
                       ),

@@ -409,7 +409,7 @@ final class _NetworkArtworkInfoAlbum extends NetworkArtworkInfo {
   _NetworkArtworkInfoAlbum(String name, this.artist, {super.fileIdentifier}) : super._(name, Broken.music_library_2);
 
   @override
-  RxList<LibraryImageSource> get settingsKey => settings.imageSourceAlbum;
+  RxBaseCore<List<LibraryImageSource>> get settingsKey => settings.imageSourceAlbum;
 
   @override
   String get _paletteKeyPrefix => 'album_';
@@ -442,7 +442,7 @@ final class _NetworkArtworkInfoArtist extends NetworkArtworkInfo {
   _NetworkArtworkInfoArtist(String name) : super._(name, Broken.user);
 
   @override
-  RxList<LibraryImageSource> get settingsKey => settings.imageSourceArtist;
+  RxBaseCore<List<LibraryImageSource>> get settingsKey => settings.imageSourceArtist;
 
   @override
   String get _paletteKeyPrefix => 'artist_';
@@ -490,7 +490,7 @@ sealed class NetworkArtworkInfo {
 
   String? toLastfmUrl();
 
-  RxList<LibraryImageSource> get settingsKey;
+  RxBaseCore<List<LibraryImageSource>> get settingsKey;
 
   String get _paletteKeyPrefix;
 

@@ -67,7 +67,7 @@ class _YoutubePlaylistCardState extends State<YoutubePlaylistCard> {
       return YoutubeInfoController.playlist.getMixPlaylist(
         videoId: videoId,
         includeFirstVideo: true,
-        userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+        userPersonalized: settings.youtube.personalizedMixPlaylists.value,
         details: executeDetails,
       );
     } else {

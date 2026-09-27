@@ -85,7 +85,7 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
         cacheReader: YoutiPie.cacheBuilder.forNotificationItems(),
         networkFetcher: (details) => YoutiPie.feed.fetchNotifications(
           details: details,
-          useNewExtractor: settings.youtube.useNewNotificationExtractor.valueF,
+          useNewExtractor: settings.youtube.useNewNotificationExtractor.value,
         ),
         itemExtent: thumbnailItemExtent,
         dummyCard: const YoutubeVideoCardNotificationDummy(

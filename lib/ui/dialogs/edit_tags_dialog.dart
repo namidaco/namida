@@ -426,8 +426,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             toIcon: (item) => item.toIcon(),
                             minimumItems: 3,
                             onSave: (activeItems) {
-                              settings.tagFieldsToEdit.value = activeItems;
-                              settings.save(tagFieldsToEdit: null);
+                              settings.tagFieldsToEdit.replace(activeItems);
                             },
                           ),
                         ),
@@ -1587,7 +1586,7 @@ class _KeepDatesToggleWidget extends StatelessWidget {
         tooltip: () => lang.keepFileDates,
         icon: editTagsKeepFileDates ? Broken.document_code_2 : Broken.calendar_edit,
         onPressed: () {
-          settings.save(editTagsKeepFileDates: !settings.editTagsKeepFileDates.value);
+          settings.editTagsKeepFileDates.save(!settings.editTagsKeepFileDates.value);
         },
         child: StackedIcon(
           baseIcon: Broken.document_code_2,

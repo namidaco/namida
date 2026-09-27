@@ -36,15 +36,15 @@ class SyncDiscovery {
   }
 
   static void autoRestoreOnStartup() async {
-    if (!settings.sync.autoReconnect.valueF) return;
-    if (settings.sync.serverWasRunning) {
+    if (!settings.sync.autoReconnect.value) return;
+    if (settings.sync.serverWasRunning.value) {
       try {
         await server.startServer();
       } catch (e, st) {
         logger.error('failed to auto start sync server', e: e, st: st);
       }
     }
-    if (settings.sync.allowedServerIds.isNotEmpty) {
+    if (settings.sync.allowedServerIds.value.isNotEmpty) {
       client.startSearchForServers(onlyOnce: true);
     }
   }
@@ -114,8 +114,8 @@ class _ServerSide extends RxNotifier {
 
   void _refresh() => super.refresh();
 
-  bool isDeviceAllowed(NetworkDevice device) => settings.sync.allowedDeviceIds.contains(device.deviceId);
-  bool isDeviceBlocked(NetworkDevice device) => settings.sync.blockedClientIds.contains(device.deviceId);
+  bool isDeviceAllowed(NetworkDevice device) => settings.sync.allowedDeviceIds.value.contains(device.deviceId);
+  bool isDeviceBlocked(NetworkDevice device) => settings.sync.blockedClientIds.value.contains(device.deviceId);
 
   final _clientsSockets = <String, _SocketWrapper>{};
 
@@ -137,8 +137,8 @@ class _ServerSide extends RxNotifier {
     SyncDiscovery.serverRunning.value = true;
     SyncDiscovery._updateMulticastLock();
 
-    if (!settings.sync.serverWasRunning) {
-      settings.sync.modify((syncSettings) => syncSettings.serverWasRunning = true);
+    if (!settings.sync.serverWasRunning.value) {
+      settings.sync.serverWasRunning.save(true);
     }
 
     _refresh();
@@ -181,8 +181,8 @@ class _ServerSide extends RxNotifier {
   }
 
   Future<void> stopServer({bool andRefresh = true}) async {
-    if (settings.sync.serverWasRunning) {
-      settings.sync.modify((syncSettings) => syncSettings.serverWasRunning = false);
+    if (settings.sync.serverWasRunning.value) {
+      settings.sync.serverWasRunning.save(false);
     }
     final sw = _serverWrapper;
     _serverWrapper = null;
@@ -226,9 +226,7 @@ class _ServerSide extends RxNotifier {
 
   /// mark client device id as trusted, [BaseMessage.decodeBytes] will accept it now
   Future<void> acceptConnection(String senderDeviceId) async {
-    settings.sync.modify(
-      (syncSettings) => syncSettings.allowedDeviceIds.add(senderDeviceId),
-    );
+    settings.sync.allowedDeviceIds.update((ids) => ids.add(senderDeviceId));
     _refresh();
 
     final msg = await ConnectionRequestMessage.createForCurrentDevice(.accepted);
@@ -237,9 +235,7 @@ class _ServerSide extends RxNotifier {
 
   /// remove client device id from trusted, [BaseMessage.decodeBytes] will throw
   Future<void> rejectConnection(String senderDeviceId, {String? reason}) async {
-    settings.sync.modify(
-      (syncSettings) => syncSettings.allowedDeviceIds.remove(senderDeviceId),
-    );
+    settings.sync.allowedDeviceIds.update((ids) => ids.remove(senderDeviceId));
     _refresh();
 
     final msg = await ConnectionRequestMessage.createForCurrentDevice(.rejected, reason: reason);
@@ -248,9 +244,7 @@ class _ServerSide extends RxNotifier {
 
   /// add client device id to blocked, [BaseMessage.decodeBytes] will throw
   Future<void> blockConnection(String senderDeviceId) async {
-    settings.sync.modify(
-      (syncSettings) => syncSettings.blockedClientIds.add(senderDeviceId),
-    );
+    settings.sync.blockedClientIds.update((ids) => ids.add(senderDeviceId));
     _refresh();
 
     final msg = await ConnectionRequestMessage.createForCurrentDevice(.blocked);
@@ -260,9 +254,7 @@ class _ServerSide extends RxNotifier {
 
   /// remove client device id from blocked
   Future<void> unblockConnection(String senderDeviceId) async {
-    settings.sync.modify(
-      (syncSettings) => syncSettings.blockedClientIds.remove(senderDeviceId),
-    );
+    settings.sync.blockedClientIds.update((ids) => ids.remove(senderDeviceId));
     _refresh();
 
     final msg = await ConnectionRequestMessage.createForCurrentDevice(.unblocked);
@@ -384,7 +376,7 @@ class _ClientSide extends RxNotifier {
   }
 
   void _reconnectManualServers() {
-    for (final e in settings.sync.manualServerAddresses.entries) {
+    for (final e in settings.sync.manualServerAddresses.value.entries) {
       _autoReconnectIfKnown(NetworkDevice._fromAddress(e.value, deviceId: e.key));
     }
   }
@@ -408,9 +400,9 @@ class _ClientSide extends RxNotifier {
     _connectedServers[serverDeviceId] = wrapper;
     existing?._socket.destroy();
 
-    settings.sync.modify((syncSettings) {
-      syncSettings.allowedServerIds.add(serverDeviceId);
-      syncSettings.manualServerAddresses[serverDeviceId] = host;
+    settings.sync.transaction(() {
+      settings.sync.allowedServerIds.update((ids) => ids.add(serverDeviceId));
+      settings.sync.manualServerAddresses.update((addresses) => addresses[serverDeviceId] = host);
     });
     SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: NetworkDevice._fromAddress(host, deviceId: serverDeviceId), asClient: true);
     SyncDiscovery._updateConnectionFlags();
@@ -428,10 +420,10 @@ class _ClientSide extends RxNotifier {
   final _autoReconnectAttempted = <String>{};
 
   void _autoReconnectIfKnown(NetworkDevice device) {
-    if (!settings.sync.autoReconnect.valueF) return;
+    if (!settings.sync.autoReconnect.value) return;
     final deviceId = device.deviceId;
     if (_connectedServers.containsKey(deviceId)) return;
-    if (!settings.sync.allowedServerIds.contains(deviceId)) return;
+    if (!settings.sync.allowedServerIds.value.contains(deviceId)) return;
     if (!_autoReconnectAttempted.add(deviceId)) return;
     connectToServer(device).catchError((_) {
       _autoReconnectAttempted.remove(deviceId); // -- can retry on next discovery
@@ -467,10 +459,8 @@ class _ClientSide extends RxNotifier {
 
   Future<void> connectToServer(NetworkDevice serverDevice, {bool forceReconnect = false}) async {
     final serverDeviceId = serverDevice.deviceId;
-    if (!settings.sync.allowedServerIds.contains(serverDeviceId)) {
-      settings.sync.modify(
-        (syncSettings) => syncSettings.allowedServerIds.add(serverDeviceId),
-      );
+    if (!settings.sync.allowedServerIds.value.contains(serverDeviceId)) {
+      settings.sync.allowedServerIds.update((ids) => ids.add(serverDeviceId));
     }
 
     if (forceReconnect) {
@@ -488,9 +478,9 @@ class _ClientSide extends RxNotifier {
   Future<void> disconnectFromServer(String serverDeviceId, {bool removeFromAutoReconnect = true}) async {
     _autoReconnectAttempted.remove(serverDeviceId);
     if (removeFromAutoReconnect) {
-      settings.sync.modify((syncSettings) {
-        syncSettings.allowedServerIds.remove(serverDeviceId);
-        syncSettings.manualServerAddresses.remove(serverDeviceId);
+      settings.sync.transaction(() {
+        settings.sync.allowedServerIds.update((ids) => ids.remove(serverDeviceId));
+        settings.sync.manualServerAddresses.update((addresses) => addresses.remove(serverDeviceId));
       });
     }
 
@@ -524,10 +514,8 @@ class _ClientSide extends RxNotifier {
   Future<void> onConnectionAccepted(ConnectionRequestMessage msg) async {
     // -- server just welcomed us. trust it so its data messages pass [BaseMessage.decodeBytes]
     final senderDeviceId = msg.messageInfo.senderDeviceId;
-    if (settings.sync.allowedDeviceIds.contains(senderDeviceId)) return; // -- routine reconnect, no need to announce
-    settings.sync.modify(
-      (syncSettings) => syncSettings.allowedDeviceIds.add(senderDeviceId),
-    );
+    if (settings.sync.allowedDeviceIds.value.contains(senderDeviceId)) return; // -- routine reconnect, no need to announce
+    settings.sync.allowedDeviceIds.update((ids) => ids.add(senderDeviceId));
     snackyy(
       icon: Broken.tick_circle,
       title: '${lang.connectionAccepted} - ${msg.senderDeviceName}',
@@ -707,7 +695,7 @@ class _FrameDispatcher {
 
   void _onJsonFrame(Uint8List data) {
     try {
-      final msg = BaseMessage.decodeBytes(data, settings.sync.allowedDeviceIds, settings.sync.blockedClientIds);
+      final msg = BaseMessage.decodeBytes(data, settings.sync.allowedDeviceIds.value, settings.sync.blockedClientIds.value);
       _onDecodedBeforeExecute?.call(msg);
       SyncActionsLog.inst.onMessageActivity(.received, msg, msg.messageInfo.senderDeviceId, _FrameWriter.kFrameHeaderSize + data.length);
       if (msg is BinaryPayloadMessage) {

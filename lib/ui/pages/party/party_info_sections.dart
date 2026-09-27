@@ -228,7 +228,7 @@ class _ReactionsCard extends StatelessWidget {
 }
 
 void _editReactions() {
-  final controller = TextEditingController(text: settings.party.reactions.valueF);
+  final controller = TextEditingController(text: settings.party.reactions.value);
   NamidaNavigator.inst.navigateDialog(
     onDisposing: controller.dispose,
     dialog: CustomBlurryDialog(
@@ -241,7 +241,7 @@ void _editReactions() {
           iconSize: 20.0,
           tooltip: () => lang.restoreDefaults,
           onPressed: () {
-            settings.party.modify((partySettings) => partySettings.reactions.value = null);
+            settings.party.reactions.reset();
             NamidaNavigator.inst.closeDialog();
           },
         ),
@@ -251,7 +251,7 @@ void _editReactions() {
         NamidaButton(
           text: lang.save,
           onTap: () {
-            settings.party.modify((partySettings) => partySettings.reactions.value = controller.text.trim().nullifyEmpty());
+            settings.party.reactions.save(controller.text.trim().nullifyEmpty());
             NamidaNavigator.inst.closeDialog();
           },
         ),
@@ -812,7 +812,7 @@ class _HostSettingsCard extends StatelessWidget {
                       icon: Broken.musicnote,
                       title: lang.partySharePlaying,
                       subtitle: lang.partySharePlayingSubtitle,
-                      value: sharePlaying ?? false,
+                      value: sharePlaying,
                       onChanged: (isTrue) => controller.setSharePlaying(!isTrue),
                     ),
                   ),

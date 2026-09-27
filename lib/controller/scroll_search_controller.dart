@@ -111,7 +111,7 @@ class ScrollSearchController {
         : Transition.leftToRight;
 
     _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab);
-    settings.extra.save(selectedLibraryTab: tab);
+    settings.extra.setSelectedLibraryTab(tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: isVertical ? 300 : 400);
   }
 

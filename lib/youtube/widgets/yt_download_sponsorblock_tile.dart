@@ -79,9 +79,7 @@ class YTDownloadSponsorBlockTile extends StatelessWidget {
             icon: Broken.scissor,
             title: lang.removeSponsorSegmentsFromDownloads,
             subtitle: categoriesNames.isEmpty ? lang.none : categoriesNames.map((name) => name.sponsorCategoryToText()).join(', '),
-            onTap: () => settings.youtube.save(
-              sponsorBlockSettings: sponsorBlockSettings.copyWith(removeSegmentsFromDownloads: !enabled),
-            ),
+            onTap: () => settings.youtube.sponsorBlockSettings.save(sponsorBlockSettings.copyWith(removeSegmentsFromDownloads: !enabled)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

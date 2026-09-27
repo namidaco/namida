@@ -245,7 +245,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     Widget buildTile(AlbumType type, IconData icon, String title) {
       void onTap() {
         final wasActive = settings.activeAlbumTypes.value[type] ?? true;
-        settings.updateActiveAlbumTypes(type, !wasActive);
+        settings.activeAlbumTypes.update((types) => types[type] = !wasActive);
         SearchSortController.inst.searchMedia(LibraryTab.albums.textSearchController?.text ?? '', MediaType.album);
       }
 

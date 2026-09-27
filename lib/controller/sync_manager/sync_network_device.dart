@@ -39,7 +39,7 @@ class NetworkDevice {
       name: address,
       address: address,
       port: SyncUtils.kDefaultNamidaPort,
-      deviceName: settings.sync.deviceIdNames[deviceId] ?? deviceId,
+      deviceName: settings.sync.deviceIdNames.value[deviceId] ?? deviceId,
       deviceId: deviceId,
     );
   }
@@ -107,5 +107,5 @@ class SyncDeviceView {
   bool get connectedAsServer => SyncDiscovery.server._clientsSockets.containsKey(deviceId);
   bool get isConnected => connectedAsClient || connectedAsServer;
 
-  String get displayName => settings.sync.deviceIdNames[deviceId] ?? networkDevice?.deviceName ?? deviceId;
+  String get displayName => settings.sync.deviceIdNames.value[deviceId] ?? networkDevice?.deviceName ?? deviceId;
 }

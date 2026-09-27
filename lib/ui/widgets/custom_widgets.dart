@@ -2039,7 +2039,7 @@ class CollapsedSettingTileWidget extends StatelessWidget {
         title: lang.useCollapsedSettingTiles,
         value: useSettingCollapsedTiles,
         onChanged: (isTrue) async {
-          settings.save(useSettingCollapsedTiles: !isTrue);
+          settings.useSettingCollapsedTiles.save(!isTrue);
           await NamidaNavigator.inst.popPage();
           const SettingsPage().navigate();
         },
@@ -3204,7 +3204,7 @@ class AnimatingTile extends StatelessWidget {
     }
 
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
-      if (allowTilting && settings.extra.tiltingCardsEffect == true) {
+      if (allowTilting && settings.extra.tiltingCardsEffect.value == true) {
         child = _EncapsulateWithTilt(
           isInOpenSpace: false,
           child: child,
@@ -3256,7 +3256,7 @@ class AnimatingGrid extends StatelessWidget {
     }
 
     if (NamidaFeaturesVisibility.tiltingCardsEffect) {
-      if (settings.extra.tiltingCardsEffect == true) {
+      if (settings.extra.tiltingCardsEffect.value == true) {
         child = _EncapsulateWithTilt(
           isInOpenSpace: isInOpenSpace,
           child: child,
@@ -5664,8 +5664,8 @@ class NamidaScrollbar extends StatelessWidget {
       thicknessWhileDragging: 8.5,
       minInteractiveSize: 60.0,
       pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
-      tapToScroll: () => settings.extra.tapToScroll ?? false,
-      enhancedDragToScroll: () => settings.extra.enhancedDragToScroll ?? true,
+      tapToScroll: () => settings.extra.tapToScroll.value ?? false,
+      enhancedDragToScroll: () => settings.extra.enhancedDragToScroll.value ?? true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       child: child,
@@ -6066,7 +6066,7 @@ class QueueUtilsRow extends StatelessWidget {
                   borderRadius: 10.0,
                   // bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
                   onTap: () {
-                    // settings.player.save(shuffleAllTracks: isShuffleAll);
+                    // settings.player.shuffleAllTracks.save(isShuffleAll);
                     NamidaNavigator.inst.popMenu();
                     Player.inst.shuffleTracks(isShuffleAll);
                   },
@@ -6110,7 +6110,7 @@ class QueueUtilsRow extends StatelessWidget {
               icon: Broken.shuffle,
               colors: shuffleQueue ? NamidaButtonColors.selected : NamidaButtonColors.normal,
               // onTap: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
-              onTap: () => settings.player.save(shuffleQueue: !shuffleQueue),
+              onTap: () => settings.player.shuffleQueue.save(!shuffleQueue),
             ),
           ),
         ),
@@ -6146,7 +6146,7 @@ class RepeatModeIconButton extends StatelessWidget {
 
   // void _switchMode() {
   //   final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
-  //   settings.player.save(repeatMode: e);
+  //   settings.player.repeatMode.save(e);
   // }
 
   // String _buildTooltip() {
@@ -6232,7 +6232,7 @@ class RepeatModeIconButton extends StatelessWidget {
                 //         padding: const EdgeInsets.all(6.0),
                 //         borderRadius: 8.0,
                 //         bgColor: shuffleReflectInQueue ? CurrentColor.inst.color.withOpacityExt(0.4) : null,
-                //         onTap: () => settings.player.save(shuffleReflectInQueue: !shuffleReflectInQueue),
+                //         onTap: () => settings.player.shuffleReflectInQueue.save(!shuffleReflectInQueue),
                 //         child: Icon(
                 //           Broken.task,
                 //           size: 18.0,

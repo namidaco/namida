@@ -60,7 +60,7 @@ class SortByMenuTracks with SortByMenuBase {
             borderRadius: 10.0,
             active: mediaItemsTrackSortingReverse[MediaType.track] == true,
             onTap: () {
-              SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+              SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse.value[MediaType.track] == true));
             },
           ),
         ),
@@ -95,6 +95,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
             final tracksSortSearch = settings.tracksSortSearch.valueR;
             final reversed = settings.tracksSortSearchReversed.valueR;
             final isAuto = settings.tracksSortSearchIsAuto.valueR;
+            final activeSortType = isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull : tracksSortSearch;
             return Column(
               children: [
                 Padding(
@@ -105,7 +106,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                     title: lang.auto,
                     activeRx: settings.tracksSortSearchIsAuto,
                     onTap: () {
-                      settings.save(tracksSortSearchIsAuto: !settings.tracksSortSearchIsAuto.value);
+                      settings.tracksSortSearchIsAuto.save(!settings.tracksSortSearchIsAuto.value);
                       if (settings.tracksSortSearchIsAuto.value) {
                         SearchSortController.inst.searchTracks(ScrollSearchController.inst.searchTextEditingController.text, temp: true);
                       } else {
@@ -141,7 +142,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
                                 visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
                                 title: e.toText(),
                                 trailingIcon: e.toIcon(),
-                                active: (isAuto ? settings.mediaItemsTrackSorting[MediaType.track]?.firstOrNull : tracksSortSearch) == e,
+                                active: activeSortType == e,
                                 onTap: () {
                                   SearchSortController.inst.sortTracksSearch(sortBy: e);
                                 },

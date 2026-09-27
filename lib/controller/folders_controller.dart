@@ -393,13 +393,11 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchy, // same settings
       toggleFoldersHierarchy: () {
         final newValue = !settings.enableFoldersHierarchy.value;
-        settings.save(enableFoldersHierarchy: newValue);
+        settings.enableFoldersHierarchy.save(newValue);
         FoldersController.tracksAndVideos.onFoldersHierarchyChanged(newValue);
       },
       onDefaultStartupFolderChanged: () {
-        settings.save(
-          defaultFolderStartupLocation: FoldersController.tracksAndVideos.getCurrentFolderToBookmark(),
-        );
+        settings.defaultFolderStartupLocation.save(FoldersController.tracksAndVideos.getCurrentFolderToBookmark());
       },
     );
   }
@@ -410,13 +408,11 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchyTracks,
       toggleFoldersHierarchy: () {
         final newValue = !settings.enableFoldersHierarchyTracks.value;
-        settings.save(enableFoldersHierarchyTracks: newValue);
+        settings.enableFoldersHierarchyTracks.save(newValue);
         FoldersController.tracks.onFoldersHierarchyChanged(newValue);
       },
       onDefaultStartupFolderChanged: () {
-        settings.save(
-          defaultFolderStartupLocation: FoldersController.tracks.getCurrentFolderToBookmark(),
-        );
+        settings.defaultFolderStartupLocation.save(FoldersController.tracks.getCurrentFolderToBookmark());
       },
     );
   }
@@ -427,13 +423,11 @@ class FoldersPageConfig {
       enableFoldersHierarchy: settings.enableFoldersHierarchyVideos,
       toggleFoldersHierarchy: () {
         final newValue = !settings.enableFoldersHierarchyVideos.value;
-        settings.save(enableFoldersHierarchyVideos: newValue);
+        settings.enableFoldersHierarchyVideos.save(newValue);
         FoldersController.videos.onFoldersHierarchyChanged(newValue);
       },
       onDefaultStartupFolderChanged: () {
-        settings.save(
-          defaultFolderStartupLocationVideos: FoldersController.videos.getCurrentFolderToBookmark(),
-        );
+        settings.defaultFolderStartupLocationVideos.save(FoldersController.videos.getCurrentFolderToBookmark());
       },
     );
   }

@@ -128,7 +128,7 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
     final smallBoxText = _infoFetcher.duration;
     final firstBadge = smallBoxText == null || smallBoxText.isEmpty ? widget.video.badges?.firstOrNull : null;
 
-    final enableGifThumbnails = settings.youtube.enableGifThumbnails;
+    final enableGifThumbnails = settings.youtube.enableGifThumbnails.value;
     final thumbnailGifUrl = enableGifThumbnails ? widget.video.thumbnailGifUrl : null;
     final channelThumbnailUrl =
         _infoFetcher.channelThumbnailUrl ?? //

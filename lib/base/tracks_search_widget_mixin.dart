@@ -324,7 +324,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
               ),
               onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
               onReverseIconTap: (newSortReverse) {
-                settings.updateMediaItemsTrackSortingReverse(type, newSortReverse);
+                settings.mediaItemsTrackSortingReverse.update((reverse) => reverse[type] = newSortReverse);
                 Indexer.inst.sortMediaTracksSubLists([type]);
               },
             );

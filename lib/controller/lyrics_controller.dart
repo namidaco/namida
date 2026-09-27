@@ -74,7 +74,7 @@ class Lyrics {
 
   Future<void> updateLyrics(Playable item) async {
     await _updateLyrics(item);
-    if (settings.tutorial.lyricsLongPressFullScreen) {
+    if (!settings.tutorial.lyricsFullscreenTipSeen.value) {
       if (currentLyricsLRC.value != null || currentLyricsText.value.text.isNotEmpty) {
         snackyy(
           message: lang.longPressTheLyricsToEnterFullscreen,
@@ -83,7 +83,7 @@ class Lyrics {
           icon: Broken.book_saved,
           button: SnackbarButton(
             text: lang.done,
-            function: () => settings.tutorial.save(lyricsLongPressFullScreen: false),
+            function: () => settings.tutorial.lyricsFullscreenTipSeen.save(true),
           ),
         );
       }

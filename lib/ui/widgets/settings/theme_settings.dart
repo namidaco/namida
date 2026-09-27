@@ -87,10 +87,10 @@ class ThemeSetting extends SettingSubpageProvider {
           subtitle: "${lang.autoColoringSubtitle}. ${lang.performanceNote}",
           value: autoColor,
           onChanged: (isTrue) {
-            settings.save(
-              autoColor: !isTrue,
-              performanceMode: PerformanceMode.custom,
-            );
+            settings.transaction(() {
+              settings.autoColor.save(!isTrue);
+              settings.performanceMode.save(PerformanceMode.custom);
+            });
             if (isTrue) {
               CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
               CurrentColor.inst.updateCurrentColorSchemeOfSubPages(playerStaticColor);
@@ -251,7 +251,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   title: lang.pickColorsFromDeviceWallpaper,
                   value: settings.pickColorsFromDeviceWallpaper.valueR,
                   onChanged: (isTrue) {
-                    settings.save(pickColorsFromDeviceWallpaper: !isTrue);
+                    settings.pickColorsFromDeviceWallpaper.save(!isTrue);
                     CurrentColor.inst.refreshColorsOfCurrentItem();
                   },
                 ),
@@ -267,7 +267,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   subtitle: '${lang.ignores}: ${lang.autoColoring}, ${lang.pickColorsFromDeviceWallpaper} & ${lang.defaultColor}',
                   value: settings.forceMiniplayerTrackColor.valueR,
                   onChanged: (isTrue) {
-                    settings.save(forceMiniplayerTrackColor: !isTrue);
+                    settings.forceMiniplayerTrackColor.save(!isTrue);
                     CurrentColor.inst.refreshColorsOfCurrentItem();
                   },
                 ),
@@ -284,7 +284,7 @@ class ThemeSetting extends SettingSubpageProvider {
                   subtitle: lang.usePitchBlackSubtitle,
                   value: pitchBlack,
                   onChanged: (isTrue) {
-                    settings.save(pitchBlack: !isTrue);
+                    settings.pitchBlack.save(!isTrue);
                     if (context.isDarkMode) CurrentColor.inst.updateColorAfterThemeModeChange();
                   },
                 ),
@@ -383,14 +383,14 @@ class ThemeSetting extends SettingSubpageProvider {
   }
 
   void _updateColorLight(Color color) {
-    settings.save(staticColor: color.intValue);
+    settings.staticColor.save(color.intValue);
     if (!namida.isDarkMode) {
       CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }
   }
 
   void _updateColorDark(Color color) {
-    settings.save(staticColorDark: color.intValue);
+    settings.staticColorDark.save(color.intValue);
     if (namida.isDarkMode) {
       CurrentColor.inst.updatePlayerColorFromColor(color, false);
     }
@@ -430,7 +430,7 @@ class ToggleThemeModeContainer extends StatefulWidget {
   const ToggleThemeModeContainer({super.key, required this.maxWidth, this.blurRadius = 6.0});
 
   static void onThemeChangeTap(ThemeMode themeMode) async {
-    settings.save(themeMode: themeMode);
+    settings.themeMode.save(themeMode);
     await Future.delayed(const Duration(milliseconds: kThemeAnimationDurationMS));
     CurrentColor.inst.updateColorAfterThemeModeChange();
     YoutubeMiniplayerUiController.inst.startDimTimer();

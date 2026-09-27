@@ -27,6 +27,9 @@ enum SyncDataItem {
   thumbnailsChannelsYt(needsFingerprints: false, isHeavy: true),
   playerQueue(needsFingerprints: true, isHeavy: false),
   playback(needsFingerprints: false, isHeavy: false),
+  settingsGeneral(needsFingerprints: false, isHeavy: false),
+  settingsPlayer(needsFingerprints: false, isHeavy: false),
+  settingsYoutube(needsFingerprints: false, isHeavy: false),
   ;
 
   /// wether local track paths get sent over, requiring our tracks db
@@ -45,6 +48,7 @@ enum SyncDataItem {
   /// default items to sync. file-based items (except queues) are excluded,
   /// they have no cache map so building their manifests loops all files.
   /// playerQueue & playback are excluded too, they take over live playback.
+  /// settings are excluded, devices usually want their own.
   static final Set<SyncDataItem> essentialsSet =
       {
           ...SyncDataItem.values,
@@ -60,7 +64,10 @@ enum SyncDataItem {
         ..remove(SyncDataItem.thumbnailsYt)
         ..remove(SyncDataItem.thumbnailsChannelsYt)
         ..remove(SyncDataItem.playerQueue)
-        ..remove(SyncDataItem.playback);
+        ..remove(SyncDataItem.playback)
+        ..remove(SyncDataItem.settingsGeneral)
+        ..remove(SyncDataItem.settingsPlayer)
+        ..remove(SyncDataItem.settingsYoutube);
 
   static final lookupMap = values.asNameMap();
 
@@ -91,6 +98,9 @@ enum SyncDataItem {
     SyncDataItem.thumbnailsChannelsYt => const [AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS],
     SyncDataItem.playerQueue => const [AppPathsBackupEnum.LATEST_QUEUE],
     SyncDataItem.playback => const [],
+    SyncDataItem.settingsGeneral => const [AppPathsBackupEnum.SETTINGS],
+    SyncDataItem.settingsPlayer => const [AppPathsBackupEnum.SETTINGS_PLAYER],
+    SyncDataItem.settingsYoutube => const [AppPathsBackupEnum.SETTINGS_YOUTUBE],
   };
 }
 
@@ -146,7 +156,7 @@ class SyncSender extends RxNotifier {
       final msg = await SyncItemsRequestMessage.createForCurrentDevice(items);
       await SyncDiscovery.sendMessage(msg, deviceId);
     } catch (e, st) {
-      final deviceName = settings.sync.deviceIdNames[deviceId] ?? deviceId;
+      final deviceName = settings.sync.deviceIdNames.value[deviceId] ?? deviceId;
       snackyy(message: '${lang.failed}: "$deviceName": $e', isError: true);
       logger.error('Error requesting items from "$deviceName"', e: e, st: st);
     }
@@ -166,7 +176,7 @@ class SyncSender extends RxNotifier {
   void setupAutoSync() {
     _autoSyncTimer?.cancel();
     _autoSyncTimer = null;
-    final intervalMinutes = settings.sync.autoSyncIntervalMinutes.valueF;
+    final intervalMinutes = settings.sync.autoSyncIntervalMinutes.value;
     if (intervalMinutes <= 0) return;
     _autoSyncTimer = Timer.periodic(Duration(minutes: intervalMinutes), (_) => _autoSyncTick());
   }
@@ -174,7 +184,7 @@ class SyncSender extends RxNotifier {
   Future<void> _autoSyncTick() async {
     final deviceIds = SyncDiscovery.getAllConnectedDeviceIdsSet();
     if (deviceIds.isEmpty) return;
-    final syncItems = settings.sync.syncItems.valueF;
+    final syncItems = settings.sync.syncItems.value;
     final items = SyncDataItem.values.where(syncItems.contains).toList();
     if (items.isEmpty) return;
     for (final deviceId in deviceIds) {
@@ -201,7 +211,7 @@ class SyncSender extends RxNotifier {
       await batch.completion;
     } catch (e, st) {
       batch.finish();
-      final deviceName = settings.sync.deviceIdNames[deviceId] ?? deviceId;
+      final deviceName = settings.sync.deviceIdNames.value[deviceId] ?? deviceId;
       snackyy(message: '${lang.failed}: "$deviceName": $e', isError: true);
       logger.error('Error sending to "$deviceName"', e: e, st: st);
     } finally {
@@ -264,6 +274,7 @@ class SyncSender extends RxNotifier {
       SyncDataItem.thumbnailsChannelsYt => await DirFilesManifestRequestMessage.create(AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS, batchRef),
       SyncDataItem.playerQueue => await PlayerQueueMessage.createForCurrentDevice(),
       SyncDataItem.playback => await PlaybackStateMessage.createForCurrentDevice(),
+      SyncDataItem.settingsGeneral || SyncDataItem.settingsPlayer || SyncDataItem.settingsYoutube => await SettingsMessage.createForCurrentDevice(item),
     };
   }
 

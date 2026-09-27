@@ -8,9 +8,9 @@ class _YoutubeCurrentInfoController {
   _RelatedVideosType _getRelatedVideosType([bool? preferMix]) {
     final preferMixRelatedVideos = (preferMix ?? settings.youtube.preferMixRelatedVideos.value) == true;
     if (preferMixRelatedVideos) {
-      return settings.youtube.personalizedMixPlaylists.valueF ? .personalizedMixVideos : .nonPersonalizedMixVideos;
+      return settings.youtube.personalizedMixPlaylists.value ? .personalizedMixVideos : .nonPersonalizedMixVideos;
     } else {
-      return settings.youtube.personalizedRelatedVideos.valueF ? .personalizedRelatedVideos : .nonPersonalizedRelatedVideos;
+      return settings.youtube.personalizedRelatedVideos.value ? .personalizedRelatedVideos : .nonPersonalizedRelatedVideos;
     }
   }
 
@@ -181,7 +181,7 @@ class _YoutubeCurrentInfoController {
     bool resetCurrentInfoOnFetch = true;
 
     final currentPage = _currentVideoPage.value;
-    final maxCacheDurationMin = settings.youtube.maxPageCacheDurationMin;
+    final maxCacheDurationMin = settings.youtube.maxPageCacheDurationMin.value;
 
     if (!requestPage) {
       // -- force set to true if cache duration invalid

@@ -66,7 +66,7 @@ class _YoutubeHistoryLinker {
 
   void executePendingRequests() async {
     if (!_hasConnection) return;
-    if (!settings.youtube.markVideoWatched) return;
+    if (!settings.youtube.markVideoWatched.value) return;
 
     if (_pendingRequestsCompleter != null) {
       // -- already executing
@@ -144,7 +144,7 @@ class _YoutubeHistoryLinker {
 
   Future<YTMarkVideoWatchedResult> markVideoWatched({required String videoId, required VideoStreamsResult? streamResult, bool errorOnMissingParam = true}) async {
     if (_dbOpenedAccId == null) return YTMarkVideoWatchedResult.noAccount; // no acc signed in
-    if (!settings.youtube.markVideoWatched) return YTMarkVideoWatchedResult.userDenied;
+    if (!settings.youtube.markVideoWatched.value) return YTMarkVideoWatchedResult.userDenied;
 
     if (_hasPendingRequests) {
       executePendingRequests();

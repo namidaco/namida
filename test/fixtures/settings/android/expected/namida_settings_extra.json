@@ -1,0 +1,18 @@
+{
+  "selectedLibraryTab": "playlists",
+  "staticLibraryTab": "playlists",
+  "libraryTabGroupVariants": {},
+  "autoLibraryTab": true,
+  "ytInitialHomePage": "playlists",
+  "recentSearches": [],
+  "resumeUIEnabled": true,
+  "lastPlayedIndex": 0,
+  "ytAddToPlaylistsTabIndex": 1,
+  "windowBounds": {
+    "l": 1481.0,
+    "t": 155.0,
+    "r": 1921.0,
+    "b": 971.0
+  },
+  "windowMaximized": false
+}

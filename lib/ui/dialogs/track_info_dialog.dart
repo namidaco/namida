@@ -208,7 +208,7 @@ Future<void> showTrackInfoDialog(
                   tooltip: () => lang.showHideUnknownFields,
                   icon: showUnknownFieldsInTrackInfoDialog ? Broken.eye : Broken.eye_slash,
                   iconColor: theme.colorScheme.primary,
-                  onPressed: () => settings.save(showUnknownFieldsInTrackInfoDialog: !settings.showUnknownFieldsInTrackInfoDialog.value),
+                  onPressed: () => settings.showUnknownFieldsInTrackInfoDialog.save(!settings.showUnknownFieldsInTrackInfoDialog.value),
                 ),
               ),
               NamidaLocalLikeButton(

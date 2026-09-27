@@ -337,7 +337,7 @@ class VideoController {
   }
 
   void holdVideoFrameFor(Playable item) {
-    if (settings.extra.keepVideoFrameOnSwitch != true) return;
+    if (settings.extra.keepVideoFrameOnSwitch.value != true) return;
     if (_displayedVideoInfo.value?.isInitialized != true || !_hasReadyVideoFor(item)) return dropVideoFrameHold();
     _videoFrameHoldTimer?.cancel();
     _videoFrameHoldTimer = Timer(_kVideoFrameHoldTimeout, dropVideoFrameHold);
@@ -543,7 +543,7 @@ class VideoController {
   }
 
   void _ensureVideoPlaybackEnabled() {
-    if (!settings.enableVideoPlayback.value) settings.save(enableVideoPlayback: true);
+    if (!settings.enableVideoPlayback.value) settings.enableVideoPlayback.save(true);
   }
 
   Future<void> setVideoQualityFromLocal({required Track track, required NamidaVideo video}) async {
@@ -612,7 +612,7 @@ class VideoController {
 
   Future<void> toggleVideoPlayback() async {
     final currentValue = settings.enableVideoPlayback.value;
-    settings.save(enableVideoPlayback: !currentValue);
+    settings.enableVideoPlayback.save(!currentValue);
 
     // only modify if not playing yt/local video, since [enableVideoPlayback] is
     // limited to local music.

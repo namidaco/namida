@@ -206,7 +206,7 @@ class EditDeleteController {
     Iterable<String>? forThesePathsOnly,
     bool ensureNewFileExists = false,
   }) async {
-    if (!settings.directoriesToScan.value.any((dir) => newDirPre.startsWith(dir.sourceRaw))) settings.save(directoriesToScan: [DirectoryIndex.guess(newDirPre, newDirType)]);
+    if (!settings.directoriesToScan.value.any((dir) => newDirPre.startsWith(dir.sourceRaw))) settings.directoriesToScan.update((list) => list.addNoDuplicates(DirectoryIndex.guess(newDirPre, newDirType)));
 
     var normalizedOldDir = replaceFunctionNormalizePath(oldDirPre);
     var normalizedNewDir = replaceFunctionNormalizePath(newDirPre);

@@ -310,11 +310,11 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                 itemExtent: Dimensions.inst.trackTileItemExtent,
                 historyController: HistoryController.inst,
                 onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-                  settings.save(
-                    mostPlayedTimeRange: mptr,
-                    mostPlayedCustomDateRange: dateCustom,
-                    mostPlayedCustomisStartOfDay: isStartOfDay,
-                  );
+                  settings.transaction(() {
+                    if (mptr != null) settings.mostPlayedTimeRange.save(mptr);
+                    if (dateCustom != null) settings.mostPlayedCustomDateRange.save(dateCustom);
+                    if (isStartOfDay != null) settings.mostPlayedCustomisStartOfDay.save(isStartOfDay);
+                  });
                 },
                 infoBox: (timeRangeChips, bottomPadding, maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,

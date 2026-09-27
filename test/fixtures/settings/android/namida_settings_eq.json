@@ -1,0 +1,13 @@
+{
+  "preset": null,
+  "equalizerEnabled": false,
+  "equalizer": {
+    "910.0": 0.0,
+    "3600.0": -0.7493401018229421,
+    "14000.0": -0.42168073757164803,
+    "60.0": 0.0
+  },
+  "loudnessEnhancerEnabled": false,
+  "loudnessEnhancer": 0.0,
+  "uiTapToUpdate": false
+}

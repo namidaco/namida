@@ -169,7 +169,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       key: LogicalKeyboardKey.keyL,
       control: true,
       callback: () {
-        settings.save(enableLyrics: !settings.enableLyrics.value);
+        settings.enableLyrics.save(!settings.enableLyrics.value);
         final currentItem = Player.inst.currentItem.value;
         if (currentItem != null) {
           Lyrics.inst.updateLyrics(currentItem);
@@ -218,7 +218,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         //   message: "${shuffleAll ? lang.shuffleAll : lang.shuffleNext}: ${lang.done}",
         // );
         final shuffleQueue = !settings.player.shuffleQueue.value;
-        settings.player.save(shuffleQueue: shuffleQueue);
+        settings.player.shuffleQueue.save(shuffleQueue);
         _showSnack(
           message: "${lang.shuffle}: ${shuffleQueue ? '✓' : '✗'}",
         );
@@ -411,7 +411,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     oldShortcut?.disposeHotkey();
 
     data?.createHotkey(action.toSimpleCallback());
-    settings.shortcuts.save(action: action, data: data);
+    settings.shortcuts.shortcuts.update((shortcuts) => shortcuts[action] = data);
   }
 
   @override

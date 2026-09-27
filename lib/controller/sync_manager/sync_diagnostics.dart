@@ -115,7 +115,7 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
       );
     }
 
-    final probeAddresses = {...foundAddresses, ...settings.sync.manualServerAddresses.values};
+    final probeAddresses = {...foundAddresses, ...settings.sync.manualServerAddresses.value.values};
     final probeResults = await Future.wait(probeAddresses.map(_probeTcp));
     var i = 0;
     for (final address in probeAddresses) {

@@ -357,7 +357,7 @@ class ChangeGridCountWidget extends StatelessWidget {
     if (count != null) {
       if (count.rawValue != settings.mediaGridCounts.value.get(tab).rawValue) {
         final newCount = ScrollSearchController.inst.animateChangingGridSize(tab, count);
-        settings.updateMediaGridCounts(tab, newCount);
+        settings.mediaGridCounts.update((counts) => counts[tab] = newCount);
       }
     }
   }

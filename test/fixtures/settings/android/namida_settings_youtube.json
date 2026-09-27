@@ -1,0 +1,50 @@
+{
+  "showChannelWatermarkFullscreen": false,
+  "showVideoEndcards": true,
+  "autoStartRadio": false,
+  "personalizedRelatedVideos": false,
+  "ytDownloadLocation": "/storage/emulated/0/Namida/Downloads/",
+  "ytMiniplayerDimAfterSeconds": 0,
+  "ytMiniplayerDimOpacity": 0.5,
+  "youtubeStyleMiniplayer": true,
+  "preferNewComments": false,
+  "autoExtractVideoTagsFromInfo": true,
+  "fallbackExtractInfoDescription": false,
+  "isAudioOnlyMode": false,
+  "dataSaverMode": "medium",
+  "dataSaverModeMobile": "medium",
+  "rememberAudioOnly": true,
+  "topComments": false,
+  "onYoutubeLinkOpen": "alwaysAsk",
+  "tapToSeek": "expandedMiniplayer",
+  "dragToSeek": "all",
+  "ytVisibleShorts": {
+    "relatedVideos": false,
+    "history": false,
+    "search": false,
+    "homeFeed": false
+  },
+  "ytVisibleMixes": {
+    "homeFeed": true,
+    "search": true,
+    "relatedVideos": true
+  },
+  "downloadFilenameBuilder": "[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s",
+  "downloadNotifications": "showFailedOnly",
+  "sponsorBlockSettings": {
+    "enabled": true,
+    "trackSkipCount": false,
+    "serverAddress": null,
+    "hideSkipButtonAfterMS": 3000,
+    "minimumSegmentDurationMS": 0,
+    "configs": {}
+  },
+  "initialDefaultMetadataTags": {
+    "artist": "%(artist)s"
+  },
+  "markVideoWatched": true,
+  "innertubeClient": "android_vr",
+  "whiteVideoBGInLightMode": true,
+  "enableDimInLightMode": false,
+  "allowExperimentalCodecs": false
+}

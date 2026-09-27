@@ -105,7 +105,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   }
 
   void _updateAudioOnly(bool audioOnly) {
-    settings.save(downloadAudioOnly: audioOnly);
+    settings.downloadAudioOnly.save(audioOnly);
     _configMap.value.updateAll((key, value) => value.copyWith(fetchMissingVideo: !audioOnly));
     _configMap.refresh();
   }
@@ -270,7 +270,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.magicpen,
                   title: lang.autoExtractTitleAndArtistFromVideoTitle,
                   value: autoExtractVideoTagsFromInfo,
-                  onChanged: (isTrue) => settings.youtube.save(autoExtractVideoTagsFromInfo: !isTrue),
+                  onChanged: (isTrue) => settings.youtube.autoExtractVideoTagsFromInfo.save(!isTrue),
                 ),
               ),
               ObxO(
@@ -279,7 +279,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.copy,
                   title: lang.keepCachedVersions,
                   value: downloadFilesKeepCachedVersions,
-                  onChanged: (isTrue) => settings.save(downloadFilesKeepCachedVersions: !isTrue),
+                  onChanged: (isTrue) => settings.downloadFilesKeepCachedVersions.save(!isTrue),
                 ),
               ),
               ObxO(
@@ -288,7 +288,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.document_code,
                   title: lang.setFileLastModifiedAsVideoUploadDate,
                   value: downloadFilesWriteUploadDate,
-                  onChanged: (isTrue) => settings.save(downloadFilesWriteUploadDate: !isTrue),
+                  onChanged: (isTrue) => settings.downloadFilesWriteUploadDate.save(!isTrue),
                 ),
               ),
               ObxO(
@@ -298,7 +298,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   title: lang.splitByChapters,
                   subtitle: lang.splitByChaptersSubtitle,
                   value: splitDownloadsByChapters,
-                  onChanged: (isTrue) => settings.youtube.save(splitDownloadsByChapters: !isTrue),
+                  onChanged: (isTrue) => settings.youtube.splitDownloadsByChapters.save(!isTrue),
                 ),
               ),
               YTDownloadSponsorBlockTile(
@@ -311,7 +311,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.music_library_2,
                   title: lang.addAudioToLocalLibrary,
                   value: addAudioToLocalLibrary,
-                  onChanged: (isTrue) => settings.save(downloadAddAudioToLocalLibrary: !isTrue),
+                  onChanged: (isTrue) => settings.downloadAddAudioToLocalLibrary.save(!isTrue),
                 ),
               ),
               Obx(
@@ -323,7 +323,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     title: lang.addToPlaylist,
                     subtitle: _getLocalPlaylistName(_groupName.valueR),
                     value: addAudioToLocalLibrary && settings.downloadAddToLocalPlaylist.valueR,
-                    onChanged: (isTrue) => settings.save(downloadAddToLocalPlaylist: !isTrue),
+                    onChanged: (isTrue) => settings.downloadAddToLocalPlaylist.save(!isTrue),
                   );
                 },
               ),
@@ -333,7 +333,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   icon: Broken.danger,
                   title: lang.overrideOldFilesInTheSameFolder,
                   value: override,
-                  onChanged: (isTrue) => settings.save(downloadOverrideOldFiles: !isTrue),
+                  onChanged: (isTrue) => settings.downloadOverrideOldFiles.save(!isTrue),
                 ),
               ),
             ],

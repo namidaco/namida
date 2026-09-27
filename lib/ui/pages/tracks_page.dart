@@ -146,7 +146,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   popupMenuChild: const SortByMenuTracks(),
                   isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
                   onReverseIconTap: () {
-                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse[MediaType.track] == true));
+                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse.value[MediaType.track] == true));
                   },
                 ),
                 textField: CustomTextField(

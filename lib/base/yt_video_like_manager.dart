@@ -136,7 +136,7 @@ class YtVideoLikeManager {
         );
       }
 
-      if (settings.youtube.linkLikeButtonWithFavourites) {
+      if (settings.youtube.linkLikeButtonWithFavourites.value) {
         switch (parameters.action) {
           case LikeAction.addLike:
             YoutubePlaylistController.inst.setVideoFavourite(p.videoId, true);

@@ -398,7 +398,7 @@ class QueueController {
     var (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
     if (latestQueue.isEmpty) return;
 
-    int index = settings.extra.lastPlayedIndex;
+    int index = settings.extra.lastPlayedIndex.value;
     if (index > latestQueue.length - 1) index = 0;
 
     // -- shuffle was toggled off but the app was killed before the queue file was rewritten.

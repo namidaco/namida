@@ -114,7 +114,7 @@ class Subtitles {
       _deselect();
       return;
     }
-    settings.save(enableSubtitles: true);
+    settings.enableSubtitles.save(true);
     final item = _currentItem;
     if (item == null) return;
 
@@ -163,7 +163,7 @@ class Subtitles {
       );
       return;
     }
-    if (!settings.enableSubtitles.value) settings.save(enableSubtitles: true);
+    if (!settings.enableSubtitles.value) settings.enableSubtitles.save(true);
     _promoteLanguage(track.languageCode);
     await _apply(track, ++_operationId, notifyFailure: true);
   }
@@ -191,7 +191,7 @@ class Subtitles {
     currentSubtitle.value = null;
     renderMode.value = SubtitleRenderMode.none;
     isLoading.value = false;
-    if (settings.enableSubtitles.value) settings.save(enableSubtitles: false);
+    if (settings.enableSubtitles.value) settings.enableSubtitles.save(false);
     _clearPlayerSelection();
   }
 
@@ -538,6 +538,6 @@ class Subtitles {
     final current = settings.subtitlesLanguages.value;
     if (current.firstOrNull == code) return;
     final newList = <String>[code, ...current.where((e) => e != code)];
-    settings.save(subtitlesLanguages: newList);
+    settings.subtitlesLanguages.replace(newList);
   }
 }

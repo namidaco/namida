@@ -1,6 +1,6 @@
 part of 'settings_controller.dart';
 
-class _YoutubeSettings with SettingsFileWriter {
+class _YoutubeSettings extends _SettingsKeysWriter {
   _YoutubeSettings._internal();
 
   int get kMaxDaysForPageCacheDuration => kDefaultMaxDaysForPageCacheDuration;
@@ -13,317 +13,86 @@ class _YoutubeSettings with SettingsFileWriter {
 
   static const _defaultFilenameBuilder = '[%(playlist_autonumber)s] %(video_title)s [(%(channel)s)].%(ext)s';
 
-  final ytVisibleShorts = <YTVisibleShortPlaces, bool>{}.obs;
-  final ytVisibleMixes = <YTVisibleMixesPlaces, bool>{}.obs;
-
-  final ytHomePageItems = <HomePageItems>[
-    HomePageItems.mixes,
-    HomePageItems.recentListens,
-    HomePageItems.topRecentListens,
-    HomePageItems.lostMemories,
-  ].obso;
-  final showChannelWatermarkFullscreen = true.obs;
-  final showVideoEndcards = true.obs;
-  final autoStartRadio = false.obs;
-  final personalizedRelatedVideos = RxnF<bool>(fallback: true);
-  final personalizedMixPlaylists = RxnF<bool>(fallback: true);
-  final preferMixRelatedVideos = RxnF<bool>(fallback: false);
-  final searchCleanup = true.obs;
-  final showLikeStatusOnCards = RxnF<bool>(fallback: false);
-  final useNewNotificationExtractor = RxnF<bool>(fallback: false);
-  final preferLikeButtonOverFavourite = true.obs;
-
-  final ytDownloadLocation = AppDirs.YOUTUBE_DOWNLOADS_DEFAULT.obs;
-  final ytMiniplayerDimAfterSeconds = 15.obs;
-  final ytMiniplayerDimOpacity = 0.5.obs;
-  final youtubeStyleMiniplayer = true.obs;
-  final preferNewComments = false.obs;
-  final autoExtractVideoTagsFromInfo = true.obs;
-  final fallbackExtractInfoDescription = true.obs;
-  final isAudioOnlyMode = false.obs;
-  final dataSaverMode = DataSaverMode.off.obs;
-  final dataSaverModeMobile = DataSaverMode.medium.obs;
-  final rememberAudioOnly = false.obs;
-  final topComments = true.obs;
-  final enableStreamSegments = true.obs;
-  final splitDownloadsByChapters = false.obs;
-  final enableHeatMap = true.obs;
-  final onYoutubeLinkOpen = OnYoutubeLinkOpenAction.alwaysAsk.obs;
-  final tapToSeek = YTSeekActionMode.expandedMiniplayer.obs;
-  final dragToSeek = YTSeekActionMode.all.obs;
-  final horizontalDrag = YTHorizontalDragMode.fullscreen.obs;
-  final downloadFilenameBuilder = _defaultFilenameBuilder.obs;
-  final downloadParallelCount = RxnF<int>(fallback: 4);
-  final downloadThreadsCount = RxnF<int>(fallback: 3);
-  final initialDefaultMetadataTags = <String, String>{};
-
-  // -- currently used for windows
-  final downloadNotifications = DownloadNotifications.showFailedOnly.obs;
-
-  bool markVideoWatched = true;
-  bool linkLikeButtonWithFavourites = true;
-  InnertubeClients? innertubeClient;
-  bool whiteVideoBGInLightMode = false;
-  bool enableDimInLightMode = true;
-  bool allowExperimentalCodecs = false;
-  bool preferOpusFormat = false;
-  bool enableGifThumbnails = false;
-  int maxPageCacheDurationMin = kDefaultMinutesInMaxDaysForPageCache;
-
-  final sponsorBlockSettings = SponsorBlockSettings().obs;
-  final ryd = ReturnYoutubeDislikeSettings().obs;
-
-  void save({
-    List<HomePageItems>? ytHomePageItems,
-    bool? showChannelWatermarkFullscreen,
-    bool? showVideoEndcards,
-    bool? autoStartRadio,
-    bool? personalizedRelatedVideos,
-    bool? personalizedMixPlaylists,
-    bool? preferMixRelatedVideos,
-    bool? searchCleanup,
-    bool? showLikeStatusOnCards,
-    bool? useNewNotificationExtractor,
-    String? ytDownloadLocation,
-    int? ytMiniplayerDimAfterSeconds,
-    double? ytMiniplayerDimOpacity,
-    bool? youtubeStyleMiniplayer,
-    bool? preferNewComments,
-    bool? isAudioOnlyMode,
-    DataSaverMode? dataSaverMode,
-    DataSaverMode? dataSaverModeMobile,
-    bool? rememberAudioOnly,
-    bool? topComments,
-    bool? enableStreamSegments,
-    bool? splitDownloadsByChapters,
-    bool? enableHeatMap,
-    bool? autoExtractVideoTagsFromInfo,
-    bool? fallbackExtractInfoDescription,
-    OnYoutubeLinkOpenAction? onYoutubeLinkOpen,
-    YTSeekActionMode? tapToSeek,
-    YTSeekActionMode? dragToSeek,
-    YTHorizontalDragMode? horizontalDrag,
-    String? downloadFilenameBuilder,
-    int? downloadParallelCount,
-    int? downloadThreadsCount,
-    DownloadNotifications? downloadNotifications,
-    SponsorBlockSettings? sponsorBlockSettings,
-    ReturnYoutubeDislikeSettings? ryd,
-    bool? markVideoWatched,
-    bool? linkLikeButtonWithFavourites,
-    bool? preferLikeButtonOverFavourite,
-    InnertubeClients? innertubeClient,
-    bool setDefaultInnertubeClient = false,
-    bool? whiteVideoBGInLightMode,
-    bool? enableDimInLightMode,
-    bool? allowExperimentalCodecs,
-    bool? preferOpusFormat,
-    bool? enableGifThumbnails,
-    int? maxPageCacheDurationMin,
-  }) {
-    if (ytHomePageItems != null) this.ytHomePageItems.value = ytHomePageItems;
-    if (showChannelWatermarkFullscreen != null) this.showChannelWatermarkFullscreen.value = showChannelWatermarkFullscreen;
-    if (showVideoEndcards != null) this.showVideoEndcards.value = showVideoEndcards;
-    if (autoStartRadio != null) this.autoStartRadio.value = autoStartRadio;
-    if (personalizedRelatedVideos != null) this.personalizedRelatedVideos.value = personalizedRelatedVideos;
-    if (personalizedMixPlaylists != null) this.personalizedMixPlaylists.value = personalizedMixPlaylists;
-    if (preferMixRelatedVideos != null) this.preferMixRelatedVideos.value = preferMixRelatedVideos;
-    if (searchCleanup != null) this.searchCleanup.value = searchCleanup;
-    if (showLikeStatusOnCards != null) this.showLikeStatusOnCards.value = showLikeStatusOnCards;
-    if (useNewNotificationExtractor != null) this.useNewNotificationExtractor.value = useNewNotificationExtractor;
-
-    if (ytDownloadLocation != null) this.ytDownloadLocation.value = ytDownloadLocation;
-    if (ytMiniplayerDimAfterSeconds != null) this.ytMiniplayerDimAfterSeconds.value = ytMiniplayerDimAfterSeconds;
-    if (ytMiniplayerDimOpacity != null) this.ytMiniplayerDimOpacity.value = ytMiniplayerDimOpacity;
-    if (youtubeStyleMiniplayer != null) this.youtubeStyleMiniplayer.value = youtubeStyleMiniplayer;
-    if (preferNewComments != null) this.preferNewComments.value = preferNewComments;
-    if (isAudioOnlyMode != null) this.isAudioOnlyMode.value = isAudioOnlyMode;
-    if (dataSaverMode != null) this.dataSaverMode.value = dataSaverMode;
-    if (dataSaverModeMobile != null) this.dataSaverModeMobile.value = dataSaverModeMobile;
-    if (rememberAudioOnly != null) this.rememberAudioOnly.value = rememberAudioOnly;
-    if (topComments != null) this.topComments.value = topComments;
-    if (enableStreamSegments != null) this.enableStreamSegments.value = enableStreamSegments;
-    if (splitDownloadsByChapters != null) this.splitDownloadsByChapters.value = splitDownloadsByChapters;
-    if (enableHeatMap != null) this.enableHeatMap.value = enableHeatMap;
-    if (autoExtractVideoTagsFromInfo != null) this.autoExtractVideoTagsFromInfo.value = autoExtractVideoTagsFromInfo;
-    if (fallbackExtractInfoDescription != null) this.fallbackExtractInfoDescription.value = fallbackExtractInfoDescription;
-    if (onYoutubeLinkOpen != null) this.onYoutubeLinkOpen.value = onYoutubeLinkOpen;
-    if (tapToSeek != null) this.tapToSeek.value = tapToSeek;
-    if (dragToSeek != null) this.dragToSeek.value = dragToSeek;
-    if (horizontalDrag != null) this.horizontalDrag.value = horizontalDrag;
-    if (downloadFilenameBuilder != null) this.downloadFilenameBuilder.value = downloadFilenameBuilder;
-    if (downloadParallelCount != null) this.downloadParallelCount.value = downloadParallelCount;
-    if (downloadThreadsCount != null) this.downloadThreadsCount.value = downloadThreadsCount;
-    if (downloadNotifications != null) this.downloadNotifications.value = downloadNotifications;
-    if (sponsorBlockSettings != null) this.sponsorBlockSettings.value = sponsorBlockSettings;
-    if (ryd != null) this.ryd.value = ryd;
-
-    if (markVideoWatched != null) this.markVideoWatched = markVideoWatched;
-    if (linkLikeButtonWithFavourites != null) this.linkLikeButtonWithFavourites = linkLikeButtonWithFavourites;
-    if (preferLikeButtonOverFavourite != null) this.preferLikeButtonOverFavourite.value = preferLikeButtonOverFavourite;
-    if (innertubeClient != null || setDefaultInnertubeClient) this.innertubeClient = innertubeClient;
-    if (whiteVideoBGInLightMode != null) this.whiteVideoBGInLightMode = whiteVideoBGInLightMode;
-    if (enableDimInLightMode != null) this.enableDimInLightMode = enableDimInLightMode;
-    if (allowExperimentalCodecs != null) this.allowExperimentalCodecs = allowExperimentalCodecs;
-    if (preferOpusFormat != null) this.preferOpusFormat = preferOpusFormat;
-    if (enableGifThumbnails != null) this.enableGifThumbnails = enableGifThumbnails;
-    if (maxPageCacheDurationMin != null) this.maxPageCacheDurationMin = maxPageCacheDurationMin;
-    _writeToStorage();
-  }
-
-  void updateShortsVisible(YTVisibleShortPlaces place, bool show) {
-    ytVisibleShorts[place] = show;
-    _writeToStorage();
-  }
-
-  void updateMixesVisible(YTVisibleMixesPlaces place, bool show) {
-    ytVisibleMixes[place] = show;
-    _writeToStorage();
-  }
-
-  @override
-  void applyKuruSettings() {
-    ytVisibleShorts.value = <YTVisibleShortPlaces, bool>{
-      YTVisibleShortPlaces.history: false,
-      YTVisibleShortPlaces.homeFeed: false,
-      YTVisibleShortPlaces.relatedVideos: false,
-      YTVisibleShortPlaces.search: false,
-    };
-    personalizedRelatedVideos.value = false;
-    personalizedMixPlaylists.value = false;
-    preferMixRelatedVideos.value = true;
-    ytMiniplayerDimAfterSeconds.value = 0;
-    ytMiniplayerDimOpacity.value = 0.6;
-    fallbackExtractInfoDescription.value = false;
-    rememberAudioOnly.value = true;
-    whiteVideoBGInLightMode = true;
-    enableDimInLightMode = false;
-    dataSaverMode.value = DataSaverMode.medium;
-  }
-
-  Future<void> prepareSettingsFile() async {
-    final json = await prepareSettingsFile_();
-    if (json is! Map) return;
-
-    try {
-      showChannelWatermarkFullscreen.value = json['showChannelWatermarkFullscreen'] ?? showChannelWatermarkFullscreen.value;
-      showVideoEndcards.value = json['showVideoEndcards'] ?? showVideoEndcards.value;
-      autoStartRadio.value = json['autoStartRadio'] ?? autoStartRadio.value;
-      personalizedRelatedVideos.value = json['personalizedRelatedVideos'] ?? personalizedRelatedVideos.value;
-      personalizedMixPlaylists.value = json['personalizedMixPlaylists'] ?? personalizedMixPlaylists.value;
-      preferMixRelatedVideos.value = json['preferMixRelatedVideos'] ?? preferMixRelatedVideos.value;
-      searchCleanup.value = json['searchCleanup'] ?? searchCleanup.value;
-      showLikeStatusOnCards.value = json['showLikeStatusOnCards'] ?? showLikeStatusOnCards.value;
-      useNewNotificationExtractor.value = json['useNewNotificationExtractor'] ?? useNewNotificationExtractor.value;
-
-      ytDownloadLocation.value = json['ytDownloadLocation'] ?? ytDownloadLocation.value;
-      ytMiniplayerDimAfterSeconds.value = json['ytMiniplayerDimAfterSeconds'] ?? ytMiniplayerDimAfterSeconds.value;
-      ytMiniplayerDimOpacity.value = json['ytMiniplayerDimOpacity'] ?? ytMiniplayerDimOpacity.value;
-      youtubeStyleMiniplayer.value = json['youtubeStyleMiniplayer'] ?? youtubeStyleMiniplayer.value;
-      preferNewComments.value = json['preferNewComments'] ?? preferNewComments.value;
-      autoExtractVideoTagsFromInfo.value = json['autoExtractVideoTagsFromInfo'] ?? autoExtractVideoTagsFromInfo.value;
-      fallbackExtractInfoDescription.value = json['fallbackExtractInfoDescription'] ?? fallbackExtractInfoDescription.value;
-      rememberAudioOnly.value = json['rememberAudioOnly'] ?? rememberAudioOnly.value;
-      if (rememberAudioOnly.value) isAudioOnlyMode.value = json['isAudioOnlyMode'] ?? isAudioOnlyMode.value;
-      dataSaverMode.value = DataSaverMode.values.getEnum(json['dataSaverMode']) ?? dataSaverMode.value;
-      dataSaverModeMobile.value = DataSaverMode.values.getEnum(json['dataSaverModeMobile']) ?? dataSaverModeMobile.value;
-      topComments.value = json['topComments'] ?? topComments.value;
-      enableStreamSegments.value = json['enableStreamSegments'] ?? enableStreamSegments.value;
-      splitDownloadsByChapters.value = json['splitDownloadsByChapters'] ?? splitDownloadsByChapters.value;
-      enableHeatMap.value = json['enableHeatMap'] ?? enableHeatMap.value;
-      onYoutubeLinkOpen.value = OnYoutubeLinkOpenAction.values.getEnum(json['onYoutubeLinkOpen']) ?? onYoutubeLinkOpen.value;
-      tapToSeek.value = YTSeekActionMode.values.getEnum(json['tapToSeek']) ?? tapToSeek.value;
-      dragToSeek.value = YTSeekActionMode.values.getEnum(json['dragToSeek']) ?? dragToSeek.value;
-      horizontalDrag.value = YTHorizontalDragMode.values.getEnum(json['horizontalDrag']) ?? horizontalDrag.value;
-
-      final ytHomePageItemsFromStorage = json['ytHomePageItems'];
-      if (ytHomePageItemsFromStorage is List) ytHomePageItems.value = ytHomePageItemsFromStorage.map((e) => HomePageItems.values.getEnum(e)).toListy();
-
-      ytVisibleShorts.value = (json['ytVisibleShorts'] as Map?)?.map((key, value) => MapEntry(YTVisibleShortPlaces.values.getEnum(key)!, value)) ?? ytVisibleShorts.value;
-      ytVisibleMixes.value = (json['ytVisibleMixes'] as Map?)?.map((key, value) => MapEntry(YTVisibleMixesPlaces.values.getEnum(key)!, value)) ?? ytVisibleMixes.value;
-      downloadFilenameBuilder.value = json['downloadFilenameBuilder'] ?? downloadFilenameBuilder.value;
-      downloadParallelCount.value = json['downloadParallelCount_v2'] ?? downloadParallelCount.value;
-      downloadThreadsCount.value = json['downloadThreadsCount'] ?? downloadThreadsCount.value;
-      downloadNotifications.value = DownloadNotifications.values.getEnum(json['downloadNotifications']) ?? downloadNotifications.value;
-      sponsorBlockSettings.value = SponsorBlockSettings.fromJson(json['sponsorBlockSettings']);
-      ryd.value = ReturnYoutubeDislikeSettings.fromJson(json['ryd']);
-
-      final initialDefaultMetadataTagsInStorage = (json['initialDefaultMetadataTags'] as Map?);
-      if (initialDefaultMetadataTagsInStorage != null) {
-        for (final e in initialDefaultMetadataTagsInStorage.entries) {
-          initialDefaultMetadataTags[e.key] = e.value;
-        }
-      }
-
-      markVideoWatched = json['markVideoWatched'] ?? markVideoWatched;
-      linkLikeButtonWithFavourites = json['linkLikeButtonWithFavourites'] ?? linkLikeButtonWithFavourites;
-      preferLikeButtonOverFavourite.value = json['preferLikeButtonOverFavourite'] ?? preferLikeButtonOverFavourite.value;
-      innertubeClient = InnertubeClients.values.getEnum(json['innertubeClient_v2']);
-      whiteVideoBGInLightMode = json['whiteVideoBGInLightMode'] ?? whiteVideoBGInLightMode;
-      enableDimInLightMode = json['enableDimInLightMode'] ?? enableDimInLightMode;
-      allowExperimentalCodecs = json['allowExperimentalCodecs'] ?? allowExperimentalCodecs;
-      preferOpusFormat = json['preferOpusFormat'] ?? preferOpusFormat;
-      enableGifThumbnails = json['enableGifThumbnails'] ?? enableGifThumbnails;
-      maxPageCacheDurationMin = json['maxPageCacheDurationMin_v2'] ?? maxPageCacheDurationMin;
-    } catch (e, st) {
-      printy(e, isError: true);
-      logger.report(e, st);
-    }
-  }
-
-  @override
-  Object get jsonToWrite => <String, dynamic>{
-    'showChannelWatermarkFullscreen': showChannelWatermarkFullscreen.value,
-    'showVideoEndcards': showVideoEndcards.value,
-    'autoStartRadio': autoStartRadio.value,
-    'personalizedRelatedVideos': personalizedRelatedVideos.value,
-    'personalizedMixPlaylists': ?personalizedMixPlaylists.value,
-    'preferMixRelatedVideos': ?preferMixRelatedVideos.value,
-    'searchCleanup': searchCleanup.value,
-    'showLikeStatusOnCards': ?showLikeStatusOnCards.value,
-    'useNewNotificationExtractor': ?useNewNotificationExtractor.value,
-    'ytDownloadLocation': ytDownloadLocation.value,
-    'ytMiniplayerDimAfterSeconds': ytMiniplayerDimAfterSeconds.value,
-    'ytMiniplayerDimOpacity': ytMiniplayerDimOpacity.value,
-    'youtubeStyleMiniplayer': youtubeStyleMiniplayer.value,
-    'preferNewComments': preferNewComments.value,
-    'autoExtractVideoTagsFromInfo': autoExtractVideoTagsFromInfo.value,
-    'fallbackExtractInfoDescription': fallbackExtractInfoDescription.value,
-    'isAudioOnlyMode': isAudioOnlyMode.value,
-    'dataSaverMode': dataSaverMode.value.name,
-    'dataSaverModeMobile': dataSaverModeMobile.value.name,
-    'rememberAudioOnly': rememberAudioOnly.value,
-    'topComments': topComments.value,
-    'enableStreamSegments': enableStreamSegments.value,
-    'splitDownloadsByChapters': splitDownloadsByChapters.value,
-    'enableHeatMap': enableHeatMap.value,
-    'onYoutubeLinkOpen': onYoutubeLinkOpen.value.name,
-    'tapToSeek': tapToSeek.value.name,
-    'dragToSeek': dragToSeek.value.name,
-    'horizontalDrag': horizontalDrag.value.name,
-    'ytHomePageItems': ytHomePageItems.value.map((element) => element.name).toFixedList(),
-    'ytVisibleShorts': ytVisibleShorts.map((key, value) => MapEntry(key.name, value)),
-    'ytVisibleMixes': ytVisibleMixes.map((key, value) => MapEntry(key.name, value)),
-    'downloadFilenameBuilder': downloadFilenameBuilder.value,
-    'downloadParallelCount_v2': downloadParallelCount.value,
-    'downloadThreadsCount': downloadThreadsCount.value,
-    'downloadNotifications': downloadNotifications.value.name,
-    'sponsorBlockSettings': sponsorBlockSettings.value.toJson(),
-    'ryd': ryd.value.toJson(),
-    'initialDefaultMetadataTags': initialDefaultMetadataTags,
-    'markVideoWatched': markVideoWatched,
-    'linkLikeButtonWithFavourites': linkLikeButtonWithFavourites,
-    'preferLikeButtonOverFavourite': preferLikeButtonOverFavourite.value,
-    'innertubeClient_v2': innertubeClient?.name,
-    'whiteVideoBGInLightMode': whiteVideoBGInLightMode,
-    'enableDimInLightMode': enableDimInLightMode,
-    'allowExperimentalCodecs': allowExperimentalCodecs,
-    'preferOpusFormat': preferOpusFormat,
-    'enableGifThumbnails': enableGifThumbnails,
-    'maxPageCacheDurationMin_v2': maxPageCacheDurationMin,
+  static const _kKuruHiddenShorts = {
+    YTVisibleShortPlaces.history: false,
+    YTVisibleShortPlaces.homeFeed: false,
+    YTVisibleShortPlaces.relatedVideos: false,
+    YTVisibleShortPlaces.search: false,
   };
 
-  Future<void> _writeToStorage() => writeToStorage();
+  late final ytVisibleShorts = _keyMap<YTVisibleShortPlaces, bool>('ytVisibleShorts', isKuru ? _kKuruHiddenShorts : const {}, key: YTVisibleShortPlaces.values.asCodec());
+  late final ytVisibleMixes = _keyMap<YTVisibleMixesPlaces, bool>('ytVisibleMixes', const {}, key: YTVisibleMixesPlaces.values.asCodec());
+
+  late final ytHomePageItems = _keyEnumList(
+    'ytHomePageItems',
+    const [HomePageItems.mixes, HomePageItems.recentListens, HomePageItems.topRecentListens, HomePageItems.lostMemories],
+    HomePageItems.values,
+  );
+  late final showChannelWatermarkFullscreen = _key('showChannelWatermarkFullscreen', true);
+  late final showVideoEndcards = _key('showVideoEndcards', true);
+  late final autoStartRadio = _key('autoStartRadio', false);
+  late final personalizedRelatedVideos = _key('personalizedRelatedVideos', isKuru ? false : true);
+  late final personalizedMixPlaylists = _key('personalizedMixPlaylists', isKuru ? false : true);
+  late final preferMixRelatedVideos = _key('preferMixRelatedVideos', isKuru ? true : false);
+  late final searchCleanup = _key('searchCleanup', true);
+  late final showLikeStatusOnCards = _key('showLikeStatusOnCards', false);
+  late final useNewNotificationExtractor = _key('useNewNotificationExtractor', false);
+  late final preferLikeButtonOverFavourite = _key('preferLikeButtonOverFavourite', true);
+
+  late final ytDownloadLocation = _key('ytDownloadLocation', AppDirs.YOUTUBE_DOWNLOADS_DEFAULT, sync: false);
+  late final ytMiniplayerDimAfterSeconds = _key('ytMiniplayerDimAfterSeconds', isKuru ? 0 : 15);
+  late final ytMiniplayerDimOpacity = _key('ytMiniplayerDimOpacity', isKuru ? 0.6 : 0.5);
+  late final youtubeStyleMiniplayer = _key('youtubeStyleMiniplayer', true);
+  late final preferNewComments = _key('preferNewComments', false);
+  late final autoExtractVideoTagsFromInfo = _key('autoExtractVideoTagsFromInfo', true);
+  late final fallbackExtractInfoDescription = _key('fallbackExtractInfoDescription', isKuru ? false : true);
+  late final isAudioOnlyMode = _key('isAudioOnlyMode', false, sync: false);
+  late final dataSaverMode = _keyEnum('dataSaverMode', isKuru ? DataSaverMode.medium : DataSaverMode.off, DataSaverMode.values, sync: false);
+  late final dataSaverModeMobile = _keyEnum('dataSaverModeMobile', DataSaverMode.medium, DataSaverMode.values, sync: false);
+  late final rememberAudioOnly = _key('rememberAudioOnly', isKuru ? true : false);
+  late final topComments = _key('topComments', true);
+  late final enableStreamSegments = _key('enableStreamSegments', true);
+  late final splitDownloadsByChapters = _key('splitDownloadsByChapters', false);
+  late final enableHeatMap = _key('enableHeatMap', true);
+  late final onYoutubeLinkOpen = _keyEnum('onYoutubeLinkOpen', OnYoutubeLinkOpenAction.alwaysAsk, OnYoutubeLinkOpenAction.values);
+  late final tapToSeek = _keyEnum('tapToSeek', YTSeekActionMode.expandedMiniplayer, YTSeekActionMode.values);
+  late final dragToSeek = _keyEnum('dragToSeek', YTSeekActionMode.all, YTSeekActionMode.values);
+  late final horizontalDrag = _keyEnum('horizontalDrag', YTHorizontalDragMode.fullscreen, YTHorizontalDragMode.values);
+  late final downloadFilenameBuilder = _key('downloadFilenameBuilder', _defaultFilenameBuilder);
+  late final downloadParallelCount = _key('downloadParallelCount_v2', 4, sync: false);
+  late final downloadThreadsCount = _key('downloadThreadsCount', 3, sync: false);
+  late final initialDefaultMetadataTags = _keyMap<String, String>('initialDefaultMetadataTags', const {});
+
+  // -- currently used for windows
+  late final downloadNotifications = _keyEnum('downloadNotifications', DownloadNotifications.showFailedOnly, DownloadNotifications.values);
+
+  late final markVideoWatched = _key('markVideoWatched', true);
+  late final linkLikeButtonWithFavourites = _key('linkLikeButtonWithFavourites', true);
+  late final innertubeClient = _key<InnertubeClients?>('innertubeClient_v2', null, codec: InnertubeClients.values.asCodec());
+  late final whiteVideoBGInLightMode = _key('whiteVideoBGInLightMode', isKuru ? true : false);
+  late final enableDimInLightMode = _key('enableDimInLightMode', isKuru ? false : true);
+  late final allowExperimentalCodecs = _key('allowExperimentalCodecs', false);
+  late final preferOpusFormat = _key('preferOpusFormat', false);
+  late final enableGifThumbnails = _key('enableGifThumbnails', false);
+  late final maxPageCacheDurationMin = _key('maxPageCacheDurationMin_v2', kDefaultMinutesInMaxDaysForPageCache, sync: false);
+
+  late final sponsorBlockSettings = _keyObject('sponsorBlockSettings', SponsorBlockSettings(), SponsorBlockSettings.fromJson, (v) => v.toJson());
+  late final ryd = _keyObject('ryd', ReturnYoutubeDislikeSettings(), ReturnYoutubeDislikeSettings.fromJson, (v) => v.toJson());
+
+  @override
+  void _migrateLegacy() {
+    _dropKey('innertubeClient');
+    _dropKey('downloadParallelCount');
+    _dropKey('maxPageCacheDurationMin');
+  }
+
+  @override
+  void _onLoaded() {
+    if (!rememberAudioOnly.value) isAudioOnlyMode._setValue(isAudioOnlyMode.fallback);
+  }
+
+  @override
+  bool get syncable => true;
 
   @override
   String get filePath => AppPaths.SETTINGS_YOUTUBE;

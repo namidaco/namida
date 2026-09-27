@@ -1,0 +1,55 @@
+{
+  "selectedLibraryTab": "playlists",
+  "staticLibraryTab": "playlists",
+  "libraryTabGroupVariants": {
+    "tracks": "tracks",
+    "folders": "foldersMusic",
+    "youtube": "youtube",
+    "artists": "artists",
+    "playlists": "playlists",
+    "albums": "albums",
+    "home": "home",
+    "queues": "queues",
+    "currentQueue": "currentQueue",
+    "genres": "genres",
+    "party": "party"
+  },
+  "autoLibraryTab": true,
+  "ytInitialHomePage": "playlists",
+  "recentSearches": [
+    "search 1",
+    "search 2",
+    "search 3",
+    "search 4",
+    "search 5",
+    "search 6",
+    "search 7"
+  ],
+  "resumeUIEnabled": false,
+  "tiltingCardsEffect": false,
+  "jellysInvasion": true,
+  "jellysPalette": false,
+  "artistAlbumsExpanded": false,
+  "artistSinglesExpanded": false,
+  "artistsMapGraphLayout": true,
+  "recentSearchesEnabled": true,
+  "lastPlayedIndex": 0,
+  "ytAddToPlaylistsTabIndex": 1,
+  "ytPlaylistsPageIndex": 0,
+  "ytHomePageIndex": 1,
+  "audioConfigPageIndex": 0,
+  "widePlayerPageIndex": 1,
+  "windowBounds": {
+    "l": 1473.0,
+    "t": 121.0,
+    "r": 1920.0,
+    "b": 974.0
+  },
+  "windowMaximized": false,
+  "miniLyricsWindowBounds": {
+    "l": 650.0,
+    "t": 876.0,
+    "r": 1270.0,
+    "b": 968.0
+  }
+}

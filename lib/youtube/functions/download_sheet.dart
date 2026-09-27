@@ -63,8 +63,8 @@ Future<void> showDownloadVideoBottomSheet({
   final downloadChapter = chapter ?? initialItemConfig?.chapter;
   final chapterSuffix = downloadChapter == null ? '' : ' - ${downloadChapter.title}';
 
-  final showAudioWebm = settings.youtube.preferOpusFormat.obs;
-  final showVideoWebm = settings.youtube.allowExperimentalCodecs.obs;
+  final showAudioWebm = settings.youtube.preferOpusFormat.value.obs;
+  final showVideoWebm = settings.youtube.allowExperimentalCodecs.value.obs;
   final isLoadingInfoRx = Rx<bool>(true);
   final isLoadingStreamsRx = Rx<bool>(true);
   final streamResultRx = Rxn<VideoStreamsResult>();
@@ -91,7 +91,7 @@ Future<void> showDownloadVideoBottomSheet({
 
   final defaultInitialTags = YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value);
   updateTagsMap(defaultInitialTags.map((key, value) => MapEntry(key.tagKey, value)));
-  updateTagsMap(settings.youtube.initialDefaultMetadataTags);
+  updateTagsMap(settings.youtube.initialDefaultMetadataTags.value);
 
   bool videoOutputFilenameWasUserEdited = false;
   void updatefilenameOutput({String customName = ''}) async {
@@ -151,9 +151,9 @@ Future<void> showDownloadVideoBottomSheet({
 
   void onVideoSelectionChanged() {
     if (selectedVideoOnlyStream.value == null) {
-      if (!settings.downloadAudioOnly.value) settings.save(downloadAudioOnly: true);
+      if (!settings.downloadAudioOnly.value) settings.downloadAudioOnly.save(true);
     } else {
-      if (settings.downloadAudioOnly.value) settings.save(downloadAudioOnly: false);
+      if (settings.downloadAudioOnly.value) settings.downloadAudioOnly.save(false);
     }
   }
 
@@ -186,7 +186,7 @@ Future<void> showDownloadVideoBottomSheet({
               final cached = await e.getCachedFile(videoId);
               if (cached != null) return true;
               final strQualityLabel = e.qualityLabel.videoLabelToSettingLabel();
-              return !e.isWebm && settings.youtubeVideoQualities.contains(strQualityLabel);
+              return !e.isWebm && settings.youtubeVideoQualities.value.contains(strQualityLabel);
             },
           ) ??
           videoStreams?.firstWhereEff((e) => !e.isWebm);

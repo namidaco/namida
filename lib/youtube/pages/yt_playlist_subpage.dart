@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:flex_list/flex_list.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
@@ -54,18 +55,20 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
       onTimeRangeChanged: onTimeRangeChanged,
       itemExtent: Dimensions.youtubeCardItemExtent,
       historyController: YoutubeHistoryController.inst,
-      onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-        settings.save(
-          ytMostPlayedTimeRange: mptr,
-          ytMostPlayedCustomDateRange: dateCustom,
-          ytMostPlayedCustomisStartOfDay: isStartOfDay,
-        );
-      },
+      onSavingTimeRange: _saveTimeRange,
       infoBox: null,
       header: null,
       itemsCount: 0,
       itemBuilder: (context, i) => const SizedBox(),
     );
+  }
+
+  static void _saveTimeRange({required MostPlayedTimeRange? mptr, DateRange? dateCustom, bool? isStartOfDay}) {
+    settings.transaction(() {
+      if (mptr != null) settings.ytMostPlayedTimeRange.save(mptr);
+      if (dateCustom != null) settings.ytMostPlayedCustomDateRange.save(dateCustom);
+      if (isStartOfDay != null) settings.ytMostPlayedCustomisStartOfDay.save(isStartOfDay);
+    });
   }
 
   @override
@@ -104,13 +107,7 @@ class YTMostPlayedVideosPage extends StatelessWidget with NamidaRouteWidget {
               isInFullPage: true,
               itemExtent: Dimensions.youtubeCardItemExtent,
               historyController: YoutubeHistoryController.inst,
-              onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
-                settings.save(
-                  ytMostPlayedTimeRange: mptr,
-                  ytMostPlayedCustomDateRange: dateCustom,
-                  ytMostPlayedCustomisStartOfDay: isStartOfDay,
-                );
-              },
+              onSavingTimeRange: _saveTimeRange,
               infoBox: null,
               header: (timeRangeChips, bottomPadding) {
                 return Padding(
@@ -552,7 +549,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
             videoId: mixVideoId,
             mixId: mixId,
             includeFirstVideo: true,
-            userPersonalized: settings.youtube.personalizedMixPlaylists.valueF,
+            userPersonalized: settings.youtube.personalizedMixPlaylists.value,
             details: ExecuteDetails.kForceRequest,
           );
         } else {

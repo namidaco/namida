@@ -1,0 +1,35 @@
+{
+  "customDeviceName": "Device",
+  "allowedServerIds": [],
+  "manualServerAddresses": {},
+  "allowedDeviceIds": [
+    "{00000000-0000-0000-0000-000000000000}",
+    "DEVICE.000000.000"
+  ],
+  "blockedClientIds": [],
+  "deviceIdNames": {
+    "{00000000-0000-0000-0000-000000000000}": "Desktop",
+    "DEVICE.000000.000": "Phone"
+  },
+  "selectedSyncItems": [
+    "history",
+    "historyYt",
+    "playlists",
+    "playlistsYt",
+    "favourites",
+    "favouritesYt",
+    "stats",
+    "statsYt",
+    "latestPlayedForSource",
+    "audioConfigs",
+    "smartPlaylists",
+    "videosPriority",
+    "subscriptionsYt",
+    "queues",
+    "videosCache"
+  ],
+  "syncItemsAdvancedView": false,
+  "autoReconnect": null,
+  "autoSyncIntervalMinutes": -1,
+  "serverWasRunning": false
+}

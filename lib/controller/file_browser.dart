@@ -259,10 +259,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     reversed ??= settings.fileBrowserSortReversed.value;
 
     if (type != settings.fileBrowserSort.value || reversed != settings.fileBrowserSortReversed.value) {
-      settings.save(
-        fileBrowserSort: type,
-        fileBrowserSortReversed: reversed,
-      );
+      settings.transaction(() {
+        settings.fileBrowserSort.save(type);
+        settings.fileBrowserSortReversed.save(reversed);
+      });
     }
 
     setState(() {

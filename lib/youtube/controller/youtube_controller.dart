@@ -313,7 +313,7 @@ class YoutubeController {
 
   static AudioStream? getPreferredAudioStream(List<AudioStream>? audiostreams) {
     if (audiostreams == null) return null;
-    final preferOpusFormat = settings.youtube.preferOpusFormat;
+    final preferOpusFormat = settings.youtube.preferOpusFormat.value;
 
     AudioStream? firstWhereEffIterable(Iterable<AudioStream> streams, bool Function(AudioStream s) test) {
       for (final s in streams) {
@@ -336,7 +336,7 @@ class YoutubeController {
 
   static VideoStream? getPreferredStreamQuality(List<VideoStream> streams, {List<String> qualities = const [], bool preferIncludeWebm = false}) {
     if (streams.isEmpty) return null;
-    final allowExperimentalCodecs = settings.youtube.allowExperimentalCodecs;
+    final allowExperimentalCodecs = settings.youtube.allowExperimentalCodecs.value;
 
     final preferredQualities = (qualities.isNotEmpty ? qualities : settings.youtubeVideoQualities.value);
     VideoStream? plsLoop(bool webm, bool experimentalCodecs) {
@@ -2051,7 +2051,7 @@ class YoutubeController {
         url: url,
         file: file,
         totalBytes: targetSize,
-        threads: settings.youtube.downloadThreadsCount.valueF,
+        threads: settings.youtube.downloadThreadsCount.value,
         downloadingStream: downloadingStream,
       );
     }
@@ -2120,7 +2120,7 @@ class YoutubeController {
           url: erabaretaStream.buildUrl(),
           file: file,
           totalBytes: erabaretaStreamSizeInBytes,
-          threads: settings.youtube.downloadThreadsCount.valueF,
+          threads: settings.youtube.downloadThreadsCount.value,
           downloadingStream: downloadingStream,
           moveTo: newFilePath,
           moveToRequiredBytes: erabaretaStreamSizeInBytes,

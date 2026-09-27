@@ -763,7 +763,7 @@ class YTUtils {
       }
     }
 
-    final defaultInfoSett = settings.youtube.initialDefaultMetadataTags;
+    final defaultInfoSett = settings.youtube.initialDefaultMetadataTags.value;
     for (final di in defaultInfoSett.entries) {
       final defaultText = di.value;
       infoMap[di.key] ??=
@@ -831,10 +831,10 @@ class YTUtils {
 
   static Future<void> onYoutubeMostPlayedPlaylistTap({MostPlayedTimeRange? mptr, DateRange? dateCustom}) async {
     if (mptr != null) {
-      settings.save(
-        ytMostPlayedTimeRange: mptr,
-        ytMostPlayedCustomDateRange: dateCustom,
-      );
+      settings.transaction(() {
+        settings.ytMostPlayedTimeRange.save(mptr);
+        settings.ytMostPlayedCustomDateRange.save(dateCustom);
+      });
       YoutubeHistoryController.inst.updateTempMostPlayedPlaylist(
         mptr: mptr,
         customDateRange: dateCustom,
@@ -1140,7 +1140,7 @@ class YTUtils {
       buttonText: lang.save,
       onButtonTap: (text) {
         onChanged(text);
-        settings.youtube.save(downloadFilenameBuilder: text);
+        settings.youtube.downloadFilenameBuilder.save(text);
         return true;
       },
       extraPreItemsBuilder: !showEditTags
@@ -1156,10 +1156,11 @@ class YTUtils {
                     size: 22.0,
                   ),
                   onTap: () async {
+                    final tagMaps = Map.of(settings.youtube.initialDefaultMetadataTags.value);
                     await showVideoDownloadOptionsSheet(
                       videoTitle: null,
                       videoUploader: null,
-                      tagMaps: settings.youtube.initialDefaultMetadataTags,
+                      tagMaps: tagMaps,
                       tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
                       showSpecificFileOptions: false,
                       onDownloadFilenameChanged: (filename) {}, // not visible
@@ -1174,7 +1175,7 @@ class YTUtils {
                       ),
                       initialGroupName: groupName,
                     );
-                    settings.youtube.save();
+                    settings.youtube.initialDefaultMetadataTags.replace(tagMaps);
                   },
                 ),
               );

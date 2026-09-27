@@ -66,7 +66,7 @@ void showAddToPlaylistDialog(List<Track> tracks) {
                   icon: Broken.arrow_square_up,
                   title: lang.addTracksAtTheBeginning,
                   value: atBeginning,
-                  onChanged: (val) => settings.save(playlistAddTracksAtBeginning: !val),
+                  onChanged: (val) => settings.playlistAddTracksAtBeginning.save(!val),
                 ),
               ),
             ),

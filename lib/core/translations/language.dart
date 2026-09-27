@@ -57,7 +57,7 @@ class Language {
       _currentLanguage.value = language;
 
       if (language != settings.language.value) {
-        settings.save(language: language);
+        settings.language.save(language);
       }
 
       // -- mainly to refresh tray/taskbar language

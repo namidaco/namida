@@ -136,12 +136,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                   children: [
                     NamidaPopupWrapper(
                       child: NamidaPopupWrapper(
-                        childrenDefault: _YTFlagsOptionsState._dataSaverChildren,
+                        childrenDefault: _YTFlagsOptions._dataSaverChildren,
                         child: CustomListTile(
                           icon: Broken.wifi_square,
                           title: lang.dataSaverMode,
                           trailing: NamidaPopupWrapper(
-                            childrenDefault: _YTFlagsOptionsState._dataSaverChildren,
+                            childrenDefault: _YTFlagsOptions._dataSaverChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverMode,
                               builder: (context, dataSaverMode) => Text(
@@ -154,12 +154,12 @@ class YoutubeSettings extends SettingSubpageProvider {
                     ),
                     NamidaPopupWrapper(
                       child: NamidaPopupWrapper(
-                        childrenDefault: _YTFlagsOptionsState._dataSaverMobileChildren,
+                        childrenDefault: _YTFlagsOptions._dataSaverMobileChildren,
                         child: CustomListTile(
                           icon: Broken.chart_1,
                           title: '${lang.dataSaverMode} (${lang.mobile})',
                           trailing: NamidaPopupWrapper(
-                            childrenDefault: _YTFlagsOptionsState._dataSaverMobileChildren,
+                            childrenDefault: _YTFlagsOptions._dataSaverMobileChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverModeMobile,
                               builder: (context, dataSaverModeMobile) => Text(
@@ -187,7 +187,7 @@ class YoutubeSettings extends SettingSubpageProvider {
         title: e.toText(),
         selected: e == settings.youtube.downloadNotifications.value,
         onTap: () {
-          settings.youtube.save(downloadNotifications: e);
+          settings.youtube.downloadNotifications.save(e);
         },
       ),
     );
@@ -209,7 +209,7 @@ class YoutubeSettings extends SettingSubpageProvider {
           subtitle: lang.autoStartRadioSubtitle,
           value: autoStartRadio,
           onChanged: (isTrue) {
-            settings.youtube.save(autoStartRadio: !isTrue);
+            settings.youtube.autoStartRadio.save(!isTrue);
             Player.inst.tryAddingMixPlaylist();
           },
         ),
@@ -217,14 +217,14 @@ class YoutubeSettings extends SettingSubpageProvider {
     );
   }
 
-  static Widget getNotificationsExtractorFlagWidget({required void Function() afterChanged}) => ObxOF(
+  static Widget getNotificationsExtractorFlagWidget({void Function()? afterChanged}) => ObxO(
     rx: settings.youtube.useNewNotificationExtractor,
-    builder: (context, value, fallback) => CustomSwitchListTile(
+    builder: (context, value) => CustomSwitchListTile(
       icon: Broken.notification_1,
-      value: value ?? fallback,
+      value: value,
       onChanged: (isTrue) {
-        settings.youtube.save(useNewNotificationExtractor: !isTrue);
-        afterChanged();
+        settings.youtube.useNewNotificationExtractor.save(!isTrue);
+        afterChanged?.call();
       },
       title: 'use_new_notifications_extractor'.toUpperCase(),
       subtitle: 'use if you don\'t see new notifications. order might not be accurate if enabled',
@@ -300,7 +300,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.youtubeStyleMiniplayer,
                 value: settings.youtube.youtubeStyleMiniplayer.valueR,
                 onChanged: (isTrue) {
-                  settings.youtube.save(youtubeStyleMiniplayer: !isTrue);
+                  settings.youtube.youtubeStyleMiniplayer.save(!isTrue);
                   Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
                 },
               ),
@@ -314,7 +314,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 icon: Broken.musicnote,
                 title: lang.rememberAudioOnlyMode,
                 value: settings.youtube.rememberAudioOnly.valueR,
-                onChanged: (isTrue) => settings.youtube.save(rememberAudioOnly: !isTrue),
+                onChanged: (isTrue) => settings.youtube.rememberAudioOnly.save(!isTrue),
               ),
             ),
           ),
@@ -332,7 +332,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 subtitle: lang.topCommentsSubtitle,
                 value: settings.youtube.topComments.valueR,
                 onChanged: (isTrue) {
-                  settings.youtube.save(topComments: !isTrue);
+                  settings.youtube.topComments.save(!isTrue);
                   YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
 
                   // -- pop comments subpage in case was inside.
@@ -364,7 +364,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.ytPreferNewComments,
                 subtitle: lang.ytPreferNewCommentsSubtitle,
                 value: settings.youtube.preferNewComments.valueR,
-                onChanged: (isTrue) => settings.youtube.save(preferNewComments: !isTrue),
+                onChanged: (isTrue) => settings.youtube.preferNewComments.save(!isTrue),
               ),
             ),
           ),
@@ -381,7 +381,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
                 title: lang.showChannelWatermarkInFullscreen,
                 value: showChannelWatermarkFullscreen,
-                onChanged: (isTrue) => settings.youtube.save(showChannelWatermarkFullscreen: !isTrue),
+                onChanged: (isTrue) => settings.youtube.showChannelWatermarkFullscreen.save(!isTrue),
               ),
             ),
           ),
@@ -394,25 +394,25 @@ class YoutubeSettings extends SettingSubpageProvider {
                 icon: Broken.card_tick,
                 title: lang.showVideoEndcards,
                 value: showVideoEndcards,
-                onChanged: (isTrue) => settings.youtube.save(showVideoEndcards: !isTrue),
+                onChanged: (isTrue) => settings.youtube.showVideoEndcards.save(!isTrue),
               ),
             ),
           ),
           getAutoStartRadioWidget(),
           getItemWrapper(
             key: _YoutubeSettingKeys.personalizedRelatedVideos,
-            child: ObxOF(
+            child: ObxO(
               rx: settings.youtube.personalizedRelatedVideos,
-              builder: (context, personalizedRelatedVideos, fallback) => CustomSwitchListTile(
+              builder: (context, personalizedRelatedVideos) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.personalizedRelatedVideos),
                 leading: const StackedIcon(
                   baseIcon: Broken.video_square,
                   secondaryIcon: Broken.profile_circle,
                   secondaryIconSize: 12.0,
                 ),
-                value: personalizedRelatedVideos ?? fallback,
+                value: personalizedRelatedVideos,
                 onChanged: (isTrue) {
-                  settings.youtube.save(personalizedRelatedVideos: !isTrue);
+                  settings.youtube.personalizedRelatedVideos.save(!isTrue);
                   if (settings.youtube.preferMixRelatedVideos.value != true) {
                     YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
                   }
@@ -424,18 +424,18 @@ class YoutubeSettings extends SettingSubpageProvider {
           ),
           getItemWrapper(
             key: _YoutubeSettingKeys.personalizedMixPlaylists,
-            child: ObxOF(
+            child: ObxO(
               rx: settings.youtube.personalizedMixPlaylists,
-              builder: (context, personalizedMixPlaylists, fallback) => CustomSwitchListTile(
+              builder: (context, personalizedMixPlaylists) => CustomSwitchListTile(
                 bgColor: getBgColor(_YoutubeSettingKeys.personalizedMixPlaylists),
                 leading: const StackedIcon(
                   baseIcon: Broken.video_square,
                   secondaryIcon: Broken.music_playlist,
                   secondaryIconSize: 12.0,
                 ),
-                value: personalizedMixPlaylists ?? fallback,
+                value: personalizedMixPlaylists,
                 onChanged: (isTrue) {
-                  settings.youtube.save(personalizedMixPlaylists: !isTrue);
+                  settings.youtube.personalizedMixPlaylists.save(!isTrue);
                   if (settings.youtube.preferMixRelatedVideos.value == true) {
                     YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
                   }
@@ -452,7 +452,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 bgColor: getBgColor(_YoutubeSettingKeys.searchCleanup),
                 icon: Broken.document_filter,
                 value: searchCleanup,
-                onChanged: (isTrue) => settings.youtube.save(searchCleanup: !isTrue),
+                onChanged: (isTrue) => settings.youtube.searchCleanup.save(!isTrue),
                 title: lang.enableSearchCleanup,
               ),
             ),
@@ -464,6 +464,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               title: lang.showShortVideosIn,
               icon: Broken.video_vertical,
               activeMapRx: settings.youtube.ytVisibleShorts,
+              onToggle: (item) => settings.youtube.ytVisibleShorts.update((map) => map[item] = !(map[item] ?? true)),
               getValues: () => YTVisibleShortPlaces.values,
               toText: (item) => item.toText(),
               getIconsLookup: () => {
@@ -481,6 +482,7 @@ class YoutubeSettings extends SettingSubpageProvider {
               title: lang.showMixPlaylistsIn,
               icon: Broken.radar_1,
               activeMapRx: settings.youtube.ytVisibleMixes,
+              onToggle: (item) => settings.youtube.ytVisibleMixes.update((map) => map[item] = !(map[item] ?? true)),
               getValues: () => YTVisibleMixesPlaces.values,
               toText: (item) => item.toText(),
               getIconsLookup: () => {
@@ -513,7 +515,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     extraValue: true,
                     text: valInSet <= -1 ? '' : "${valInSet}s",
                     onValueChanged: (val) {
-                      settings.youtube.save(ytMiniplayerDimAfterSeconds: val);
+                      settings.youtube.ytMiniplayerDimAfterSeconds.save(val);
                       if (val == 0) {
                         YoutubeMiniplayerUiController.inst.startDimTimer(); // to dim instantly
                       }
@@ -583,7 +585,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     initValue: (ytMiniplayerDimOpacity * 100).round(),
                     text: "${(ytMiniplayerDimOpacity * 100).round()}%",
                     onValueChanged: (val) {
-                      settings.youtube.save(ytMiniplayerDimOpacity: val / 100);
+                      settings.youtube.ytMiniplayerDimOpacity.save(val / 100);
                     },
                   ),
                 ),
@@ -610,7 +612,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         title: e.toText(),
                         selected: e == settings.youtube.tapToSeek.value,
                         onTap: () {
-                          settings.youtube.save(tapToSeek: e);
+                          settings.youtube.tapToSeek.save(e);
                         },
                       ),
                     ),
@@ -632,7 +634,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         title: e.toText(),
                         selected: e == settings.youtube.dragToSeek.value,
                         onTap: () {
-                          settings.youtube.save(dragToSeek: e);
+                          settings.youtube.dragToSeek.save(e);
                         },
                       ),
                     ),
@@ -654,7 +656,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                         title: e.toText(),
                         selected: e == settings.youtube.horizontalDrag.value,
                         onTap: () {
-                          settings.youtube.save(horizontalDrag: e);
+                          settings.youtube.horizontalDrag.save(e);
                         },
                       ),
                     ),
@@ -682,7 +684,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 title: lang.downloadsMetadataTags,
                 subtitle: lang.downloadsMetadataTagsSubtitle,
                 value: settings.youtube.autoExtractVideoTagsFromInfo.valueR,
-                onChanged: (isTrue) => settings.youtube.save(autoExtractVideoTagsFromInfo: !isTrue),
+                onChanged: (isTrue) => settings.youtube.autoExtractVideoTagsFromInfo.save(!isTrue),
               ),
             ),
           ),
@@ -696,7 +698,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                 subtitle: settings.youtube.ytDownloadLocation.valueR,
                 onTap: () async {
                   final path = await NamidaFileBrowser.getDirectory(note: lang.defaultDownloadLocation);
-                  if (path != null) settings.youtube.save(ytDownloadLocation: path);
+                  if (path != null) settings.youtube.ytDownloadLocation.save(path);
                 },
                 trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
                     ? IconButton(
@@ -756,7 +758,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                                   title: e.toText(),
                                   active: onYoutubeLinkOpen == e,
                                   onTap: () {
-                                    settings.youtube.save(onYoutubeLinkOpen: e);
+                                    settings.youtube.onYoutubeLinkOpen.save(e);
                                   },
                                 ),
                               ),
@@ -780,7 +782,8 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
   final Color? bgColor;
   final String title;
   final IconData icon;
-  final RxMap<Enum, bool> activeMapRx;
+  final RxBaseCore<Map<Enum, bool>> activeMapRx;
+  final void Function(E item) onToggle;
   final List<E> Function() getValues;
   final String Function(E item) toText;
   final Map<Enum, IconData> Function() getIconsLookup;
@@ -791,6 +794,7 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
     required this.title,
     required this.icon,
     required this.activeMapRx,
+    required this.onToggle,
     required this.getValues,
     required this.toText,
     required this.getIconsLookup,
@@ -808,46 +812,36 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
           title: title,
           subtitle: activeElements.join(', '),
           onTap: () {
-            bool didModify = false;
             final iconsLookup = getIconsLookup();
             NamidaNavigator.inst.navigateDialog(
-              dialog: PopScope(
-                onPopInvokedWithResult: (didPop, _) {
-                  if (!didPop) return;
-                  if (didModify) settings.youtube.save();
-                },
-                child: CustomBlurryDialog(
-                  icon: icon,
-                  normalTitleStyle: true,
-                  title: title,
-                  actions: [
-                    NamidaButton(
-                      text: lang.done,
-                      onTap: NamidaNavigator.inst.closeDialog,
-                    ),
-                  ],
-                  child: ObxO(
-                    rx: activeMapRx,
-                    builder: (context, activeMap) => Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        children: getValues().map(
-                          (e) {
-                            return Padding(
-                              padding: const EdgeInsets.all(3.0),
-                              child: ListTileWithCheckMark(
-                                title: toText(e),
-                                icon: iconsLookup[e],
-                                active: activeMap[e] ?? true,
-                                onTap: () {
-                                  didModify = true;
-                                  activeMapRx[e] = !(activeMapRx[e] ?? true);
-                                },
-                              ),
-                            );
-                          },
-                        ).toFixedList(),
-                      ),
+              dialog: CustomBlurryDialog(
+                icon: icon,
+                normalTitleStyle: true,
+                title: title,
+                actions: [
+                  NamidaButton(
+                    text: lang.done,
+                    onTap: NamidaNavigator.inst.closeDialog,
+                  ),
+                ],
+                child: ObxO(
+                  rx: activeMapRx,
+                  builder: (context, activeMap) => Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: getValues().map(
+                        (e) {
+                          return Padding(
+                            padding: const EdgeInsets.all(3.0),
+                            child: ListTileWithCheckMark(
+                              title: toText(e),
+                              icon: iconsLookup[e],
+                              active: activeMap[e] ?? true,
+                              onTap: () => onToggle(e),
+                            ),
+                          );
+                        },
+                      ).toFixedList(),
                     ),
                   ),
                 ),
@@ -860,44 +854,22 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
   }
 }
 
-class _YTFlagsOptions extends StatefulWidget {
+class _YTFlagsOptions extends StatelessWidget {
   const _YTFlagsOptions();
 
-  @override
-  State<_YTFlagsOptions> createState() => _YTFlagsOptionsState();
-}
-
-class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
-  bool isRefreshingJsPlayer = false;
-
-  String? _jsPlayerVersion;
-  void _refreshJSPlayerVersion() {
-    _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
-  }
-
-  @override
-  void initState() {
-    _refreshJSPlayerVersion();
-    super.initState();
-  }
-
-  List<NamidaPopupItem> _innertubeChildren() => [
+  static List<NamidaPopupItem> _innertubeChildren() => [
     NamidaPopupItem(
       icon: Broken.video_horizontal,
       title: lang.defaultLabel,
-      selected: null == settings.youtube.innertubeClient,
-      onTap: () {
-        setState(() => settings.youtube.save(setDefaultInnertubeClient: true));
-      },
+      selected: null == settings.youtube.innertubeClient.value,
+      onTap: settings.youtube.innertubeClient.reset,
     ),
     ...InnertubeClients.values.map(
       (e) => NamidaPopupItem(
         icon: Broken.video_octagon,
         title: e.name,
-        selected: e == settings.youtube.innertubeClient,
-        onTap: () {
-          setState(() => settings.youtube.save(innertubeClient: e));
-        },
+        selected: e == settings.youtube.innertubeClient.value,
+        onTap: () => settings.youtube.innertubeClient.save(e),
       ),
     ),
   ];
@@ -909,7 +881,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
         title: e.toText(),
         selected: e == settings.youtube.dataSaverMode.value,
         onTap: () {
-          settings.youtube.save(dataSaverMode: e);
+          settings.youtube.dataSaverMode.save(e);
           onSave?.call();
         },
       ),
@@ -923,7 +895,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
         title: e.toText(),
         selected: e == settings.youtube.dataSaverModeMobile.value,
         onTap: () {
-          settings.youtube.save(dataSaverModeMobile: e);
+          settings.youtube.dataSaverModeMobile.save(e);
           onSave?.call();
         },
       ),
@@ -932,7 +904,6 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
 
   @override
   Widget build(BuildContext context) {
-    final maxPageCacheDurationMin = settings.youtube.maxPageCacheDurationMin;
     return SizedBox(
       width: context.width,
       child: ConstrainedBox(
@@ -944,25 +915,31 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             children: [
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.video,
-                  secondaryIcon: Broken.tick_circle,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.markVideoWatched,
+                builder: (context, markVideoWatched) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.video,
+                    secondaryIcon: Broken.tick_circle,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: markVideoWatched,
+                  onChanged: (isTrue) => settings.youtube.markVideoWatched.save(!isTrue),
+                  title: 'mark_video_watched'.toUpperCase(),
                 ),
-                value: settings.youtube.markVideoWatched,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(markVideoWatched: !isTrue)),
-                title: 'mark_video_watched'.toUpperCase(),
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.document_text_1,
-                  secondaryIcon: Broken.export_1,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.fallbackExtractInfoDescription,
+                builder: (context, fallbackExtractInfoDescription) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.document_text_1,
+                    secondaryIcon: Broken.export_1,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: fallbackExtractInfoDescription,
+                  onChanged: (isTrue) => settings.youtube.fallbackExtractInfoDescription.save(!isTrue),
+                  title: 'try_extract_tags_info_from_description'.toUpperCase(),
                 ),
-                value: settings.youtube.fallbackExtractInfoDescription.value,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(fallbackExtractInfoDescription: !isTrue)),
-                title: 'try_extract_tags_info_from_description'.toUpperCase(),
               ),
               NamidaPopupWrapper(
                 child: NamidaPopupWrapper(
@@ -972,64 +949,82 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                     title: 'innertube_client'.toUpperCase(),
                     trailing: NamidaPopupWrapper(
                       childrenDefault: _innertubeChildren,
-                      child: Text(
-                        settings.youtube.innertubeClient?.name ?? lang.defaultLabel,
-                        style: context.textTheme.displayMedium,
+                      child: ObxO(
+                        rx: settings.youtube.innertubeClient,
+                        builder: (context, innertubeClient) => Text(
+                          innertubeClient?.name ?? lang.defaultLabel,
+                          style: context.textTheme.displayMedium,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-              CustomSwitchListTile(
-                icon: Broken.sun_1,
-                value: settings.youtube.whiteVideoBGInLightMode,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(whiteVideoBGInLightMode: !isTrue)),
-                title: 'white_video_bg_in_light_mode'.toUpperCase(),
-              ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.sun_1,
-                  secondaryIcon: Broken.moon,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.whiteVideoBGInLightMode,
+                builder: (context, whiteVideoBGInLightMode) => CustomSwitchListTile(
+                  icon: Broken.sun_1,
+                  value: whiteVideoBGInLightMode,
+                  onChanged: (isTrue) => settings.youtube.whiteVideoBGInLightMode.save(!isTrue),
+                  title: 'white_video_bg_in_light_mode'.toUpperCase(),
                 ),
-                value: settings.youtube.enableDimInLightMode,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(enableDimInLightMode: !isTrue)),
-                title: 'enable_dim_in_light_mode'.toUpperCase(),
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.story,
-                  secondaryIcon: Broken.cpu_charge,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.enableDimInLightMode,
+                builder: (context, enableDimInLightMode) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.sun_1,
+                    secondaryIcon: Broken.moon,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: enableDimInLightMode,
+                  onChanged: (isTrue) => settings.youtube.enableDimInLightMode.save(!isTrue),
+                  title: 'enable_dim_in_light_mode'.toUpperCase(),
                 ),
-                value: settings.youtube.allowExperimentalCodecs,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(allowExperimentalCodecs: !isTrue)),
-                title: 'allow_experimental_codecs'.toUpperCase(),
-                subtitle: 'av1 & vp9',
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.audio_square,
-                  secondaryIcon: Broken.cpu_charge,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.allowExperimentalCodecs,
+                builder: (context, allowExperimentalCodecs) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.story,
+                    secondaryIcon: Broken.cpu_charge,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: allowExperimentalCodecs,
+                  onChanged: (isTrue) => settings.youtube.allowExperimentalCodecs.save(!isTrue),
+                  title: 'allow_experimental_codecs'.toUpperCase(),
+                  subtitle: 'av1 & vp9',
                 ),
-                value: settings.youtube.preferOpusFormat,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(preferOpusFormat: !isTrue)),
-                title: 'prefer_opus_format'.toUpperCase(),
-                subtitle: 'opus/webm',
               ),
-              CustomSwitchListTile(
-                icon: Broken.video_horizontal,
-                value: settings.youtube.enableGifThumbnails,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(enableGifThumbnails: !isTrue)),
-                title: 'enable_gif_thumbnails'.toUpperCase(),
+              ObxO(
+                rx: settings.youtube.preferOpusFormat,
+                builder: (context, preferOpusFormat) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.audio_square,
+                    secondaryIcon: Broken.cpu_charge,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: preferOpusFormat,
+                  onChanged: (isTrue) => settings.youtube.preferOpusFormat.save(!isTrue),
+                  title: 'prefer_opus_format'.toUpperCase(),
+                  subtitle: 'opus/webm',
+                ),
+              ),
+              ObxO(
+                rx: settings.youtube.enableGifThumbnails,
+                builder: (context, enableGifThumbnails) => CustomSwitchListTile(
+                  icon: Broken.video_horizontal,
+                  value: enableGifThumbnails,
+                  onChanged: (isTrue) => settings.youtube.enableGifThumbnails.save(!isTrue),
+                  title: 'enable_gif_thumbnails'.toUpperCase(),
+                ),
               ),
               ObxO(
                 rx: settings.youtube.enableStreamSegments,
                 builder: (context, enableStreamSegments) => CustomSwitchListTile(
                   icon: Broken.weight_1,
                   value: enableStreamSegments,
-                  onChanged: (isTrue) => settings.youtube.save(enableStreamSegments: !isTrue),
+                  onChanged: (isTrue) => settings.youtube.enableStreamSegments.save(!isTrue),
                   title: 'enable_stream_segments'.toUpperCase(),
                 ),
               ),
@@ -1038,7 +1033,7 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                 builder: (context, enableHeatMap) => CustomSwitchListTile(
                   icon: Broken.wind_2,
                   value: enableHeatMap,
-                  onChanged: (isTrue) => settings.youtube.save(enableHeatMap: !isTrue),
+                  onChanged: (isTrue) => settings.youtube.enableHeatMap.save(!isTrue),
                   title: 'enable_seek_heatmap'.toUpperCase(),
                 ),
               ),
@@ -1050,9 +1045,9 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                     secondaryIcon: Broken.music_playlist,
                     secondaryIconSize: 12.0,
                   ),
-                  value: preferMixRelatedVideos ?? settings.youtube.preferMixRelatedVideos.fallback,
+                  value: preferMixRelatedVideos,
                   onChanged: (isTrue) {
-                    settings.youtube.save(preferMixRelatedVideos: !isTrue);
+                    settings.youtube.preferMixRelatedVideos.save(!isTrue);
                     YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: null, preferMix: !isTrue);
                   },
                   title: 'prefer_mix_playlist_as_related_videos'.toUpperCase(),
@@ -1066,87 +1061,69 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
                     secondaryIcon: Broken.like_1,
                     secondaryIconSize: 12.0,
                   ),
-                  value: showLikeStatusOnCards ?? settings.youtube.showLikeStatusOnCards.fallback,
+                  value: showLikeStatusOnCards,
                   onChanged: (isTrue) {
-                    settings.youtube.save(showLikeStatusOnCards: !isTrue);
+                    settings.youtube.showLikeStatusOnCards.save(!isTrue);
                   },
                   title: 'show_like_status_on_cards'.toUpperCase(),
                   subtitle: 'can increase data usage',
                 ),
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.heart,
-                  secondaryIcon: Broken.like_1,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.preferLikeButtonOverFavourite,
+                builder: (context, preferLikeButtonOverFavourite) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.heart,
+                    secondaryIcon: Broken.like_1,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: preferLikeButtonOverFavourite,
+                  onChanged: (isTrue) => settings.youtube.preferLikeButtonOverFavourite.save(!isTrue),
+                  title: 'prefer_like_button_over_favourite'.toUpperCase(),
+                  subtitle: 'show like instead of heart in notification, widgets, etc. when signed in',
                 ),
-                value: settings.youtube.preferLikeButtonOverFavourite.value,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(preferLikeButtonOverFavourite: !isTrue)),
-                title: 'prefer_like_button_over_favourite'.toUpperCase(),
-                subtitle: 'show like instead of heart in notification, widgets, etc. when signed in',
               ),
-              CustomSwitchListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.like_1,
-                  secondaryIcon: Broken.heart,
-                  secondaryIconSize: 12.0,
+              ObxO(
+                rx: settings.youtube.linkLikeButtonWithFavourites,
+                builder: (context, linkLikeButtonWithFavourites) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.like_1,
+                    secondaryIcon: Broken.heart,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: linkLikeButtonWithFavourites,
+                  onChanged: (isTrue) => settings.youtube.linkLikeButtonWithFavourites.save(!isTrue),
+                  title: 'link_like_button_with_favourites'.toUpperCase(),
+                  subtitle: 'liking adds to local favourites, unliking/disliking removes',
                 ),
-                value: settings.youtube.linkLikeButtonWithFavourites,
-                onChanged: (isTrue) => setState(() => settings.youtube.save(linkLikeButtonWithFavourites: !isTrue)),
-                title: 'link_like_button_with_favourites'.toUpperCase(),
-                subtitle: 'liking adds to local favourites, unliking/disliking removes',
               ),
-              YoutubeSettings.getNotificationsExtractorFlagWidget(
-                afterChanged: refreshState,
-              ),
-              CustomListTile(
-                icon: Broken.driver_refresh,
-                title: 'max_page_cache_duration_validity'.toUpperCase(),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: _MaxPageCacheDurationDialog(
-                      icon: Broken.driver_refresh,
-                      title: 'max_page_cache_duration_validity'.toUpperCase(),
-                      onSave: (minutesTotal) {
-                        setState(() => settings.youtube.save(maxPageCacheDurationMin: minutesTotal));
-                      },
-                    ),
-                  );
-                },
-                trailingText: maxPageCacheDurationMin < 0
-                    ? 'always valid'
-                    : maxPageCacheDurationMin > settings.youtube.kMinutesInMaxDaysForPageCache
-                    ? 'always invalid'
-                    : maxPageCacheDurationMin > 24 * 60
-                    ? '${(maxPageCacheDurationMin / 24 / 60).toStringAsFixed(1)} days'
-                    : maxPageCacheDurationMin > 60
-                    ? '${(maxPageCacheDurationMin / 60).toStringAsFixed(1)} hours'
-                    : '$maxPageCacheDurationMin min',
-              ),
-              CustomListTile(
-                leading: StackedIcon(
-                  baseIcon: Broken.code_1,
-                  secondaryIcon: Broken.refresh,
-                  secondaryIconSize: 12.0,
+              YoutubeSettings.getNotificationsExtractorFlagWidget(),
+              ObxO(
+                rx: settings.youtube.maxPageCacheDurationMin,
+                builder: (context, maxPageCacheDurationMin) => CustomListTile(
+                  icon: Broken.driver_refresh,
+                  title: 'max_page_cache_duration_validity'.toUpperCase(),
+                  onTap: () {
+                    NamidaNavigator.inst.navigateDialog(
+                      dialog: _MaxPageCacheDurationDialog(
+                        icon: Broken.driver_refresh,
+                        title: 'max_page_cache_duration_validity'.toUpperCase(),
+                        onSave: settings.youtube.maxPageCacheDurationMin.save,
+                      ),
+                    );
+                  },
+                  trailingText: maxPageCacheDurationMin < 0
+                      ? 'always valid'
+                      : maxPageCacheDurationMin > settings.youtube.kMinutesInMaxDaysForPageCache
+                      ? 'always invalid'
+                      : maxPageCacheDurationMin > 24 * 60
+                      ? '${(maxPageCacheDurationMin / 24 / 60).toStringAsFixed(1)} days'
+                      : maxPageCacheDurationMin > 60
+                      ? '${(maxPageCacheDurationMin / 60).toStringAsFixed(1)} hours'
+                      : '$maxPageCacheDurationMin min',
                 ),
-                enabled: !isRefreshingJsPlayer,
-                title: 'refresh_js_player'.toUpperCase(),
-                subtitle: _jsPlayerVersion,
-                trailing: isRefreshingJsPlayer ? const LoadingIndicator() : null,
-                onTap: () async {
-                  setState(() {
-                    isRefreshingJsPlayer = true;
-                    _jsPlayerVersion = '?';
-                  });
-                  await YoutubeInfoController.video.forceRefreshJSPlayer();
-                  if (mounted) {
-                    setState(() {
-                      isRefreshingJsPlayer = false;
-                      _refreshJSPlayerVersion();
-                    });
-                  }
-                },
               ),
+              const _RefreshJSPlayerTile(),
               CustomListTile(
                 icon: Broken.hierarchy_square,
                 title: 'copy_yt_history_to_local_history'.toUpperCase(),
@@ -1183,6 +1160,47 @@ class _YTFlagsOptionsState extends State<_YTFlagsOptions> {
   }
 }
 
+class _RefreshJSPlayerTile extends StatefulWidget {
+  const _RefreshJSPlayerTile();
+
+  @override
+  State<_RefreshJSPlayerTile> createState() => _RefreshJSPlayerTileState();
+}
+
+class _RefreshJSPlayerTileState extends State<_RefreshJSPlayerTile> {
+  bool _isRefreshing = false;
+  String? _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
+
+  Future<void> _refresh() async {
+    setState(() {
+      _isRefreshing = true;
+      _jsPlayerVersion = '?';
+    });
+    await YoutubeInfoController.video.forceRefreshJSPlayer();
+    if (!mounted) return;
+    setState(() {
+      _isRefreshing = false;
+      _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      leading: const StackedIcon(
+        baseIcon: Broken.code_1,
+        secondaryIcon: Broken.refresh,
+        secondaryIconSize: 12.0,
+      ),
+      enabled: !_isRefreshing,
+      title: 'refresh_js_player'.toUpperCase(),
+      subtitle: _jsPlayerVersion,
+      trailing: _isRefreshing ? const LoadingIndicator() : null,
+      onTap: _refresh,
+    );
+  }
+}
+
 class _MaxPageCacheDurationDialog extends StatefulWidget {
   final String title;
   final IconData icon;
@@ -1209,7 +1227,7 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
 
   @override
   void initState() {
-    final int initial = settings.youtube.maxPageCacheDurationMin;
+    final int initial = settings.youtube.maxPageCacheDurationMin.value;
     if (initial < 0) {
       minutesRx.value = -1;
     } else {

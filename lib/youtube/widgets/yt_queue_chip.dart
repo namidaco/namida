@@ -290,7 +290,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 iconSize: 20.0, // not used
                                 tooltip: null, // long press above
                                 onTap: () {
-                                  settings.save(enableLyrics: !settings.enableLyrics.value);
+                                  settings.enableLyrics.save(!settings.enableLyrics.value);
                                   Lyrics.inst.updateLyrics(Player.inst.currentItem.value!);
                                 },
                                 icon: null,
@@ -816,7 +816,7 @@ class QueueChipHeaderRow extends StatelessWidget {
                             //     onTap: () {
                             //       final currentItem = Player.inst.currentItem.value;
                             //       if (currentItem == null) return;
-                            //       settings.save(enableLyrics: !settings.enableLyrics.value);
+                            //       settings.enableLyrics.save(!settings.enableLyrics.value);
                             //       Lyrics.inst.updateLyrics(currentItem);
                             //     },
                             //     iconWidget: NamidaMiniPlayerBase.getLrcButton(

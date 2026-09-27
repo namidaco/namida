@@ -447,7 +447,7 @@ class Indexer<T extends Track> {
 
   List<MediaType> _getMediaTypeSortThatDependOnHistory() {
     final requiredToSort = <MediaType>[];
-    for (final e in settings.mediaItemsTrackSorting.entries) {
+    for (final e in settings.mediaItemsTrackSorting.value.entries) {
       for (final sort in e.value) {
         if (sort.requiresHistory) {
           requiredToSort.add(e.key);
@@ -2262,7 +2262,7 @@ class Indexer<T extends Track> {
     allMusic.retainWhere(
       (element) => settings.directoriesToExclude.value.every(
         (dir) => !element.data.startsWith(dir.sourceRaw),
-      ) /* && settings.directoriesToScan.any((dir) => element.data.startsWith(dir)) */,
+      ) /* && settings.directoriesToScan.value.any((dir) => element.data.startsWith(dir)) */,
     );
     final tracks = <TrackExtended>[];
 

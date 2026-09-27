@@ -560,14 +560,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.max,
       children: [
-        if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher == true)
+        if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher.value == true)
           MPCustomIconButton(
             tooltipCallback: () => lang.youtubeStyleMiniplayer,
             onPressed: () {
               MiniPlayerController.inst.snapToMini(haptic: false);
               NamidaYTMiniplayer.setInitialExpanded(true);
 
-              settings.youtube.save(youtubeStyleMiniplayer: true);
+              settings.youtube.youtubeStyleMiniplayer.save(true);
 
               Timer(
                 const Duration(milliseconds: 100),
@@ -608,7 +608,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           child: MPCustomIconButton(
             tooltipCallback: null,
             onPressed: <T extends Playable>() {
-              settings.save(enableLyrics: !settings.enableLyrics.value);
+              settings.enableLyrics.save(!settings.enableLyrics.value);
               Lyrics.inst.updateLyrics(_getcurrentItem);
             },
             icon: NamidaMiniPlayerBase.getLrcButton(
@@ -1505,7 +1505,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                       return DoubleTapDetector(
                                                         onDoubleTap: currentLyricsLRC == null
                                                             ? () {
-                                                                settings.save(enableLyrics: !settings.enableLyrics.value);
+                                                                settings.enableLyrics.save(!settings.enableLyrics.value);
                                                                 Lyrics.inst.updateLyrics(currentItem);
                                                               }
                                                             : null,
@@ -2652,7 +2652,7 @@ class PlayerVideoAudioChip extends StatelessWidget {
                   if (currentId != null &&
                       currentId.isNotEmpty &&
                       (focusedMenuOptions.streams.value?.videoStreams
-                              .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs)
+                              .withoutWebmIfNeccessaryOrExperimentalCodecs(allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs.value)
                               .isEmpty ??
                           true)) {
                     focusedMenuOptions.loadQualities!(currentItem);
@@ -2673,7 +2673,7 @@ class PlayerVideoAudioChip extends StatelessWidget {
                 (context) {
                   final currentId = focusedMenuOptions.currentId(currentItem);
                   final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
-                    allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs,
+                    allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs.value,
                   );
                   final availableVideos = List<NamidaVideo>.from(focusedMenuOptions.localVideos.valueR);
                   YoutubeController.removeDuplicateCachedQualities(availableVideos, ytVideos, currentId);
@@ -2922,11 +2922,11 @@ class PlayerVideoAudioChip extends StatelessWidget {
                                             Player.inst.setPitch(val);
                                             Player.inst.setSpeed(val);
                                             Player.inst.setVolume(val);
-                                            settings.player.save(
-                                              pitch: val,
-                                              speed: val,
-                                              volume: val,
-                                            );
+                                            settings.player.transaction(() {
+                                              settings.player.pitch.save(val);
+                                              settings.player.speed.save(val);
+                                              settings.player.volume.save(val);
+                                            });
                                           },
                                         ),
                                         const DoneButton(),

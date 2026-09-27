@@ -154,7 +154,7 @@ class BackupAndRestore extends SettingSubpageProvider {
             final path = await NamidaFileBrowser.getDirectory(note: lang.defaultBackupLocation);
 
             if (path != null) {
-              settings.save(defaultBackupLocation: path);
+              settings.defaultBackupLocation.save(path);
             }
           },
           trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
@@ -251,7 +251,7 @@ class BackupAndRestore extends SettingSubpageProvider {
 
   void _ensureNewBackupItemsIncluded(List<AppPathsBackupEnum> items) {
     int includedCount = 0;
-    final settingItems = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+    final settingItems = settings.backupItemslist.value;
     for (final item in items) {
       final isIncluded = settingItems.contains(item);
       if (isIncluded) includedCount++;
@@ -259,7 +259,7 @@ class BackupAndRestore extends SettingSubpageProvider {
     if (includedCount > 0 && includedCount < items.length) {
       // -- if a new item was added in an update while old
       // -- settings still apply, this should fix it
-      settings.save(backupItemslist: items);
+      settings.backupItemslist.update((list) => list.addAllNoDuplicates(items));
     }
   }
 
@@ -315,15 +315,13 @@ class BackupAndRestore extends SettingSubpageProvider {
           return ObxO(
             rx: settings.backupItemslist,
             builder: (context, backupItemslist) {
-              backupItemslist ??= AppPathsBackupEnumCategories.everything;
-
-              bool isActive(List<AppPathsBackupEnum> items) => items.any((element) => backupItemslist!.contains(element));
+              bool isActive(List<AppPathsBackupEnum> items) => items.any((element) => backupItemslist.contains(element));
 
               void onItemTap(List<AppPathsBackupEnum> items) {
                 if (isActive(items)) {
-                  settings.removeFromList(backupItemslistAll: items);
+                  settings.backupItemslist.update((list) => list.removeWhere(items.contains));
                 } else {
-                  settings.save(backupItemslist: items);
+                  settings.backupItemslist.update((list) => list.addAllNoDuplicates(items));
                 }
               }
 
@@ -419,12 +417,11 @@ class BackupAndRestore extends SettingSubpageProvider {
           ObxO(
             rx: settings.backupItemslist,
             builder: (context, backupItemslist) {
-              backupItemslist ??= AppPathsBackupEnumCategories.everything;
               return NamidaButton(
                 enabled: backupItemslist.isNotEmpty,
                 text: lang.createBackup,
                 onTap: () {
-                  final items = settings.backupItemslist.value ?? AppPathsBackupEnumCategories.everything;
+                  final items = settings.backupItemslist.value;
                   if (items.isNotEmpty) {
                     NamidaNavigator.inst.closeDialog();
                     final rawPaths = items.map((e) => e.resolve()).toList();
@@ -725,7 +722,7 @@ class BackupAndRestore extends SettingSubpageProvider {
                   return NamidaWheelSlider(
                     max: 14,
                     initValue: days,
-                    onValueChanged: (val) => settings.save(autoBackupIntervalDays: val),
+                    onValueChanged: (val) => settings.autoBackupIntervalDays.save(val),
                     text: days == 0 ? lang.none : "$days ${days == 1 ? lang.day : lang.days}",
                   );
                 },

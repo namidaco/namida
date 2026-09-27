@@ -185,6 +185,12 @@
       "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
       "label": "chlog: commit group",
       "detail": "commits only that group, opens the editor with the template"
+    },
+    {
+      "label": "settings: regenerate debug keys",
+      "type": "shell",
+      "command": "python scripts/gen_settings_debug_keys.py",
+      "problemMatcher": []
     }
   ],
   "inputs": [

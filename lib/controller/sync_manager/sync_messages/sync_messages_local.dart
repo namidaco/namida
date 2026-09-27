@@ -455,6 +455,56 @@ class SmartPlaylistsMessage extends BaseMessage {
   }
 }
 
+/// only keys the sender changed, see `_SettingsKeysWriter.syncDelta`.
+class SettingsMessage extends BaseMessage {
+  final SyncDataItem item;
+  final Map<String, dynamic> delta;
+
+  const SettingsMessage({
+    required this.item,
+    required this.delta,
+    required super.messageInfo,
+  }) : super(MessageType.settings);
+
+  static Future<SettingsMessage?> createForCurrentDevice(SyncDataItem item) async {
+    final delta = settings.syncWriterOf(item).syncDelta(0);
+    if (delta == null) return null;
+    return SettingsMessage(
+      item: item,
+      delta: delta,
+      messageInfo: await SyncUtils.createMessageInfo(.edit),
+    );
+  }
+
+  factory SettingsMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
+    final item = SyncDataItem.lookupMap[map['i']];
+    if (item == null) throw FormatException('unknown settings item ${map['i']}');
+    return SettingsMessage(
+      item: item,
+      delta: (map['d'] as Map).cast<String, dynamic>(),
+      messageInfo: messageInfo,
+    );
+  }
+
+  @override
+  Map<String, dynamic> _encodeToMap() => {
+    'i': item.name,
+    'd': delta,
+  };
+
+  @override
+  String toRawInfo() => 'Settings(${item.name}, ${(delta['m'] as Map).length} keys)';
+
+  @override
+  FutureOr<void> executeOnReceived() {
+    if (SyncUtils.kAllowModification) {
+      settings.syncWriterOf(item).applySyncDelta(delta);
+    } else {
+      snackyy(message: 'Importing ${(delta['m'] as Map).length} ${item.name} keys');
+    }
+  }
+}
+
 class PlaylistsMessage extends BaseMessage {
   final Iterable<LocalPlaylist> playlists;
 

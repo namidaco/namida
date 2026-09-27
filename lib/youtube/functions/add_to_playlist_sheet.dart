@@ -90,9 +90,9 @@ void showAddToPlaylistSheet({
             const SizedBox(height: 6.0),
             Expanded(
               child: NamidaTabView(
-                initialIndex: settings.extra.ytAddToPlaylistsTabIndex ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
+                initialIndex: settings.extra.ytAddToPlaylistsTabIndex.value ?? settings.extra.getPreferredTabIndexIfLoggedInYT(),
                 onIndexChanged: (index) {
-                  settings.extra.save(ytAddToPlaylistsTabIndex: index);
+                  settings.extra.ytAddToPlaylistsTabIndex.save(index);
                 },
                 tabs: [lang.local, lang.youtube],
                 children: [
@@ -106,7 +106,7 @@ void showAddToPlaylistSheet({
                           icon: Broken.arrow_square_up,
                           title: lang.addTracksAtTheBeginning,
                           value: atBeginning,
-                          onChanged: (val) => settings.save(playlistAddTracksAtBeginningYT: !val),
+                          onChanged: (val) => settings.playlistAddTracksAtBeginningYT.save(!val),
                         ),
                       ),
                       Expanded(

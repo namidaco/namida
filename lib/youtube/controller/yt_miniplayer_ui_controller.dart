@@ -32,7 +32,7 @@ class YoutubeMiniplayerUiController {
     if (NamidaNavigator.inst.isInFullScreen) {
       await NamidaNavigator.inst.exitFullScreen();
     }
-    if (settings.enableLyrics.value) settings.save(enableLyrics: false);
+    if (settings.enableLyrics.value) settings.enableLyrics.save(false);
     MiniPlayerController.inst.ytMiniplayerKey.currentState?.animateToState(true, dur: Duration.zero);
     final ytQueue = NamidaNavigator.inst.ytQueueSheetKey.currentState;
     if (ytQueue != null && ytQueue.isOpened) ytQueue.dismissSheet();
