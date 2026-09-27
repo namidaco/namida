@@ -229,8 +229,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       key: LogicalKeyboardKey.tab,
       control: true,
       callback: () {
-        final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
-        settings.player.save(repeatMode: e);
+        final e = Player.inst.cycleRepeatMode();
         _showSnack(
           message: "${lang.repeatMode}: ${e.buildText()}",
         );

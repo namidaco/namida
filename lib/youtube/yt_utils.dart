@@ -347,8 +347,7 @@ class YTUtils {
           ),
         ),
         onTap: () {
-          settings.player.save(repeatMode: PlayerRepeatMode.forNtimes);
-          Player.inst.updateNumberOfRepeats(numberOfRepeats.value);
+          Player.inst.setRepeatMode(PlayerRepeatMode.forNtimes, times: numberOfRepeats.value);
         },
         trailing: NumberOfRepeatsWidgetProvider(
           numberOfRepeatsRx: numberOfRepeats,

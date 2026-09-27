@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:basic_audio_handler/basic_audio_handler.dart';
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/party/party_player_gate.dart';
@@ -62,7 +64,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   Timer? _deviationTimer;
   Future<void> _chain = Future.value();
 
-  _StashedQueue? _stash;
+  _StashedPlayer? _stash;
 
   /// a party queue can hold both kinds at any moment, the dedicated players would break on the other one.
   @override
@@ -72,6 +74,16 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   bool get canSkip {
     final me = _delegate.me;
     return me != null && state.canControl(me);
+  }
+
+  @override
+  PlayerRepeatMode getPlaybackRepeatMode() {
+    return switch (state.repeat.mode) {
+      PlayerRepeatMode.one || PlayerRepeatMode.forNtimes => PlayerRepeatMode.one,
+      PlayerRepeatMode.all => PlayerRepeatMode.all,
+      // -- the timeline stops or reshuffles at the end, the player must wait for it
+      PlayerRepeatMode.none || PlayerRepeatMode.allShuffle => PlayerRepeatMode.none,
+    };
   }
 
   bool isUnavailable(PartyEntry entry) => _unavailableIds.contains(entry.id);
@@ -90,12 +102,14 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     final player = Player.inst;
     // -- joining a party is not a play command, a paused player stays paused until the user says otherwise
     _locallyPaused = inheritLocalPause && !player.isPlaying.value;
-    _stash = _StashedQueue(
+    _stash = _StashedPlayer(
       queue: player.currentQueue.value.toList(),
       index: player.currentIndex.value,
       positionMS: player.nowPlayingPosition.value,
+      numberOfRepeats: player.numberOfRepeats.value,
     );
     player.partyGate = this;
+    _applyRepeat();
     player.currentItemDuration.addListener(_onLocalDurationChanged);
     _delegate.onForcesMixedQueueChanged(true);
     _reconcileTimer = Timer.periodic(_reconcileInterval, (_) => reconcile());
@@ -111,13 +125,14 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     final player = Player.inst;
     player.currentItemDuration.removeListener(_onLocalDurationChanged);
     await _chain;
+    final stash = _stash;
+    _stash = null;
+    if (stash != null) player.updateNumberOfRepeats(stash.numberOfRepeats);
     player.partyGate = null;
     _clearQueueMirror();
     _delegate.onForcesMixedQueueChanged(false);
     _publishSyncState(.idle);
 
-    final stash = _stash;
-    _stash = null;
     if (!restoreQueue || stash == null) return;
     if (stash.queue.isEmpty) {
       await player.partyClearQueue();
@@ -339,6 +354,17 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   void onAnchorChanged() => reconcile();
 
   @override
+  void onRepeatChanged() {
+    if (!_bound) return;
+    _applyRepeat();
+  }
+
+  void _applyRepeat() {
+    final repeat = state.repeat;
+    Player.inst.partySetRepeat(repeat.mode, repeat.times);
+  }
+
+  @override
   void onMembersChanged() {}
 
   @override
@@ -486,6 +512,12 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _lastLocalSeekMS = DateTime.now().millisecondsSinceEpoch;
     _delegate.sendCommand(PartyMsg.seek(position.inMilliseconds));
     return false;
+  }
+
+  @override
+  bool interceptRepeatMode(PlayerRepeatMode mode, int times) {
+    if (_can(state.canControl)) _delegate.sendCommand(PartyMsg.repeat(PartyRepeat(mode: mode, times: times)));
+    return true;
   }
 
   @override
@@ -680,10 +712,11 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   }
 }
 
-class _StashedQueue {
+class _StashedPlayer {
   final List<Playable> queue;
   final int index;
   final int positionMS;
+  final int numberOfRepeats;
 
-  const _StashedQueue({required this.queue, required this.index, required this.positionMS});
+  const _StashedPlayer({required this.queue, required this.index, required this.positionMS, required this.numberOfRepeats});
 }

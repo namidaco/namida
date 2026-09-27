@@ -77,13 +77,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   PartyPlayerGate? get partyGate => _partyGate;
   PartyPlayerGate? _partyGate;
 
-  /// what overrides the user's own choice, null when nothing does.
+  /// shown & changed instead of the user's own choice, null when nothing overrides it.
+  /// playback follows [PartyPlayerGate.getPlaybackRepeatMode] meanwhile.
   final forcedRepeatMode = Rxn<PlayerRepeatMode>();
 
   set partyGate(PartyPlayerGate? gate) {
     _partyGate = gate;
-    // -- the party timeline owns advancement, any other mode would fight it
-    forcedRepeatMode.value = gate == null ? null : PlayerRepeatMode.all;
+    if (gate == null) forcedRepeatMode.value = null;
   }
 
   bool get _willPlayWhenReady => playWhenReady.value;
@@ -118,7 +118,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     settings.youtube.preferLikeButtonOverFavourite.addListener(_refreshNotificationFavouriteStatus);
     YoutubeAccountController.current.activeAccountChannel.addListener(_refreshNotificationFavouriteStatus);
 
-    settings.player.repeatMode.addListener(resetGaplessPlaybackData);
+    settings.player.repeatMode.addListener(_onRepeatModeChanged);
+    forcedRepeatMode.addListener(_onRepeatModeChanged);
     // settings.player.shuffleReflectInQueue.addListener(resetGaplessPlaybackData);
 
     // bool wasShuffleReflectingInQueue = isShuffleReflectingInQueue;
@@ -145,21 +146,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     settings.player.shuffleQueue.addListener(updateQueueShuffled);
     updateQueueShuffled();
 
-    settings.player.repeatMode.addListener(() {
-      refreshPlaybackStateModes();
-      SMTCController.instance?.updateRepeatMode(playerRepeatMode);
-    });
-
     final homeWidget = HomeWidgetController.instance;
     if (homeWidget != null) {
-      settings.player.repeatMode.addListener(
-        () => homeWidget.updateRepeatMode(settings.player.repeatMode.value, numberOfRepeats.value),
-      );
       settings.player.shuffleQueue.addListener(
         () => homeWidget.updateShuffle(settings.player.shuffleQueue.value),
       );
       // -- quick settings tiles read these before anything is ever played.
-      homeWidget.updateRepeatMode(settings.player.repeatMode.value, numberOfRepeats.value);
+      homeWidget.updateRepeatMode(displayRepeatMode, numberOfRepeats.value);
       homeWidget.updateShuffle(settings.player.shuffleQueue.value);
     }
 
@@ -444,7 +437,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       isPlaying: isPlaying,
       isFavourite: isFavourite,
       isFavouriteAsLike: displayFavouriteButtonAsLikeInNotification,
-      repeatMode: playerRepeatMode,
+      repeatMode: displayRepeatMode,
       repeatCount: numberOfRepeats.value,
       shuffle: settings.player.shuffleQueue.value,
     );
@@ -462,13 +455,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
       final isLike = displayFavouriteButtonAsLikeInNotification;
 
-      final repeat = playerRepeatMode;
+      final repeat = displayRepeatMode;
       final repeatText = repeat.buildText();
       final repeatIco = trayIcons.forRepeatMode(repeat);
 
       void onRepeatPress() {
-        final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
-        settings.player.save(repeatMode: e);
+        userCycleRepeatMode();
         _refreshWindowsTaskbar(_willPlayWhenReady, null);
       }
 
@@ -2262,12 +2254,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   void onRepeatModeChange(PlayerRepeatMode repeatMode) {
-    settings.player.save(repeatMode: repeatMode);
+    userSetRepeatMode(repeatMode);
+  }
+
+  void _onRepeatModeChanged() {
+    resetGaplessPlaybackData();
+    refreshPlaybackStateModes();
+    final repeatMode = displayRepeatMode;
+    SMTCController.instance?.updateRepeatMode(repeatMode);
+    HomeWidgetController.instance?.updateRepeatMode(repeatMode, numberOfRepeats.value);
   }
 
   @override
   void onShuffleModeChange(bool shuffled) {
-    settings.player.save(shuffleQueue: shuffled);
+    settings.player.shuffleQueue.save(shuffled);
   }
 
   var _totalListenTimeWriteLock = Future<void>.value();
@@ -2392,7 +2392,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get playerPauseOnVolume0 => settings.player.pauseOnVolume0.value;
 
   @override
-  PlayerRepeatMode get playerRepeatMode => forcedRepeatMode.value ?? settings.player.repeatMode.value;
+  PlayerRepeatMode get playerRepeatMode => _partyGate?.getPlaybackRepeatMode() ?? settings.player.repeatMode.value;
+
+  @override
+  PlayerRepeatMode get displayRepeatMode => forcedRepeatMode.value ?? settings.player.repeatMode.value;
 
   // @override
   // bool get shuffleReflectInQueue => settings.player.shuffleReflectInQueue.value;
@@ -2489,6 +2492,21 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   Future<void> userSkipToQueueItem(int index) {
     if (index != currentIndex.value && partyGate?.interceptSkip(index: index) == true) return Future.value();
     return skipToQueueItem(index);
+  }
+
+  /// [times] is for [PlayerRepeatMode.forNtimes], the current [numberOfRepeats] is kept when null.
+  void userSetRepeatMode(PlayerRepeatMode repeatMode, {int? times}) {
+    final repeats = times ?? numberOfRepeats.value;
+    if (partyGate?.interceptRepeatMode(repeatMode, repeats) == true) return;
+    if (times != null) updateNumberOfRepeats(times);
+    settings.player.repeatMode.save(repeatMode);
+  }
+
+  /// returns the requested mode.
+  PlayerRepeatMode userCycleRepeatMode() {
+    final repeatMode = displayRepeatMode.nextElement(PlayerRepeatMode.values);
+    userSetRepeatMode(repeatMode);
+    return repeatMode;
   }
 
   /// lets position listeners tell a seek apart from playback, without hooking into every seek path.
@@ -2645,9 +2663,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     switch (name) {
       case HomeWidgetController.actionShuffle:
         // await shuffleNextItems();
-        settings.player.save(shuffleQueue: !settings.player.shuffleQueue.value);
+        settings.player.shuffleQueue.save(!settings.player.shuffleQueue.value);
       case HomeWidgetController.actionCycleRepeat:
-        settings.player.save(repeatMode: settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values));
+        userCycleRepeatMode();
       default:
         return super.customAction(name, extras);
     }

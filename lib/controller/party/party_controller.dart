@@ -726,12 +726,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     }
     _synced = true;
     if (_state.epoch == 0) {
+      final repeat = PartyRepeat(mode: settings.player.repeatMode.value, times: Player.inst.numberOfRepeats.value);
       _host = PartyHost.create(
         state: _state,
         selfN: _myN,
         selfName: _relayMembers[_myN] ?? '',
         roomName: _pendingRoomName,
         listening: isListening.value,
+        repeat: repeat,
         delegate: this,
       );
       for (final e in _relayMembers.entries) {
@@ -1029,6 +1031,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _pushSummary();
     _binder?.onAnchorChanged();
   }
+
+  @override
+  void onRepeatChanged() => _binder?.onRepeatChanged();
 
   @override
   void onMembersChanged() => membersTick.value++;

@@ -425,6 +425,16 @@ class Player {
     _audioHandler.updateNumberOfRepeats(newNumber);
   }
 
+  /// [times] is for [PlayerRepeatMode.forNtimes].
+  void setRepeatMode(PlayerRepeatMode repeatMode, {int? times}) {
+    _audioHandler.userSetRepeatMode(repeatMode, times: times);
+  }
+
+  /// returns the requested mode.
+  PlayerRepeatMode cycleRepeatMode() {
+    return _audioHandler.userCycleRepeatMode();
+  }
+
   void updateSleepTimerValues({
     bool? enableSleepAfterItems,
     bool? enableSleepAfterMins,
@@ -907,6 +917,11 @@ class Player {
   PartyPlayerGate? get partyGate => _audioHandler.partyGate;
   RxBaseCore<PlayerRepeatMode?> get forcedRepeatMode => _audioHandler.forcedRepeatMode;
   set partyGate(PartyPlayerGate? gate) => _audioHandler.partyGate = gate;
+
+  void partySetRepeat(PlayerRepeatMode repeatMode, int times) {
+    if (repeatMode == PlayerRepeatMode.forNtimes) _audioHandler.updateNumberOfRepeats(times);
+    _audioHandler.forcedRepeatMode.value = repeatMode;
+  }
 
   Future<void> partyAssignQueue(List<Playable> queue, int index, {required bool startPlaying, required String roomName}) {
     _audioHandler.latestQueueSource = QueueSource.others(roomName);

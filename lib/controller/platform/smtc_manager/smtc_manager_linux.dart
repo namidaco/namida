@@ -176,8 +176,7 @@ class _CustomMPRISService extends MPRISService {
 
   @override
   Future<void> onLoopStatus(LoopStatus loopStatus) async {
-    final e = settings.player.repeatMode.value.nextElement(PlayerRepeatMode.values);
-    settings.player.save(repeatMode: e);
+    final e = Player.inst.cycleRepeatMode();
     snackyy(
       icon: Broken.flash_1,
       title: '',

@@ -11,6 +11,7 @@ abstract class PartyStateListener {
   void onEntryMoved(int fromIndex, int toIndex);
   void onEntryMetaChanged(PartyEntry entry, {required bool fallbackChanged});
   void onAnchorChanged();
+  void onRepeatChanged();
   void onMembersChanged();
   void onPermsChanged();
   void onChat(PartyChatMessage message);
@@ -26,6 +27,7 @@ class PartyState {
   String roomName = '';
   PartyPermissions perms = const PartyPermissions();
   PartyAnchor anchor = PartyAnchor.empty;
+  PartyRepeat repeat = PartyRepeat.initial;
 
   List<PartyEntry> get entries => _entries;
   Map<int, PartyMember> get members => _members;
@@ -123,6 +125,7 @@ class PartyState {
     roomName = data['n'] as String;
     perms = PartyPermissions.fromBits(data['p'] as int);
     anchor = PartyAnchor.fromList(data['a'] as List);
+    repeat = PartyRepeat.fromList(data['r'] as List);
     _members
       ..clear()
       ..addEntries(members.map((e) => MapEntry(e.n, e)));
@@ -139,6 +142,7 @@ class PartyState {
     if (l == null) return;
     l.onMembersChanged();
     l.onPermsChanged();
+    l.onRepeatChanged();
     if (!_loading) l.onQueueSet();
   }
 
@@ -154,6 +158,10 @@ class PartyState {
       case PartyMsgType.anchor:
         anchor = PartyAnchor.fromList(data['a'] as List);
         l?.onAnchorChanged();
+
+      case PartyMsgType.repeatChanged:
+        repeat = PartyRepeat.fromList(data['r'] as List);
+        l?.onRepeatChanged();
 
       case PartyMsgType.added:
         final entries = _parseEntries(data['e']);

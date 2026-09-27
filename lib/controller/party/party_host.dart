@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:basic_audio_handler/basic_audio_handler.dart';
+
 import 'package:namida/controller/party/party_protocol.dart';
 import 'package:namida/controller/party/party_state.dart';
 
@@ -40,6 +42,7 @@ class PartyHost {
     required String selfName,
     required String roomName,
     required bool listening,
+    required PartyRepeat repeat,
     required PartyHostDelegate delegate,
   }) {
     final snapshot = PartyMsg.snapshot(
@@ -48,6 +51,7 @@ class PartyHost {
       members: [PartyMember(n: selfN, name: selfName, role: .host, listening: listening)],
       perms: const PartyPermissions(),
       anchor: PartyAnchor.empty,
+      repeat: repeat,
       chat: const [],
       entries: const [],
       more: false,
@@ -82,6 +86,7 @@ class PartyHost {
       members: members,
       perms: state.perms,
       anchor: state.anchor,
+      repeat: state.repeat,
       chat: state.chat.toList(),
       entries: state.entries.toList(),
       more: false,
@@ -181,6 +186,12 @@ class PartyHost {
       case PartyMsgType.previous:
         if (!state.canControl(member)) return .permission;
         _skipBy(-1);
+
+      case PartyMsgType.repeat:
+        if (!state.canControl(member)) return .permission;
+        final repeat = PartyRepeat.fromList(data['r'] as List);
+        if (repeat.mode == PlayerRepeatMode.forNtimes && repeat.times < 1) return .invalid;
+        _emit(PartyMsg.repeatChanged(repeat));
 
       case PartyMsgType.add:
         return _add(member, data);
@@ -312,7 +323,31 @@ class PartyHost {
 
   void _autoAdvance(int entryId) {
     if (state.anchor.entryId != entryId) return;
-    _skipBy(1);
+    final repeat = state.repeat;
+    switch (repeat.mode) {
+      case PlayerRepeatMode.one:
+        _setAnchor(entryId, 0, true);
+      case PlayerRepeatMode.forNtimes:
+        final timesLeft = repeat.times - 1;
+        final nextRepeat = timesLeft > 0 ? PartyRepeat(mode: .forNtimes, times: timesLeft) : const PartyRepeat(mode: .none, times: 0);
+        _emit(PartyMsg.repeatChanged(nextRepeat));
+        _setAnchor(entryId, 0, true);
+      case PlayerRepeatMode.all:
+        _skipBy(1);
+      case PlayerRepeatMode.none || PlayerRepeatMode.allShuffle when state.currentIndex < state.entries.length - 1:
+        _skipBy(1);
+      case PlayerRepeatMode.none:
+        _setAnchor(state.entries.first.id, 0, false);
+      case PlayerRepeatMode.allShuffle:
+        _reshuffle();
+    }
+  }
+
+  void _reshuffle() {
+    final justEndedId = state.anchor.entryId;
+    final entries = state.entries.toList()..shuffle();
+    if (entries.length > 1 && entries.first.id == justEndedId) entries.add(entries.removeAt(0));
+    _emitQueue(entries, _anchorOf(entries.first.id, 0, true));
   }
 
   PartyDenyReason? _add(PartyMember member, Map<String, dynamic> data) {
@@ -411,7 +446,11 @@ class PartyHost {
       anchor = _anchorOf(entries[index].id, position < 0 ? 0 : position, data['pl'] == true);
     }
     _fallbackRequested.clear();
+    _emitQueue(entries, anchor);
+    return null;
+  }
 
+  void _emitQueue(List<PartyEntry> entries, PartyAnchor anchor) {
     const chunk = PartyLimits.snapshotChunkSize;
     final firstEnd = entries.length < chunk ? entries.length : chunk;
     _emit(PartyMsg.queueSet(entries.sublist(0, firstEnd), anchor, more: firstEnd < entries.length));
@@ -420,7 +459,6 @@ class PartyHost {
       _emit(PartyMsg.entriesChunk(entries.sublist(start, end), more: end < entries.length));
     }
     _scheduleAdvance();
-    return null;
   }
 
   // ------------------------------------------------------------
@@ -456,6 +494,7 @@ class PartyHost {
       members: state.members.values,
       perms: state.perms,
       anchor: state.anchor,
+      repeat: state.repeat,
       chat: state.chat,
       entries: entries.sublist(0, firstEnd),
       more: firstEnd < entries.length,

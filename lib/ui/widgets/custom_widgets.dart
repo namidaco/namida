@@ -6169,10 +6169,8 @@ class RepeatModeIconButton extends StatelessWidget {
             borderRadius: 12.0,
             bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
             onTap: () {
-              settings.player.save(repeatMode: repeatMode);
-              if (repeatMode == PlayerRepeatMode.forNtimes) {
-                Player.inst.updateNumberOfRepeats(_numberOfRepeats.value);
-              }
+              final times = repeatMode == PlayerRepeatMode.forNtimes ? _numberOfRepeats.value : null;
+              Player.inst.setRepeatMode(repeatMode, times: times);
               NamidaNavigator.inst.popMenu();
             },
             child: Row(

@@ -23,8 +23,8 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
         repeatMode: settings.player.repeatMode.value.toSMTCRepeatMode(),
       );
 
-      smtc?.shuffleChangeStream.listen((shuffle) => settings.player.save(shuffleQueue: shuffle));
-      smtc?.repeatModeChangeStream.listen((repeatMode) => settings.player.save(repeatMode: repeatMode.toPlayerRepeatMode()));
+      smtc?.shuffleChangeStream.listen((shuffle) => settings.player.shuffleQueue.save(shuffle));
+      smtc?.repeatModeChangeStream.listen((repeatMode) => Player.inst.setRepeatMode(repeatMode.toPlayerRepeatMode()));
 
       smtc?.buttonPressStream.listen((event) {
         switch (event) {

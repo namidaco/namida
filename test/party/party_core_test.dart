@@ -1,3 +1,4 @@
+import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:namida/controller/party/party_host.dart';
@@ -18,7 +19,7 @@ class _Room implements PartyHostDelegate {
   List<String>? reactions;
 
   _Room() {
-    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, delegate: this);
+    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, repeat: PartyRepeat.initial, delegate: this);
   }
 
   PartyState join(int n, {String? name}) {
@@ -74,6 +75,7 @@ class _Room implements PartyHostDelegate {
       expect(state.anchor.toList(), hostState.anchor.toList());
       expect(state.members.keys, hostState.members.keys);
       expect(state.perms.toBits(), hostState.perms.toBits());
+      expect(state.repeat.toList(), hostState.repeat.toList());
     }
   }
 }
@@ -368,6 +370,70 @@ void main() {
     room.host.dispose();
   });
 
+  test('repeat modes decide what the timeline does at the end of an entry', () {
+    final room = _Room();
+    room.join(2);
+    room.send(1, PartyMsg.add([_yt('a', durationMS: 10000), _yt('b', durationMS: 10000), _yt('c', durationMS: 10000)]));
+
+    void endCurrent() {
+      room.now += 10000;
+      room.send(2, PartyMsg.ended(room.hostState.anchor.entryId));
+    }
+
+    room.send(1, PartyMsg.repeat(const PartyRepeat(mode: .one, times: 0)));
+    endCurrent();
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.anchor.positionMS, 0);
+
+    room.send(1, PartyMsg.repeat(const PartyRepeat(mode: .forNtimes, times: 2)));
+    endCurrent();
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.repeat.times, 1);
+    endCurrent();
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.repeat.mode, PlayerRepeatMode.none);
+    endCurrent();
+    expect(room.hostState.currentIndex, 1);
+
+    room.send(1, PartyMsg.skip(3));
+    endCurrent();
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.anchor.playing, false);
+
+    room.send(1, PartyMsg.repeat(const PartyRepeat(mode: .all, times: 0)));
+    room.send(1, PartyMsg.skip(3));
+    endCurrent();
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.anchor.playing, true);
+
+    room.send(1, PartyMsg.repeat(const PartyRepeat(mode: .allShuffle, times: 0)));
+    room.send(1, PartyMsg.skip(3));
+    endCurrent();
+    expect(room.hostState.entries.map((e) => e.id).toSet(), {1, 2, 3});
+    expect(room.hostState.currentIndex, 0);
+    expect(room.hostState.currentEntry!.id, isNot(3));
+    expect(room.hostState.anchor.playing, true);
+    room.expectConverged();
+    room.host.dispose();
+  });
+
+  test('repeat changes need control & a valid count, late joiners get it in the snapshot', () {
+    final room = _Room();
+    room.join(2);
+    room.send(2, PartyMsg.repeat(const PartyRepeat(mode: .one, times: 0)));
+    expect(room.denied[2]!.single.data['r'], PartyDenyReason.permission.index);
+    room.send(1, PartyMsg.repeat(const PartyRepeat(mode: .forNtimes, times: 0)));
+    expect(room.denied[1]!.single.data['r'], PartyDenyReason.invalid.index);
+    expect(room.hostState.repeat.mode, PlayerRepeatMode.all);
+
+    room.send(1, PartyMsg.perms(const PartyPermissions(control: true)));
+    room.send(2, PartyMsg.repeat(const PartyRepeat(mode: .forNtimes, times: 3)));
+    final late = room.join(3);
+    expect(late.repeat.mode, PlayerRepeatMode.forNtimes);
+    expect(late.repeat.times, 3);
+    room.expectConverged();
+  });
+
   test('take over keeps the queue, bumps epoch, old snapshots are ignored', () {
     final room = _Room();
     final guest = room.join(2);
@@ -394,6 +460,7 @@ void main() {
       members: const [],
       perms: const PartyPermissions(),
       anchor: PartyAnchor.empty,
+      repeat: PartyRepeat.initial,
       chat: const [],
       entries: const [],
       more: false,

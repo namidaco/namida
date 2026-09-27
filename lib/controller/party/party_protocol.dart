@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:basic_audio_handler/basic_audio_handler.dart';
+
 /// bump on breaking changes of the data payloads, the relay rejects joins with a different version.
-const kPartyVersion = 1;
+const kPartyVersion = 2;
 
 abstract final class PartyLimits {
   static const maxEntries = 3000;
@@ -196,6 +198,30 @@ class PartyAnchor {
   }
 }
 
+/// applied by the host timeline, players only predict it.
+class PartyRepeat {
+  final PlayerRepeatMode mode;
+
+  /// repeats left of the current entry, only meaningful for [PlayerRepeatMode.forNtimes].
+  final int times;
+
+  const PartyRepeat({
+    required this.mode,
+    required this.times,
+  });
+
+  static const initial = PartyRepeat(mode: PlayerRepeatMode.all, times: 0);
+
+  factory PartyRepeat.fromList(List list) {
+    return PartyRepeat(
+      mode: PlayerRepeatMode.values.byName(list[0] as String),
+      times: list[1] as int,
+    );
+  }
+
+  List<Object> toList() => [mode.name, times];
+}
+
 class PartyChatMessage {
   final int n;
   final String name;
@@ -246,6 +272,7 @@ enum PartyMsgType {
   skip,
   next,
   previous,
+  repeat,
   add,
   remove,
   move,
@@ -264,6 +291,7 @@ enum PartyMsgType {
   snapshot,
   entriesChunk,
   anchor,
+  repeatChanged,
   added,
   removed,
   moved,
@@ -320,6 +348,7 @@ class PartyMsg {
   factory PartyMsg.skip(int entryId) => PartyMsg(.skip, {'id': entryId});
   const PartyMsg.next() : this(.next, _empty);
   const PartyMsg.previous() : this(.previous, _empty);
+  factory PartyMsg.repeat(PartyRepeat repeat) => PartyMsg(.repeat, {'r': repeat.toList()});
 
   /// [afterId]: null appends, 0 inserts at the start, -1 inserts after the current entry.
   /// [playIndex] asks to play that entry of this batch, honored only if the sender can control.
@@ -350,6 +379,7 @@ class PartyMsg {
     required Iterable<PartyMember> members,
     required PartyPermissions perms,
     required PartyAnchor anchor,
+    required PartyRepeat repeat,
     required Iterable<PartyChatMessage> chat,
     required List<PartyEntry> entries,
     required bool more,
@@ -360,6 +390,7 @@ class PartyMsg {
       'ms': members.map((e) => e.toList()).toList(growable: false),
       'p': perms.toBits(),
       'a': anchor.toList(),
+      'r': repeat.toList(),
       'c': chat.map((e) => e.toList()).toList(growable: false),
       'e': _entriesToList(entries),
       'm': more,
@@ -367,6 +398,7 @@ class PartyMsg {
   }
 
   factory PartyMsg.anchor(PartyAnchor anchor) => PartyMsg(.anchor, {'a': anchor.toList()});
+  factory PartyMsg.repeatChanged(PartyRepeat repeat) => PartyMsg(.repeatChanged, {'r': repeat.toList()});
   factory PartyMsg.added(List<PartyEntry> entries, int index) => PartyMsg(.added, {'e': _entriesToList(entries), 'i': index});
   factory PartyMsg.removed(List<int> ids, PartyAnchor? anchor) => PartyMsg(.removed, {'ids': ids, 'a': ?anchor?.toList()});
   factory PartyMsg.moved(int id, int toIndex) => PartyMsg(.moved, {'id': id, 'i': toIndex});

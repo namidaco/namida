@@ -56,7 +56,7 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
       ..addAll(welcome.members);
     if (isHost) {
       synced = true;
-      host ??= PartyHost.create(state: state, selfN: myN, selfName: name, roomName: 'room', listening: true, delegate: this);
+      host ??= PartyHost.create(state: state, selfN: myN, selfName: name, roomName: 'room', listening: true, repeat: PartyRepeat.initial, delegate: this);
     } else {
       connection.sendData(PartyRoute.toHost, PartyMsg.hello(listening: true).encode());
     }

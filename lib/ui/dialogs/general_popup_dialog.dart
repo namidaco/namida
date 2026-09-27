@@ -24,7 +24,6 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
-import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -1420,8 +1419,7 @@ Future<void> showGeneralPopupDialog(
                                     icon: Broken.cd,
                                     onTap: () {
                                       NamidaNavigator.inst.closeDialog();
-                                      settings.player.save(repeatMode: PlayerRepeatMode.forNtimes);
-                                      Player.inst.updateNumberOfRepeats(repeats);
+                                      Player.inst.setRepeatMode(PlayerRepeatMode.forNtimes, times: repeats);
                                     },
                                     trailing: NumberOfRepeatsWidgetProvider(
                                       numberOfRepeatsRx: numberOfRepeats,
