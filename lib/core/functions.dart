@@ -358,6 +358,32 @@ class NamidaOnTaps {
     );
   }
 
+  void onSmartPlaylistSortIconTap({
+    required List<SortType> currentSorts,
+    required bool currentReverse,
+    required void Function(List<SortType> sorts, bool reverse) onChanged,
+  }) {
+    List<SortType> newSorts = currentSorts;
+    bool newReverse = currentReverse;
+
+    return _onSubPageSortIconTap<SortType>(
+      minimumItems: 0,
+      defaultSorts: const [],
+      allSortsList: List<SortType>.from(SortType.values),
+      sortToText: (sort) => sort.toText(),
+      sortToIcon: (sort) => sort.toIcon(),
+      currentSorts: currentSorts,
+      currentReverse: currentReverse,
+      allowCustom: false,
+      onSortChange: (activeSorters) => newSorts = activeSorters,
+      onSortReverseChange: (reverse) => newReverse = reverse,
+      onDone: () {
+        final didChange = newReverse != currentReverse || !listEquals(newSorts, currentSorts);
+        if (didChange) onChanged(newSorts, newReverse);
+      },
+    );
+  }
+
   void _onSubPageSortIconTap<S>({
     Widget? header,
     required List<S> currentSorts,

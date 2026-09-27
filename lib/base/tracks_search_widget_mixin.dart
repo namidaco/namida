@@ -240,7 +240,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
 
   SmartPlaylistWrapper? createSmartPlaylist({
     required MediaType type,
-    required SortType? sort,
+    required List<SortType> sorts,
     required bool sortReverse,
     required String pageTitle,
   }) {
@@ -251,7 +251,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
         name: lang.search,
         creationDate: DateTime.now(),
         joiner: SmartJoiner.defaultForGroups,
-        sort: sort,
+        sorts: sorts,
         sortReverse: sortReverse,
         moods: [],
         ruleGroups: [
@@ -263,13 +263,13 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
 
   void _onFilterIconLongPress({
     required MediaType type,
-    required SortType? sort,
+    required List<SortType> sorts,
     required bool sortReverse,
     required String pageTitle,
   }) async {
     final initialSmartPlaylist = _cachedInitialSmartPlaylist ??= createSmartPlaylist(
       type: type,
-      sort: sort,
+      sorts: sorts,
       sortReverse: sortReverse,
       pageTitle: pageTitle,
     );
@@ -309,16 +309,16 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
         return ObxO(
           rx: settings.mediaItemsTrackSorting,
           builder: (context, sortingModes) {
-            final sort = sortingModes[type]?.firstOrNull;
+            final sorts = sortingModes[type] ?? const <SortType>[];
             return TracksSearchWidgetBoxBase(
               state: widget.state,
               leftText: widget.leftText,
-              sort: sort,
+              sort: sorts.firstOrNull,
               sortReverse: sortIsReverse,
               disableSort: widget.disableSort,
               onFilterIconLongPress: () => _onFilterIconLongPress(
                 type: type,
-                sort: sort,
+                sorts: sorts,
                 sortReverse: sortIsReverse,
                 pageTitle: widget.pageTitle,
               ),

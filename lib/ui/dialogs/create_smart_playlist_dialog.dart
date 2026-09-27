@@ -15,7 +15,6 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/text_suggestions.dart';
 
 class CreateSmartPlaylistDialog extends StatefulWidget {
@@ -65,59 +64,6 @@ class CreateSmartPlaylistDialog extends StatefulWidget {
     );
   }
 
-  static void openSortMenu({
-    required BuildContext context,
-    required SortType? activeSort,
-    required bool activeSortReverse,
-    required void Function(SortType? newSort) setSort,
-    required void Function(bool newSortReverse) setSortReverse,
-    required bool popMenuOnSortReverse,
-  }) {
-    final popupMenu = NamidaPopupWrapper(
-      children: () => SortByMenuCustom(
-        childrenCallback: (context) {
-          return [
-            Padding(
-              padding: const EdgeInsets.only(left: 4.0, right: 4.0, bottom: 4.0),
-              child: ListTileWithCheckMark(
-                borderRadius: 10.0,
-                active: activeSortReverse,
-                onTap: () {
-                  setSortReverse(!activeSortReverse);
-                  if (popMenuOnSortReverse) NamidaNavigator.inst.popMenu();
-                },
-              ),
-            ),
-            ...SortType.values.map(
-              (sort) => SmallListTile(
-                borderRadius: 12.0,
-                compact: true,
-                visualDensity: VisualDensity(horizontal: -4.0, vertical: -4.0),
-                trailing: Padding(
-                  padding: const EdgeInsets.only(right: 4.0),
-                  child: Icon(
-                    sort.toIcon(),
-                    size: 18.0,
-                  ),
-                ),
-                title: sort.toText(),
-                active: activeSort == sort,
-                onTap: () {
-                  if (activeSort == sort) {
-                    setSort(null);
-                  } else {
-                    setSort(sort);
-                  }
-                  NamidaNavigator.inst.popMenu();
-                },
-              ),
-            ),
-          ];
-        },
-      ).children(context),
-    );
-    popupMenu.showPopupMenu(context);
-  }
 }
 
 class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
@@ -127,7 +73,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
 
   final _nameController = TextEditingController();
   SmartJoiner _joiner = SmartJoiner.defaultForGroups;
-  SortType? _sort;
+  List<SortType> _sorts = const [];
   bool _sortReverse = false;
   final _moods = <String>[];
   final _ruleGroups = <SmartPlaylistRuleGroup>[];
@@ -138,7 +84,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     if (sp != null) {
       _nameController.text = sp.name;
       _joiner = sp.joiner;
-      _sort = sp.sort;
+      _sorts = sp.sorts;
       _sortReverse = sp.sortReverse;
       _moods.addAll(sp.moods);
       _ruleGroups.addAll(sp.ruleGroups.map((e) => e.copy()));
@@ -163,7 +109,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   void _resetEverything() {
     _nameController.text = '';
     _joiner = SmartJoiner.defaultForGroups;
-    _sort = null;
+    _sorts = const [];
     _sortReverse = false;
     _moods.clear();
     _ruleGroups.clear();
@@ -180,7 +126,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
       name: _nameController.text,
       creationDate: DateTime.now(),
       joiner: _joiner,
-      sort: _sort,
+      sorts: _sorts,
       sortReverse: _sortReverse,
       moods: _moods,
       ruleGroups: _ruleGroups,
@@ -218,9 +164,11 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     });
   }
 
-  void _setSort(SortType? sort) {
-    if (_sort == sort) return;
-    setState(() => _sort = sort);
+  void _setSorts(List<SortType> sorts, bool sortReverse) {
+    setState(() {
+      _sorts = sorts;
+      _sortReverse = sortReverse;
+    });
   }
 
   void _setSortReverse(bool sortReverse) {
@@ -386,18 +334,13 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                       minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
                       colors: NamidaButtonColors.dimmed,
                       icon: Broken.sort,
-                      text: _sort?.toText() ?? lang.auto,
+                      text: _sorts.firstOrNull?.toText() ?? lang.auto,
                       fontSizeMultiplier: 0.95,
-                      onTap: () {
-                        CreateSmartPlaylistDialog.openSortMenu(
-                          context: context,
-                          activeSort: _sort,
-                          activeSortReverse: _sortReverse,
-                          setSort: _setSort,
-                          setSortReverse: _setSortReverse,
-                          popMenuOnSortReverse: false,
-                        );
-                      },
+                      onTap: () => NamidaOnTaps.inst.onSmartPlaylistSortIconTap(
+                        currentSorts: _sorts,
+                        currentReverse: _sortReverse,
+                        onChanged: _setSorts,
+                      ),
                     ),
                     NamidaIconButton(
                       horizontalPadding: 8.0,

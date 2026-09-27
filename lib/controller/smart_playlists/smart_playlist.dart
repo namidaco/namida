@@ -14,7 +14,7 @@ class SmartPlaylist {
   final String name;
   final DateTime creationDate;
   final SmartJoiner joiner;
-  final SortType? sort;
+  final List<SortType> sorts;
   final bool sortReverse;
   final List<String> moods;
   final List<SmartPlaylistRuleGroup> ruleGroups;
@@ -25,7 +25,7 @@ class SmartPlaylist {
     required this.name,
     required this.creationDate,
     required this.joiner,
-    required this.sort,
+    required this.sorts,
     required this.sortReverse,
     required this.moods,
     required this.ruleGroups,
@@ -34,14 +34,10 @@ class SmartPlaylist {
 
   List<Track> resolve() {
     final allTracks = Indexer.inst.tracksInfoList.value;
-    if (sort != null) {
+    if (sorts.isNotEmpty) {
       final list = resolveIterableUnSorted(allTracks).toList();
-      final comparable = SearchSortController.inst.getTracksSortingComparables(sort!);
-      if (sortReverse) {
-        list.sortByReverse(comparable);
-      } else {
-        list.sortBy(comparable);
-      }
+      final comparables = sorts.map(SearchSortController.inst.getTracksSortingComparables).toFixedList();
+      list.sortByAltsPrecomputed(comparables, reverse: sortReverse);
       return list;
     } else if (sortReverse) {
       return resolveIterableUnSorted(allTracks.reversed).toList();
@@ -111,7 +107,7 @@ class SmartPlaylist {
       name: map['name'] as String,
       creationDate: DateTime.fromMillisecondsSinceEpoch(map['creationDate'] as int),
       joiner: SmartJoiner.values.getEnum(map['joiner']) ?? SmartJoiner.defaultForGroups,
-      sort: SortType.values.getEnum(map['sort']),
+      sorts: _parseSorts(map),
       sortReverse: map['sortReverse'] as bool,
       moods: (map['moods'] as List).cast<String>(),
       ruleGroups: (map['ruleGroups'] as List).map(SmartPlaylistRuleGroup.fromMap).toList(),
@@ -119,12 +115,19 @@ class SmartPlaylist {
     );
   }
 
+  static List<SortType> _parseSorts(Map<String, dynamic> map) {
+    final sortsRaw = map['sorts'];
+    if (sortsRaw != null) return SortType.sortListFromJsonList(sortsRaw) ?? const [];
+    final legacySort = SortType.values.getEnum(map['sort']);
+    return legacySort == null ? const [] : [legacySort];
+  }
+
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
       'name': name,
       'creationDate': creationDate.millisecondsSinceEpoch,
       'joiner': joiner.name,
-      'sort': sort?.name,
+      'sorts': SortType.sortsToJson(sorts),
       'sortReverse': sortReverse,
       'moods': moods,
       'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
@@ -136,7 +139,7 @@ class SmartPlaylist {
     String? name,
     DateTime? creationDate,
     SmartJoiner? joiner,
-    SortType? sort,
+    List<SortType>? sorts,
     bool? sortReverse,
     List<String>? moods,
     List<SmartPlaylistRuleGroup>? ruleGroups,
@@ -145,7 +148,7 @@ class SmartPlaylist {
     name: name ?? this.name,
     creationDate: creationDate ?? this.creationDate,
     joiner: joiner ?? this.joiner,
-    sort: sort ?? this.sort,
+    sorts: sorts ?? this.sorts,
     sortReverse: sortReverse ?? this.sortReverse,
     moods: moods ?? this.moods,
     ruleGroups: ruleGroups ?? this.ruleGroups,

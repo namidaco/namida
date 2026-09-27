@@ -12,8 +12,8 @@ import 'package:namida/controller/smart_playlists/smart_playlists_controller.dar
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -122,24 +122,16 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         _tracks.displayTrackKeyword,
                         _tracks.totalDurationFormatted,
                       ].join(' - '),
-                      sort: smartPlaylist.sort,
+                      sort: smartPlaylist.sorts.firstOrNull,
                       sortReverse: smartPlaylist.sortReverse,
-                      onSortTap: () {
-                        CreateSmartPlaylistDialog.openSortMenu(
-                          context: context,
-                          activeSort: smartPlaylist.sort,
-                          activeSortReverse: smartPlaylist.sortReverse,
-                          setSort: (newSort) => _editAndRefresh(
-                            smartPlaylist,
-                            smartPlaylist.copyWith(sort: newSort),
-                          ),
-                          setSortReverse: (newSortReverse) => _editAndRefresh(
-                            smartPlaylist,
-                            smartPlaylist.copyWith(sortReverse: newSortReverse),
-                          ),
-                          popMenuOnSortReverse: true,
-                        );
-                      },
+                      onSortTap: () => NamidaOnTaps.inst.onSmartPlaylistSortIconTap(
+                        currentSorts: smartPlaylist.sorts,
+                        currentReverse: smartPlaylist.sortReverse,
+                        onChanged: (sorts, reverse) => _editAndRefresh(
+                          smartPlaylist,
+                          smartPlaylist.copyWith(sorts: sorts, sortReverse: reverse),
+                        ),
+                      ),
                       onReverseIconTap: (newSortReverse) => _editAndRefresh(
                         smartPlaylist,
                         smartPlaylist.copyWith(sortReverse: newSortReverse),
