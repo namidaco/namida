@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/count_per_row.dart';
@@ -63,6 +64,13 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
     ];
   }
 
+  ScrollbarThumbLabelResolver? _createThumbLabel() {
+    final genreType = settings.activeGenreType.value;
+    final genres = SearchSortController.inst.genreSearchList.value;
+    final labelOf = SearchSortController.inst.getGenresSortLabelResolver(genreType);
+    return NamidaScrollbar.createListThumbLabel(genres, labelOf);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -76,6 +84,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: NamidaScrollbar(
         controller: scrollController,
+        thumbLabel: _createThumbLabel,
         child: AnimationLimiter(
           child: Obx(
             (context) {

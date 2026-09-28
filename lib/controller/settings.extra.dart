@@ -29,6 +29,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   static const _maxRecentSearches = 20;
 
+  late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null);
   late final tapToScroll = _key<bool?>('tapToScroll', null);
   late final enhancedDragToScroll = _key<bool?>('enhancedDragToScroll', null);
   late final smoothScrolling = _key<bool?>('smoothScrolling', null);

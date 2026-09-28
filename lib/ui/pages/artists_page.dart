@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/count_per_row.dart';
@@ -91,6 +92,13 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     ];
   }
 
+  ScrollbarThumbLabelResolver? _createThumbLabel() {
+    final artistType = settings.activeArtistType.value;
+    final artists = SearchSortController.inst.artistSearchList.value;
+    final labelOf = SearchSortController.inst.getArtistsSortLabelResolver(artistType);
+    return NamidaScrollbar.createListThumbLabel(artists, labelOf);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -105,6 +113,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: NamidaScrollbar(
         controller: scrollController,
+        thumbLabel: isCustomList ? null : _createThumbLabel,
         child: AnimationLimiter(
           child: ObxO(
             rx: artists ?? SearchSortController.inst.artistSearchList,

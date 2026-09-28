@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
@@ -284,6 +285,12 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     }
   }
 
+  ScrollbarThumbLabelResolver? _createThumbLabel() {
+    final playlists = SearchSortController.inst.playlistSearchList.value;
+    final labelOf = SearchSortController.inst.getPlaylistsSortLabelResolver();
+    return NamidaScrollbar.createListThumbLabel(playlists, labelOf);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -313,6 +320,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         onPointerCancel: (event) => onVerticalDragFinish(),
         child: NamidaScrollbar(
           controller: scrollController,
+          thumbLabel: _createThumbLabel,
           child: AnimationLimiter(
             child: ExpandableBoxColumn(
               tab: libraryTab,

@@ -318,6 +318,16 @@ class SearchSortController extends SearchPortsProvider {
     };
   }
 
+  Comparable Function(MapEntry<String, List<Track>>)? _getArtistsSortingComparable(MediaType artistType, GroupSortType sortBy) {
+    if (artistType == MediaType.albumArtist && sortBy == GroupSortType.albumArtist) {
+      return _getMediaSortingComparable(sortBy, overrideKey: GroupSortType.albumArtist, filter: TrackSearchFilter.albumartist);
+    }
+    if (artistType == MediaType.composer && sortBy == GroupSortType.composer) {
+      return _getMediaSortingComparable(sortBy, overrideKey: GroupSortType.composer, filter: TrackSearchFilter.composer);
+    }
+    return _getMediaSortingComparable(sortBy, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist);
+  }
+
   Comparable Function(Track e) getTracksSortingComparables(SortType type) {
     final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
     final normalize = sortKeyNormalizer;
@@ -452,6 +462,163 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.shuffle => null,
     GroupSortType.custom => null,
   };
+
+  String? Function(Track tr)? getTracksSortLabelResolver(SortType sort) {
+    late final sortKey = getTracksSortingComparables(sort);
+    late final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
+    return switch (sort) {
+      SortType.title ||
+      SortType.album ||
+      SortType.albumArtist ||
+      SortType.artistsList ||
+      SortType.genresList ||
+      SortType.composer ||
+      SortType.filename ||
+      SortType.titleSort ||
+      SortType.albumSort ||
+      SortType.albumArtistSort ||
+      SortType.artistSort ||
+      SortType.composerSort => _createSortKeyLabelResolver(sortKey),
+      SortType.year => (tr) => tr.year.yearFormatted,
+      SortType.dateAdded => (tr) => tr.dateAdded.dateFormatted,
+      SortType.dateModified => (tr) => tr.dateModified.dateFormatted,
+      SortType.bitrate => (tr) => '${tr.bitrate} kb/s',
+      SortType.trackNo => (tr) => tr.trackNo.toString(),
+      SortType.discNo => (tr) => tr.discNo.toString(),
+      SortType.path => (tr) => tr.folderName,
+      SortType.duration => (tr) => tr.durationMS.milliSecondsLabel,
+      SortType.sampleRate => (tr) => '${tr.sampleRate}Hz',
+      SortType.bitDepth => (tr) => '${tr.bits} bit',
+      SortType.bpm => (tr) => '${tr.bpm ?? 0} BPM',
+      SortType.size => (tr) => tr.size.fileSizeFormatted,
+      SortType.rating => (tr) => '${tr.effectiveRating}%',
+      SortType.mostPlayed => (tr) => topTracksMapListens[tr]?.length.formatDecimal() ?? '0',
+      SortType.latestPlayed => (tr) => topTracksMapListens[tr]?.lastOrNull?.dateFormatted,
+      SortType.firstListen => (tr) => topTracksMapListens[tr]?.firstOrNull?.dateFormatted,
+      SortType.shuffle => null,
+    };
+  }
+
+  String? Function(AlbumIdentifierWrapper album)? getAlbumsSortLabelResolver() {
+    final sort = settings.albumSort.value;
+    final sortKey = _getMediaSortingComparable(sort, overrideKey: GroupSortType.album, filter: TrackSearchFilter.album);
+    final labelOf = _getGroupSortLabelResolver(sort, sortKey);
+    if (labelOf == null) return null;
+    return (album) {
+      final tracks = album.getAlbumTracks();
+      final entry = MapEntry(album.displayAlbumName, tracks);
+      return labelOf(entry);
+    };
+  }
+
+  String? Function(String artist)? getArtistsSortLabelResolver(MediaType artistType) {
+    final sort = settings.artistSort.value;
+    final sortKey = _getArtistsSortingComparable(artistType, sort);
+    final labelOf = _getGroupSortLabelResolver(sort, sortKey);
+    if (labelOf == null) return null;
+    return (artist) {
+      final tracks = artist.getArtistTracksFor(artistType);
+      final entry = MapEntry(artist, tracks);
+      return labelOf(entry);
+    };
+  }
+
+  String? Function(String genre)? getGenresSortLabelResolver(MediaType genreType) {
+    final sort = settings.genreSort.value;
+    final sortKey = _getMediaSortingComparable(sort, overrideKey: GroupSortType.genresList, filter: TrackSearchFilter.genre);
+    final labelOf = _getGroupSortLabelResolver(sort, sortKey);
+    if (labelOf == null) return null;
+    return (genre) {
+      final tracks = genre.getGenresTracksFor(genreType);
+      final entry = MapEntry(genre, tracks);
+      return labelOf(entry);
+    };
+  }
+
+  String? Function(String playlistName)? getPlaylistsSortLabelResolver() {
+    final sort = settings.playlistSort.value;
+    if (sort == GroupSortType.title) {
+      final normalize = sortKeyNormalizer;
+      return (playlistName) {
+        final translatedName = playlistName.translatePlaylistName();
+        final sortKey = normalize(translatedName);
+        return _sortKeyToSectionLabel(sortKey);
+      };
+    }
+    final extraTextResolver = getGroupSortExtraTextResolverPlaylist(sort);
+    if (extraTextResolver == null) return null;
+    final playlists = playlistsMap.value;
+    return (playlistName) {
+      final playlist = playlists[playlistName];
+      if (playlist == null) return null;
+      return extraTextResolver(playlist);
+    };
+  }
+
+  String? Function(MapEntry<String, List<Track>> e)? _getGroupSortLabelResolver(GroupSortType sort, Comparable Function(MapEntry<String, List<Track>>)? sortKey) {
+    if (sortKey != null && _isGroupSortTextual(sort)) return _createSortKeyLabelResolver(sortKey);
+    final extraTextResolver = getGroupSortExtraTextResolver(sort);
+    if (extraTextResolver == null) return null;
+    return (e) => extraTextResolver(e.value);
+  }
+
+  static bool _isGroupSortTextual(GroupSortType sort) => switch (sort) {
+    GroupSortType.title ||
+    GroupSortType.album ||
+    GroupSortType.albumArtist ||
+    GroupSortType.artistsList ||
+    GroupSortType.genresList ||
+    GroupSortType.composer ||
+    GroupSortType.label ||
+    GroupSortType.releaseType ||
+    GroupSortType.albumSort ||
+    GroupSortType.albumArtistSort ||
+    GroupSortType.artistSort ||
+    GroupSortType.composerSort => true,
+    GroupSortType.year ||
+    GroupSortType.dateAdded ||
+    GroupSortType.dateModified ||
+    GroupSortType.bpm ||
+    GroupSortType.duration ||
+    GroupSortType.numberOfTracks ||
+    GroupSortType.playCount ||
+    GroupSortType.latestPlayed ||
+    GroupSortType.firstListen ||
+    GroupSortType.albumsCount ||
+    GroupSortType.creationDate ||
+    GroupSortType.modifiedDate ||
+    GroupSortType.shuffle ||
+    GroupSortType.custom => false,
+  };
+
+  static String? Function(T item) _createSortKeyLabelResolver<T>(Comparable Function(T item) sortKey) {
+    return (item) {
+      final key = sortKey(item);
+      return _sortKeyToSectionLabel(key);
+    };
+  }
+
+  static const _kOtherSectionLabel = '#';
+  static const _kAsciiEnd = 0x80;
+  static const _kLowerA = 0x61;
+  static const _kLowerZ = 0x7A;
+  static const _kLowerCaseBit = 0x20;
+
+  static String? _sortKeyToSectionLabel(Comparable key) {
+    if (key is! String) return null;
+    if (key.isEmpty) return _kOtherSectionLabel;
+    final firstCodeUnit = key.codeUnitAt(0);
+    if (firstCodeUnit < _kAsciiEnd) {
+      final lowerCodeUnit = firstCodeUnit | _kLowerCaseBit;
+      final isLetter = lowerCodeUnit >= _kLowerA && lowerCodeUnit <= _kLowerZ;
+      if (!isLetter) return _kOtherSectionLabel;
+      final upperCodeUnit = lowerCodeUnit - _kLowerCaseBit;
+      return String.fromCharCode(upperCodeUnit);
+    }
+    final firstRune = key.runes.first;
+    final firstCharacter = String.fromCharCode(firstRune);
+    return firstCharacter.toUpperCase();
+  }
 
   bool? _preparedResources;
   Future<void> prepareResources() async {
@@ -1228,17 +1395,7 @@ class SearchSortController extends SearchPortsProvider {
                 GroupSortType.year,
                 GroupSortType.dateModified,
               }
-              .map(
-                (e) => e == sortBy
-                    ? artistType == MediaType.artist && sortBy == GroupSortType.artistsList
-                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
-                          : artistType == MediaType.albumArtist && sortBy == GroupSortType.albumArtist
-                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.albumArtist, filter: TrackSearchFilter.albumartist)
-                          : artistType == MediaType.composer && sortBy == GroupSortType.composer
-                          ? _getMediaSortingComparable(e, overrideKey: GroupSortType.composer, filter: TrackSearchFilter.composer)
-                          : _getMediaSortingComparable(e, overrideKey: GroupSortType.artistsList, filter: TrackSearchFilter.artist)
-                    : _getMediaSortingComparable(e),
-              )
+              .map((e) => e == sortBy ? _getArtistsSortingComparable(artistType, e) : _getMediaSortingComparable(e))
               .whereType<Comparable Function(MapEntry<String, List<Track>>)>()
               .toList();
       if (sortBy == GroupSortType.albumsCount) {

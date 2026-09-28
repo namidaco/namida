@@ -1300,6 +1300,20 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   subtitle: 'drag anywhere on the scroll track to scroll',
                 ),
               ),
+              ObxO(
+                rx: settings.extra.scrollbarThumbLabel,
+                builder: (context, scrollbarThumbLabel) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.text,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: scrollbarThumbLabel ?? false,
+                  onChanged: (isTrue) => settings.extra.scrollbarThumbLabel.save(!isTrue),
+                  title: 'scrollbar_thumb_label'.toUpperCase(),
+                  subtitle: 'show the current letter/section next to the scrollbar while dragging it',
+                ),
+              ),
               if (NamidaFeaturesVisibility.smoothScrolling)
                 ObxO(
                   rx: settings.extra.smoothScrolling,

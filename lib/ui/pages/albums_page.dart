@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
@@ -48,6 +49,12 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
   bool get _shouldAnimate => animateTiles && LibraryTab.albums.shouldAnimateTiles;
 
+  ScrollbarThumbLabelResolver? _createThumbLabel() {
+    final albums = SearchSortController.inst.albumSearchList.value;
+    final labelOf = SearchSortController.inst.getAlbumsSortLabelResolver();
+    return NamidaScrollbar.createListThumbLabel(albums, labelOf);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
@@ -62,6 +69,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: NamidaScrollbar(
         controller: scrollController,
+        thumbLabel: isCustomList ? null : _createThumbLabel,
         child: AnimationLimiter(
           child: ObxO(
             rx: albumIdentifiers ?? SearchSortController.inst.albumSearchList,

@@ -4295,7 +4295,7 @@ class NamidaListView extends StatelessWidget {
   final int itemCount;
   final ScrollPhysics? physics;
   final double scrollStep;
-  final Map<String, int> scrollConfig;
+  final ScrollbarThumbLabelResolver? Function()? thumbLabel;
   final bool reverse;
   final bool showScrollbarOnStart;
 
@@ -4319,7 +4319,7 @@ class NamidaListView extends StatelessWidget {
     this.onReorderEnd,
     this.physics,
     this.scrollStep = 0,
-    this.scrollConfig = const {},
+    this.thumbLabel,
     this.reverse = false,
     this.showScrollbarOnStart = false,
   });
@@ -4357,7 +4357,7 @@ class NamidaListView extends StatelessWidget {
       reverse: reverse,
       showScrollbarOnStart: showScrollbarOnStart,
       scrollController: scrollController,
-      scrollConfig: scrollConfig,
+      thumbLabel: thumbLabel,
       scrollStep: scrollStep,
       header: header,
       footer: footer,
@@ -4392,7 +4392,7 @@ class NamidaListViewRaw extends StatefulWidget {
   final double? listBottomPadding;
   final ScrollController? scrollController;
   final ScrollPhysics? physics;
-  final Map<String, int> scrollConfig;
+  final ScrollbarThumbLabelResolver? Function()? thumbLabel;
   final double scrollStep;
   final Axis scrollDirection;
   final bool reverse;
@@ -4409,7 +4409,7 @@ class NamidaListViewRaw extends StatefulWidget {
     this.listBottomPadding,
     this.scrollController,
     this.physics,
-    this.scrollConfig = const {},
+    this.thumbLabel,
     this.scrollStep = 0,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
@@ -4523,6 +4523,7 @@ class _NamidaListViewRawState extends State<NamidaListViewRaw> {
       controller: _scrollController,
       scrollStep: widget.scrollStep,
       showOnStart: widget.showScrollbarOnStart,
+      thumbLabel: widget.thumbLabel,
       child: widget.builder?.call(listW) ?? listW,
     );
   }
@@ -4608,7 +4609,6 @@ class NamidaTracksList extends StatelessWidget {
   final bool displayTrackNumber;
   final bool shouldAnimate;
   final String Function(Selectable track)? thirdLineText;
-  final Map<String, int> scrollConfig;
 
   const NamidaTracksList({
     super.key,
@@ -4630,7 +4630,6 @@ class NamidaTracksList extends StatelessWidget {
     this.displayTrackNumber = false,
     this.shouldAnimate = true,
     this.thirdLineText,
-    this.scrollConfig = const {},
   });
 
   @override
@@ -4648,7 +4647,6 @@ class NamidaTracksList extends StatelessWidget {
           itemExtentBuilder: itemExtentBuilder,
           listBottomPadding: listBottomPadding,
           physics: physics,
-          scrollConfig: scrollConfig,
           itemBuilder: itemBuilder!,
         ),
       );
@@ -4673,7 +4671,6 @@ class NamidaTracksList extends StatelessWidget {
               itemExtent: Dimensions.inst.trackTileItemExtent,
               listBottomPadding: listBottomPadding,
               physics: physics,
-              scrollConfig: scrollConfig,
               itemBuilder: (context, i) {
                 final track = queue[i];
                 return AnimatingTile(
@@ -5652,6 +5649,7 @@ class NamidaScrollbar extends StatelessWidget {
   final Widget child;
   final double scrollStep;
   final bool showOnStart;
+  final ScrollbarThumbLabelResolver? Function()? thumbLabel;
 
   const NamidaScrollbar({
     super.key,
@@ -5659,7 +5657,32 @@ class NamidaScrollbar extends StatelessWidget {
     required this.child,
     this.scrollStep = 0.0,
     this.showOnStart = false,
+    this.thumbLabel,
   });
+
+  /// the thumb sits next to the item at the same fraction of [list] as the scroll fraction.
+  static ScrollbarThumbLabelResolver? createListThumbLabel<T>(List<T> list, String? Function(T item)? labelOf) {
+    if (labelOf == null) return null;
+    var lastIndex = -1;
+    String? lastLabel;
+    return (scrollFraction) {
+      final length = list.length;
+      if (length == 0) return null;
+      final fractionIndex = (scrollFraction * length).floor();
+      final index = fractionIndex.withMaximum(length - 1);
+      if (index != lastIndex) {
+        lastIndex = index;
+        final item = list[index];
+        lastLabel = labelOf(item);
+      }
+      return lastLabel;
+    };
+  }
+
+  ScrollbarThumbLabelResolver? _createThumbLabelIfEnabled() {
+    if (settings.extra.scrollbarThumbLabel.value != true) return null;
+    return thumbLabel?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -5675,6 +5698,7 @@ class NamidaScrollbar extends StatelessWidget {
       enhancedDragToScroll: () => settings.extra.enhancedDragToScroll.value ?? true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
+      thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,
       child: child,
     );
   }
@@ -5716,135 +5740,6 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
       showOnStart: widget.showOnStart,
       scrollStep: widget.scrollStep,
       child: widget.child(_sc),
-    );
-  }
-}
-
-class NamidaAZScrollbar extends StatefulWidget {
-  final Widget child;
-  final ScrollController? controller;
-  final Map<String, int> scrollConfig;
-  final double? itemExtent;
-
-  const NamidaAZScrollbar({
-    super.key,
-    required this.child,
-    this.controller,
-    this.scrollConfig = const {},
-    this.itemExtent,
-  });
-
-  @override
-  State<NamidaAZScrollbar> createState() => _NamidaAZScrollbarState();
-}
-
-class _NamidaAZScrollbarState extends State<NamidaAZScrollbar> {
-  ScrollController? controller;
-  final stackKey = GlobalKey<State<StatefulWidget>>();
-  final columnKey = GlobalKey<State<StatefulWidget>>();
-  double stackHeight = 0;
-  double columnHeight = 1;
-  static const verticalPadding = 6.0;
-  final characters = <String>[];
-  final items = <Text>[];
-
-  final _selectedChar = (0.0, '').obs;
-
-  @override
-  void initState() {
-    controller = widget.controller;
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      final s = columnKey.currentContext?.size;
-      if (s != null) stackHeight = s.height;
-      final h = columnKey.currentContext?.size?.height;
-      if (h != null) columnHeight = h;
-    });
-    stackHeight = stackHeight;
-
-    for (final e in widget.scrollConfig.entries) {
-      characters.add(e.key);
-      items.add(Text(e.key));
-    }
-
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _selectedChar.close();
-    super.dispose();
-  }
-
-  void onScroll(double dy) {
-    final controller = this.controller!;
-    final columnHeight = columnKey.currentContext?.size?.height ?? 1;
-    final p = (dy) / (columnHeight - verticalPadding * 2);
-    final index = ((p * items.length).clampDouble(0, items.length - 1)).floor();
-    final character = characters[index];
-    _selectedChar.value = (p, character);
-    if (controller.positions.isNotEmpty) {
-      final p = controller.positions.last;
-      final toOffset = (widget.scrollConfig[character] ?? 1) * (widget.itemExtent ?? 0);
-      controller.jumpTo(toOffset.toDouble().clampDouble(0.0, p.maxScrollExtent));
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (controller == null || widget.scrollConfig.isEmpty) {
-      return NamidaScrollbar(
-        controller: controller,
-        child: widget.child,
-      );
-    }
-
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return Stack(
-      key: stackKey,
-      alignment: Alignment.center,
-      children: [
-        widget.child,
-        Obx(
-          (context) => Positioned(
-            right: 14.0,
-            top: _selectedChar.valueR.$1 * columnHeight,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8.0),
-              decoration: BoxDecoration(shape: BoxShape.circle, color: theme.cardColor),
-              child: Text(_selectedChar.valueR.$2),
-            ),
-          ),
-        ),
-        Positioned(
-          right: 0,
-          child: SizedBox(
-            width: 14.0,
-            height: stackHeight,
-            child: FittedBox(
-              child: DefaultTextStyle(
-                style: textTheme.displaySmall!.copyWith(fontSize: stackHeight / widget.scrollConfig.length),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: verticalPadding),
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor.withOpacityExt(0.8),
-                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                  ),
-                  child: GestureDetector(
-                    onVerticalDragDown: (details) => onScroll(details.localPosition.dy),
-                    onVerticalDragUpdate: (details) => onScroll(details.localPosition.dy),
-                    child: Text(
-                      widget.scrollConfig.keys.join('\n'),
-                      key: columnKey,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

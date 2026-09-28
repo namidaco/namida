@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
@@ -86,6 +87,14 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
   void dispose() {
     super.dispose();
     RefreshLibraryIconController.dispose(_animationKey);
+  }
+
+  ScrollbarThumbLabelResolver? _createThumbLabel() {
+    final sort = settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull;
+    if (sort == null) return null;
+    final tracks = SearchSortController.inst.trackSearchList.value;
+    final labelOf = SearchSortController.inst.getTracksSortLabelResolver(sort);
+    return NamidaScrollbar.createListThumbLabel(tracks, labelOf);
   }
 
   @override
@@ -214,6 +223,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                         itemCount: trackSearchList.length,
                         scrollController: libraryTab.scrollController,
                         scrollStep: Dimensions.inst.trackTileItemExtent,
+                        thumbLabel: _createThumbLabel,
                         header: listHeader,
                         footer: NamidaJellys.enabled ? const JellyListEnd() : null,
                         itemBuilder: (context, i) {

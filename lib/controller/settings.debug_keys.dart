@@ -25,6 +25,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     resumeUIEnabled,
     recentSearchesEnabled,
     recentSearches,
+    scrollbarThumbLabel,
     tapToScroll,
     enhancedDragToScroll,
     smoothScrolling,
