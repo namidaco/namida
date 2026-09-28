@@ -560,6 +560,21 @@ void main() {
       expect(settings.libraryTabs.value, [LibraryTab.tracks, LibraryTab.home, LibraryTab.folders]);
       expect(settings.buildJson()['libraryTabs'], ['tracks', 'home', 'folders']);
     });
+
+    test('duplicates are dropped, the first one keeps its place', () async {
+      final storedPerVariant = ['home', 'folders', 'foldersMusic', 'foldersVideos', 'youtube', 'tracks', 'tracksMusic', 'tracksVideos', 'playlists', 'currentQueue'];
+      final expected = [LibraryTab.home, LibraryTab.folders, LibraryTab.youtube, LibraryTab.tracks, LibraryTab.playlists, LibraryTab.currentQueue];
+      await loadFile(settings, {'libraryTabs': storedPerVariant});
+      expect(settings.libraryTabs.value, expected);
+
+      final collapsed = ['home', 'folders', 'folders', 'folders', 'youtube', 'tracks', 'tracks', 'tracks', 'playlists', 'currentQueue'];
+      await loadFile(settings, {
+        '_v': 2,
+        'libraryTabs': collapsed,
+        '_x': {'libraryTabs': namesExcept(LibraryTab.values, expected.toSet())},
+      });
+      expect(settings.libraryTabs.value, expected);
+    });
   });
 
   group('maps', () {
@@ -811,6 +826,8 @@ void main() {
       expect(settings.extra.selectedLibraryTab.value, LibraryTab.albums);
       settings.extra.setSelectedLibraryTab(LibraryTab.tracksVideos);
       expect(settings.extra.selectedLibraryTab.value, LibraryTab.tracksVideos);
+      expect(settings.extra.libraryTabGroupVariants.value, {LibraryTab.tracks: LibraryTab.tracksVideos});
+      settings.extra.setSelectedLibraryTab(LibraryTab.playlists);
       expect(settings.extra.libraryTabGroupVariants.value, {LibraryTab.tracks: LibraryTab.tracksVideos});
       expect(settings.extra.getPreferredTabIndexIfLoggedInYT(), 0);
     });

@@ -58,9 +58,9 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     return _keys[name] = key;
   }
 
-  /// a customized list of enum values still gains values added to the enum afterwards, when the default has them.
+  /// a list of distinct enum values, a customized one still gains values added to the enum afterwards, when the default has them.
   _SettingsEnumListKey<E> _keyEnumList<E extends Enum>(String name, List<E> fallback, List<E> values, {_SettingsCodec<E>? item, bool sync = true}) {
-    final key = _SettingsEnumListKey<E>._(this, name, _ProtectedList(fallback), _ListCodec(item ?? _EnumCodec(values)), sync, values);
+    final key = _SettingsEnumListKey<E>._(this, name, _ProtectedList(fallback), _ListCodec(item ?? _EnumCodec(values), isUnique: true), sync, values);
     key._load(_raw[name]);
     return _keys[name] = key;
   }
@@ -552,12 +552,14 @@ class _DoubleStringCodec extends _SettingsCodec<double> {
 
 class _ListCodec<T> extends _SettingsCodec<_ProtectedList<T>> {
   final _SettingsCodec<T>? item;
-  const _ListCodec(this.item);
+  final bool isUnique;
+  const _ListCodec(this.item, {this.isUnique = false});
 
   @override
   _ProtectedList<T>? decode(dynamic json) {
     if (json is! List) return null;
-    final list = _decodeItems(json, item).toList();
+    final items = _decodeItems(json, item);
+    final list = isUnique ? items.toSet().toList() : items.toList();
     return _ProtectedList(list);
   }
 

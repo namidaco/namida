@@ -59,7 +59,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   void setSelectedLibraryTab(LibraryTab tab) {
     transaction(() {
       selectedLibraryTab.save(tab);
-      libraryTabGroupVariants.update((variants) => variants[tab.group] = tab);
+      if (tab.groupVariants.isNotEmpty) libraryTabGroupVariants.update((variants) => variants[tab.group] = tab);
     });
   }
 
