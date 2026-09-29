@@ -142,6 +142,7 @@ class Lyrics {
   }
 
   static const _LyricsResolveResult _noLyrics = (lrc: null, txt: null, canBeAvailable: true);
+  static const _LyricsResolveResult _unavailableLyrics = (lrc: null, txt: null, canBeAvailable: false);
 
   /// null when interrupted.
   Future<_LyricsResolveResult?> _resolveLyrics(Playable item, bool Function() checkInterrupted) async {
@@ -155,30 +156,22 @@ class Lyrics {
     final embedded = lrcUtils.embeddedLyrics;
     if (embedded.startsWith('IGNORE')) return _noLyrics;
 
-    if (_lyricsPrioritizeEmbedded && embedded != '') {
-      final lrc = embedded.parseLRC();
-      if (lrc != null && lrc.lyrics.isNotEmpty) return (lrc: lrc, txt: null, canBeAvailable: true);
-      return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(embedded)), canBeAvailable: true);
-    }
+    final local = await pickLocalLyrics(lrcUtils, embedded);
+    final localLyrics = local.isEmbedded ? embedded : await local.file?.readLrcString();
+    if (localLyrics != null) return _parseLocalLyrics(localLyrics);
 
     final source = _lyricsSource;
     final lookupKey = _onlineLookupKey(item);
     final canSearchOnline = source != LyricsSource.local && !_wasNotFoundOnlineRecently(lookupKey);
+    if (!canSearchOnline) return _unavailableLyrics;
 
-    /// 1. cached/device lrc, the location lyrics are saved in goes first
-    /// 2. track embedded lrc
-    /// 3. cached/device txt
-    /// 4. database.
-    final lrcLyrics = await _fetchLRCBasedLyrics(
-      lrcUtils,
-      embedded,
-      source,
-      canSearchOnline: canSearchOnline,
-      // -- nothing local, hide now instead of holding an empty overlay for the whole network request.
-      onBeforeNetwork: () {
-        if (!checkInterrupted()) _updateWidgets(null, null);
-      },
-    );
+    // -- nothing local, hide now instead of holding an empty overlay for the whole network request.
+    if (checkInterrupted()) return null;
+    _updateWidgets(null, null);
+
+    /// 1. database
+    /// 2. google search
+    final lrcLyrics = await _fetchLRCBasedLyrics(lrcUtils, source);
 
     if (checkInterrupted()) return null;
 
@@ -187,10 +180,7 @@ class Lyrics {
     final lrcAsText = lrcLyrics.txt;
     if (lrcAsText != null) return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(lrcAsText)), canBeAvailable: true);
 
-    /// 1. cached/device txt
-    /// 2. track embedded txt
-    /// 3. google search
-    final textLyrics = await _fetchTextBasedLyrics(lrcUtils, source, canSearchOnline: canSearchOnline);
+    final textLyrics = await _fetchTextBasedLyrics(lrcUtils, source);
 
     if (checkInterrupted()) return null;
 
@@ -198,8 +188,38 @@ class Lyrics {
     if (text != '') return (lrc: null, txt: LrcText.fromText(_cleanPlainLyrics(text)), canBeAvailable: true);
 
     final didSearchFail = lrcLyrics.didSearchFail || textLyrics.didSearchFail;
-    if (canSearchOnline && !didSearchFail) _notFoundOnlineMS[lookupKey] = DateTime.now().millisecondsSinceEpoch;
-    return (lrc: null, txt: null, canBeAvailable: false);
+    if (!didSearchFail) _notFoundOnlineMS[lookupKey] = DateTime.now().millisecondsSinceEpoch;
+    return _unavailableLyrics;
+  }
+
+  static const LocalLyricsPick _noLocalLyrics = (file: null, isEmbedded: false);
+  static const LocalLyricsPick _embeddedLocalLyrics = (file: null, isEmbedded: true);
+
+  /// the local lyrics [updateLyrics] shows before searching online, [embedded] can be newer than the ones in [lrcUtils].
+  ///
+  /// 1. track embedded, when prioritized
+  /// 2. cached/device lrc, the location lyrics are saved in goes first
+  /// 3. track embedded
+  /// 4. cached/device txt
+  Future<LocalLyricsPick> pickLocalLyrics(LrcSearchUtils lrcUtils, String embedded) async {
+    if (embedded.startsWith('IGNORE')) return _noLocalLyrics;
+    final hasEmbedded = embedded != '';
+    if (hasEmbedded && _lyricsPrioritizeEmbedded) return _embeddedLocalLyrics;
+    if (_lyricsSource == LyricsSource.internet) return _noLocalLyrics;
+
+    final files = await lrcUtils.firstLyricsFiles(includeTxt: !hasEmbedded);
+    final lrc = files.lrc;
+    if (lrc != null) return (file: lrc, isEmbedded: false);
+    if (hasEmbedded) return _embeddedLocalLyrics;
+    return (file: files.txt, isEmbedded: false);
+  }
+
+  _LyricsResolveResult _parseLocalLyrics(String lyrics) {
+    final lrc = lyrics.parseLRC();
+    if (lrc != null && lrc.lyrics.isNotEmpty) return (lrc: lrc, txt: null, canBeAvailable: true);
+    final cleanLyrics = _cleanPlainLyrics(lyrics);
+    final txt = LrcText.fromText(cleanLyrics);
+    return (lrc: null, txt: txt, canBeAvailable: true);
   }
 
   Future<List<LyricsModel>> searchLRCLyricsFromInternet({
@@ -273,61 +293,24 @@ class Lyrics {
     }
   }
 
-  Future<_LRCFetchResult> _fetchLRCBasedLyrics(
-    LrcSearchUtils lrcUtils,
-    String trackLyrics,
-    LyricsSource source, {
-    required bool canSearchOnline,
-    void Function()? onBeforeNetwork,
-  }) async {
-    String? lrcContent;
-
-    /// 1. cached/device lrc
-    /// 2. track embedded
-    /// 3. cached/device txt
-    if (source != LyricsSource.internet) {
-      final files = await lrcUtils.firstLyricsFiles(includeTxt: trackLyrics == '');
-      lrcContent = await files.lrc?.readLrcString();
-
-      if (lrcContent == null && trackLyrics != '') {
-        lrcContent = trackLyrics;
-      }
-      // -- this should be prioritized before searching network again
-      // -- if txt is there, then either the user has chosen a file or lrc wasn't found
-      // -- so it has to be a good reason why this is here
-      // -- turning this off will cost time and network each time trynna fetch lyrics
-      lrcContent ??= await files.txt?.readLrcString();
-    }
-
-    /// 4. if still null, fetch from database.
-    bool didSearchFail = false;
-    if (canSearchOnline && lrcContent == null) {
-      onBeforeNetwork?.call();
-      final res = await _searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
-      didSearchFail = res.hadFailure;
-      final lyricsModelToUse = res.lyrics.firstOrNull;
-      if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
-        final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
-        final isSynced = parsedLrc != null;
-        await _saveFetchedLyrics(lrcUtils, lyricsModelToUse.lyrics, isSynced, source);
-        if (parsedLrc != null) {
-          return (lrc: parsedLrc, txt: null, didSearchFail: false);
-        } else {
-          return (lrc: null, txt: lyricsModelToUse.lyrics, didSearchFail: false);
-        }
+  Future<_LRCFetchResult> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source) async {
+    final res = await _searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
+    final lyricsModelToUse = res.lyrics.firstOrNull;
+    if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
+      final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
+      final isSynced = parsedLrc != null;
+      await _saveFetchedLyrics(lrcUtils, lyricsModelToUse.lyrics, isSynced, source);
+      if (parsedLrc != null) {
+        return (lrc: parsedLrc, txt: null, didSearchFail: false);
+      } else {
+        return (lrc: null, txt: lyricsModelToUse.lyrics, didSearchFail: false);
       }
     }
-
-    final lrc = lrcContent?.parseLRC();
-    if (lrc != null && lrc.lyrics.isNotEmpty) {
-      return (lrc: lrc, txt: null, didSearchFail: didSearchFail);
-    } else {
-      return (lrc: null, txt: lrcContent, didSearchFail: didSearchFail);
-    }
+    return (lrc: null, txt: null, didSearchFail: res.hadFailure);
   }
 
-  Future<_TextFetchResult> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source, {required bool canSearchOnline}) async {
-    // -- [_fetchLRCBasedLyrics] already returns the txt file and the embedded lyrics, looking again only costs io.
+  Future<_TextFetchResult> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source) async {
+    // -- [pickLocalLyrics] already returns the txt file and the embedded lyrics, looking again only costs io.
     // final lyricsFile = lrcUtils.cachedTxtFile;
     // if (source != LyricsSource.internet && await lyricsFile.existsAndValid()) {
     //   return await lyricsFile.readLrcString();
@@ -336,14 +319,12 @@ class Lyrics {
     // }
 
     /// download lyrics
-    if (canSearchOnline) {
-      final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
-      if (lyrics == null) return (txt: '', didSearchFail: true);
-      if (lyrics != '') {
-        final formattedText = lyrics.replaceAll(_htmlTagRegex, '');
-        await _saveFetchedLyrics(lrcUtils, formattedText, false, source);
-        return (txt: formattedText, didSearchFail: false);
-      }
+    final lyrics = await _fetchLyricsGoogle(lrcUtils.searchQueriesGoogle());
+    if (lyrics == null) return (txt: '', didSearchFail: true);
+    if (lyrics != '') {
+      final formattedText = lyrics.replaceAll(_htmlTagRegex, '');
+      await _saveFetchedLyrics(lrcUtils, formattedText, false, source);
+      return (txt: formattedText, didSearchFail: false);
     }
     return (txt: '', didSearchFail: false);
   }
@@ -970,6 +951,8 @@ class LrcText {
     );
   }
 }
+
+typedef LocalLyricsPick = ({File? file, bool isEmbedded});
 
 typedef _LyricsResolveResult = ({Lrc? lrc, LrcText? txt, bool canBeAvailable});
 typedef _LRCFetchResult = ({Lrc? lrc, String? txt, bool didSearchFail});
