@@ -247,10 +247,10 @@ class TagLibPropertiesWrapper {
   String? get composer => _getProperty(TagLibField.composer);
   String? get genre => _getProperty(TagLibField.genre);
   String? get style => _getProperty(TagLibField.style);
-  String? get trackNumber => _getProperty(TagLibField.trackNumber);
-  String? get trackTotal => _getProperty(TagLibField.trackTotal);
-  String? get discNumber => _getProperty(TagLibField.discNumber);
-  String? get discTotal => _getProperty(TagLibField.discTotal);
+  String? get trackNumber => _getPropertyFirst(TagLibField.trackNumber);
+  String? get trackTotal => _getPropertyFirst(TagLibField.trackTotal);
+  String? get discNumber => _getPropertyFirst(TagLibField.discNumber);
+  String? get discTotal => _getPropertyFirst(TagLibField.discTotal);
   String? get lyrics => _getPropertyFallbacks(_TagLibFieldsFallback.lyrics);
   String? get comment => _getPropertyFallbacks(_TagLibFieldsFallback.comment);
   String? get description => _getPropertyFirstFallbacks(_TagLibFieldsFallback.description);
