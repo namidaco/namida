@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:playlist_manager/playlist_manager.dart';
+
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -145,6 +147,92 @@ void showSetTrackStatsDialogSimple({
       child: TrackRatingRowWidget(
         selectedRatingRx: selectedRatingRx,
         selectedFixedRatingRx: selectedFixedRatingRx,
+      ),
+    ),
+  );
+}
+
+void showSetPlaylistsTagsDialog<T extends PlaylistItemWithDate, E, S>({
+  required PlaylistManager<T, E, S> manager,
+  required Iterable<String> playlistsNames,
+  Color? iconColor,
+  Color? colorScheme,
+}) {
+  final playlists = <GeneralPlaylist<T, S>>[];
+  for (final name in playlistsNames) {
+    final pl = manager.playlistsMap.value[name];
+    if (pl != null) playlists.add(pl);
+  }
+  if (playlists.isEmpty) return;
+
+  final tags = _TrackStatsItemsSelection._fromTracksItems(
+    playlists.map((pl) => pl.tags),
+    computeAvailableCounts: manager.computeTagsCounts,
+  );
+  final moods = _TrackStatsItemsSelection._fromTracksItems(
+    playlists.map((pl) => pl.moods),
+    computeAvailableCounts: manager.computeMoodsCounts,
+  );
+
+  void onSave() {
+    final edits = <String, PlaylistMetadataEdit>{};
+    for (final pl in playlists) {
+      final newTags = tags._newItemsOrNull(pl.tags);
+      final newMoods = moods._newItemsOrNull(pl.moods);
+      if (newTags == null && newMoods == null) continue;
+      edits[pl.name] = PlaylistMetadataEdit(tags: newTags, moods: newMoods);
+    }
+    manager.updatePlaylistsMetadata(edits);
+    NamidaNavigator.inst.closeAllDialogs();
+  }
+
+  NamidaNavigator.inst.navigateDialog(
+    colorScheme: colorScheme,
+    lighterDialogColor: true,
+    onDisposing: () {
+      tags._dispose();
+      moods._dispose();
+    },
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      contentPadding: EdgeInsets.zero,
+      title: playlists.length > 1 ? '${lang.configure} (${playlists.length.displayPlaylistKeyword})' : lang.configure,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.save,
+          onTap: onSave,
+        ),
+      ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: namida.height * 0.6),
+        child: SuperSmoothListView(
+          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+          shrinkWrap: true,
+          children: [
+            _StatsItemsSection(
+              title: lang.setTags,
+              icon: Broken.tag,
+              selection: tags,
+              iconColor: iconColor,
+              colorScheme: colorScheme,
+              addSubtitle: lang.setTagsNestedSubtitle,
+              normalizeItems: PlaylistTagsFilter.normalizeTags,
+            ),
+            const NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
+            ),
+            _StatsItemsSection(
+              title: lang.setMoods,
+              icon: Broken.smileys,
+              selection: moods,
+              iconColor: iconColor,
+              colorScheme: colorScheme,
+            ),
+            const SizedBox(
+              height: 12.0,
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -353,7 +441,9 @@ class _TrackStatsItemsSelection {
     return changes.isEmpty ? null : changes.join(', ');
   }
 
-  String? _newItemsJoinedOrNull(List<String> current) {
+  String? _newItemsJoinedOrNull(List<String> current) => _newItemsOrNull(current)?.join(', ');
+
+  List<String>? _newItemsOrNull(List<String> current) {
     final selected = selectedForAllRx.value;
     final partialKept = partialKeptRx.value;
     final result = <String>[];
@@ -368,7 +458,7 @@ class _TrackStatsItemsSelection {
       if (!current.contains(item)) result.add(item);
     }
     if (keptCount == currentCount && result.length == keptCount) return null;
-    return result.join(', ');
+    return result;
   }
 
   void _dispose() {
@@ -514,6 +604,8 @@ class _StatsItemsSection extends StatelessWidget {
   final _TrackStatsItemsSelection selection;
   final Color? iconColor;
   final Color? colorScheme;
+  final String? addSubtitle;
+  final List<String> Function(Iterable<String> items)? normalizeItems;
 
   const _StatsItemsSection({
     required this.title,
@@ -521,6 +613,8 @@ class _StatsItemsSection extends StatelessWidget {
     required this.selection,
     required this.iconColor,
     required this.colorScheme,
+    this.addSubtitle,
+    this.normalizeItems,
   });
 
   void _showAddItemsDialog() {
@@ -536,7 +630,10 @@ class _StatsItemsSection extends StatelessWidget {
           NamidaButton(
             text: lang.add,
             onTap: () {
-              selection.selectForAll(Indexer.splitByCommaList(controller.text));
+              final normalizeItems = this.normalizeItems;
+              final itemsRaw = Indexer.splitByCommaList(controller.text);
+              final items = normalizeItems == null ? itemsRaw : normalizeItems(itemsRaw);
+              selection.selectForAll(items);
               NamidaNavigator.inst.closeDialog();
             },
           ),
@@ -553,6 +650,7 @@ class _StatsItemsSection extends StatelessWidget {
                 labelText: title,
                 icon: icon,
                 iconColor: iconColor,
+                extraSubtitle: addSubtitle,
               ),
               const SizedBox(height: 12.0),
             ],
@@ -590,18 +688,22 @@ class _StatsItemsAddField extends StatelessWidget {
   final String labelText;
   final IconData icon;
   final Color? iconColor;
+  final String? extraSubtitle;
 
   const _StatsItemsAddField({
     required this.controller,
     required this.labelText,
     required this.icon,
     required this.iconColor,
+    required this.extraSubtitle,
   });
 
   @override
   Widget build(BuildContext context) {
     const iconSize = 24.0;
     const iconRightPadding = 8.0;
+    final extraSubtitle = this.extraSubtitle;
+    final subtitle = extraSubtitle == null ? lang.setMoodsSubtitle : '${lang.setMoodsSubtitle}\n$extraSubtitle';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -626,7 +728,7 @@ class _StatsItemsAddField extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: iconSize + iconRightPadding),
           child: Text(
-            lang.setMoodsSubtitle,
+            subtitle,
             style: context.textTheme.displaySmall,
           ),
         ),

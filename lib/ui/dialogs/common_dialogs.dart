@@ -208,7 +208,7 @@ class NamidaDialogs {
         playlist.name.translatePlaylistName(),
         [trackss.displayTrackKeyword, playlist.creationDate.dateFormatted].join(' • '),
         playlist.toQueueSource(),
-        thirdLineText: playlist.moods.join(', '),
+        thirdLineText: playlist.toTagsAndMoodsText(),
         playlistName: playlist.name,
         tracksWithDates: playlist.tracks,
         extractColor: false,

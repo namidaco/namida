@@ -152,6 +152,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final genreSortReversed = _key('genreSortReversed', false);
   late final playlistSort = _keyEnum('playlistSort', GroupSortType.dateModified, GroupSortType.values);
   late final playlistSortReversed = _key('playlistSortReversed', false);
+  late final playlistsGroupByTags = _key('playlistsGroupByTags', false);
   late final ytPlaylistSort = _keyEnum('ytPlaylistSort', GroupSortType.dateModified, GroupSortType.values);
   late final ytPlaylistSortReversed = _key('ytPlaylistSortReversed', true);
   late final indexMinDurationInSec = _key('indexMinDurationInSec', 5, sync: false);
@@ -163,7 +164,7 @@ class _SettingsController extends _SettingsKeysWriter {
         : const [TrackSearchFilter.filename, TrackSearchFilter.title, TrackSearchFilter.artist, TrackSearchFilter.album],
     item: TrackSearchFilter.values.asCodec(),
   );
-  late final playlistSearchFilter = _keyList<String>('playlistSearchFilter', const ['name', 'creationDate', 'modifiedDate', 'moods', 'comment']);
+  late final playlistSearchFilter = _keyEnumList('playlistSearchFilter_v2', PlaylistSearchFilter.values, PlaylistSearchFilter.values);
   late final directoriesToScan = _keyList<DirectoryIndex>('directoriesToScan', const [], item: const _DirectoryIndexCodec(), sync: false);
   late final directoriesToExclude = _keyList<DirectoryIndex>('directoriesToExclude', const [], item: const _DirectoryIndexCodec(), sync: false);
   late final preventDuplicatedTracks = _key('preventDuplicatedTracks', false, sync: false);

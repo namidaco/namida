@@ -2281,6 +2281,7 @@ extension QueueSourceL10n on QueueSourceEnum {
     QueueSourceEnum.moods => lang.moods,
     QueueSourceEnum.tags => lang.tags,
     QueueSourceEnum.rating => lang.rating,
+    QueueSourceEnum.playlistTags => lang.playlistTags,
     QueueSourceEnum.homePageItem => lang.home,
     QueueSourceEnum.others => lang.others,
   };
@@ -2767,6 +2768,42 @@ extension PlaylistAddDuplicateActionL10n on PlaylistAddDuplicateAction {
     PlaylistAddDuplicateAction.addOnlyMissing => lang.addOnlyMissing,
     PlaylistAddDuplicateAction.mergeAndSortByAddedDate => '${lang.merge} + ${lang.sortBy}: ${lang.dateAdded}',
     PlaylistAddDuplicateAction.deleteAndCreateNewPlaylist => '${lang.deletePlaylist} + ${lang.createNewPlaylist}',
+  };
+}
+
+extension PlaylistTagsSelectionL10n on PlaylistTagsSelection {
+  /// ex: `gym + rock - live`
+  String toText() {
+    final includedText = included.map((e) => e.toText()).join(' + ');
+    if (excluded.isEmpty) return includedText;
+    final excludedText = excluded.map((e) => e.toText()).join(' - ');
+    return '$includedText - $excludedText';
+  }
+}
+
+extension PlaylistTagKeyL10n on PlaylistTagKey {
+  String toText() {
+    final key = this;
+    return switch (key) {
+      PlaylistUserTag() => key.path,
+      PlaylistVirtualTag() => key.toVirtualText(),
+    };
+  }
+}
+
+extension PlaylistVirtualTagL10n on PlaylistVirtualTag {
+  String toVirtualText() => switch (this) {
+    PlaylistVirtualTag.pinned => lang.pinned,
+    PlaylistVirtualTag.untagged => lang.untagged,
+    PlaylistVirtualTag.m3u => lang.m3uPlaylist,
+    PlaylistVirtualTag.remote => lang.server,
+  };
+
+  IconData toIcon() => switch (this) {
+    PlaylistVirtualTag.pinned => Broken.paperclip,
+    PlaylistVirtualTag.untagged => Broken.tag_cross,
+    PlaylistVirtualTag.m3u => Broken.music_filter,
+    PlaylistVirtualTag.remote => Broken.cloud,
   };
 }
 

@@ -43,6 +43,7 @@ void showTrackAdvancedDialog({
   required NetworkArtworkInfo? networkArtworkInfo,
   required Color colorScheme,
   required QueueSourceBase source,
+  VoidCallback? onRemovePlaylistDuplicates,
 }) async {
   if (tracks.isEmpty) return;
   final isSingle = tracks.length == 1;
@@ -483,6 +484,20 @@ void showTrackAdvancedDialog({
               ),
             ),
           ),
+
+          if (onRemovePlaylistDuplicates != null)
+            CustomListTile(
+              passedColor: colorScheme,
+              title: lang.removeDuplicates,
+              leading: StackedIcon(
+                baseIcon: Broken.copy,
+                secondaryIcon: Broken.broom,
+                baseIconColor: colorScheme,
+                secondaryIconColor: colorScheme,
+                delightenColors: true,
+              ),
+              onTap: onRemovePlaylistDuplicates,
+            ),
 
           if (sourcesMap.isNotEmpty)
             CustomListTile(

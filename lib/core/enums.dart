@@ -291,6 +291,15 @@ enum TrackSearchFilter {
   const TrackSearchFilter({this.canAffectPerformance = false});
 }
 
+enum PlaylistSearchFilter {
+  name,
+  creationDate,
+  modifiedDate,
+  moods,
+  tags,
+  comment,
+}
+
 enum LibraryTab {
   home,
   albums,
@@ -379,6 +388,7 @@ enum QueueSourceEnum {
   moods(false),
   tags(false),
   rating(false),
+  playlistTags(false, supportResuming: true),
 
   others(true),
   ;
@@ -475,6 +485,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   static QueueSource moods(String? name) => QueueSource._(QueueSourceEnum.moods, title: name);
   static QueueSource tags(String? name) => QueueSource._(QueueSourceEnum.tags, title: name);
   static QueueSource rating(String? name) => QueueSource._(QueueSourceEnum.rating, title: name);
+  static QueueSource playlistTags(String? name) => QueueSource._(QueueSourceEnum.playlistTags, title: name);
 
   static QueueSource others(String? name) => QueueSource._(QueueSourceEnum.others, title: name);
 

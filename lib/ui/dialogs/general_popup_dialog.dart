@@ -269,6 +269,24 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  void setPlaylistTagsAndMoods() {
+    if (!shoulShowPlaylistUtils()) return;
+    showSetPlaylistsTagsDialog(
+      manager: PlaylistController.inst,
+      playlistsNames: [playlistName!],
+      colorScheme: colorDelightened.value,
+      iconColor: iconColor.value,
+    );
+  }
+
+  void togglePlaylistPin() {
+    if (!shoulShowPlaylistUtils()) return;
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+    NamidaNavigator.inst.closeDialog();
+    PlaylistController.inst.updatePlaylistMetadata(playlistName, isPinned: !pl.isPinned);
+  }
+
   void renamePlaylist() async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
@@ -604,6 +622,7 @@ Future<void> showGeneralPopupDialog(
     NamidaLinkUtils.openLink(link);
   }
 
+  final canRemovePlaylistDuplicates = shoulShowPlaylistUtils() && PlaylistController.inst.getPlaylist(playlistName!)?.isReadOnly != true;
   final advancedStuffListTile = tracksWithDates.isEmpty && tracks.isEmpty
       ? null
       : ObxO(
@@ -620,6 +639,7 @@ Future<void> showGeneralPopupDialog(
                 networkArtworkInfo: networkArtworkInfo,
                 colorScheme: colorDelightened,
                 source: source,
+                onRemovePlaylistDuplicates: canRemovePlaylistDuplicates ? removePlaylistDuplicates : null,
               );
             },
           ),
@@ -669,6 +689,7 @@ Future<void> showGeneralPopupDialog(
   final playlist = playlistName == null ? null : PlaylistController.inst.getPlaylist(playlistName);
   final playlistIsM3u = playlist?.m3uPath != null;
   final playlistIsReadOnly = playlist?.isReadOnly == true;
+  final playlistIsPinned = playlist?.isPinned == true;
 
   final Widget? playlistUtilsRow = shoulShowPlaylistUtils()
       ? SizedBox(
@@ -678,37 +699,26 @@ Future<void> showGeneralPopupDialog(
               const SizedBox(width: 24.0),
               Expanded(
                 child: bigIcon(
-                  Broken.smileys,
-                  () => lang.setMoods,
-                  () {
-                    if (playlistName == null) return;
-                    setPlaylistMoods(
-                      PlaylistController.inst.getPlaylist(playlistName)?.moods,
-                      (newMoods) => PlaylistController.inst.updatePropertyInPlaylist(playlistName, moods: newMoods),
-                    );
-                  },
+                  Broken.tag,
+                  () => '${lang.tags}/${lang.moods}',
+                  setPlaylistTagsAndMoods,
                 ),
               ),
-              const SizedBox(width: 8.0),
+              const SizedBox(
+                width: 8.0,
+              ),
+              Expanded(
+                child: bigIcon(
+                  playlistIsPinned ? Broken.paperclip_2 : Broken.paperclip,
+                  () => playlistIsPinned ? lang.unpin : lang.pin,
+                  togglePlaylistPin,
+                ),
+              ),
+              const SizedBox(
+                width: 8.0,
+              ),
               if (!playlistIsReadOnly) ...[
                 Expanded(child: bigIcon(Broken.edit_2, () => lang.renamePlaylist, renamePlaylist)),
-                const SizedBox(width: 8.0),
-                Expanded(
-                  child: bigIcon(
-                    Broken.edit_2,
-                    () => lang.removeDuplicates,
-                    removePlaylistDuplicates,
-                    iconWidget: ObxO(
-                      rx: iconColor,
-                      builder: (context, iconColor) => StackedIcon(
-                        baseIcon: Broken.copy,
-                        secondaryIcon: Broken.broom,
-                        baseIconColor: iconColor,
-                        secondaryIconColor: iconColor,
-                      ),
-                    ),
-                  ),
-                ),
                 const SizedBox(width: 8.0),
               ],
               Expanded(child: bigIcon(Broken.trash, () => lang.deletePlaylist, deletePlaylist)),

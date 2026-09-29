@@ -21,9 +21,11 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
+import 'package:namida/ui/widgets/library/playlist_tags_chips_row.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_import_controller.dart';
@@ -76,14 +78,32 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
     return videos;
   }
 
-  FutureOr<List<NamidaPopupItem>> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) {
-    return YTUtils.getVideosMenuItems(
+  Future<List<NamidaPopupItem>> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) async {
+    final items = await YTUtils.getVideosMenuItems(
       queueSource: queueSource,
       context: context,
       videos: playlist.tracks,
       playlistName: '',
       playlistToRemove: playlist,
     );
+    if (playlist.isFav) return items;
+    final isPinned = playlist.isPinned;
+    items.addAll([
+      NamidaPopupItem(
+        icon: Broken.tag,
+        title: '${lang.tags}/${lang.moods}',
+        onTap: () => showSetPlaylistsTagsDialog(
+          manager: YoutubePlaylistController.inst,
+          playlistsNames: [playlist.name],
+        ),
+      ),
+      NamidaPopupItem(
+        icon: isPinned ? Broken.paperclip_2 : Broken.paperclip,
+        title: isPinned ? lang.unpin : lang.pin,
+        onTap: () => YoutubePlaylistController.inst.updatePlaylistMetadata(playlist.name, isPinned: !isPinned),
+      ),
+    ]);
+    return items;
   }
 
   void _onAddToPlaylist({required YoutubePlaylist playlist, required bool allIdsExist, required bool allowAddingEverything}) {
@@ -481,6 +501,13 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
             ),
           ),
           const SliverPadding(padding: EdgeInsets.only(bottom: 8.0)),
+          if (!_isReordering)
+            SliverToBoxAdapter(
+              child: PlaylistTagsChipsRow(
+                manager: YoutubePlaylistController.inst,
+                padding: const EdgeInsets.only(bottom: 8.0),
+              ),
+            ),
           if (idsToAdd.isNotEmpty)
             SliverToBoxAdapter(
               child: ObxOClass(
@@ -638,6 +665,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                             playlistsNames = searchBoxManager.filterPlaylistNames(playlistsNames, searchQuery).toList();
                           }
 
+                          final tagsFilter = YoutubePlaylistController.inst.tagsFilter;
+                          tagsFilter.revision.valueR;
+                          playlistsNames = tagsFilter.apply(playlistsNames);
+
                           return SliverFixedExtentList.builder(
                             itemExtent: playlistsItemExtent,
                             itemCount: playlistsNames.length,
@@ -655,6 +686,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                       extraText,
                                     ].join(' • ')
                                   : creationDateText;
+                              final modifiedDateText = TimeAgoController.dateMSSEFromNow(playlist.modifiedDate);
+                              final tagsAndMoodsText = playlist.toTagsAndMoodsText();
+                              final thirdLineText = tagsAndMoodsText.isEmpty ? modifiedDateText : '$modifiedDateText • $tagsAndMoodsText';
 
                               return NamidaPopupWrapper(
                                 childrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
@@ -670,7 +704,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   title: playlist.name,
                                   subtitle: subtitle,
                                   displaythirdLineText: true,
-                                  thirdLineText: TimeAgoController.dateMSSEFromNow(playlist.modifiedDate),
+                                  thirdLineText: thirdLineText,
                                   displayChannelThumbnail: false,
                                   channelThumbnailUrl: '',
                                   thumbnailHeight: playlistThumbnailHeight,
@@ -688,6 +722,17 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                   smallBoxText: playlist.tracks.length.formatDecimal(),
                                   smallBoxIcon: Broken.play_cricle,
                                   checkmarkStatus: allIdsExist,
+                                  bottomRightWidgets: [
+                                    PlaylistTagsColorDots(
+                                      filter: YoutubePlaylistController.inst.tagsFilter,
+                                      tags: playlist.tags,
+                                    ),
+                                    if (playlist.isPinned)
+                                      const Icon(
+                                        Broken.paperclip,
+                                        size: 16.0,
+                                      ),
+                                  ],
                                   menuChildrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 ),
                               );

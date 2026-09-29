@@ -195,6 +195,8 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       default:
         null;
     }
+
+    playlistList.movePinnedFirst();
   }
 
   Future<void> prepareAllPlaylists() async => await super.prepareAllPlaylistsFile();

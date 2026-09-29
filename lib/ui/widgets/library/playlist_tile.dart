@@ -11,10 +11,12 @@ import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
+import 'package:namida/ui/widgets/library/playlist_tags_chips_row.dart';
 
 class PlaylistTile extends StatelessWidget {
   final String playlistName;
   final void Function()? onTap;
+  final void Function()? onLongPress;
   final bool enableHero;
   final bool? checkmarkStatus;
   final String? extraText;
@@ -23,6 +25,7 @@ class PlaylistTile extends StatelessWidget {
     super.key,
     required this.playlistName,
     this.onTap,
+    this.onLongPress,
     this.enableHero = true,
     required this.checkmarkStatus,
     this.extraText,
@@ -50,7 +53,7 @@ class PlaylistTile extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 0.0,
         onTap: onTap,
-        onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+        onLongPress: onLongPress ?? () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
         enableSecondaryTap: true,
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: SizedBox(
@@ -68,6 +71,7 @@ class PlaylistTile extends StatelessWidget {
                   final tracksRaw = playlist.tracks.toTracks();
 
                   final remoteInfo = playlist.getRemoteInfo();
+                  final tagsAndMoodsText = playlist.toTagsAndMoodsText();
 
                   return Row(
                     children: [
@@ -104,14 +108,25 @@ class PlaylistTile extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            if (playlist.moods.isNotEmpty)
+                            if (tagsAndMoodsText.isNotEmpty)
                               NamidaHero(
                                 enabled: enableHero,
                                 tag: 'line3_$hero',
-                                child: Text(
-                                  playlist.moods.join(', '),
-                                  style: textTheme.displaySmall,
-                                  overflow: TextOverflow.ellipsis,
+                                child: Row(
+                                  children: [
+                                    PlaylistTagsColorDots(
+                                      filter: PlaylistController.inst.tagsFilter,
+                                      tags: playlist.tags,
+                                      trailingGap: 4.0,
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        tagsAndMoodsText,
+                                        style: textTheme.displaySmall,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                           ],
@@ -133,6 +148,18 @@ class PlaylistTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(width: 4.0),
+                      if (playlist.isPinned) ...[
+                        NamidaTooltip(
+                          message: () => lang.pinned,
+                          child: const Icon(
+                            Broken.paperclip,
+                            size: 18.0,
+                          ),
+                        ),
+                        const SizedBox(
+                          width: 2.0,
+                        ),
+                      ],
                       if (playlist.m3uPath != null) ...[
                         NamidaTooltip(
                           message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",

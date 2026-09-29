@@ -242,6 +242,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     genreSortReversed,
     playlistSort,
     playlistSortReversed,
+    playlistsGroupByTags,
     ytPlaylistSort,
     ytPlaylistSortReversed,
     indexMinDurationInSec,

@@ -127,11 +127,12 @@
     "a ",
     "an "
   ],
-  "playlistSearchFilter": [
+  "playlistSearchFilter_v2": [
     "name",
     "creationDate",
     "modifiedDate",
     "moods",
+    "tags",
     "comment"
   ],
   "directoriesToScan": [

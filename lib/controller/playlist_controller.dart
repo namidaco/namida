@@ -6,6 +6,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+// ignore: depend_on_referenced_packages
+import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
@@ -55,6 +57,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     int? modifiedDate,
     String comment = '',
     List<String> moods = const [],
+    List<String> tags = const [],
+    bool isPinned = false,
     String? m3uPath,
     PlaylistAddDuplicateAction? actionIfAlreadyExists,
   }) => super.addNewPlaylistRaw(
@@ -68,6 +72,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     modifiedDate: modifiedDate,
     comment: comment,
     moods: moods,
+    tags: tags,
+    isPinned: isPinned,
     m3uPath: m3uPath,
     actionIfAlreadyExists: () => actionIfAlreadyExists ?? NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
   );
@@ -115,6 +121,60 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
             )
           : null,
     );
+  }
+
+  @override
+  int? getMetadataEditDate(LocalPlaylist playlist) {
+    if (playlist.m3uPath != null) return _m3uDateCeil(currentTimeMS);
+    return super.getMetadataEditDate(playlist);
+  }
+
+  /// the tracks are kept as they are, the tags are combined.
+  Future<LocalPlaylist?> mergePlaylists(List<String> playlistsNames, String newName, {required bool removeMerged, required bool deleteM3UFiles}) async {
+    final tracks = <Track>[];
+    final tags = <String>[];
+    for (final name in playlistsNames) {
+      final pl = playlistsMap.value[name];
+      if (pl == null) continue;
+      for (final twd in pl.tracks) {
+        tracks.add(twd.track);
+      }
+      for (final tag in pl.tags) {
+        if (!tags.contains(tag)) tags.add(tag);
+      }
+    }
+    if (tracks.isEmpty) return null;
+    final merged = await addNewPlaylist(newName, tracks: tracks, tags: tags);
+    if (removeMerged) await removePlaylists(playlistsNames, deleteM3UFiles: deleteM3UFiles);
+    return merged;
+  }
+
+  Future<int> exportPlaylistsToM3UFiles(List<String> playlistsNames, String directoryPath) async {
+    int exportedCount = 0;
+    for (final name in playlistsNames) {
+      final pl = playlistsMap.value[name];
+      if (pl == null) continue;
+      final filePath = FileParts.joinPath(directoryPath, '$name.m3u');
+      try {
+        await exportPlaylistToM3UFile(pl, filePath);
+        exportedCount++;
+      } catch (_) {}
+    }
+    return exportedCount;
+  }
+
+  List<Track> getUniqueTracksOf(Iterable<String> playlistsNames) {
+    final tracks = <Track>[];
+    final added = <Track>{};
+    for (final name in playlistsNames) {
+      final pl = playlistsMap.value[name];
+      if (pl == null) continue;
+      for (final twd in pl.tracks) {
+        final tr = twd.track;
+        if (added.add(tr)) tracks.add(tr);
+      }
+    }
+    return tracks;
   }
 
   bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true}) {
@@ -242,7 +302,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   Future<void> prepareAllPlaylists() async {
-    await super.prepareAllPlaylistsFile();
+    await Future.wait([
+      super.prepareAllPlaylistsFile(),
+      _m3uProperties.load(),
+    ]);
     // -- preparing all playlist is awaited, for cases where
     // -- similar name exists, so m3u overrides it
     // -- this can produce in an outdated playlist version in cache
@@ -299,14 +362,14 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       }
     }
     if (namesToRemove.isNotEmpty) {
-      removePlaylists(namesToRemove);
+      super.removePlaylists(namesToRemove); // -- keeps their metadata, the file could come back
     }
   }
 
   final _m3uPlaylistsCompleter = Completer<bool>();
   Future<bool> get waitForM3UPlaylistsLoad => _m3uPlaylistsCompleter.future;
 
-  Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true}) async {
+  Future<int?> prepareM3UPlaylists({Set<String> forPaths = const {}, bool addAsM3U = true, Map<String, List<String>> tagsForPaths = const {}}) async {
     try {
       final allm3uPaths = forPaths.isEmpty ? await _listAllM3UFiles() : forPaths;
 
@@ -327,6 +390,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         removeM3UPlaylists((name) => !paths.containsKey(name));
       }
 
+      bool didRestoreAny = false;
       for (final e in paths.entries) {
         try {
           final plName = e.key;
@@ -335,22 +399,43 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           final stat = await File(m3uPath).stat();
           final creationDate = stat.creationDate.millisecondsSinceEpoch;
           final fileModifiedMS = stat.modified.millisecondsSinceEpoch;
-          final modifiedDate = addAsM3U ? _m3uDateFloor(fileModifiedMS) : null;
+          final properties = addAsM3U ? _m3uProperties.propertiesOf(plName) : null;
+          final tagsToAdd = tagsForPaths[m3uPath];
+          int? modifiedDate;
+          if (addAsM3U) {
+            final fileModifiedDate = _m3uDateFloor(fileModifiedMS);
+            final propertiesModifiedDate = properties?.modifiedDate ?? 0;
+            modifiedDate = fileModifiedDate.withMinimum(propertiesModifiedDate);
+          }
           final plAlreadyExisting = playlistsMap.value[plName];
           if (plAlreadyExisting != null) {
             this.updatePropertyInPlaylist(
               plName,
               tracksRaw: trs,
               convertItem: (e, dateAdded) => TrackWithDate(dateAdded: dateAdded, track: e),
+              tags: tagsToAdd == null ? null : _combineTags(plAlreadyExisting.tags, tagsToAdd),
               m3uPath: addAsM3U ? m3uPath : null,
               creationDate: creationDate,
               modifiedDate: modifiedDate,
               tracksFromNewSource: true,
             );
+          } else if (properties != null) {
+            int dateAdded = currentTimeMS;
+            final tracks = trs.map((tr) => TrackWithDate(dateAdded: dateAdded++, track: tr)).toList();
+            final restored = properties.copyWith(
+              name: plName,
+              tracks: tracks,
+              m3uPath: m3uPath,
+              creationDate: creationDate,
+              modifiedDate: modifiedDate,
+            );
+            importPlaylistForce(restored, sortPlaylists: false, tracksFromNewSource: true);
+            didRestoreAny = true;
           } else {
             this.addNewPlaylist(
               plName,
               tracks: trs,
+              tags: tagsToAdd ?? const [],
               m3uPath: addAsM3U ? m3uPath : null,
               creationDate: creationDate,
               modifiedDate: modifiedDate,
@@ -361,6 +446,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
           _ensureM3UArtUrlObtained(plName, e.value.path, e.value.artUrl);
         } catch (_) {}
       }
+      if (didRestoreAny) sortPlaylists();
 
       if (_pathsM3ULookup.isEmpty) {
         _pathsM3ULookup = infoMap;
@@ -371,6 +457,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       return paths.length;
     } catch (_) {}
     return null;
+  }
+
+  /// returns [tags] itself when there is nothing new.
+  static List<String> _combineTags(List<String> tags, List<String>? tagsToAdd) {
+    if (tagsToAdd == null) return tags;
+    List<String>? combined;
+    for (final tag in tagsToAdd) {
+      if (tags.contains(tag)) continue;
+      combined ??= [...tags];
+      combined.add(tag);
+    }
+    return combined ?? tags;
   }
 
   Future<Set<String>> _listAllM3UFiles() async {
@@ -589,7 +687,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         modifiedDate: spl.changedMS ?? currentTimeMS,
         comment: spl.comment ?? '',
         moods: existing?.moods ?? [],
+        tags: existing?.tags ?? [],
         isFav: false,
+        isPinned: existing?.isPinned ?? false,
         m3uPath: null,
         sortsType: existing?.sortsType,
         sortReverse: existing?.sortReverse ?? false,
@@ -975,11 +1075,46 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     }
   }
 
+  late final _m3uPropertiesFile = FileParts.join(playlistsMetadataDirectory, 'm3u_metadata.json');
+  late final _m3uProperties = _M3UPlaylistsProperties(_m3uPropertiesFile);
+
   @override
-  FutureOr<bool> canSavePlaylist(LocalPlaylist playlist) {
+  Future<bool> writePlaylistToStorage(LocalPlaylist playlist) async {
     final m3uPath = playlist.m3uPath;
-    return m3uPath == null || m3uPath.isEmpty; // dont save m3u-based playlists;
+    final isM3U = m3uPath != null && m3uPath.isNotEmpty;
+    if (isM3U) {
+      final properties = playlist.toJson(itemToJson, sortToJson, includeTracks: false); // -- tracks live in the m3u file
+      _m3uProperties.update(playlist.name, properties);
+      return true;
+    }
+    _m3uProperties.remove(playlist.name);
+    return await super.writePlaylistToStorage(playlist);
   }
+
+  @override
+  Future<void> removePlaylist(LocalPlaylist playlist) async {
+    await super.removePlaylist(playlist);
+    _m3uProperties.remove(playlist.name);
+  }
+
+  @override
+  Future<void> removePlaylists(List<String> names, {bool deleteM3UFiles = false}) async {
+    final m3uPaths = <String>[];
+    if (deleteM3UFiles) {
+      for (final name in names) {
+        final m3uPath = playlistsMap.value[name]?.m3uPath;
+        if (m3uPath != null) m3uPaths.add(m3uPath);
+      }
+    }
+    await super.removePlaylists(names);
+    names.loop(_m3uProperties.remove);
+    for (final m3uPath in m3uPaths) {
+      await File(m3uPath).deleteIfExists();
+    }
+  }
+
+  @override
+  void onTagsFilterChanged() => SearchSortController.inst.refreshPlaylistsTagsFilter();
 
   @override
   void onReadOnlyPlaylistError() {
@@ -1123,6 +1258,65 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     }
 
     return map;
+  }
+}
+
+// by claude
+class _M3UPlaylistsProperties {
+  final File _file;
+  _M3UPlaylistsProperties(this._file);
+
+  /// {playlistName: playlist json without the tracks}
+  var _entries = <String, Map<String, dynamic>>{};
+
+  /// the returned playlist has no tracks.
+  LocalPlaylist? propertiesOf(String playlistName) {
+    final json = _entries[playlistName];
+    if (json == null) return null;
+    try {
+      return LocalPlaylist.fromJson(json, TrackWithDate.fromJson, SortType.sortListFromJsonList);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> load() async {
+    final json = await _file.readAsJson();
+    if (json is! Map) return;
+    final entries = <String, Map<String, dynamic>>{};
+    for (final e in json.entries) {
+      final properties = e.value;
+      if (properties is Map<String, dynamic>) entries[e.key] = properties;
+    }
+    _entries = entries;
+  }
+
+  void update(String playlistName, Map<String, dynamic> properties) {
+    final oldProperties = _entries[playlistName];
+    if (oldProperties != null && const DeepCollectionEquality().equals(oldProperties, properties)) return;
+    _entries[playlistName] = properties;
+    _save();
+  }
+
+  void remove(String playlistName) {
+    final removed = _entries.remove(playlistName);
+    if (removed != null) _save();
+  }
+
+  bool _isSaving = false;
+  bool _hasNewerEntries = false;
+
+  Future<void> _save() async {
+    if (_isSaving) {
+      _hasNewerEntries = true;
+      return;
+    }
+    _isSaving = true;
+    do {
+      _hasNewerEntries = false;
+      await _file.writeAsJson(_entries);
+    } while (_hasNewerEntries);
+    _isSaving = false;
   }
 }
 
