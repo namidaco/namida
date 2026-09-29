@@ -578,6 +578,8 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
       // -- keep the sender's mtime so future manifests compare correctly
       await file.setLastModified(DateTime.fromMillisecondsSinceEpoch(mtime));
 
+      if (subtype == AppPathsBackupEnum.AUDIOS_CACHE) AudioCacheController.inst.addFileToCacheMap(file);
+
       final info = this.info;
       if (info != null) {
         switch (subtype) {

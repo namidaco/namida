@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -443,6 +444,7 @@ class BackupController {
     QueueController.inst.prepareAllQueuesFile();
 
     VideoController.inst.initialize();
+    AudioCacheController.inst.updateAudioCacheMap();
 
     PlaylistController.inst.prepareAllPlaylists();
     HistoryController.inst.prepareHistoryFile().then((_) => Indexer.inst.sortMediaTracksAndSubListsAfterHistoryPrepared());

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:namida/class/audio_cache_detail.dart';
@@ -12,18 +13,25 @@ class AudioCacheController {
 
   var audioCacheMap = <String, List<AudioCacheDetails>>{};
 
+  final _audioCacheMapLoadedCompleter = Completer<void>();
+
   Future<void> updateAudioCacheMap() async {
-    final map = await _getAllAudiosInCache.thready(AppDirs.AUDIOS_CACHE);
-    audioCacheMap = map;
+    try {
+      final map = await _getAllAudiosInCache.thready(AppDirs.AUDIOS_CACHE);
+      audioCacheMap = map;
+    } finally {
+      _audioCacheMapLoadedCompleter.completeIfWasnt();
+    }
   }
 
   Future<AudioCacheDetails?> getCachedAudioForId(String videoId) async {
-    final possibleAudioFiles = audioCacheMap[videoId] ?? [];
+    await _audioCacheMapLoadedCompleter.future;
+
+    final audioFiles = audioCacheMap[videoId] ?? [];
     final possibleLocalFiles = Indexer.inst.allTracksMappedByYTID[videoId] ?? [];
 
-    final audioFiles = possibleAudioFiles.isNotEmpty ? possibleAudioFiles : await _getCachedAudiosForID.thready((dirPath: AppDirs.AUDIOS_CACHE, id: videoId));
-    final finalAudioFiles = audioFiles..sortByAltsPrecomputed([(e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0], reverse: true);
-    AudioCacheDetails? cachedAudio = await finalAudioFiles.firstWhereEffAsync((e) => e.file.exists());
+    audioFiles.sortByAltsPrecomputed([(e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0], reverse: true);
+    AudioCacheDetails? cachedAudio = await audioFiles.firstWhereEffAsync((e) => e.file.exists());
 
     if (cachedAudio == null) {
       final localTrack = await possibleLocalFiles.firstWhereEffAsync((e) => File(e.path).exists());
@@ -46,6 +54,13 @@ class AudioCacheController {
     audioCacheMap.addForce(videoId, cacheDetails);
   }
 
+  void addFileToCacheMap(File file) {
+    final details = _tryParseAudioCacheFile(file);
+    if (details == null) return;
+    removeFromCacheMap(details.youtubeId, file.path);
+    addToCacheMap(details.youtubeId, details);
+  }
+
   void removeFromCacheMap(String videoId, String path) {
     audioCacheMap[videoId]?.removeWhere((element) => element.file.path == path);
   }
@@ -62,46 +77,27 @@ class AudioCacheController {
     audioCacheMap.remove(videoId);
   }
 
-  /// TODO: improve using PortsProvider
-  static List<AudioCacheDetails> _getCachedAudiosForID(({String dirPath, String id}) params) {
-    final dirPath = params.dirPath;
-    final id = params.id;
-
-    final newFiles = <AudioCacheDetails>[];
-
-    final allFiles = Directory(dirPath).listSyncSafe();
-    for (final fe in allFiles) {
-      final filename = fe.path.getFilename;
-      final goodID = filename.startsWith(id);
-      final isGood = fe is File && goodID && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
-
-      if (isGood) {
-        try {
-          final details = _parseAudioCacheDetailsFromFile(fe);
-          newFiles.add(details);
-          break; // since its not likely to find other audios
-        } catch (_) {}
-      }
-    }
-    return newFiles;
-  }
-
   static Map<String, List<AudioCacheDetails>> _getAllAudiosInCache(String dirPath) {
     final newFiles = <String, List<AudioCacheDetails>>{};
 
     final files = Directory(dirPath).listSyncSafe();
     for (final fe in files) {
-      final filename = fe.path.getFilename;
-      final isGood = fe is File && !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
-
-      if (isGood) {
-        try {
-          final details = _parseAudioCacheDetailsFromFile(fe);
-          newFiles.addForce(details.youtubeId, details);
-        } catch (_) {}
-      }
+      if (fe is! File) continue;
+      final details = _tryParseAudioCacheFile(fe);
+      if (details != null) newFiles.addForce(details.youtubeId, details);
     }
     return newFiles;
+  }
+
+  static AudioCacheDetails? _tryParseAudioCacheFile(File file) {
+    final filename = file.path.getFilename;
+    final isGood = !filename.endsWith('.part') && !filename.endsWith('.mime') && !filename.endsWith('.metadata');
+    if (!isGood) return null;
+    try {
+      return _parseAudioCacheDetailsFromFile(file);
+    } catch (_) {
+      return null;
+    }
   }
 
   static AudioCacheDetails _parseAudioCacheDetailsFromFile(File file) {
