@@ -37,6 +37,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final tiltingCardsEffect = _key<bool?>('tiltingCardsEffect', null);
   late final jellysInvasion = _key<bool?>('jellysInvasion', null);
   late final jellysPalette = _key<bool?>('jellysPalette', null);
+  late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
   late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null);
   late final keepVideoFrameOnSwitch = _key<bool?>('keepVideoFrameOnSwitch', null);
   late final artistAlbumsExpanded = _key<bool?>('artistAlbumsExpanded', null);

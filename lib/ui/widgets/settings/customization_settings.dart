@@ -24,12 +24,16 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 enum _CustomizationSettingsKeys with SettingKeysBase {
   enableBlur,
   enableGlow,
   enableParallax,
+  backgroundEffect,
+  overlayEffect,
+  wallpaper,
   displayRemainingDur,
   displayActualPosition,
   brMultiplier,
@@ -64,7 +68,8 @@ enum _CustomizationSettingsKeys with SettingKeysBase {
   MINIPLAYERCUSTOMIZATION,
   partyMode,
   edgeColorsSwitching,
-  movingParticles,
+  visualizer,
+  playerBackground,
   THUMBANIMATIONINTENSITY,
   thumbAnimationIntensityExpanded,
   thumbAnimationIntensityLyrics,
@@ -97,6 +102,9 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.enableBlur: [lang.enableBlurEffect],
     _CustomizationSettingsKeys.enableGlow: [lang.enableGlowEffect],
     _CustomizationSettingsKeys.enableParallax: [lang.enableParallaxEffect],
+    _CustomizationSettingsKeys.backgroundEffect: [lang.backgroundEffect],
+    _CustomizationSettingsKeys.overlayEffect: [lang.overlayEffect, lang.overlayEffectSubtitle],
+    _CustomizationSettingsKeys.wallpaper: [lang.wallpaper, lang.blur, lang.dimIntensity],
     _CustomizationSettingsKeys.displayRemainingDur: [lang.displayRemainingDurationInsteadOfTotal],
     _CustomizationSettingsKeys.displayActualPosition: [lang.displayActualPositionInsteadOfDifferenceWhileSeeking],
     _CustomizationSettingsKeys.brMultiplier: [lang.borderRadiusMultiplier],
@@ -131,7 +139,8 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.miniplayerCustomization],
     _CustomizationSettingsKeys.partyMode: [lang.enablePartyMode, lang.enablePartyModeSubtitle],
     _CustomizationSettingsKeys.edgeColorsSwitching: [lang.edgeColorsSwitching],
-    _CustomizationSettingsKeys.movingParticles: [lang.enableMiniplayerParticles],
+    _CustomizationSettingsKeys.visualizer: [lang.visualizer, lang.enableMiniplayerParticles],
+    _CustomizationSettingsKeys.playerBackground: [lang.playerBackground, lang.artwork, lang.blur, lang.dimIntensity, lang.colorWhenExpanded],
     _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.animatingThumbnailIntensity],
     _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.animatingThumbnailIntensity, lang.expandedMiniplayer],
     _CustomizationSettingsKeys.thumbAnimationIntensityLyrics: [lang.animatingThumbnailIntensity, lang.lyrics],
@@ -209,6 +218,24 @@ class CustomizationSettings extends SettingSubpageProvider {
                 }),
                 value: enableMiniplayerParallaxEffect,
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.backgroundEffect,
+            child: EffectThemeTile.background(
+              bgColor: getBgColor(_CustomizationSettingsKeys.backgroundEffect),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.overlayEffect,
+            child: EffectThemeTile.overlay(
+              bgColor: getBgColor(_CustomizationSettingsKeys.overlayEffect),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.wallpaper,
+            child: AppWallpaperTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.wallpaper),
             ),
           ),
           getItemWrapper(
@@ -990,15 +1017,15 @@ class CustomizationSettings extends SettingSubpageProvider {
             ),
           ),
           getItemWrapper(
-            key: _CustomizationSettingsKeys.movingParticles,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_CustomizationSettingsKeys.movingParticles),
-                icon: Broken.buy_crypto,
-                title: lang.enableMiniplayerParticles,
-                onChanged: (value) => settings.enableMiniplayerParticles.save(!value),
-                value: settings.enableMiniplayerParticles.valueR,
-              ),
+            key: _CustomizationSettingsKeys.visualizer,
+            child: VisualizerTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.visualizer),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.playerBackground,
+            child: PlayerBackgroundTile(
+              bgColor: getBgColor(_CustomizationSettingsKeys.playerBackground),
             ),
           ),
           getItemWrapper(

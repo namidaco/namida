@@ -143,12 +143,23 @@ class NamidaPopupWrapper extends StatelessWidget {
             child: popupItem,
           );
         }
-        return ConstrainedBox(
+        final popupItemPadded = ConstrainedBox(
           constraints: BoxConstraints(minHeight: 38.0),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
             child: popupItem,
           ),
+        );
+        if (!e.hasDividerAbove) return popupItemPadded;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const NamidaContainerDivider(
+              height: 1.5,
+              margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+            ),
+            popupItemPadded,
+          ],
         );
       },
     );
@@ -243,6 +254,7 @@ class NamidaPopupItem {
   final bool enabled;
   final bool selected;
   final bool oneLinedSub;
+  final bool hasDividerAbove;
   final Widget? trailing;
 
   const NamidaPopupItem({
@@ -256,6 +268,7 @@ class NamidaPopupItem {
     this.enabled = true,
     this.selected = false,
     this.oneLinedSub = false,
+    this.hasDividerAbove = false,
     this.trailing,
   });
 }

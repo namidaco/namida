@@ -18,12 +18,16 @@ class WaveformComponent extends StatefulWidget {
   final double barsMinHeight;
   final double barsMaxHeight;
 
+  static const barWidthFraction = 0.54;
+  static const defaultBarsMinHeight = 3.0;
+  static const defaultBarsMaxHeight = 64.0;
+
   const WaveformComponent({
     super.key,
     this.durationInMilliseconds = 600,
     this.curve = Curves.easeInOutQuart,
-    this.barsMinHeight = 3.0,
-    this.barsMaxHeight = 64.0,
+    this.barsMinHeight = defaultBarsMinHeight,
+    this.barsMaxHeight = defaultBarsMaxHeight,
   });
 
   @override
@@ -91,7 +95,7 @@ class WaveformComponentState extends State<WaveformComponent> with SingleTickerP
         return ObxO(
           rx: WaveformController.inst.currentWaveformUIRx,
           builder: (context, downscaled) {
-            final barWidth = maxWidth / downscaled.length * 0.54;
+            final barWidth = maxWidth / downscaled.length * WaveformComponent.barWidthFraction;
             return Center(
               child: AnimatedBuilder(
                 animation: _animation,

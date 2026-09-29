@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:animated_background/animated_background.dart';
 import 'package:just_audio/just_audio.dart' show VideoInfoData;
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/youtipie.dart' show CodecInfoUtils;
@@ -42,6 +41,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -87,7 +87,6 @@ class _MiniPlayerParentBody extends StatelessWidget {
               opacity: NamidaMiniPlayerBase.clampedAnimationCP,
               child: const Wallpaper(
                 gradient: false,
-                particleOpacity: 0.3,
               ),
             ),
           ),
@@ -1188,75 +1187,24 @@ class _AnimatingYoutubeIDImage extends StatelessWidget {
   }
 }
 
-class Wallpaper extends StatefulWidget {
+class Wallpaper extends StatelessWidget {
   const Wallpaper({
     super.key,
     this.child,
-    this.particleOpacity = .1,
     this.gradient = true,
   });
 
   final Widget? child;
-  final double particleOpacity;
   final bool gradient;
-
-  @override
-  State<Wallpaper> createState() => _WallpaperState();
-}
-
-class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMixin {
-  late final _particleBehaviour = RandomParticleBehaviour(options: _buildParticleOptions(Colors.transparent, 0));
-  final _particlesScale = ValueNotifier<double>(0.0);
-  Color _particlesBaseColor = Colors.transparent;
-
-  @override
-  void initState() {
-    super.initState();
-    if (settings.enableMiniplayerParticles.value) Player.inst.nowPlayingPosition.addListener(_onPositionChanged);
-  }
-
-  @override
-  void dispose() {
-    Player.inst.nowPlayingPosition.removeListener(_onPositionChanged);
-    _particlesScale.dispose();
-    super.dispose();
-  }
-
-  void _onPositionChanged() {
-    final scale = WaveformController.inst.getCurrentAnimatingScale(Player.inst.nowPlayingPosition.value);
-    if (scale == _particlesScale.value) return;
-    final bpm = (2000 * scale).withMinimum(0);
-    _particleBehaviour.options = _buildParticleOptions(_particlesBaseColor, bpm);
-    _particlesScale.value = scale;
-  }
-
-  ParticleOptions _buildParticleOptions(Color baseColor, double bpm) {
-    return ParticleOptions(
-      baseColor: baseColor,
-      spawnMaxRadius: 4,
-      spawnMinRadius: 2,
-      spawnMaxSpeed: 60 + bpm * 2,
-      spawnMinSpeed: bpm,
-      maxOpacity: widget.particleOpacity,
-      minOpacity: 0,
-      particleCount: 50,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    _particlesBaseColor = theme.colorScheme.secondary;
-    final particlesChild = AnimatedBackground(
-      vsync: this,
-      behaviour: _particleBehaviour,
-      child: const SizedBox(),
-    );
     return Material(
       color: theme.scaffoldBackgroundColor,
       child: Stack(
         children: [
-          if (widget.gradient)
+          if (gradient)
             Container(
               decoration: BoxDecoration(
                 gradient: RadialGradient(
@@ -1270,6 +1218,10 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
               ),
             ),
 
+          const Positioned.fill(
+            child: NamidaPlayerBackground(),
+          ),
+
           if (NamidaJellys.enabled)
             const Positioned.fill(
               child: NamidaJellyBackground(
@@ -1282,24 +1234,10 @@ class _WallpaperState extends State<Wallpaper> with SingleTickerProviderStateMix
               ),
             ),
 
-          if (settings.enableMiniplayerParticles.value)
-            ObxO(
-              rx: Player.inst.isPlaying,
-              builder: (context, playing) => AnimatedOpacity(
-                duration: const Duration(seconds: 1),
-                opacity: playing ? 1 : 0,
-                child: ValueListenableBuilder<double>(
-                  valueListenable: _particlesScale,
-                  child: particlesChild,
-                  builder: (context, scale, child) => AnimatedScale(
-                    duration: const Duration(milliseconds: 300),
-                    scale: 1.0 + scale * 1.5,
-                    child: child,
-                  ),
-                ),
-              ),
-            ),
-          if (widget.child != null) widget.child!,
+          const Positioned.fill(
+            child: NamidaVisualizer.wallpaper(),
+          ),
+          ?child,
         ],
       ),
     );

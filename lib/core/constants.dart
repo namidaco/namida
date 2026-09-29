@@ -943,6 +943,7 @@ class AppDirs {
   static final ARTWORKS_ARTISTS = _join(USER_DATA, 'Artworks Artists');
   static final ARTWORKS_ALBUMS = _join(USER_DATA, 'Artworks Albums');
   static final PALETTES = _join(USER_DATA, 'Palettes');
+  static final WALLPAPERS = _join(USER_DATA, 'Wallpapers');
   static final VIDEOS_CACHE = _join(USER_DATA, 'Videos');
   static final AUDIOS_CACHE = _join(USER_DATA, 'Audios');
   static final SERVERS_CACHE = _join(USER_DATA, 'Servers Cache');
@@ -998,6 +999,7 @@ class AppDirs {
     ARTWORKS_ARTISTS,
     ARTWORKS_ALBUMS,
     PALETTES,
+    WALLPAPERS,
     VIDEOS_CACHE,
     VIDEOS_CACHE_TEMP,
     AUDIOS_CACHE,

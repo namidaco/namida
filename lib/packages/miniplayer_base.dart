@@ -50,6 +50,7 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -808,6 +809,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     textScaler: MediaQuery.textScalerOf(context),
                   )
                 : 0.0;
+            final hasPlayerBackground = settings.playerBackground.valueR != PlayerBackground.none;
+            final hasColorWhenExpanded = settings.playerColorWhenExpanded.valueR;
+            final visualizers = settings.miniplayerVisualizers.valueR;
+            final visualizerPlacements = NamidaVisualizer.placementsOf(visualizers);
             final thumbnailBaseScale = MiniplayerThumbnailScale.resolveBase(
               isInversed: settings.animatingThumbnailInversed.valueR,
               userScaleMultiplier: settings.animatingThumbnailScaleMultiplier.valueR,
@@ -1008,6 +1013,9 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     bottomOffset,
                     navBarHeight,
                   ) {
+                    // -- collapsed it still has pages under it, so it only clears up while expanding
+                    final panelOpacity = hasPlayerBackground ? 1.0 - 0.8 * cp : 1.0;
+                    final panelColorStrength = hasColorWhenExpanded ? 1.0 : 1.0 - cp;
                     final BorderRadius borderRadius = BorderRadius.vertical(
                       top: Radius.circular(20.0.multipliedRadius + 6.0 * p),
                       bottom: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clampDouble(0, 1)),
@@ -1139,7 +1147,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                         animate: animateDecoration,
                                         duration: const Duration(milliseconds: kThemeAnimationDurationMS),
                                         decoration: BoxDecoration(
-                                          color: theme.scaffoldBackgroundColor,
+                                          color: theme.scaffoldBackgroundColor.withOpacityExt(panelOpacity),
                                           borderRadius: borderRadius,
                                         ),
                                         child: Stack(
@@ -1160,11 +1168,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                       Color.alphaBlend(
                                                         theme.colorScheme.onSurface.withAlpha(100),
                                                         CurrentColor.inst.miniplayerColor,
-                                                      ).withOpacityExt(velpy(a: .38, b: .28, c: icp)),
+                                                      ).withOpacityExt(velpy(a: .38, b: .28, c: icp) * panelColorStrength),
                                                       Color.alphaBlend(
                                                         theme.colorScheme.onSurface.withAlpha(40),
                                                         CurrentColor.inst.miniplayerColor,
-                                                      ).withOpacityExt(velpy(a: .1, b: .22, c: icp)),
+                                                      ).withOpacityExt(velpy(a: .1, b: .22, c: icp) * panelColorStrength),
                                                     ],
                                                   ),
                                                 ),
@@ -1184,6 +1192,16 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                                     enabled: cp > 0.01,
                                                     seed: 7,
                                                   ),
+                                                ),
+                                              ),
+
+                                            if (visualizerPlacements.hasInsidePanel)
+                                              Positioned.fill(
+                                                child: NamidaVisualizer.insidePanel(
+                                                  opacity: cp,
+                                                  baseline: 32.0 * waveformYScale - vOffsetWaveform,
+                                                  waveformScale: waveformYScale,
+                                                  waveformPadding: 16.0,
                                                 ),
                                               ),
 
@@ -1211,6 +1229,33 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                             ),
                           ),
                         ),
+
+                        if (visualizerPlacements.hasAroundPlayer)
+                          Positioned.fill(
+                            child: NamidaVisualizer.aroundPlayer(
+                              opacity: cp,
+                            ),
+                          ),
+
+                        /// Artwork Visualizer
+                        if (visualizerPlacements.hasAroundArtwork)
+                          FadeIgnoreTransition(
+                            completelyKillWhenPossible: true,
+                            opacity: slowOpacityAnimation,
+                            child: Transform.translate(
+                              offset: Offset(imageLeftOffset, vOffsetImage),
+                              child: _RawImageContainer(
+                                width: imageBoxWidth,
+                                height: imageBoxHeight,
+                                padding: imagePadding,
+                                child: NamidaVisualizer.aroundArtwork(
+                                  artworkScale: thumbnailBaseScale,
+                                  artworkRadius: 14.0.multipliedRadius,
+                                ),
+                              ),
+                            ),
+                          ),
+
                         if (settings.enablePartyModeInMiniplayer.value)
                           FadeIgnoreTransition(
                             opacity: partyContainersOpacityAnimation,

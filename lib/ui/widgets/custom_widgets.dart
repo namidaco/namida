@@ -62,6 +62,7 @@ import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_tooltip.dart';
+import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/popup_wrapper.dart';
@@ -4724,7 +4725,18 @@ class BackgroundWrapper extends StatelessWidget {
     final theme = context.theme;
     return Material(
       color: theme.scaffoldBackgroundColor,
-      child: child,
+      child: Stack(
+        fit: StackFit.passthrough,
+        children: [
+          const Positioned.fill(
+            child: NamidaAppWallpaper(),
+          ),
+          const Positioned.fill(
+            child: NamidaEffectsLayer.background(),
+          ),
+          child,
+        ],
+      ),
     );
   }
 }

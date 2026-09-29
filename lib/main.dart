@@ -74,6 +74,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -353,6 +354,7 @@ void _recheckTimeAwareEssentials() async {
   const StorageCacheManager().trimExtraFiles();
   VersionController.inst.ensureRefreshed();
   _clearIntentCachedFiles();
+  NamidaEffects.refreshSeason();
 }
 
 Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) async {
@@ -558,10 +560,20 @@ class _NamidaState extends State<Namida> {
                 )
               : widget;
 
+          const effectsOverlay = Positioned.fill(
+            child: NamidaEffectsLayer.overlay(),
+          );
+
           return Theme(
             data: theme,
             child: WindowController.instance == null
-                ? mainChild
+                ? Stack(
+                    fit: StackFit.passthrough,
+                    children: [
+                      mainChild,
+                      effectsOverlay,
+                    ],
+                  )
                 : ObxO(
                     rx: NamidaWindowManager.isMiniLyricsMode,
                     builder: (context, isMiniLyricsMode) => Stack(
@@ -572,7 +584,7 @@ class _NamidaState extends State<Namida> {
                           visible: !isMiniLyricsMode,
                           child: mainChild,
                         ),
-                        if (isMiniLyricsMode) const MiniLyricsWindow(),
+                        isMiniLyricsMode ? const MiniLyricsWindow() : effectsOverlay,
                       ],
                     ),
                   ),

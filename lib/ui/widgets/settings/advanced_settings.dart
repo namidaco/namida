@@ -30,6 +30,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -170,6 +171,10 @@ class AdvancedSettings extends SettingSubpageProvider {
                   value: enableMiniplayerParallaxEffect,
                 ),
               ),
+              const EffectThemeTile.background(),
+              const EffectThemeTile.overlay(),
+              const VisualizerTile(),
+              const PlayerBackgroundTile(),
               CustomListTile(
                 icon: Broken.card_pos,
                 title: lang.artwork,

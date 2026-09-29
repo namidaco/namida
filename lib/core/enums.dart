@@ -872,6 +872,40 @@ enum PerformanceMode {
   custom,
 }
 
+enum MiniplayerVisualizer {
+  bars,
+  mirroredBars,
+  waves,
+  edgeLights,
+  glow,
+  outline,
+  beatRings,
+  reactiveParticles,
+}
+
+enum PlayerBackground {
+  none,
+  artwork,
+  image,
+}
+
+enum EffectTheme {
+  auto,
+  none,
+  particles,
+  halloween,
+  christmas,
+  ramadan,
+  sakura,
+  rain,
+  fireflies,
+  starfield,
+  galaxy,
+  aurora,
+  fireworks,
+  deepOcean,
+}
+
 enum KillAppMode {
   always,
   ifNotPlaying,

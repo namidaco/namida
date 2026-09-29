@@ -1098,6 +1098,12 @@ extension PerformanceModeUtils on PerformanceMode {
           settings.enableBlurEffect.save(false);
           settings.enableGlowEffect.save(false);
           settings.enableMiniplayerParallaxEffect.save(false);
+          settings.enableMiniplayerParticles.save(false);
+          settings.miniplayerVisualizers.reset();
+          settings.visualizerArtworkColors.save(false);
+          settings.effectsBackground.save(EffectTheme.none);
+          settings.effectsOverlay.save(EffectTheme.none);
+          settings.playerBackground.save(PlayerBackground.none);
           settings.artworkCacheHeightMultiplier.save(0.8);
           settings.autoColor.save(false);
           settings.animatedTheme.save(false);
@@ -2570,6 +2576,80 @@ extension PerformanceModeL10n on PerformanceMode {
     PerformanceMode.balanced => Broken.cd,
     PerformanceMode.goodLooking => Broken.buy_crypto,
     PerformanceMode.custom => Broken.candle,
+  };
+}
+
+extension MiniplayerVisualizerL10n on MiniplayerVisualizer {
+  String toText() => switch (this) {
+    MiniplayerVisualizer.bars => lang.bars,
+    MiniplayerVisualizer.mirroredBars => lang.mirroredBars,
+    MiniplayerVisualizer.waves => lang.waves,
+    MiniplayerVisualizer.edgeLights => lang.edgeLights,
+    MiniplayerVisualizer.glow => lang.glow,
+    MiniplayerVisualizer.outline => lang.outline,
+    MiniplayerVisualizer.beatRings => lang.beatRings,
+    MiniplayerVisualizer.reactiveParticles => lang.reactiveParticles,
+  };
+
+  IconData toIcon() => switch (this) {
+    MiniplayerVisualizer.bars => Broken.chart_2,
+    MiniplayerVisualizer.mirroredBars => Broken.sound,
+    MiniplayerVisualizer.waves => Broken.wind_2,
+    MiniplayerVisualizer.edgeLights => Broken.slider,
+    MiniplayerVisualizer.glow => Broken.sun_1,
+    MiniplayerVisualizer.outline => Broken.record_circle,
+    MiniplayerVisualizer.beatRings => Broken.radar,
+    MiniplayerVisualizer.reactiveParticles => Broken.flash_1,
+  };
+}
+
+extension PlayerBackgroundL10n on PlayerBackground {
+  String toText() => switch (this) {
+    PlayerBackground.none => lang.none,
+    PlayerBackground.artwork => lang.artwork,
+    PlayerBackground.image => lang.custom,
+  };
+
+  IconData toIcon() => switch (this) {
+    PlayerBackground.none => Broken.slash,
+    PlayerBackground.artwork => Broken.music_square,
+    PlayerBackground.image => Broken.gallery,
+  };
+}
+
+extension EffectThemeL10n on EffectTheme {
+  String toText() => switch (this) {
+    EffectTheme.auto => lang.auto,
+    EffectTheme.none => lang.none,
+    EffectTheme.particles => lang.particles,
+    EffectTheme.fireflies => lang.fireflies,
+    EffectTheme.starfield => lang.starfield,
+    EffectTheme.galaxy => lang.galaxy,
+    EffectTheme.aurora => lang.aurora,
+    EffectTheme.deepOcean => lang.deepOcean,
+    EffectTheme.rain => lang.rain,
+    EffectTheme.sakura => lang.sakura,
+    EffectTheme.fireworks => lang.fireworks,
+    EffectTheme.halloween => lang.halloween,
+    EffectTheme.christmas => lang.christmas,
+    EffectTheme.ramadan => lang.ramadan,
+  };
+
+  IconData toIcon() => switch (this) {
+    EffectTheme.auto => Broken.magicpen,
+    EffectTheme.none => Broken.slash,
+    EffectTheme.particles => Broken.buy_crypto,
+    EffectTheme.fireflies => Broken.lamp_on,
+    EffectTheme.starfield => Broken.star_1,
+    EffectTheme.galaxy => Broken.global,
+    EffectTheme.aurora => Broken.wind,
+    EffectTheme.deepOcean => Broken.bubble,
+    EffectTheme.rain => Broken.cloud_drizzle,
+    EffectTheme.sakura => Broken.tree,
+    EffectTheme.fireworks => Broken.magic_star,
+    EffectTheme.halloween => Broken.ghost,
+    EffectTheme.christmas => Broken.sun,
+    EffectTheme.ramadan => Broken.moon,
   };
 }
 

@@ -1,14 +1,14 @@
 import 'dart:typed_data';
 
-import 'package:namida_waveform/namida_waveform.dart';
-
-import 'package:namida/controller/waveform_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/spectrum_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
+import 'package:namida/controller/waveform_extractor.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida_waveform/namida_waveform.dart';
 
 class WaveformController {
   static WaveformController get inst => _instance;
@@ -34,6 +34,7 @@ class WaveformController {
     _currentScaleLookup = [];
     _currentScaleMaxIndex = -1;
     _isWaveformUIEnabled.value = false;
+    SpectrumController.inst.reset();
   }
 
   /// Extracts waveform data from a given track, or immediately read from .wave file if exists, then assigns wavedata to [_currentWaveform].
@@ -48,7 +49,7 @@ class WaveformController {
     await Future.wait([
       _waveformExtractor
           .extractWaveformData(path, samplesPerSecond: samplePerSecond)
-          .then((value) => waveformData = value)
+          .then((value) => waveformData = value) //
           .catchError((_) => waveformData = _emptyWaveformData),
       Future.delayed(const Duration(milliseconds: 800)),
     ]);
@@ -68,6 +69,7 @@ class WaveformController {
 
       calculateUIWaveform();
       _ensureHapticListener();
+      SpectrumController.inst.onSourceReady(path: path, duration: duration);
     }
   }
 
@@ -124,6 +126,12 @@ class WaveformController {
 
   double getCurrentAnimatingScaleMinimized(int positionInMs) {
     return _getCurrentAnimatingScaleGeneral(positionInMs, settings.animatingThumbnailIntensityMinimized.value);
+  }
+
+  double getCurrentLevel(double positionInMs) {
+    final posInMap = positionInMs ~/ _positionDividorWithOffset;
+    if (posInMap < 0 || posInMap > _currentScaleMaxIndex) return 0.0;
+    return (_currentScaleLookup[posInMap] / 64.0).clampDouble(0.0, 1.0);
   }
 
   double _getCurrentAnimatingScaleGeneral(int positionInMs, int intensity) {
