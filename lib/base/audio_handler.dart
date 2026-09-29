@@ -1173,25 +1173,28 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _nextSeekSetVideoCache = null;
     _freePlayerTemporarily();
 
-    setAudioOnlyPlayback(false);
+    final wasAudioOnly = _isAudioOnlyPlayback;
+    if (wasAudioOnly) settings.youtube.isAudioOnlyMode.save(false);
 
     currentVideoStream.value = stream;
     currentCachedVideo.value = null;
-
-    mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
 
     if (useCache && cachedFile != null && await cachedFile.exists()) {
       currentCachedVideo.value = videoItem;
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
     } else if (stream != null) {
-      if (!_willPlayWhenReady) await onPauseRaw();
-
-      final bool expired = mainStreams?.hasExpired() ?? true;
-
       bool checkInterrupted() {
         final curr = currentItem.value;
         return !(curr is YoutubeID && curr.id == videoId);
       }
+
+      await onPauseRaw();
+      isFetchingInfo.value = true;
+
+      mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
+      if (checkInterrupted()) return;
+
+      final bool expired = mainStreams?.hasExpired() ?? true;
 
       Future<void> setVideoLockCache(VideoStream stream, Duration positionToRestore) async {
         final url = stream.buildUrl();
@@ -1263,7 +1266,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         refreshNotification();
       }
 
-      if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
+      if (!YoutubeInfoController.video.jsPreparedIfRequired) {
+        await YoutubeInfoController.video.ensureJSPlayerInitialized();
+        if (checkInterrupted()) return;
+      }
 
       final positionToRestore = currentPositionMS.value.milliseconds;
 
@@ -1272,9 +1278,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         await setVideoLockCache(stream, positionToRestore);
       } catch (e) {
         // ==== if the url got outdated.
-        isFetchingInfo.value = true;
         final newStreams = await YoutubeInfoController.video.fetchVideoStreams(videoId);
-        isFetchingInfo.value = false;
 
         if (checkInterrupted()) return;
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
@@ -1289,6 +1293,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           } catch (_) {}
         }
       }
+      if (checkInterrupted()) return;
+      isFetchingInfo.value = false;
+    } else if (wasAudioOnly) {
+      await setAudioOnlyPlayback(false);
     }
 
     if (_willPlayWhenReady) onPlayRaw();
@@ -1306,7 +1314,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     _freePlayerTemporarily();
 
     currentAudioStream.value = stream;
-    mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
 
     final cachedAudio = await stream?.getCachedFile(videoId);
 
@@ -1322,7 +1329,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       );
       refreshNotification();
     } else if (stream != null) {
-      if (!_willPlayWhenReady) await super.onPauseRaw();
+      bool checkInterrupted() {
+        final curr = currentItem.value;
+        return !(curr is YoutubeID && curr.id == videoId);
+      }
+
+      await super.onPauseRaw();
+      isFetchingInfo.value = true;
+
+      mainStreams ??= await YoutubeInfoController.video.fetchVideoStreams(videoId, forceRequest: false) ?? YoutubeInfoController.current.currentYTStreams.value;
+      if (checkInterrupted()) return;
 
       final bool expired = mainStreams?.hasExpired() ?? true;
 
@@ -1344,12 +1360,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         refreshNotification();
       }
 
-      bool checkInterrupted() {
-        final curr = currentItem.value;
-        return !(curr is YoutubeID && curr.id == videoId);
+      if (!YoutubeInfoController.video.jsPreparedIfRequired) {
+        await YoutubeInfoController.video.ensureJSPlayerInitialized();
+        if (checkInterrupted()) return;
       }
-
-      if (!YoutubeInfoController.video.jsPreparedIfRequired) await YoutubeInfoController.video.ensureJSPlayerInitialized();
 
       final positionToRestore = currentPositionMS.value.milliseconds;
 
@@ -1358,9 +1372,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         await setAudioLockCache(stream, positionToRestore);
       } catch (_) {
         // ==== if the url got outdated.
-        isFetchingInfo.value = true;
         final newStreams = await YoutubeInfoController.video.fetchVideoStreams(videoId);
-        isFetchingInfo.value = false;
 
         if (checkInterrupted()) return;
         if (newStreams != null) YoutubeInfoController.current.currentYTStreams.value = newStreams;
@@ -1372,6 +1384,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           } catch (_) {}
         }
       }
+      if (checkInterrupted()) return;
+      isFetchingInfo.value = false;
     }
 
     if (_willPlayWhenReady) onPlayRaw();

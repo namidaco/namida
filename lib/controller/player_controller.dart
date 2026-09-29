@@ -146,8 +146,10 @@ class Player {
     if (isBufferingR || isLoadingR) return true;
     final state = _audioHandler.currentState.valueR;
     if (state == ProcessingState.idle) return false;
-    if (isFetchingInfo.valueR && state != ProcessingState.ready) return true;
-    return false;
+    if (!isFetchingInfo.valueR) return false;
+    if (state != ProcessingState.ready) return true;
+    final isWaitingToPlay = _audioHandler.playWhenReady.valueR && !isPlaying.valueR;
+    return isWaitingToPlay;
   }
 
   RxBaseCore<Duration> get buffered => _audioHandler.buffered;
