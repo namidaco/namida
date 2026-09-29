@@ -39,6 +39,7 @@ enum SortType {
   size,
   rating,
   shuffle,
+  shuffleDaily,
   mostPlayed,
   latestPlayed,
   firstListen,
@@ -81,6 +82,7 @@ enum SortType {
     SortType.artistSort,
     SortType.composerSort,
     SortType.shuffle,
+    SortType.shuffleDaily,
   ];
 
   static List<SortType>? sortListFromJsonList(dynamic value) {

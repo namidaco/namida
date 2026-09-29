@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/text_suggestions_provider.dart';
@@ -63,7 +62,6 @@ class CreateSmartPlaylistDialog extends StatefulWidget {
       ),
     );
   }
-
 }
 
 class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
@@ -77,6 +75,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   bool _sortReverse = false;
   final _moods = <String>[];
   final _ruleGroups = <SmartPlaylistRuleGroup>[];
+  SmartPlaylistLimit? _limit;
 
   @override
   void initState() {
@@ -88,6 +87,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
       _sortReverse = sp.sortReverse;
       _moods.addAll(sp.moods);
       _ruleGroups.addAll(sp.ruleGroups.map((e) => e.copy()));
+      _limit = sp.limit;
     }
     if (_ruleGroups.isEmpty) {
       _ruleGroups.add(
@@ -113,6 +113,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     _sortReverse = false;
     _moods.clear();
     _ruleGroups.clear();
+    _limit = null;
 
     _ruleGroups.add(SmartPlaylistRuleGroup.create());
 
@@ -130,6 +131,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
       sortReverse: _sortReverse,
       moods: _moods,
       ruleGroups: _ruleGroups,
+      limit: _limit,
     );
   }
 
@@ -137,7 +139,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     final pl = _buildSmartPlaylistFromCurrentParams();
     if (pl.ruleGroups.isEmpty) return null;
     if (pl.ruleGroups.every((g) => g.rules.isEmpty)) return null;
-    return pl.resolveIterableUnSorted(Indexer.inst.tracksInfoList.value).length;
+    return pl.resolveCount();
   }
 
   void _createOrEdit() async {
@@ -174,6 +176,13 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   void _setSortReverse(bool sortReverse) {
     if (_sortReverse == sortReverse) return;
     setState(() => _sortReverse = sortReverse);
+  }
+
+  void _setLimit(SmartPlaylistLimit? limit) {
+    setState(() {
+      _limit = limit;
+      _resolvedTracksCountForCurrentSmartPlaylist = _buildResolvedTracksCount();
+    });
   }
 
   void _addGroup() {
@@ -336,7 +345,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                       icon: Broken.sort,
                       text: _sorts.firstOrNull?.toText() ?? lang.auto,
                       fontSizeMultiplier: 0.95,
-                      onTap: () => NamidaOnTaps.inst.onSmartPlaylistSortIconTap(
+                      onTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
                         currentSorts: _sorts,
                         currentReverse: _sortReverse,
                         onChanged: _setSorts,
@@ -492,7 +501,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                                       mainAxisSize: .min,
                                                                       children: [
                                                                         Text(
-                                                                          rule.source.toText(),
+                                                                          rule.sourceDisplayText(),
                                                                           style: textStyleSmall,
                                                                         ),
                                                                         Text(
@@ -629,6 +638,13 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 12.0),
+
+                    _LimitTile(
+                      limit: _limit,
+                      onChanged: _setLimit,
+                    ),
                   ],
                 ),
               ),
@@ -747,12 +763,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
       if (selectedRule == null) return;
       if (selectedRule is SmartPlaylistRuleText) {
         // -- auto add literal text if field had data
-        final pending = _dataController.text;
-        if (pending.isNotEmpty) {
-          final newTokens = [...?selectedRule.data, SmartPlaylistTextDataTokenLiteral(pending)];
-          selectedRule = _selectedRule = selectedRule.copyWith(datas: (newTokens, null));
-          _dataController.clear();
-        }
+        final data = _withPendingLiteral(selectedRule.data, _dataController);
+        final data2 = selectedRule.filter.requiresData2Field ? _withPendingLiteral(selectedRule.data2, _data2Controller) : null;
+        selectedRule = _selectedRule = selectedRule.copyWith(datas: (data, data2));
       } else {
         selectedRule = _selectedRule = selectedRule.copyWith(
           datas: (
@@ -777,6 +790,57 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
       widget.onAdd(selectedRule);
       NamidaNavigator.inst.closeDialog();
     }
+  }
+
+  static List<SmartPlaylistTextDataToken>? _withPendingLiteral(List<SmartPlaylistTextDataToken>? tokens, TextEditingController controller) {
+    final pending = controller.text;
+    if (pending.isEmpty) return tokens;
+    controller.clear();
+    return [...?tokens, SmartPlaylistTextDataTokenLiteral(pending)];
+  }
+
+  void _setTextTokens(List<SmartPlaylistTextDataToken>? tokens, {required bool isData2}) {
+    final rule = _selectedRule;
+    if (rule is! SmartPlaylistRuleText) return;
+    final datas = isData2 ? (rule.data, tokens) : (tokens, rule.data2);
+    setState(() => _selectedRule = rule.copyWith(datas: datas));
+  }
+
+  void _setNumberRule(SmartPlaylistRuleNumber rule) {
+    setState(() => _selectedRule = rule);
+    NamidaNavigator.inst.popMenu();
+  }
+
+  Iterable<Widget> _getScopeChildren() {
+    final selectedRule = _selectedRule;
+    if (selectedRule is! SmartPlaylistRuleNumber) return [];
+    final requiresScope = selectedRule.source.requiresScope;
+    final aggregateWhenLeavingTrack = selectedRule.isScoped ? selectedRule.aggregate : selectedRule.source.defaultAggregate;
+    return SmartPlaylistNumberScope.values
+        .where((scope) => !requiresScope || scope != SmartPlaylistNumberScope.track)
+        .map(
+          (scope) => _PopupChoiceItem(
+            isSelected: scope == selectedRule.scope,
+            icon: scope.toIcon(),
+            iconText: null,
+            text: scope.toText(),
+            onTap: () => _setNumberRule(selectedRule.copyWith(scope: scope, aggregate: aggregateWhenLeavingTrack)),
+          ),
+        );
+  }
+
+  Iterable<Widget> _getAggregateChildren() {
+    final selectedRule = _selectedRule;
+    if (selectedRule is! SmartPlaylistRuleNumber) return [];
+    return SmartPlaylistNumberAggregate.values.map(
+      (aggregate) => _PopupChoiceItem(
+        isSelected: aggregate == selectedRule.aggregate,
+        icon: null,
+        iconText: aggregate.toIconText(),
+        text: aggregate.toText(),
+        onTap: () => _setNumberRule(selectedRule.copyWith(aggregate: aggregate)),
+      ),
+    );
   }
 
   static Widget _buildFiltersSourceSection(
@@ -930,28 +994,23 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
     final selectedRule = _selectedRule;
     if (selectedRule == null) return [];
     return selectedRule.filter.type.getRuleFilters().map(
-      (filter) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
-        child: NamidaInkWell(
-          borderRadius: 8.0,
-          padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
-          bgColor: filter == selectedRule.filter ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
-          onTap: () {
-            final isRelative = filter.isRelativeDate;
-            setState(() {
-              _selectedRule = selectedRule.copyWith(
-                filter: filter,
-                datas: isRelative ? (null, null) : null,
-                relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
-              );
-            });
-            _tempFilterForTypeMap[_selectedRule?.type] = filter;
-            NamidaNavigator.inst.popMenu();
-          },
-          child: SmartPlaylistFilterInfoRow(
-            filter: filter,
-          ),
-        ),
+      (filter) => _PopupChoiceItem(
+        isSelected: filter == selectedRule.filter,
+        icon: filter.toIcon(),
+        iconText: filter.toIconText(),
+        text: filter.toText(),
+        onTap: () {
+          final isRelative = filter.isRelativeDate;
+          setState(() {
+            _selectedRule = selectedRule.copyWith(
+              filter: filter,
+              datas: isRelative ? (null, null) : null,
+              relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
+            );
+          });
+          _tempFilterForTypeMap[_selectedRule?.type] = filter;
+          NamidaNavigator.inst.popMenu();
+        },
       ),
     );
   }
@@ -996,6 +1055,39 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                 ),
               ),
             ),
+            if (selectedRule is SmartPlaylistRuleNumber && selectedRule.source.supportsScope) ...[
+              NamidaPopupWrapper(
+                children: _getScopeChildren,
+                child: CustomListTile(
+                  icon: Broken.category,
+                  title: lang.per,
+                  trailing: NamidaPopupWrapper(
+                    children: _getScopeChildren,
+                    child: _InfoRowRaw(
+                      filterIcon: selectedRule.scope.toIcon(),
+                      filterIconText: null,
+                      filterText: selectedRule.scope.toText(),
+                    ),
+                  ),
+                ),
+              ),
+              if (selectedRule.isScoped && !selectedRule.source.requiresScope)
+                NamidaPopupWrapper(
+                  children: _getAggregateChildren,
+                  child: CustomListTile(
+                    icon: Broken.calculator,
+                    title: lang.calculation,
+                    trailing: NamidaPopupWrapper(
+                      children: _getAggregateChildren,
+                      child: _InfoRowRaw(
+                        filterIcon: null,
+                        filterIconText: selectedRule.aggregate.toIconText(),
+                        filterText: selectedRule.aggregate.toText(),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
             if (selectedRule != null && selectedRule.source.supportsCleanup)
               CustomSwitchListTile(
                 icon: Broken.document_filter,
@@ -1033,8 +1125,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
               if (selectedRule is SmartPlaylistRuleText)
                 _TextDataTokensEditor(
                   rule: selectedRule,
+                  tokens: selectedRule.data,
                   controller: _dataController,
-                  onChanged: (newRule) => setState(() => _selectedRule = newRule),
+                  onChanged: (tokens) => _setTextTokens(tokens, isData2: false),
                 )
               else
                 Row(
@@ -1074,39 +1167,47 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
 
             if (selectedRule != null && selectedRule.filter.requiresData2Field) ...[
               const SizedBox(height: 12.0),
-              Row(
-                children: [
-                  Expanded(
-                    child: CustomTagTextField(
-                      controller: _data2Controller,
-                      hintText: selectedRule.toHintText() ?? lang.value,
-                      labelText: lang.value,
-                      validator: selectedRule.dataValidator,
-                    ),
-                  ),
-                  ?switch (selectedRule) {
-                    SmartPlaylistRuleDateTime() => Padding(
-                      padding: const EdgeInsetsGeometry.only(left: 8.0),
-                      child: _CalendarPickerIconWidget(
-                        clockOnly: selectedRule.clockOnly,
-                        onSelect: (date) {
-                          _data2Controller.text = selectedRule.data2ToText(date) ?? '';
-                        },
-                      ),
-                    ),
-                    SmartPlaylistRuleNumber() => Padding(
-                      padding: const EdgeInsetsGeometry.only(left: 8.0),
-                      child: _NumberSliderWidget(
-                        key: ValueKey(selectedRule.source),
-                        rule: selectedRule,
+              if (selectedRule is SmartPlaylistRuleText)
+                _TextDataTokensEditor(
+                  rule: selectedRule,
+                  tokens: selectedRule.data2,
+                  controller: _data2Controller,
+                  onChanged: (tokens) => _setTextTokens(tokens, isData2: true),
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: CustomTagTextField(
                         controller: _data2Controller,
+                        hintText: selectedRule.toHintText() ?? lang.value,
+                        labelText: lang.value,
+                        validator: selectedRule.dataValidator,
                       ),
                     ),
-                    SmartPlaylistRuleText() => null,
-                    SmartPlaylistRuleBoolean() => null,
-                  },
-                ],
-              ),
+                    ?switch (selectedRule) {
+                      SmartPlaylistRuleDateTime() => Padding(
+                        padding: const EdgeInsetsGeometry.only(left: 8.0),
+                        child: _CalendarPickerIconWidget(
+                          clockOnly: selectedRule.clockOnly,
+                          onSelect: (date) {
+                            _data2Controller.text = selectedRule.data2ToText(date) ?? '';
+                          },
+                        ),
+                      ),
+                      SmartPlaylistRuleNumber() => Padding(
+                        padding: const EdgeInsetsGeometry.only(left: 8.0),
+                        child: _NumberSliderWidget(
+                          key: ValueKey(selectedRule.source),
+                          rule: selectedRule,
+                          controller: _data2Controller,
+                        ),
+                      ),
+                      SmartPlaylistRuleText() => null,
+                      SmartPlaylistRuleBoolean() => null,
+                    },
+                  ],
+                ),
             ],
 
             if (selectedRule != null && selectedRule.filter.isRelativeDate) ...[
@@ -1219,6 +1320,87 @@ class _InfoRowRaw extends StatelessWidget {
   }
 }
 
+class _PopupChoiceItem extends StatelessWidget {
+  final bool isSelected;
+  final IconData? icon;
+  final String? iconText;
+  final String text;
+  final VoidCallback onTap;
+
+  const _PopupChoiceItem({
+    required this.isSelected,
+    required this.icon,
+    required this.iconText,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
+      child: NamidaInkWell(
+        borderRadius: 8.0,
+        padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
+        bgColor: isSelected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
+        onTap: onTap,
+        child: _InfoRowRaw(
+          filterIcon: icon,
+          filterIconText: iconText,
+          filterText: text,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChoiceChipsWrap<T> extends StatelessWidget {
+  final List<T> values;
+  final T selected;
+  final String Function(T value) toText;
+  final void Function(T value) onSelect;
+
+  const _ChoiceChipsWrap({
+    required this.values,
+    required this.selected,
+    required this.toText,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.theme.colorScheme;
+    return Wrap(
+      alignment: WrapAlignment.start,
+      runAlignment: WrapAlignment.start,
+      crossAxisAlignment: WrapCrossAlignment.start,
+      runSpacing: 4.0,
+      children: values.map((value) {
+        final isSelected = value == selected;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2.0),
+          child: NamidaInkWellButton(
+            icon: null,
+            borderRadius: 99.0,
+            trailing:
+                Icon(
+                  Broken.tick_circle,
+                  size: 15.0,
+                ).animateEntrance(
+                  showWhen: isSelected,
+                  allCurves: Curves.fastLinearToSlowEaseIn,
+                  durationMS: 200,
+                ),
+            text: toText(value),
+            bgColor: isSelected ? colorScheme.secondaryContainer.withOpacityExt(0.4) : colorScheme.secondaryContainer.withOpacityExt(0.2),
+            onTap: () => onSelect(value),
+          ),
+        );
+      }).toFixedList(),
+    );
+  }
+}
+
 class _CalendarPickerIconWidget extends StatelessWidget {
   final bool clockOnly;
   final void Function(DateTime date) onSelect;
@@ -1275,14 +1457,12 @@ class _NumberSliderWidgetState extends State<_NumberSliderWidget> {
       final value = int.tryParse(text) ?? config.min;
       return switch (widget.rule.source) {
         SmartPlaylistRuleFilterNumberSource.sizeB => (value / (1024 * 1024)).round().clamp(config.min, config.max),
-        SmartPlaylistRuleFilterNumberSource.bitrate => (value / 1000).round().clamp(config.min, config.max),
         _ => value.clamp(config.min, config.max),
       };
     },
     sliderToDisplayText: config.formatter,
     sliderToRawText: (sliderVal) => switch (widget.rule.source) {
       SmartPlaylistRuleFilterNumberSource.sizeB => (sliderVal * 1024 * 1024).toString(),
-      SmartPlaylistRuleFilterNumberSource.bitrate => (sliderVal * 1000).toString(),
       _ => sliderVal.toString(),
     },
     onChanged: (_) {
@@ -1400,38 +1580,16 @@ class _RelativeDurationPickerState extends State<_RelativeDurationPicker> {
           ],
         ),
         const SizedBox(height: 8.0),
-        Wrap(
-          alignment: WrapAlignment.start,
-          runAlignment: WrapAlignment.start,
-          crossAxisAlignment: WrapCrossAlignment.start,
-          runSpacing: 4.0,
-          children: SmartPlaylistRelativeUnit.values.map((unit) {
-            final isSelected = unit == widget.relativeDuration.unit;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2.0),
-              child: NamidaInkWellButton(
-                icon: null,
-                borderRadius: 99.0,
-                trailing:
-                    Icon(
-                      Broken.tick_circle,
-                      size: 15.0,
-                    ).animateEntrance(
-                      showWhen: isSelected,
-                      allCurves: Curves.fastLinearToSlowEaseIn,
-                      durationMS: 200,
-                    ),
-                text: unit.toText(),
-                bgColor: isSelected ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4) : context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                onTap: () => widget.onUnitChanged(
-                  SmartPlaylistRelativeDuration(
-                    amount: widget.relativeDuration.amount,
-                    unit: unit,
-                  ),
-                ),
-              ),
-            );
-          }).toFixedList(),
+        _ChoiceChipsWrap(
+          values: SmartPlaylistRelativeUnit.values,
+          selected: widget.relativeDuration.unit,
+          toText: (unit) => unit.toText(),
+          onSelect: (unit) => widget.onUnitChanged(
+            SmartPlaylistRelativeDuration(
+              amount: widget.relativeDuration.amount,
+              unit: unit,
+            ),
+          ),
         ),
       ],
     );
@@ -1525,11 +1683,13 @@ class _TextSliderSyncController {
 
 class _TextDataTokensEditor extends StatefulWidget {
   final SmartPlaylistRuleText rule;
+  final List<SmartPlaylistTextDataToken>? tokens;
   final TextEditingController controller;
-  final void Function(SmartPlaylistRuleText newRule) onChanged;
+  final void Function(List<SmartPlaylistTextDataToken>? tokens) onChanged;
 
   const _TextDataTokensEditor({
     required this.rule,
+    required this.tokens,
     required this.controller,
     required this.onChanged,
   });
@@ -1539,7 +1699,7 @@ class _TextDataTokensEditor extends StatefulWidget {
 }
 
 class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
-  late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.rule.data ?? <SmartPlaylistTextDataToken>[]);
+  late final _tokensCopy = List<SmartPlaylistTextDataToken>.from(widget.tokens ?? <SmartPlaylistTextDataToken>[]);
   final _suggestionsProvider = TextSuggestionsProvider();
 
   Set<String>? _buildAlreadyAddedLiterals() {
@@ -1551,9 +1711,7 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
   }
 
   void _refreshTokens() {
-    widget.onChanged(
-      widget.rule.copyWith(datas: (_tokensCopy.isEmpty ? null : _tokensCopy, null)),
-    );
+    widget.onChanged(_tokensCopy.isEmpty ? null : _tokensCopy);
   }
 
   void _addLiteralFromField() {
@@ -1759,6 +1917,205 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                   );
                 },
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LimitTile extends StatelessWidget {
+  final SmartPlaylistLimit? limit;
+  final void Function(SmartPlaylistLimit? limit) onChanged;
+
+  const _LimitTile({
+    required this.limit,
+    required this.onChanged,
+  });
+
+  void _openLimitDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _LimitDialog(
+        initialLimit: limit ?? const SmartPlaylistLimit.initial(),
+        onConfirm: onChanged,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final limit = this.limit;
+    return NamidaInkWell(
+      onTap: _openLimitDialog,
+      borderRadius: 8.0,
+      bgColor: theme.cardColor,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      child: Row(
+        children: [
+          const Icon(
+            Broken.ranking,
+            size: 18.0,
+          ),
+          const SizedBox(width: 10.0),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              mainAxisSize: .min,
+              children: [
+                Text(
+                  lang.limit,
+                  style: textTheme.displayMedium,
+                ),
+                Text(
+                  limit?.toText() ?? lang.none,
+                  style: textTheme.displaySmall,
+                ),
+              ],
+            ),
+          ),
+          if (limit != null)
+            NamidaIconButton(
+              horizontalPadding: 4.0,
+              icon: Broken.close_circle,
+              iconSize: 18.0,
+              onPressed: () => onChanged(null),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LimitDialog extends StatefulWidget {
+  final SmartPlaylistLimit initialLimit;
+  final void Function(SmartPlaylistLimit limit) onConfirm;
+
+  const _LimitDialog({
+    required this.initialLimit,
+    required this.onConfirm,
+  });
+
+  @override
+  State<_LimitDialog> createState() => _LimitDialogState();
+}
+
+class _LimitDialogState extends State<_LimitDialog> {
+  static const _maxAmount = 9999;
+
+  final _formKey = GlobalKey<FormState>();
+  late SmartPlaylistLimit _limit = widget.initialLimit;
+  late final _amountController = TextEditingController(text: widget.initialLimit.amount.toString());
+  late final _syncer = _TextSliderSyncController(
+    textController: _amountController,
+    textToSlider: (text) => int.tryParse(text)?.clamp(1, _maxAmount) ?? 1,
+    sliderToDisplayText: (v) => '$v',
+    sliderToRawText: (v) => '$v',
+    onChanged: (_) {
+      // -- controller already updates
+    },
+  );
+
+  @override
+  void dispose() {
+    _syncer.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _pickSorts() {
+    NamidaOnTaps.inst.onTracksSortIconTap(
+      currentSorts: _limit.sorts,
+      currentReverse: _limit.sortReverse,
+      onChanged: (sorts, reverse) {
+        setState(() => _limit = _limit.copyWith(sorts: sorts, sortReverse: reverse));
+      },
+    );
+  }
+
+  void _confirm() {
+    if (_formKey.currentState?.validate() != true) return;
+    final amount = int.parse(_amountController.text);
+    widget.onConfirm(_limit.copyWith(amount: amount));
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  String? _validateAmount(String? value) {
+    final amount = value == null ? null : int.tryParse(value);
+    if (amount == null || amount <= 0) return '1+';
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sortText = _limit.sorts.firstOrNull?.toText() ?? lang.auto;
+    return Form(
+      key: _formKey,
+      child: CustomBlurryDialog(
+        normalTitleStyle: true,
+        icon: Broken.ranking,
+        horizontalInset: 42.0,
+        title: lang.limit,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.confirm,
+            onTap: _confirm,
+          ),
+        ],
+        child: Column(
+          crossAxisAlignment: .start,
+          mainAxisSize: .min,
+          children: [
+            const SizedBox(height: 8.0),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomTagTextField(
+                    controller: _amountController,
+                    hintText: '25, 50, 100...',
+                    labelText: '${lang.value} (${_limit.unit.toText()})',
+                    isNumeric: true,
+                    validator: _validateAmount,
+                  ),
+                ),
+                const SizedBox(width: 8.0),
+                _SyncedWheelSlider(
+                  syncer: _syncer,
+                  min: 1,
+                  max: _maxAmount,
+                  stepper: 1,
+                ),
+              ],
+            ),
+            const SizedBox(height: 8.0),
+            _ChoiceChipsWrap(
+              values: SmartPlaylistLimitUnit.values,
+              selected: _limit.unit,
+              toText: (unit) => unit.toText(),
+              onSelect: (unit) => setState(() => _limit = _limit.copyWith(unit: unit)),
+            ),
+            const SizedBox(height: 8.0),
+            CustomListTile(
+              icon: Broken.sort,
+              title: lang.selectedBy,
+              onTap: _pickSorts,
+              trailing: Row(
+                mainAxisSize: .min,
+                children: [
+                  Text(
+                    sortText,
+                    style: context.textTheme.displayMedium,
+                  ),
+                  const SizedBox(width: 4.0),
+                  Icon(
+                    _limit.sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                    size: 18.0,
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

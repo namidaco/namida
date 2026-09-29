@@ -202,6 +202,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
       data: [
         SmartPlaylistTextDataTokenLiteral(text),
       ],
+      data2: null,
       filter: SmartPlaylistRuleFilterText.isSame,
       source: source,
       enableCleanup: false,
@@ -257,6 +258,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
         ruleGroups: [
           SmartPlaylistRuleGroup.create(rules: [rule]),
         ],
+        limit: null,
       ),
     );
   }

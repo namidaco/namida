@@ -193,7 +193,7 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   }
 
   @override
-  bool isMatch(Track track) {
+  bool _matches(Track track, _SmartPlaylistResolveContext context) {
     return switch (source) {
       SmartPlaylistRuleFilterDateTimeSource.dateAdded => _dateFn(track.dateAdded),
       SmartPlaylistRuleFilterDateTimeSource.dateModified => _dateFn(track.dateModified),

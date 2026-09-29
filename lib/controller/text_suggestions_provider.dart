@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -28,6 +29,8 @@ class TextSuggestionsProvider {
 
     TextSuggestionsSource.mood => _build(Indexer.inst.getAllLibraryMoods(), sort: true),
     TextSuggestionsSource.tags => _build(Indexer.inst.getAllLibraryTags(), sort: true),
+    TextSuggestionsSource.playlist => _build(PlaylistController.inst.playlistsMap.value.keys, sort: true),
+    TextSuggestionsSource.playlistTags => _build(PlaylistController.inst.tagsFilter.allPaths, sort: true),
 
     // -- no library grouping for these, a single pass is required.
     TextSuggestionsSource.language => _buildFromTracks((trExt) => trExt.language),
@@ -240,7 +243,9 @@ enum TextSuggestionsSource {
   channels,
   extension,
   folderName,
-  folderPath;
+  folderPath,
+  playlist,
+  playlistTags;
 
   /// whether a single field can hold multiple values separated by [buildSeparators].
   bool get isMultiValue => switch (this) {
@@ -259,7 +264,9 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.channels ||
     TextSuggestionsSource.extension ||
     TextSuggestionsSource.folderName ||
-    TextSuggestionsSource.folderPath => false,
+    TextSuggestionsSource.folderPath ||
+    TextSuggestionsSource.playlist ||
+    TextSuggestionsSource.playlistTags => false,
   };
 
   /// separators used to split a field text into individual values, empty for single-value sources.
@@ -276,7 +283,9 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.channels ||
     TextSuggestionsSource.extension ||
     TextSuggestionsSource.folderName ||
-    TextSuggestionsSource.folderPath => const <String>[],
+    TextSuggestionsSource.folderPath ||
+    TextSuggestionsSource.playlist ||
+    TextSuggestionsSource.playlistTags => const <String>[],
   };
 }
 
@@ -333,6 +342,8 @@ extension SmartPlaylistTextSourceSuggestionsUtils on SmartPlaylistRuleFilterText
     SmartPlaylistRuleFilterTextSource.extension => TextSuggestionsSource.extension,
     SmartPlaylistRuleFilterTextSource.folderName => TextSuggestionsSource.folderName,
     SmartPlaylistRuleFilterTextSource.folderPath => TextSuggestionsSource.folderPath,
+    SmartPlaylistRuleFilterTextSource.playlist => TextSuggestionsSource.playlist,
+    SmartPlaylistRuleFilterTextSource.playlistTags => TextSuggestionsSource.playlistTags,
     SmartPlaylistRuleFilterTextSource.title ||
     SmartPlaylistRuleFilterTextSource.comment ||
     SmartPlaylistRuleFilterTextSource.description ||

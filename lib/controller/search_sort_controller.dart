@@ -371,6 +371,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.artistSort => (e) => normalizeOrNull(e.sortInfo?.artist) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join()))(e),
       SortType.composerSort => (e) => normalizeOrNull(e.sortInfo?.composer) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer))(e),
       SortType.shuffle => _createShuffleComparable(),
+      SortType.shuffleDaily => _createDailyShuffleComparable(),
     };
   }
 
@@ -380,6 +381,29 @@ class SearchSortController extends SearchPortsProvider {
     final random = math.Random();
     final assigned = <Track, double>{};
     return (e) => assigned[e] ??= random.nextDouble();
+  }
+
+  /// same order for the whole day regardless of the list order, since each key depends only on the track and the date.
+  static Comparable Function(Track e) _createDailyShuffleComparable() {
+    final now = DateTime.now();
+    final daySeed = now.year * 10000 + now.month * 100 + now.day;
+    return (e) => _seededTextHash(e.path, daySeed);
+  }
+
+  /// FNV-1a followed by murmur3's finalizer, `String.hashCode` isn't guaranteed to be stable across runs.
+  static int _seededTextHash(String text, int seed) {
+    const mask32 = 0xFFFFFFFF;
+    int hash = 0x811c9dc5 ^ seed;
+    final length = text.length;
+    for (int i = 0; i < length; i++) {
+      hash = ((hash ^ text.codeUnitAt(i)) * 0x01000193) & mask32;
+    }
+    hash ^= hash >> 16;
+    hash = (hash * 0x85ebca6b) & mask32;
+    hash ^= hash >> 13;
+    hash = (hash * 0xc2b2ae35) & mask32;
+    hash ^= hash >> 16;
+    return hash;
   }
 
   List<Comparable Function(Track tr)> getMediaTracksSortingComparables(MediaType media) {
@@ -495,7 +519,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.mostPlayed => (tr) => topTracksMapListens[tr]?.length.formatDecimal() ?? '0',
       SortType.latestPlayed => (tr) => topTracksMapListens[tr]?.lastOrNull?.dateFormatted,
       SortType.firstListen => (tr) => topTracksMapListens[tr]?.firstOrNull?.dateFormatted,
-      SortType.shuffle => null,
+      SortType.shuffle || SortType.shuffleDaily => null,
     };
   }
 
@@ -1266,6 +1290,9 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.shuffle:
         list.shuffle();
+        break;
+      case SortType.shuffleDaily:
+        sortThis(_createDailyShuffleComparable());
         break;
       case SortType.mostPlayed:
         sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0));

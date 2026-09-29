@@ -18,6 +18,7 @@ class SmartPlaylist {
   final bool sortReverse;
   final List<String> moods;
   final List<SmartPlaylistRuleGroup> ruleGroups;
+  final SmartPlaylistLimit? limit;
 
   final int modifiedDate;
 
@@ -29,21 +30,34 @@ class SmartPlaylist {
     required this.sortReverse,
     required this.moods,
     required this.ruleGroups,
+    required this.limit,
     this.modifiedDate = 0,
   });
 
   List<Track> resolve() {
     final allTracks = Indexer.inst.tracksInfoList.value;
+    final limit = this.limit;
+    if (limit == null && sorts.isEmpty) {
+      final orderedTracks = sortReverse ? allTracks.reversed : allTracks;
+      return resolveIterableUnSorted(orderedTracks).toList();
+    }
+
+    final matched = resolveIterableUnSorted(allTracks).toList();
+    final list = limit == null ? matched : limit.select(matched);
     if (sorts.isNotEmpty) {
-      final list = resolveIterableUnSorted(allTracks).toList();
       final comparables = sorts.map(SearchSortController.inst.getTracksSortingComparables).toFixedList();
       list.sortByAltsPrecomputed(comparables, reverse: sortReverse);
       return list;
-    } else if (sortReverse) {
-      return resolveIterableUnSorted(allTracks.reversed).toList();
     }
+    return sortReverse ? list.reversed.toList() : list;
+  }
 
-    return resolveIterableUnSorted(allTracks).toList();
+  int resolveCount() {
+    final matched = resolveIterableUnSorted(Indexer.inst.tracksInfoList.value);
+    final limit = this.limit;
+    if (limit == null) return matched.length;
+    final matchedList = matched.toList();
+    return limit.selectCount(matchedList);
   }
 
   Set<int> resolveAsIndicesSetUnsorted() {
@@ -53,28 +67,30 @@ class SmartPlaylist {
 
   Iterable<Track> resolveIterableUnSorted(Iterable<Track> allTracks) sync* {
     final effectiveGroups = _setupGroupsBeforeResolving();
+    final context = _SmartPlaylistResolveContext();
 
     for (final track in allTracks) {
-      final isMatch = _isMatch(effectiveGroups, track);
+      final isMatch = _isMatch(effectiveGroups, track, context);
       if (isMatch) yield track;
     }
   }
 
   Iterable<int> resolveIterableUnSortedAsIndices(Iterable<Track> allTracks) sync* {
     final effectiveGroups = _setupGroupsBeforeResolving();
+    final context = _SmartPlaylistResolveContext();
 
     int index = 0;
     for (final track in allTracks) {
-      final isMatch = _isMatch(effectiveGroups, track);
+      final isMatch = _isMatch(effectiveGroups, track, context);
       if (isMatch) yield index;
       index++;
     }
   }
 
-  bool _isMatch(List<SmartPlaylistRuleGroup> effectiveGroups, Track track) {
+  bool _isMatch(List<SmartPlaylistRuleGroup> effectiveGroups, Track track, _SmartPlaylistResolveContext context) {
     return switch (joiner) {
-      SmartJoiner.and => effectiveGroups.every((group) => group.isMatch(track)),
-      SmartJoiner.or => effectiveGroups.any((group) => group.isMatch(track)),
+      SmartJoiner.and => effectiveGroups.every((group) => group._matches(track, context)),
+      SmartJoiner.or => effectiveGroups.any((group) => group._matches(track, context)),
     };
   }
 
@@ -111,6 +127,7 @@ class SmartPlaylist {
       sortReverse: map['sortReverse'] as bool,
       moods: (map['moods'] as List).cast<String>(),
       ruleGroups: (map['ruleGroups'] as List).map(SmartPlaylistRuleGroup.fromMap).toList(),
+      limit: SmartPlaylistLimit.fromMapNullable(map['limit']),
       modifiedDate: map['_mt'] as int? ?? 0,
     );
   }
@@ -131,6 +148,7 @@ class SmartPlaylist {
       'sortReverse': sortReverse,
       'moods': moods,
       'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
+      'limit': ?limit?.toMap(),
       if (modifiedDate > 0) '_mt': modifiedDate,
     };
   }
@@ -152,6 +170,7 @@ class SmartPlaylist {
     sortReverse: sortReverse ?? this.sortReverse,
     moods: moods ?? this.moods,
     ruleGroups: ruleGroups ?? this.ruleGroups,
+    limit: this.limit,
     modifiedDate: modifiedDate ?? this.modifiedDate,
   );
 }
@@ -178,11 +197,11 @@ class SmartPlaylistRuleGroup {
     rules: rules.toList(),
   );
 
-  bool isMatch(Track track) {
+  bool _matches(Track track, _SmartPlaylistResolveContext context) {
     final effectiveRules = rules.where((r) => r.source != SmartPlaylistRuleFilterDateTimeSource.rangeOnly);
     return switch (joiner) {
-      SmartJoiner.and => effectiveRules.every((element) => element.isMatch(track)),
-      SmartJoiner.or => effectiveRules.any((element) => element.isMatch(track)),
+      SmartJoiner.and => effectiveRules.every((element) => element._matches(track, context)),
+      SmartJoiner.or => effectiveRules.any((element) => element._matches(track, context)),
     };
   }
 
@@ -207,6 +226,58 @@ class SmartPlaylistRuleGroup {
       'joiner': joiner.name,
       'rules': rules.map((e) => e.toMap()).toFixedList(),
     };
+  }
+}
+
+/// values shared by all rules during a single resolve, built lazily & dropped afterwards since listens/playlists keep changing.
+///
+/// by claude
+class _SmartPlaylistResolveContext {
+  final nowMS = currentTimeMS;
+
+  Map<Track, List<String>>? _trackPlaylists;
+  Map<Track, List<String>>? _trackPlaylistsTags;
+  final _scopeValuesPerRule = Map<SmartPlaylistRuleNumber, Map<Object?, num?>>.identity();
+
+  List<String>? playlistsOf(Track track) {
+    final trackPlaylists = _trackPlaylists ??= _buildTrackPlaylists();
+    return trackPlaylists[track];
+  }
+
+  /// a nested tag counts as each of its parents too.
+  List<String>? playlistsTagsOf(Track track) {
+    final trackPlaylistsTags = _trackPlaylistsTags ??= _buildTrackPlaylistsTags();
+    return trackPlaylistsTags[track];
+  }
+
+  Map<Object?, num?> scopeValuesOf(SmartPlaylistRuleNumber rule) => _scopeValuesPerRule[rule] ??= <Object?, num?>{};
+
+  static Map<Track, List<String>> _buildTrackPlaylists() {
+    final trackPlaylists = <Track, List<String>>{};
+    for (final pl in PlaylistController.inst.playlistsMap.value.values) {
+      final plName = pl.name;
+      for (final twd in pl.tracks) {
+        final names = trackPlaylists[twd.track] ??= <String>[];
+        // -- a playlist's tracks are all visited before the next one, so a duplicate can only follow its own name
+        if (names.isEmpty || names.last != plName) names.add(plName);
+      }
+    }
+    return trackPlaylists;
+  }
+
+  static Map<Track, List<String>> _buildTrackPlaylistsTags() {
+    final trackPlaylistsTags = <Track, List<String>>{};
+    for (final pl in PlaylistController.inst.playlistsMap.value.values) {
+      if (pl.tags.isEmpty) continue;
+      final paths = PlaylistTagsFilter.expandTags(pl.tags);
+      for (final twd in pl.tracks) {
+        final tags = trackPlaylistsTags[twd.track] ??= <String>[];
+        for (final path in paths) {
+          if (!tags.contains(path)) tags.add(path);
+        }
+      }
+    }
+    return trackPlaylistsTags;
   }
 }
 
@@ -244,6 +315,7 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
   }) => switch (type) {
     SmartPlaylistFilterType.text => SmartPlaylistRuleText(
       data: null,
+      data2: null,
       filter: filter as SmartPlaylistRuleFilterText,
       source: source as SmartPlaylistRuleFilterTextSource,
       enableCleanup: enableCleanup,
@@ -254,6 +326,8 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
       filter: filter as SmartPlaylistRuleFilterNumber,
       source: source as SmartPlaylistRuleFilterNumberSource,
       enableCleanup: enableCleanup,
+      scope: source.requiresScope ? SmartPlaylistNumberScope.artist : SmartPlaylistNumberScope.track,
+      aggregate: source.defaultAggregate,
     ),
     SmartPlaylistFilterType.dateTime => SmartPlaylistRuleDateTime(
       data: null,
@@ -280,6 +354,7 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
   });
 
   String datasDisplayText();
+  String sourceDisplayText() => source.toText();
   T? textToData(String? value);
   T2? textToData2(String? value);
   String? dataToText(T? data);
@@ -287,7 +362,7 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
   String? toHintText();
   String? validate();
   String? dataValidator(String? value);
-  bool isMatch(Track track);
+  bool _matches(Track track, _SmartPlaylistResolveContext context);
 
   static SmartPlaylistRuleBase? fromMap(dynamic map) {
     map as Map;
@@ -433,6 +508,134 @@ mixin SmartPlaylistRuleFilterSource {
 
   String toText();
   IconData? toIcon();
+}
+
+/// keeps only the first tracks by [sorts] that fit in [amount] of [unit].
+///
+/// by claude
+class SmartPlaylistLimit {
+  final int amount;
+  final SmartPlaylistLimitUnit unit;
+  final List<SortType> sorts;
+  final bool sortReverse;
+
+  const SmartPlaylistLimit({
+    required this.amount,
+    required this.unit,
+    required this.sorts,
+    required this.sortReverse,
+  });
+
+  const SmartPlaylistLimit.initial() : amount = 25, unit = SmartPlaylistLimitUnit.tracks, sorts = const [SortType.mostPlayed], sortReverse = false;
+
+  Iterable<Track> _ordered(List<Track> tracks) {
+    final comparables = sorts.map(SearchSortController.inst.getTracksSortingComparables).toFixedList();
+    return tracks.lazySortedByAltsPrecomputed(comparables, reverse: sortReverse);
+  }
+
+  List<Track> select(List<Track> tracks) {
+    if (unit == SmartPlaylistLimitUnit.tracks) return _ordered(tracks).take(amount).toList();
+
+    final costOf = unit.buildCostGetter();
+    int minCost = -1;
+    for (final tr in tracks) {
+      final cost = costOf(tr);
+      if (minCost < 0 || cost < minCost) minCost = cost;
+    }
+
+    int remaining = unit.toBaseUnits(amount);
+    final selected = <Track>[];
+    // -- a track exceeding what's left is skipped instead of stopping, so smaller ones still fill it
+    for (final tr in _ordered(tracks)) {
+      if (remaining < minCost) break;
+      final cost = costOf(tr);
+      if (cost > remaining) continue;
+      selected.add(tr);
+      remaining -= cost;
+    }
+    return selected;
+  }
+
+  int selectCount(List<Track> tracks) {
+    if (unit == SmartPlaylistLimitUnit.tracks) return tracks.length.withMaximum(amount);
+    return select(tracks).length;
+  }
+
+  String toText() {
+    final amountText = unit.toAmountText(amount);
+    final sortText = sorts.firstOrNull?.toText();
+    return sortText == null ? amountText : '$amountText • $sortText';
+  }
+
+  static SmartPlaylistLimit? fromMapNullable(dynamic map) {
+    if (map is! Map) return null;
+    try {
+      return SmartPlaylistLimit(
+        amount: map['amount'] as int,
+        unit: SmartPlaylistLimitUnit.values.getEnum(map['unit']) ?? SmartPlaylistLimitUnit.tracks,
+        sorts: SortType.sortListFromJsonList(map['sorts']) ?? const [],
+        sortReverse: map['sortReverse'] == true,
+      );
+    } catch (_) {}
+    return null;
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'amount': amount,
+      'unit': unit.name,
+      'sorts': SortType.sortsToJson(sorts),
+      if (sortReverse) 'sortReverse': sortReverse,
+    };
+  }
+
+  SmartPlaylistLimit copyWith({
+    int? amount,
+    SmartPlaylistLimitUnit? unit,
+    List<SortType>? sorts,
+    bool? sortReverse,
+  }) => SmartPlaylistLimit(
+    amount: amount ?? this.amount,
+    unit: unit ?? this.unit,
+    sorts: sorts ?? this.sorts,
+    sortReverse: sortReverse ?? this.sortReverse,
+  );
+}
+
+enum SmartPlaylistLimitUnit {
+  tracks,
+  minutes,
+  hours,
+  megabytes,
+  gigabytes,
+  ;
+
+  int toBaseUnits(int amount) => switch (this) {
+    SmartPlaylistLimitUnit.tracks => amount,
+    SmartPlaylistLimitUnit.minutes => amount * Duration.millisecondsPerMinute,
+    SmartPlaylistLimitUnit.hours => amount * Duration.millisecondsPerHour,
+    SmartPlaylistLimitUnit.megabytes => amount * 1024 * 1024,
+    SmartPlaylistLimitUnit.gigabytes => amount * 1024 * 1024 * 1024,
+  };
+
+  int Function(Track tr) buildCostGetter() => switch (this) {
+    SmartPlaylistLimitUnit.tracks => (tr) => 1,
+    SmartPlaylistLimitUnit.minutes || SmartPlaylistLimitUnit.hours => (tr) => tr.durationMS,
+    SmartPlaylistLimitUnit.megabytes || SmartPlaylistLimitUnit.gigabytes => (tr) => tr.size,
+  };
+
+  String toText() => switch (this) {
+    SmartPlaylistLimitUnit.tracks => lang.tracks,
+    SmartPlaylistLimitUnit.minutes => lang.minutes,
+    SmartPlaylistLimitUnit.hours => lang.hours,
+    SmartPlaylistLimitUnit.megabytes => 'MB',
+    SmartPlaylistLimitUnit.gigabytes => 'GB',
+  };
+
+  String toAmountText(int amount) => switch (this) {
+    SmartPlaylistLimitUnit.tracks => amount.displayTrackKeyword,
+    SmartPlaylistLimitUnit.minutes || SmartPlaylistLimitUnit.hours || SmartPlaylistLimitUnit.megabytes || SmartPlaylistLimitUnit.gigabytes => '$amount ${toText()}',
+  };
 }
 
 extension SmartPlaylistRuleGroupUtils on List<SmartPlaylistRuleGroup> {

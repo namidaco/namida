@@ -1425,16 +1425,18 @@ void _showFindReplaceDialog(_MultiTagField field) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             NamidaPopupWrapper(
-              children: () => SmartPlaylistRuleFilterText.values.map(
-                (f) => _FindReplaceFilterItem(
-                  filter: f,
-                  selected: f == filter,
-                  onTap: () {
-                    filterRx.value = f;
-                    NamidaNavigator.inst.popMenu();
-                  },
-                ),
-              ),
+              children: () => SmartPlaylistRuleFilterText.values
+                  .where((f) => !f.isAlphabetical())
+                  .map(
+                    (f) => _FindReplaceFilterItem(
+                      filter: f,
+                      selected: f == filter,
+                      onTap: () {
+                        filterRx.value = f;
+                        NamidaNavigator.inst.popMenu();
+                      },
+                    ),
+                  ),
               child: CustomListTile(
                 icon: Broken.filter_square,
                 title: lang.filterType,
@@ -1524,6 +1526,7 @@ class _FindReplaceRule {
       SmartPlaylistRuleFilterText.endsWith => '$escaped\$',
       SmartPlaylistRuleFilterText.regexMatch || SmartPlaylistRuleFilterText.regexNotMatch => find,
       SmartPlaylistRuleFilterText.exists || SmartPlaylistRuleFilterText.missing => null,
+      SmartPlaylistRuleFilterText.isBefore || SmartPlaylistRuleFilterText.isAfter || SmartPlaylistRuleFilterText.isInBetween || SmartPlaylistRuleFilterText.isOutside => null,
     };
     if (pattern == null) return null;
     try {
@@ -1546,6 +1549,7 @@ class _FindReplaceRule {
       SmartPlaylistRuleFilterText.regexNotMatch => regex == null || regex.hasMatch(value) ? value : replaceWith,
       SmartPlaylistRuleFilterText.exists => value.isEmpty ? value : replaceWith,
       SmartPlaylistRuleFilterText.missing => value.isEmpty ? replaceWith : value,
+      SmartPlaylistRuleFilterText.isBefore || SmartPlaylistRuleFilterText.isAfter || SmartPlaylistRuleFilterText.isInBetween || SmartPlaylistRuleFilterText.isOutside => value,
     };
   }
 

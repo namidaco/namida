@@ -56,7 +56,7 @@ final class SmartPlaylistRuleBoolean extends SmartPlaylistRuleBase<Null, Null, S
   };
 
   @override
-  bool isMatch(Track track) {
+  bool _matches(Track track, _SmartPlaylistResolveContext context) {
     return switch (source) {
       SmartPlaylistRuleFilterBooleanSource.isLossless => _booleanFn(track.isLossless),
       SmartPlaylistRuleFilterBooleanSource.isFavourite => _booleanFn(track.isFavourite),

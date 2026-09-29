@@ -1291,8 +1291,11 @@ Future<void> showGeneralPopupDialog(
                                     NamidaNavigator.inst.closeDialog();
                                     Player.inst.playOrPause(0, tracks, source);
                                   },
-                                  trailing: showPlayAllReverse
-                                      ? IconButton(
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (showPlayAllReverse)
+                                        IconButton(
                                           tooltip: "${lang.playAll} (${lang.reverseOrder})",
                                           icon: StackedIcon(
                                             baseIcon: Broken.play_cricle,
@@ -1306,8 +1309,22 @@ Future<void> showGeneralPopupDialog(
                                             NamidaNavigator.inst.closeDialog();
                                             Player.inst.playOrPause(0, tracks.reversed, source);
                                           },
-                                        )
-                                      : null,
+                                        ),
+                                      IconButton(
+                                        tooltip: "${lang.playAll} (${lang.sortBy})",
+                                        icon: Icon(
+                                          Broken.sort,
+                                          size: 20.0,
+                                          color: iconColor,
+                                        ),
+                                        iconSize: 20.0,
+                                        onPressed: () {
+                                          NamidaNavigator.inst.closeDialog();
+                                          SubpageInfoContainer.openAdvancedPlayDialog(() => tracks, source);
+                                        },
+                                      ),
+                                    ],
+                                  ),
                                 ),
 
                               if (!isSingle)
@@ -1319,6 +1336,10 @@ Future<void> showGeneralPopupDialog(
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
                                     Player.inst.playOrPause(0, tracks, source, shuffle: true);
+                                  },
+                                  onLongPress: () {
+                                    NamidaNavigator.inst.closeDialog();
+                                    SubpageInfoContainer.openAdvancedShuffleDialog(() => tracks, source);
                                   },
                                 ),
 

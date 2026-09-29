@@ -452,6 +452,68 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
     return List<E>.generate(length, (i) => this[indices[i]], growable: false);
   }
 
+  /// Yields items in sorted order through a binary heap, `O(n)` to build and `O(log n)` per yielded item,
+  /// so taking the first `k` items costs `O(n + k log n)` instead of a full sort.
+  ///
+  /// items that compare equal keep their original order, [reverse] flips the whole order.
+  Iterable<E> lazySortedByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false}) sync* {
+    final length = this.length;
+    if (length == 0) return;
+
+    final alternativesLength = alternatives.length;
+    final keys = List<List<Comparable>>.generate(
+      alternativesLength,
+      (alternativeIndex) {
+        final key = alternatives[alternativeIndex];
+        return List<Comparable>.generate(length, (i) => key(this[i]), growable: false);
+      },
+      growable: false,
+    );
+    final direction = reverse ? -1 : 1;
+
+    bool isBefore(int a, int b) {
+      for (int i = 0; i < alternativesLength; i++) {
+        final key = keys[i];
+        final compare = key[a].compareTo(key[b]);
+        if (compare != 0) return compare * direction < 0;
+      }
+      return (a - b) * direction < 0;
+    }
+
+    final heap = Int32List(length);
+    for (int i = 0; i < length; i++) {
+      heap[i] = i;
+    }
+
+    void siftDown(int start, int heapLength) {
+      final item = heap[start];
+      int parent = start;
+      while (true) {
+        int child = parent * 2 + 1;
+        if (child >= heapLength) break;
+        final right = child + 1;
+        if (right < heapLength && isBefore(heap[right], heap[child])) child = right;
+        if (!isBefore(heap[child], item)) break;
+        heap[parent] = heap[child];
+        parent = child;
+      }
+      heap[parent] = item;
+    }
+
+    for (int i = (length >> 1) - 1; i >= 0; i--) {
+      siftDown(i, length);
+    }
+
+    int heapLength = length;
+    while (heapLength > 0) {
+      final top = heap[0];
+      heapLength--;
+      heap[0] = heap[heapLength];
+      siftDown(0, heapLength);
+      yield this[top];
+    }
+  }
+
   static List<int> _sortedIndicesOf(int length, int Function(int a, int b) compare, bool reverse) {
     final indices = List<int>.generate(length, (i) => i, growable: false);
     indices.sort(reverse ? (a, b) => compare(b, a) : compare);

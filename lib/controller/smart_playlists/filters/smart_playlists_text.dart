@@ -1,34 +1,43 @@
 part of '../smart_playlists_controller.dart';
 
-final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlaylistTextDataToken>, Null, SmartPlaylistRuleFilterText, SmartPlaylistRuleFilterTextSource> {
+final class SmartPlaylistRuleText
+    extends SmartPlaylistRuleBase<List<SmartPlaylistTextDataToken>, List<SmartPlaylistTextDataToken>, SmartPlaylistRuleFilterText, SmartPlaylistRuleFilterTextSource> {
   SmartPlaylistRuleText({
     required super.data,
+    required super.data2,
     required super.filter,
     required super.source,
     required super.enableCleanup,
   }) : super(
          type: SmartPlaylistFilterType.text,
-         data2: null,
          clockOnly: false,
          relativeDuration: null,
        );
 
   @override
   SmartPlaylistRuleText copyWith({
-    (List<SmartPlaylistTextDataToken>? data, Null data2)? datas,
+    (List<SmartPlaylistTextDataToken>? data, List<SmartPlaylistTextDataToken>? data2)? datas,
     SmartPlaylistRuleFilterText? filter,
     bool? enableCleanup,
     bool? clockOnly,
     SmartPlaylistRelativeDuration? relativeDuration,
   }) => SmartPlaylistRuleText(
     data: datas != null ? datas.$1 : this.data,
+    data2: datas != null ? datas.$2 : this.data2,
     filter: filter ?? this.filter,
     source: this.source,
     enableCleanup: enableCleanup ?? this.enableCleanup,
   );
 
   @override
-  String datasDisplayText() => dataToText(data) ?? '';
+  String datasDisplayText() {
+    final dataText = dataToText(data) ?? '';
+    return switch (filter) {
+      SmartPlaylistRuleFilterText.isInBetween => '$dataText -> • <- ${data2ToText(data2)}',
+      SmartPlaylistRuleFilterText.isOutside => '• <- $dataText - ${data2ToText(data2)} -> •',
+      _ => dataText,
+    };
+  }
 
   @override
   List<SmartPlaylistTextDataToken>? textToData(String? value) {
@@ -37,7 +46,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
   }
 
   @override
-  Null textToData2(String? value) => null;
+  List<SmartPlaylistTextDataToken>? textToData2(String? value) => textToData(value);
 
   @override
   String? dataToText(List<SmartPlaylistTextDataToken>? data) {
@@ -47,7 +56,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
   }
 
   @override
-  String? data2ToText(Null data2) => null;
+  String? data2ToText(List<SmartPlaylistTextDataToken>? data2) => dataToText(data2);
 
   @override
   String? toHintText() => null;
@@ -70,14 +79,20 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
 
   @override
   String? validate() {
-    final tokens = data;
-    final hasTokens = tokens != null && tokens.isNotEmpty;
+    final hasTokens = data?.isNotEmpty == true;
+    final hasTokens2 = data2?.isNotEmpty == true;
     if (filter.requiresDataField && !hasTokens) return lang.emptyValue;
     if (!filter.requiresDataField && hasTokens) return lang.nameContainsBadCharacter;
+    if (filter.requiresData2Field && !hasTokens2) return lang.emptyValue;
+    if (!filter.requiresData2Field && hasTokens2) return lang.nameContainsBadCharacter;
     return null;
   }
 
   late final String? _staticData = data?.joinedLiteralTextOnly();
+  late final String? _staticData2 = data2?.joinedLiteralTextOnly();
+  late final String? _staticDataOrCleaned = _cleanedIfEnabled(_staticData);
+  late final String? _staticData2OrCleaned = _cleanedIfEnabled(_staticData2);
+  late final (String, String)? _staticBounds = _sortedBounds(_staticDataOrCleaned, _staticData2OrCleaned);
   late final RegExp? _staticRegex = _tryCompile(_staticData);
 
   RegExp? _tryCompile(String? pattern) {
@@ -89,26 +104,56 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
     }
   }
 
-  String? _resolveData(Track track, {bool escapeSources = false}) {
-    if (_staticData != null) return _staticData;
-    final tokens = data;
+  String? _cleanedIfEnabled(String? text) => enableCleanup ? text?.cleanUpForComparison : text;
+
+  static String? _resolveTokens(List<SmartPlaylistTextDataToken>? tokens, Track track, _SmartPlaylistResolveContext context, {bool escapeSources = false}) {
     if (tokens == null || tokens.isEmpty) return null;
     if (escapeSources) {
       return tokens
           .map(
-            (t) => t.isSourceBased ? RegExp.escape(t.resolveFor(track)) : t.resolveFor(track),
+            (t) => t.isSourceBased ? RegExp.escape(t._resolveFor(track, context)) : t._resolveFor(track, context),
           )
           .join();
     } else {
-      return tokens.map((t) => t.resolveFor(track)).join();
+      return tokens.map((t) => t._resolveFor(track, context)).join();
     }
   }
 
+  (String, String)? _resolveBounds(String? dataOrCleaned, Track track, _SmartPlaylistResolveContext context) {
+    if (_staticData != null && _staticData2 != null) return _staticBounds;
+    final data2OrCleaned = _staticData2 != null ? _staticData2OrCleaned : _cleanedIfEnabled(_resolveTokens(data2, track, context));
+    return _sortedBounds(dataOrCleaned, data2OrCleaned);
+  }
+
+  static (String, String)? _sortedBounds(String? a, String? b) {
+    if (a == null || b == null) return null;
+    return a.compareTo(b) <= 0 ? (a, b) : (b, a);
+  }
+
+  /// compares [text] cut to [bound]'s length, so a bound covers everything starting with it: `C` is equal to `Coldplay`.
+  static int _compareCutToBound(String text, String bound) {
+    final textLength = text.length;
+    final boundLength = bound.length;
+    final length = textLength < boundLength ? textLength : boundLength;
+    for (int i = 0; i < length; i++) {
+      final diff = text.codeUnitAt(i) - bound.codeUnitAt(i);
+      if (diff != 0) return diff;
+    }
+    return textLength < boundLength ? -1 : 0;
+  }
+
+  static bool _isBefore(String text, String bound) => text.isNotEmpty && text.compareTo(bound) < 0;
+  static bool _isAfter(String text, String bound) => text.isNotEmpty && _compareCutToBound(text, bound) > 0;
+  static bool _isInRange(String text, (String, String) bounds) => text.isNotEmpty && text.compareTo(bounds.$1) >= 0 && _compareCutToBound(text, bounds.$2) <= 0;
+  static bool _isOutsideRange(String text, (String, String) bounds) => _isBefore(text, bounds.$1) || _isAfter(text, bounds.$2);
+
   @override
-  bool isMatch(Track track) {
-    final resolved = _resolveData(track);
-    final dataOrCleaned = enableCleanup ? resolved?.cleanUpForComparison : resolved;
-    late final dataAsRegex = filter.isRegex() && resolved != null ? _staticRegex ?? _tryCompile(_resolveData(track, escapeSources: true)) : null;
+  bool _matches(Track track, _SmartPlaylistResolveContext context) {
+    final isStatic = _staticData != null;
+    final resolved = isStatic ? _staticData : _resolveTokens(data, track, context);
+    final dataOrCleaned = isStatic ? _staticDataOrCleaned : _cleanedIfEnabled(resolved);
+    late final dataAsRegex = resolved != null ? _staticRegex ?? _tryCompile(_resolveTokens(data, track, context, escapeSources: true)) : null;
+    late final bounds = _resolveBounds(dataOrCleaned, track, context);
 
     bool textFnRaw(String trackText) => switch (filter) {
       SmartPlaylistRuleFilterText.isSame => trackText == dataOrCleaned,
@@ -119,6 +164,10 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       SmartPlaylistRuleFilterText.endsWith => dataOrCleaned != null && trackText.endsWith(dataOrCleaned),
       SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && dataAsRegex.hasMatch(trackText),
       SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !dataAsRegex.hasMatch(trackText),
+      SmartPlaylistRuleFilterText.isBefore => dataOrCleaned != null && _isBefore(trackText, dataOrCleaned),
+      SmartPlaylistRuleFilterText.isAfter => dataOrCleaned != null && _isAfter(trackText, dataOrCleaned),
+      SmartPlaylistRuleFilterText.isInBetween => bounds != null && _isInRange(trackText, bounds),
+      SmartPlaylistRuleFilterText.isOutside => bounds != null && _isOutsideRange(trackText, bounds),
       SmartPlaylistRuleFilterText.exists => trackText.isNotEmpty,
       SmartPlaylistRuleFilterText.missing => trackText.isEmpty,
     };
@@ -132,6 +181,10 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       SmartPlaylistRuleFilterText.endsWith => dataOrCleaned != null && list.any((e) => e.endsWith(dataOrCleaned)),
       SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && list.any((e) => dataAsRegex.hasMatch(e)),
       SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !list.any((e) => dataAsRegex.hasMatch(e)),
+      SmartPlaylistRuleFilterText.isBefore => dataOrCleaned != null && list.any((e) => _isBefore(e, dataOrCleaned)),
+      SmartPlaylistRuleFilterText.isAfter => dataOrCleaned != null && list.any((e) => _isAfter(e, dataOrCleaned)),
+      SmartPlaylistRuleFilterText.isInBetween => bounds != null && list.any((e) => _isInRange(e, bounds)),
+      SmartPlaylistRuleFilterText.isOutside => bounds != null && list.any((e) => _isOutsideRange(e, bounds)),
       SmartPlaylistRuleFilterText.exists => list.isNotEmpty,
       SmartPlaylistRuleFilterText.missing => list.isEmpty,
     };
@@ -158,6 +211,8 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       SmartPlaylistRuleFilterTextSource.lyrics => textFn(track.lyrics),
       SmartPlaylistRuleFilterTextSource.moods => textListFn(track.effectiveMoods),
       SmartPlaylistRuleFilterTextSource.tags => textListFn(track.effectiveTags),
+      SmartPlaylistRuleFilterTextSource.playlist => textListFn(context.playlistsOf(track) ?? const []),
+      SmartPlaylistRuleFilterTextSource.playlistTags => textListFn(context.playlistsTagsOf(track) ?? const []),
       SmartPlaylistRuleFilterTextSource.youtubeLink => textFn(track.youtubeLink),
       SmartPlaylistRuleFilterTextSource.youtubeID => textFn(track.youtubeID),
       SmartPlaylistRuleFilterTextSource.filename => textFn(track.filename),
@@ -170,20 +225,20 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
   }
 
   factory SmartPlaylistRuleText.fromMap(Map map) {
-    final raw = map['data'];
-    List<SmartPlaylistTextDataToken>? tokens;
-    if (raw is String) {
-      tokens = raw.isEmpty ? null : [SmartPlaylistTextDataTokenLiteral(raw)];
-    } else if (raw is List) {
-      tokens = raw.map(SmartPlaylistTextDataToken.fromAny).whereType<SmartPlaylistTextDataToken>().toList();
-      if (tokens.isEmpty) tokens = null;
-    }
     return SmartPlaylistRuleText(
-      data: tokens,
+      data: _tokensFromJson(map['data']),
+      data2: _tokensFromJson(map['data2']),
       filter: SmartPlaylistRuleFilterText.values.getEnum(map['filter'])!,
       source: SmartPlaylistRuleFilterTextSource.values.getEnum(map['source'])!,
       enableCleanup: map['enableCleanup'] == true,
     );
+  }
+
+  static List<SmartPlaylistTextDataToken>? _tokensFromJson(dynamic raw) {
+    if (raw is String) return raw.isEmpty ? null : [SmartPlaylistTextDataTokenLiteral(raw)];
+    if (raw is! List) return null;
+    final tokens = raw.map(SmartPlaylistTextDataToken.fromAny).whereType<SmartPlaylistTextDataToken>().toList();
+    return tokens.isEmpty ? null : tokens;
   }
 
   @override
@@ -193,6 +248,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       'filter': filter.name,
       'source': source.name,
       'data': data?.map((t) => t.toMap()).toFixedList(),
+      'data2': ?data2?.map((t) => t.toMap()).toFixedList(),
       if (enableCleanup) 'enableCleanup': enableCleanup,
     };
   }
@@ -205,6 +261,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
         other.filter == filter &&
         other.source == source &&
         _tokensEqual(other.data, data) &&
+        _tokensEqual(other.data2, data2) &&
         other.enableCleanup == enableCleanup;
   }
 
@@ -214,6 +271,7 @@ final class SmartPlaylistRuleText extends SmartPlaylistRuleBase<List<SmartPlayli
       filter.hashCode ^
       source.hashCode ^
       _tokensHash(data) ^
+      _tokensHash(data2) ^
       enableCleanup.hashCode;
 
   static bool _tokensEqual(List<SmartPlaylistTextDataToken>? a, List<SmartPlaylistTextDataToken>? b) {
@@ -241,6 +299,10 @@ enum SmartPlaylistRuleFilterText with SmartPlaylistRuleFilter {
   endsWith,
   regexMatch,
   regexNotMatch,
+  isBefore,
+  isAfter,
+  isInBetween(requiresData2Field: true),
+  isOutside(requiresData2Field: true),
   exists(requiresDataField: false),
   missing(requiresDataField: false),
   ;
@@ -248,6 +310,11 @@ enum SmartPlaylistRuleFilterText with SmartPlaylistRuleFilter {
   bool isRegex() => switch (this) {
     SmartPlaylistRuleFilterText.regexMatch => true,
     SmartPlaylistRuleFilterText.regexNotMatch => true,
+    _ => false,
+  };
+
+  bool isAlphabetical() => switch (this) {
+    SmartPlaylistRuleFilterText.isBefore || SmartPlaylistRuleFilterText.isAfter || SmartPlaylistRuleFilterText.isInBetween || SmartPlaylistRuleFilterText.isOutside => true,
     _ => false,
   };
 
@@ -272,6 +339,10 @@ enum SmartPlaylistRuleFilterText with SmartPlaylistRuleFilter {
     SmartPlaylistRuleFilterText.endsWith => lang.endsWith,
     SmartPlaylistRuleFilterText.regexMatch => "${lang.contains} (Regex)",
     SmartPlaylistRuleFilterText.regexNotMatch => "${lang.doesNotContain} (Regex)",
+    SmartPlaylistRuleFilterText.isBefore => "${lang.isBefore} (A-Z)",
+    SmartPlaylistRuleFilterText.isAfter => "${lang.isAfter} (A-Z)",
+    SmartPlaylistRuleFilterText.isInBetween => "${lang.isInBetween} (A-Z)",
+    SmartPlaylistRuleFilterText.isOutside => "${lang.isOutside} (A-Z)",
     SmartPlaylistRuleFilterText.exists => lang.exists,
     SmartPlaylistRuleFilterText.missing => lang.missing,
   };
@@ -286,6 +357,10 @@ enum SmartPlaylistRuleFilterText with SmartPlaylistRuleFilter {
     SmartPlaylistRuleFilterText.endsWith => null,
     SmartPlaylistRuleFilterText.regexMatch => null,
     SmartPlaylistRuleFilterText.regexNotMatch => null,
+    SmartPlaylistRuleFilterText.isBefore => null,
+    SmartPlaylistRuleFilterText.isAfter => null,
+    SmartPlaylistRuleFilterText.isInBetween => null,
+    SmartPlaylistRuleFilterText.isOutside => null,
     SmartPlaylistRuleFilterText.exists => Broken.tick_circle,
     SmartPlaylistRuleFilterText.missing => Broken.close_circle,
   };
@@ -300,6 +375,10 @@ enum SmartPlaylistRuleFilterText with SmartPlaylistRuleFilter {
     SmartPlaylistRuleFilterText.endsWith => '...#',
     SmartPlaylistRuleFilterText.regexMatch => '.*',
     SmartPlaylistRuleFilterText.regexNotMatch => '^.*',
+    SmartPlaylistRuleFilterText.isBefore => '<--',
+    SmartPlaylistRuleFilterText.isAfter => '-->',
+    SmartPlaylistRuleFilterText.isInBetween => '-><-',
+    SmartPlaylistRuleFilterText.isOutside => '<-->',
     SmartPlaylistRuleFilterText.exists => null,
     SmartPlaylistRuleFilterText.missing => null,
   };
@@ -324,6 +403,8 @@ enum SmartPlaylistRuleFilterTextSource with SmartPlaylistRuleFilterSource {
   lyrics(canAffectPerformance: true),
   moods,
   tags,
+  playlist,
+  playlistTags,
   youtubeLink,
   youtubeID,
   filename,
@@ -369,6 +450,8 @@ enum SmartPlaylistRuleFilterTextSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterTextSource.lyrics => lang.lyrics,
     SmartPlaylistRuleFilterTextSource.moods => lang.moods,
     SmartPlaylistRuleFilterTextSource.tags => lang.tags,
+    SmartPlaylistRuleFilterTextSource.playlist => lang.playlist,
+    SmartPlaylistRuleFilterTextSource.playlistTags => lang.playlistTags,
     SmartPlaylistRuleFilterTextSource.youtubeLink => lang.youtubeLink,
     SmartPlaylistRuleFilterTextSource.youtubeID => lang.youtubeId,
     SmartPlaylistRuleFilterTextSource.filename => lang.fileName,
@@ -399,6 +482,8 @@ enum SmartPlaylistRuleFilterTextSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterTextSource.lyrics => Broken.message_text,
     SmartPlaylistRuleFilterTextSource.moods => Broken.smileys,
     SmartPlaylistRuleFilterTextSource.tags => Broken.tag,
+    SmartPlaylistRuleFilterTextSource.playlist => Broken.music_library_2,
+    SmartPlaylistRuleFilterTextSource.playlistTags => Broken.tag_2,
     SmartPlaylistRuleFilterTextSource.youtubeLink => Broken.video_square,
     SmartPlaylistRuleFilterTextSource.youtubeID => Broken.video_square,
     SmartPlaylistRuleFilterTextSource.filename => Broken.quote_up_circle,
@@ -424,7 +509,7 @@ sealed class SmartPlaylistTextDataToken {
     _SmartPlaylistTextDataTokenType.source => true,
   };
 
-  String resolveFor(Track track);
+  String _resolveFor(Track track, _SmartPlaylistResolveContext context);
   String displayText();
   Map<String, dynamic> toMap();
 
@@ -450,7 +535,7 @@ class SmartPlaylistTextDataTokenLiteral extends SmartPlaylistTextDataToken {
   }
 
   @override
-  String resolveFor(Track track) => text;
+  String _resolveFor(Track track, _SmartPlaylistResolveContext context) => text;
 
   @override
   String displayText() => text;
@@ -483,7 +568,7 @@ class SmartPlaylistTextDataTokenSource extends SmartPlaylistTextDataToken {
   }
 
   @override
-  String resolveFor(Track track) => switch (source) {
+  String _resolveFor(Track track, _SmartPlaylistResolveContext context) => switch (source) {
     SmartPlaylistRuleFilterTextSource.title => track.title,
     SmartPlaylistRuleFilterTextSource.album => track.albumsList.join(' '),
     SmartPlaylistRuleFilterTextSource.artist => track.artistsList.join(' '),
@@ -502,6 +587,8 @@ class SmartPlaylistTextDataTokenSource extends SmartPlaylistTextDataToken {
     SmartPlaylistRuleFilterTextSource.lyrics => track.lyrics,
     SmartPlaylistRuleFilterTextSource.moods => track.effectiveMoods.join(' '),
     SmartPlaylistRuleFilterTextSource.tags => track.effectiveTags.join(' '),
+    SmartPlaylistRuleFilterTextSource.playlist => context.playlistsOf(track)?.join(' ') ?? '',
+    SmartPlaylistRuleFilterTextSource.playlistTags => context.playlistsTagsOf(track)?.join(' ') ?? '',
     SmartPlaylistRuleFilterTextSource.youtubeLink => track.youtubeLink,
     SmartPlaylistRuleFilterTextSource.youtubeID => track.youtubeID,
     SmartPlaylistRuleFilterTextSource.filename => track.filename,

@@ -358,7 +358,7 @@ class NamidaOnTaps {
     );
   }
 
-  void onSmartPlaylistSortIconTap({
+  void onTracksSortIconTap({
     required List<SortType> currentSorts,
     required bool currentReverse,
     required void Function(List<SortType> sorts, bool reverse) onChanged,

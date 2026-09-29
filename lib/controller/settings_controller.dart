@@ -275,6 +275,13 @@ class _SettingsController extends _SettingsKeysWriter {
 
   late final trackPlayMode = _keyEnum('trackPlayMode', isKuru ? TrackPlayMode.selectedTrack : TrackPlayMode.searchResults, TrackPlayMode.values);
 
+  late final shuffleExcludeCount = _key('shuffleExcludeCount', 0);
+  late final shuffleExcludeSort = _keyEnum('shuffleExcludeSort', SortType.latestPlayed, SortType.values);
+  late final shuffleExcludeSortReverse = _key('shuffleExcludeSortReverse', false);
+  late final advancedPlaySorts = _keyList<SortType>('advancedPlaySorts', const [], item: SortType.values.asCodec());
+  late final advancedPlaySortReverse = _key('advancedPlaySortReverse', false);
+  late final advancedPlayMinimums = _keyMap<SortType, int>('advancedPlayMinimums', const {SortType.rating: 75}, key: SortType.values.asCodec());
+
   late final mostPlayedTimeRange = _keyEnum('mostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
   late final mostPlayedCustomDateRange = _keyObject('mostPlayedCustomDateRange', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
   late final mostPlayedCustomisStartOfDay = _key('mostPlayedCustomisStartOfDay', true);

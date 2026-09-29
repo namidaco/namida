@@ -124,7 +124,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                       ].join(' - '),
                       sort: smartPlaylist.sorts.firstOrNull,
                       sortReverse: smartPlaylist.sortReverse,
-                      onSortTap: () => NamidaOnTaps.inst.onSmartPlaylistSortIconTap(
+                      onSortTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
                         currentSorts: smartPlaylist.sorts,
                         currentReverse: smartPlaylist.sortReverse,
                         onChanged: (sorts, reverse) => _editAndRefresh(
