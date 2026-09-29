@@ -223,7 +223,7 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
   Future<void> _refreshCurrentTab(YoutiPieChannelPageResult channelInfo) async {
     final currentKeyState = _isAboutTab() ? _aboutPageKey.currentState : _tabsGlobalKeys[_tabIndex]?.currentState;
     if (currentKeyState is _YTChannelVideosTabState) {
-      await currentKeyState.fetchChannelStreams(channelInfo, forceRequest: true);
+      await currentKeyState.fetchChannelStreams(channelInfo.id, forceRequest: true);
     } else if (currentKeyState is _YTChannelSubpageTabState) {
       await currentKeyState.fetchTabAndUpdate(forceRequest: true);
     } else if (currentKeyState is _YTChannelSubpageAboutState) {

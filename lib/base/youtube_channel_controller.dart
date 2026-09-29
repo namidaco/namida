@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:youtipie/class/channels/channel_page_result.dart';
+import 'package:youtipie/class/channels/channel_tab.dart';
 import 'package:youtipie/class/channels/channel_tab_result.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
-import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/controller/current_color.dart';
@@ -91,20 +90,16 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
   Future<void> _initValues() async {
     final channelID = this.channelID;
     if (channelID != null) {
-      final cachedChannelInfo = await YoutubeInfoController.channel.fetchChannelInfoCache(channelID);
-      final cachedChannelInfoV = cachedChannelInfo?.tabs.getVideosTab();
-      if (cachedChannelInfoV != null) {
-        final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: channelID, tab: cachedChannelInfoV);
-        if (tabResultCache != null) {
-          refreshState(
-            () {
-              channelVideoTab = tabResultCache;
-              isLoadingInitialStreams = false;
-              final st = tabResultCache.items;
-              updatePeakDates(st.cast());
-            },
-          );
-        }
+      final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: channelID, tab: ChannelTab.videos);
+      if (tabResultCache != null) {
+        refreshState(
+          () {
+            channelVideoTab = tabResultCache;
+            isLoadingInitialStreams = false;
+            final st = tabResultCache.items;
+            updatePeakDates(st.cast());
+          },
+        );
       }
     }
   }
@@ -137,25 +132,19 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
 
   void onSuccessFetch() {}
 
-  Future<void> fetchChannelStreams(YoutiPieChannelPageResult channelPage, {bool forceRequest = false}) async {
-    final tab = channelPage.tabs.getVideosTab();
-    YoutiPieChannelTabResult? newResult;
-    final channelID = channelPage.id;
+  Future<void> fetchChannelStreams(String channelID, {bool forceRequest = false}) async {
+    final details = forceRequest ? ExecuteDetails.kForceRequest : null;
+    final currentTab = channelVideoTab;
+    final keepSort = currentTab?.channelId == channelID ? currentTab?.customSort : null; // keep the server sort the user picked
+    final newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: ChannelTab.videos, sort: keepSort, details: details);
+    if (newResult != null) {
+      // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
+      // -- but data like viewsCount will not be updated sadly.
 
-    if (tab != null) {
-      final details = forceRequest ? ExecuteDetails.kForceRequest : null;
-      final currentTab = channelVideoTab;
-      final keepSort = currentTab?.channelId == channelID ? currentTab?.customSort : null; // keep the server sort the user picked
-      newResult = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: tab, sort: keepSort, details: details);
-      if (newResult != null) {
-        // -- would have prevented re-assigning if first video was the same, it would help check any deleted videos too
-        // -- but data like viewsCount will not be updated sadly.
-
-        final st = newResult.items;
-        updatePeakDates(st.cast());
-        YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
-        onSuccessFetch();
-      }
+      final st = newResult.items;
+      updatePeakDates(st.cast());
+      YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID);
+      onSuccessFetch();
     }
 
     if (channelID == channel?.channelID) {

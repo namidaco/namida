@@ -30,7 +30,6 @@ import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -104,6 +103,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
   @override
   void dispose() {
+    _allChannelsFetchRun++;
     _horizontalListController.dispose();
     _uploadsScrollController.dispose();
     _allChannelsStreamsProgress.close();
@@ -122,25 +122,19 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     });
 
     if (sub != null) {
-      _updateChannelInfoCache(sub.channelID);
-      final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
-        channelId: sub.channelID,
-        // details: forceRequest ? ExecuteDetails.kForceRequest : null, // -- info is not force requested
-      );
-
-      refreshState(() => currentChannelInfo = channelInfo);
-
-      if (channelInfo != null && channel == sub) {
-        return fetchChannelStreams(channelInfo, forceRequest: forceRequest);
-      }
+      _updateChannelInfo(sub);
+      return fetchChannelStreams(sub.channelID, forceRequest: forceRequest);
     } else {
       return _fetchAllChannelsStreams(forceRequest: forceRequest);
     }
   }
 
-  void _updateChannelInfoCache(String channelID) async {
-    final res = await YoutubeInfoController.channel.fetchChannelInfoCache(channelID);
-    refreshState(() => currentChannelInfo = res);
+  Future<void> _updateChannelInfo(YoutubeSubscription sub) async {
+    final channelInfo = await YoutubeInfoController.channel.fetchChannelInfo(
+      channelId: sub.channelID,
+      // details: forceRequest ? ExecuteDetails.kForceRequest : null, // -- info is not force requested
+    );
+    if (channel == sub) refreshState(() => currentChannelInfo = channelInfo);
   }
 
   bool get _hasConnection => ConnectivityController.inst.hasConnection;
@@ -155,97 +149,140 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     });
   }
 
+  static const _kAllChannelsConcurrentFetches = 6;
+
+  static final _lastChannelsWindowStreams = <String, _ChannelWindowStreams>{};
+
+  int _allChannelsFetchRun = 0;
+
   /// TODO(youtipie): might be faster using rss feed, but limited to 15 vid.
   Future<void> _fetchAllChannelsStreams({required bool forceRequest}) async {
     if (!_hasConnection) {
       _showNetworkError();
       return;
     }
+    final run = ++_allChannelsFetchRun;
     setState(() {
       isLoadingInitialStreams = true;
       _allStreamsList = [];
     });
     _allChannelsStreamsLoading.value = true;
 
-    final streams = <StreamInfoItem>[];
     final ids = YoutubeSubscriptionsController.inst.subscribedChannels.toFixedList();
     final idsLength = ids.length;
+    final channelsStreams = List<List<StreamInfoItem>?>.filled(idsLength, null);
 
-    final maxDateBeforeMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;
-
-    bool enoughStreams(List<StreamInfoItem> streams) {
-      final lastDate = streams.lastOrNull?.publishedAt.date?.toLocal();
-      if (lastDate == null || lastDate.millisecondsSinceEpoch < maxDateBeforeMS) {
-        streams.removeWhere((element) {
-          final date = element.publishedAt.date?.toLocal();
-          return date != null && date.millisecondsSinceEpoch < maxDateBeforeMS;
-        });
-        return true;
-      }
-      return false;
-    }
+    final oldestDateMS = allChannelFetchOldestDate.value.millisecondsSinceEpoch;
+    final executeDetails = forceRequest ? ExecuteDetails.kForceRequest : null;
 
     void reportError(String msg) => snackyy(message: msg, isError: true, title: lang.error);
 
-    final executeDetails = forceRequest ? ExecuteDetails.kForceRequest : null;
+    int nextIndex = 0;
+    int doneCount = 0;
+    int fetchErrorsInRow = 0;
+    bool isAborted = false;
+    bool shouldStop() => isAborted || run != _allChannelsFetchRun || channel != null;
 
-    int pageFetchErrors = 0;
-    int index = -1;
-    for (final channelID in ids) {
-      index++;
-      _allChannelsStreamsProgress.value = index / idsLength;
-      final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelID, details: null);
-      if (channelPage == null) {
+    Future<void> fetchChannelsInOrder() async {
+      while (nextIndex < idsLength && !shouldStop()) {
+        final index = nextIndex++;
+        final channelID = ids[index];
+        final streams = await _fetchChannelWindowStreams(channelID, oldestDateMS, executeDetails);
+        if (shouldStop()) return;
+
+        doneCount++;
+        _allChannelsStreamsProgress.value = doneCount / idsLength;
+
+        if (streams != null) {
+          fetchErrorsInRow = 0;
+          channelsStreams[index] = streams;
+          YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
+          continue;
+        }
+
         if (!_hasConnection) {
           await Future.delayed(const Duration(seconds: 7));
+          if (shouldStop()) return;
           if (!_hasConnection) {
+            isAborted = true;
             _showNetworkError();
-            break;
+            return;
           }
         }
 
-        if (pageFetchErrors < 3) {
-          pageFetchErrors++;
-          reportError('failed to fetch channel page for $channelID');
-          continue;
+        if (fetchErrorsInRow < 3) {
+          fetchErrorsInRow++;
+          reportError('failed to fetch videos for $channelID');
         } else {
-          reportError('failed to fetch channel pages 3 times in row, aborting.');
-          break;
+          isAborted = true;
+          reportError('failed to fetch videos 3 times in row, aborting.');
         }
-      } else {
-        pageFetchErrors = 0;
       }
-      final videosTab = channelPage.tabs.getVideosTab();
-      if (videosTab == null) {
-        reportError('failed to fetch video tab for $channelID');
-        continue;
-      }
-      final videosPage = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelPage.id, tab: videosTab, details: executeDetails);
-      if (videosPage == null) {
-        reportError('failed to fetch initial videos for $channelID');
-        continue;
-      }
-      while (!enoughStreams(videosPage.items.cast())) {
-        final didFetch = await videosPage.fetchNext();
-        if (!didFetch) break;
-      }
-      printy('p: $index / $idsLength = ${_allChannelsStreamsProgress.value} =>> ${videosPage.length} videos');
-      if (channel != null) {
-        break;
-      }
-      YoutubeSubscriptionsController.inst.refreshLastFetchedTime(channelID, saveToStorage: false);
-      streams.addAll(videosPage.items.cast());
     }
 
+    final workers = List.generate(_kAllChannelsConcurrentFetches, (_) => fetchChannelsInOrder());
+    await Future.wait(workers);
+
     YoutubeSubscriptionsController.inst.sortByLastFetched();
+    if (run != _allChannelsFetchRun) return; // -- a newer run or dispose owns the state now
     _allChannelsStreamsProgress.value = 0.0;
     _allChannelsStreamsLoading.value = false;
+    if (channel != null) return;
+
+    final streams = <StreamInfoItem>[];
+    for (final channelStreams in channelsStreams) {
+      if (channelStreams != null) streams.addAll(channelStreams);
+    }
 
     setState(() {
       isLoadingInitialStreams = false;
-      _allStreamsList?.addAll(streams);
+      _allStreamsList = streams;
       trySortStreams();
     });
+  }
+
+  /// Uploads of [channelID] newer than [oldestDateMS]. Pages until the date, or until reaching a video known from the last complete fetch.
+  static Future<List<StreamInfoItem>?> _fetchChannelWindowStreams(String channelID, int oldestDateMS, ExecuteDetails? executeDetails) async {
+    final videosPage = await YoutubeInfoController.channel.fetchChannelTab(channelId: channelID, tab: ChannelTab.videos, details: executeDetails);
+    if (videosPage == null) return null;
+
+    final lastWindow = _lastChannelsWindowStreams[channelID];
+    final knownStreams = lastWindow != null && lastWindow.oldestDateMS <= oldestDateMS ? lastWindow.streams : null;
+
+    final pageStreams = videosPage.items.cast<StreamInfoItem>();
+    Iterable<StreamInfoItem>? olderKnownStreams;
+    bool isComplete = true;
+    while (!_reachedDate(pageStreams, oldestDateMS)) {
+      if (knownStreams != null) {
+        final lastId = pageStreams.last.id;
+        final knownIndex = knownStreams.indexWhere((e) => e.id == lastId);
+        if (knownIndex != -1) {
+          olderKnownStreams = knownStreams.skip(knownIndex + 1);
+          break;
+        }
+      }
+      final didFetch = await videosPage.fetchNext();
+      if (!didFetch) {
+        isComplete = !videosPage.canFetchNext;
+        break;
+      }
+    }
+
+    final windowStreams = <StreamInfoItem>[...pageStreams, ...?olderKnownStreams];
+    windowStreams.removeWhere((e) => _isOlderThan(e, oldestDateMS));
+    if (isComplete) _lastChannelsWindowStreams[channelID] = (streams: windowStreams, oldestDateMS: oldestDateMS);
+    return windowStreams;
+  }
+
+  /// Unknown date counts as reached.
+  static bool _reachedDate(List<StreamInfoItem> streams, int oldestDateMS) {
+    final lastPublishedMS = streams.lastOrNull?.publishedAt.date?.millisecondsSinceEpoch;
+    return lastPublishedMS == null || lastPublishedMS < oldestDateMS;
+  }
+
+  static bool _isOlderThan(StreamInfoItem stream, int dateMS) {
+    final publishedMS = stream.publishedAt.date?.millisecondsSinceEpoch;
+    return publishedMS != null && publishedMS < dateMS;
   }
 
   Future<void> _onSubscriptionFileImportTap() async {
@@ -752,48 +789,9 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
   }
 }
 
-class _YoutubeChannelVideosPage extends StatefulWidget {
+class _YoutubeChannelVideosPage extends StatelessWidget {
   final String? channelId;
   const _YoutubeChannelVideosPage({super.key, this.channelId});
-
-  @override
-  State<_YoutubeChannelVideosPage> createState() => __YoutubeChannelVideosPageState();
-}
-
-class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
-  bool _isLoadingChannelPage = true;
-  ChannelTab? _videosTab;
-
-  @override
-  void initState() {
-    _initValues().whenComplete(() => refreshState(() => _isLoadingChannelPage = false));
-    super.initState();
-  }
-
-  Future<void> _initValues() async {
-    final channelId = widget.channelId;
-    if (channelId == null || channelId.isEmpty) return;
-
-    final channelPageCache = await YoutubeInfoController.channel.fetchChannelInfoCache(channelId);
-    if (!mounted) return;
-
-    setState(() {
-      _videosTab = channelPageCache?.tabs.getVideosTab();
-    });
-
-    if (_videosTab != null) return;
-
-    await _fetchNewInfo(channelId);
-  }
-
-  Future<void> _fetchNewInfo(String channelId) async {
-    final channelPage = await YoutubeInfoController.channel.fetchChannelInfo(channelId: channelId);
-    if (!mounted) return;
-
-    setState(() {
-      _videosTab = channelPage?.tabs.getVideosTab();
-    });
-  }
 
   void _onViewAllTap() {
     const YoutubeUserChannelsPage().navigate();
@@ -805,17 +803,7 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
-    if (_isLoadingChannelPage) {
-      return Center(
-        child: ThreeArchedCircle(
-          size: 48.0,
-          color: context.theme.colorScheme.onSurface.withOpacityExt(0.5),
-        ),
-      );
-    }
-
-    final channelId = widget.channelId;
-    final tab = _videosTab;
+    final channelId = this.channelId;
     if (channelId == null) {
       return VideoTilePropertiesProvider(
         configs: VideoTilePropertiesConfigs(
@@ -859,52 +847,50 @@ class __YoutubeChannelVideosPageState extends State<_YoutubeChannelVideosPage> {
         ),
       );
     } else {
-      return tab == null
-          ? const SizedBox()
-          : VideoTilePropertiesProvider(
-              configs: VideoTilePropertiesConfigs(
-                queueSource: QueueSourceYoutubeID.ytChannel(channelId),
-                showMoreIcon: true,
-              ),
-              builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieChannelTabResult, YoutubeFeed>(
-                operation: YoutiPieOperation.fetchChannelTab,
-                fetchTimeMapKey: ValueKey(channelId),
-                transparentShimmer: true,
-                topPadding: 0.0,
-                title: lang.channel,
-                headerTrailing: NamidaInkWellButton(
-                  icon: Broken.category,
-                  text: lang.viewAll,
-                  onTap: _onViewAllTap,
-                ),
-                headerBuilder: (_) => const SizedBox(),
-                headerPadding: EdgeInsets.zero,
-                isSortable: true,
-                cacheReader: YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: tab),
-                networkFetcher: (details) => YoutubeInfoController.channel.fetchChannelTab(channelId: channelId, tab: tab, details: details),
-                itemExtent: thumbnailItemExtent,
-                dummyCard: const YoutubeVideoCardDummy(
-                  shimmerEnabled: true,
-                  thumbnailHeight: thumbnailHeight,
-                  thumbnailWidth: thumbnailWidth,
-                  thumbnailWidthPercentage: 0.8,
-                ),
-                itemBuilder: (video, index, list) {
-                  if (video is! StreamInfoItem) return const SizedBox();
-                  return YoutubeVideoCard(
-                    properties: properties,
-                    key: Key(video.id),
-                    thumbnailHeight: thumbnailHeight,
-                    thumbnailWidth: thumbnailWidth,
-                    isImageImportantInCache: false,
-                    video: video,
-                    playlistID: null,
-                    thumbnailWidthPercentage: 0.8,
-                    dateInsteadOfChannel: true,
-                  );
-                },
-              ),
+      return VideoTilePropertiesProvider(
+        configs: VideoTilePropertiesConfigs(
+          queueSource: QueueSourceYoutubeID.ytChannel(channelId),
+          showMoreIcon: true,
+        ),
+        builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieChannelTabResult, YoutubeFeed>(
+          operation: YoutiPieOperation.fetchChannelTab,
+          fetchTimeMapKey: ValueKey(channelId),
+          transparentShimmer: true,
+          topPadding: 0.0,
+          title: lang.channel,
+          headerTrailing: NamidaInkWellButton(
+            icon: Broken.category,
+            text: lang.viewAll,
+            onTap: _onViewAllTap,
+          ),
+          headerBuilder: (_) => const SizedBox(),
+          headerPadding: EdgeInsets.zero,
+          isSortable: true,
+          cacheReader: YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: ChannelTab.videos),
+          networkFetcher: (details) => YoutubeInfoController.channel.fetchChannelTab(channelId: channelId, tab: ChannelTab.videos, details: details),
+          itemExtent: thumbnailItemExtent,
+          dummyCard: const YoutubeVideoCardDummy(
+            shimmerEnabled: true,
+            thumbnailHeight: thumbnailHeight,
+            thumbnailWidth: thumbnailWidth,
+            thumbnailWidthPercentage: 0.8,
+          ),
+          itemBuilder: (video, index, list) {
+            if (video is! StreamInfoItem) return const SizedBox();
+            return YoutubeVideoCard(
+              properties: properties,
+              key: Key(video.id),
+              thumbnailHeight: thumbnailHeight,
+              thumbnailWidth: thumbnailWidth,
+              isImageImportantInCache: false,
+              video: video,
+              playlistID: null,
+              thumbnailWidthPercentage: 0.8,
+              dateInsteadOfChannel: true,
             );
+          },
+        ),
+      );
     }
   }
 }
@@ -1034,7 +1020,7 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
   }
 
   void _initValues() async {
-    final res = await YoutubeInfoController.channel.fetchChannelInfoCache(widget.sub.channelID);
+    final res = await YoutubeInfoController.channel.fetchChannelInfo(channelId: widget.sub.channelID);
     refreshState(() => _channelInfo = res);
   }
 
@@ -1077,3 +1063,5 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
     );
   }
 }
+
+typedef _ChannelWindowStreams = ({List<StreamInfoItem> streams, int oldestDateMS});

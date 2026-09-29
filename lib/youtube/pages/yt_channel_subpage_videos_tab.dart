@@ -51,13 +51,13 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
   }
 
   Future<void> _fetchOnMount() async {
-    final channelInfo = widget.channelInfo;
-    if (channelInfo == null) return;
+    final channelID = this.channelID;
+    if (channelID == null) return;
     if (widget.shouldForceRequest()) {
-      await widget.tabFetcher(() => fetchChannelStreams(channelInfo, forceRequest: true));
+      await widget.tabFetcher(() => fetchChannelStreams(channelID, forceRequest: true));
     } else {
       await cachedStreamsLoad;
-      if (mounted && channelVideoTab == null) await fetchChannelStreams(channelInfo);
+      if (mounted && channelVideoTab == null) await fetchChannelStreams(channelID);
     }
   }
 
