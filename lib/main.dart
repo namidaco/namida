@@ -223,6 +223,7 @@ Future<bool> _mainAppInitialization() async {
     await settings.prepareAllSettings();
     Language.initialize(); // should be done as early as possible
     ShortcutsController.instance?.initUserShortcutsFromSettings();
+    NamidaEffects.refreshSeason();
 
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
@@ -354,7 +355,6 @@ void _recheckTimeAwareEssentials() async {
   const StorageCacheManager().trimExtraFiles();
   VersionController.inst.ensureRefreshed();
   _clearIntentCachedFiles();
-  NamidaEffects.refreshSeason();
 }
 
 Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) async {
@@ -452,6 +452,7 @@ void _initLifeCycle() {
     }
   });
   NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
+  NamidaChannel.inst.addOnResume(NamidaEffects.refreshSeasonIfDue);
 }
 
 Future<void> _clearIntentCachedFiles() async {

@@ -1,4 +1,5 @@
 // all effects logic by claude
+import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:typed_data';
@@ -41,10 +42,25 @@ abstract class NamidaEffects {
   static const _backgroundOpacity = 0.5;
   static const _overlayOpacity = 0.3;
 
-  static final season = Rxn<EffectTheme>(_Seasons.themeAt(DateTime.now()));
+  static final season = Rxn<EffectTheme>();
+
+  static var _seasonRefreshAt = DateTime(0);
+  static Timer? _seasonRefreshTimer;
 
   static void refreshSeason() {
-    season.value = _Seasons.themeAt(DateTime.now());
+    final now = DateTime.now();
+    season.value = _Seasons.themeAt(now);
+    final refreshAt = _Seasons.nextBoundaryAfter(now);
+    _seasonRefreshAt = refreshAt;
+    final refreshDelay = refreshAt.difference(now);
+    _seasonRefreshTimer?.cancel();
+    _seasonRefreshTimer = Timer(refreshDelay, refreshSeason);
+  }
+
+  // -- timers don't count deep sleep on android
+  static void refreshSeasonIfDue() {
+    if (DateTime.now().isBefore(_seasonRefreshAt)) return;
+    refreshSeason();
   }
 
   static void announceSeason() {

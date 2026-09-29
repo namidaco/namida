@@ -3,9 +3,12 @@ part of 'effects.dart';
 abstract class _Seasons {
   static EffectTheme? themeAt(DateTime date) {
     if (_isNewYear(date) || _isEid(date)) return EffectTheme.fireworks;
+    if (_isChristmasEve(date)) return EffectTheme.christmas;
     if (_isRamadan(date)) return EffectTheme.ramadan;
     if (_isHalloween(date)) return EffectTheme.halloween;
     if (_isChristmas(date)) return EffectTheme.christmas;
+    if (_isSakura(date)) return EffectTheme.sakura;
+    if (_isTanabata(date)) return EffectTheme.galaxy;
     return null;
   }
 
@@ -23,6 +26,14 @@ abstract class _Seasons {
       _ => date.year,
     };
     return '${theme.name}_$year';
+  }
+
+  static DateTime nextBoundaryAfter(DateTime date) {
+    if (date.month == DateTime.december) {
+      if (date.day == 24 && date.hour < _christmasEveStartHour) return DateTime(date.year, date.month, date.day, _christmasEveStartHour);
+      if (date.day == 25 && date.hour < _christmasEveEndHour) return DateTime(date.year, date.month, date.day, _christmasEveEndHour);
+    }
+    return DateTime(date.year, date.month, date.day + 1);
   }
 
   static bool _isNewYear(DateTime date) {
@@ -47,6 +58,22 @@ abstract class _Seasons {
     if (date.month == DateTime.december) return date.day >= 15;
     return date.month == DateTime.january && date.day <= 5;
   }
+
+  static const _christmasEveStartHour = 18;
+  static const _christmasEveEndHour = 6;
+
+  static bool _isChristmasEve(DateTime date) {
+    if (date.month != DateTime.december) return false;
+    if (date.day == 24) return date.hour >= _christmasEveStartHour;
+    return date.day == 25 && date.hour < _christmasEveEndHour;
+  }
+
+  static bool _isSakura(DateTime date) {
+    if (date.month == DateTime.march) return date.day >= 25;
+    return date.month == DateTime.april && date.day <= 10;
+  }
+
+  static bool _isTanabata(DateTime date) => date.month == DateTime.july && date.day == 7;
 
   // -- the month starts on a sighting, a calculated one can be a day off either way
   static bool _isRamadan(DateTime date) {
