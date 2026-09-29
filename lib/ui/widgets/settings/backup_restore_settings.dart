@@ -45,7 +45,7 @@ class BackupAndRestore extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.backupRestore;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _BackupAndRestoreKeys.create: [lang.createBackup],
     _BackupAndRestoreKeys.restore: [lang.restoreBackup],
     _BackupAndRestoreKeys.defaultLocation: [lang.defaultBackupLocation],

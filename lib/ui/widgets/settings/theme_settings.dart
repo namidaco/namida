@@ -49,7 +49,7 @@ class ThemeSetting extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.theme;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _ThemeSettingsKeys.themeMode: [lang.themeMode],
     _ThemeSettingsKeys.autoColoring: [lang.autoColoring, lang.autoColoringSubtitle],
     _ThemeSettingsKeys.wallpaperColors: [lang.pickColorsFromDeviceWallpaper],

@@ -72,7 +72,7 @@ class YoutubeSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.youtube;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _YoutubeSettingKeys.manageYourAccounts: [lang.manageYourAccounts],
     _YoutubeSettingKeys.sponsorBlock: [lang.sponsorblock, lang.skipSponsorSegmentsInVideos],
     _YoutubeSettingKeys.ryd: [lang.returnYoutubeDislike],

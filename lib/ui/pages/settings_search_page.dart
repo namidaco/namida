@@ -57,8 +57,9 @@ class SettingsSearchPage extends StatelessWidget {
                         final isNotAvailable = availability?.resolve() == false;
 
                         final title = item.titles.firstOrNull ?? '';
+                        final subtitleIndex = item.matchedTitleIndex.withMinimum(1);
                         final subtitleParts = [
-                          if (item.titles.length >= 2) item.titles[1],
+                          if (item.titles.length > subtitleIndex) item.titles[subtitleIndex],
                           if (isNotAvailable) '${lang.notAvailableForYourDevice} (${availability?.text})',
                         ];
                         final subtitle = subtitleParts.isNotEmpty ? subtitleParts.join('\n') : null;

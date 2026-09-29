@@ -93,11 +93,13 @@ class SettingSearchResultItem {
   final SettingSubpageEnum? page;
   final Enum key;
   final List<String> titles;
+  final int matchedTitleIndex;
 
   const SettingSearchResultItem({
     required this.page,
     required this.key,
     required this.titles,
+    required this.matchedTitleIndex,
   });
 }
 
@@ -146,7 +148,7 @@ class SettingsSearchController {
       for (final p in settingsWidgets) {
         subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();
         final page = p.settingPage;
-        for (final e in p.lookupMap.entries) {
+        for (final e in p.buildLookupMap().entries) {
           final titles = e.value;
           _searchIndex.add((
             page: page,
@@ -175,6 +177,7 @@ class SettingsSearchController {
               page: entry.page,
               key: entry.key,
               titles: entry.titles,
+              matchedTitleIndex: i,
             ),
           );
           break;

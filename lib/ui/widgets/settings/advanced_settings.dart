@@ -60,8 +60,12 @@ class AdvancedSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.advanced;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
-    _AdvancedSettingKeys.performanceMode: [lang.performanceMode],
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
+    _AdvancedSettingKeys.performanceMode: [
+      lang.performanceMode,
+      for (final e in PerformanceMode.values)
+        if (e != PerformanceMode.custom) e.toText(),
+    ],
     _AdvancedSettingKeys.rescanVideos: [lang.rescanVideos],
     _AdvancedSettingKeys.removeSourceHistory: [lang.removeSourceFromHistory],
     _AdvancedSettingKeys.updateDirPath: [lang.updateDirectoryPath],

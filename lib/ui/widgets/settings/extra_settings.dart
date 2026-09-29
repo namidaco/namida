@@ -73,7 +73,7 @@ class ExtrasSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.extra;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _ExtraSettingsKeys.collapsedTiles: [lang.useCollapsedSettingTiles],
     _ExtraSettingsKeys.bottomNavBar: [lang.enableBottomNavBar, lang.enableBottomNavBarSubtitle],
     _ExtraSettingsKeys.pip: [lang.enablePictureInPicture],

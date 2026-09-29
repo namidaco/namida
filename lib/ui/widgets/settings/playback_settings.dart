@@ -72,7 +72,7 @@ class PlaybackSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.playback;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _PlaybackSettingsKeys.enableVideoPlayback: [lang.enableVideoPlayback],
     _PlaybackSettingsKeys.videoSource: [lang.videoPlaybackSource],
     _PlaybackSettingsKeys.videoQuality: [lang.videoQuality],
@@ -97,7 +97,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
     _PlaybackSettingsKeys.onVolume0: [lang.onVolumeZero],
     _PlaybackSettingsKeys.longPressSpeed: [lang.longPressAction, lang.speed],
-    _PlaybackSettingsKeys.onInterruption: [lang.onInterruption],
+    _PlaybackSettingsKeys.onInterruption: [lang.onInterruption, lang.duckAudio],
     _PlaybackSettingsKeys.onConnect: [lang.onDeviceConnect],
     _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
     _PlaybackSettingsKeys.previousButtonReplays: [lang.previousButtonReplays, lang.previousButtonReplaysSubtitle],

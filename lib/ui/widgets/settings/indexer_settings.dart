@@ -80,7 +80,7 @@ class IndexerSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.indexer;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _IndexerSettingsKeys.preventDuplicatedTracks: [lang.preventDuplicatedTracks, lang.preventDuplicatedTracksSubtitle],
     _IndexerSettingsKeys.respectNoMedia: [lang.respectNoMedia, lang.respectNoMediaSubtitle],
     _IndexerSettingsKeys.extractFtArtist: [lang.extractFeatArtist, lang.extractFeatArtistSubtitle],

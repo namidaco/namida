@@ -9,7 +9,7 @@ import 'package:namida/core/extensions.dart';
 
 abstract class SettingSubpageProvider extends StatelessWidget {
   SettingSubpageEnum get settingPage;
-  Map<SettingKeysBase, List<String>> get lookupMap;
+  Map<SettingKeysBase, List<String>> buildLookupMap();
   final Enum? initialItem;
 
   const SettingSubpageProvider({super.key, this.initialItem});

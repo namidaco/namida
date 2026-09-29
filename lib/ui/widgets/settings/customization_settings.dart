@@ -98,12 +98,12 @@ class CustomizationSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.customization;
 
   @override
-  Map<SettingKeysBase, List<String>> get lookupMap => {
+  Map<SettingKeysBase, List<String>> buildLookupMap() => {
     _CustomizationSettingsKeys.enableBlur: [lang.enableBlurEffect],
     _CustomizationSettingsKeys.enableGlow: [lang.enableGlowEffect],
     _CustomizationSettingsKeys.enableParallax: [lang.enableParallaxEffect],
-    _CustomizationSettingsKeys.backgroundEffect: [lang.backgroundEffect],
-    _CustomizationSettingsKeys.overlayEffect: [lang.overlayEffect, lang.overlayEffectSubtitle],
+    _CustomizationSettingsKeys.backgroundEffect: [lang.backgroundEffect, lang.seasonalEffectsSubtitle, ..._getEffectThemesTexts()],
+    _CustomizationSettingsKeys.overlayEffect: [lang.overlayEffect, lang.overlayEffectSubtitle, ..._getEffectThemesTexts()],
     _CustomizationSettingsKeys.wallpaper: [lang.wallpaper, lang.blur, lang.dimIntensity],
     _CustomizationSettingsKeys.displayRemainingDur: [lang.displayRemainingDurationInsteadOfTotal],
     _CustomizationSettingsKeys.displayActualPosition: [lang.displayActualPositionInsteadOfDifferenceWhileSeeking],
@@ -139,7 +139,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.miniplayerCustomization],
     _CustomizationSettingsKeys.partyMode: [lang.enablePartyMode, lang.enablePartyModeSubtitle],
     _CustomizationSettingsKeys.edgeColorsSwitching: [lang.edgeColorsSwitching],
-    _CustomizationSettingsKeys.visualizer: [lang.visualizer, lang.enableMiniplayerParticles],
+    _CustomizationSettingsKeys.visualizer: [lang.visualizer, lang.enableMiniplayerParticles, for (final e in MiniplayerVisualizer.values) e.toText()],
     _CustomizationSettingsKeys.playerBackground: [lang.playerBackground, lang.artwork, lang.blur, lang.dimIntensity, lang.colorWhenExpanded],
     _CustomizationSettingsKeys.THUMBANIMATIONINTENSITY: [lang.animatingThumbnailIntensity],
     _CustomizationSettingsKeys.thumbAnimationIntensityExpanded: [lang.animatingThumbnailIntensity, lang.expandedMiniplayer],
@@ -156,6 +156,11 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.displayArtistBeforeTitle: [lang.displayArtistBeforeTitle],
     _CustomizationSettingsKeys.appIcons: [lang.appIcon],
   };
+
+  static List<String> _getEffectThemesTexts() => [
+    for (final e in EffectTheme.values)
+      if (e != EffectTheme.auto && e != EffectTheme.none) e.toText(),
+  ];
 
   @override
   Widget build(BuildContext context) {
