@@ -36,6 +36,8 @@ class CustomMPVPlayer implements AVPlayer {
 
     _playerCompletedStreamSub = _player.stream.completed.listen((event) {
       if (event) {
+        // -- mpv can flag eof for an instant while moving to the queued item, [_onPlaylistChanged] reports that move
+        if (_queuedNextMedia != null) return;
         _processingState = ProcessingState.completed;
         _updateProcessingState();
       } else if (_processingState == ProcessingState.completed) {
@@ -45,6 +47,8 @@ class CustomMPVPlayer implements AVPlayer {
     });
 
     _playerBufferingStreamSub = _player.stream.buffering.listen((event) {
+      // -- mpv reports buffering off right after eof, only the completed stream ends that state
+      if (_processingState == ProcessingState.completed) return;
       if (event) {
         _processingState = ProcessingState.buffering;
       } else {
@@ -73,6 +77,22 @@ class CustomMPVPlayer implements AVPlayer {
     });
 
     _playerAudioDevicesStreamSub = _player.stream.audioDevices.listen((devices) => outputDevices.value = devices);
+
+    _playerPlaylistStreamSub = _player.stream.playlist.listen(_onPlaylistChanged);
+  }
+
+  /// mpv moving to this item is the only reliable sign of a gapless transition.
+  mk.Media? _queuedNextMedia;
+
+  void _onPlaylistChanged(mk.Playlist playlist) {
+    final queued = _queuedNextMedia;
+    if (queued == null) return;
+    final index = playlist.index;
+    if (index < 0 || index >= playlist.medias.length) return;
+    if (!identical(playlist.medias[index], queued)) return;
+    _queuedNextMedia = null;
+    final transitionEvent = PlaybackEvent(processingState: _processingState, currentIndex: index, autoTransition: true);
+    _playbackEventStreamController.add(transitionEvent);
   }
 
   /// every mpv instance sees the same devices, the latest report wins.
@@ -115,6 +135,8 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerAudioTracksStreamSub;
   StreamSubscription? _playerLogStreamSub;
   StreamSubscription? _playerAudioDevicesStreamSub;
+  StreamSubscription? _playerPlaylistStreamSub;
+  final _playbackEventStreamController = StreamController<PlaybackEvent>();
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
   final _playerPositionStreamController = StreamController<Duration>();
 
@@ -187,7 +209,7 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Stream<PlaybackEvent> get playbackEventStream => Stream.empty();
+  Stream<PlaybackEvent> get playbackEventStream => _playbackEventStreamController.stream;
 
   @override
   Stream<List<AudioTrack>?> get audioTracksStream => _audioTracksStreamController.stream;
@@ -270,6 +292,7 @@ class CustomMPVPlayer implements AVPlayer {
   Future<Duration?> setSource<T>(ItemPrepareConfig<T, UriSource> config) async {
     _audioSource = config.source;
     if (config.keepOldVideoSource == false) _videoOptions = config.videoOptions;
+    _queuedNextMedia = null;
 
     _processingState = ProcessingState.loading;
     _updateProcessingState();
@@ -323,6 +346,9 @@ class CustomMPVPlayer implements AVPlayer {
           _updateAudioTracks();
         });
       }
+
+      // -- `open` always loads paused, undoing a play requested meanwhile (crossfade)
+      if (_playRequested) await _player.play();
     } catch (_) {
       completeDuration(null);
       rethrow;
@@ -649,13 +675,17 @@ class CustomMPVPlayer implements AVPlayer {
     return loaded;
   }
 
+  bool _playRequested = false;
+
   @override
   Future<void> play() {
+    _playRequested = true;
     return _player.play();
   }
 
   @override
   Future<void> pause() {
+    _playRequested = false;
     return _player.pause();
   }
 
@@ -672,7 +702,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Future<void> stop() async {
     if (_disposed) return;
-    return _player.pause(); // _player.stop too powerful
+    return pause(); // _player.stop too powerful
   }
 
   @override
@@ -694,9 +724,11 @@ class CustomMPVPlayer implements AVPlayer {
       _playerAudioTracksStreamSub?.cancel(),
       _playerLogStreamSub?.cancel(),
       _playerAudioDevicesStreamSub?.cancel(),
+      _playerPlaylistStreamSub?.cancel(),
     ].execute();
 
     // -- not awaited, closing a controller that was never listened to never completes (temp players).
+    _playbackEventStreamController.close();
     _videoInfoStreamController.close();
     _playerProcessingStateStreamController.close();
     _playerPositionStreamController.close();
@@ -909,6 +941,7 @@ class CustomMPVPlayer implements AVPlayer {
 
     // -- no `insert`, so we add and move
     await pl.add(media);
+    _queuedNextMedia = media;
     final addedIndex = pl.state.playlist.medias.length - 1;
     if (addedIndex != insertIndex) {
       await pl.move(addedIndex, insertIndex);
@@ -933,6 +966,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Future<void> removeAllMediaNext() async {
+    _queuedNextMedia = null;
     final pl = _player;
     final length = pl.state.playlist.medias.length;
 
