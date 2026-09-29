@@ -35,6 +35,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -2738,6 +2739,11 @@ class PlayerVideoAudioChip extends StatelessWidget {
                   return SuperSmoothListView(
                     padding: const EdgeInsets.symmetric(vertical: 12.0),
                     children: [
+                      _MPQualityButton(
+                        icon: Broken.routing_2,
+                        title: lang.signalPath,
+                        onTap: NamidaOnTaps.inst.openAudioPath,
+                      ),
                       _MPQualityButton(
                         icon: Broken.play_cricle,
                         title: lang.playbackSetting,

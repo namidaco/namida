@@ -5,6 +5,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -22,6 +23,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/disabled_by_pill.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -38,6 +40,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   killPlayerAfterDismissing(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux])),
   onNotificationTap(NamidaFeaturesAvailablity.android),
   dismissibleMiniplayer,
+  soundControl,
   replayGain,
   skipSilence(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.linux])),
   gaplessPlayback,
@@ -81,6 +84,10 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.killPlayerAfterDismissingApp],
     _PlaybackSettingsKeys.onNotificationTap: [lang.onNotificationTap],
     _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.dismissibleMiniplayer],
+    _PlaybackSettingsKeys.soundControl: [
+      lang.soundControl, lang.outputDevice, lang.bitPerfect, lang.usbDirect, lang.signalPath, lang.equalizer, lang.preamp, //
+      lang.speed, lang.pitch, lang.volume, lang.loudnessEnhancer, lang.monoAudio, //
+    ],
     _PlaybackSettingsKeys.replayGain: [lang.normalizeAudio, lang.normalizeAudioSubtitle],
     _PlaybackSettingsKeys.skipSilence: [lang.skipSilence],
     _PlaybackSettingsKeys.gaplessPlayback: [lang.gaplessPlayback],
@@ -307,6 +314,8 @@ class PlaybackSettings extends SettingSubpageProvider {
       ),
     );
   }
+
+  static String _getSoundControlSubtitle() => [lang.outputDevice, lang.bitPerfect, lang.equalizer, lang.speed, lang.pitch].join(', ');
 
   @override
   Widget build(BuildContext context) {
@@ -651,6 +660,20 @@ class PlaybackSettings extends SettingSubpageProvider {
           ),
         ),
       ),
+      getItemWrapper(
+        key: _PlaybackSettingsKeys.soundControl,
+        child: CustomListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.soundControl),
+          icon: Broken.sound,
+          title: lang.soundControl,
+          subtitle: _getSoundControlSubtitle(),
+          trailing: const Icon(
+            Broken.arrow_right_3,
+            size: 18.0,
+          ),
+          onTap: NamidaOnTaps.inst.openSoundControl,
+        ),
+      ),
       getNormalizeAudioWidget(),
       getItemWrapper(
         key: _PlaybackSettingsKeys.skipSilence,
@@ -688,128 +711,141 @@ class PlaybackSettings extends SettingSubpageProvider {
       // -- Crossfade
       getItemWrapper(
         key: _PlaybackSettingsKeys.crossfade,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
-          bigahh: true,
-          normalRightPadding: true,
-          borderless: true,
-          initiallyExpanded: settings.player.enableCrossFade.value || initialItem == _PlaybackSettingsKeys.crossfade,
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
-            secondaryIcon: Broken.recovery_convert,
-          ),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          titleText: lang.enableCrossfadeEffect,
-          onExpansionChanged: (wasCollapsed) {
-            if (wasCollapsed) {
-              SussyBaka.monetize(onEnable: () => settings.player.enableCrossFade.save(true));
-            } else {
-              settings.player.enableCrossFade.save(false);
-            }
-          },
-          trailingBuilder: (_) => Obx((context) {
-            return CustomSwitch(active: settings.player.enableCrossFade.valueR);
-          }),
-          children: [
-            Obx(
-              (context) {
-                final enableCrossFade = settings.player.enableCrossFade.valueR;
-                final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
-                return CustomListTile(
-                  enabled: enableCrossFade,
-                  icon: Broken.blend_2,
-                  title: lang.crossfadeDuration,
-                  trailing: NamidaWheelSlider(
-                    min: 100,
-                    max: 10000,
-                    stepper: 100,
-                    initValue: crossFadeDurationMS,
-                    onValueChanged: (val) => settings.player.crossFadeDurationMS.save(val),
-                    text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
-                  ),
-                );
-              },
+        child: _ForcedOffWrapper(
+          option: AudioOutputForcedOff.crossfade,
+          builder: (causePill) => NamidaExpansionTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
+            bigahh: true,
+            normalRightPadding: true,
+            borderless: true,
+            initiallyExpanded: settings.player.enableCrossFade.value || initialItem == _PlaybackSettingsKeys.crossfade,
+            leading: const StackedIcon(
+              baseIcon: Broken.play,
+              secondaryIcon: Broken.recovery_convert,
             ),
-            ObxO(
-              rx: settings.player.enableGaplessPlayback,
-              builder: (context, gaplessEnabled) => Obx(
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+            iconColor: context.defaultIconColor(),
+            titleText: lang.enableCrossfadeEffect,
+            subtitle: causePill,
+            onExpansionChanged: (wasCollapsed) {
+              if (wasCollapsed) {
+                SussyBaka.monetize(onEnable: () => settings.player.enableCrossFade.save(true));
+              } else {
+                settings.player.enableCrossFade.save(false);
+              }
+            },
+            trailingBuilder: (_) => Obx((context) {
+              return CustomSwitch(active: settings.player.enableCrossFade.valueR);
+            }),
+            children: [
+              Obx(
                 (context) {
-                  final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
-                  return AnimatedEnabled(
-                    enabled: !gaplessEnabled,
-                    child: CustomListTile(
-                      enabled: settings.player.enableCrossFade.valueR,
-                      icon: Broken.blend,
-                      title: crossFadeAutoTriggerSeconds == 0 ? lang.crossfadeTriggerSecondsDisabled : lang.crossfadeTriggerSeconds(seconds: crossFadeAutoTriggerSeconds),
-                      subtitle: gaplessEnabled ? 'x ${lang.gaplessPlayback}' : null,
-                      trailing: NamidaWheelSlider(
-                        max: 30,
-                        initValue: crossFadeAutoTriggerSeconds,
-                        onValueChanged: (val) => settings.player.crossFadeAutoTriggerSeconds.save(val),
-                        text: "${crossFadeAutoTriggerSeconds}s",
-                      ),
+                  final enableCrossFade = settings.player.enableCrossFade.valueR;
+                  final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
+                  return CustomListTile(
+                    enabled: enableCrossFade,
+                    icon: Broken.blend_2,
+                    title: lang.crossfadeDuration,
+                    trailing: NamidaWheelSlider(
+                      min: 100,
+                      max: 10000,
+                      stepper: 100,
+                      initValue: crossFadeDurationMS,
+                      onValueChanged: (val) => settings.player.crossFadeDurationMS.save(val),
+                      text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
                     ),
                   );
                 },
               ),
-            ),
-          ],
+              ObxO(
+                rx: settings.player.enableGaplessPlayback,
+                builder: (context, gaplessEnabled) => Obx(
+                  (context) {
+                    final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
+                    return AnimatedEnabled(
+                      enabled: !gaplessEnabled,
+                      child: CustomListTile(
+                        enabled: settings.player.enableCrossFade.valueR,
+                        icon: Broken.blend,
+                        title: crossFadeAutoTriggerSeconds == 0 ? lang.crossfadeTriggerSecondsDisabled : lang.crossfadeTriggerSeconds(seconds: crossFadeAutoTriggerSeconds),
+                        subtitleWidget: gaplessEnabled
+                            ? DisabledByPill(
+                                icon: Broken.blend_2,
+                                title: lang.gaplessPlayback,
+                              )
+                            : null,
+                        trailing: NamidaWheelSlider(
+                          max: 30,
+                          initValue: crossFadeAutoTriggerSeconds,
+                          onValueChanged: (val) => settings.player.crossFadeAutoTriggerSeconds.save(val),
+                          text: "${crossFadeAutoTriggerSeconds}s",
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       // -- Play/Pause Fade
       getItemWrapper(
         key: _PlaybackSettingsKeys.fadeEffectOnPlayPause,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
-          bigahh: true,
-          normalRightPadding: true,
-          borderless: true,
-          initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value || initialItem == _PlaybackSettingsKeys.fadeEffectOnPlayPause,
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
-            secondaryIcon: Broken.pause,
+        child: _ForcedOffWrapper(
+          option: AudioOutputForcedOff.fadeOnPlayPause,
+          builder: (causePill) => NamidaExpansionTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
+            bigahh: true,
+            normalRightPadding: true,
+            borderless: true,
+            initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value || initialItem == _PlaybackSettingsKeys.fadeEffectOnPlayPause,
+            leading: const StackedIcon(
+              baseIcon: Broken.play,
+              secondaryIcon: Broken.pause,
+            ),
+            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+            iconColor: context.defaultIconColor(),
+            titleText: lang.enableFadeEffectOnPlayPause,
+            subtitle: causePill,
+            onExpansionChanged: (value) {
+              settings.player.enableVolumeFadeOnPlayPause.save(value);
+              Player.inst.setVolume(Player.inst.userPlayerVolumeForItem);
+            },
+            trailingBuilder: (_) => Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
+            children: [
+              Obx(
+                (context) => CustomListTile(
+                  enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
+                  icon: Broken.play,
+                  title: lang.playFadeDuration,
+                  trailing: NamidaWheelSlider(
+                    min: 100,
+                    max: 2000,
+                    stepper: 50,
+                    initValue: settings.player.playFadeDurInMilli.valueR,
+                    onValueChanged: (val) => settings.player.playFadeDurInMilli.save(val),
+                    text: "${settings.player.playFadeDurInMilli.valueR}ms",
+                  ),
+                ),
+              ),
+              Obx(
+                (context) => CustomListTile(
+                  enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
+                  icon: Broken.pause,
+                  title: lang.pauseFadeDuration,
+                  trailing: NamidaWheelSlider(
+                    min: 100,
+                    max: 2000,
+                    stepper: 50,
+                    initValue: settings.player.pauseFadeDurInMilli.valueR,
+                    onValueChanged: (val) => settings.player.pauseFadeDurInMilli.save(val),
+                    text: "${settings.player.pauseFadeDurInMilli.valueR}ms",
+                  ),
+                ),
+              ),
+            ],
           ),
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          titleText: lang.enableFadeEffectOnPlayPause,
-          onExpansionChanged: (value) {
-            settings.player.enableVolumeFadeOnPlayPause.save(value);
-            Player.inst.setVolume(Player.inst.userPlayerVolumeForItem);
-          },
-          trailingBuilder: (_) => Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
-          children: [
-            Obx(
-              (context) => CustomListTile(
-                enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
-                icon: Broken.play,
-                title: lang.playFadeDuration,
-                trailing: NamidaWheelSlider(
-                  min: 100,
-                  max: 2000,
-                  stepper: 50,
-                  initValue: settings.player.playFadeDurInMilli.valueR,
-                  onValueChanged: (val) => settings.player.playFadeDurInMilli.save(val),
-                  text: "${settings.player.playFadeDurInMilli.valueR}ms",
-                ),
-              ),
-            ),
-            Obx(
-              (context) => CustomListTile(
-                enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
-                icon: Broken.pause,
-                title: lang.pauseFadeDuration,
-                trailing: NamidaWheelSlider(
-                  min: 100,
-                  max: 2000,
-                  stepper: 50,
-                  initValue: settings.player.pauseFadeDurInMilli.valueR,
-                  onValueChanged: (val) => settings.player.pauseFadeDurInMilli.save(val),
-                  text: "${settings.player.pauseFadeDurInMilli.valueR}ms",
-                ),
-              ),
-            ),
-          ],
         ),
       ),
       getAutoPlayOnNextPrevWidget(),
@@ -1153,6 +1189,38 @@ class PlaybackSettings extends SettingSubpageProvider {
           : Column(
               children: children,
             ),
+    );
+  }
+}
+
+class _ForcedOffWrapper extends StatelessWidget {
+  final AudioOutputForcedOff option;
+  final Widget Function(Widget? causePill) builder;
+
+  const _ForcedOffWrapper({
+    required this.option,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final cause = AudioOutputController.inst.getForcedOffCauseR(option);
+        final causePill = cause == null
+            ? null
+            : Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: DisabledByPill(
+                  icon: cause.toIcon(),
+                  title: cause.toText(),
+                ),
+              );
+        return AnimatedEnabled(
+          enabled: cause == null,
+          child: builder(causePill),
+        );
+      },
     );
   }
 }

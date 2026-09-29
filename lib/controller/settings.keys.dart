@@ -97,6 +97,7 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
       _raw = json;
       json['_v'] = _kVersion;
     }
+    _migrateKeys();
     for (final key in _keys.values) {
       key._load(_raw[key.name]);
     }
@@ -130,6 +131,10 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
 
   /// runs before keys load, only for a file still in the full-dump format.
   void _migrateLegacy() {}
+
+  /// runs before keys load, for every file format. used when a key changes its format under a new name,
+  /// so devices syncing with an older version keep reading the name they know.
+  void _migrateKeys() {}
 
   /// runs after every load, for values that depend on other keys.
   void _onLoaded() {}
@@ -538,16 +543,6 @@ class _ObjectCodec<T> extends _SettingsCodec<T> {
 
   @override
   Object? encode(T value) => toJson(value);
-}
-
-class _DoubleStringCodec extends _SettingsCodec<double> {
-  const _DoubleStringCodec();
-
-  @override
-  double? decode(dynamic json) => json is String ? double.tryParse(json) : null;
-
-  @override
-  Object? encode(double value) => value.toString();
 }
 
 class _ListCodec<T> extends _SettingsCodec<_ProtectedList<T>> {

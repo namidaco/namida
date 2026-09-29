@@ -3,6 +3,7 @@ package com.msob7y.namida
 import android.Manifest
 import android.app.PictureInPictureParams
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -159,6 +160,16 @@ class NamidaMainActivity : FlutterActivity() {
           } catch (e: Exception) {
             result.error("MULTICAST_LOCK", e.message, null)
           }
+        }
+        "setUsbDacHandlerEnabled" -> {
+          val enabled = call.argument<Boolean>("enabled") ?: false
+          val state = if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+          packageManager.setComponentEnabledSetting(
+            ComponentName(this, "com.msob7y.namida.UsbDacHandler"),
+            state,
+            PackageManager.DONT_KILL_APP,
+          )
+          result.success(null)
         }
         "showToast" -> {
           try {

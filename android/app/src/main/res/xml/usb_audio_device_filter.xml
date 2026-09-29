@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- any device with a usb audio streaming interface -->
+    <usb-device class="1" subclass="2" />
+</resources>

@@ -513,6 +513,8 @@ class NamidaOnTaps {
     NamidaNavigator.inst.isInSoundControlSubpage = false;
   }
 
+  void openAudioPath() => SoundControlPage.showAudioPath();
+
   static Map<int, int> _getQueuesSize(String dir) {
     final map = <int, int>{};
     final files = Directory(dir).listSync();

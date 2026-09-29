@@ -46,6 +46,7 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - [Features](#-features)
   - [Library \& Indexing](#library--indexing)
   - [Look \& Feel](#look--feel)
+  - [Sound](#sound)
   - [Streaming & Youtube](#streaming--youtube)
   - [Others](#others)
   - [Some additional cool features](#some-additional-cool-features)
@@ -82,6 +83,18 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 - Home, Tracks, Albums, Artists, Genres, Playlists, Queues and Folders Pages.
 - Waveform Seekbar.
 - Lots of customizations (check out [customization section](#customization-settings)).
+
+## Sound
+
+- Parametric Equalizer with AutoEQ import. <sub><code>new</code></sub>
+- Bit-perfect Playback & USB DAC Direct Access. <sub><code>new</code></sub>
+- High precision 32-bit float audio. <sub><code>new</code></sub>
+- Audio Path, see every step from the file to your device. <sub><code>new</code></sub>
+- Output Device Selection & Mono Audio. <sub><code>new</code></sub>
+- Crossfade, Gapless Playback, Play/Pause Fade Effect & Skip Silence.
+- Speed & Pitch Control (semitones & 432Hz) & Loudness Enhancer.
+- Per-track Sound Settings.
+- Replay Gain (Normalize Audio)
 
 ## Streaming & Youtube
 
@@ -146,8 +159,6 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 
 - Lyrics auto fetching & displaying (Synced & Plain) + Support for Word Synced lrc/ttml.
 - Sleep Timer (Tracks or Minutes)
-- Crossfade, Play/Pause Fade Effect, along with Skip Silence.
-- Replay Gain (Normalize Audio)
 - Control pausing scenarios (calls, notifications, volume 0, etc..)
 - Search tracks by title, artist, album, filename, even lyrics and more.
 - Global Tracks Selection

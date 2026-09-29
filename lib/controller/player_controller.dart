@@ -15,8 +15,10 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/audio_cache_detail.dart';
+import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -249,6 +251,8 @@ class Player {
       }
     }
 
+    AudioOutputController.inst.init();
+
     _audioHandler.videoPlayerInfo.removeListener(videoInfoListener);
     _audioHandler.videoPlayerInfo.addListener(videoInfoListener);
     _audioHandler.onVideoError = (e, _) {
@@ -353,6 +357,28 @@ class Player {
 
   Future<void> refreshCurrentItemPlayerConfig() async {
     await _audioHandler.refreshCurrentItemPlayerConfig();
+  }
+
+  /// desktop only, android pushes its path through [AudioOutputController.signalPath].
+  Future<AudioSignalPath?> getDesktopSignalPath() async {
+    final player = _audioHandler.currentPlayer;
+    return player is CustomMPVPlayer ? player.getSignalPath() : null;
+  }
+
+  /// desktop players each own their output, android ones are routed through [AudioOutputController].
+  Future<void> applyAudioOutput() {
+    final device = settings.player.audioOutputDevice.value;
+    final bitPerfect = settings.player.bitPerfect.value;
+    final mono = settings.player.monoAudio.value;
+    return _audioHandler.executeOnPlayers((player) => player.setAudioOutput(device, bitPerfect: bitPerfect, mono: mono));
+  }
+
+  /// saves the global equalizer and applies it, unless the current item has its own config.
+  Future<void> setGlobalEqualizer(ParametricEqualizer equalizer, {required EqualizerPreset? preset}) async {
+    settings.equalizer.equalizer.save(equalizer);
+    settings.equalizer.preset.save(preset);
+    if (Player.audioConfigs.itemHasCustomConfig(currentItem.value?.key)) return;
+    await equalizerExtended?.apply(settings.equalizer.equalizerEnabled.value, equalizer);
   }
 
   double volumeUp() {

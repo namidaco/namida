@@ -17,6 +17,7 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-feature android:name="android.hardware.usb.host" android:required="false" />
     <queries>
       <intent>
          <action android:name="android.intent.action.GET_CONTENT" />
@@ -426,6 +427,19 @@
                 <data android:mimeType="text/*" />
             </intent-filter>
         </activity>
+        <!-- enabled only while usb direct is on, lets android offer namida as the dac's default app, which also grants access without asking -->
+        <activity-alias
+            android:enabled="false"
+            android:name="com.msob7y.namida.UsbDacHandler"
+            android:targetActivity=".NamidaMainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
+                android:resource="@xml/usb_audio_device_filter" />
+        </activity-alias>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data android:name="flutterEmbedding" android:value="2" />

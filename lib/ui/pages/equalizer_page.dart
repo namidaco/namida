@@ -1,12 +1,19 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
+import 'package:just_audio/just_audio.dart' show BitPerfectStatusMessage, BitPerfectReasonMessage, UsbDirectStatusMessage, UsbDirectStateMessage;
 
+import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -21,8 +28,12 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/disabled_by_pill.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+
+part 'equalizer_page.parametric.dart';
+part 'equalizer_page.signal_path.dart';
 
 class SoundControlMainSlidersColumn extends StatefulWidget {
   final double verticalInBetweenPadding;
@@ -164,7 +175,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
   final RxBaseCore<bool> loudnessEnhancerEnabledRx;
   final RxBaseCore<double> loudnessEnhancerRx;
   final RxBaseCore<bool> equalizerEnabledRx;
-  final RxBaseCore<Map<double, double>> equalizerRx;
+  final RxBaseCore<ParametricEqualizer> equalizerRx;
   final RxBaseCore<EqualizerPreset?> presetRx;
   final RxBaseCore<double> volumeRx;
   final RxBaseCore<double> speedRx;
@@ -175,9 +186,10 @@ class _SoundControlMainSlidersColumnUpdateConfig {
   final Future<void> Function(bool enabled) setSkipSilenceEnabled;
   final Future<void> Function(LoudnessEnhancerExtended? loudnessEnhancer, bool enabled) setLoudnessEnhancerEnabled;
   final Future<void> Function(LoudnessEnhancerExtended? loudnessEnhancer, double val) setLoudnessEnhancer;
-  final Future<void> Function(EqualizerExtended? equalizer, bool enabled) setEqualizerEnabled;
-  final Future<void> Function(EqualizerExtended? equalizer, EqualizerBandBase band, MapEntry<double, double> entry) setEqualizer;
-  final Future<void> Function(EqualizerExtended? equalizer, EqualizerPreset? preset) setPreset;
+  final Future<void> Function(bool enabled) setEqualizerEnabled;
+
+  /// [preset] is the preset [equalizer] came from, null once edited.
+  final Future<void> Function(ParametricEqualizer equalizer, EqualizerPreset? preset) setEqualizer;
 
   const _SoundControlMainSlidersColumnUpdateConfig._({
     required this.skipSilenceEnabledRx,
@@ -194,7 +206,6 @@ class _SoundControlMainSlidersColumnUpdateConfig {
     required this.setLoudnessEnhancer,
     required this.setEqualizerEnabled,
     required this.setEqualizer,
-    required this.setPreset,
     required this.setVolume,
     required this.setSpeed,
     required this.setPitch,
@@ -233,30 +244,14 @@ class _SoundControlMainSlidersColumnUpdateConfig {
           loudnessEnhancer?.setTargetGainUser(val);
         }
       },
-      setEqualizerEnabled: (equalizer, enabled) async {
+      setEqualizerEnabled: (enabled) async {
         settings.equalizer.equalizerEnabled.save(enabled);
 
         if (canApplyGlobalConfig()) {
-          if (equalizer != null) Player.inst.executeWithPausedOutput(() => equalizer.setEnabled(enabled));
+          await Player.inst.equalizerExtended?.apply(enabled, settings.equalizer.equalizer.value);
         }
       },
-      setEqualizer: (equalizer, band, entry) async {
-        settings.equalizer.equalizer.update((map) => map[entry.key] = entry.value);
-
-        if (canApplyGlobalConfig()) {
-          band.setGain(entry.value).ignoreError();
-        }
-      },
-      setPreset: (equalizer, preset) async {
-        settings.equalizer.preset.save(preset);
-
-        if (canApplyGlobalConfig()) {
-          final eqMap = Map.of(settings.equalizer.equalizer.value);
-          final newPreset = await equalizer?.setPreset(preset, eqMap);
-          settings.equalizer.equalizer.replace(eqMap);
-          if (newPreset != preset) snackyy(message: lang.error, top: false, isError: true);
-        }
-      },
+      setEqualizer: (equalizer, preset) => Player.inst.setGlobalEqualizer(equalizer, preset: preset),
       setVolume: (val) async {
         settings.player.volume.save(val);
         if (canApplyGlobalConfig()) {
@@ -287,7 +282,7 @@ class _SoundControlMainSlidersColumnUpdateConfig {
     required final Rx<bool> loudnessEnhancerEnabledRx,
     required final Rx<double> loudnessEnhancerRx,
     required final Rx<bool> equalizerEnabledRx,
-    required final RxMap<double, double> equalizerRx,
+    required final Rx<ParametricEqualizer> equalizerRx,
     required final Rxn<EqualizerPreset> presetRx,
     required final Rx<double> volumeRx,
     required final Rx<double> speedRx,
@@ -317,28 +312,16 @@ class _SoundControlMainSlidersColumnUpdateConfig {
       loudnessEnhancer?.setTargetGainUser(val);
       if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(loudnessEnhancer: val));
     },
-    setEqualizerEnabled: (equalizer, enabled) async {
+    setEqualizerEnabled: (enabled) async {
       equalizerEnabledRx.value = enabled;
-      if (equalizer != null) Player.inst.executeWithPausedOutput(() => equalizer.setEnabled(enabled));
+      await Player.inst.equalizerExtended?.apply(enabled, equalizerRx.value);
       if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(equalizerEnabled: enabled));
     },
-    setEqualizer: (equalizer, band, entry) async {
-      equalizerRx[entry.key] = entry.value;
-      band.setGain(entry.value).ignoreError();
-      if (saveToDb()) {
-        await Player.audioConfigs.updateProperty(item.key, (current) {
-          final eqMap = current.equalizer;
-          eqMap[entry.key] = entry.value;
-          return current.copyWith(equalizer: eqMap);
-        });
-      }
-    },
-    setPreset: (equalizer, preset) async {
+    setEqualizer: (equalizer, preset) async {
+      equalizerRx.value = equalizer;
       presetRx.value = preset;
-      final newPreset = await equalizer?.setPreset(preset, equalizerRx.value);
-      equalizerRx.refresh();
-      if (newPreset != preset) snackyy(message: lang.error, top: false, isError: true);
-      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(preset: preset, equalizer: equalizerRx.value));
+      await Player.inst.equalizerExtended?.apply(equalizerEnabledRx.value, equalizer);
+      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWithEqualizer(equalizer, preset));
     },
     setVolume: (val) async {
       volumeRx.value = val;
@@ -404,17 +387,8 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
     await _setLoudnessEnhancerEnabled(config.loudnessEnhancerEnabledRx.value);
     await _setLoudnessEnhancer(config.loudnessEnhancerRx.value);
 
-    await _setEqualizerEnabled(config.equalizerEnabledRx.value);
-    if (config.presetRx.value == null) {
-      final parameters = await _equalizer?.parameters;
-      if (parameters != null) {
-        for (final band in parameters.bands) {
-          final gain = config.equalizerRx.value[band.centerFrequency];
-          if (gain != null) await _setEqualizerNoClamp(band, parameters, gain);
-        }
-      }
-    }
-    await _setPreset(config.presetRx.value);
+    await widget.updateConfig.setEqualizerEnabled(config.equalizerEnabledRx.value);
+    await widget.updateConfig.setEqualizer(config.equalizerRx.value, config.presetRx.value);
   }
 
   Future<void> _setSpeed(double value) async {
@@ -448,67 +422,6 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
   Future<void> _setLoudnessEnhancer(double val) async {
     _loudnessKey.currentState?.updateValExternal(val);
     await widget.updateConfig.setLoudnessEnhancer(_loudnessEnhancerExtended, val);
-  }
-
-  Future<void> _setPreset(EqualizerPreset? preset) async {
-    if (widget.updateConfig.presetRx.value == preset) return;
-    await widget.updateConfig.setPreset(_equalizer, preset);
-  }
-
-  Future<void> _setEqualizerEnabled(bool enabled) async {
-    await widget.updateConfig.setEqualizerEnabled(_equalizer, enabled);
-  }
-
-  Future<void> _setEqualizer(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) async {
-    final newVal = newValue.clampDouble(parameters.minDecibels, parameters.maxDecibels).roundDecimals(4);
-    await widget.updateConfig.setEqualizer(_equalizer, band, MapEntry(band.centerFrequency, newVal));
-    _resetPreset();
-  }
-
-  Future<void> _setEqualizerNoClamp(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) async {
-    final newVal = newValue.roundDecimals(4);
-    await widget.updateConfig.setEqualizer(_equalizer, band, MapEntry(band.centerFrequency, newVal));
-    _resetPreset();
-  }
-
-  EqualizerExtended? get _equalizer => Player.inst.equalizerExtended;
-
-  final _equalizerParameters = Rxn<EqualizerParametersBase>();
-  StreamSubscription? _equalizerParamsSub;
-
-  @override
-  void initState() {
-    _initEqualizerParameters();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _equalizerParameters.close();
-    _equalizerParamsSub?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _initEqualizerParameters() async {
-    final params = await _equalizer?.parameters;
-    if (!mounted) return;
-    _equalizerParameters.value = params;
-
-    _equalizerParamsSub = _equalizer?.parametersStream.listen((params) {
-      _equalizerParameters.value = params;
-    });
-  }
-
-  void _resetPreset() {
-    _setPreset(null);
-  }
-
-  void _onGainSet(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) {
-    _setEqualizer(band, parameters, newValue);
-  }
-
-  void _onGainSetNoClamp(EqualizerBandBase band, EqualizerParametersBase parameters, double newValue) {
-    _setEqualizerNoClamp(band, parameters, newValue);
   }
 
   @override
@@ -616,12 +529,16 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
             child: Column(
               mainAxisSize: .min,
               children: [
+                const _ForcedOffBanner(),
                 if (NamidaFeaturesVisibility.skipSilenceAvailable) ...[
                   Obx(
                     (context) {
                       final skipSilence = widget.updateConfig.skipSilenceEnabledRx.valueR;
+                      final currentItem = Player.inst.currentItem.valueR;
+                      final isSupported = Player.inst.supportsSkipSilence(currentItem);
+                      final isForcedOff = AudioOutputController.inst.isForcedOffR(AudioOutputForcedOff.skipSilence);
                       return AnimatedEnabled(
-                        enabled: Player.inst.supportsSkipSilence(Player.inst.currentItem.valueR),
+                        enabled: isSupported && !isForcedOff,
                         child: Padding(
                           padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
                           child: NamidaInkWell(
@@ -660,458 +577,291 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                   verticalPadding,
                 ],
 
-                ObxO(
-                  rx: settings.player.useSemitones,
-                  builder: (context, isSemitones) => ObxO(
-                    rx: settings.player.linkSpeedPitch,
-                    builder: (context, enabled) => AnimatedEnabled(
-                      enabled: !enabled,
-                      child: Obx(
-                        (context) {
-                          final pitch = widget.updateConfig.pitchRx.valueR;
-                          const hz432Value = 432.0 / 440.0;
-                          final is432HzEnabled = pitch == hz432Value;
-                          return _SliderTextWidget(
-                            icon: Broken.airpods,
-                            min: isSemitones ? -12.0 : 0.0,
-                            max: isSemitones ? 12.0 : 2.0,
-                            title: lang.pitch,
-                            subtitle: isSemitones ? '(${lang.semitones})' : '(${lang.percentage})',
-                            onTap: () {
-                              settings.player.useSemitones.save(!settings.player.useSemitones.value);
-                            },
-                            value: pitch,
-                            valToText: isSemitones ? _SliderTextWidget.toSemitones : _SliderTextWidget.toPercentage,
-                            valueModifier: isSemitones ? _SliderTextWidget.ratioToSemitonesRound : null,
-                            restoreDefault: () => _setPitch(1.0),
-                            onManualChange: (convertedValue) {
-                              pitchKey.currentState?._updateValNoRound(convertedValue); // no conversion
-                            },
-                            featuredButton: NamidaInkWellButton(
+                _ForcedOffEnabled(
+                  option: AudioOutputForcedOff.pitch,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ObxO(
+                        rx: settings.player.useSemitones,
+                        builder: (context, isSemitones) => ObxO(
+                          rx: settings.player.linkSpeedPitch,
+                          builder: (context, enabled) => AnimatedEnabled(
+                            enabled: !enabled,
+                            child: Obx(
+                              (context) {
+                                final pitch = widget.updateConfig.pitchRx.valueR;
+                                const hz432Value = 432.0 / 440.0;
+                                final is432HzEnabled = pitch == hz432Value;
+                                return _SliderTextWidget(
+                                  icon: Broken.airpods,
+                                  min: isSemitones ? -12.0 : 0.0,
+                                  max: isSemitones ? 12.0 : 2.0,
+                                  title: lang.pitch,
+                                  subtitle: isSemitones ? '(${lang.semitones})' : '(${lang.percentage})',
+                                  onTap: () {
+                                    settings.player.useSemitones.save(!settings.player.useSemitones.value);
+                                  },
+                                  value: pitch,
+                                  valToText: isSemitones ? _SliderTextWidget.toSemitones : _SliderTextWidget.toPercentage,
+                                  valueModifier: isSemitones ? _SliderTextWidget.ratioToSemitonesRound : null,
+                                  restoreDefault: () => _setPitch(1.0),
+                                  onManualChange: (convertedValue) {
+                                    pitchKey.currentState?._updateValNoRound(convertedValue); // no conversion
+                                  },
+                                  featuredButton: NamidaInkWellButton(
+                                    icon: null,
+                                    text: '',
+                                    borderRadius: 8.0,
+                                    sizeMultiplier: 0.9,
+                                    paddingMultiplier: 0.7,
+                                    bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
+                                    onTap: () {
+                                      final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                                      widget.updateConfig.setPitch(newValue);
+                                      pitchKey.currentState?.updateValNoRoundExternal(newValue);
+                                    },
+                                    leading: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          '✓ ',
+                                          style: textTheme.displaySmall,
+                                        ).animateEntrance(
+                                          showWhen: is432HzEnabled,
+                                          allCurves: Curves.fastLinearToSlowEaseIn,
+                                          durationMS: 300,
+                                        ),
+                                        Text(
+                                          '432Hz',
+                                          style: textTheme.displaySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      ObxO(
+                        rx: settings.player.useSemitones,
+                        builder: (context, isSemitones) => ObxO(
+                          rx: settings.player.linkSpeedPitch,
+                          builder: (context, enabled) => AnimatedEnabled(
+                            enabled: !enabled,
+                            child: isSemitones
+                                ? _CuteSlider<double>(
+                                    key: pitchKey,
+                                    min: -12.0,
+                                    max: 12.0,
+                                    divisions: 24, // 24 steps = 0.5 semitone steps from -12 to +12
+                                    incremental: 0.5,
+                                    valueListenable: widget.updateConfig.pitchRx,
+                                    valueModifier: _SliderTextWidget.ratioToSemitones,
+                                    onChanged: (semitones) {
+                                      final ratio = _SliderTextWidget.semitonesToRatio(semitones);
+                                      widget.updateConfig.setPitch(ratio);
+                                    },
+                                    tapToUpdate: widget.tapToUpdate,
+                                    valToText: _SliderTextWidget.toSemitones,
+                                  )
+                                : _CuteSlider(
+                                    key: pitchKey,
+                                    valueListenable: widget.updateConfig.pitchRx,
+                                    onChanged: (value) {
+                                      widget.updateConfig.setPitch(value);
+                                    },
+                                    tapToUpdate: widget.tapToUpdate,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                verticalPadding,
+                _ForcedOffEnabled(
+                  option: AudioOutputForcedOff.speed,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Obx(
+                        (context) => _SliderTextWidget(
+                          icon: Broken.forward,
+                          title: lang.speed,
+                          value: widget.updateConfig.speedRx.valueR,
+                          onManualChange: (value) {
+                            speedKey.currentState?.updateValNoRoundExternal(value);
+                            if (settings.player.linkSpeedPitch.value) {
+                              pitchKey.currentState?.updateValNoRoundExternal(value);
+                            }
+                          },
+                          restoreDefault: () => _setSpeed(1.0),
+                          useMaxToLimitPreciseValue: false,
+                          valToText: _SliderTextWidget.toXMultiplier,
+                          featuredButton: ObxO(
+                            rx: settings.player.linkSpeedPitch,
+                            builder: (context, enabled) => NamidaInkWellButton(
                               icon: null,
                               text: '',
                               borderRadius: 8.0,
                               sizeMultiplier: 0.9,
                               paddingMultiplier: 0.7,
-                              bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
+                              bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(enabled ? 0.5 : 0.2),
                               onTap: () {
-                                final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                                final newLinkValue = !settings.player.linkSpeedPitch.value;
+                                final newValue = newLinkValue ? widget.updateConfig.speedRx.value : widget.updateConfig.pitchRx.value;
                                 widget.updateConfig.setPitch(newValue);
+                                settings.player.linkSpeedPitch.save(newLinkValue);
                                 pitchKey.currentState?.updateValNoRoundExternal(newValue);
                               },
                               leading: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    '✓ ',
-                                    style: textTheme.displaySmall,
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 4.0),
+                                    child: Icon(
+                                      Broken.link_21,
+                                      size: 12.0,
+                                    ),
                                   ).animateEntrance(
-                                    showWhen: is432HzEnabled,
+                                    showWhen: enabled,
                                     allCurves: Curves.fastLinearToSlowEaseIn,
                                     durationMS: 300,
                                   ),
                                   Text(
-                                    '432Hz',
+                                    lang.pitch,
                                     style: textTheme.displaySmall,
                                   ),
                                 ],
                               ),
                             ),
+                          ),
+                        ),
+                      ),
+                      _CuteSlider(
+                        key: speedKey,
+                        valueListenable: widget.updateConfig.speedRx,
+                        onChanged: (value) async {
+                          await widget.updateConfig.setSpeed(value);
+
+                          if (settings.player.linkSpeedPitch.value) {
+                            await widget.updateConfig.setPitch(value);
+                          }
+                        },
+                        tapToUpdate: widget.tapToUpdate,
+                      ),
+                    ],
+                  ),
+                ),
+                verticalPadding,
+                _ForcedOffEnabled(
+                  option: AudioOutputForcedOff.volume,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Obx(
+                        (context) {
+                          final normalVolume = widget.updateConfig.volumeRx.valueR;
+                          final replayGainLinear = Player.inst.replayGainLinearVolumeMultiplierRx.valueR;
+                          final replayGainText = replayGainLinear == 1.0 ? '' : ' (N: ${_SliderTextWidget.toPercentage(normalVolume * replayGainLinear)})';
+                          return _SliderTextWidget(
+                            icon: normalVolume > 0 ? Broken.volume_up : Broken.volume_slash,
+                            title: lang.volume,
+                            value: normalVolume,
+                            max: 1.0,
+                            valToText: (val) => '${_SliderTextWidget.toPercentage(val)}$replayGainText',
+                            onManualChange: (value) {
+                              volumeKey.currentState?.updateValNoRoundExternal(value);
+                            },
+                            restoreDefault: () => _setVolume(1.0),
                           );
                         },
                       ),
-                    ),
-                  ),
-                ),
-                ObxO(
-                  rx: settings.player.useSemitones,
-                  builder: (context, isSemitones) => ObxO(
-                    rx: settings.player.linkSpeedPitch,
-                    builder: (context, enabled) => AnimatedEnabled(
-                      enabled: !enabled,
-                      child: isSemitones
-                          ? _CuteSlider<double>(
-                              key: pitchKey,
-                              min: -12.0,
-                              max: 12.0,
-                              divisions: 24, // 24 steps = 0.5 semitone steps from -12 to +12
-                              incremental: 0.5,
-                              valueListenable: widget.updateConfig.pitchRx,
-                              valueModifier: _SliderTextWidget.ratioToSemitones,
-                              onChanged: (semitones) {
-                                final ratio = _SliderTextWidget.semitonesToRatio(semitones);
-                                widget.updateConfig.setPitch(ratio);
-                              },
-                              tapToUpdate: widget.tapToUpdate,
-                              valToText: _SliderTextWidget.toSemitones,
-                            )
-                          : _CuteSlider(
-                              key: pitchKey,
-                              valueListenable: widget.updateConfig.pitchRx,
-                              onChanged: (value) {
-                                widget.updateConfig.setPitch(value);
-                              },
-                              tapToUpdate: widget.tapToUpdate,
-                            ),
-                    ),
-                  ),
-                ),
-                verticalPadding,
-                Obx(
-                  (context) => _SliderTextWidget(
-                    icon: Broken.forward,
-                    title: lang.speed,
-                    value: widget.updateConfig.speedRx.valueR,
-                    onManualChange: (value) {
-                      speedKey.currentState?.updateValNoRoundExternal(value);
-                      if (settings.player.linkSpeedPitch.value) {
-                        pitchKey.currentState?.updateValNoRoundExternal(value);
-                      }
-                    },
-                    restoreDefault: () => _setSpeed(1.0),
-                    useMaxToLimitPreciseValue: false,
-                    valToText: _SliderTextWidget.toXMultiplier,
-                    featuredButton: ObxO(
-                      rx: settings.player.linkSpeedPitch,
-                      builder: (context, enabled) => NamidaInkWellButton(
-                        icon: null,
-                        text: '',
-                        borderRadius: 8.0,
-                        sizeMultiplier: 0.9,
-                        paddingMultiplier: 0.7,
-                        bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(enabled ? 0.5 : 0.2),
-                        onTap: () {
-                          final newLinkValue = !settings.player.linkSpeedPitch.value;
-                          final newValue = newLinkValue ? widget.updateConfig.speedRx.value : widget.updateConfig.pitchRx.value;
-                          widget.updateConfig.setPitch(newValue);
-                          settings.player.linkSpeedPitch.save(newLinkValue);
-                          pitchKey.currentState?.updateValNoRoundExternal(newValue);
+                      _CuteSlider(
+                        key: volumeKey,
+                        max: 1.0,
+                        valueListenable: widget.updateConfig.volumeRx,
+                        onChanged: (value) {
+                          widget.updateConfig.setVolume(value);
                         },
-                        leading: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 4.0),
-                              child: Icon(
-                                Broken.link_21,
-                                size: 12.0,
-                              ),
-                            ).animateEntrance(
-                              showWhen: enabled,
-                              allCurves: Curves.fastLinearToSlowEaseIn,
-                              durationMS: 300,
-                            ),
-                            Text(
-                              lang.pitch,
-                              style: textTheme.displaySmall,
-                            ),
-                          ],
-                        ),
+                        tapToUpdate: widget.tapToUpdate,
                       ),
-                    ),
+                    ],
                   ),
-                ),
-                _CuteSlider(
-                  key: speedKey,
-                  valueListenable: widget.updateConfig.speedRx,
-                  onChanged: (value) async {
-                    await widget.updateConfig.setSpeed(value);
-
-                    if (settings.player.linkSpeedPitch.value) {
-                      await widget.updateConfig.setPitch(value);
-                    }
-                  },
-                  tapToUpdate: widget.tapToUpdate,
-                ),
-                verticalPadding,
-                Obx(
-                  (context) {
-                    final normalVolume = widget.updateConfig.volumeRx.valueR;
-                    final replayGainLinear = Player.inst.replayGainLinearVolumeMultiplierRx.valueR;
-                    final replayGainText = replayGainLinear == 1.0 ? '' : ' (N: ${_SliderTextWidget.toPercentage(normalVolume * replayGainLinear)})';
-                    return _SliderTextWidget(
-                      icon: normalVolume > 0 ? Broken.volume_up : Broken.volume_slash,
-                      title: lang.volume,
-                      value: normalVolume,
-                      max: 1.0,
-                      valToText: (val) => '${_SliderTextWidget.toPercentage(val)}$replayGainText',
-                      onManualChange: (value) {
-                        volumeKey.currentState?.updateValNoRoundExternal(value);
-                      },
-                      restoreDefault: () => _setVolume(1.0),
-                    );
-                  },
-                ),
-                _CuteSlider(
-                  key: volumeKey,
-                  max: 1.0,
-                  valueListenable: widget.updateConfig.volumeRx,
-                  onChanged: (value) {
-                    widget.updateConfig.setVolume(value);
-                  },
-                  tapToUpdate: widget.tapToUpdate,
                 ),
 
                 verticalPadding,
                 if (NamidaFeaturesVisibility.loudnessEnhancerAvailable)
-                  ObxO(
-                    rx: widget.updateConfig.loudnessEnhancerEnabledRx,
-                    builder: (context, enabled) => ObxO(
-                      rx: widget.updateConfig.loudnessEnhancerRx,
-                      builder: (context, targetGainUser) => ObxOrNull(
-                        rx: _loudnessEnhancerExtended?.targetGainTrack,
-                        builder: (context, targetGainTrack) {
-                          final replayGainText = targetGainTrack == 0.0
-                              ? ''
-                              : ' (N: ${_SliderTextWidget.toDecibelMultiplier(_loudnessEnhancerExtended?.getActualGainFromUser(enabled, targetGainUser) ?? 0)})';
-                          return Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              NamidaInkWell(
-                                onTap: () => _setLoudnessEnhancerEnabled(!enabled),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                  child: _SliderTextWidget(
-                                    icon: targetGainUser > 0 ? Broken.volume_high : Broken.volume_low_1,
-                                    title: '${lang.loudnessEnhancer} (PreAmp)',
-                                    value: targetGainUser,
+                  _ForcedOffEnabled(
+                    option: AudioOutputForcedOff.loudnessEnhancer,
+                    child: ObxO(
+                      rx: widget.updateConfig.loudnessEnhancerEnabledRx,
+                      builder: (context, enabled) => ObxO(
+                        rx: widget.updateConfig.loudnessEnhancerRx,
+                        builder: (context, targetGainUser) => ObxOrNull(
+                          rx: _loudnessEnhancerExtended?.targetGainTrack,
+                          builder: (context, targetGainTrack) {
+                            final replayGainText = targetGainTrack == 0.0
+                                ? ''
+                                : ' (N: ${_SliderTextWidget.toDecibelMultiplier(_loudnessEnhancerExtended?.getActualGainFromUser(enabled, targetGainUser) ?? 0)})';
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                NamidaInkWell(
+                                  onTap: () => _setLoudnessEnhancerEnabled(!enabled),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                    child: _SliderTextWidget(
+                                      icon: targetGainUser > 0 ? Broken.volume_high : Broken.volume_low_1,
+                                      title: '${lang.loudnessEnhancer} (PreAmp)',
+                                      value: targetGainUser,
+                                      min: LoudnessEnhancerExtended.kMinGain,
+                                      max: LoudnessEnhancerExtended.kMaxGain,
+                                      valToText: (val) => '${_SliderTextWidget.toDecibelMultiplier(val)}$replayGainText',
+                                      onManualChange: (newVal) {
+                                        _loudnessKey.currentState?.updateValNoRoundExternal(newVal);
+                                      },
+                                      restoreDefault: () => _setLoudnessEnhancer(0.0),
+                                      trailing: CustomSwitch(
+                                        active: enabled,
+                                        passedColor: null,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                ObxO(
+                                  rx: settings.equalizer.uiTapToUpdate,
+                                  builder: (context, uiTapToUpdate) => _CuteSlider(
+                                    key: _loudnessKey,
+                                    valueListenable: widget.updateConfig.loudnessEnhancerRx,
                                     min: LoudnessEnhancerExtended.kMinGain,
                                     max: LoudnessEnhancerExtended.kMaxGain,
-                                    valToText: (val) => '${_SliderTextWidget.toDecibelMultiplier(val)}$replayGainText',
-                                    onManualChange: (newVal) {
-                                      _loudnessKey.currentState?.updateValNoRoundExternal(newVal);
+                                    valToText: _SliderTextWidget.toDecibelMultiplier,
+                                    onChanged: (newVal) {
+                                      widget.updateConfig.setLoudnessEnhancer(_loudnessEnhancerExtended, newVal);
                                     },
-                                    restoreDefault: () => _setLoudnessEnhancer(0.0),
-                                    trailing: CustomSwitch(
-                                      active: enabled,
-                                      passedColor: null,
-                                    ),
+                                    tapToUpdate: uiTapToUpdate,
                                   ),
                                 ),
-                              ),
-                              ObxO(
-                                rx: settings.equalizer.uiTapToUpdate,
-                                builder: (context, uiTapToUpdate) => _CuteSlider(
-                                  key: _loudnessKey,
-                                  valueListenable: widget.updateConfig.loudnessEnhancerRx,
-                                  min: LoudnessEnhancerExtended.kMinGain,
-                                  max: LoudnessEnhancerExtended.kMaxGain,
-                                  valToText: _SliderTextWidget.toDecibelMultiplier,
-                                  onChanged: (newVal) {
-                                    widget.updateConfig.setLoudnessEnhancer(_loudnessEnhancerExtended, newVal);
-                                  },
-                                  tapToUpdate: uiTapToUpdate,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                if (NamidaFeaturesVisibility.equalizerAvailable && !widget.isInDialog) ...[
-                  ObxO(
-                    rx: widget.updateConfig.equalizerEnabledRx,
-                    builder: (context, enabled) => NamidaInkWell(
-                      onTap: () => _setEqualizerEnabled(!enabled),
-                      padding: const EdgeInsets.symmetric(vertical: 12.0),
-                      child: _SliderTextWidget(
-                        icon: Broken.chart_3,
-                        title: lang.equalizer,
-                        value: 0,
-                        displayValue: false,
-                        trailing: Row(
-                          children: [
-                            if (NamidaFeaturesVisibility.methodSetMonoAudio) ...[
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                tooltip: lang.setMonoAudio,
-                                icon: Icon(
-                                  Broken.airpods,
-                                  size: 20.0,
-                                  color: context.defaultIconColor(),
-                                ),
-                                iconSize: 20.0,
-                                onPressed: () => NamidaChannel.inst.setMonoAudio(null),
-                              ),
-                              const SizedBox(width: 2.0),
-                            ],
-
-                            if (NamidaFeaturesVisibility.methodOpenSystemEqualizer && widget.isGlobal)
-                              IconButton(
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                tooltip: lang.openApp,
-                                icon: Icon(
-                                  Broken.export_2,
-                                  size: 20.0,
-                                  color: context.defaultIconColor(),
-                                ),
-                                iconSize: 20.0,
-                                onPressed: () => NamidaChannel.inst.openSystemEqualizer(
-                                  Player.inst.androidSessionId,
-                                  package: settings.customEQPackage.value,
-                                ),
-                              ),
-                            const SizedBox(width: 8.0),
-                            CustomSwitch(
-                              active: enabled,
-                              passedColor: null,
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 6.0),
-                  ObxO(
-                    rx: _equalizerParameters,
-                    builder: (context, parameters) {
-                      if (parameters == null) return const SizedBox();
-                      final allBands = parameters.bands;
-                      return SizedBox(
-                        width: context.width,
-                        height: context.height * 0.5,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
-                          children: allBands
-                              .map(
-                                (band) => Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                    child: Column(
-                                      children: [
-                                        Expanded(
-                                          child: ObxO(
-                                            rx: widget.updateConfig.equalizerRx,
-                                            builder: (context, eqMap) {
-                                              final gain = eqMap[band.centerFrequency] ?? band.gain;
-                                              return Column(
-                                                children: [
-                                                  _getArrowIcon(
-                                                    icon: Broken.arrow_up_3,
-                                                    callback: () => _onGainSet(band, parameters, gain + 0.01),
-                                                  ),
-                                                  const SizedBox(height: 4.0),
-                                                  Expanded(
-                                                    child: VerticalSlider(
-                                                      min: parameters.minDecibels,
-                                                      max: parameters.maxDecibels,
-                                                      value: gain,
-                                                      onChanged: (value) => _onGainSetNoClamp(band, parameters, value),
-                                                      circleWidth: (context.width / allBands.length * 0.7).clampDouble(8.0, 24.0),
-                                                      tapToUpdate: () => settings.equalizer.uiTapToUpdate.value,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4.0),
-                                                  _getArrowIcon(
-                                                    icon: Broken.arrow_down_2,
-                                                    callback: () => _onGainSet(band, parameters, band.gain - 0.01),
-                                                  ),
-                                                  const SizedBox(height: 8.0),
-                                                  FittedBox(
-                                                    child: Text(
-                                                      "${band.gain > 0 ? '+' : ''}${(band.gain).toStringAsFixed(2)}",
-                                                      style: textTheme.displayMedium,
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12.0),
-                                        FittedBox(
-                                          child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                                              color: theme.scaffoldBackgroundColor,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                                              child: Text(
-                                                band.centerFrequency >= 1000 ? '${(band.centerFrequency / 1000).round()} kHz' : '${band.centerFrequency.round()} hz',
-                                                style: textTheme.displaySmall,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toFixedList(),
-                        ),
-                      );
-                    },
+
+                if (NamidaFeaturesVisibility.equalizerAvailable && !widget.isInDialog)
+                  _ForcedOffEnabled(
+                    option: AudioOutputForcedOff.equalizer,
+                    child: _ParametricEqualizerSection(
+                      updateConfig: widget.updateConfig,
+                      isGlobal: widget.isGlobal,
+                    ),
                   ),
-                  verticalPadding,
-                  ObxO(
-                    rx: settings.equalizer.eqPresets,
-                    builder: (context, eqPresets) => eqPresets.isEmpty
-                        ? const SizedBox()
-                        : Padding(
-                            padding: const EdgeInsets.only(bottom: 12.0),
-                            child: SmoothSingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: ObxO(
-                                rx: widget.updateConfig.presetRx,
-                                builder: (context, activePreset) {
-                                  return Row(
-                                    children: [
-                                      const SizedBox(width: 8.0),
-                                      NamidaInkWell(
-                                        animationDurationMS: 200,
-                                        borderRadius: 5.0,
-                                        margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                        bgColor: activePreset == null
-                                            ? Color.alphaBlend(CurrentColor.inst.color.withOpacityExt(0.9), theme.scaffoldBackgroundColor)
-                                            : theme.colorScheme.secondary.withOpacityExt(0.15),
-                                        onTap: _resetPreset,
-                                        child: Text(
-                                          lang.custom,
-                                          style: textTheme.displaySmall?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 13.5,
-                                            color: activePreset == null ? Colors.white.withOpacityExt(0.7) : null,
-                                          ),
-                                        ),
-                                      ),
-                                      ...eqPresets.map(
-                                        (preset) => NamidaInkWell(
-                                          animationDurationMS: 200,
-                                          borderRadius: 5.0,
-                                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                                          bgColor: activePreset == preset
-                                              ? Color.alphaBlend(CurrentColor.inst.color.withOpacityExt(0.9), theme.scaffoldBackgroundColor)
-                                              : theme.colorScheme.secondary.withOpacityExt(0.15),
-                                          onTap: () => _setPreset(preset),
-                                          child: Text(
-                                            preset.name,
-                                            style: textTheme.displaySmall?.copyWith(
-                                              color: activePreset == preset ? Colors.white.withOpacityExt(0.7) : null,
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 13.5,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8.0),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                  ),
-                ],
 
                 verticalPadding,
 
@@ -1132,6 +882,14 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
 
 class SoundControlPage extends StatefulWidget {
   const SoundControlPage({super.key});
+
+  static void showAudioPath() {
+    NamidaNavigator.inst.showSheet(
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (context, bottomPadding, maxWidth, maxHeight) => _SignalPathSheet(maxHeight: maxHeight),
+    );
+  }
 
   @override
   SoundControlPageState createState() => SoundControlPageState();
@@ -1207,6 +965,13 @@ class SoundControlPageState extends State<SoundControlPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          const _AudioOutputSection(),
+                          NamidaContainerDivider(
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                              vertical: verticalInBetweenPaddingH / 2,
+                            ),
+                          ),
                           const PlaybackSettings().getNormalizeAudioWidget(isInEQPage: true),
                           NamidaContainerDivider(
                             margin: EdgeInsets.symmetric(
@@ -1221,6 +986,10 @@ class SoundControlPageState extends State<SoundControlPage> {
                               tapToUpdate: uiTapToUpdate,
                               isInDialog: false,
                             ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: const _MonoAudioTile(),
                           ),
                           verticalInBetweenPadding,
                         ],
@@ -1730,7 +1499,7 @@ class _TempConfigRxProviders extends StatefulWidget {
     Rx<bool> loudnessEnhancerEnabledRx,
     Rx<double> loudnessEnhancerRx,
     Rx<bool> equalizerEnabledRx,
-    RxMap<double, double> equalizerRx,
+    Rx<ParametricEqualizer> equalizerRx,
     Rxn<EqualizerPreset> preset,
     Rx<double> volumeRx,
     Rx<double> speedRx,
@@ -1748,7 +1517,7 @@ class __TempConfigRxProvidersState extends State<_TempConfigRxProviders> {
   final loudnessEnhancerEnabledRx = Rx<bool>(false);
   final loudnessEnhancerRx = Rx<double>(0.0);
   final equalizerEnabledRx = Rx<bool>(false);
-  final equalizerRx = RxMap<double, double>({});
+  final equalizerRx = Rx<ParametricEqualizer>(ParametricEqualizer.flat);
   final presetRx = Rxn<EqualizerPreset>();
   final volumeRx = Rx<double>(1.0);
   final speedRx = Rx<double>(1.0);

@@ -249,6 +249,9 @@ class CustomListTile extends StatelessWidget {
   final String title;
   final String? titleSuffix;
   final String? subtitle;
+
+  /// takes the place of [subtitle].
+  final Widget? subtitleWidget;
   final bool subtitleAbove;
   final Widget? trailing;
   final Widget? trailingRaw;
@@ -272,6 +275,7 @@ class CustomListTile extends StatelessWidget {
     required this.title,
     this.titleSuffix,
     this.subtitle,
+    this.subtitleWidget,
     this.subtitleAbove = false,
     this.trailing,
     this.trailingRaw,
@@ -298,7 +302,9 @@ class CustomListTile extends StatelessWidget {
     final textTheme = theme.textTheme;
     final iconColor = context.defaultIconColor(passedColor);
     final subtitle = this.subtitle;
-    final hasSubtitle = subtitle != null && subtitle.isNotEmpty;
+    final subtitleWidget = this.subtitleWidget;
+    final hasSubtitleText = subtitle != null && subtitle.isNotEmpty;
+    final hasSubtitle = hasSubtitleText || subtitleWidget != null;
 
     final baseDensity = VisualDensity.compact.baseSizeAdjustment;
     var minTileHeight =
@@ -318,14 +324,16 @@ class CustomListTile extends StatelessWidget {
       borderR *= 0.8;
     }
 
-    final subtitleText = hasSubtitle
-        ? Text(
-            subtitle,
-            style: theme.textTheme.displaySmall,
-            maxLines: maxSubtitleLines,
-            overflow: TextOverflow.ellipsis,
-          )
-        : null;
+    final subtitleText =
+        subtitleWidget ??
+        (hasSubtitleText
+            ? Text(
+                subtitle,
+                style: theme.textTheme.displaySmall,
+                maxLines: maxSubtitleLines,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 1.0),

@@ -68,6 +68,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<void> setUsbDacHandlerEnabled(bool enabled) async {
+    await _channel.invokeMethod('setUsbDacHandlerEnabled', {'enabled': enabled});
+  }
+
+  @override
   Future<void> logPreviousAbnormalExits() async {
     final reports = await _channel.invokeListMethod<Map>('consumeExitReports');
     if (reports == null) return;

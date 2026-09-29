@@ -14,6 +14,7 @@ import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -267,6 +268,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
               if (isLossless == true) 'Lossless',
             ];
             final bitsText = bitsTextParts.join(' ');
+            final isBitPerfect = AudioOutputController.inst.isBitPerfectActiveR();
+            final badgeIcon = isBitPerfect ? Broken.flash : Broken.wind_2;
 
             return Text.rich(
               TextSpan(
@@ -306,10 +309,17 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            Broken.wind_2,
+                                            badgeIcon,
                                             size: 32.0,
                                           ),
                                           const SizedBox(height: 12.0),
+                                          if (isBitPerfect) ...[
+                                            Text(
+                                              lang.bitPerfect,
+                                              style: textTheme.displayLarge,
+                                            ),
+                                            const SizedBox(height: 6.0),
+                                          ],
                                           if (bitsText.isNotEmpty) ...[
                                             Text(
                                               bitsText,
@@ -321,7 +331,30 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                             trExt.audioInfoFormattedAlt,
                                             style: textTheme.displayMedium,
                                           ),
-                                          const SizedBox(height: 4.0),
+                                          const SizedBox(height: 12.0),
+                                          NamidaInkWell(
+                                            borderRadius: 8.0,
+                                            padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+                                            bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                                            onTap: () {
+                                              NamidaNavigator.inst.popMenu();
+                                              NamidaOnTaps.inst.openAudioPath();
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(
+                                                  Broken.routing_2,
+                                                  size: 16.0,
+                                                ),
+                                                const SizedBox(width: 6.0),
+                                                Text(
+                                                  lang.signalPath,
+                                                  style: textTheme.displaySmall,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -334,7 +367,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Icon(
-                                          Broken.wind_2,
+                                          badgeIcon,
                                           size: 12.0,
                                         ),
                                         const SizedBox(width: 2.0),

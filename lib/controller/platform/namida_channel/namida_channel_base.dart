@@ -61,6 +61,9 @@ abstract class NamidaChannel {
 
   Future<void> setMulticastLock(bool enabled) async {}
 
+  /// lets android offer namida as a plugged usb dac's default app.
+  Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
+
   Future<bool> shareFiles(List<String> paths) async => false;
 
   Future<void> logPreviousAbnormalExits() async {}

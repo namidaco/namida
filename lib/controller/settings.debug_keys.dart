@@ -10,6 +10,7 @@ extension EqualizerSettingsDebugKeys on _EqualizerSettings {
     loudnessEnhancerEnabled,
     loudnessEnhancer,
     eqPresets,
+    devicePresets,
     uiTapToUpdate,
   ];
 }
@@ -103,6 +104,10 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     lockscreenArtwork,
     replayGainType,
     internalPlayer,
+    bitPerfect,
+    usbDirect,
+    monoAudio,
+    audioOutputDevice,
     onInterrupted,
   ];
 }

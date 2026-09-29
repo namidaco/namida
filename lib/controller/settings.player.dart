@@ -41,6 +41,12 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final lockscreenArtwork = _key('lockscreenArtwork', true);
   late final replayGainType = _keyEnum('replayGainType', isKuru ? ReplayGainType.volume : ReplayGainType.platform_default, ReplayGainType.values, sync: false);
   late final internalPlayer = _keyEnum('internalPlayer', InternalPlayerType.auto, InternalPlayerType.getAvailableForCurrentPlatform(), sync: false);
+  late final bitPerfect = _key('bitPerfect', false, sync: false);
+  late final usbDirect = _key('usbDirect', false, sync: false);
+  late final monoAudio = _key('monoAudio', false);
+
+  /// [AudioOutputDevice.key], null follows the system.
+  late final audioOutputDevice = _key<String?>('audioOutputDevice', null, sync: false);
 
   late final onInterrupted = _keyMap<InterruptionType, InterruptionAction>(
     'onInterrupted',

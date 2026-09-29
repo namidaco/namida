@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:basic_audio_handler/basic_audio_handler.dart' show EqualizerBandType, EqualizerChannel;
 import 'package:history_manager/history_manager.dart';
 import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
@@ -22,6 +23,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -2740,6 +2742,80 @@ extension ReplayGainTypeL10n on ReplayGainType {
     ReplayGainType.platform_default => lang.defaultLabel,
     ReplayGainType.loudness_enhancer => lang.loudnessEnhancer,
     ReplayGainType.volume => lang.volume,
+  };
+}
+
+extension EqualizerBandTypeL10n on EqualizerBandType {
+  String toText() => switch (this) {
+    EqualizerBandType.peak => lang.eqPeak,
+    EqualizerBandType.lowShelf => lang.eqLowShelf,
+    EqualizerBandType.highShelf => lang.eqHighShelf,
+    EqualizerBandType.lowPass => lang.eqLowPass,
+    EqualizerBandType.highPass => lang.eqHighPass,
+    EqualizerBandType.bandPass => lang.eqBandPass,
+    EqualizerBandType.notch => lang.eqNotch,
+    EqualizerBandType.allPass => lang.eqAllPass,
+  };
+}
+
+extension EqualizerChannelL10n on EqualizerChannel {
+  String toText() => switch (this) {
+    EqualizerChannel.all => lang.all,
+    EqualizerChannel.left => lang.left,
+    EqualizerChannel.right => lang.right,
+  };
+}
+
+extension AudioOutputDeviceTypeUtils on AudioOutputDeviceType {
+  IconData toIcon() => switch (this) {
+    AudioOutputDeviceType.speaker => Broken.speaker,
+    AudioOutputDeviceType.wired => Broken.headphone,
+    AudioOutputDeviceType.bluetooth => Broken.bluetooth,
+    AudioOutputDeviceType.usb => Broken.cpu,
+    AudioOutputDeviceType.digital => Broken.monitor,
+    AudioOutputDeviceType.other => Broken.radar_1,
+  };
+}
+
+extension AudioOutputForcedOffCauseUtils on AudioOutputForcedOffCause {
+  String toText() => switch (this) {
+    AudioOutputForcedOffCause.bitPerfect => lang.bitPerfect,
+    AudioOutputForcedOffCause.usbDirect => lang.usbDirect,
+  };
+
+  IconData toIcon() => switch (this) {
+    AudioOutputForcedOffCause.bitPerfect => Broken.flash,
+    AudioOutputForcedOffCause.usbDirect => Broken.cpu,
+  };
+
+  bool isAvailable() => switch (this) {
+    AudioOutputForcedOffCause.bitPerfect => true,
+    AudioOutputForcedOffCause.usbDirect => Platform.isAndroid,
+  };
+}
+
+extension AudioOutputForcedOffUtils on AudioOutputForcedOff {
+  String toText() => switch (this) {
+    AudioOutputForcedOff.equalizer => lang.equalizer,
+    AudioOutputForcedOff.loudnessEnhancer => lang.loudnessEnhancer,
+    AudioOutputForcedOff.speed => lang.speed,
+    AudioOutputForcedOff.pitch => lang.pitch,
+    AudioOutputForcedOff.skipSilence => lang.skipSilence,
+    AudioOutputForcedOff.monoAudio => lang.monoAudio,
+    AudioOutputForcedOff.volume => lang.volume,
+    AudioOutputForcedOff.fadeOnPlayPause => lang.fadeOnPlayPause,
+    AudioOutputForcedOff.crossfade => lang.crossfade,
+    AudioOutputForcedOff.systemEffects => lang.systemAudioEffects,
+    AudioOutputForcedOff.systemVolume => lang.volumeKeys,
+    AudioOutputForcedOff.otherSounds => lang.otherAppsSounds,
+  };
+
+  bool isAvailable() => switch (this) {
+    AudioOutputForcedOff.equalizer => NamidaFeaturesVisibility.equalizerAvailable,
+    AudioOutputForcedOff.loudnessEnhancer => NamidaFeaturesVisibility.loudnessEnhancerAvailable,
+    AudioOutputForcedOff.skipSilence => NamidaFeaturesVisibility.skipSilenceAvailable,
+    AudioOutputForcedOff.systemEffects || AudioOutputForcedOff.systemVolume => Platform.isAndroid,
+    _ => true,
   };
 }
 

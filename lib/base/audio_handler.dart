@@ -23,6 +23,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/artwork_prefetcher.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -2367,7 +2368,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   final replayGainLinearVolumeMultiplierRx = 1.0.obs;
 
   @override
-  bool get enableCrossFade => settings.player.enableCrossFade.value;
+  bool get enableCrossFade => settings.player.enableCrossFade.value && !AudioOutputController.inst.isForcedOff(AudioOutputForcedOff.crossfade);
 
   @override
   bool get defaultGaplessEnabled => settings.player.enableGaplessPlayback.value;
@@ -2391,7 +2392,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get defaultShouldStartPlayingOnNextPrev => settings.player.playOnNextPrev.value;
 
   @override
-  bool get enableVolumeFadeOnPlayPause => settings.player.enableVolumeFadeOnPlayPause.value;
+  bool get enableVolumeFadeOnPlayPause => settings.player.enableVolumeFadeOnPlayPause.value && !AudioOutputController.inst.isForcedOff(AudioOutputForcedOff.fadeOnPlayPause);
 
   @override
   bool get playerInfiniyQueueOnNextPrevious => settings.player.infiniyQueueOnNextPrevious.value;
@@ -2870,10 +2871,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   @override
   AVPlayer createPlayerInstance() {
-    return createPlayer(
+    final player = createPlayer(
       exoplayerCreator: () => _createAndroidPlayer(preferSWDecoders: false),
       exoplayerSWCreator: () => _createAndroidPlayer(preferSWDecoders: true),
     );
+    player.setAudioOutput(settings.player.audioOutputDevice.value, bitPerfect: settings.player.bitPerfect.value, mono: settings.player.monoAudio.value);
+    return player;
   }
 
   AudioPlayer _createAndroidPlayer({required bool preferSWDecoders}) {

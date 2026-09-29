@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
@@ -7,7 +8,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'package:media_kit_video/media_kit_video.dart';
 
+import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/utils.dart';
 
 // Missing features: quick settings tile, picture in picture
 // `isPlaying()`, `hasVideo()`, `getVideoRational()`.
@@ -68,7 +71,19 @@ class CustomMPVPlayer implements AVPlayer {
       if (missingFilter == null) return;
       _audioFilters.onMissingFilter(missingFilter);
     });
+
+    _playerAudioDevicesStreamSub = _player.stream.audioDevices.listen((devices) => outputDevices.value = devices);
   }
+
+  /// every mpv instance sees the same devices, the latest report wins.
+  static final outputDevices = Rx<List<mk.AudioDevice>>(const []);
+
+  static Set<EqualizerBandType> getSupportedEqualizerBandTypes() => {
+    for (final type in EqualizerBandType.values)
+      if (_MPVAudioFilters.isFilterAvailable(_MPVAudioFilters.filterNameOf(type))) type,
+  };
+
+  static bool supportsEqualizerLimiter() => _MPVAudioFilters.isFilterAvailable(_MPVAudioFilters._kLimiterFilterName);
 
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
@@ -99,6 +114,7 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerPositionStreamSub;
   StreamSubscription? _playerAudioTracksStreamSub;
   StreamSubscription? _playerLogStreamSub;
+  StreamSubscription? _playerAudioDevicesStreamSub;
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
   final _playerPositionStreamController = StreamController<Duration>();
 
@@ -214,7 +230,7 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Stream<Duration?> get durationStream => _player.stream.duration;
   @override
-  Stream<double> get volumeStream => _player.stream.volume.map((event) => event / 100 / _loudnessMultiplier);
+  Stream<double> get volumeStream => _player.stream.volume.map((_) => _volume);
   @override
   Stream<double> get speedStream => _player.stream.rate;
   @override
@@ -235,9 +251,9 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   double get volume => _volume;
   @override
-  double get speed => _player.state.rate;
+  double get speed => _speed;
   @override
-  double get pitch => _player.state.pitch;
+  double get pitch => _pitch;
   @override
   bool get playing => _player.state.playing;
 
@@ -677,6 +693,7 @@ class CustomMPVPlayer implements AVPlayer {
       _playerPositionStreamSub?.cancel(),
       _playerAudioTracksStreamSub?.cancel(),
       _playerLogStreamSub?.cancel(),
+      _playerAudioDevicesStreamSub?.cancel(),
     ].execute();
 
     // -- not awaited, closing a controller that was never listened to never completes (temp players).
@@ -700,55 +717,128 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> setEqualizerEnabled(bool enabled) async {
-    _audioFilters.setEqualizerEnabled(enabled);
+  Future<void> setEqualizer(ParametricEqualizer? equalizer) async {
+    _audioFilters.setEqualizer(equalizer);
+    final preampDb = equalizer?.computeEffectivePreamp() ?? 0.0;
+    if (_preampDb == preampDb) return;
+    _preampDb = preampDb;
+    await _applyVolume();
+  }
+
+  String? _audioDevice;
+  bool _bitPerfect = false;
+  bool _mono = false;
+
+  static const _kSignalPathProperties = [
+    'audio-codec-name', 'audio-bitrate', 'current-ao', //
+    'audio-params/samplerate', 'audio-params/channel-count', 'audio-params/format', //
+    'audio-out-params/samplerate', 'audio-out-params/channel-count', 'audio-out-params/format', //
+  ];
+
+  /// what mpv decodes and hands to its audio output, namida's own filters (equalizer, speed, volume) aren't part of it.
+  Future<AudioSignalPath> getSignalPath() async {
+    final player = _player.platform as mk.NativePlayer;
+    final propertyFutures = _kSignalPathProperties.map((name) => player.getProperty(name).catchError((_) => ''));
+    final values = await Future.wait(propertyFutures);
+    final codecName = values[0];
+    final bitrate = double.tryParse(values[1]) ?? 0.0;
+    final driver = values[2];
+    final decoded = _signalFormatOf(values[3], values[4], values[5]);
+    final output = _signalFormatOf(values[6], values[7], values[8]);
+    final isUntouched = !decoded.isFloat && !output.isFloat && decoded.sampleRate == output.sampleRate && decoded.channels == output.channels;
+    final isBitPerfect = _bitPerfect && isUntouched && output.bitDepth >= decoded.bitDepth;
+    final deviceDescription = _player.state.audioDevice.description;
+    return AudioSignalPath(
+      codec: _codecOf(codecName),
+      source: AudioSignalFormat(sampleRate: decoded.sampleRate, bitDepth: 0, isFloat: false, channels: decoded.channels),
+      sourceBitrate: bitrate.round(),
+      decoderName: codecName.isEmpty ? null : 'FFmpeg $codecName',
+      decoded: decoded,
+      isBitPerfect: isBitPerfect,
+      outputType: _bitPerfect ? AudioSignalOutputType.desktopExclusive : AudioSignalOutputType.desktopShared,
+      outputDriver: driver.isEmpty ? null : driver,
+      outputDeviceName: deviceDescription.isEmpty ? null : deviceDescription,
+      output: output,
+      isOutputDithered: false,
+      hasOutputHardwareVolume: false,
+      mixerSampleRate: 0,
+    );
+  }
+
+  static String? _codecOf(String codecName) {
+    if (codecName.isEmpty) return null;
+    if (codecName.startsWith('mp3')) return 'MP3';
+    if (codecName.startsWith('pcm_')) return 'PCM';
+    return codecName.toUpperCase();
+  }
+
+  /// mpv sample formats: u8, s16, s32, s64, float, double, with a `p` suffix when planar.
+  static AudioSignalFormat _signalFormatOf(String sampleRate, String channels, String format) {
+    final packedFormat = format.endsWith('p') ? format.substring(0, format.length - 1) : format;
+    final (bitDepth, isFloat) = switch (packedFormat) {
+      'u8' => (8, false),
+      's16' => (16, false),
+      's24' => (24, false),
+      's32' => (32, false),
+      's64' => (64, false),
+      'float' => (32, true),
+      'double' => (64, true),
+      _ => (0, false),
+    };
+    return AudioSignalFormat(
+      sampleRate: int.tryParse(sampleRate) ?? 0,
+      bitDepth: bitDepth,
+      isFloat: isFloat,
+      channels: int.tryParse(channels) ?? 0,
+    );
   }
 
   @override
-  Future<void> setEqualizerBandGains(Map<double, double> gains) async {
-    _audioFilters.setEqualizerBandGains(gains);
+  Future<void> setAudioOutput(String? device, {required bool bitPerfect, required bool mono}) async {
+    if (device != _audioDevice) {
+      _audioDevice = device;
+      final mpvDevice = device ?? 'auto';
+      await _setMpvProperty('audio-device', mpvDevice);
+    }
+    // -- mpv's own downmix, lavfi's `pan` is missing from the bundled builds
+    final isMonoApplied = mono && !bitPerfect;
+    if (isMonoApplied != _mono) {
+      _mono = isMonoApplied;
+      await _setMpvProperty('audio-channels', isMonoApplied ? 'mono' : 'auto-safe');
+    }
+    if (bitPerfect == _bitPerfect) return;
+    _bitPerfect = bitPerfect;
+    await _setMpvProperty('audio-exclusive', bitPerfect ? 'yes' : 'no');
+    _audioFilters.setBitPerfect(bitPerfect);
+    await [
+      _player.setRate(bitPerfect ? 1.0 : _speed),
+      _player.setPitch(bitPerfect ? 1.0 : _pitch),
+      _applyVolume(),
+    ].execute();
+    if (!bitPerfect) _audioFilters.refresh();
   }
 
   // -- the `volume` filter is absent from most mpv builds, mpv's own volume can go past 100% instead.
   bool _loudnessEnhancerEnabled = false;
   double _loudnessEnhancerGain = 0.0;
-  double _loudnessMultiplier = 1.0;
+  double _preampDb = 0.0;
   double _volume = 1.0;
+  double _speed = 1.0;
+  double _pitch = 1.0;
   String? _originalVolumeMax;
 
   @override
   Future<void> setLoudnessEnhancerEnabled(bool enabled) async {
     if (_loudnessEnhancerEnabled == enabled) return;
     _loudnessEnhancerEnabled = enabled;
-    await _refreshLoudnessMultiplier();
+    await _applyVolume();
   }
 
   @override
   Future<void> setLoudnessEnhancerGain(double gainDb) async {
     if (_loudnessEnhancerGain == gainDb) return;
     _loudnessEnhancerGain = gainDb;
-    if (_loudnessEnhancerEnabled) await _refreshLoudnessMultiplier();
-  }
-
-  Future<void> _refreshLoudnessMultiplier() async {
-    final multiplier = _loudnessEnhancerEnabled && _loudnessEnhancerGain != 0.0 ? math.pow(10, _loudnessEnhancerGain / 20).toDouble() : 1.0;
-    if (_loudnessMultiplier == multiplier) return;
-    _loudnessMultiplier = multiplier;
-
-    final player = _player.platform as mk.NativePlayer;
-    if (multiplier > 1.0) {
-      // -- mpv refuses anything above 130% by default, the original cap has to come back with us
-      // -- otherwise it would keep uncapping volumes that aren't ours, like replay gain.
-      if (_originalVolumeMax == null) {
-        final currentMax = await player.getProperty(_kVolumeMaxProperty);
-        if (currentMax.isNotEmpty) _originalVolumeMax = currentMax;
-      }
-      await player.setProperty(_kVolumeMaxProperty, '$_kBoostedVolumeMaxPercentage');
-    } else if (_originalVolumeMax != null) {
-      await player.setProperty(_kVolumeMaxProperty, _originalVolumeMax!);
-      _originalVolumeMax = null;
-    }
-    await _applyVolume();
+    if (_loudnessEnhancerEnabled) await _applyVolume();
   }
 
   static const _kVolumeMaxProperty = 'volume-max';
@@ -760,18 +850,48 @@ class CustomMPVPlayer implements AVPlayer {
     return _applyVolume();
   }
 
-  Future<void> _applyVolume() {
-    return _player.setVolume((_volume * _loudnessMultiplier * 100).clampDouble(0, _kBoostedVolumeMaxPercentage.toDouble()));
+  /// [_volume] is a linear gain like on every other player, mpv applies its `volume` cubed.
+  Future<void> _applyVolume() async {
+    if (_bitPerfect) {
+      await _setVolumeMaxBoosted(false);
+      return _player.setVolume(100);
+    }
+    final loudnessDb = _loudnessEnhancerEnabled ? _loudnessEnhancerGain : 0.0;
+    final gainDb = _preampDb + loudnessDb;
+    final gain = _volume * math.pow(10, gainDb / 20);
+    final cubicRoot = math.pow(gain, 1 / 3).toDouble();
+    final mpvVolume = (cubicRoot * 100).withMaximum(_kBoostedVolumeMaxPercentage.toDouble());
+    await _setVolumeMaxBoosted(mpvVolume > 100);
+    return _player.setVolume(mpvVolume);
+  }
+
+  /// mpv refuses anything above 130% by default, the original cap has to come back with us,
+  /// otherwise it would keep uncapping volumes that aren't ours.
+  Future<void> _setVolumeMaxBoosted(bool boosted) async {
+    final player = _player.platform as mk.NativePlayer;
+    if (boosted) {
+      if (_originalVolumeMax != null) return;
+      final currentMax = await player.getProperty(_kVolumeMaxProperty);
+      _originalVolumeMax = currentMax.isNotEmpty ? currentMax : '130';
+      await player.setProperty(_kVolumeMaxProperty, '$_kBoostedVolumeMaxPercentage');
+    } else if (_originalVolumeMax != null) {
+      await player.setProperty(_kVolumeMaxProperty, _originalVolumeMax!);
+      _originalVolumeMax = null;
+    }
   }
 
   @override
   Future<void> setPitch(double pitch) async {
+    _pitch = pitch;
+    if (_bitPerfect) return;
     await _player.setPitch(pitch);
     _audioFilters.refresh(); // -- media_kit overwrites the whole filter chain when pitch changes
   }
 
   @override
   Future<void> setSpeed(double speed) async {
+    _speed = speed;
+    if (_bitPerfect) return;
     await _player.setRate(speed);
     _audioFilters.refresh(); // -- media_kit overwrites the whole filter chain when rate changes
   }
@@ -853,27 +973,44 @@ class _MPVAudioFilters {
   static const _kEqualizerLabel = 'nmeq';
   static const _kSkipSilenceLabel = 'nmss';
 
-  static const _kEqualizerFilterName = 'equalizer';
+  static const _kLimiterFilterName = 'alimiter';
   static const _kSkipSilenceFilterName = 'silenceremove';
   static const _kSkipSilenceParams =
       'start_periods=1:start_duration=0.15:start_threshold=-50dB:start_silence=0.05'
       ':stop_periods=-1:stop_duration=0.15:stop_threshold=-50dB:stop_silence=0.05:detection=peak';
 
+  /// media_kit's windows & macos libmpv ship a stripped ffmpeg whose only equalizing filter is `equalizer`,
+  /// linux uses the system's libmpv.
+  static final _kFullFilterSet = Platform.isLinux;
+
+  static bool isFilterAvailable(String name) => !_MPVMissingFilters.contains(name) && (_kFullFilterSet || name == 'equalizer');
+
+  static String filterNameOf(EqualizerBandType type) => switch (type) {
+    EqualizerBandType.peak => 'equalizer',
+    EqualizerBandType.lowShelf => 'lowshelf',
+    EqualizerBandType.highShelf => 'highshelf',
+    EqualizerBandType.lowPass => 'lowpass',
+    EqualizerBandType.highPass => 'highpass',
+    EqualizerBandType.bandPass => 'bandpass',
+    EqualizerBandType.notch => 'bandreject',
+    EqualizerBandType.allPass => 'allpass',
+  };
+
   /// Rebuilding the chain reinitializes the filters, dragging a slider would do it on every frame.
   static const _kApplyThrottleMS = 100;
 
   bool _skipSilenceEnabled = false;
-  bool _equalizerEnabled = false;
-  var _equalizerGains = <double, double>{}; // -- sorted by frequency
+  ParametricEqualizer? _equalizer;
+  bool _bitPerfect = false;
 
   Timer? _throttleTimer;
   final _sinceLastApply = Stopwatch();
 
-  bool get _hasCustomFilters => _equalizerEnabled || _skipSilenceEnabled;
+  bool get _hasCustomFilters => _equalizer != null || _skipSilenceEnabled;
 
   /// media_kit already wrote a chain holding nothing but its own scaletempo filter, only ours need to be restored.
   void refresh() {
-    if (_hasCustomFilters) _requestApply();
+    if (_hasCustomFilters && !_bitPerfect) _requestApply();
   }
 
   void setSkipSilenceEnabled(bool enabled) {
@@ -882,21 +1019,20 @@ class _MPVAudioFilters {
     _requestApply();
   }
 
-  void setEqualizerEnabled(bool enabled) {
-    if (_equalizerEnabled == enabled) return;
-    _equalizerEnabled = enabled;
+  void setEqualizer(ParametricEqualizer? equalizer) {
+    if (_equalizer == equalizer) return;
+    _equalizer = equalizer;
     _requestApply();
   }
 
-  void setEqualizerBandGains(Map<double, double> gains) {
-    final entries = gains.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
-    _equalizerGains = Map.fromEntries(entries);
-    if (_equalizerEnabled) _requestApply();
+  void setBitPerfect(bool bitPerfect) {
+    if (_bitPerfect == bitPerfect) return;
+    _bitPerfect = bitPerfect;
+    _requestApply();
   }
 
   void onMissingFilter(String filter) {
-    if (filter != _kEqualizerFilterName && filter != _kSkipSilenceFilterName) return;
-    if (_hasCustomFilters) _applyChain(); // -- the chain is down, restoring it without the missing filter
+    if (_hasCustomFilters && !_bitPerfect) _applyChain(); // -- the chain is down, restoring it without the missing filter
   }
 
   void dispose() {
@@ -923,20 +1059,28 @@ class _MPVAudioFilters {
       ..reset()
       ..start();
 
+    if (_bitPerfect) {
+      _setProperty('af', '');
+      return;
+    }
+
     final filters = <String>[];
 
     // -- lavfi filters go first, a stripped ffmpeg can't convert the format scaletempo hands them and gets disabled.
-    if (_equalizerEnabled && _equalizerGains.isNotEmpty && !_MPVMissingFilters.contains(_kEqualizerFilterName)) {
-      final frequencies = _equalizerGains.keys.toList();
-      final bands = <String>[];
-      for (int i = 0; i < frequencies.length; i++) {
-        final frequency = frequencies[i];
-        final gain = _equalizerGains[frequency]!;
-        if (gain == 0.0) continue; // -- a flat band is a biquad computed for nothing
-        final width = _bandWidthInOctaves(frequencies, i);
-        bands.add('$_kEqualizerFilterName=f=${_formatDouble(frequency)}:t=o:w=${_formatDouble(width)}:g=${_formatDouble(gain)}');
+    final equalizer = _equalizer;
+    if (equalizer != null) {
+      final sections = <String>[];
+      for (final band in equalizer.getActiveBands()) {
+        final name = filterNameOf(band.type);
+        if (!isFilterAvailable(name)) continue;
+        for (int s = 0; s < band.sectionCount; s++) {
+          sections.add(_bandFilter(name, band, band.sectionQ(s)));
+        }
       }
-      if (bands.isNotEmpty) filters.add('@$_kEqualizerLabel:lavfi=[${bands.join(',')}]');
+      if (equalizer.limiter && sections.isNotEmpty && isFilterAvailable(_kLimiterFilterName)) {
+        sections.add('$_kLimiterFilterName=limit=0.999:level=0');
+      }
+      if (sections.isNotEmpty) filters.add('@$_kEqualizerLabel:lavfi=[${sections.join(',')}]');
     }
 
     if (_skipSilenceEnabled && !_MPVMissingFilters.contains(_kSkipSilenceFilterName)) {
@@ -951,15 +1095,25 @@ class _MPVAudioFilters {
     _setProperty('af', filters.join(','));
   }
 
-  /// Width that covers the gap to the closest neighbour band, so bands blend instead of leaving holes.
-  static double _bandWidthInOctaves(List<double> frequencies, int index) {
-    const fallback = 2.0;
-    if (frequencies.length < 2) return fallback;
-    final current = frequencies[index];
-    final neighbour = index == 0 ? frequencies[1] : frequencies[index - 1];
-    final ratio = index == 0 ? neighbour / current : current / neighbour;
-    if (!(ratio > 1)) return fallback;
-    return math.log(ratio) / math.ln2;
+  /// every one of these filters is an RBJ cookbook biquad, same design as [ParametricEqualizer.responseDb].
+  static String _bandFilter(String name, EqualizerBand band, double q) {
+    final frequencyText = _formatDouble(band.frequency);
+    final qText = _formatDouble(q);
+    final buffer = StringBuffer('$name=f=$frequencyText:t=q:w=$qText');
+    if (band.type.hasGain) {
+      final gainText = _formatDouble(band.gain);
+      buffer.write(':g=$gainText');
+    }
+    if (band.type.hasOrder) buffer.write(':p=2');
+    switch (band.channel) {
+      case EqualizerChannel.all:
+        break;
+      case EqualizerChannel.left:
+        buffer.write(':c=FL');
+      case EqualizerChannel.right:
+        buffer.write(':c=FR');
+    }
+    return buffer.toString();
   }
 
   static String _formatDouble(double value) => value.toStringAsFixed(4);

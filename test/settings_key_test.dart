@@ -585,15 +585,15 @@ void main() {
       expect(settings.player.onInterrupted.userValue, null);
     });
 
-    test('double keys are stored as strings, bad keys are skipped', () async {
-      await loadFile(settings.equalizer, {'_v': 2});
-      settings.equalizer.equalizer.update((bands) => bands[60.0] = 1.5);
-      expect(settings.equalizer.buildJson()['equalizer'], {'60.0': 1.5});
+    test('the old fixed band equalizer moves to the parametric key, bad bands are skipped', () async {
       await loadFile(settings.equalizer, {
         '_v': 2,
-        'equalizer': {'60.0': 2.5, 'bad': 1.0, '120.0': 'x'},
+        'equalizer': {'60.0': 2.5, 'bad': 1.0, '120.0': 'x', '910.0': -1.0},
       });
-      expect(settings.equalizer.equalizer.value, {60.0: 2.5});
+      final bands = settings.equalizer.equalizer.value.bands;
+      expect([for (final b in bands) (b.frequency, b.gain)], [(60.0, 2.5), (910.0, -1.0)]);
+      expect(settings.equalizer.buildJson().containsKey('equalizer'), false);
+      expect(settings.equalizer.buildJson()['parametricEqualizer'], settings.equalizer.equalizer.value.toMap());
     });
 
     test('track sorting of a media type updates both maps once, unchanged input does nothing', () async {
