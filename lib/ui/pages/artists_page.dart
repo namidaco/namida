@@ -51,9 +51,9 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
   List<NamidaPopupItem> _getTypeChooserChildren() {
     void onTap(MediaType type) {
       GroupSortType? newArtistSort;
-      final currentArtistSort = settings.artistSort.value;
+      final currentArtistSorts = settings.artistSorts.value;
       // -- automatically resorting by the new type
-      switch (currentArtistSort) {
+      switch (currentArtistSorts.first) {
         case GroupSortType.artistsList:
         case GroupSortType.albumArtist:
         case GroupSortType.composer:
@@ -66,8 +66,12 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
         default:
           null;
       }
+      List<GroupSortType>? newArtistSorts;
+      if (newArtistSort != null) {
+        newArtistSorts = [newArtistSort, ...currentArtistSorts.skip(1).where((e) => e != newArtistSort)];
+      }
       settings.activeArtistType.save(type);
-      SearchSortController.inst.sortMedia(type, groupSortBy: newArtistSort, reverse: null);
+      SearchSortController.inst.sortMedia(type, groupSorts: newArtistSorts, reverse: null);
     }
 
     return [
@@ -133,7 +137,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                     ? '$finalArtistsLength/${countToText(count: totalArtistsLength)}'
                     : countToText(count: finalArtistsLength);
 
-                final sort = settings.artistSort.valueR;
+                final sort = settings.artistSorts.valueR.first;
                 final sortReverse = settings.artistSortReversed.valueR;
 
                 final sortTextIsUseless =

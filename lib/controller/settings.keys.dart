@@ -52,8 +52,9 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     return _key(name, fallback, codec: _ObjectCodec(fromJson, toJson), sync: sync);
   }
 
-  _SettingsListKey<T> _keyList<T>(String name, List<T> fallback, {_SettingsCodec<T>? item, bool sync = true}) {
-    final key = _SettingsListKey<T>._(this, name, _ProtectedList(fallback), _ListCodec(item), sync);
+  /// [isNonEmpty] falls back to the default instead of loading an empty list.
+  _SettingsListKey<T> _keyList<T>(String name, List<T> fallback, {_SettingsCodec<T>? item, bool isUnique = false, bool isNonEmpty = false, bool sync = true}) {
+    final key = _SettingsListKey<T>._(this, name, _ProtectedList(fallback), _ListCodec(item, isUnique: isUnique, isNonEmpty: isNonEmpty), sync);
     key._load(_raw[name]);
     return _keys[name] = key;
   }
@@ -548,13 +549,15 @@ class _ObjectCodec<T> extends _SettingsCodec<T> {
 class _ListCodec<T> extends _SettingsCodec<_ProtectedList<T>> {
   final _SettingsCodec<T>? item;
   final bool isUnique;
-  const _ListCodec(this.item, {this.isUnique = false});
+  final bool isNonEmpty;
+  const _ListCodec(this.item, {this.isUnique = false, this.isNonEmpty = false});
 
   @override
   _ProtectedList<T>? decode(dynamic json) {
     if (json is! List) return null;
     final items = _decodeItems(json, item);
     final list = isUnique ? items.toSet().toList() : items.toList();
+    if (isNonEmpty && list.isEmpty) return null;
     return _ProtectedList(list);
   }
 

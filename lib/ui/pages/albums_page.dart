@@ -77,7 +77,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
               tab: libraryTab,
               header: Obx(
                 (context) {
-                  final sort = settings.albumSort.valueR;
+                  final sort = settings.albumSorts.valueR.first;
                   final sortReverse = settings.albumSortReversed.valueR;
 
                   final finalAlbumsLength = finalAlbums.length;
@@ -144,7 +144,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     (context) {
                       settings.albumListTileHeight.valueR;
 
-                      final sort = settings.albumSort.valueR;
+                      final sort = settings.albumSorts.valueR.first;
                       final sortTextIsUseless =
                           sort == GroupSortType.album ||
                           sort == GroupSortType.year ||

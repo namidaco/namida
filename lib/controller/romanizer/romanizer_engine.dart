@@ -44,25 +44,26 @@ class RomanizerEngine {
   static bool containsKana(String text) => _scan(text) & _kana != 0;
   static bool needsRomanization(String text) => _scan(text) != 0;
 
+  static bool scriptsNeedDictionary(int scripts) => scripts & _han != 0;
+
   static int _scan(String text) {
     var flags = 0;
     final length = text.length;
     for (var i = 0; i < length; i++) {
       final c = text.codeUnitAt(i);
       if (c < 0x0370) continue;
-      if (c < 0x3005) {
-        if (_isAlphabeticScript(c)) flags |= _alphabetic;
-        continue;
-      }
-      if (c >= 0x3041 && c <= 0x30FF) {
-        flags |= _kana;
-      } else if ((c >= 0x3400 && c <= 0x9FFF) || c == 0x3005) {
-        flags |= _han;
-      } else if (c >= 0xAC00 && c <= 0xD7A3) {
-        flags |= _hangul;
-      }
+      flags |= scriptOf(c);
     }
     return flags;
+  }
+
+  static int scriptOf(int c) {
+    if (c < 0x0370) return 0;
+    if (c < 0x3005) return _isAlphabeticScript(c) ? _alphabetic : 0;
+    if (c >= 0x3041 && c <= 0x30FF) return _kana;
+    if ((c >= 0x3400 && c <= 0x9FFF) || c == 0x3005) return _han;
+    if (c >= 0xAC00 && c <= 0xD7A3) return _hangul;
+    return 0;
   }
 
   /// Returns the same instance if there is nothing to romanize.

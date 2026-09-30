@@ -4,12 +4,14 @@ import 'package:lrc/lrc.dart';
 import 'package:rhttp/rhttp.dart';
 
 import 'package:namida/class/http_response_wrapper.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/sort_key.dart';
 import 'package:namida/core/utils.dart';
 
 // by claude
@@ -71,9 +73,18 @@ class Romanizer {
     }
   }
 
+  bool get hasRomanizableSortText => SortKey.seenScripts != 0;
+
+  bool get sortingNeedsDictionary => RomanizerEngine.scriptsNeedDictionary(SortKey.seenScripts);
+
   void setSortingEnabled(bool enabled) {
     settings.romanizeSorting.save(enabled);
-    if (enabled && !isDictionaryInstalled.value) downloadDictionary();
+    if (enabled && !isDictionaryInstalled.value && sortingNeedsDictionary) downloadDictionary();
+    Indexer.inst.resortAllAfterSortKeysChange();
+  }
+
+  void _resortIfSortingEnabled() {
+    if (settings.romanizeSorting.value) Indexer.inst.resortAllAfterSortKeysChange();
   }
 
   Future<bool> downloadDictionary({bool enableLyrics = false}) async {
@@ -114,6 +125,7 @@ class Romanizer {
       _sortingCache.clear();
       isDictionaryInstalled.value = true;
       _refreshLyrics();
+      _resortIfSortingEnabled();
       return true;
     } catch (_) {
       return false;
@@ -144,6 +156,7 @@ class Romanizer {
     _loadAttempted = false;
     isDictionaryInstalled.value = false;
     _refreshLyrics();
+    _resortIfSortingEnabled();
     try {
       await Directory(AppDirs.ROMANIZATION).delete(recursive: true);
     } catch (_) {}

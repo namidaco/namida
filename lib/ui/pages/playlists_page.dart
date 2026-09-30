@@ -288,12 +288,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     if (_isReordering) {
       await PlaylistController.inst.waitForPlaylistsLoad;
       PlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
-      if (settings.playlistSort.value != GroupSortType.custom || settings.playlistSortReversed.value) {
+      if (settings.playlistSorts.value.first != GroupSortType.custom || settings.playlistSortReversed.value) {
         // -- for consistent order while enabling/disabling
-        settings.transaction(() {
-          settings.playlistSort.save(GroupSortType.custom);
-          settings.playlistSortReversed.save(false);
-        });
+        settings.updateGroupSortingAll(MediaType.playlist, const [GroupSortType.custom], false);
         PlaylistController.inst.sortPlaylists();
       }
     }
@@ -404,7 +401,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
                     disableSorting: tracksToAdd != null && tracksToAdd.isNotEmpty,
                     sortByMenuWidget: SortByMenu(
-                      title: settings.playlistSort.valueR.toText(),
+                      title: settings.playlistSorts.valueR.first.toText(),
                       popupMenuChild: const SortByMenuPlaylist(),
                       isCurrentlyReversed: settings.playlistSortReversed.valueR,
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
@@ -725,8 +722,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 onReorderStart: (index) => super.enablePullToRefresh = false,
                                 onReorderEnd: (index) => super.enablePullToRefresh = true,
                                 onReorder: (oldIndex, newIndex) async {
-                                  if (settings.playlistSort.value != GroupSortType.custom) {
-                                    settings.playlistSort.save(GroupSortType.custom);
+                                  if (settings.playlistSorts.value.first != GroupSortType.custom) {
+                                    settings.playlistSorts.replace(const [GroupSortType.custom]);
                                   }
                                   PlaylistController.inst.onPlaylistReorder(oldIndex, newIndex);
                                 },
@@ -762,8 +759,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               ),
                             )
                           : ObxO(
-                              rx: settings.playlistSort,
-                              builder: (context, sort) {
+                              rx: settings.playlistSorts,
+                              builder: (context, sorts) {
+                                final sort = sorts.first;
                                 final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
                                 final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 

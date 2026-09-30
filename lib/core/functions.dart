@@ -48,7 +48,9 @@ import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -71,7 +73,7 @@ class NamidaOnTaps {
       }
     }
     final albumIdsFinalList = albumIdsMap.entries.toFixedList();
-    SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSort.value, settings.albumSortReversed.value);
+    SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSorts.value, settings.albumSortReversed.value);
 
     final albumIds = <AlbumIdentifierWrapper>[];
     final singlesIds = <AlbumIdentifierWrapper>[];
@@ -280,6 +282,8 @@ class NamidaOnTaps {
       currentSorts: settings.mediaItemsTrackSorting.value[media] ?? [],
       currentReverse: settings.mediaItemsTrackSortingReverse.value[media] ?? false,
       allowCustom: false,
+      withSortKeyOptions: true,
+      prefixFiltersOf: SortOptionsCards.prefixFiltersOfTracks,
       onSortChange: (activeSorters) {
         settings.mediaItemsTrackSorting.update((sorting) => sorting[media] = activeSorters);
       },
@@ -288,6 +292,45 @@ class NamidaOnTaps {
       },
       onDone: () {
         Indexer.inst.sortMediaTracksSubLists([media]);
+      },
+    );
+  }
+
+  void onGroupSortIconTap(MediaType media) {
+    final sorting = settings.groupSortingOf(media);
+    final availableSorts = switch (media) {
+      MediaType.album => GroupSortType.forAlbums(),
+      MediaType.artist || MediaType.albumArtist || MediaType.composer => GroupSortType.forArtists(media),
+      MediaType.genre || MediaType.style => GroupSortType.forGenres(),
+      MediaType.playlist => GroupSortType.forPlaylists(),
+      MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.mood || MediaType.tag || MediaType.rating => null,
+    };
+    if (sorting == null || availableSorts == null) return;
+    final allSorts = availableSorts.where((e) => e != GroupSortType.shuffle && e != GroupSortType.custom).toList();
+    final defaultSorts = [allSorts.first];
+    final currentSortsValid = sorting.sorts.where(allSorts.contains).toList();
+    final currentSorts = currentSortsValid.isEmpty ? defaultSorts : currentSortsValid;
+    final isPlaylists = media == MediaType.playlist;
+
+    List<GroupSortType> newSorts = currentSorts;
+    bool newReverse = sorting.isReverse;
+
+    return _onSubPageSortIconTap<GroupSortType>(
+      minimumItems: 1,
+      defaultSorts: defaultSorts,
+      allSortsList: allSorts,
+      sortToText: (sort) => sort.toText(),
+      sortToIcon: (sort) => sort.toIcon(),
+      currentSorts: currentSorts,
+      currentReverse: sorting.isReverse,
+      allowCustom: false,
+      withSortKeyOptions: true,
+      prefixFiltersOf: isPlaylists ? null : SortOptionsCards.prefixFiltersOfGroups,
+      onSortChange: (activeSorters) => newSorts = activeSorters,
+      onSortReverseChange: (reverse) => newReverse = reverse,
+      onDone: () {
+        final didChange = newReverse != sorting.isReverse || newSorts.didChangeFrom(sorting.sorts, ordered: true);
+        if (didChange) SearchSortController.inst.sortMedia(media, groupSorts: newSorts, reverse: newReverse);
       },
     );
   }
@@ -394,6 +437,8 @@ class NamidaOnTaps {
     required String Function(S sort) sortToText,
     required IconData Function(S sort) sortToIcon,
     required bool allowCustom,
+    bool withSortKeyOptions = false,
+    Set<TrackSearchFilter> Function(List<S> sorts)? prefixFiltersOf,
     required void Function(List<S> activeSorters) onSortChange,
     required void Function(bool reverse) onSortReverseChange,
     required void Function() onDone,
@@ -442,18 +487,23 @@ class NamidaOnTaps {
           child: Column(
             children: [
               ?header,
-              ObxO(
-                rx: isReverse,
-                builder: (context, reverse) => ListTileWithCheckMark(
-                  title: lang.reverseOrder,
-                  active: reverse,
-                  onTap: () {
-                    onSortReverseChange(!reverse);
-                    isReverse.value = !reverse;
-                  },
-                ),
+              Obx(
+                (context) {
+                  final reverse = isReverse.valueR;
+                  final prefixFilters = prefixFiltersOf?.call(sorters.valueR);
+                  return SortOptionsCards(
+                    isReversed: reverse,
+                    onReverseTap: () {
+                      onSortReverseChange(!reverse);
+                      isReverse.value = !reverse;
+                    },
+                    withSortKeyOptions: withSortKeyOptions,
+                    prefixFilters: prefixFilters,
+                    showTitles: true,
+                  );
+                },
               ),
-              const SizedBox(height: 12.0),
+              const SizedBox(height: 8.0),
               Expanded(
                 child: Obx(
                   (context) => NamidaListView(

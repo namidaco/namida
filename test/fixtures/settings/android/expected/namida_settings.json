@@ -95,13 +95,21 @@
   "tracksSortSearch": "mostPlayed",
   "tracksSortSearchReversed": false,
   "tracksSortSearchIsAuto_v2": true,
-  "albumSort": "numberOfTracks",
+  "albumSorts": [
+    "numberOfTracks"
+  ],
   "albumSortReversed": true,
-  "artistSort": "numberOfTracks",
+  "artistSorts": [
+    "numberOfTracks"
+  ],
   "artistSortReversed": true,
-  "genreSort": "genresList",
+  "genreSorts": [
+    "genresList"
+  ],
   "genreSortReversed": false,
-  "playlistSort": "dateModified",
+  "playlistSorts": [
+    "dateModified"
+  ],
   "playlistSortReversed": false,
   "ytPlaylistSort": "dateModified",
   "ytPlaylistSortReversed": true,

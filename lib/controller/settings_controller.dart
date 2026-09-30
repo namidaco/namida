@@ -144,13 +144,13 @@ class _SettingsController extends _SettingsKeysWriter {
   late final tracksSortSearch = _keyEnum('tracksSortSearch', isKuru ? SortType.mostPlayed : SortType.title, SortType.values);
   late final tracksSortSearchReversed = _key('tracksSortSearchReversed', false);
   late final tracksSortSearchIsAuto = _key('tracksSortSearchIsAuto_v2', true);
-  late final albumSort = _keyEnum('albumSort', isKuru ? GroupSortType.numberOfTracks : GroupSortType.album, GroupSortType.values);
+  late final albumSorts = _keyList('albumSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final albumSortReversed = _key('albumSortReversed', isKuru ? true : false);
-  late final artistSort = _keyEnum('artistSort', isKuru ? GroupSortType.numberOfTracks : GroupSortType.artistsList, GroupSortType.values);
+  late final artistSorts = _keyList('artistSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final artistSortReversed = _key('artistSortReversed', isKuru ? true : false);
-  late final genreSort = _keyEnum('genreSort', GroupSortType.genresList, GroupSortType.values);
+  late final genreSorts = _keyList('genreSorts', const [GroupSortType.genresList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final genreSortReversed = _key('genreSortReversed', false);
-  late final playlistSort = _keyEnum('playlistSort', GroupSortType.dateModified, GroupSortType.values);
+  late final playlistSorts = _keyList('playlistSorts', const [GroupSortType.dateModified], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final playlistSortReversed = _key('playlistSortReversed', false);
   late final playlistsGroupByTags = _key('playlistsGroupByTags', false);
   late final ytPlaylistSort = _keyEnum('ytPlaylistSort', GroupSortType.dateModified, GroupSortType.values);
@@ -467,6 +467,14 @@ class _SettingsController extends _SettingsKeysWriter {
     }
   }
 
+  @override
+  void _migrateKeys() {
+    for (final name in const ['albumSort', 'artistSort', 'genreSort', 'playlistSort']) {
+      final listName = '${name}s';
+      _migrateKey(name, listName, (json) => json is String && _raw[listName] == null ? [json] : null);
+    }
+  }
+
   void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {
     if (allsorts == null && isReverse == null) return;
     final didChangeSorts = allsorts.didChangeFrom(mediaItemsTrackSorting.value[media], ordered: true);
@@ -478,6 +486,35 @@ class _SettingsController extends _SettingsKeysWriter {
       if (isReverse != null) mediaItemsTrackSortingReverse.update((reverse) => reverse[media] = isReverse);
     });
   }
+
+  void updateGroupSortingAll(MediaType media, List<GroupSortType> allSorts, bool isReverse) {
+    final keys = _groupSortingKeysOf(media);
+    if (keys == null) return;
+    final (sortsKey, reverseKey) = keys;
+    final didChangeSorts = allSorts.didChangeFrom(sortsKey.value, ordered: true);
+    final didChangeReverse = isReverse != reverseKey.value;
+    if (!didChangeSorts && !didChangeReverse) return;
+
+    transaction(() {
+      if (didChangeSorts) sortsKey.replace(allSorts);
+      if (didChangeReverse) reverseKey.save(isReverse);
+    });
+  }
+
+  ({List<GroupSortType> sorts, bool isReverse})? groupSortingOf(MediaType media) {
+    final keys = _groupSortingKeysOf(media);
+    if (keys == null) return null;
+    final (sortsKey, reverseKey) = keys;
+    return (sorts: sortsKey.value, isReverse: reverseKey.value);
+  }
+
+  (_SettingsListKey<GroupSortType>, _SettingsKey<bool>)? _groupSortingKeysOf(MediaType media) => switch (media) {
+    MediaType.album => (albumSorts, albumSortReversed),
+    MediaType.artist || MediaType.albumArtist || MediaType.composer => (artistSorts, artistSortReversed),
+    MediaType.genre || MediaType.style => (genreSorts, genreSortReversed),
+    MediaType.playlist => (playlistSorts, playlistSortReversed),
+    MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.mood || MediaType.tag || MediaType.rating => null,
+  };
 
   void updateActiveTrSearch({required bool tracks, required bool videos}) {
     activeTrSearch.update(

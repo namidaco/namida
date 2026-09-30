@@ -89,7 +89,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
           child: Obx(
             (context) {
               final genreType = settings.activeGenreType.valueR;
-              final sort = settings.genreSort.valueR;
+              final sort = settings.genreSorts.valueR.first;
               final sortReverse = settings.genreSortReversed.valueR;
 
               final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;

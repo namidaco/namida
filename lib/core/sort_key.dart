@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:namida/controller/romanizer/romanizer_engine.dart';
+
 /// Lower case key that ignores diacritics & orders digit runs by value, comparable using [String.compareTo].
 ///
 /// by claude
@@ -31,6 +33,9 @@ class SortKey {
 
   static var _buffer = Uint16List(256);
 
+  static var _seenScripts = 0;
+  static int get seenScripts => _seenScripts;
+
   static String of(String text) {
     final length = text.length;
     var i = 0;
@@ -44,6 +49,7 @@ class SortKey {
     if (_buffer.length < length * 2 + 2) _buffer = Uint16List(length * 4 + 2);
     final buffer = _buffer;
     var outputLength = 0;
+    var scripts = 0;
     for (var k = 0; k < i; k++) {
       buffer[outputLength++] = text.codeUnitAt(k);
     }
@@ -94,9 +100,11 @@ class SortKey {
       } else if (codeUnit >= _latinExtendedAdditionalStart && codeUnit <= _latinExtendedAdditionalEnd) {
         buffer[outputLength++] = _baseLettersOfLatinExtendedAdditional.codeUnitAt(codeUnit - _latinExtendedAdditionalStart);
       } else {
+        scripts |= RomanizerEngine.scriptOf(codeUnit);
         buffer[outputLength++] = codeUnit;
       }
     }
+    _seenScripts |= scripts;
     return String.fromCharCodes(buffer, 0, outputLength).toLowerCase();
   }
 }

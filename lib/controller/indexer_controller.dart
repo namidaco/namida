@@ -302,7 +302,8 @@ class Indexer<T extends Track> {
     tracksInfoList.refresh();
   }
 
-  void resortAllAfterIgnoreCommonPrefixChange() async {
+  void resortAllAfterSortKeysChange() async {
+    SearchSortController.inst.disposeMediaResources(MediaType.track);
     await _afterIndexing();
     tracksInfoList.refresh();
   }
@@ -474,13 +475,10 @@ class Indexer<T extends Track> {
       for (final e in MediaType.values) {
         final sortRequiresHistory = switch (e) {
           MediaType.track => settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull?.requiresHistory ?? false,
-          MediaType.album => settings.albumSort.value.requiresHistory,
-          MediaType.artist => settings.artistSort.value.requiresHistory,
-          MediaType.albumArtist => settings.artistSort.value.requiresHistory,
-          MediaType.composer => settings.artistSort.value.requiresHistory,
-          MediaType.genre => settings.genreSort.value.requiresHistory,
-          MediaType.style => settings.genreSort.value.requiresHistory,
-          MediaType.playlist => settings.playlistSort.value.requiresHistory,
+          MediaType.album => settings.albumSorts.value.any((e) => e.requiresHistory),
+          MediaType.artist || MediaType.albumArtist || MediaType.composer => settings.artistSorts.value.any((e) => e.requiresHistory),
+          MediaType.genre || MediaType.style => settings.genreSorts.value.any((e) => e.requiresHistory),
+          MediaType.playlist => settings.playlistSorts.value.any((e) => e.requiresHistory),
           MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstOrNull?.requiresHistory ?? false,
           MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstOrNull?.requiresHistory ?? false,
           MediaType.folderVideo => settings.mediaItemsTrackSorting.value[MediaType.folderVideo]?.firstOrNull?.requiresHistory ?? false,

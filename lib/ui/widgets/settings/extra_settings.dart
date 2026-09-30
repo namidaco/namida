@@ -437,10 +437,7 @@ class ExtrasSettings extends SettingSubpageProvider {
 
                   void resortIfNecessary() {
                     final didChange = settings.ignoreCommonPrefixForTypes.value.didChangeFrom(original);
-                    if (didChange) {
-                      Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
-                      SearchSortController.inst.disposeMediaResources(MediaType.track);
-                    }
+                    if (didChange) Indexer.inst.resortAllAfterSortKeysChange();
                   }
 
                   NamidaNavigator.inst.navigateDialog(
@@ -703,21 +700,7 @@ class ExtrasSettings extends SettingSubpageProvider {
                       size: 16.0,
                     ),
                     onTap: () {
-                      final wasRomanizingSorting = settings.romanizeSorting.value;
-                      final wasDictionaryInstalled = Romanizer.inst.isDictionaryInstalled.value;
-
-                      void resortIfNecessary() {
-                        final isRomanizingSorting = settings.romanizeSorting.value;
-                        final didChange =
-                            wasRomanizingSorting != isRomanizingSorting || (isRomanizingSorting && wasDictionaryInstalled != Romanizer.inst.isDictionaryInstalled.value);
-                        if (didChange) {
-                          Indexer.inst.resortAllAfterIgnoreCommonPrefixChange();
-                          SearchSortController.inst.disposeMediaResources(MediaType.track);
-                        }
-                      }
-
                       NamidaNavigator.inst.navigateDialog(
-                        onDismissing: resortIfNecessary,
                         dialog: CustomBlurryDialog(
                           title: lang.romanization,
                           actions: const [
