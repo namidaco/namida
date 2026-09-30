@@ -41,18 +41,18 @@ SnackbarController snackyy({
   final backgroundColor = context?.theme.scaffoldBackgroundColor.withOpacityExt(0.3) ?? Colors.black54;
   final itemsColor = context?.theme.colorScheme.onSurface.withOpacityExt(0.7) ?? Colors.white54;
   final accentColor = context?.theme.colorScheme.primary ?? itemsColor;
-  final countdownBaseColor = isError ? Colors.red : leftBarIndicatorColor ?? accentColor;
-  final countdownColor = countdownBaseColor.withOpacityExt(0.35);
+  final hasAction = button != null;
+  final isShortDisplay = displayDuration.milliseconds <= SnackDisplayDuration.mediumLow.milliseconds;
+  final isReducedAnimations = WidgetsBinding.instance.disableAnimations;
+  final shouldShowCountdown = hasAction && !isShortDisplay && !isReducedAnimations;
 
   final dismissHintEndMS = animationDurationMS + NamSnackBar.kDismissHintDuration.inMilliseconds;
   final dismissHintCount = settings.tutorial.snackbarDismissHintCount.value;
   final shouldHintDismiss = dismissHintCount < _kSnackbarDismissHintMaxCount && displayDuration.milliseconds >= dismissHintEndMS;
   if (shouldHintDismiss) settings.tutorial.snackbarDismissHintCount.save(dismissHintCount + 1);
 
-  // -- add extra duration to older snackbars,
-  // -- so that they don't close while the current one is covering or drawing attention
   final displayDurationEffective = Duration(milliseconds: displayDuration.milliseconds);
-  _snackbarsStackManager.addDurationForGenericSnackbars(displayDurationEffective);
+  final animationDuration = Duration(milliseconds: animationDurationMS);
 
   TextStyle getTextStyle(FontWeight fontWeight, double size, {bool action = false}) => TextStyle(
     fontWeight: fontWeight,
@@ -182,10 +182,34 @@ SnackbarController snackyy({
           child: content,
         )
       : content;
+
+  final Widget snackbarBody;
+  if (shouldShowCountdown) {
+    final countdownBaseColor = isError ? itemsColor : leftBarIndicatorColor ?? accentColor;
+    final countdownColor = countdownBaseColor.withOpacityExt(0.35);
+    snackbarBody = Stack(
+      children: [
+        contentWithIndicator,
+        Positioned(
+          left: 0.0,
+          right: 0.0,
+          bottom: 0.0,
+          height: 2.0,
+          child: _SnackbarCountdownLine(
+            color: countdownColor,
+            fadeInDelay: animationDuration,
+          ),
+        ),
+      ],
+    );
+  } else {
+    snackbarBody = contentWithIndicator;
+  }
+
   final snackbar = NamSnackBar(
     margin: margin,
     duration: displayDurationEffective,
-    animationDuration: Duration(milliseconds: animationDurationMS),
+    animationDuration: animationDuration,
     alignment: Alignment.centerLeft,
     top: top,
     forwardAnimationCurve: Curves.fastLinearToSlowEaseIn,
@@ -218,20 +242,7 @@ SnackbarController snackyy({
                 ]
               : null,
         ),
-        child: Stack(
-          children: [
-            contentWithIndicator,
-            Positioned(
-              left: 0.0,
-              right: 0.0,
-              bottom: 0.0,
-              height: 2.0,
-              child: _SnackbarCountdownLine(
-                color: countdownColor,
-              ),
-            ),
-          ],
-        ),
+        child: snackbarBody,
       ),
     ),
   );
@@ -244,7 +255,7 @@ SnackbarController snackyy({
   }
   snackbarController.show().whenComplete(
     () {
-      _snackbarsStackManager.remove(type, snackbarController);
+      _snackbarsStackManager.remove(snackbarController);
       if (mergedSnackbar != null) {
         _mergedSnackbars.remove(mergedSnackbar.merge._key);
         mergedSnackbar.dispose();
@@ -255,33 +266,40 @@ SnackbarController snackyy({
 }
 
 class _SnackbarStackManager {
-  final _snackbarsStackMap = <SnackbarType?, List<SnackbarController>>{};
+  final _topStack = <_StackedSnackbar>[];
+  final _bottomStack = <_StackedSnackbar>[];
+
+  List<_StackedSnackbar> _getStack(SnackbarController controller) => controller.snackbar.top ? _topStack : _bottomStack;
 
   void add(SnackbarType? type, SnackbarController controller) {
-    final list = _snackbarsStackMap[type] ??= [];
+    final stack = _getStack(controller);
 
     // -- X close previous snackbars of the same type (null excluded)
     // -- but sadly can result in snackbars instantly nuked,
-    // -- main issue is better solved inside [addDurationForGenericSnackbars]
-    // if (type != null && list.isNotEmpty) {
-    //   for (final s in list) {
-    //     s.close();
+    // -- main issue is better solved inside [_refreshCovered]
+    // if (type != null) {
+    //   for (final s in stack) {
+    //     if (s.type == type) s.controller.close();
     //   }
     // }
-    list.add(controller);
+    stack.add((type: type, controller: controller));
+    _refreshCovered(stack);
   }
 
-  void remove(SnackbarType? type, SnackbarController controller) {
-    _snackbarsStackMap[type]?.remove(controller);
+  void remove(SnackbarController controller) {
+    final stack = _getStack(controller);
+    stack.removeWhere((s) => s.controller == controller);
+    _refreshCovered(stack);
   }
 
-  void addDurationForGenericSnackbars(Duration displayDurationEffective) {
-    for (final e in _snackbarsStackMap.entries) {
-      if (e.key == null) {
-        for (final s in e.value) {
-          s.addDuration(displayDurationEffective);
-        }
-      }
+  void _refreshCovered(List<_StackedSnackbar> stack) {
+    final lastIndex = stack.length - 1;
+    for (int i = 0; i <= lastIndex; i++) {
+      final s = stack[i];
+      final waitsWhileCovered = s.type == null;
+      if (!waitsWhileCovered) continue;
+      final isCovered = i != lastIndex;
+      s.controller.setCovered(isCovered);
     }
   }
 }
@@ -382,10 +400,43 @@ class _SnackbarMergedMessageState extends State<_SnackbarMergedMessage> with Sin
   }
 }
 
-class _SnackbarCountdownLine extends StatelessWidget {
+class _SnackbarCountdownLine extends StatefulWidget {
   final Color color;
+  final Duration fadeInDelay;
 
-  const _SnackbarCountdownLine({required this.color});
+  const _SnackbarCountdownLine({
+    required this.color,
+    required this.fadeInDelay,
+  });
+
+  @override
+  State<_SnackbarCountdownLine> createState() => _SnackbarCountdownLineState();
+}
+
+class _SnackbarCountdownLineState extends State<_SnackbarCountdownLine> with SingleTickerProviderStateMixin {
+  static const _kFadeInDuration = Duration(milliseconds: 1200);
+
+  late final AnimationController _fadeInController;
+  late final CurvedAnimation _fadeIn;
+
+  @override
+  void initState() {
+    super.initState();
+    final fadeInDelay = widget.fadeInDelay;
+    final totalDuration = fadeInDelay + _kFadeInDuration;
+    final fadeInStart = fadeInDelay.inMicroseconds / totalDuration.inMicroseconds;
+    final fadeInCurve = Interval(fadeInStart, 1.0, curve: Curves.easeIn);
+    _fadeInController = AnimationController(duration: totalDuration, vsync: this);
+    _fadeIn = CurvedAnimation(parent: _fadeInController, curve: fadeInCurve);
+    _fadeInController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeIn.dispose();
+    _fadeInController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -396,7 +447,8 @@ class _SnackbarCountdownLine extends StatelessWidget {
       child: CustomPaint(
         painter: _SnackbarCountdownPainter(
           countdown: countdown,
-          color: color,
+          fadeIn: _fadeIn,
+          color: widget.color,
           textDirection: textDirection,
         ),
       ),
@@ -406,19 +458,25 @@ class _SnackbarCountdownLine extends StatelessWidget {
 
 class _SnackbarCountdownPainter extends CustomPainter {
   final Animation<double> countdown;
+  final Animation<double> fadeIn;
   final Color color;
   final TextDirection textDirection;
 
   _SnackbarCountdownPainter({
     required this.countdown,
+    required this.fadeIn,
     required this.color,
     required this.textDirection,
-  }) : super(repaint: countdown);
+  }) : super(repaint: Listenable.merge([countdown, fadeIn]));
 
-  late final _paint = Paint()..color = color;
+  final _paint = Paint();
 
   @override
   void paint(Canvas canvas, Size size) {
+    final opacity = fadeIn.value;
+    if (opacity == 0.0) return;
+    final paintColor = opacity == 1.0 ? color : color.withOpacityExt(color.a * opacity);
+    _paint.color = paintColor;
     final remainingWidth = size.width * countdown.value;
     final startX = textDirection == TextDirection.ltr ? 0.0 : size.width - remainingWidth;
     final rect = Rect.fromLTWH(startX, 0.0, remainingWidth, size.height);
@@ -427,7 +485,7 @@ class _SnackbarCountdownPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SnackbarCountdownPainter oldDelegate) {
-    return countdown != oldDelegate.countdown || color != oldDelegate.color || textDirection != oldDelegate.textDirection;
+    return countdown != oldDelegate.countdown || fadeIn != oldDelegate.fadeIn || color != oldDelegate.color || textDirection != oldDelegate.textDirection;
   }
 }
 
@@ -488,3 +546,5 @@ enum SnackbarMergeGroup {
 }
 
 typedef _SnackbarMergeKey = (SnackbarMergeGroup, String);
+
+typedef _StackedSnackbar = ({SnackbarType? type, SnackbarController controller});

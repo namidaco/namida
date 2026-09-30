@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart' show EqualizerBandType, EqualizerChannel;
@@ -82,6 +83,7 @@ import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
+import 'package:namida/ui/widgets/snackbar_test_button.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -1747,6 +1749,8 @@ extension RouteUtils on NamidaRoute {
         ),
         shouldShow: docsLink != null,
       ),
+
+      if (kDebugMode) const SnackbarTestAppBarIcon(),
 
       // -- Settings Icon
       _getAnimatedCrossFade(
