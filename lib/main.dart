@@ -1,6 +1,7 @@
 // ignore_for_file: depend_on_referenced_packages
 
 import 'dart:async';
+import 'dart:ffi' as ffi;
 import 'dart:io';
 import 'dart:isolate';
 import 'dart:ui';
@@ -503,6 +504,10 @@ class Namida extends StatefulWidget {
   State<Namida> createState() => _NamidaState();
 
   static Future<Never> disposeAllResourcesAndExit() async {
+    await [
+      windowManager.hide(),
+      TrayController.instance?.dispose(),
+    ].executeAllAndSilentReportErrors();
     await Future.any(
       [
         // -- usually it takes few milliseconds, but limit to 2 seconds just in case.
@@ -510,23 +515,33 @@ class Namida extends StatefulWidget {
         Namida._disposeAllResources().ignoreError(),
       ],
     );
+    if (Platform.isWindows) _terminateProcessWindows();
     await windowManager.destroy().ignoreError();
-    return exit(0); // -- sometimes it takes seconds to actually close on windows, this forces exiting the process
+    return exit(0); // -- destroy alone can take seconds to actually close the process
+  }
+
+  /// `exit` (ExitProcess) runs dll detach routines while the engine & gpu threads are still alive, some gpu drivers hang or crash there.
+  static void _terminateProcessWindows() {
+    final kernel32 = ffi.DynamicLibrary.open('kernel32.dll');
+    final getCurrentProcess = kernel32.lookupFunction<ffi.IntPtr Function(), int Function()>('GetCurrentProcess');
+    final terminateProcess = kernel32.lookupFunction<ffi.Int32 Function(ffi.IntPtr process, ffi.Uint32 exitCode), int Function(int process, int exitCode)>('TerminateProcess');
+    final currentProcess = getCurrentProcess();
+    terminateProcess(currentProcess, 0);
   }
 
   static Future<void> _disposeAllResources() async {
+    // -- before the dbs, it saves the last position into them
+    await Player.inst.disposeForExit().catchError(logger.report);
     YoutubeInfoController.dispose();
     await [
-      logger.dispose(),
-      Player.inst.pause().whenComplete(Player.inst.dispose),
       PortsProvider.disposeAll(),
       ShortcutKeyData.disposeAllHotkeys(),
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
       SMTCController.instance?.dispose(),
       AppSingleInstanceBase.instance?.dispose(),
-      TrayController.instance?.dispose(),
     ].executeAllAndSilentReportErrors();
+    await logger.dispose();
   }
 
   static final shouldAddEdgeAbsorbers = Platform.isAndroid || Platform.isIOS;

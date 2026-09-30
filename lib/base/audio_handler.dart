@@ -2300,7 +2300,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onItemLastPositionReport(Q? currentItem, int currentPositionMs) async {
+  Future<void> onItemLastPositionReport(Q? currentItem, int currentPositionMs) async {
     await currentItem?.execute(
       selectable: (finalItem) => _updateTrackLastPosition(finalItem.track, currentPositionMs),
       youtubeID: (finalItem) => _updateYoutubeIDLastPosition(finalItem, currentPositionMs),

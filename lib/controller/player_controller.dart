@@ -769,6 +769,15 @@ class Player {
     await _audioHandler.userPause();
   }
 
+  /// Pauses without the party gate, closing the app shouldn't pause the party for everyone.
+  Future<void> disposeForExit() async {
+    try {
+      await _audioHandler.pause(awaitLastPositionReport: true);
+    } finally {
+      await _audioHandler.onDispose();
+    }
+  }
+
   Future<void> dispose() async {
     await _audioHandler.onDispose();
   }
