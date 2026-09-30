@@ -30,6 +30,7 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 
 enum _ExtraSettingsKeys with SettingKeysBase {
@@ -1378,6 +1379,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   ),
                 ),
               ],
+              const BackgroundImagesFlagTile(),
               ObxO(
                 rx: settings.extra.keepVideoFrameOnSwitch,
                 builder: (context, keepVideoFrameOnSwitch) => CustomSwitchListTile(

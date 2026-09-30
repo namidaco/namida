@@ -42,6 +42,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     artistSinglesExpanded,
     artistsMapGraphLayout,
     ytStyleButtonSwitcher,
+    backgroundImages,
     lastPlayedIndex,
     ytAddToPlaylistsTabIndex,
     ytPlaylistsPageIndex,

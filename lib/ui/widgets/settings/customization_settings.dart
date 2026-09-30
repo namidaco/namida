@@ -104,7 +104,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.enableParallax: [lang.enableParallaxEffect],
     _CustomizationSettingsKeys.backgroundEffect: [lang.backgroundEffect, lang.seasonalEffectsSubtitle, ..._getEffectThemesTexts()],
     _CustomizationSettingsKeys.overlayEffect: [lang.overlayEffect, lang.overlayEffectSubtitle, ..._getEffectThemesTexts()],
-    _CustomizationSettingsKeys.wallpaper: [lang.wallpaper, lang.blur, lang.dimIntensity],
+    if (settings.extra.backgroundImages.value == true) _CustomizationSettingsKeys.wallpaper: [lang.wallpaper, lang.blur, lang.dimIntensity],
     _CustomizationSettingsKeys.displayRemainingDur: [lang.displayRemainingDurationInsteadOfTotal],
     _CustomizationSettingsKeys.displayActualPosition: [lang.displayActualPositionInsteadOfDifferenceWhileSeeking],
     _CustomizationSettingsKeys.brMultiplier: [lang.borderRadiusMultiplier],

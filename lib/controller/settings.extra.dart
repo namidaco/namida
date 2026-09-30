@@ -45,6 +45,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final artistSinglesExpanded = _key<bool?>('artistSinglesExpanded', null);
   late final artistsMapGraphLayout = _key<bool?>('artistsMapGraphLayout', null);
   late final ytStyleButtonSwitcher = _key<bool?>('ytStyleButtonSwitcher', null);
+  late final backgroundImages = _key<bool?>('backgroundImages', null);
 
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);
 

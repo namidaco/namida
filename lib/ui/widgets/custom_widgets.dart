@@ -5155,6 +5155,7 @@ class BackgroundWrapper extends StatelessWidget {
     final theme = context.theme;
     return Material(
       color: theme.scaffoldBackgroundColor,
+      clipBehavior: Clip.hardEdge,
       child: Stack(
         fit: StackFit.passthrough,
         children: [

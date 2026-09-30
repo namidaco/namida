@@ -277,18 +277,51 @@ class AppWallpaperTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    return CustomListTile(
-      bgColor: bgColor,
-      icon: Broken.gallery,
-      title: lang.wallpaper,
-      onTap: _openOptions,
-      trailing: ObxO(
-        rx: settings.appWallpaper,
-        builder: (context, path) => Text(
-          path == null ? lang.none : lang.custom,
-          style: textTheme.displayMedium,
-          textAlign: TextAlign.end,
-        ),
+    return ObxO(
+      rx: settings.extra.backgroundImages,
+      builder: (context, backgroundImages) {
+        if (backgroundImages != true) return const SizedBox();
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.gallery,
+          title: lang.wallpaper,
+          onTap: _openOptions,
+          trailing: ObxO(
+            rx: settings.appWallpaper,
+            builder: (context, path) => Text(
+              path == null ? lang.none : lang.custom,
+              style: textTheme.displayMedium,
+              textAlign: TextAlign.end,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class BackgroundImagesFlagTile extends StatelessWidget {
+  const BackgroundImagesFlagTile({super.key});
+
+  void _toggle(bool wasEnabled) {
+    if (!wasEnabled) return settings.extra.backgroundImages.save(true);
+    settings.transaction(() {
+      settings.extra.backgroundImages.save(false);
+      if (settings.playerBackground.value == PlayerBackground.image) settings.playerBackground.save(PlayerBackground.none);
+      _AppWallpaperOptions._removeImage();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.extra.backgroundImages,
+      builder: (context, backgroundImages) => CustomSwitchListTile(
+        icon: Broken.gallery,
+        value: backgroundImages ?? false,
+        onChanged: _toggle,
+        title: 'background_images'.toUpperCase(),
+        subtitle: '${lang.wallpaper} & ${lang.playerBackground}',
       ),
     );
   }
@@ -332,10 +365,11 @@ class _PlayerBackgroundOptions extends StatelessWidget {
       (context) {
         final source = settings.playerBackground.valueR;
         final imagePath = settings.playerBackgroundImage.valueR;
+        final backgroundImages = settings.extra.backgroundImages.valueR == true;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ...PlayerBackground.values.map(
+            ...PlayerBackground.values.where((e) => backgroundImages || e != PlayerBackground.image).map(
               (e) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 3.0),
                 child: ListTileWithCheckMark(
@@ -410,7 +444,7 @@ class _AppWallpaperOptions extends StatelessWidget {
     SussyBaka.monetize(onEnable: _pickImage);
   }
 
-  void _removeImage() {
+  static void _removeImage() {
     final path = settings.appWallpaper.value;
     if (path == null) return;
     settings.appWallpaper.reset();

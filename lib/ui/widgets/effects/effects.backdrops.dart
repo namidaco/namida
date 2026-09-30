@@ -187,7 +187,10 @@ class _Backdrop extends StatelessWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            picture,
+            // -- blur spreads ~3 sigma past the box, pulse scales past it
+            ClipRect(
+              child: picture,
+            ),
             ColoredBox(
               color: scrimColor,
             ),

@@ -483,175 +483,173 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       lastPadding = EdgeInsets.only(bottom: pagePadding.bottom);
     }
 
-    Widget page = BackgroundWrapper(
-      child: PullToRefreshWidget(
-        state: this,
-        controller: _controller,
-        onRefresh: widget.onPullToRefresh == null
-            ? _fetchFeedSilent
-            : () => Future.wait([
-                _fetchFeedSilent(),
-                widget.onPullToRefresh!(),
-              ]),
-        child: ObxO(
-          rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
-          builder: (context, membership) => ObxO(
-            rx: YoutubeAccountController.current.activeAccountChannel,
-            builder: (context, activeAccountChannel) {
-              Widget? blockedPage;
-              if (widget.operation.requiresAccount) {
-                if (activeAccountChannel == null) {
-                  blockedPage = _BlockedPage(
-                    icon: Broken.profile_circle,
-                    title: lang.signInYouNeedAccountToViewPage,
-                    subtitle: null,
-                    buttonIcon: Broken.user_edit,
-                    buttonText: lang.manageYourAccounts,
-                    onButtonTap: const YoutubeAccountManagePage().navigate,
-                  );
-                } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
-                  blockedPage = _BlockedPage(
-                    icon: Broken.ticket_star,
-                    title: lang.operationRequiresMembership(name: MembershipType.cutie.name, operation: widget.operation.name),
-                    subtitle: lang.yourCurrentMembershipIs(name: (membership ?? MembershipType.unknown).name),
-                    buttonIcon: Broken.money_3,
-                    buttonText: lang.membershipManage,
-                    onButtonTap: const YoutubeManageSubscriptionPage().navigate,
-                    secondaryText: lang.learnMore,
-                    onSecondaryTap: () => NamidaLinkUtils.openLink(AppSocial.PATREON_BENEFITS_POST),
-                  );
-                }
+    Widget page = PullToRefreshWidget(
+      state: this,
+      controller: _controller,
+      onRefresh: widget.onPullToRefresh == null
+          ? _fetchFeedSilent
+          : () => Future.wait([
+              _fetchFeedSilent(),
+              widget.onPullToRefresh!(),
+            ]),
+      child: ObxO(
+        rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
+        builder: (context, membership) => ObxO(
+          rx: YoutubeAccountController.current.activeAccountChannel,
+          builder: (context, activeAccountChannel) {
+            Widget? blockedPage;
+            if (widget.operation.requiresAccount) {
+              if (activeAccountChannel == null) {
+                blockedPage = _BlockedPage(
+                  icon: Broken.profile_circle,
+                  title: lang.signInYouNeedAccountToViewPage,
+                  subtitle: null,
+                  buttonIcon: Broken.user_edit,
+                  buttonText: lang.manageYourAccounts,
+                  onButtonTap: const YoutubeAccountManagePage().navigate,
+                );
+              } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
+                blockedPage = _BlockedPage(
+                  icon: Broken.ticket_star,
+                  title: lang.operationRequiresMembership(name: MembershipType.cutie.name, operation: widget.operation.name),
+                  subtitle: lang.yourCurrentMembershipIs(name: (membership ?? MembershipType.unknown).name),
+                  buttonIcon: Broken.money_3,
+                  buttonText: lang.membershipManage,
+                  onButtonTap: const YoutubeManageSubscriptionPage().navigate,
+                  secondaryText: lang.learnMore,
+                  onSecondaryTap: () => NamidaLinkUtils.openLink(AppSocial.PATREON_BENEFITS_POST),
+                );
               }
+            }
 
-              return blockedPage != null
-                  ? Padding(
-                      padding: pagePadding,
-                      child: SuperSmoothListView(
-                        shrinkWrap: true,
-                        children: [
-                          if (widget.pageHeader != null) widget.pageHeader!,
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: header,
-                          ),
-                          const SizedBox(height: 24.0),
-                          blockedPage,
-                        ],
-                      ),
-                    )
-                  : ObxO(
-                      rx: _isLoadingCurrentFeed,
-                      builder: (context, isLoadingCurrentFeed) => ObxO(
-                        rx: _currentFeed,
-                        builder: (context, listItems) {
-                          return LazyLoadListView(
-                            onReachingEnd: _fetchFeedNext,
-                            scrollController: _controller,
-                            listview: (controller) {
-                              final customScrollView = SmoothCustomScrollView(
-                                scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
-                                controller: controller,
-                                slivers: [
-                                  if (!widget.isHorizontal && widget.pageHeader != null)
-                                    SliverToBoxAdapter(
-                                      child: widget.pageHeader,
-                                    ),
-                                  SliverPadding(padding: firstPadding),
-                                  if (!widget.isHorizontal)
-                                    SliverToBoxAdapter(
-                                      child: header,
-                                    ),
-                                  if (searchBoxManager != null && !widget.isHorizontal)
-                                    SliverToBoxAdapter(
-                                      child: ObxO(
-                                        rx: searchBoxManager.searchBoxVisible,
-                                        builder: (context, searchBoxVisible) => AnimatedShow(
-                                          show: searchBoxVisible,
-                                          duration: const Duration(milliseconds: 250),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                            child: Row(
-                                              children: [
-                                                const SizedBox(width: 12.0),
-                                                Expanded(
-                                                  child: SizedBox(
-                                                    height: 42.0,
-                                                    child: CustomTextField(
-                                                      focusNode: searchBoxManager.searchFocusNode,
-                                                      textFieldController: searchBoxManager.searchController,
-                                                      textFieldHintText: widget.searchHintText ?? '',
-                                                      onTextFieldValueChanged: searchBoxManager.updateSearchQuery,
-                                                    ),
+            return blockedPage != null
+                ? Padding(
+                    padding: pagePadding,
+                    child: SuperSmoothListView(
+                      shrinkWrap: true,
+                      children: [
+                        if (widget.pageHeader != null) widget.pageHeader!,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: header,
+                        ),
+                        const SizedBox(height: 24.0),
+                        blockedPage,
+                      ],
+                    ),
+                  )
+                : ObxO(
+                    rx: _isLoadingCurrentFeed,
+                    builder: (context, isLoadingCurrentFeed) => ObxO(
+                      rx: _currentFeed,
+                      builder: (context, listItems) {
+                        return LazyLoadListView(
+                          onReachingEnd: _fetchFeedNext,
+                          scrollController: _controller,
+                          listview: (controller) {
+                            final customScrollView = SmoothCustomScrollView(
+                              scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
+                              controller: controller,
+                              slivers: [
+                                if (!widget.isHorizontal && widget.pageHeader != null)
+                                  SliverToBoxAdapter(
+                                    child: widget.pageHeader,
+                                  ),
+                                SliverPadding(padding: firstPadding),
+                                if (!widget.isHorizontal)
+                                  SliverToBoxAdapter(
+                                    child: header,
+                                  ),
+                                if (searchBoxManager != null && !widget.isHorizontal)
+                                  SliverToBoxAdapter(
+                                    child: ObxO(
+                                      rx: searchBoxManager.searchBoxVisible,
+                                      builder: (context, searchBoxVisible) => AnimatedShow(
+                                        show: searchBoxVisible,
+                                        duration: const Duration(milliseconds: 250),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                          child: Row(
+                                            children: [
+                                              const SizedBox(width: 12.0),
+                                              Expanded(
+                                                child: SizedBox(
+                                                  height: 42.0,
+                                                  child: CustomTextField(
+                                                    focusNode: searchBoxManager.searchFocusNode,
+                                                    textFieldController: searchBoxManager.searchController,
+                                                    textFieldHintText: widget.searchHintText ?? '',
+                                                    onTextFieldValueChanged: searchBoxManager.updateSearchQuery,
                                                   ),
                                                 ),
-                                                const SizedBox(width: 6.0),
-                                                NamidaIconButton(
-                                                  onPressed: searchBoxManager.onSearchCloseButtonPressed,
-                                                  icon: Broken.close_circle,
-                                                ),
-                                                const SizedBox(width: 8.0),
-                                              ],
-                                            ),
+                                              ),
+                                              const SizedBox(width: 6.0),
+                                              NamidaIconButton(
+                                                onPressed: searchBoxManager.onSearchCloseButtonPressed,
+                                                icon: Broken.close_circle,
+                                              ),
+                                              const SizedBox(width: 8.0),
+                                            ],
                                           ),
                                         ),
                                       ),
                                     ),
-                                  isLoadingCurrentFeed
-                                      ? SliverToBoxAdapter(
-                                          child: ShimmerWrapper(
-                                            transparent: widget.transparentShimmer,
-                                            shimmerEnabled: true,
-                                            child: SuperSmoothListView.builder(
-                                              scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
-                                              padding: EdgeInsets.zero,
-                                              physics: const NeverScrollableScrollPhysics(),
-                                              itemCount: 15,
-                                              shrinkWrap: true,
-                                              itemBuilder: (_, _) {
-                                                return widget.dummyCard;
-                                              },
-                                            ),
-                                          ),
-                                        )
-                                      : listItems == null
-                                      ? const SliverToBoxAdapter()
-                                      : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ?? _buildDefaultSliverList(listItems),
-                                  SliverToBoxAdapter(
-                                    child: ObxO(
-                                      rx: _isLoadingNext,
-                                      builder: (context, isLoadingNext) => isLoadingNext
-                                          ? const Padding(
-                                              padding: EdgeInsets.all(12.0),
-                                              child: Center(
-                                                child: LoadingIndicator(),
-                                              ),
-                                            )
-                                          : const SizedBox(),
-                                    ),
                                   ),
-                                  SliverPadding(padding: lastPadding),
-                                ],
-                              );
-                              return widget.isHorizontal
-                                  ? Column(
-                                      children: [
-                                        if (widget.pageHeader != null) widget.pageHeader!,
-                                        SizedBox(height: widget.topPadding),
-                                        header,
-                                        SizedBox(
-                                          height: widget.horizontalHeight,
-                                          child: customScrollView,
+                                isLoadingCurrentFeed
+                                    ? SliverToBoxAdapter(
+                                        child: ShimmerWrapper(
+                                          transparent: widget.transparentShimmer,
+                                          shimmerEnabled: true,
+                                          child: SuperSmoothListView.builder(
+                                            scrollDirection: widget.isHorizontal ? Axis.horizontal : Axis.vertical,
+                                            padding: EdgeInsets.zero,
+                                            physics: const NeverScrollableScrollPhysics(),
+                                            itemCount: 15,
+                                            shrinkWrap: true,
+                                            itemBuilder: (_, _) {
+                                              return widget.dummyCard;
+                                            },
+                                          ),
                                         ),
-                                      ],
-                                    )
-                                  : customScrollView;
-                            },
-                          );
-                        },
-                      ),
-                    );
-            },
-          ),
+                                      )
+                                    : listItems == null
+                                    ? const SliverToBoxAdapter()
+                                    : widget.sliverListBuilder?.call(listItems, widget.itemBuilder, widget.dummyCard) ?? _buildDefaultSliverList(listItems),
+                                SliverToBoxAdapter(
+                                  child: ObxO(
+                                    rx: _isLoadingNext,
+                                    builder: (context, isLoadingNext) => isLoadingNext
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(12.0),
+                                            child: Center(
+                                              child: LoadingIndicator(),
+                                            ),
+                                          )
+                                        : const SizedBox(),
+                                  ),
+                                ),
+                                SliverPadding(padding: lastPadding),
+                              ],
+                            );
+                            return widget.isHorizontal
+                                ? Column(
+                                    children: [
+                                      if (widget.pageHeader != null) widget.pageHeader!,
+                                      SizedBox(height: widget.topPadding),
+                                      header,
+                                      SizedBox(
+                                        height: widget.horizontalHeight,
+                                        child: customScrollView,
+                                      ),
+                                    ],
+                                  )
+                                : customScrollView;
+                          },
+                        );
+                      },
+                    ),
+                  );
+          },
         ),
       ),
     );
@@ -659,7 +657,9 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     if (!widget.isHorizontal) {
       page = NamidaScrollbar(
         controller: _controller,
-        child: page,
+        child: BackgroundWrapper(
+          child: page,
+        ),
       );
     }
 
