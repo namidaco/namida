@@ -25,6 +25,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -704,6 +705,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             ),
           ),
           const SizedBox(width: 8.0),
+          const _LyricsFontScaleButton(),
           NamidaIconButton(
             icon: Broken.additem,
             tooltip: () => lang.add,
@@ -1065,6 +1067,117 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     ),
   );
+}
+
+class _LyricsFontScaleButton extends StatelessWidget {
+  const _LyricsFontScaleButton();
+
+  void _showPopup(BuildContext context) {
+    final popup = NamidaPopupWrapper(
+      children: () => const [
+        _LyricsFontScaleStepper(isFullscreen: false),
+        _LyricsFontScaleStepper(isFullscreen: true),
+      ],
+    );
+    popup.showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      icon: Broken.text,
+      tooltip: () => lang.fontScale,
+      onPressed: () => _showPopup(context),
+    );
+  }
+}
+
+class _LyricsFontScaleStepper extends StatelessWidget {
+  final bool isFullscreen;
+
+  const _LyricsFontScaleStepper({
+    required this.isFullscreen,
+  });
+
+  static const _kStepPercent = 5;
+
+  void _saveNextStep(int percent) {
+    final nextPercent = (percent ~/ _kStepPercent + 1) * _kStepPercent;
+    _savePercent(nextPercent);
+  }
+
+  void _savePreviousStep(int percent) {
+    final previousPercent = ((percent + _kStepPercent - 1) ~/ _kStepPercent - 1) * _kStepPercent;
+    _savePercent(previousPercent);
+  }
+
+  void _savePercent(int percent) {
+    final scale = percent / 100;
+    final clampedScale = scale.clampDouble(LyricsLRCParsedView.minFontScale, LyricsLRCParsedView.maxFontScale);
+    if (isFullscreen) {
+      settings.fontScaleLRCFull.save(clampedScale);
+    } else {
+      settings.fontScaleLRC.save(clampedScale);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+      child: Row(
+        children: [
+          NamidaTooltip(
+            message: () => isFullscreen ? '${lang.fontScale} (${lang.fullscreen})' : lang.fontScale,
+            child: Icon(
+              isFullscreen ? Broken.maximize_3 : Broken.text,
+              size: 20.0,
+            ),
+          ),
+          const SizedBox(width: 10.0),
+          const Spacer(),
+          Obx(
+            (context) {
+              final fullscreenScale = isFullscreen ? settings.fontScaleLRCFull.valueR : null;
+              final scale = fullscreenScale ?? settings.fontScaleLRC.valueR;
+              final percent = (scale * 100).round();
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  NamidaIconButton(
+                    horizontalPadding: 5.0,
+                    verticalPadding: 5.0,
+                    icon: Broken.minus_cirlce,
+                    iconSize: 20.0,
+                    onPressed: () => _savePreviousStep(percent),
+                  ),
+                  NamidaInkWell(
+                    width: 44.0,
+                    borderRadius: 6.0,
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    onTap: () => _savePercent(100),
+                    child: Text(
+                      '$percent%',
+                      style: textTheme.displayMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  NamidaIconButton(
+                    horizontalPadding: 5.0,
+                    verticalPadding: 5.0,
+                    icon: Broken.add_circle,
+                    iconSize: 20.0,
+                    onPressed: () => _saveNextStep(percent),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _PrioritizeEmbeddedLyricsTile extends StatelessWidget {

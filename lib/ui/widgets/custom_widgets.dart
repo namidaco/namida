@@ -7037,14 +7037,13 @@ class ScaleDetectorState extends State<ScaleDetector> {
   @override
   Widget build(BuildContext context) {
     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
-    gestures[ScaleGestureRecognizer] = GestureRecognizerFactoryWithHandlers<ScaleGestureRecognizer>(
-      () => ScaleGestureRecognizer(debugOwner: this),
-      (ScaleGestureRecognizer instance) {
+    gestures[_PinchGestureRecognizer] = GestureRecognizerFactoryWithHandlers<_PinchGestureRecognizer>(
+      () => _PinchGestureRecognizer(debugOwner: this),
+      (_PinchGestureRecognizer instance) {
         instance
           ..onStart = widget.onScaleStart
           ..onUpdate = widget.onScaleUpdate
-          ..onEnd = widget.onScaleEnd
-          ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+          ..onEnd = widget.onScaleEnd;
       },
     );
 
@@ -7058,6 +7057,187 @@ class ScaleDetectorState extends State<ScaleDetector> {
         child: widget.child,
       ),
     );
+  }
+}
+
+// by claude
+/// claims only 2+ fingers (or a trackpad pinch), the moment the second lands, so drags with a smaller slop can't win first.
+class _PinchGestureRecognizer extends OneSequenceGestureRecognizer {
+  _PinchGestureRecognizer({super.debugOwner});
+
+  static const _kTrackpadAcceptScale = 1.05;
+
+  GestureScaleStartCallback? onStart;
+  GestureScaleUpdateCallback? onUpdate;
+  GestureScaleEndCallback? onEnd;
+
+  final _touchPositions = <int, Offset>{};
+  int? _trackpadPointer;
+  double? _trackpadPinchScale;
+  Matrix4? _lastTransform;
+  Offset _focalPoint = Offset.zero;
+
+  bool _isAccepted = false;
+  bool _isPinching = false;
+  double _scale = 1.0;
+  double _segmentStartScale = 1.0;
+  double _segmentStartSpread = 1.0;
+
+  int get _pointerCount => _trackpadPinchScale != null ? 2 : _touchPositions.length;
+
+  @override
+  String get debugDescription => 'pinch';
+
+  @override
+  bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) => true;
+
+  @override
+  void addAllowedPointer(PointerDownEvent event) {
+    super.addAllowedPointer(event);
+    _touchPositions[event.pointer] = event.position;
+    _lastTransform = event.transform;
+    if (_touchPositions.length < 2) return;
+    resolve(GestureDisposition.accepted);
+    _onPointersChanged();
+  }
+
+  @override
+  void addAllowedPointerPanZoom(PointerPanZoomStartEvent event) {
+    startTrackingPointer(event.pointer, event.transform);
+    _trackpadPointer = event.pointer;
+    _lastTransform = event.transform;
+  }
+
+  @override
+  void acceptGesture(int pointer) {
+    _isAccepted = true;
+    _onPointersChanged();
+  }
+
+  @override
+  void rejectGesture(int pointer) {
+    _removePointer(pointer);
+    stopTrackingPointer(pointer);
+  }
+
+  @override
+  void handleEvent(PointerEvent event) {
+    if (event is PointerMoveEvent) {
+      _touchPositions[event.pointer] = event.position;
+      _lastTransform = event.transform;
+      if (_isPinching) _dispatchUpdate();
+    } else if (event is PointerPanZoomUpdateEvent) {
+      _lastTransform = event.transform;
+      _onTrackpadUpdate(event);
+    } else if (event is PointerUpEvent || event is PointerCancelEvent || event is PointerPanZoomEndEvent) {
+      _removePointer(event.pointer);
+    }
+    stopTrackingIfPointerNoLongerDown(event);
+  }
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {
+    if (!_isAccepted) resolve(GestureDisposition.rejected);
+    _isAccepted = false;
+  }
+
+  void _onTrackpadUpdate(PointerPanZoomUpdateEvent event) {
+    final scale = event.scale;
+    final wasTrackpadPinch = _trackpadPinchScale != null;
+    if (!wasTrackpadPinch) {
+      final scaleRatio = math.max(scale, 1.0 / scale);
+      final isPinch = scaleRatio > _kTrackpadAcceptScale;
+      if (!isPinch) return;
+    }
+    _trackpadPinchScale = scale;
+    _focalPoint = event.position;
+    if (wasTrackpadPinch) {
+      if (_isPinching) _dispatchUpdate();
+      return;
+    }
+    resolve(GestureDisposition.accepted);
+    _onPointersChanged();
+  }
+
+  void _removePointer(int pointer) {
+    if (pointer == _trackpadPointer) {
+      _trackpadPointer = null;
+      _trackpadPinchScale = null;
+    } else if (_touchPositions.remove(pointer) == null) {
+      return;
+    }
+    _onPointersChanged();
+  }
+
+  double? _measureSpread() {
+    final trackpadScale = _trackpadPinchScale;
+    if (trackpadScale != null) return trackpadScale;
+    final count = _touchPositions.length;
+    if (count < 2) return null;
+    var focalPoint = Offset.zero;
+    for (final position in _touchPositions.values) {
+      focalPoint += position;
+    }
+    focalPoint /= count.toDouble();
+    var totalDistance = 0.0;
+    for (final position in _touchPositions.values) {
+      totalDistance += (position - focalPoint).distance;
+    }
+    _focalPoint = focalPoint;
+    return totalDistance / count;
+  }
+
+  void _onPointersChanged() {
+    if (!_isAccepted) return;
+    final spread = _measureSpread();
+    if (spread == null) {
+      if (_isPinching) _endPinch();
+      return;
+    }
+    _segmentStartSpread = spread;
+    if (_isPinching) {
+      _segmentStartScale = _scale;
+      return;
+    }
+    _isPinching = true;
+    _scale = 1.0;
+    _segmentStartScale = 1.0;
+    final onStart = this.onStart;
+    if (onStart == null) return;
+    final localFocalPoint = PointerEvent.transformPosition(_lastTransform, _focalPoint);
+    final details = ScaleStartDetails(
+      focalPoint: _focalPoint,
+      localFocalPoint: localFocalPoint,
+      pointerCount: _pointerCount,
+    );
+    invokeCallback<void>('onStart', () => onStart(details));
+  }
+
+  void _dispatchUpdate() {
+    final spread = _measureSpread();
+    if (spread == null) return;
+    final ratio = _segmentStartSpread > 0.0 ? spread / _segmentStartSpread : 1.0;
+    _scale = _segmentStartScale * ratio;
+    final onUpdate = this.onUpdate;
+    if (onUpdate == null) return;
+    final localFocalPoint = PointerEvent.transformPosition(_lastTransform, _focalPoint);
+    final details = ScaleUpdateDetails(
+      scale: _scale,
+      focalPoint: _focalPoint,
+      localFocalPoint: localFocalPoint,
+      pointerCount: _pointerCount,
+    );
+    invokeCallback<void>('onUpdate', () => onUpdate(details));
+  }
+
+  void _endPinch() {
+    _isPinching = false;
+    final onEnd = this.onEnd;
+    if (onEnd == null) return;
+    final details = ScaleEndDetails(
+      pointerCount: _pointerCount,
+    );
+    invokeCallback<void>('onEnd', () => onEnd(details));
   }
 }
 

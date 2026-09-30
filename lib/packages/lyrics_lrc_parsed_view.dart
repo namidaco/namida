@@ -35,6 +35,9 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class LyricsLRCParsedView extends StatefulWidget {
+  static const minFontScale = 0.5;
+  static const maxFontScale = 2.0;
+
   final Widget videoOrImage;
   final bool isFullScreenView;
   final bool canShowToggleFullscreenButton;
@@ -145,6 +148,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     super.initState();
     _mountedViews.add(this);
     if (widget.visibilityNotifier != null) _visibility.addListener(_reportVisibility);
+    settings.fontScaleLRC.addListener(_onFontScaleSettingChanged);
+    if (_largeText) settings.fontScaleLRCFull.addListener(_onFontScaleSettingChanged);
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -357,16 +362,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   late final bool _largeText = widget.isFullScreenView || widget.largeText;
   late double _previousFontMultiplier = _fontMultiplier;
-  late double _fontMultiplier = _getInitialFontMultiplier();
+  late double _fontMultiplier = _getFontMultiplierSetting();
 
-  double _getInitialFontMultiplier() {
+  double _getFontMultiplierSetting() {
     final normalMultiplier = settings.fontScaleLRC.value;
     if (!_largeText) return normalMultiplier;
     return settings.fontScaleLRCFull.value ?? normalMultiplier;
   }
 
+  void _onFontScaleSettingChanged() => _setFontMultiplier(_getFontMultiplierSetting());
+
   void _setFontMultiplier(double value) {
-    value = value.clampDouble(0.5, 2.0);
+    value = value.clampDouble(LyricsLRCParsedView.minFontScale, LyricsLRCParsedView.maxFontScale);
     if (value == _fontMultiplier) return;
     refreshState(() => _fontMultiplier = value);
   }
@@ -378,6 +385,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   @override
   void dispose() {
     _mountedViews.remove(this);
+    settings.fontScaleLRC.removeListener(_onFontScaleSettingChanged);
+    if (_largeText) settings.fontScaleLRCFull.removeListener(_onFontScaleSettingChanged);
     _cardSlide.removeListener(_onCardSlideTick);
     widget.visibilityNotifier?.value = 0.0;
     _visibility.dispose();
