@@ -4,6 +4,7 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 
 /// Used to retain state for cases like navigating after pip mode.
 bool _wasExpanded = false;
@@ -19,7 +20,9 @@ class NamidaYTMiniplayer extends StatefulWidget {
 
   final bool enforceExpanded;
   final double minHeight, maxHeight, bottomMargin;
-  final Widget Function(double height, double percentage, Animation<double> reverseOpacityAnimation) builder;
+
+  /// called on rebuilds only, per frame values come through the animations.
+  final Widget Function(Animation<double> percentage, Animation<double> reverseOpacityAnimation, double expandedHeight) builder;
   final Color bgColor;
   final void Function(double percentage)? onHeightChange;
   final void Function(bool isExpanded)? onExpandedStateChange;
@@ -257,60 +260,80 @@ class NamidaYTMiniplayerState extends State<NamidaYTMiniplayer> with SingleTicke
       },
     ),
   );
+  late final percentageAnimation = controller.drive(
+    Animatable.fromCallback((_) => percentage),
+  );
+  late final _heightConstraints = controller.drive(
+    Animatable.fromCallback((_) => BoxConstraints.tightFor(height: controllerHeight)),
+  );
+  late final _bottomLayerConstraints = controller.drive(
+    Animatable.fromCallback((_) => BoxConstraints.tightFor(height: _computeTotalBottomPadding())),
+  );
+  late final _contentPadding = controller.drive(
+    Animatable.fromCallback((_) => EdgeInsets.only(top: _padding.top, bottom: _computeTotalBottomPadding())),
+  );
+
+  double _computeTotalBottomPadding() => _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clampDouble(0, widget.bottomMargin);
+
+  bool _isHeadingToCollapsed(double _) => _dragheight == widget.minHeight;
+
+  void _onTapWhileCollapsed() => animateToState(true);
+
+  void _onDragUpdate(DragUpdateDetails details) => onVerticalDragUpdate(details.delta.dy);
+
+  void _onDragEnd(DragEndDetails details) {
+    if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
+  }
 
   @override
   Widget build(BuildContext context) {
     _padding = MediaQuery.paddingOf(context);
     final maxWidth = context.width;
+    final content = widget.builder(percentageAnimation, reverseOpacityAnimation, maxHeight);
 
     return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: controller,
-        builder: (context, _) {
-          final percentage = this.percentage;
-          final totalBottomPadding = _padding.bottom + (widget.bottomMargin * (1.0 - percentage)).clampDouble(0, widget.bottomMargin);
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              if (widget.displayBottomBGLayer)
-                SizedBox(
-                  height: totalBottomPadding,
-                  width: maxWidth,
-                  child: ColoredBox(color: widget.bgColor),
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          if (widget.displayBottomBGLayer)
+            SizedBox(
+              width: maxWidth,
+              child: ListenableConstrainedBox(
+                constraints: _bottomLayerConstraints,
+                child: ColoredBox(color: widget.bgColor),
+              ),
+            ),
+          ListenablePadding(
+            padding: _contentPadding,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ValueConditionBuilder(
+                listenable: controller,
+                condition: _isHeadingToCollapsed,
+                builder: (context, isHeadingToCollapsed, child) => GestureDetector(
+                  onTap: isHeadingToCollapsed ? _onTapWhileCollapsed : null,
+                  onVerticalDragUpdate: _onDragUpdate,
+                  onVerticalDragEnd: _onDragEnd,
+                  child: child,
                 ),
-              Padding(
-                padding: EdgeInsets.only(
-                  top: _padding.top,
-                  bottom: totalBottomPadding,
-                ),
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: GestureDetector(
-                    onTap: _dragheight == widget.minHeight ? () => animateToState(true) : null,
-                    onVerticalDragUpdate: (details) => onVerticalDragUpdate(details.delta.dy),
-                    onVerticalDragEnd: (details) {
-                      if (_isDragManagedInternally) onVerticalDragEnd(details.velocity.pixelsPerSecond.dy);
-                    },
-                    child: Material(
-                      clipBehavior: Clip.hardEdge,
-                      type: MaterialType.transparency,
-                      child: FadeTransition(
-                        opacity: dismissPercentageAnimation,
-                        child: SizedBox(
-                          height: controllerHeight,
-                          child: ColoredBox(
-                            color: widget.bgColor,
-                            child: widget.builder(controllerHeight, percentage, reverseOpacityAnimation),
-                          ),
-                        ),
+                child: Material(
+                  clipBehavior: Clip.hardEdge,
+                  type: MaterialType.transparency,
+                  child: FadeTransition(
+                    opacity: dismissPercentageAnimation,
+                    child: ListenableConstrainedBox(
+                      constraints: _heightConstraints,
+                      child: ColoredBox(
+                        color: widget.bgColor,
+                        child: content,
                       ),
                     ),
                   ),
                 ),
               ),
-            ],
-          );
-        },
+            ),
+          ),
+        ],
       ),
     );
   }

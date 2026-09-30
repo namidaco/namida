@@ -100,6 +100,8 @@ class FocusedMenuOptions {
 }
 
 const _kSimpleLyricsLineFontSize = 14.0;
+const _kTopBottomMargin = 8.0;
+const _kNextPrevMaxIconSize = 32.0;
 
 abstract class MiniplayerThumbnailScale {
   static const _base = 1.13;
@@ -291,8 +293,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   /// the space the lyrics overlay may use, independent of the artwork's own aspect ratio.
   final _lyricsMaxSize = ValueNotifier<Size>(Size.zero);
 
-  /// used to skip implicit decoration animations while the miniplayer itself is animating.
-  double _lastAnimationP = 0.0;
+  final _geometry = _MiniplayerGeometry();
 
   Playable<Object> get _getcurrentItem => Player.inst.currentQueue.value[Player.inst.currentIndex.value];
 
@@ -324,6 +325,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   void dispose() {
     isMenuOpened.close();
     _lyricsMaxSize.dispose();
+    _geometry.dispose();
     MiniPlayerController.inst.screenValuesVersion.removeListener(_screenValuesListener);
     ArtworkWidget.aspectRatiosVersion.removeListener(_artworkAspectRatiosListener);
     super.dispose();
@@ -423,11 +425,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final sAnim = getsAnim;
-
-    final kStParallax = MiniPlayerController.kStParallax;
-    final kSiParallax = MiniPlayerController.kSiParallax;
-
     final onSecondary = theme.colorScheme.onSecondaryContainer;
     const waveformChild = RepaintBoundary(child: WaveformMiniplayer());
     const seekReadyWidget = SeekReadyWidget(
@@ -438,8 +435,6 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       clampCircleEdges: false,
       useReducedProgressColor: true,
     );
-
-    final topBottomMargin = 8.0;
 
     final topRightButton = _TopActionButton(
       icon: Broken.more,
@@ -885,7 +880,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             );
 
             final topRowChild = Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: topBottomMargin),
+              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: _kTopBottomMargin),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -967,7 +962,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             );
 
             final bottomRowChild = Padding(
-              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: topBottomMargin),
+              padding: EdgeInsets.symmetric(horizontal: 6.0, vertical: _kTopBottomMargin),
               child: Row(
                 children: [
                   bottomLeftButton,
@@ -989,700 +984,797 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             //   ),
             // );
 
+            final navBarHeight = MediaQuery.viewPaddingOf(context).bottom;
+            final panelBaseRadius = 20.0.multipliedRadius;
+            final geometry = _geometry;
+            geometry.updateInputs(
+              (
+                navBarHeight: navBarHeight,
+                imageAspectRatio: imageAspectRatio,
+                simpleLyricsBandHeight: simpleLyricsBandHeight,
+                thumbnailBaseScale: thumbnailBaseScale,
+                panelBaseRadius: panelBaseRadius,
+              ),
+            );
+            _lyricsMaxSize.value = geometry.computeExpandedLyricsMaxSize();
+            final waveformYScale = geometry.layout.waveformYScale;
+
+            final miniplayerColor = CurrentColor.inst.miniplayerColor;
+            final miniplayerColorAlpha = miniplayerColor.a;
+            final panelGradientTopColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(100), miniplayerColor).withOpacityExt(miniplayerColorAlpha);
+            final panelGradientBottomColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), miniplayerColor).withOpacityExt(miniplayerColorAlpha);
+            final isThemeAnimated = settings.animatedTheme.valueR;
+            final isPartyModeEnabled = settings.enablePartyModeInMiniplayer.valueR;
+            final hideStatusBarInExpanded = settings.hideStatusBarInExpandedMiniplayer.valueR;
+            final hasJellys = NamidaJellys.enabledRx.valueR;
+
             return MiniplayerRaw(
-              builder:
-                  (
-                    maxOffset,
-                    bounceUp,
-                    bounceDown,
-                    topInset,
-                    bottomInset,
-                    rightInset,
-                    screenSize,
-                    sMaxOffset,
-                    p,
-                    cp,
-                    ip,
-                    icp,
-                    rp,
-                    rcp,
-                    qp,
-                    qcp,
-                    bp,
-                    bcp,
-                    miniplayerbottomnavheight,
-                    bottomOffset,
-                    navBarHeight,
-                  ) {
-                    // -- collapsed it still has pages under it, so it only clears up while expanding
-                    final panelOpacity = hasPlayerBackground ? 1.0 - 0.8 * cp : 1.0;
-                    final panelColorStrength = hasColorWhenExpanded ? 1.0 : 1.0 - cp;
-                    final BorderRadius borderRadius = BorderRadius.vertical(
-                      top: Radius.circular(20.0.multipliedRadius + 6.0 * p),
-                      bottom: Radius.circular(20.0.multipliedRadius * (1 - p * 10 + 9).clampDouble(0, 1)),
-                    );
-                    final shadowBorderRadius = BorderRadius.circular(20.0.multipliedRadius);
-
-                    final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;
-
-                    final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0) * qp);
-                    final panelExtra = panelH / 2.4 - (100.0 + topInset + 4.0) * qp;
-                    // final panelExtra = panelH; // -- use if u want to hide it while expanded, looks cool
-                    final panelFinal = panelH - (panelExtra * (1 - qcp));
-
-                    final iconSize = _PlayPauseMetrics.iconSize(p);
-                    final iconButtonExtraPadding = _PlayPauseMetrics.extraPadding(iconSize);
-                    final iconBoxSize = iconSize + iconButtonExtraPadding * 2;
-
-                    final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
-                    final nextPrevIconSize = (21.0 + 11.0 * nextprevmultiplier);
-                    final nextPrevIconPadding = (8.0 + 4.0 * cp + 6.0 * nextprevmultiplier);
-
-                    final totalButtonsSize = (iconSize + iconButtonExtraPadding * 2) + (nextPrevIconSize + nextPrevIconPadding * 2) * 2;
-                    final buttonsRightPadding = (cp * rcp * ((screenSize.width - totalButtonsSize) / 2)) - rightInset;
-
-                    // -- the vertical layout is designed at [_perfectHeight] and stretches with the panel,
-                    // -- shrinking is covered by the scale box but taller panels still spread these out.
-                    final heightFactor = _lerpDouble(1.0, maxOffset / _perfectHeight, rp);
-
-                    final topRowHeight = 1.25 * (32.0 * heightFactor + topBottomMargin * 2) * cp;
-                    final bottomRowHeight = topRowHeight;
-                    final imageWidth = velpy(a: 82.0, b: 92.0, c: qp);
-
-                    final vOffsetExtras = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 + 12.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
-                    final vOffsetExtrasAlt = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 - 8.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
-                    final trackInfoBoxHeight = velpy(a: 58.0, b: 82.0, c: bcp);
-                    double vOffsetControls = vOffsetExtrasAlt - bottomRowHeight * bp /* ?? vOffsetExtras + (-bottomRowHeight - 4.0 * bp) * (1 - qp) */;
-                    double vOffsetWaveform = vOffsetControls - iconSize - (64.0 * waveformYScale) / 2 - (panelFinal * 0.026);
-                    vOffsetWaveform = vOffsetWaveform.withMaximum(-(maxOffset - bottomInset - topInset) * 0.2 * (1 - bcp));
-
-                    double vOffsetTrackInfo = _lerpDouble(
-                      _lerpDouble(
-                        vOffsetExtras,
-                        // -- [maxOffset] excludes the navbar, but these are anchored to the real screen bottom.
-                        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0 * heightFactor - navBarHeight * cp, // idk bro this the only way it matches :/
-                        qp,
-                      ),
-                      (vOffsetWaveform - 64.0 * waveformYScale).withMaximum(-(maxOffset - bottomInset - topInset) * 0.3), // don't ask why topInset.. it works like that idk
-                      bcp,
-                    );
-                    double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0 * heightFactor * bcp) + (6.0 * heightFactor * qp);
-
-                    if (simpleLyricsBandHeight > 0) {
-                      // -- the line may fall back to 2 lines, the gap under the artwork (22) only holds one.
-                      vOffsetImage -= (simpleLyricsBandHeight - 22.0 * heightFactor).withMinimum(0.0) * bcp;
-                    }
-
-                    // -- the picture is painted 1.13x past its box, so the side margin has to grow with the
-                    // -- width, a fixed one only holds the overshoot inside the panel up to ~380 wide.
-                    final imageMaxWidthPre = sMaxOffset - (sMaxOffset * 0.2).withMinimum(76.0);
-                    final imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 24.0 * heightFactor;
-                    // -- the box follows the picture's ratio, so wide videos/thumbnails use the width
-                    // -- instead of shrinking to whatever square fits the height.
-                    final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre * imageAspectRatio);
-                    final imageHeightBig = imageWidthBig / imageAspectRatio;
-
-                    // -- collapsed thumbnail stays square, the ratio only kicks in while expanding.
-                    final imageBoxWidth = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
-                    final imageBoxHeight = velpy(a: imageWidth, b: imageHeightBig, c: bcp);
-                    final trackInfoLeftMargin = imageWidth * (1 - bcp);
-                    // -- the painted picture overshoots its box, adjacent items must clear it while sliding.
-                    final imageSwitchSpacing = (sMaxOffset / kSiParallax).withMinimum(imageBoxWidth * thumbnailBaseScale + 12.0);
-
-                    double spaceLeftAboveImage = maxOffset - -vOffsetImage - imageBoxHeight - topInset - topRowHeight;
-                    double imageExtraLift = 0.0;
-                    if (spaceLeftAboveImage > 0) {
-                      final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
-                      imageExtraLift = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
-                      vOffsetImage -= imageExtraLift; // re-adjust offset to make the image semi-centered
-                    } else {
-                      vOffsetImage += (-spaceLeftAboveImage / 2) * bcp;
-                    }
-
-                    // -- image related
-                    final imagePaddingAll = 12.0 * (1 - bcp);
-                    final imagePadding = EdgeInsets.fromLTRB(
-                      imagePaddingAll + 42.0 * bcp,
-                      imagePaddingAll,
-                      imagePaddingAll,
-                      imagePaddingAll,
-                    );
-                    final imageEmptyRightSpace = screenSize.width - imageBoxWidth;
-                    final imageLeftOffset = (((imageEmptyRightSpace / 2) - imagePadding.left - rightInset) * bcp);
-
-                    // -- the pre-ratio box, so lyrics keep the same space no matter what shape the artwork takes
-                    _lyricsMaxSize.value = Size(imageMaxWidthPre, imageMaxHeightPre.withMaximum(imageMaxWidthPre));
-
-                    final animateDecoration = p == _lastAnimationP;
-                    _lastAnimationP = p;
-
-                    return Stack(
-                      children: [
-                        /// MiniPlayer Body
-                        Container(
-                          color: p > 0 ? Colors.transparent : null, // hit test only when expanded
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Transform.translate(
-                              offset: Offset(0, bottomOffset),
-                              child: ColoredBox(
-                                color: Colors.transparent, // prevents scrolling gap
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 6.0 * (1 - cp * 10 + 9).clampDouble(0, 1), vertical: 12.0 * icp),
-                                  child: SizedBox(
-                                    height: velpy(a: 82.0, b: panelFinal, c: cp),
-                                    width: double.infinity,
-                                    // -- shadow kept apart with a fixed uniform radius: skia caches the blur as a nine-patch keyed
-                                    // -- by (radius, sigma) so resizing the panel per frame stays a cache hit, an animated radius wouldn't.
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: shadowBorderRadius,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: theme.shadowColor.withOpacityExt(0.2 + 0.1 * cp),
-                                            blurRadius: 20.0,
-                                          ),
-                                        ],
-                                      ),
-                                      child: _AnimatedDecorationOrDecoration(
-                                        animate: animateDecoration,
-                                        duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                        decoration: BoxDecoration(
-                                          color: theme.scaffoldBackgroundColor.withOpacityExt(panelOpacity),
-                                          borderRadius: borderRadius,
-                                        ),
-                                        child: Stack(
-                                          alignment: Alignment.bottomLeft,
-                                          children: [
-                                            Positioned.fill(
-                                              child: _AnimatedDecorationOrDecoration(
-                                                animate: animateDecoration,
-                                                duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                                // clipBehavior: Clip.antiAlias,
-                                                decoration: BoxDecoration(
-                                                  color: CurrentColor.inst.miniplayerColor,
-                                                  borderRadius: borderRadius,
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topCenter,
-                                                    end: Alignment.bottomCenter,
-                                                    colors: [
-                                                      Color.alphaBlend(
-                                                        theme.colorScheme.onSurface.withAlpha(100),
-                                                        CurrentColor.inst.miniplayerColor,
-                                                      ).withOpacityExt(velpy(a: .38, b: .28, c: icp) * panelColorStrength),
-                                                      Color.alphaBlend(
-                                                        theme.colorScheme.onSurface.withAlpha(40),
-                                                        CurrentColor.inst.miniplayerColor,
-                                                      ).withOpacityExt(velpy(a: .1, b: .22, c: icp) * panelColorStrength),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-
-                                            if (NamidaJellys.enabled)
-                                              Positioned.fill(
-                                                child: ClipRRect(
-                                                  borderRadius: borderRadius,
-                                                  child: NamidaJellyBackground(
-                                                    count: 4,
-                                                    opacity: 0.3 * cp,
-                                                    minHeight: 70.0,
-                                                    maxHeight: 210.0,
-                                                    reactToPlayback: true,
-                                                    enabled: cp > 0.01,
-                                                    seed: 7,
-                                                  ),
-                                                ),
-                                              ),
-
-                                            if (visualizerPlacements.hasInsidePanel)
-                                              Positioned.fill(
-                                                child: NamidaVisualizer.insidePanel(
-                                                  opacity: cp,
-                                                  baseline: 32.0 * waveformYScale - vOffsetWaveform,
-                                                  waveformScale: waveformYScale,
-                                                  waveformPadding: 16.0,
-                                                ),
-                                              ),
-
-                                            /// Smol progress bar
-                                            // Obx(
-                                            //   (context) {
-                                            //     final nowPlayingPosition = Player.inst.nowPlayingPosition.valueR;
-                                            //     final currentDurationInMS =
-                                            //         currentDefaultDurationInMS > 0 ? currentDefaultDurationInMS : Player.inst.currentItemDuration.valueR?.inMilliseconds ?? 0;
-                                            //     final w = currentDurationInMS > 0 ? nowPlayingPosition / currentDurationInMS : 0;
-                                            //     return SizedBox(
-                                            //       height: 2 * (1 - cp),
-                                            //       width: w > 0 ? (Dimensions.inst.miniplayerMaxWidth * w) : 0,
-                                            //       child: smolProgressBarDecoratedBox,
-                                            //     );
-                                            //   },
-                                            // ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        if (visualizerPlacements.hasAroundPlayer)
-                          Positioned.fill(
-                            child: NamidaVisualizer.aroundPlayer(
-                              opacity: cp,
-                            ),
-                          ),
-
-                        /// Artwork Visualizer
-                        if (visualizerPlacements.hasAroundArtwork)
-                          FadeIgnoreTransition(
-                            completelyKillWhenPossible: true,
-                            opacity: slowOpacityAnimation,
-                            child: Transform.translate(
-                              offset: Offset(imageLeftOffset, vOffsetImage),
-                              child: _RawImageContainer(
-                                width: imageBoxWidth,
-                                height: imageBoxHeight,
-                                padding: imagePadding,
-                                child: NamidaVisualizer.aroundArtwork(
-                                  artworkScale: thumbnailBaseScale,
-                                  artworkRadius: 14.0.multipliedRadius,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                        if (settings.enablePartyModeInMiniplayer.value)
-                          FadeIgnoreTransition(
-                            opacity: partyContainersOpacityAnimation,
-                            child: partyContainersChild,
-                          ),
-
-                        /// Top Row
-                        Material(
-                          type: MaterialType.transparency,
-                          child: Padding(
-                            padding: EdgeInsets.only(top: topInset),
-                            child: FadeIgnoreTransition(
-                              opacity: topRowOpacityAnimation,
-                              child: Transform.translate(
-                                transformHitTests: false,
-                                offset: Offset(0, (1 - bp) * -100),
-                                child: topRowChild,
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Waveform
-                        FadeIgnoreTransition(
-                          opacity: slowOpacityAnimation,
-                          // -- to avoid hero animation when not visible (eg: while entering lyrics fullscreen)
-                          // -- this might slightly affect performance while expanding player
-                          completelyKillWhenPossible: true,
-                          child: Transform.translate(
-                            offset: Offset(0, vOffsetWaveform),
-                            child: _ScaleYIfNeeded(
-                              alignment: Alignment.bottomCenter,
-                              scale: waveformYScale,
-                              child: const Align(
-                                alignment: Alignment.bottomLeft,
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                  child: waveformChild,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        Material(
-                          type: MaterialType.transparency,
-                          child: FadeIgnoreTransition(
-                            opacity: slowOpacityAnimation,
-                            child: Transform.translate(
-                              offset: Offset(0, vOffsetWaveform - 64.0 - 8.0),
-                              child: _ScaleYIfNeeded(
-                                alignment: Alignment.bottomCenter,
-                                scale: waveformYScale,
-                                child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                    child: seekPositionTextChild,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        /// Controls
-                        Material(
-                          type: MaterialType.transparency,
-                          child: Transform.translate(
-                            offset: Offset(0, vOffsetControls),
-                            child: Padding(
-                              padding: EdgeInsets.all(12.0 * icp),
-                              child: Align(
-                                alignment: Alignment.bottomRight,
+              child: Stack(
+                children: [
+                  /// MiniPlayer Body
+                  ValueConditionBuilder(
+                    listenable: MiniPlayerController.inst.animation,
+                    condition: _isExpanding,
+                    builder: (context, isExpanding, child) => Listener(
+                      behavior: isExpanding ? HitTestBehavior.opaque : HitTestBehavior.deferToChild,
+                      child: child,
+                    ),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ListenableTranslate(
+                        offset: geometry.bodyOffset,
+                        child: ColoredBox(
+                          color: Colors.transparent, // prevents scrolling gap
+                          child: ListenablePadding(
+                            padding: geometry.bodyPadding,
+                            child: ListenableConstrainedBox(
+                              constraints: geometry.panelConstraints,
+                              child: _MiniplayerPanel(
+                                geometry: geometry,
+                                duration: isThemeAnimated ? const Duration(milliseconds: kThemeAnimationDurationMS) : Duration.zero,
+                                shadowColor: theme.shadowColor,
+                                shadowRadius: panelBaseRadius,
+                                backgroundColor: theme.scaffoldBackgroundColor,
+                                gradientTopColor: panelGradientTopColor,
+                                gradientBottomColor: panelGradientBottomColor,
+                                hasPlayerBackground: hasPlayerBackground,
+                                hasColorWhenExpanded: hasColorWhenExpanded,
                                 child: Stack(
-                                  alignment: Alignment.centerRight,
+                                  alignment: Alignment.bottomLeft,
                                   children: [
-                                    FadeIgnoreTransition(
-                                      opacity: fastOpacityAnimation,
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: (24.0 * (16.0 * icp + 1))),
-                                        child: Stack(
-                                          alignment: Alignment.centerRight,
-                                          children: [
-                                            positionDurationRowChild,
-                                            positionDurationSeekerBoxesRowChild,
-                                          ],
+                                    if (hasJellys)
+                                      Positioned.fill(
+                                        child: ClipRRect(
+                                          clipper: _PanelShapeClipper(geometry),
+                                          child: NamidaJellyBackground(
+                                            count: 4,
+                                            opacity: 0.3,
+                                            fade: NamidaMiniPlayerBase.clampedAnimationCP,
+                                            minHeight: 70.0,
+                                            maxHeight: 210.0,
+                                            reactToPlayback: true,
+                                            seed: 7,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.only(right: buttonsRightPadding).add(EdgeInsets.symmetric(vertical: 20.0 * icp)),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          FadeIgnoreTransition(
-                                            opacity: queueInverseOpacityAnimation,
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
-                                              child: NamidaIconButton(
-                                                icon: Broken.previous,
-                                                iconSize: nextPrevIconSize,
-                                                horizontalPadding: nextPrevIconPadding / 2,
-                                                verticalPadding: nextPrevIconPadding,
-                                                onPressed: MiniPlayerController.inst.snapToPrev,
-                                                onLongPress: () => Player.inst.seek(Duration.zero),
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            key: const Key("playpause"),
-                                            height: iconBoxSize,
-                                            width: iconBoxSize,
-                                            child: _ScaleLayoutBox(
-                                              scaleAnimation: playPauseBoxScaleAnimation,
-                                              child: playPauseButton,
-                                            ),
-                                          ),
-                                          FadeIgnoreTransition(
-                                            opacity: queueInverseOpacityAnimation,
-                                            child: Padding(
-                                              padding: EdgeInsets.symmetric(horizontal: nextPrevIconPadding / 2),
-                                              child: NamidaIconButton(
-                                                icon: Broken.next,
-                                                iconSize: nextPrevIconSize,
-                                                horizontalPadding: nextPrevIconPadding / 2,
-                                                verticalPadding: nextPrevIconPadding,
-                                                onPressed: MiniPlayerController.inst.snapToNext,
-                                                onLongPressStart: Player.inst.startSpeedUp,
-                                                onLongPressFinish: Player.inst.endSpeedUp,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+
+                                    if (visualizerPlacements.hasInsidePanel)
+                                      Positioned.fill(
+                                        child: NamidaVisualizer.insidePanel(
+                                          opacity: slowOpacityAnimation,
+                                          baseline: geometry.visualizerBaseline,
+                                          waveformScale: waveformYScale,
+                                          waveformPadding: 16.0,
+                                        ),
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),
                             ),
                           ),
                         ),
+                      ),
+                    ),
+                  ),
 
-                        /// Destination selector
-                        FadeIgnoreTransition(
-                          opacity: opacityAnimation,
-                          child: _AnimatedOrPadding(
-                            animated: settings.hideStatusBarInExpandedMiniplayer.value,
-                            duration: Duration(milliseconds: 200),
-                            padding: EdgeInsets.only(bottom: bottomInset),
-                            child: Transform.translate(
-                              offset: Offset(0, 100 * ip),
-                              child: Align(
-                                alignment: Alignment.bottomLeft,
-                                child: bottomRowChild,
+                  if (visualizerPlacements.hasAroundPlayer)
+                    Positioned.fill(
+                      child: NamidaVisualizer.aroundPlayer(
+                        opacity: NamidaMiniPlayerBase.clampedAnimationCP,
+                      ),
+                    ),
+
+                  /// Artwork Visualizer
+                  if (visualizerPlacements.hasAroundArtwork)
+                    ListenableTranslate(
+                      offset: geometry.imageOffset,
+                      child: _RawImageContainer(
+                        geometry: geometry,
+                        child: NamidaVisualizer.aroundArtwork(
+                          opacity: slowOpacityAnimation,
+                          artworkScale: thumbnailBaseScale,
+                          artworkRadius: 14.0.multipliedRadius,
+                        ),
+                      ),
+                    ),
+
+                  if (isPartyModeEnabled)
+                    FadeIgnoreTransition(
+                      opacity: partyContainersOpacityAnimation,
+                      child: partyContainersChild,
+                    ),
+
+                  /// Top Row
+                  Material(
+                    type: MaterialType.transparency,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: MiniPlayerController.inst.topInset),
+                      child: FadeIgnoreTransition(
+                        opacity: topRowOpacityAnimation,
+                        child: ListenableTranslate(
+                          offset: geometry.topRowOffset,
+                          transformHitTests: false,
+                          child: topRowChild,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  /// Waveform & Seek Position
+                  FadeIgnoreTransition(
+                    opacity: slowOpacityAnimation,
+                    // -- to avoid hero animation when not visible (eg: while entering lyrics fullscreen)
+                    // -- this might slightly affect performance while expanding player
+                    completelyKillWhenPossible: true,
+                    child: Stack(
+                      children: [
+                        ListenableTranslate(
+                          offset: geometry.waveformOffset,
+                          child: _ScaleYIfNeeded(
+                            alignment: Alignment.bottomCenter,
+                            scale: waveformYScale,
+                            child: const Align(
+                              alignment: Alignment.bottomLeft,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                                child: waveformChild,
                               ),
                             ),
                           ),
                         ),
-
-                        /// Track Info
-                        ClipRect(
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: Stack(
-                              children: [
-                                if (prevText != null)
-                                  FadeIgnoreTransition(
-                                    opacity: leftOpacityAnim,
-                                    child: MatrixTransition(
-                                      animation: sAnim,
-                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax - sMaxOffset / kSiParallax, 0.0, 0.0),
-                                      child: Transform.translate(
-                                        offset: Offset(0.0, vOffsetTrackInfo),
-                                        child: _TrackInfo(
-                                          textData: prevText,
-                                          isCurrent: false,
-                                          p: bp,
-                                          qp: qp,
-                                          bcp: bcp,
-                                          qcp: qcp,
-                                          boxHeight: trackInfoBoxHeight,
-                                          leftMargin: trackInfoLeftMargin,
-                                          bottomOffset: bottomOffset,
-                                          maxOffset: maxOffset,
-                                          screenSize: screenSize,
-                                          opacityAnimation: fastOpacityAnimation,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                FadeIgnoreTransition(
-                                  opacity: centerItemFadeAnimation,
-                                  child: MatrixTransition(
-                                    animation: sAnim,
-                                    onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kStParallax + (12.0 * qp), 0.0, 0.0),
-                                    child: Transform.translate(
-                                      offset: Offset(0.0, vOffsetTrackInfo),
-                                      child: _TrackInfo(
-                                        textData: currentText,
-                                        isCurrent: true,
-                                        p: bp,
-                                        qp: qp,
-                                        bcp: bcp,
-                                        qcp: qcp,
-                                        boxHeight: trackInfoBoxHeight,
-                                        leftMargin: trackInfoLeftMargin,
-                                        bottomOffset: bottomOffset,
-                                        maxOffset: maxOffset,
-                                        screenSize: screenSize,
-                                        opacityAnimation: fastOpacityAnimation,
-                                      ),
-                                    ),
-                                  ),
+                        Material(
+                          type: MaterialType.transparency,
+                          child: ListenableTranslate(
+                            offset: geometry.seekTextOffset,
+                            child: _ScaleYIfNeeded(
+                              alignment: Alignment.bottomCenter,
+                              scale: waveformYScale,
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                  child: seekPositionTextChild,
                                 ),
-                                if (nextText != null)
-                                  FadeIgnoreTransition(
-                                    opacity: rightOpacityAnim,
-                                    child: MatrixTransition(
-                                      animation: sAnim,
-                                      onTransform: (animationValue) => Matrix4.translationValues(-animationValue * sMaxOffset / kSiParallax + sMaxOffset / kSiParallax, 0.0, 0.0),
-                                      child: Transform.translate(
-                                        offset: Offset(0.0, vOffsetTrackInfo),
-                                        child: _TrackInfo(
-                                          textData: nextText,
-                                          isCurrent: false,
-                                          p: bp,
-                                          qp: qp,
-                                          bcp: bcp,
-                                          qcp: qcp,
-                                          boxHeight: trackInfoBoxHeight,
-                                          leftMargin: trackInfoLeftMargin,
-                                          bottomOffset: bottomOffset,
-                                          maxOffset: maxOffset,
-                                          screenSize: screenSize,
-                                          opacityAnimation: fastOpacityAnimation,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
 
-                        /// Track Image
-                        ClipRect(
-                          child: Builder(
-                            builder: (context) {
-                              return Stack(
-                                children: [
-                                  if (previousImageWidget != null)
-                                    FadeIgnoreTransition(
-                                      opacity: leftOpacityAnim,
-                                      child: MatrixTransition(
-                                        animation: sAnim,
-                                        onTransform: (animationValue) {
-                                          final horizontalOffset = -animationValue * imageSwitchSpacing - imageSwitchSpacing;
-                                          return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
-                                        },
-                                        child: Transform.translate(
-                                          offset: Offset(0.0, vOffsetImage),
-                                          child: _RawImageContainer(
-                                            width: imageBoxWidth,
-                                            height: imageBoxHeight,
-                                            padding: imagePadding,
-                                            child: Padding(
-                                              padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                              child: previousImageWidget,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  FadeIgnoreTransition(
-                                    opacity: centerItemFadeAnimation,
-                                    child: MatrixTransition(
-                                      animation: sAnim,
-                                      onTransform: (animationValue) {
-                                        final horizontalOffset = -animationValue * imageSwitchSpacing;
-                                        return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
-                                      },
-                                      child: Transform.translate(
-                                        offset: Offset(0.0, vOffsetImage),
-                                        child: _RawImageContainer(
-                                          width: imageBoxWidth,
-                                          height: imageBoxHeight,
-                                          padding: imagePadding,
-                                          child: Padding(
-                                            padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                            child: ObxO(
-                                              rx: settings.artworkGestureDoubleTapLRC,
-                                              builder: (context, artworkGestureDoubleTapLRC) {
-                                                if (artworkGestureDoubleTapLRC) {
-                                                  return ObxO(
-                                                    rx: Lyrics.inst.currentLyricsLRC,
-                                                    builder: (context, currentLyricsLRC) {
-                                                      // -- only when lrc view is not visible, to prevent other gestures delaying.
-                                                      return DoubleTapDetector(
-                                                        onDoubleTap: currentLyricsLRC == null
-                                                            ? () {
-                                                                settings.enableLyrics.save(!settings.enableLyrics.value);
-                                                                Lyrics.inst.updateLyrics(currentItem);
-                                                              }
-                                                            : null,
-                                                        child: currentImage,
-                                                      );
-                                                    },
-                                                  );
-                                                }
-                                                return currentImage;
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
+                  /// Controls
+                  Material(
+                    type: MaterialType.transparency,
+                    child: ListenableTranslate(
+                      offset: geometry.controlsOffset,
+                      child: ListenablePadding(
+                        padding: geometry.controlsPadding,
+                        child: Align(
+                          alignment: Alignment.bottomRight,
+                          child: Stack(
+                            alignment: Alignment.centerRight,
+                            children: [
+                              FadeIgnoreTransition(
+                                opacity: fastOpacityAnimation,
+                                child: ListenablePadding(
+                                  padding: geometry.positionRowPadding,
+                                  child: Stack(
+                                    alignment: Alignment.centerRight,
+                                    children: [
+                                      positionDurationRowChild,
+                                      positionDurationSeekerBoxesRowChild,
+                                    ],
                                   ),
-                                  if (nextImageWidget != null)
+                                ),
+                              ),
+                              ListenablePadding(
+                                padding: geometry.buttonsPadding,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
                                     FadeIgnoreTransition(
-                                      opacity: rightOpacityAnim,
-                                      child: MatrixTransition(
-                                        animation: sAnim,
-                                        onTransform: (animationValue) {
-                                          final horizontalOffset = -animationValue * imageSwitchSpacing + imageSwitchSpacing;
-                                          return Matrix4.translationValues(horizontalOffset + imageLeftOffset, 0.0, 0.0);
-                                        },
-                                        child: Transform.translate(
-                                          offset: Offset(0.0, vOffsetImage),
-                                          child: _RawImageContainer(
-                                            width: imageBoxWidth,
-                                            height: imageBoxHeight,
-                                            padding: imagePadding,
-                                            child: Padding(
-                                              padding: EdgeInsets.all(12.0 * (1 - bcp)),
-                                              child: nextImageWidget,
-                                            ),
-                                          ),
-                                        ),
+                                      opacity: queueInverseOpacityAnimation,
+                                      child: _NextPrevButton(
+                                        geometry: geometry,
+                                        icon: Broken.previous,
+                                        onPressed: MiniPlayerController.inst.snapToPrev,
+                                        onLongPress: () => Player.inst.seek(Duration.zero),
                                       ),
                                     ),
-                                ],
-                              );
-                            },
+                                    _ScaleLayoutBox(
+                                      key: const Key("playpause"),
+                                      scaleListenable: playPauseBoxScaleAnimation,
+                                      child: playPauseButton,
+                                    ),
+                                    FadeIgnoreTransition(
+                                      opacity: queueInverseOpacityAnimation,
+                                      child: _NextPrevButton(
+                                        geometry: geometry,
+                                        icon: Broken.next,
+                                        onPressed: MiniPlayerController.inst.snapToNext,
+                                        onLongPressStart: Player.inst.startSpeedUp,
+                                        onLongPressFinish: Player.inst.endSpeedUp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
+                    ),
+                  ),
 
-                        /// Simple current lyrics line (under artwork)
-                        showSimpleLyricsLine
-                            ? ClipRect(
-                                child: FadeIgnoreTransition(
-                                  completelyKillWhenPossible: true,
-                                  opacity: simpleLyricsOpacityAnimation,
-                                  child: Transform.translate(
-                                    offset: Offset(0.0, vOffsetTrackInfo - trackInfoBoxHeight * bcp + 12.0 * heightFactor * bcp - imageExtraLift * 0.5),
-                                    child: Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 32.0),
-                                        child: SimpleLyricsLineWidget(
-                                          fitToWidth: true,
-                                          style: textTheme.displayMedium?.copyWith(
-                                            fontSize: _kSimpleLyricsLineFontSize,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
+                  /// Destination selector
+                  FadeIgnoreTransition(
+                    opacity: opacityAnimation,
+                    child: _AnimatedOrPadding(
+                      animated: hideStatusBarInExpanded,
+                      duration: Duration(milliseconds: 200),
+                      padding: EdgeInsets.only(bottom: MiniPlayerController.inst.bottomInset),
+                      child: ListenableTranslate(
+                        offset: geometry.bottomRowOffset,
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: bottomRowChild,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  /// Track Info
+                  ClipRect(
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: Stack(
+                        children: [
+                          if (prevText != null)
+                            FadeIgnoreTransition(
+                              opacity: leftOpacityAnim,
+                              child: ListenableTranslate(
+                                offset: geometry.previousTrackInfoOffset,
+                                child: _TrackInfo(
+                                  textData: prevText,
+                                  isCurrent: false,
+                                  geometry: geometry,
+                                  opacityAnimation: fastOpacityAnimation,
+                                ),
+                              ),
+                            ),
+                          FadeIgnoreTransition(
+                            opacity: centerItemFadeAnimation,
+                            child: ListenableTranslate(
+                              offset: geometry.currentTrackInfoOffset,
+                              child: _TrackInfo(
+                                textData: currentText,
+                                isCurrent: true,
+                                geometry: geometry,
+                                opacityAnimation: fastOpacityAnimation,
+                              ),
+                            ),
+                          ),
+                          if (nextText != null)
+                            FadeIgnoreTransition(
+                              opacity: rightOpacityAnim,
+                              child: ListenableTranslate(
+                                offset: geometry.nextTrackInfoOffset,
+                                child: _TrackInfo(
+                                  textData: nextText,
+                                  isCurrent: false,
+                                  geometry: geometry,
+                                  opacityAnimation: fastOpacityAnimation,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  /// Track Image
+                  ClipRect(
+                    child: Stack(
+                      children: [
+                        if (previousImageWidget != null)
+                          FadeIgnoreTransition(
+                            opacity: leftOpacityAnim,
+                            child: ListenableTranslate(
+                              offset: geometry.previousImageOffset,
+                              child: _RawImageContainer(
+                                geometry: geometry,
+                                child: ListenablePadding(
+                                  padding: geometry.imageInnerPadding,
+                                  child: previousImageWidget,
+                                ),
+                              ),
+                            ),
+                          ),
+                        FadeIgnoreTransition(
+                          opacity: centerItemFadeAnimation,
+                          child: ListenableTranslate(
+                            offset: geometry.currentImageOffset,
+                            child: _RawImageContainer(
+                              geometry: geometry,
+                              child: ListenablePadding(
+                                padding: geometry.imageInnerPadding,
+                                child: ObxO(
+                                  rx: settings.artworkGestureDoubleTapLRC,
+                                  builder: (context, artworkGestureDoubleTapLRC) {
+                                    if (artworkGestureDoubleTapLRC) {
+                                      return ObxO(
+                                        rx: Lyrics.inst.currentLyricsLRC,
+                                        builder: (context, currentLyricsLRC) {
+                                          // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                          return DoubleTapDetector(
+                                            onDoubleTap: currentLyricsLRC == null
+                                                ? () {
+                                                    settings.enableLyrics.save(!settings.enableLyrics.value);
+                                                    Lyrics.inst.updateLyrics(currentItem);
+                                                  }
+                                                : null,
+                                            child: currentImage,
+                                          );
+                                        },
+                                      );
+                                    }
+                                    return currentImage;
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (nextImageWidget != null)
+                          FadeIgnoreTransition(
+                            opacity: rightOpacityAnim,
+                            child: ListenableTranslate(
+                              offset: geometry.nextImageOffset,
+                              child: _RawImageContainer(
+                                geometry: geometry,
+                                child: ListenablePadding(
+                                  padding: geometry.imageInnerPadding,
+                                  child: nextImageWidget,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  /// Simple current lyrics line (under artwork)
+                  showSimpleLyricsLine
+                      ? ClipRect(
+                          child: FadeIgnoreTransition(
+                            completelyKillWhenPossible: true,
+                            opacity: simpleLyricsOpacityAnimation,
+                            child: ListenableTranslate(
+                              offset: geometry.simpleLyricsOffset,
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 32.0),
+                                  child: SimpleLyricsLineWidget(
+                                    fitToWidth: true,
+                                    style: textTheme.displayMedium?.copyWith(
+                                      fontSize: _kSimpleLyricsLineFontSize,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ),
-                              )
-                            : const SizedBox(),
-
-                        Positioned(
-                          bottom: -bottomOffset + (12.0 * icp) + (-(SeekReadyDimensions.barHeight / 2) + (SeekReadyDimensions.progressBarHeight / 2)),
-                          left: borderRadius.bottomLeft.x + 4.0,
-                          right: borderRadius.bottomRight.x + 4.0,
-                          child: FadeIgnoreTransition(
-                            opacity: progressBarOpacityAnimation,
-                            child: seekReadyWidget,
+                              ),
+                            ),
                           ),
-                        ),
+                        )
+                      : const SizedBox(),
 
-                        Visibility(
-                          maintainState: true, // cuz rebuilding from scratch almost kills raster
-                          visible: qp > 0 && !bounceUp,
-                          child: Transform.translate(
-                            offset: Offset(0, (1 - qp) * maxQueueHeight),
-                            child: queueChild,
-                          ),
+                  Positioned(
+                    left: 0.0,
+                    right: 0.0,
+                    bottom: 0.0,
+                    child: ListenableTranslate(
+                      offset: geometry.progressBarOffset,
+                      child: ListenablePadding(
+                        padding: geometry.progressBarPadding,
+                        child: FadeIgnoreTransition(
+                          opacity: progressBarOpacityAnimation,
+                          child: seekReadyWidget,
                         ),
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                  ),
+
+                  ValueConditionBuilder(
+                    listenable: MiniPlayerController.inst.animation,
+                    condition: _isQueueVisible,
+                    builder: (context, isQueueVisible, child) => Visibility(
+                      maintainState: true, // cuz rebuilding from scratch almost kills raster
+                      visible: isQueueVisible,
+                      child: child!,
+                    ),
+                    child: ListenableTranslate(
+                      offset: geometry.queueOffset,
+                      child: queueChild,
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
       },
     );
   }
+
+  static bool _isExpanding(double p) => p > 0;
+
+  static bool _isQueueVisible(double p) => p > 1.0 && !MiniPlayerController.inst.bounceUp;
+}
+
+// by claude
+/// Everything the miniplayer lays out per animation frame, recomputed once per tick and read by
+/// listenable render objects, so animating it never rebuilds a widget.
+class _MiniplayerGeometry extends ChangeNotifier {
+  _MiniplayerGeometry() {
+    MiniPlayerController.inst.animation.addListener(_onAnimationTick);
+  }
+
+  final layout = _MiniplayerLayout();
+  _MiniplayerLayoutInputs _inputs = _kDefaultLayoutInputs;
+
+  void updateInputs(_MiniplayerLayoutInputs inputs) {
+    _inputs = inputs;
+    _onAnimationTick();
+  }
+
+  void _onAnimationTick() {
+    layout.update(MiniPlayerController.inst.animation.value, _inputs);
+    notifyListeners();
+  }
+
+  /// the space the lyrics get while fully expanded, so animating never relays them out.
+  Size computeExpandedLyricsMaxSize() {
+    final expanded = _MiniplayerLayout()..update(1.0, _inputs);
+    final width = expanded.imageMaxWidthPre;
+    return Size(width, expanded.imageMaxHeightPre.withMaximum(width));
+  }
+
+  @override
+  void dispose() {
+    MiniPlayerController.inst.animation.removeListener(_onAnimationTick);
+    super.dispose();
+  }
+
+  late final bodyOffset = _LayoutValue(this, (l) => Offset(0.0, l.bottomOffset));
+  late final bodyPadding = _LayoutValue(this, (l) => EdgeInsets.symmetric(horizontal: 6.0 * (1 - l.cp * 10 + 9).clampDouble(0, 1), vertical: 12.0 * l.icp));
+  late final panelConstraints = _LayoutValue(this, (l) => BoxConstraints.tightFor(width: double.infinity, height: l.panelHeight));
+  late final visualizerBaseline = _LayoutValue(this, (l) => 32.0 * l.waveformYScale - l.vOffsetWaveform);
+
+  late final topRowOffset = _LayoutValue(this, (l) => Offset(0.0, (1 - l.bp) * -100));
+  late final waveformOffset = _LayoutValue(this, (l) => Offset(0.0, l.vOffsetWaveform));
+  late final seekTextOffset = _LayoutValue(this, (l) => Offset(0.0, l.vOffsetWaveform - 64.0 - 8.0));
+  late final bottomRowOffset = _LayoutValue(this, (l) => Offset(0.0, 100 * l.ip));
+  late final queueOffset = _LayoutValue(this, (l) => Offset(0.0, (1 - l.qp) * l.maxQueueHeight));
+
+  late final controlsOffset = _LayoutValue(this, (l) => Offset(0.0, l.vOffsetControls));
+  late final controlsPadding = _LayoutValue(this, (l) => EdgeInsets.all(12.0 * l.icp));
+  late final positionRowPadding = _LayoutValue(this, (l) => EdgeInsets.symmetric(horizontal: 24.0 * (16.0 * l.icp + 1)));
+  late final buttonsPadding = _LayoutValue(this, (l) => EdgeInsets.fromLTRB(0.0, 20.0 * l.icp, l.buttonsRightPadding, 20.0 * l.icp));
+  late final nextPrevOuterPadding = _LayoutValue(this, (l) => EdgeInsets.symmetric(horizontal: l.nextPrevIconPadding / 2));
+  late final nextPrevInnerPadding = _LayoutValue(this, (l) => EdgeInsets.symmetric(horizontal: l.nextPrevIconPadding / 2, vertical: l.nextPrevIconPadding));
+  late final nextPrevIconScale = _LayoutValue(this, (l) => (21.0 + 11.0 * l.nextPrevMultiplier) / _kNextPrevMaxIconSize);
+
+  late final imageOffset = _LayoutValue(this, (l) => Offset(l.imageLeftOffset, l.vOffsetImage));
+  late final imagePadding = _LayoutValue(this, (l) => EdgeInsets.fromLTRB(l.imagePaddingLeft, l.imagePaddingAll, l.imagePaddingAll, l.imagePaddingAll));
+  late final imageConstraints = _LayoutValue(this, (l) => BoxConstraints.tightFor(width: l.imageBoxWidth, height: l.imageBoxHeight));
+  late final imageInnerPadding = _LayoutValue(this, (l) => EdgeInsets.all(l.imagePaddingAll));
+  late final previousImageOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.imageSwitchSpacing - l.imageSwitchSpacing + l.imageLeftOffset, l.vOffsetImage));
+  late final currentImageOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.imageSwitchSpacing + l.imageLeftOffset, l.vOffsetImage));
+  late final nextImageOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.imageSwitchSpacing + l.imageSwitchSpacing + l.imageLeftOffset, l.vOffsetImage));
+
+  late final previousTrackInfoOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.infoSwitchSpacing - l.infoSwitchSpacing, l.vOffsetTrackInfo));
+  late final currentTrackInfoOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.sMaxOffset / MiniPlayerController.kStParallax + (12.0 * l.qp), l.vOffsetTrackInfo));
+  late final nextTrackInfoOffset = _SwipeLayoutValue(this, (l, s) => Offset(-s * l.infoSwitchSpacing + l.infoSwitchSpacing, l.vOffsetTrackInfo));
+  late final trackInfoPadding = _LayoutValue(this, (l) {
+    final paddingAll = 12.0 * (1 - l.bcp);
+    final paddingAllHorizontal = (paddingAll + 24.0 * l.bcp) * (1 - l.qcp);
+    return EdgeInsets.fromLTRB(paddingAllHorizontal + 4.0 * l.qp, paddingAll, paddingAllHorizontal, paddingAll * 2);
+  });
+  late final trackInfoConstraints = _LayoutValue(this, (l) => BoxConstraints.tightFor(height: l.trackInfoBoxHeight));
+  late final trackInfoImagePlaceholder = _LayoutValue(this, (l) => BoxConstraints.tightFor(width: l.imageWidth * (1 - l.bcp)));
+  late final trackInfoTextPadding = _LayoutValue(this, (l) => EdgeInsets.only(right: 32.0 + (82.0 * (1 - l.bcp) * (1 - l.qp)) + (60.0 * l.qp)));
+  late final trackInfoTextLeftPadding = _LayoutValue(this, (l) => EdgeInsets.only(left: 8.0 * l.bcp));
+  late final firstLineScale = _LayoutValue(this, (l) => velpy(a: 14.5, b: 20.0, c: l.bp) / 20.0);
+  late final secondLineScale = _LayoutValue(this, (l) => velpy(a: 12.5, b: 15.0, c: l.bp) / 15.0);
+  late final likeButtonOffset = _LayoutValue(this, (l) => Offset(-100 * (1.0 - l.bcp), 0.0));
+
+  late final simpleLyricsOffset = _LayoutValue(
+    this,
+    (l) => Offset(0.0, l.vOffsetTrackInfo - l.trackInfoBoxHeight * l.bcp + 12.0 * l.heightFactor * l.bcp - l.imageExtraLift * 0.5),
+  );
+  late final progressBarOffset = _LayoutValue(
+    this,
+    (l) => Offset(0.0, l.bottomOffset - (12.0 * l.icp) + (SeekReadyDimensions.barHeight / 2) - (SeekReadyDimensions.progressBarHeight / 2)),
+  );
+  late final progressBarPadding = _LayoutValue(this, (l) => EdgeInsets.symmetric(horizontal: l.panelBottomRadius + 4.0));
+}
+
+/// Plain per frame numbers of [_MiniplayerGeometry], updated in place so ticking allocates nothing.
+class _MiniplayerLayout {
+  double p = 0.0;
+  double cp = 0.0;
+  double icp = 1.0;
+  double ip = 1.0;
+  double bp = 0.0;
+  double bcp = 0.0;
+  double qp = 0.0;
+  double qcp = 0.0;
+
+  double sMaxOffset = 0.0;
+  double infoSwitchSpacing = 0.0;
+  double maxQueueHeight = 0.0;
+  double bottomOffset = 0.0;
+  double panelHeight = 0.0;
+  double panelTopRadius = 0.0;
+  double panelBottomRadius = 0.0;
+  double waveformYScale = 1.0;
+  double heightFactor = 1.0;
+
+  double vOffsetControls = 0.0;
+  double vOffsetWaveform = 0.0;
+  double vOffsetTrackInfo = 0.0;
+  double vOffsetImage = 0.0;
+  double trackInfoBoxHeight = 0.0;
+
+  double nextPrevMultiplier = 0.0;
+  double nextPrevIconPadding = 0.0;
+  double buttonsRightPadding = 0.0;
+
+  double imageWidth = 0.0;
+  double imageMaxWidthPre = 0.0;
+  double imageMaxHeightPre = 0.0;
+  double imageBoxWidth = 0.0;
+  double imageBoxHeight = 0.0;
+  double imagePaddingAll = 0.0;
+  double imagePaddingLeft = 0.0;
+  double imageLeftOffset = 0.0;
+  double imageSwitchSpacing = 0.0;
+  double imageExtraLift = 0.0;
+
+  RRect panelShapeOf(Rect rect) {
+    final topRadius = Radius.circular(panelTopRadius);
+    final bottomRadius = Radius.circular(panelBottomRadius);
+    return RRect.fromRectAndCorners(rect, topLeft: topRadius, topRight: topRadius, bottomLeft: bottomRadius, bottomRight: bottomRadius);
+  }
+
+  void update(double p, _MiniplayerLayoutInputs inputs) {
+    final controller = MiniPlayerController.inst;
+    final bounceUp = controller.bounceUp;
+    final bounceDown = controller.bounceDown;
+    final topInset = controller.topInset;
+    final bottomInset = controller.bottomInset;
+    final rightInset = controller.rightInset;
+    final screenWidth = controller.screenSize.width;
+    final sMaxOffset = controller.sMaxOffset;
+    final navBarHeight = inputs.navBarHeight;
+    final maxOffset = controller.maxOffset - navBarHeight;
+
+    final double cp = p.clampDouble(0.0, 1.0);
+    final double ip = 1 - p;
+    final double icp = 1 - cp;
+    final double rp = inverseAboveOne(p);
+    final double rcp = rp.clampDouble(0, 1);
+    final double qp = p.clampDouble(1.0, 3.0) - 1.0;
+    final double qcp = qp.clampDouble(0.0, 1.0);
+    final double bp = !bounceUp
+        ? !bounceDown
+              ? rp
+              : 1 - (p - 1)
+        : p;
+    final double bcp = bp.clampDouble(0.0, 1.0);
+
+    final miniplayerbottomnavheight = settings.enableBottomNavBar.value && !Dimensions.inst.miniplayerIsWideScreen ? 60.0 : 0.0;
+    final double bottomOffset = (-miniplayerbottomnavheight * icp + p.clampDouble(-1, 0) * -200) - (bottomInset * icp);
+
+    final waveformYScale = maxOffset < _perfectHeight ? (maxOffset / _perfectHeight * 0.9) : 1.0;
+
+    final panelH = (maxOffset + navBarHeight - (100.0 + topInset + 4.0) * qp);
+    final panelExtra = panelH / 2.4 - (100.0 + topInset + 4.0) * qp;
+    // final panelExtra = panelH; // -- use if u want to hide it while expanded, looks cool
+    final panelFinal = panelH - (panelExtra * (1 - qcp));
+
+    final iconSize = _PlayPauseMetrics.iconSize(p);
+    final iconBoxSize = _PlayPauseMetrics.boxSize(iconSize);
+
+    final nextprevmultiplier = ((inverseAboveOne(p - 2.0) + 3.0) * (1 - qp)) - 1;
+    final nextPrevIconSize = (21.0 + 11.0 * nextprevmultiplier);
+    final nextPrevIconPadding = (8.0 + 4.0 * cp + 6.0 * nextprevmultiplier);
+
+    final totalButtonsSize = iconBoxSize + (nextPrevIconSize + nextPrevIconPadding * 2) * 2;
+    final buttonsRightPadding = (cp * rcp * ((screenWidth - totalButtonsSize) / 2)) - rightInset;
+
+    // -- the vertical layout is designed at [_perfectHeight] and stretches with the panel,
+    // -- shrinking is covered by the scale box but taller panels still spread these out.
+    final heightFactor = _lerpDouble(1.0, maxOffset / _perfectHeight, rp);
+
+    final topRowHeight = 1.25 * (32.0 * heightFactor + _kTopBottomMargin * 2) * cp;
+    final bottomRowHeight = topRowHeight;
+    final imageWidth = velpy(a: 82.0, b: 92.0, c: qp);
+
+    final vOffsetExtras = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 + 12.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
+    final vOffsetExtrasAlt = (bottomOffset * (1 - bcp) + ((-maxOffset + topInset + 100.0 - 8.0 * 2 - 4.0) * qp)) - (navBarHeight * cp);
+    final trackInfoBoxHeight = velpy(a: 58.0, b: 82.0, c: bcp);
+    final vOffsetControls = vOffsetExtrasAlt - bottomRowHeight * bp;
+    double vOffsetWaveform = vOffsetControls - iconSize - (64.0 * waveformYScale) / 2 - (panelFinal * 0.026);
+    vOffsetWaveform = vOffsetWaveform.withMaximum(-(maxOffset - bottomInset - topInset) * 0.2 * (1 - bcp));
+
+    final vOffsetTrackInfo = _lerpDouble(
+      _lerpDouble(
+        vOffsetExtras,
+        // -- [maxOffset] excludes the navbar, but these are anchored to the real screen bottom.
+        -maxOffset + imageWidth / 2 + topInset + 100.0 / 2 + 12.0 * heightFactor - navBarHeight * cp, // idk bro this the only way it matches :/
+        qp,
+      ),
+      (vOffsetWaveform - 64.0 * waveformYScale).withMaximum(-(maxOffset - bottomInset - topInset) * 0.3), // don't ask why topInset.. it works like that idk
+      bcp,
+    );
+    double vOffsetImage = (vOffsetTrackInfo - (trackInfoBoxHeight * bcp) - 16.0 * heightFactor * bcp) + (6.0 * heightFactor * qp);
+
+    final simpleLyricsBandHeight = inputs.simpleLyricsBandHeight;
+    if (simpleLyricsBandHeight > 0) {
+      // -- the line may fall back to 2 lines, the gap under the artwork (22) only holds one.
+      vOffsetImage -= (simpleLyricsBandHeight - 22.0 * heightFactor).withMinimum(0.0) * bcp;
+    }
+
+    // -- the picture is painted 1.13x past its box, so the side margin has to grow with the
+    // -- width, a fixed one only holds the overshoot inside the panel up to ~380 wide.
+    final imageMaxWidthPre = sMaxOffset - (sMaxOffset * 0.2).withMinimum(76.0);
+    final imageMaxHeightPre = maxOffset - -vOffsetImage - topRowHeight - topInset - 24.0 * heightFactor;
+    // -- the box follows the picture's ratio, so wide videos/thumbnails use the width
+    // -- instead of shrinking to whatever square fits the height.
+    final imageAspectRatio = inputs.imageAspectRatio;
+    final imageWidthBig = imageMaxWidthPre.withMaximum(imageMaxHeightPre * imageAspectRatio);
+    final imageHeightBig = imageWidthBig / imageAspectRatio;
+
+    // -- collapsed thumbnail stays square, the ratio only kicks in while expanding.
+    final imageBoxWidth = velpy(a: imageWidth, b: imageWidthBig, c: bcp);
+    final imageBoxHeight = velpy(a: imageWidth, b: imageHeightBig, c: bcp);
+    // -- the painted picture overshoots its box, adjacent items must clear it while sliding.
+    final imageSwitchSpacing = (sMaxOffset / MiniPlayerController.kSiParallax).withMinimum(imageBoxWidth * inputs.thumbnailBaseScale + 12.0);
+
+    final spaceLeftAboveImage = maxOffset - -vOffsetImage - imageBoxHeight - topInset - topRowHeight;
+    double imageExtraLift = 0.0;
+    if (spaceLeftAboveImage > 0) {
+      final spaceLeftInPanelAboveInfo = (panelFinal - -vOffsetTrackInfo - trackInfoBoxHeight); // dont remove too much that it goes above panel
+      imageExtraLift = ((spaceLeftInPanelAboveInfo * 0.5).withMaximum(spaceLeftAboveImage * 0.5)) * bcp;
+      vOffsetImage -= imageExtraLift; // re-adjust offset to make the image semi-centered
+    } else {
+      vOffsetImage += (-spaceLeftAboveImage / 2) * bcp;
+    }
+
+    final imagePaddingAll = 12.0 * (1 - bcp);
+    final imagePaddingLeft = imagePaddingAll + 42.0 * bcp;
+    final imageEmptyRightSpace = screenWidth - imageBoxWidth;
+
+    final panelBaseRadius = inputs.panelBaseRadius;
+
+    this.p = p;
+    this.cp = cp;
+    this.icp = icp;
+    this.ip = ip;
+    this.bp = bp;
+    this.bcp = bcp;
+    this.qp = qp;
+    this.qcp = qcp;
+    this.sMaxOffset = sMaxOffset;
+    this.infoSwitchSpacing = sMaxOffset / MiniPlayerController.kSiParallax;
+    this.maxQueueHeight = controller.maxOffset - 100.0 - topInset - 12.0;
+    this.bottomOffset = bottomOffset;
+    this.panelHeight = velpy(a: 82.0, b: panelFinal, c: cp);
+    this.panelTopRadius = panelBaseRadius + 6.0 * p;
+    this.panelBottomRadius = panelBaseRadius * (1 - p * 10 + 9).clampDouble(0, 1);
+    this.waveformYScale = waveformYScale;
+    this.heightFactor = heightFactor;
+    this.vOffsetControls = vOffsetControls;
+    this.vOffsetWaveform = vOffsetWaveform;
+    this.vOffsetTrackInfo = vOffsetTrackInfo;
+    this.vOffsetImage = vOffsetImage;
+    this.trackInfoBoxHeight = trackInfoBoxHeight;
+    this.nextPrevMultiplier = nextprevmultiplier;
+    this.nextPrevIconPadding = nextPrevIconPadding;
+    this.buttonsRightPadding = buttonsRightPadding;
+    this.imageWidth = imageWidth;
+    this.imageMaxWidthPre = imageMaxWidthPre;
+    this.imageMaxHeightPre = imageMaxHeightPre;
+    this.imageBoxWidth = imageBoxWidth;
+    this.imageBoxHeight = imageBoxHeight;
+    this.imagePaddingAll = imagePaddingAll;
+    this.imagePaddingLeft = imagePaddingLeft;
+    this.imageLeftOffset = ((imageEmptyRightSpace / 2) - imagePaddingLeft - rightInset) * bcp;
+    this.imageSwitchSpacing = imageSwitchSpacing;
+    this.imageExtraLift = imageExtraLift;
+  }
+}
+
+class _LayoutValue<T> implements ValueListenable<T> {
+  final _MiniplayerGeometry _geometry;
+  final T Function(_MiniplayerLayout layout) _select;
+
+  const _LayoutValue(this._geometry, this._select);
+
+  @override
+  void addListener(VoidCallback listener) => _geometry.addListener(listener);
+
+  @override
+  void removeListener(VoidCallback listener) => _geometry.removeListener(listener);
+
+  @override
+  T get value => _select(_geometry.layout);
+}
+
+class _SwipeLayoutValue<T> implements ValueListenable<T> {
+  final _MiniplayerGeometry _geometry;
+  final T Function(_MiniplayerLayout layout, double swipe) _select;
+
+  const _SwipeLayoutValue(this._geometry, this._select);
+
+  @override
+  void addListener(VoidCallback listener) {
+    _geometry.addListener(listener);
+    MiniPlayerController.inst.sAnim.addListener(listener);
+  }
+
+  @override
+  void removeListener(VoidCallback listener) {
+    _geometry.removeListener(listener);
+    MiniPlayerController.inst.sAnim.removeListener(listener);
+  }
+
+  @override
+  T get value => _select(_geometry.layout, MiniPlayerController.inst.sAnim.value);
 }
 
 class _RawImageContainer extends StatelessWidget {
   const _RawImageContainer({
     super.key,
-    required this.width,
-    required this.height,
-    required this.padding,
+    required this.geometry,
     required this.child,
   });
 
-  final double width;
-  final double height;
-  final EdgeInsetsGeometry padding;
+  final _MiniplayerGeometry geometry;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: padding,
-        child: SizedBox(
-          height: height,
-          width: width,
+      child: ListenablePadding(
+        padding: geometry.imagePadding,
+        child: ListenableConstrainedBox(
+          constraints: geometry.imageConstraints,
           child: child,
         ),
       ),
@@ -1690,35 +1782,253 @@ class _RawImageContainer extends StatelessWidget {
   }
 }
 
+class _NextPrevButton extends StatelessWidget {
+  final _MiniplayerGeometry geometry;
+  final IconData icon;
+  final void Function() onPressed;
+  final void Function()? onLongPress;
+  final void Function(LongPressStartDetails details)? onLongPressStart;
+  final void Function()? onLongPressFinish;
+
+  const _NextPrevButton({
+    required this.geometry,
+    required this.icon,
+    required this.onPressed,
+    this.onLongPress,
+    this.onLongPressStart,
+    this.onLongPressFinish,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenablePadding(
+      padding: geometry.nextPrevOuterPadding,
+      child: NamidaIconButton(
+        icon: null,
+        padding: EdgeInsets.zero,
+        onPressed: onPressed,
+        onLongPress: onLongPress,
+        onLongPressStart: onLongPressStart,
+        onLongPressFinish: onLongPressFinish,
+        child: ListenablePadding(
+          padding: geometry.nextPrevInnerPadding,
+          child: _ScaleLayoutBox(
+            scaleListenable: geometry.nextPrevIconScale,
+            child: Icon(
+              icon,
+              size: _kNextPrevMaxIconSize,
+              color: context.theme.colorScheme.secondary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// by claude
+/// The panel's shadow, background and color gradient, painted from [geometry] each frame.
+/// Only the colors animate implicitly, when they change.
+class _MiniplayerPanel extends ImplicitlyAnimatedWidget {
+  final _MiniplayerGeometry geometry;
+  final Color shadowColor;
+  final double shadowRadius;
+  final Color backgroundColor;
+
+  /// both gradient colors carry the gradient's full strength as their alpha.
+  final Color gradientTopColor;
+  final Color gradientBottomColor;
+  final bool hasPlayerBackground;
+  final bool hasColorWhenExpanded;
+  final Widget child;
+
+  const _MiniplayerPanel({
+    required this.geometry,
+    required this.shadowColor,
+    required this.shadowRadius,
+    required this.backgroundColor,
+    required this.gradientTopColor,
+    required this.gradientBottomColor,
+    required this.hasPlayerBackground,
+    required this.hasColorWhenExpanded,
+    required super.duration,
+    required this.child,
+  });
+
+  @override
+  AnimatedWidgetBaseState<_MiniplayerPanel> createState() => _MiniplayerPanelState();
+}
+
+class _MiniplayerPanelState extends AnimatedWidgetBaseState<_MiniplayerPanel> {
+  ColorTween? _backgroundColor;
+  ColorTween? _gradientTopColor;
+  ColorTween? _gradientBottomColor;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _backgroundColor = visitor(_backgroundColor, widget.backgroundColor, (dynamic value) => ColorTween(begin: value as Color)) as ColorTween?;
+    _gradientTopColor = visitor(_gradientTopColor, widget.gradientTopColor, (dynamic value) => ColorTween(begin: value as Color)) as ColorTween?;
+    _gradientBottomColor = visitor(_gradientBottomColor, widget.gradientBottomColor, (dynamic value) => ColorTween(begin: value as Color)) as ColorTween?;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final widget = this.widget;
+    return _MiniplayerPanelBox(
+      geometry: widget.geometry,
+      shadowColor: widget.shadowColor,
+      shadowRadius: widget.shadowRadius,
+      backgroundColor: _backgroundColor?.evaluate(animation) ?? widget.backgroundColor,
+      gradientTopColor: _gradientTopColor?.evaluate(animation) ?? widget.gradientTopColor,
+      gradientBottomColor: _gradientBottomColor?.evaluate(animation) ?? widget.gradientBottomColor,
+      hasPlayerBackground: widget.hasPlayerBackground,
+      hasColorWhenExpanded: widget.hasColorWhenExpanded,
+      child: widget.child,
+    );
+  }
+}
+
+class _MiniplayerPanelBox extends SingleChildRenderObjectWidget {
+  final _MiniplayerGeometry geometry;
+  final Color shadowColor;
+  final double shadowRadius;
+  final Color backgroundColor;
+  final Color gradientTopColor;
+  final Color gradientBottomColor;
+  final bool hasPlayerBackground;
+  final bool hasColorWhenExpanded;
+
+  const _MiniplayerPanelBox({
+    required this.geometry,
+    required this.shadowColor,
+    required this.shadowRadius,
+    required this.backgroundColor,
+    required this.gradientTopColor,
+    required this.gradientBottomColor,
+    required this.hasPlayerBackground,
+    required this.hasColorWhenExpanded,
+    required super.child,
+  });
+
+  @override
+  _RenderMiniplayerPanel createRenderObject(BuildContext context) => _RenderMiniplayerPanel(this);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderMiniplayerPanel renderObject) => renderObject.config = this;
+}
+
+class _RenderMiniplayerPanel extends RenderProxyBox {
+  _RenderMiniplayerPanel(this._config);
+
+  _MiniplayerPanelBox _config;
+  set config(_MiniplayerPanelBox value) {
+    final old = _config;
+    _config = value;
+    if (old.geometry != value.geometry && attached) {
+      old.geometry.removeListener(_onGeometryChanged);
+      value.geometry.addListener(_onGeometryChanged);
+    }
+    markNeedsPaint();
+  }
+
+  double? _paintedP;
+
+  final _shadowPaint = Paint()..maskFilter = MaskFilter.blur(BlurStyle.normal, Shadow.convertRadiusToSigma(20.0));
+  final _backgroundPaint = Paint();
+  final _gradientPaint = Paint();
+
+  void _onGeometryChanged() {
+    if (_config.geometry.layout.p == _paintedP) return;
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _config.geometry.addListener(_onGeometryChanged);
+  }
+
+  @override
+  void detach() {
+    _config.geometry.removeListener(_onGeometryChanged);
+    super.detach();
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final config = _config;
+    final layout = config.geometry.layout;
+    _paintedP = layout.p;
+    final cp = layout.cp;
+    final icp = layout.icp;
+    final canvas = context.canvas;
+    final rect = offset & size;
+
+    final colorStrength = config.hasColorWhenExpanded ? 1.0 : 1.0 - cp;
+
+    // -- shadow kept apart with a fixed uniform radius: skia caches the blur as a nine-patch keyed
+    // -- by (radius, sigma) so resizing the panel per frame stays a cache hit, an animated radius wouldn't.
+    if (colorStrength > 0) {
+      final shadowOpacity = (0.2 + 0.1 * cp) * colorStrength;
+      _shadowPaint.color = config.shadowColor.withOpacityExt(shadowOpacity);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(config.shadowRadius)), _shadowPaint);
+    }
+
+    final shape = layout.panelShapeOf(rect);
+
+    // -- collapsed it still has pages under it, so it only clears up while expanding
+    final panelOpacity = config.hasPlayerBackground ? 1.0 - 0.8 * cp : 1.0;
+    _backgroundPaint.color = config.backgroundColor.withOpacityExt(panelOpacity);
+    canvas.drawRRect(shape, _backgroundPaint);
+
+    if (colorStrength > 0) {
+      final topColor = config.gradientTopColor;
+      final bottomColor = config.gradientBottomColor;
+      final topOpacity = topColor.a * velpy(a: .38, b: .28, c: icp) * colorStrength;
+      final bottomOpacity = bottomColor.a * velpy(a: .1, b: .22, c: icp) * colorStrength;
+      final gradient = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          topColor.withOpacityExt(topOpacity),
+          bottomColor.withOpacityExt(bottomOpacity),
+        ],
+      );
+      _gradientPaint.shader = gradient.createShader(rect);
+      canvas.drawRRect(shape, _gradientPaint);
+    }
+
+    super.paint(context, offset);
+  }
+}
+
+class _PanelShapeClipper extends CustomClipper<RRect> {
+  final _MiniplayerGeometry geometry;
+
+  _PanelShapeClipper(this.geometry) : super(reclip: geometry);
+
+  @override
+  RRect getClip(Size size) => geometry.layout.panelShapeOf(Offset.zero & size);
+
+  @override
+  bool shouldReclip(_PanelShapeClipper oldClipper) => oldClipper.geometry != geometry;
+}
+
 class _TrackInfo<E, S> extends StatelessWidget {
   final MiniplayerInfoData<E, S> textData;
   final bool isCurrent;
-  final double bcp;
-  final double qp;
-  final double qcp;
-  final double p;
-  final double boxHeight;
-  final double leftMargin;
-  final Size screenSize;
-  final double bottomOffset;
-  final double maxOffset;
+  final _MiniplayerGeometry geometry;
   final Animation<double> opacityAnimation;
 
   const _TrackInfo({
     super.key,
     required this.textData,
     required this.isCurrent,
-    required this.bcp,
-    required this.qp,
-    required this.qcp,
-    required this.p,
-    required this.boxHeight,
-    required this.leftMargin,
-    required this.screenSize,
-    required this.bottomOffset,
-    required this.maxOffset,
+    required this.geometry,
     required this.opacityAnimation,
   });
+
+  static bool _isFullyExpanded(double bcp) => bcp == 1.0;
 
   Widget _buildYTLikeButton(ThemeData theme, YtVideoLikeManager ytLikeManager) {
     return ObxO(
@@ -1777,42 +2087,39 @@ class _TrackInfo<E, S> extends StatelessWidget {
     final textTheme = theme.textTheme;
     final ytLikeManager = textData.ytLikeManager;
 
-    final paddingAll = 12.0 * (1 - bcp);
-    final paddingAllHorizontal = (paddingAll + 24.0 * bcp) * (1 - qcp);
-
     // -- fade needs an offscreen layer per line, adjacent items are only glimpsed mid-swipe.
     final overflow = isCurrent ? TextOverflow.fade : TextOverflow.ellipsis;
 
-    final padding = EdgeInsets.fromLTRB(
-      paddingAllHorizontal + 4.0 * qp,
-      paddingAll,
-      paddingAllHorizontal,
-      paddingAll * 2,
-    );
-
     return Align(
       alignment: Alignment.bottomLeft,
-      child: Padding(
-        padding: padding,
-        child: SizedBox(
-          height: boxHeight,
+      child: ListenablePadding(
+        padding: geometry.trackInfoPadding,
+        child: ListenableConstrainedBox(
+          constraints: geometry.trackInfoConstraints,
           child: Row(
             children: [
-              SizedBox(width: leftMargin), // Image placeholder
+              ListenableConstrainedBox(
+                constraints: geometry.trackInfoImagePlaceholder,
+              ),
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: (32.0 + (82.0 * (1 - bcp) * (1 - qp)) + (60.0 * qp))),
-                        child: InkWell(
-                          onTapUp: bcp == 1 ? textData.onMenuOpen : null,
-                          onLongPress: textData.enableTextLongTap && bcp == 1 ? textData.onTextLongTap : null,
-                          highlightColor: Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor),
-                          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 8.0 * bcp),
+                      child: ListenablePadding(
+                        padding: geometry.trackInfoTextPadding,
+                        child: ValueConditionBuilder(
+                          listenable: NamidaMiniPlayerBase.clampedAnimationBCP,
+                          condition: _isFullyExpanded,
+                          builder: (context, isFullyExpanded, child) => InkWell(
+                            onTapUp: isFullyExpanded ? textData.onMenuOpen : null,
+                            onLongPress: textData.enableTextLongTap && isFullyExpanded ? textData.onTextLongTap : null,
+                            highlightColor: Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor),
+                            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                            child: child,
+                          ),
+                          child: ListenablePadding(
+                            padding: geometry.trackInfoTextLeftPadding,
                             child: Column(
                               mainAxisSize: MainAxisSize.max,
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -1820,7 +2127,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                               children: [
                                 if (textData.firstLineGood)
                                   _ScaleLayoutBox(
-                                    scale: velpy(a: 14.5, b: 20.0, c: p) / 20.0,
+                                    scaleListenable: geometry.firstLineScale,
                                     child: Text(
                                       textData.firstLine,
                                       maxLines: textData.secondLineGood ? 1 : 2,
@@ -1834,7 +2141,7 @@ class _TrackInfo<E, S> extends StatelessWidget {
                                 if (textData.firstLineGood && textData.secondLineGood) const SizedBox(height: 4.0),
                                 if (textData.secondLineGood)
                                   _ScaleLayoutBox(
-                                    scale: velpy(a: 12.5, b: 15.0, c: p) / 15.0,
+                                    scaleListenable: geometry.secondLineScale,
                                     child: Text(
                                       textData.secondLine,
                                       softWrap: false,
@@ -1853,8 +2160,8 @@ class _TrackInfo<E, S> extends StatelessWidget {
                     FadeIgnoreTransition(
                       completelyKillWhenPossible: true,
                       opacity: opacityAnimation,
-                      child: Transform.translate(
-                        offset: Offset(-100 * (1.0 - bcp), 0.0),
+                      child: ListenableTranslate(
+                        offset: geometry.likeButtonOffset,
                         child: LongPressDetector(
                           enableSecondaryTap: true,
                           onLongPress: textData.onShowAddToPlaylistDialog,
@@ -2209,89 +2516,71 @@ class SeekForwardDetectorWidget extends StatelessWidget {
   }
 }
 
-class _AnimatedDecorationOrDecoration extends StatelessWidget {
-  final Duration duration;
-  final Decoration decoration;
-  final Widget? child;
-  final bool animate;
-
-  const _AnimatedDecorationOrDecoration({
-    super.key,
-    required this.duration,
-    required this.decoration,
-    required this.animate,
-    this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // -- same widget type either way, swapping to a plain [DecoratedBox] would remount the whole subtree.
-    return AnimatedDecoration(
-      decoration: decoration,
-      duration: animate && settings.animatedTheme.value ? duration : Duration.zero,
-      child: child,
-    );
-  }
-}
-
 /// Lays [child] out as if it had `1 / scale` of the available space, then paints it scaled by [scale].
 ///
 /// Unlike [Transform.scale], the box reports the scaled size to its parent, and unlike changing
 /// font sizes or paddings, [child] keeps its constraints so text is never re-shaped per frame.
 class _ScaleLayoutBox extends SingleChildRenderObjectWidget {
   final double scale;
-  final Animation<double>? scaleAnimation;
+  final ValueListenable<double>? scaleListenable;
 
   const _ScaleLayoutBox({
     super.key,
     this.scale = 1.0,
-    this.scaleAnimation,
+    this.scaleListenable,
     required super.child,
   });
 
   @override
-  _RenderScaleLayoutBox createRenderObject(BuildContext context) => _RenderScaleLayoutBox(scale, scaleAnimation);
+  _RenderScaleLayoutBox createRenderObject(BuildContext context) => _RenderScaleLayoutBox(scale, scaleListenable);
 
   @override
   void updateRenderObject(BuildContext context, _RenderScaleLayoutBox renderObject) {
     renderObject
       ..scale = scale
-      ..scaleAnimation = scaleAnimation;
+      ..scaleListenable = scaleListenable;
   }
 }
 
 class _RenderScaleLayoutBox extends RenderBox with RenderObjectWithChildMixin<RenderBox> {
-  _RenderScaleLayoutBox(this._scale, this._scaleAnimation);
+  _RenderScaleLayoutBox(this._scale, this._scaleListenable);
 
   double _scale;
   set scale(double value) {
     if (_scale == value) return;
     _scale = value;
-    if (_scaleAnimation == null) markNeedsLayout();
+    if (_scaleListenable == null) markNeedsLayout();
   }
 
-  Animation<double>? _scaleAnimation;
-  set scaleAnimation(Animation<double>? value) {
-    if (_scaleAnimation == value) return;
+  ValueListenable<double>? _scaleListenable;
+  set scaleListenable(ValueListenable<double>? value) {
+    if (_scaleListenable == value) return;
     if (attached) {
-      _scaleAnimation?.removeListener(markNeedsLayout);
-      value?.addListener(markNeedsLayout);
+      _scaleListenable?.removeListener(_onScaleChanged);
+      value?.addListener(_onScaleChanged);
     }
-    _scaleAnimation = value;
+    _scaleListenable = value;
     markNeedsLayout();
   }
 
-  double get _effectiveScale => _scaleAnimation?.value ?? _scale;
+  double? _laidOutScale;
+
+  void _onScaleChanged() {
+    if (_effectiveScale == _laidOutScale) return;
+    markNeedsLayout();
+  }
+
+  double get _effectiveScale => _scaleListenable?.value ?? _scale;
 
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    _scaleAnimation?.addListener(markNeedsLayout);
+    _scaleListenable?.addListener(_onScaleChanged);
   }
 
   @override
   void detach() {
-    _scaleAnimation?.removeListener(markNeedsLayout);
+    _scaleListenable?.removeListener(_onScaleChanged);
     super.detach();
   }
 
@@ -2310,6 +2599,7 @@ class _RenderScaleLayoutBox extends RenderBox with RenderObjectWithChildMixin<Re
       return;
     }
     final scale = _effectiveScale;
+    _laidOutScale = scale;
     child.layout(_childConstraints(constraints, scale), parentUsesSize: true);
     size = constraints.constrain(child.size * scale);
   }
@@ -2480,7 +2770,7 @@ class _PlayPauseButton extends StatelessWidget {
                 ),
                 child: Center(
                   child: _ScaleLayoutBox(
-                    scaleAnimation: iconScaleAnimation,
+                    scaleListenable: iconScaleAnimation,
                     child: iconStack,
                   ),
                 ),
@@ -3051,3 +3341,7 @@ double resolvePlayableImageAspectRatio(Playable item, double? videoAspectRatio) 
   if (item is YoutubeID) return 16 / 9;
   return 1.0;
 }
+
+typedef _MiniplayerLayoutInputs = ({double navBarHeight, double imageAspectRatio, double simpleLyricsBandHeight, double thumbnailBaseScale, double panelBaseRadius});
+
+const _MiniplayerLayoutInputs _kDefaultLayoutInputs = (navBarHeight: 0.0, imageAspectRatio: 1.0, simpleLyricsBandHeight: 0.0, thumbnailBaseScale: 1.0, panelBaseRadius: 0.0);

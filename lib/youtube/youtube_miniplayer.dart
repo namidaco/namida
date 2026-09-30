@@ -37,6 +37,7 @@ import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -173,11 +174,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    const space1sb = 8.0;
-    const space2ForThumbnail = _space2ForThumbnail;
-    const space3sb = 8.0;
-    const space4 = 38.0 * 2;
-    const space5sb = 8.0;
     const miniplayerHeight = kYoutubeMiniplayerHeight;
 
     final seekReadyWidget = SeekReadyWidget(key: SeekReadyWidget.normalKey);
@@ -377,11 +373,16 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                               ),
                       ),
                       rightDragAbsorberWidget,
-                      ytMiniplayerQueueChip,
                     ],
                   );
                 },
               ),
+            );
+
+            // -- follows the visible bottom edge, while the body stays laid out at full height.
+            final queueChipLayer = NamidaUiScaleBox(
+              scale: innerScale,
+              child: ytMiniplayerQueueChip,
             );
 
             final titleChild = _YTCollapsedTitle(
@@ -483,104 +484,124 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                       setOrientations: false,
                     );
                   },
-                  builder: (double height, double p, Animation<double> reverseOpacityAnimation) {
-                    final percentage = (p * 2.8).clampDouble(0.0, 1.0);
-                    final percentageFast = (p * 1.5 - 0.5).clampDouble(0.0, 1.0);
-                    final inversePerc = 1 - percentage;
-                    final finalspace1sb = space1sb * inversePerc;
-                    final finalspace3sb = space3sb * inversePerc;
-                    final finalspace4buttons = space4 * inversePerc;
-                    final finalspace5sb = space5sb * inversePerc;
-                    final finalpadding = 4.0 * inversePerc;
-                    final finalbr = (8.0 * inversePerc).multipliedRadius;
-                    final double finalthumbnailWidth = (space2ForThumbnail + maxWidth * percentage).clampDouble(
-                      space2ForThumbnail,
-                      (maxWidth - finalspace1sb - finalspace3sb).toDouble(),
+                  builder: (percentage, reverseOpacityAnimation, expandedHeight) {
+                    final geometry = _YTMiniplayerGeometry(percentage, maxWidth: maxWidth);
+                    final bodyHeight = (expandedHeight - geometry.computeExpandedHeaderHeight()).withMinimum(0.0);
+
+                    final headerRow = Row(
+                      children: [
+                        ListenableConstrainedBox(
+                          constraints: geometry.spacingConstraints,
+                        ),
+                        ListenablePadding(
+                          padding: geometry.thumbnailMargin,
+                          child: ListenableConstrainedBox(
+                            constraints: geometry.thumbnailConstraints,
+                            child: ValueConditionBuilder(
+                              listenable: percentage,
+                              condition: _isCollapsed,
+                              builder: (context, isCollapsed, child) => ClipRRect(
+                                clipper: _RoundedRectClipper(geometry.thumbnailRadius),
+                                // -- anti-aliased rrect clipping over the video texture is only worth it at rest.
+                                clipBehavior: isCollapsed ? Clip.antiAlias : Clip.hardEdge,
+                                child: child,
+                              ),
+                              child: ColoredBox(
+                                color: Colors.black,
+                                child: videoWidget,
+                              ),
+                            ),
+                          ),
+                        ),
+                        FadeIgnoreTransition(
+                          completelyKillWhenPossible: true,
+                          opacity: reverseOpacityAnimation,
+                          child: Row(
+                            children: [
+                              ListenableConstrainedBox(
+                                constraints: geometry.spacingConstraints,
+                              ),
+                              ListenableConstrainedBox(
+                                constraints: geometry.titleConstraints,
+                                child: titleChild,
+                              ),
+                              ListenableConstrainedBox(
+                                key: keys.titleButton2,
+                                constraints: geometry.buttonConstraints,
+                                child: playPauseButtonChild,
+                              ),
+                              ListenableConstrainedBox(
+                                key: keys.titleButton3,
+                                constraints: geometry.buttonConstraints,
+                                child: nextButton,
+                              ),
+                              ListenableConstrainedBox(
+                                constraints: geometry.spacingConstraints,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     );
-                    final finalthumbnailHeight = finalthumbnailWidth * 9 / 16;
 
                     return Stack(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        CustomMultiChildLayout(
+                          delegate: _YTMiniplayerLayoutDelegate(bodyHeight: bodyHeight),
                           children: [
-                            Row(
-                              children: [
-                                SizedBox(width: finalspace1sb),
-                                Container(
-                                  // -- anti-aliased rrect clipping over the video texture is only worth it at rest.
-                                  clipBehavior: percentage == 0 ? Clip.antiAlias : Clip.hardEdge,
-                                  margin: EdgeInsets.symmetric(vertical: finalpadding),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black,
-                                    borderRadius: BorderRadius.circular(finalbr),
-                                  ),
-                                  width: finalthumbnailWidth,
-                                  height: finalthumbnailHeight,
-                                  child: videoWidget,
-                                ),
-                                FadeIgnoreTransition(
-                                  completelyKillWhenPossible: true,
-                                  opacity: reverseOpacityAnimation,
-                                  child: Row(
-                                    children: [
-                                      SizedBox(width: finalspace3sb),
-                                      SizedBox(
-                                        width: (maxWidth - finalthumbnailWidth - finalspace1sb - finalspace3sb - finalspace4buttons - finalspace5sb).clampDouble(
-                                          0,
-                                          maxWidth,
-                                        ),
-                                        child: titleChild,
-                                      ),
-                                      SizedBox(
-                                        key: keys.titleButton2,
-                                        width: finalspace4buttons / 2,
-                                        height: miniplayerHeight,
-                                        child: playPauseButtonChild,
-                                      ),
-                                      SizedBox(
-                                        key: keys.titleButton3,
-                                        width: finalspace4buttons / 2,
-                                        height: miniplayerHeight,
-                                        child: nextButton,
-                                      ),
-                                      SizedBox(width: finalspace5sb),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            LayoutId(
+                              id: _YTMiniplayerSlot.header,
+                              child: headerRow,
                             ),
                             // -- kept mounted while collapsed: rebuilding the navigator, list & shimmers on the
                             // -- first drag frame was a guaranteed jank, and the comments subpage survives too.
-                            Expanded(
-                              child: Visibility(
-                                maintainState: true,
-                                visible: percentage > 0,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    miniplayerBody,
-                                    IgnorePointer(
-                                      child: ColoredBox(
-                                        color: miniplayerBGColor.withOpacityExt(1 - percentageFast),
-                                      ),
-                                    ),
-                                  ],
+                            LayoutId(
+                              id: _YTMiniplayerSlot.body,
+                              child: ValueConditionBuilder(
+                                listenable: percentage,
+                                condition: _isCollapsed,
+                                builder: (context, isCollapsed, child) => Visibility(
+                                  maintainState: true,
+                                  visible: !isCollapsed,
+                                  child: child!,
+                                ),
+                                child: miniplayerBody,
+                              ),
+                            ),
+                            LayoutId(
+                              id: _YTMiniplayerSlot.queueChip,
+                              child: ValueConditionBuilder(
+                                listenable: percentage,
+                                condition: _isCollapsed,
+                                builder: (context, isCollapsed, child) => Visibility(
+                                  maintainState: true,
+                                  visible: !isCollapsed,
+                                  child: child!,
+                                ),
+                                child: queueChipLayer,
+                              ),
+                            ),
+                            LayoutId(
+                              id: _YTMiniplayerSlot.bodyCover,
+                              child: IgnorePointer(
+                                child: FadeTransition(
+                                  opacity: geometry.bodyCoverOpacity,
+                                  child: ColoredBox(
+                                    color: miniplayerBGColor.withOpacityExt(1.0),
+                                  ),
                                 ),
                               ),
                             ),
                           ],
                         ),
                         Positioned(
-                          top:
-                              finalthumbnailHeight -
-                              (_extraPaddingForYTMiniplayer / 2 * inversePerc) -
-                              SeekReadyDimensions.barHeight +
-                              (SeekReadyDimensions.barHeight * (0.5 * inversePerc)) +
-                              (SeekReadyDimensions.progressBarHeight / 2),
-                          left: 0,
-                          right: 0,
-                          child: seekReadyWidget,
+                          top: 0.0,
+                          left: 0.0,
+                          right: 0.0,
+                          child: ListenableTranslate(
+                            offset: geometry.seekBarOffset,
+                            child: seekReadyWidget,
+                          ),
                         ),
                       ],
                     );
@@ -593,6 +614,120 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
       ),
     );
   }
+
+  static bool _isCollapsed(double p) => p <= 0;
+}
+
+/// Per frame sizes of the player's header, as listenables for render objects so dragging it never rebuilds.
+class _YTMiniplayerGeometry {
+  final Animation<double> percentage;
+  final double maxWidth;
+
+  _YTMiniplayerGeometry(this.percentage, {required this.maxWidth});
+
+  static const _spacing = 8.0;
+  static const _buttonsSpace = 38.0 * 2;
+
+  static double _expansionOf(double p) => (p * 2.8).clampDouble(0.0, 1.0);
+
+  double _computeThumbnailWidth(double expansion) {
+    final spacing = _spacing * (1 - expansion);
+    return (_space2ForThumbnail + maxWidth * expansion).clampDouble(_space2ForThumbnail, maxWidth - spacing * 2);
+  }
+
+  /// the title row is gone by then, so it's only the thumbnail.
+  double computeExpandedHeaderHeight() => _computeThumbnailWidth(1.0) * 9 / 16;
+
+  late final spacingConstraints = percentage.drive(
+    Animatable.fromCallback((p) => BoxConstraints.tightFor(width: _spacing * (1 - _expansionOf(p)))),
+  );
+  late final thumbnailMargin = percentage.drive(
+    Animatable.fromCallback((p) => EdgeInsets.symmetric(vertical: 4.0 * (1 - _expansionOf(p)))),
+  );
+  late final thumbnailConstraints = percentage.drive(
+    Animatable.fromCallback((p) {
+      final width = _computeThumbnailWidth(_expansionOf(p));
+      return BoxConstraints.tight(Size(width, width * 9 / 16));
+    }),
+  );
+  late final thumbnailRadius = percentage.drive(
+    Animatable.fromCallback((p) => (8.0 * (1 - _expansionOf(p))).multipliedRadius),
+  );
+  late final titleConstraints = percentage.drive(
+    Animatable.fromCallback((p) {
+      final expansion = _expansionOf(p);
+      final inverse = 1 - expansion;
+      final width = maxWidth - _computeThumbnailWidth(expansion) - _spacing * inverse * 3 - _buttonsSpace * inverse;
+      return BoxConstraints.tightFor(width: width.clampDouble(0, maxWidth));
+    }),
+  );
+  late final buttonConstraints = percentage.drive(
+    Animatable.fromCallback((p) => BoxConstraints.tightFor(width: _buttonsSpace / 2 * (1 - _expansionOf(p)), height: kYoutubeMiniplayerHeight)),
+  );
+  late final seekBarOffset = percentage.drive(
+    Animatable.fromCallback((p) {
+      final expansion = _expansionOf(p);
+      final inverse = 1 - expansion;
+      final thumbnailHeight = _computeThumbnailWidth(expansion) * 9 / 16;
+      final top =
+          thumbnailHeight -
+          (_extraPaddingForYTMiniplayer / 2 * inverse) -
+          SeekReadyDimensions.barHeight +
+          (SeekReadyDimensions.barHeight * (0.5 * inverse)) +
+          (SeekReadyDimensions.progressBarHeight / 2);
+      return Offset(0.0, top);
+    }),
+  );
+  late final bodyCoverOpacity = percentage.drive(
+    Animatable.fromCallback((p) => 1 - (p * 1.5 - 0.5).clampDouble(0.0, 1.0)),
+  );
+}
+
+class _RoundedRectClipper extends CustomClipper<RRect> {
+  final Animation<double> radius;
+
+  _RoundedRectClipper(this.radius) : super(reclip: radius);
+
+  @override
+  RRect getClip(Size size) => RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius.value));
+
+  @override
+  bool shouldReclip(_RoundedRectClipper oldClipper) => oldClipper.radius != radius;
+}
+
+/// Lays the body out once at its full height below the header, so resizing the player only moves it.
+/// Whatever has to follow the visible bottom edge gets the visible part instead.
+class _YTMiniplayerLayoutDelegate extends MultiChildLayoutDelegate {
+  final double bodyHeight;
+
+  _YTMiniplayerLayoutDelegate({required this.bodyHeight});
+
+  @override
+  void performLayout(Size size) {
+    final width = size.width;
+    final headerSize = layoutChild(_YTMiniplayerSlot.header, BoxConstraints(maxWidth: width));
+    final bodyOffset = Offset(0.0, headerSize.height);
+
+    layoutChild(_YTMiniplayerSlot.body, BoxConstraints.tightFor(width: width, height: bodyHeight));
+    positionChild(_YTMiniplayerSlot.body, bodyOffset);
+
+    final visibleBodyHeight = (size.height - headerSize.height).withMinimum(0.0);
+    final visibleBodyConstraints = BoxConstraints.tightFor(width: width, height: visibleBodyHeight);
+    layoutChild(_YTMiniplayerSlot.queueChip, visibleBodyConstraints);
+    positionChild(_YTMiniplayerSlot.queueChip, bodyOffset);
+    layoutChild(_YTMiniplayerSlot.bodyCover, visibleBodyConstraints);
+    positionChild(_YTMiniplayerSlot.bodyCover, bodyOffset);
+  }
+
+  @override
+  bool shouldRelayout(_YTMiniplayerLayoutDelegate oldDelegate) => oldDelegate.bodyHeight != bodyHeight;
+}
+
+enum _YTMiniplayerSlot {
+  header,
+  body,
+  queueChip,
+  bodyCover,
 }
 
 class _YTMiniplayerKeys {

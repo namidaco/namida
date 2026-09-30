@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' hide Selectable;
 
 import 'package:just_audio/just_audio.dart' show VideoInfoData;
 import 'package:youtipie/class/streams/video_stream.dart';
@@ -40,6 +41,7 @@ import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
@@ -1010,8 +1012,8 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
             alignment: Alignment.center,
             children: [
               videoInfo != null
-                  ? AnimatedBuilder(
-                      animation: NamidaMiniPlayerBase.clampedAnimationBCP,
+                  ? ClipRRect(
+                      clipper: _ExpandingRadiusClipper(NamidaMiniPlayerBase.clampedAnimationBCP),
                       child: DoubleTapDetector(
                         onDoubleTap: () => VideoController.inst.toggleFullScreenVideoView(isLocal: isLocal),
                         child: NamidaAspectRatio(
@@ -1019,18 +1021,16 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                           child: Texture(textureId: videoInfo.textureId),
                         ),
                       ),
-                      builder: (context, child) => BorderRadiusClip(
-                        borderRadius: BorderRadius.circular(6.0.multipliedRadius + (8.0.multipliedRadius * NamidaMiniPlayerBase.clampedAnimationBCP.value)),
-                        child: child!,
-                      ),
                     )
                   : widget.fallback,
               if (!isLocal)
                 Positioned(
                   bottom: 0,
                   right: 0,
-                  child: AnimatedBuilder(
-                    animation: MiniPlayerController.inst.animation,
+                  child: ValueConditionBuilder(
+                    listenable: MiniPlayerController.inst.animation,
+                    condition: _isFullyExpanded,
+                    builder: (context, isFullyExpanded, child) => isFullyExpanded ? child! : const SizedBox(),
                     child: ObxO(
                       rx: settings.youtube.sponsorBlockSettings,
                       builder: (context, sponsorblock) => sponsorblock.enabled
@@ -1045,9 +1045,6 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                             )
                           : const SizedBox(),
                     ),
-                    builder: (context, child) {
-                      return MiniPlayerController.inst.animation.value == 1 ? child! : const SizedBox();
-                    },
                   ),
                 ),
             ],
@@ -1076,39 +1073,35 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                         child: videoOrImage,
                       ),
               );
-              return LayoutBuilder(
-                builder: (context, constraints) {
-                  // -- hard cap: whatever the base overshoot, pulse & zoom add up to, never paint
-                  // -- past the panel. inside the player's scale box this MediaQuery is the panel.
-                  final boxWidth = constraints.maxWidth;
-                  final maxScale = boxWidth > 0 && boxWidth.isFinite ? MediaQuery.sizeOf(context).width / boxWidth : double.infinity;
+              // -- hard cap: whatever the base overshoot, pulse & zoom add up to, never paint
+              // -- past the panel. inside the player's scale box this MediaQuery is the panel.
+              final maxPaintedWidth = MediaQuery.sizeOf(context).width;
+              return ObxO(
+                rx: VideoController.inst.videoZoomAdditionalScale,
+                builder: (context, videoZoomAdditionalScale) {
+                  final additionalScaleVideo = 0.02 * videoZoomAdditionalScale;
                   return ObxO(
-                    rx: VideoController.inst.videoZoomAdditionalScale,
-                    builder: (context, videoZoomAdditionalScale) {
-                      final additionalScaleVideo = 0.02 * videoZoomAdditionalScale;
-                      return ObxO(
-                        rx: _lrcAdditionalScale,
-                        builder: (context, lrcAdditionalScale) {
-                          final additionalScaleLRC = 0.02 * lrcAdditionalScale;
-                          return ObxOSelect(
-                            rx: Player.inst.nowPlayingPosition,
-                            selector: (nowPlayingPosition) => MiniPlayerController.inst.animation.value == 0
-                                ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
-                                : shoulShowLyricsView
-                                ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
-                                : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition),
-                            builder: (context, animatingScale) {
-                              final finalScale = additionalScaleLRC + additionalScaleVideo + animatingScale;
-                              return AnimatedScale(
-                                duration: const Duration(milliseconds: 100),
-                                scale: MiniplayerThumbnailScale.resolve(
-                                  additional: finalScale,
-                                  isInversed: isInversed,
-                                  userScaleMultiplier: userScaleMultiplier,
-                                ).withMaximum(maxScale),
-                                child: animatedScaleChild,
-                              );
-                            },
+                    rx: _lrcAdditionalScale,
+                    builder: (context, lrcAdditionalScale) {
+                      final additionalScaleLRC = 0.02 * lrcAdditionalScale;
+                      return ObxOSelect(
+                        rx: Player.inst.nowPlayingPosition,
+                        selector: (nowPlayingPosition) => MiniPlayerController.inst.animation.value == 0
+                            ? WaveformController.inst.getCurrentAnimatingScaleMinimized(nowPlayingPosition)
+                            : shoulShowLyricsView
+                            ? WaveformController.inst.getCurrentAnimatingScaleLyrics(nowPlayingPosition)
+                            : WaveformController.inst.getCurrentAnimatingScale(nowPlayingPosition),
+                        builder: (context, animatingScale) {
+                          final finalScale = additionalScaleLRC + additionalScaleVideo + animatingScale;
+                          return _AnimatedScaleWithinWidth(
+                            duration: const Duration(milliseconds: 100),
+                            scale: MiniplayerThumbnailScale.resolve(
+                              additional: finalScale,
+                              isInversed: isInversed,
+                              userScaleMultiplier: userScaleMultiplier,
+                            ),
+                            maxPaintedWidth: maxPaintedWidth,
+                            child: animatedScaleChild,
                           );
                         },
                       );
@@ -1120,6 +1113,173 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
           );
         },
       ),
+    );
+  }
+
+  static bool _isFullyExpanded(double p) => p == 1.0;
+}
+
+class _ExpandingRadiusClipper extends CustomClipper<RRect> {
+  final Animation<double> expansion;
+
+  _ExpandingRadiusClipper(this.expansion) : super(reclip: expansion);
+
+  @override
+  RRect getClip(Size size) {
+    final radius = 6.0.multipliedRadius + (8.0.multipliedRadius * expansion.value);
+    return RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius));
+  }
+
+  @override
+  bool shouldReclip(_ExpandingRadiusClipper oldClipper) => oldClipper.expansion != expansion;
+}
+
+// by claude
+/// [AnimatedScale] that never paints [child] wider than [maxPaintedWidth]. The cap is applied
+/// while painting, so a box resizing every frame neither rebuilds nor re-animates it.
+class _AnimatedScaleWithinWidth extends ImplicitlyAnimatedWidget {
+  final double scale;
+  final double maxPaintedWidth;
+  final Widget child;
+
+  const _AnimatedScaleWithinWidth({
+    required this.scale,
+    required this.maxPaintedWidth,
+    required super.duration,
+    required this.child,
+  });
+
+  @override
+  ImplicitlyAnimatedWidgetState<_AnimatedScaleWithinWidth> createState() => _AnimatedScaleWithinWidthState();
+}
+
+class _AnimatedScaleWithinWidthState extends ImplicitlyAnimatedWidgetState<_AnimatedScaleWithinWidth> {
+  Tween<double>? _scale;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    _scale = visitor(_scale, widget.scale, (dynamic value) => Tween<double>(begin: value as double)) as Tween<double>?;
+  }
+
+  @override
+  void didUpdateTweens() {
+    _scaleAnimation = animation.drive(_scale!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _ScaleWithinWidth(
+      scale: _scaleAnimation,
+      maxPaintedWidth: widget.maxPaintedWidth,
+      child: widget.child,
+    );
+  }
+}
+
+class _ScaleWithinWidth extends SingleChildRenderObjectWidget {
+  final Animation<double> scale;
+  final double maxPaintedWidth;
+
+  const _ScaleWithinWidth({
+    required this.scale,
+    required this.maxPaintedWidth,
+    required super.child,
+  });
+
+  @override
+  _RenderScaleWithinWidth createRenderObject(BuildContext context) => _RenderScaleWithinWidth(scale, maxPaintedWidth);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderScaleWithinWidth renderObject) {
+    renderObject
+      ..scale = scale
+      ..maxPaintedWidth = maxPaintedWidth;
+  }
+}
+
+class _RenderScaleWithinWidth extends RenderProxyBox {
+  _RenderScaleWithinWidth(this._scale, this._maxPaintedWidth);
+
+  Animation<double> _scale;
+  set scale(Animation<double> value) {
+    if (value == _scale) return;
+    if (attached) {
+      _scale.removeListener(markNeedsPaint);
+      value.addListener(markNeedsPaint);
+    }
+    _scale = value;
+    markNeedsPaint();
+  }
+
+  double _maxPaintedWidth;
+  set maxPaintedWidth(double value) {
+    if (value == _maxPaintedWidth) return;
+    _maxPaintedWidth = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _scale.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    _scale.removeListener(markNeedsPaint);
+    super.detach();
+  }
+
+  double _computeEffectiveScale() {
+    final scale = _scale.value;
+    final width = size.width;
+    if (width <= 0) return scale;
+    return scale.withMaximum(_maxPaintedWidth / width);
+  }
+
+  Matrix4 _computeTransform(double scale) {
+    final dx = size.width / 2 * (1 - scale);
+    final dy = size.height / 2 * (1 - scale);
+    return Matrix4.diagonal3Values(scale, scale, 1.0)..setTranslationRaw(dx, dy, 0.0);
+  }
+
+  // -- like [RenderTransform], the untransformed size isn't checked, the child is hit where it's painted.
+  @override
+  bool hitTest(BoxHitTestResult result, {required Offset position}) => hitTestChildren(result, position: position);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final child = this.child;
+    if (child == null) return false;
+    return result.addWithPaintTransform(
+      transform: _computeTransform(_computeEffectiveScale()),
+      position: position,
+      hitTest: (result, position) => child.hitTest(result, position: position),
+    );
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    transform.multiply(_computeTransform(_computeEffectiveScale()));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final child = this.child;
+    if (child == null) return;
+    final scale = _computeEffectiveScale();
+    if (scale == 1.0) {
+      layer = null;
+      context.paintChild(child, offset);
+      return;
+    }
+    layer = context.pushTransform(
+      needsCompositing,
+      offset,
+      _computeTransform(scale),
+      (context, offset) => context.paintChild(child, offset),
+      oldLayer: layer as TransformLayer?,
     );
   }
 }

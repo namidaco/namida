@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
@@ -16,6 +17,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/floating_image.dart';
 
 /// How hard the currently playing track is hitting right now, `0.0` when nothing plays.
@@ -292,7 +294,8 @@ class JellyField extends StatefulWidget {
   /// Jellies squeeze their bell in time with the playing track.
   final bool reactToPlayback;
 
-  final bool enabled;
+  /// Multiplies [opacity] while painting, the swarm pauses while it's ~0 but the widget stays mounted.
+  final ValueListenable<double> fade;
   final int seed;
 
   const JellyField({
@@ -306,7 +309,7 @@ class JellyField extends StatefulWidget {
     this.driftAngle = 0.14,
     this.groups = 3,
     this.reactToPlayback = false,
-    this.enabled = true,
+    this.fade = kAlwaysCompleteAnimation,
     this.seed = 0,
   });
 
@@ -357,25 +360,38 @@ class _JellyFieldState extends State<JellyField> {
     _swarm = null;
   }
 
+  static bool _isVisible(double fade) => fade > 0.01;
+
   @override
   Widget build(BuildContext context) {
-    if (!widget.enabled || !_imagesReady || namidaAnimationsPaused(context)) {
+    if (!_imagesReady || namidaAnimationsPaused(context)) {
       _detach();
       return const SizedBox();
     }
-    _attach();
-    return RepaintBoundary(
-      child: CustomPaint(
-        isComplex: true,
-        painter: _JellyFieldPainter(
-          swarm: _swarm!,
-          tint: widget.tint ?? context.theme.colorScheme.primary,
-          tintStrength: widget.tintStrength,
-          opacity: widget.opacity,
-          minHeight: widget.minHeight,
-          maxHeight: widget.maxHeight,
-        ),
-      ),
+    return ValueConditionBuilder(
+      listenable: widget.fade,
+      condition: _isVisible,
+      builder: (context, isVisible, _) {
+        if (!isVisible) {
+          _detach();
+          return const SizedBox();
+        }
+        _attach();
+        return RepaintBoundary(
+          child: CustomPaint(
+            isComplex: true,
+            painter: _JellyFieldPainter(
+              swarm: _swarm!,
+              tint: widget.tint ?? context.theme.colorScheme.primary,
+              tintStrength: widget.tintStrength,
+              opacity: widget.opacity,
+              fade: widget.fade,
+              minHeight: widget.minHeight,
+              maxHeight: widget.maxHeight,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -385,6 +401,7 @@ class _JellyFieldPainter extends CustomPainter {
   final Color? tint;
   final double tintStrength;
   final double opacity;
+  final ValueListenable<double> fade;
   final double minHeight;
   final double maxHeight;
 
@@ -393,9 +410,10 @@ class _JellyFieldPainter extends CustomPainter {
     required this.tint,
     required this.tintStrength,
     required this.opacity,
+    required this.fade,
     required this.minHeight,
     required this.maxHeight,
-  }) : super(repaint: swarm);
+  }) : super(repaint: Listenable.merge([swarm, fade]));
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -404,7 +422,7 @@ class _JellyFieldPainter extends CustomPainter {
       canvas,
       size,
       swarm,
-      opacity: opacity,
+      opacity: opacity * fade.value,
       minHeight: minHeight,
       maxHeight: maxHeight,
       colorFilter: tint == null || tintStrength <= 0 ? null : NamidaJellys.tintFilter(tint, tintStrength),
@@ -417,6 +435,7 @@ class _JellyFieldPainter extends CustomPainter {
         oldDelegate.tint != tint ||
         oldDelegate.tintStrength != tintStrength ||
         oldDelegate.opacity != opacity ||
+        oldDelegate.fade != fade ||
         oldDelegate.minHeight != minHeight ||
         oldDelegate.maxHeight != maxHeight;
   }
@@ -497,9 +516,7 @@ class NamidaJellyBackground extends StatelessWidget {
   final double minHeight;
   final double maxHeight;
   final bool reactToPlayback;
-
-  /// Keeps the widget mounted while pausing the swarm, so hiding it doesn't churn siblings.
-  final bool enabled;
+  final ValueListenable<double> fade;
   final int seed;
 
   const NamidaJellyBackground({
@@ -509,7 +526,7 @@ class NamidaJellyBackground extends StatelessWidget {
     this.minHeight = 80.0,
     this.maxHeight = 220.0,
     this.reactToPlayback = false,
-    this.enabled = true,
+    this.fade = kAlwaysCompleteAnimation,
     this.seed = 0,
   });
 
@@ -532,7 +549,7 @@ class NamidaJellyBackground extends StatelessWidget {
                 minHeight: minHeight,
                 maxHeight: maxHeight,
                 reactToPlayback: reactToPlayback,
-                enabled: enabled,
+                fade: fade,
                 seed: seed,
               ),
             )

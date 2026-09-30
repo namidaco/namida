@@ -2,40 +2,45 @@ part of 'effects.dart';
 
 class NamidaVisualizer extends StatelessWidget {
   final _Placement _placement;
-  final double opacity;
+  final ValueListenable<double> opacity;
 
   final double artworkScale;
   final double artworkRadius;
 
   /// how far above the bottom edge the waveform sits.
-  final double baseline;
+  final ValueListenable<double> baseline;
   final double waveformScale;
   final double waveformPadding;
 
-  const NamidaVisualizer.wallpaper({super.key, this.opacity = 1.0})
+  const NamidaVisualizer.wallpaper({super.key, this.opacity = kAlwaysCompleteAnimation})
     : _placement = _Placement.wallpaper,
       artworkScale = 1.0,
       artworkRadius = 0.0,
-      baseline = 0.0,
+      baseline = kAlwaysDismissedAnimation,
       waveformScale = 1.0,
       waveformPadding = 0.0;
 
-  const NamidaVisualizer.aroundPlayer({super.key, this.opacity = 1.0})
+  const NamidaVisualizer.aroundPlayer({super.key, this.opacity = kAlwaysCompleteAnimation})
     : _placement = _Placement.player,
       artworkScale = 1.0,
       artworkRadius = 0.0,
-      baseline = 0.0,
+      baseline = kAlwaysDismissedAnimation,
       waveformScale = 1.0,
       waveformPadding = 0.0;
 
-  const NamidaVisualizer.insidePanel({super.key, this.opacity = 1.0, required this.baseline, required this.waveformScale, required this.waveformPadding})
-    : _placement = _Placement.panel,
-      artworkScale = 1.0,
-      artworkRadius = 0.0;
+  const NamidaVisualizer.insidePanel({
+    super.key,
+    this.opacity = kAlwaysCompleteAnimation,
+    required this.baseline,
+    required this.waveformScale,
+    required this.waveformPadding,
+  }) : _placement = _Placement.panel,
+       artworkScale = 1.0,
+       artworkRadius = 0.0;
 
-  const NamidaVisualizer.aroundArtwork({super.key, this.opacity = 1.0, required this.artworkScale, required this.artworkRadius})
+  const NamidaVisualizer.aroundArtwork({super.key, this.opacity = kAlwaysCompleteAnimation, required this.artworkScale, required this.artworkRadius})
     : _placement = _Placement.artwork,
-      baseline = 0.0,
+      baseline = kAlwaysDismissedAnimation,
       waveformScale = 1.0,
       waveformPadding = 0.0;
 
@@ -265,10 +270,10 @@ class _VisualizerDriver extends ChangeNotifier {
 
 class _VisualizerView extends StatefulWidget {
   final _VisualizerKind kind;
-  final double opacity;
+  final ValueListenable<double> opacity;
   final double artworkScale;
   final double artworkRadius;
-  final double baseline;
+  final ValueListenable<double> baseline;
   final double waveformScale;
   final double waveformPadding;
   final bool hasArtworkColors;
@@ -321,30 +326,41 @@ class _VisualizerViewState extends State<_VisualizerView> {
     _driver = null;
   }
 
+  static bool _isVisible(double opacity) => opacity > 0.01;
+
   @override
   Widget build(BuildContext context) {
-    final opacity = widget.opacity;
-    if (opacity <= 0.01 || namidaAnimationsPaused(context)) {
+    if (namidaAnimationsPaused(context)) {
       _detach();
       return const SizedBox();
     }
-    final driver = _attach();
-    final themeColors = [context.theme.colorScheme.secondary];
-    if (!widget.hasArtworkColors) {
-      return _VisualizerCanvas(
-        view: widget,
-        driver: driver,
-        colors: themeColors,
-      );
-    }
-    return Obx(
-      (context) {
-        final palette = CurrentColor.inst.palette;
-        final colors = _vividColorsOf(palette, themeColors);
-        return _VisualizerCanvas(
-          view: widget,
-          driver: driver,
-          colors: colors,
+    return ValueConditionBuilder(
+      listenable: widget.opacity,
+      condition: _isVisible,
+      builder: (context, isVisible, _) {
+        if (!isVisible) {
+          _detach();
+          return const SizedBox();
+        }
+        final driver = _attach();
+        final themeColors = [context.theme.colorScheme.secondary];
+        if (!widget.hasArtworkColors) {
+          return _VisualizerCanvas(
+            view: widget,
+            driver: driver,
+            colors: themeColors,
+          );
+        }
+        return Obx(
+          (context) {
+            final palette = CurrentColor.inst.palette;
+            final colors = _vividColorsOf(palette, themeColors);
+            return _VisualizerCanvas(
+              view: widget,
+              driver: driver,
+              colors: colors,
+            );
+          },
         );
       },
     );
@@ -367,26 +383,54 @@ class _VisualizerCanvas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final kind = view.kind;
-    final opacity = kind == _VisualizerKind.particles ? view.opacity : view.opacity * _spectrumOpacity;
+    final fade = view.opacity;
+    final maxOpacity = kind == _VisualizerKind.particles ? 1.0 : _spectrumOpacity;
+    final baseline = view.baseline;
+    final repaint = Listenable.merge([driver, fade, baseline]);
     final artworkScale = view.artworkScale;
     final artworkRadius = view.artworkRadius;
     final painter = switch (kind) {
-      _VisualizerKind.particles => _ParticlesPainter(driver: driver, colors: colors, opacity: opacity),
-      _VisualizerKind.bars => _BarsPainter(driver: driver, colors: colors, opacity: opacity),
+      _VisualizerKind.particles => _ParticlesPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.bars => _BarsPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
       _VisualizerKind.mirroredBars => _MirroredBarsPainter(
         driver: driver,
         colors: colors,
-        opacity: opacity,
-        baseline: view.baseline,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        baseline: baseline,
         waveformScale: view.waveformScale,
         waveformPadding: view.waveformPadding,
       ),
-      _VisualizerKind.waves => _WavesPainter(driver: driver, colors: colors, opacity: opacity),
-      _VisualizerKind.edgeLights => _EdgeLightsPainter(driver: driver, colors: colors, opacity: opacity),
-      _VisualizerKind.glow => _GlowPainter(driver: driver, colors: colors, opacity: opacity, artworkScale: artworkScale),
-      _VisualizerKind.outline => _OutlinePainter(driver: driver, colors: colors, opacity: opacity, artworkScale: artworkScale, artworkRadius: artworkRadius),
-      _VisualizerKind.beatRings => _BeatRingsPainter(driver: driver, colors: colors, opacity: opacity, artworkScale: artworkScale, artworkRadius: artworkRadius),
-      _VisualizerKind.reactiveParticles => _ReactiveParticlesPainter(driver: driver, colors: colors, opacity: opacity, artworkScale: artworkScale),
+      _VisualizerKind.waves => _WavesPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.edgeLights => _EdgeLightsPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.glow => _GlowPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint, artworkScale: artworkScale),
+      _VisualizerKind.outline => _OutlinePainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        artworkScale: artworkScale,
+        artworkRadius: artworkRadius,
+      ),
+      _VisualizerKind.beatRings => _BeatRingsPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        artworkScale: artworkScale,
+        artworkRadius: artworkRadius,
+      ),
+      _VisualizerKind.reactiveParticles => _ReactiveParticlesPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        artworkScale: artworkScale,
+      ),
     };
     return RepaintBoundary(
       child: CustomPaint(
@@ -399,15 +443,20 @@ class _VisualizerCanvas extends StatelessWidget {
 abstract class _VisualizerPainter extends CustomPainter {
   final _VisualizerDriver driver;
   final List<Color> colors;
-  final double opacity;
+  final ValueListenable<double> fade;
+  final double maxOpacity;
 
   _VisualizerPainter({
     required this.driver,
     required this.colors,
-    required this.opacity,
-  }) : super(repaint: driver);
+    required this.fade,
+    required this.maxOpacity,
+    required super.repaint,
+  });
 
   Color get color => colors.first;
+
+  double get opacity => fade.value * maxOpacity;
 
   double _lastPaintedAt = 0.0;
 
@@ -432,7 +481,7 @@ abstract class _VisualizerPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VisualizerPainter oldDelegate) {
-    return oldDelegate.driver != driver || oldDelegate.colors != colors || oldDelegate.opacity != opacity;
+    return oldDelegate.driver != driver || oldDelegate.colors != colors || oldDelegate.fade != fade || oldDelegate.maxOpacity != maxOpacity;
   }
 }
 
@@ -440,7 +489,9 @@ class _ParticlesPainter extends _VisualizerPainter {
   _ParticlesPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
   });
 
   static const _swell = 0.12;
@@ -465,7 +516,9 @@ class _BarsPainter extends _VisualizerPainter {
   _BarsPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
   });
 
   static const barsCount = SpectrumController.bandCount * 2 - 1;
@@ -523,14 +576,16 @@ class _BarsPainter extends _VisualizerPainter {
 }
 
 class _MirroredBarsPainter extends _VisualizerPainter {
-  final double baseline;
+  final ValueListenable<double> baseline;
   final double waveformScale;
   final double waveformPadding;
 
   _MirroredBarsPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
     required this.baseline,
     required this.waveformScale,
     required this.waveformPadding,
@@ -566,7 +621,7 @@ class _MirroredBarsPainter extends _VisualizerPainter {
     final slot = barWidth + gap;
     final capRadius = barWidth / 2;
     final firstX = waveformPadding + gap + capRadius;
-    final middle = size.height - baseline;
+    final middle = size.height - baseline.value;
     final maxReach = _maxReach * waveformScale * presence;
 
     for (int i = 0; i < barsCount; i++) {
@@ -606,7 +661,9 @@ class _WavesPainter extends _VisualizerPainter {
   _WavesPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
   });
 
   static const _step = 14.0;
@@ -667,7 +724,9 @@ class _EdgeLightsPainter extends _VisualizerPainter {
   _EdgeLightsPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
   });
 
   static const _depthFraction = 0.2;
@@ -743,7 +802,9 @@ class _GlowPainter extends _VisualizerPainter {
   _GlowPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
     required this.artworkScale,
   });
 
@@ -783,7 +844,9 @@ class _OutlinePainter extends _VisualizerPainter {
   _OutlinePainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
     required this.artworkScale,
     required this.artworkRadius,
   });
@@ -921,7 +984,9 @@ class _BeatRingsPainter extends _VisualizerPainter {
   _BeatRingsPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
     required this.artworkScale,
     required this.artworkRadius,
   });
@@ -993,7 +1058,9 @@ class _ReactiveParticlesPainter extends _VisualizerPainter {
   _ReactiveParticlesPainter({
     required super.driver,
     required super.colors,
-    required super.opacity,
+    required super.fade,
+    required super.maxOpacity,
+    required super.repaint,
     required this.artworkScale,
   });
 
