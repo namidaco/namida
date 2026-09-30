@@ -93,7 +93,18 @@ jobs:
             echo "tag=${{ steps.extract_version.outputs.version }}" >> $GITHUB_OUTPUT
           fi
 
+      # a re-run for an existing release keeps its notes, the changelog range would be empty by now
+      - name: Check existing release
+        id: existing
+        env:
+          GH_TOKEN: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.set_vars.outputs.tag }}" -R "${{ steps.set_vars.outputs.target_repo }}" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate Changelog
+        if: steps.existing.outputs.exists != 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
@@ -101,6 +112,7 @@ jobs:
           cat ./beta_changelog.md
 
       - name: Generate Downloads Table
+        if: steps.existing.outputs.exists != 'true'
         run: |
           bash scripts/gen_downloads_table.sh \
             "${{ steps.set_vars.outputs.tag }}" \
@@ -111,6 +123,7 @@ jobs:
           mv combined.md beta_changelog.md
 
       - name: Create Release with Changelog
+        if: steps.existing.outputs.exists != 'true'
         uses: softprops/action-gh-release@v3
         with:
           repository: ${{ steps.set_vars.outputs.target_repo }}
