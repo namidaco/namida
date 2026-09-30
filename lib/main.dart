@@ -28,6 +28,7 @@ import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
+import 'package:namida/controller/eggs_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
@@ -225,6 +226,7 @@ Future<bool> _mainAppInitialization() async {
     Language.initialize(); // should be done as early as possible
     ShortcutsController.instance?.initUserShortcutsFromSettings();
     NamidaEffects.refreshSeason();
+    EggsController.inst.refreshDateEgg();
 
     if (settings.directoriesToScan.value.isEmpty) {
       final defaultDirs = await _getDefaultDirectoriesToScan(paths);
@@ -454,6 +456,7 @@ void _initLifeCycle() {
   });
   NamidaChannel.inst.addOnResume(WaveformController.inst.calculateUIWaveform);
   NamidaChannel.inst.addOnResume(NamidaEffects.refreshSeasonIfDue);
+  NamidaChannel.inst.addOnResume(EggsController.inst.refreshDateEggIfDue);
 }
 
 Future<void> _clearIntentCachedFiles() async {

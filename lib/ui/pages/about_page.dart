@@ -11,6 +11,7 @@ import 'package:flutter_mailer/flutter_mailer.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rhttp/rhttp.dart';
 
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -32,6 +33,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -254,6 +256,7 @@ class _AboutPageState extends State<AboutPage> {
             ),
           ),
           const StatsSection(),
+          const EggsSection(),
           SettingsCard(
             icon: Broken.hierarchy,
             title: lang.development,
@@ -742,6 +745,8 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
       _controller?.forward(from: 0).then((_) => _speedLevel = 0);
 
       _play(longerVer: playLongerVer);
+
+      if (playLongerVer) EggHunt.collect(NamidaEgg.dizzy);
 
       if (kAllowJellysInvasion && playLongerVer) {
         if (settings.extra.jellysInvasion.value != true) NamidaJellys.setInvasion(true);

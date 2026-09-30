@@ -649,6 +649,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final double verticalInset;
   final EdgeInsetsGeometry contentPadding;
   final ThemeData? theme;
+  final Widget? frame;
 
   const CustomBlurryDialog({
     super.key,
@@ -668,6 +669,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.contentPadding = const EdgeInsets.all(14.0),
     this.leftAction,
     this.theme,
+    this.frame,
   });
 
   @override
@@ -686,142 +688,170 @@ class CustomBlurryDialog extends StatelessWidget {
             constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
             child: TapDetector(
               onTap: () {},
-              child: Container(
-                color: Colors.transparent,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    /// Title.
-                    ?titleWidget,
-                    if (titleWidgetInPadding != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: titleWidgetInPadding,
+              child: _DialogFrame(
+                frame: frame,
+                child: Container(
+                  color: Colors.transparent,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      /// Title.
+                      ?titleWidget,
+                      if (titleWidgetInPadding != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: titleWidgetInPadding,
+                          ),
                         ),
-                      ),
-                    if (titleWidget == null && titleWidgetInPadding == null)
-                      normalTitleStyle
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                              child: Row(
-                                children: [
-                                  if (icon != null || isWarning) ...[
-                                    Icon(
-                                      isWarning ? Broken.warning_2 : icon,
-                                    ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                  ],
-                                  Expanded(
-                                    child: Text(
-                                      isWarning ? lang.warning : title ?? '',
-                                      style: ctxth.textTheme.displayLarge,
-                                    ),
-                                  ),
-                                  ...?trailingWidgets,
-                                ],
-                              ),
-                            )
-                          : Container(
-                              color: Color.alphaBlend(ctxth.colorScheme.primary.withOpacityExt(0.02), ctxth.cardTheme.color!),
-                              padding: const EdgeInsets.all(16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (icon != null) ...[
-                                    Icon(
-                                      icon,
-                                    ),
-                                    const SizedBox(
-                                      width: 10.0,
-                                    ),
-                                  ],
-                                  Expanded(
-                                    child: Text(
-                                      title ?? '',
-                                      style: ctxth.textTheme.displayMedium,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                    /// Body.
-                    Padding(
-                      padding: contentPadding,
-                      child: SizedBox(
-                        width: context.width,
-                        child: bodyText != null
+                      if (titleWidget == null && titleWidgetInPadding == null)
+                        normalTitleStyle
                             ? Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Text(
-                                  bodyText!,
-                                  style: ctxth.textTheme.displayMedium,
-                                ),
-                              )
-                            : child,
-                      ),
-                    ),
-
-                    /// Actions.
-                    if (actions != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                        child: LayoutWidthProvider(
-                          builder: (context, maxWidth) {
-                            final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
-                            final actionsMaxWidth = (maxWidth - leftActionMaxWidth);
-                            return SizedBox(
-                              width: maxWidth,
-                              child: Row(
-                                mainAxisSize: .max,
-                                children: [
-                                  if (leftAction != null) ...[
-                                    ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: leftActionMaxWidth),
-                                      child: FittedBox(
-                                        alignment: AlignmentDirectional.centerStart,
-                                        fit: BoxFit.scaleDown,
-                                        child: leftAction!,
+                                padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                                child: Row(
+                                  children: [
+                                    if (icon != null || isWarning) ...[
+                                      Icon(
+                                        isWarning ? Broken.warning_2 : icon,
+                                      ),
+                                      const SizedBox(
+                                        width: 10.0,
+                                      ),
+                                    ],
+                                    Expanded(
+                                      child: Text(
+                                        isWarning ? lang.warning : title ?? '',
+                                        style: ctxth.textTheme.displayLarge,
                                       ),
                                     ),
-                                    const SizedBox(width: 6.0),
+                                    ...?trailingWidgets,
                                   ],
+                                ),
+                              )
+                            : Container(
+                                color: Color.alphaBlend(ctxth.colorScheme.primary.withOpacityExt(0.02), ctxth.cardTheme.color!),
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    if (icon != null) ...[
+                                      Icon(
+                                        icon,
+                                      ),
+                                      const SizedBox(
+                                        width: 10.0,
+                                      ),
+                                    ],
+                                    Expanded(
+                                      child: Text(
+                                        title ?? '',
+                                        style: ctxth.textTheme.displayMedium,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                                  Expanded(
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(maxWidth: actionsMaxWidth),
-                                      child: FittedBox(
-                                        alignment: AlignmentDirectional.centerEnd,
-                                        fit: BoxFit.scaleDown,
-                                        child: Row(
-                                          mainAxisSize: .max,
-                                          mainAxisAlignment: .end,
-                                          children: [
-                                            ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
-                                          ],
+                      /// Body.
+                      Padding(
+                        padding: contentPadding,
+                        child: SizedBox(
+                          width: context.width,
+                          child: bodyText != null
+                              ? Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Text(
+                                    bodyText!,
+                                    style: ctxth.textTheme.displayMedium,
+                                  ),
+                                )
+                              : child,
+                        ),
+                      ),
+
+                      /// Actions.
+                      if (actions != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                          child: LayoutWidthProvider(
+                            builder: (context, maxWidth) {
+                              final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
+                              final actionsMaxWidth = (maxWidth - leftActionMaxWidth);
+                              return SizedBox(
+                                width: maxWidth,
+                                child: Row(
+                                  mainAxisSize: .max,
+                                  children: [
+                                    if (leftAction != null) ...[
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(maxWidth: leftActionMaxWidth),
+                                        child: FittedBox(
+                                          alignment: AlignmentDirectional.centerStart,
+                                          fit: BoxFit.scaleDown,
+                                          child: leftAction!,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6.0),
+                                    ],
+
+                                    Expanded(
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(maxWidth: actionsMaxWidth),
+                                        child: FittedBox(
+                                          alignment: AlignmentDirectional.centerEnd,
+                                          fit: BoxFit.scaleDown,
+                                          child: Row(
+                                            mainAxisSize: .max,
+                                            mainAxisAlignment: .end,
+                                            children: [
+                                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DialogFrame extends StatelessWidget {
+  final Widget? frame;
+  final Widget child;
+
+  const _DialogFrame({required this.frame, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final frame = this.frame;
+    if (frame == null) return child;
+    return Stack(
+      children: [
+        child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: RepaintBoundary(
+              child: frame,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -931,6 +961,7 @@ enum NamidaButtonColors {
 
 class NamidaButton extends StatelessWidget {
   final IconData? icon;
+  final Widget? iconWidget;
   final IconData? secondaryIcon;
   final double? iconSize;
   final String? text;
@@ -959,6 +990,7 @@ class NamidaButton extends StatelessWidget {
   const NamidaButton({
     super.key,
     this.icon,
+    this.iconWidget,
     this.secondaryIcon,
     this.iconSize = 20.0,
     this.text,
@@ -1012,12 +1044,13 @@ class NamidaButton extends StatelessWidget {
 
     final text = this.text;
     final icon = this.icon;
+    final iconWidget = this.iconWidget;
     final iconSize = this.iconSize;
     final secondaryIcon = this.secondaryIcon;
     final enabled = this.enabled;
     final isLoading = this.isLoading;
 
-    final iconChild = (icon == null
+    final iconOfData = (icon == null
         ? null
         : secondaryIcon != null
         ? StackedIcon(
@@ -1034,6 +1067,7 @@ class NamidaButton extends StatelessWidget {
             size: iconSize,
             color: foregroundColor,
           ));
+    final iconChild = iconWidget ?? iconOfData;
 
     final textStyle = context.textTheme.displayMedium?.copyWith(
       color: foregroundColor,
@@ -5153,12 +5187,14 @@ class NamidaTracksList extends StatelessWidget {
 class NamidaSupportButton extends StatelessWidget {
   final String? title;
   final bool closeDialog;
-  const NamidaSupportButton({super.key, this.title, this.closeDialog = true});
+  final Widget? iconWidget;
+  const NamidaSupportButton({super.key, this.title, this.closeDialog = true, this.iconWidget});
 
   @override
   Widget build(BuildContext context) {
     return NamidaButton(
       icon: Broken.heart,
+      iconWidget: iconWidget,
       text: title ?? lang.support,
       onTap: () {
         closeDialog.closeDialog();
@@ -5635,6 +5671,7 @@ class NamidaTooltip extends StatelessWidget {
   final String Function()? message;
   final bool? preferBelow;
   final TooltipTriggerMode? triggerMode;
+  final void Function()? onTriggered;
   final Widget child;
 
   const NamidaTooltip({
@@ -5642,6 +5679,7 @@ class NamidaTooltip extends StatelessWidget {
     required this.message,
     this.preferBelow,
     this.triggerMode,
+    this.onTriggered,
     required this.child,
   });
 
@@ -5652,6 +5690,7 @@ class NamidaTooltip extends StatelessWidget {
       message: message,
       preferBelow: preferBelow,
       triggerMode: triggerMode,
+      onTriggered: onTriggered,
       child: child,
     );
   }

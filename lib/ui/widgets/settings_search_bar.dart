@@ -6,6 +6,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/searchbar_animation.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 
 class NamidaSettingSearchBar extends StatefulWidget {
   final Widget? closedChild;
@@ -110,6 +111,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
           onTap: () => _onSearch(isOpen: true),
           onPressButton: (isOpen) => _onSearch(isOpen: isOpen),
           onChanged: SettingsSearchController.inst.onSearchChanged,
+          onFieldSubmitted: EggHunt.onSettingsSearchSubmitted,
         ),
       ],
     );

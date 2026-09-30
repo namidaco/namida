@@ -404,6 +404,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     fontScaleLRC,
     fontScaleLRCFull,
     canAskForBatteryOptimizations,
+    eggs,
   ];
 }
 

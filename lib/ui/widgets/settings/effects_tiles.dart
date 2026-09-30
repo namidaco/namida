@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
@@ -33,8 +34,9 @@ class EffectThemeTile extends StatelessWidget {
   }
 
   void _onSelected(EffectTheme theme) {
-    if (!theme.isForSupporters()) return _save(theme);
-    SussyBaka.monetize(onEnable: () => _save(theme));
+    final unlockable = theme.toUnlockable();
+    if (unlockable == null) return _save(theme);
+    SussyBaka.monetize(unlockable: unlockable, onEnable: () => _save(theme));
   }
 
   Iterable<NamidaPopupItem> _getItems() {
@@ -110,8 +112,9 @@ class VisualizerTile extends StatelessWidget {
   void _toggle(MiniplayerVisualizer style) {
     final isEnabled = settings.miniplayerVisualizers.value.contains(style);
     if (isEnabled) return settings.miniplayerVisualizers.update((styles) => styles.remove(style));
-    if (!style.isForSupporters()) return _enable(style);
-    SussyBaka.monetize(onEnable: () => _enable(style));
+    final unlockable = style.toUnlockable();
+    if (unlockable == null) return _enable(style);
+    SussyBaka.monetize(unlockable: unlockable, onEnable: () => _enable(style));
   }
 
   void _disableAll() {
@@ -308,7 +311,7 @@ class BackgroundImagesFlagTile extends StatelessWidget {
     settings.transaction(() {
       settings.extra.backgroundImages.save(false);
       if (settings.playerBackground.value == PlayerBackground.image) settings.playerBackground.save(PlayerBackground.none);
-      _AppWallpaperOptions._removeImage();
+      NamidaBackdrops.removeAppWallpaper();
     });
   }
 
@@ -356,7 +359,7 @@ class _PlayerBackgroundOptions extends StatelessWidget {
 
   void _onSourceSelected(PlayerBackground source) {
     if (source != PlayerBackground.image) return _save(source);
-    SussyBaka.monetize(onEnable: _selectImage);
+    SussyBaka.monetize(unlockable: EggUnlockable.playerBackgroundImage, onEnable: _selectImage);
   }
 
   @override
@@ -441,14 +444,7 @@ class _AppWallpaperOptions extends StatelessWidget {
   }
 
   void _onPickTap() {
-    SussyBaka.monetize(onEnable: _pickImage);
-  }
-
-  static void _removeImage() {
-    final path = settings.appWallpaper.value;
-    if (path == null) return;
-    settings.appWallpaper.reset();
-    NamidaBackdrops.removeImage(path);
+    SussyBaka.monetize(unlockable: EggUnlockable.appWallpaper, onEnable: _pickImage);
   }
 
   @override
@@ -471,7 +467,7 @@ class _AppWallpaperOptions extends StatelessWidget {
               CustomListTile(
                 icon: Broken.gallery_slash,
                 title: lang.remove,
-                onTap: _removeImage,
+                onTap: NamidaBackdrops.removeAppWallpaper,
               ),
               _PercentageTile(
                 icon: Broken.blur,
@@ -623,8 +619,12 @@ class _PercentageTile extends StatelessWidget {
 }
 
 extension _EffectThemeAccess on EffectTheme {
-  bool isForSupporters() => switch (this) {
-    EffectTheme.starfield || EffectTheme.galaxy || EffectTheme.aurora || EffectTheme.fireworks || EffectTheme.deepOcean => true,
+  EggUnlockable? toUnlockable() => switch (this) {
+    EffectTheme.starfield => EggUnlockable.starfield,
+    EffectTheme.galaxy => EggUnlockable.galaxy,
+    EffectTheme.aurora => EggUnlockable.aurora,
+    EffectTheme.fireworks => EggUnlockable.fireworks,
+    EffectTheme.deepOcean => EggUnlockable.deepOcean,
     EffectTheme.auto || //
     EffectTheme.none || //
     EffectTheme.particles || //
@@ -633,15 +633,22 @@ extension _EffectThemeAccess on EffectTheme {
     EffectTheme.ramadan || //
     EffectTheme.sakura || //
     EffectTheme.rain || //
-    EffectTheme.fireflies => false,
+    EffectTheme.fireflies => null,
   };
+
+  bool isForSupporters() => toUnlockable() != null;
 }
 
 extension _MiniplayerVisualizerAccess on MiniplayerVisualizer {
-  bool isForSupporters() => switch (this) {
-    MiniplayerVisualizer.mirroredBars || MiniplayerVisualizer.glow || MiniplayerVisualizer.outline || MiniplayerVisualizer.edgeLights => true,
-    MiniplayerVisualizer.bars || MiniplayerVisualizer.waves || MiniplayerVisualizer.beatRings || MiniplayerVisualizer.reactiveParticles => false,
+  EggUnlockable? toUnlockable() => switch (this) {
+    MiniplayerVisualizer.mirroredBars => EggUnlockable.mirroredBars,
+    MiniplayerVisualizer.glow => EggUnlockable.glow,
+    MiniplayerVisualizer.outline => EggUnlockable.outline,
+    MiniplayerVisualizer.edgeLights => EggUnlockable.edgeLights,
+    MiniplayerVisualizer.bars || MiniplayerVisualizer.waves || MiniplayerVisualizer.beatRings || MiniplayerVisualizer.reactiveParticles => null,
   };
+
+  bool isForSupporters() => toUnlockable() != null;
 
   /// only one of them is on at a time, the rest go along with any.
   bool isMainStyle() => switch (this) {

@@ -34,6 +34,7 @@ import 'package:namida/ui/pages/settings_search_page.dart';
 import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/server_cache_widgets.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
@@ -896,6 +897,7 @@ class _CustomAppBar extends StatelessWidget {
                 child: title ?? const SizedBox(),
               ),
             ),
+            const DateEggAppBarIcon(),
             const DownloadsAppBarIcon(),
             ...?actions,
           ],

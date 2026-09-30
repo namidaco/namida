@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:audio_service/audio_service.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
@@ -729,7 +730,7 @@ class PlaybackSettings extends SettingSubpageProvider {
             subtitle: causePill,
             onExpansionChanged: (wasCollapsed) {
               if (wasCollapsed) {
-                SussyBaka.monetize(onEnable: () => settings.player.enableCrossFade.save(true));
+                SussyBaka.monetize(unlockable: EggUnlockable.crossfade, onEnable: () => settings.player.enableCrossFade.save(true));
               } else {
                 settings.player.enableCrossFade.save(false);
               }

@@ -8,18 +8,19 @@ import 'package:flutter/material.dart';
 
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:history_manager/history_manager.dart';
-import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/eggs_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -2281,75 +2282,18 @@ class TracksAddOnTap {
 }
 
 class SussyBaka {
-  static void monetize({required void Function() onEnable}) {
-    if (settings.didSupportNamida) return onEnable();
-    final membership = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
-    if (membership != null && membership.index >= MembershipType.cutie.index) {
-      // -- also remember it for future
-      settings.didSupportNamida = true;
-      return onEnable();
-    }
+  static void monetize({required EggUnlockable unlockable, required void Function() onEnable}) {
+    final eggs = EggsController.inst;
+    if (eggs.isSupporter()) return onEnable();
+    final isUnlocked = settings.eggs.value.isUnlocked(unlockable);
+    if (isUnlocked) return onEnable();
+    final newEggs = eggs.collectPending();
     NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        normalTitleStyle: true,
-        title: 'uwu',
-        actions: const [NamidaSupportButton()],
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            DoubleTapDetector(
-              onDoubleTap: () => settings.didSupportNamida = true,
-              child: const Text('a- ano...'),
-            ),
-            const Text(
-              'this one is actually supposed to be for supporters, if you don\'t mind u can support namida and get the power to unleash this cool feature',
-            ),
-            TapDetector(
-              onTap: () {
-                NamidaNavigator.inst.closeDialog();
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    normalTitleStyle: true,
-                    title: '!!',
-                    bodyText: "EH? YOU DON'T WANT TO SUPPORT?",
-                    actions: [
-                      NamidaSupportButton(title: lang.yes),
-                      NamidaButton(
-                        text: lang.no,
-                        onTap: () {
-                          NamidaNavigator.inst.closeDialog();
-                          NamidaNavigator.inst.navigateDialog(
-                            dialog: CustomBlurryDialog(
-                              title: 'kechi',
-                              bodyText: 'hidoii ಥ_ಥ here use it as much as u can, dw im not upset or anything ^^, or am i?',
-                              actions: [
-                                NamidaButton(
-                                  text: lang.unlock.toUpperCase(),
-                                  onTap: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    onEnable();
-                                  },
-                                ),
-                                NamidaButton(
-                                  text: lang.support.toUpperCase(),
-                                  onTap: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE);
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-              child: const Text('or you just wanna use it like that? mattaku'),
-            ),
-          ],
-        ),
+      onDismissing: EggHunt.countDismissal,
+      dialog: UwuDialog(
+        unlockable: unlockable,
+        newEggs: newEggs,
+        onEnable: onEnable,
       ),
     );
   }

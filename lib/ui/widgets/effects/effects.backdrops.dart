@@ -24,6 +24,13 @@ abstract class NamidaBackdrops {
   static void removeImage(String path) {
     File(path).tryDeleting();
   }
+
+  static void removeAppWallpaper() {
+    final path = settings.appWallpaper.value;
+    if (path == null) return;
+    settings.appWallpaper.reset();
+    removeImage(path);
+  }
 }
 
 class NamidaAppWallpaper extends StatelessWidget {

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -999,7 +1000,7 @@ class CustomizationSettings extends SettingSubpageProvider {
                 subtitle: lang.enablePartyModeSubtitle,
                 onChanged: (value) {
                   if (value) return settings.enablePartyModeInMiniplayer.save(false);
-                  SussyBaka.monetize(onEnable: () => settings.enablePartyModeInMiniplayer.save(true));
+                  SussyBaka.monetize(unlockable: EggUnlockable.partyMode, onEnable: () => settings.enablePartyModeInMiniplayer.save(true));
                 },
                 value: settings.enablePartyModeInMiniplayer.valueR,
               ),

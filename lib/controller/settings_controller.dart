@@ -10,6 +10,7 @@ import 'package:youtipie/core/http.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
@@ -428,6 +429,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   late final canAskForBatteryOptimizations = _key('canAskForBatteryOptimizations', true, sync: false);
   bool didSupportNamida = false;
+  late final eggs = _keyObject<EggsData>('eggs', const EggsData(), EggsData.fromJson, (v) => v.toJson());
 
   @override
   void _migrateLegacy() {
