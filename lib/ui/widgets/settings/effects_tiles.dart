@@ -205,7 +205,7 @@ class VisualizerTile extends StatelessWidget {
       refreshListenable: refreshListenable,
       child: CustomListTile(
         bgColor: bgColor,
-        icon: Broken.buy_crypto,
+        icon: Broken.chart_2,
         title: lang.visualizer,
         subtitle: lang.performanceNote,
         trailing: NamidaPopupWrapper(

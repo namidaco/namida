@@ -22,6 +22,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
@@ -398,26 +399,37 @@ class ThemeSetting extends SettingSubpageProvider {
 }
 
 /// The flag lives in the extra settings, offered here too because this is where colors are looked for.
-class _JellysInvasionButton extends StatefulWidget {
+class _JellysInvasionButton extends StatelessWidget {
   const _JellysInvasionButton();
 
-  @override
-  State<_JellysInvasionButton> createState() => _JellysInvasionButtonState();
-}
+  static void _openOptionsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: const CustomBlurryDialog(
+        title: 'Jellys Invasion',
+        normalTitleStyle: true,
+        actions: [
+          DoneButton(),
+        ],
+        child: JellysFlagsTiles(),
+      ),
+    );
+  }
 
-class _JellysInvasionButtonState extends State<_JellysInvasionButton> {
   @override
   Widget build(BuildContext context) {
-    final enabled = NamidaJellys.enabled;
     return NamidaTooltip(
       message: () => 'Jellys Invasion',
-      child: NamidaInkWell(
-        borderRadius: 8.0,
-        padding: const EdgeInsets.all(4.0),
-        onTap: () => setState(() => NamidaJellys.setInvasion(!enabled)),
-        child: JellyMascot(
-          height: 38.0,
-          opacity: enabled ? 0.9 : 0.35,
+      child: ObxO(
+        rx: NamidaJellys.enabledRx,
+        builder: (context, enabled) => NamidaInkWell(
+          borderRadius: 8.0,
+          padding: const EdgeInsets.all(4.0),
+          onTap: () => NamidaJellys.setInvasion(!enabled),
+          onLongPress: _openOptionsDialog,
+          child: JellyMascot(
+            height: 38.0,
+            opacity: enabled ? 0.9 : 0.35,
+          ),
         ),
       ),
     );

@@ -49,7 +49,7 @@ import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/eggs_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/class/youtube_id.dart';

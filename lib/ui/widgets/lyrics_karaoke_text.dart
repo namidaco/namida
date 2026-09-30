@@ -24,9 +24,13 @@ import 'package:namida/core/extensions.dart';
 /// the "sung" region on top of a dimmed base. Because it's a single paragraph, wrapping
 /// is identical to [Text] and the reveal flows correctly across any number of lines.
 ///
-/// lines without word timing are revealed by one short sweep when they become current.
+/// lines without word timing are revealed by one short sweep when they become current,
+/// or swept over their whole duration with [LyricsKaraokeEffects.untimedLineSweep].
 class LyricsKaraokeText extends StatefulWidget {
   final LrcLine line;
+
+  /// start of the next line, [LyricsKaraokeEffects.untimedLineSweep] ends a bit before it.
+  final Duration? lineEnd;
   final TextStyle textStyle;
   final TextAlign textAlign;
   final TextDirection textDirection;
@@ -41,6 +45,7 @@ class LyricsKaraokeText extends StatefulWidget {
   const LyricsKaraokeText({
     super.key,
     required this.line,
+    this.lineEnd,
     required this.textStyle,
     required this.textAlign,
     required this.textDirection,
@@ -59,8 +64,9 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   /// position updates arrive every ~200ms, the playback clock is only corrected when it drifts further than this.
   static const _resyncToleranceMicros = 100 * 1000;
 
-  static const _revealDuration = Duration(milliseconds: 1400);
+  static const _revealDuration = Duration(milliseconds: 800);
   static const _revealCurve = Curves.easeOut;
+  static const _untimedSweepFraction = 0.7;
   static const _ellipsis = '\u{2026}';
 
   /// unbounded; the playback position in microseconds, ticking linearly towards the line end between position updates.
@@ -80,6 +86,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   int _totalChars = 0;
   int _activePartHint = 0;
   bool _isWordTimed = false;
+  bool _isClockDriven = false;
 
   _KaraokeLayout? _layout;
   _KaraokeLayoutKey? _layoutKey;
@@ -106,12 +113,22 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
     _isWordTimed = isWordTimed;
     if (isWordTimed) {
       _computeTimedParts(parts);
+      _isClockDriven = true;
     } else {
       final text = line.readableText;
       _fullText = text;
       _totalChars = text.length;
       _partCharStarts = [0];
       _partCharEnds = [text.length];
+      final startMicros = line.timestamp.inMicroseconds;
+      final lineEndMicros = widget.lineEnd?.inMicroseconds ?? 0;
+      final sweepsWholeLine = widget.effects.untimedLineSweep && lineEndMicros > startMicros;
+      _isClockDriven = sweepsWholeLine;
+      if (sweepsWholeLine) {
+        final sweepMicros = ((lineEndMicros - startMicros) * _untimedSweepFraction).round();
+        _partStartMicros = [startMicros];
+        _partEndMicros = [startMicros + sweepMicros];
+      }
     }
     _activePartHint = 0;
     _layout?.dispose();
@@ -145,7 +162,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   @override
   void didUpdateWidget(covariant LyricsKaraokeText oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.line, widget.line)) {
+    if (!identical(oldWidget.line, widget.line) || oldWidget.lineEnd != widget.lineEnd) {
       _computeParts();
       _clock.stop();
       _syncClock();
@@ -155,7 +172,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   }
 
   void _startRevealIfUntimed() {
-    if (_isWordTimed) return;
+    if (_isClockDriven) return;
     final isPlaying = Player.inst.playWhenReady.value;
     if (!isPlaying) {
       _untimedReveal?.value = 1.0;
@@ -185,7 +202,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
 
   void _updateFill() {
     if (_totalChars == 0) return;
-    if (!_isWordTimed) {
+    if (!_isClockDriven) {
       final revealProgress = _untimedReveal?.value ?? 1.0;
       final revealedFraction = _revealCurve.transform(revealProgress);
       _sungChars.value = revealedFraction * _totalChars;
@@ -215,7 +232,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
 
   /// the clock keeps running on its own through the whole line, position updates only correct real drift (seeks, stalls).
   void _syncClock() {
-    if (_totalChars == 0 || !_isWordTimed) return;
+    if (_totalChars == 0 || !_isClockDriven) return;
 
     final posMicros = Player.inst.nowPlayingPosition.value * 1000.0;
     final playing = Player.inst.playWhenReady.value;
@@ -238,7 +255,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
     }
 
     final shimmer = _shimmer;
-    if (shimmer != null) {
+    if (shimmer != null && _isWordTimed) {
       final active = _activePartAt(posMicros);
       final heldNote = active >= 0 && posMicros < _partEndMicros[active] && _partEndMicros[active] - _partStartMicros[active] >= _ShimmerSweep.heldNoteMicros;
       shimmer.setActive(playing && (heldNote || posMicros > lineEndMicros + _ShimmerSweep.holdDelayMicros));
@@ -695,12 +712,16 @@ class LyricsKaraokeEffects {
   /// a soft sweep edge instead of a hard one. an offscreen layer every frame of the sweep.
   final bool feather;
 
+  /// lines without word timing sweep over most of their duration instead of a short reveal. repaints every frame like word-synced lines.
+  final bool untimedLineSweep;
+
   const LyricsKaraokeEffects({
     required this.accentTint,
     required this.glow,
     required this.wordBump,
     required this.shimmer,
     required this.feather,
+    required this.untimedLineSweep,
   });
 }
 

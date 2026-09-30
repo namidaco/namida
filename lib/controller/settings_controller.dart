@@ -200,7 +200,14 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enablePartyModeInMiniplayer = _key('enablePartyModeInMiniplayer', false);
   late final enablePartyModeColorSwap = _key('enablePartyModeColorSwap', true);
   late final enableMiniplayerParticles = _key('enableMiniplayerParticles', true);
-  late final miniplayerVisualizers = _keySet<MiniplayerVisualizer>('miniplayerVisualizers', const {}, item: MiniplayerVisualizer.values.asCodec());
+  late final miniplayerVisualizers = _keySet<MiniplayerVisualizer>(
+    'miniplayerVisualizers',
+    const {
+      MiniplayerVisualizer.beatRings,
+      MiniplayerVisualizer.reactiveParticles,
+    },
+    item: MiniplayerVisualizer.values.asCodec(),
+  );
   late final visualizerArtworkColors = _key('visualizerArtworkColors', false);
   late final effectsBackground = _keyEnum('effectsBackground', EffectTheme.auto, EffectTheme.values, sync: false);
   late final effectsOverlay = _keyEnum('effectsOverlay', EffectTheme.none, EffectTheme.values, sync: false);

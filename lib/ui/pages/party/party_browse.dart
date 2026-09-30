@@ -71,13 +71,7 @@ class _PartyBrowseCardState extends State<_PartyBrowseCard> {
         onPressed: _state == _BrowseState.loading ? null : _refresh,
       ),
       child: switch (_state) {
-        _BrowseState.loading => Padding(
-          padding: EdgeInsets.all(32.0),
-          child: ThreeArchedCircle(
-            color: context.theme.colorScheme.primary.withOpacityExt(0.5),
-            size: 38.0,
-          ),
-        ),
+        _BrowseState.loading => _BrowseInfo.loading(text: lang.fetching),
         _BrowseState.unsupported => _BrowseInfo(icon: Broken.global_refresh, text: lang.partyBrowseUnsupported),
         _BrowseState.unreachable => _BrowseInfo(icon: Broken.danger, text: lang.partyUnreachable),
         _BrowseState.empty => _BrowseInfo(icon: Broken.moon, text: lang.partyNoPublicRooms),
@@ -98,27 +92,36 @@ class _PartyBrowseCardState extends State<_PartyBrowseCard> {
 }
 
 class _BrowseInfo extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
   final String text;
 
-  const _BrowseInfo({required this.icon, required this.text});
+  const _BrowseInfo({required IconData this.icon, required this.text});
+  const _BrowseInfo.loading({required this.text}) : icon = null;
 
   @override
   Widget build(BuildContext context) {
-    final color = context.theme.colorScheme.onSurface.withOpacityExt(0.5);
+    final theme = context.theme;
+    final color = theme.colorScheme.onSurface.withOpacityExt(0.5);
+    final icon = this.icon;
+    final iconWidget = icon == null
+        ? ThreeArchedCircle(
+            color: theme.colorScheme.primary.withOpacityExt(0.5),
+            size: 28.0,
+          )
+        : Icon(
+            icon,
+            size: 28.0,
+            color: color,
+          );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 24.0),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 28.0,
-            color: color,
-          ),
+          iconWidget,
           const SizedBox(height: 8.0),
           Text(
             text,
-            style: context.theme.textTheme.displaySmall?.copyWith(color: color),
+            style: theme.textTheme.displaySmall?.copyWith(color: color),
             textAlign: TextAlign.center,
           ),
         ],

@@ -7,6 +7,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:playlist_manager/class/favourite_playlist.dart';
+import 'package:playlist_manager/playlist_manager.dart' show PlaylistTagsFilter;
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';

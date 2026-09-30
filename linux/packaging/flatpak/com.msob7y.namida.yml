@@ -149,6 +149,7 @@ modules:
   - name: namida
     buildsystem: simple
     build-commands:
+      - tar -xzf namida-linux.tar.gz
       # the flutter bundle keeps its own layout under /app/namida (namida, lib/, data/, bin/)
       - mkdir -p /app/namida
       - cp -a namida lib data /app/namida/
@@ -163,11 +164,11 @@ modules:
       - for s in 128 256 512; do install -Dm644 share/icons/hicolor/${s}x${s}/apps/namida.png /app/share/icons/hicolor/${s}x${s}/apps/com.msob7y.namida.png; done
       - install -Dm644 share/metainfo/com.msob7y.namida.metainfo.xml /app/share/metainfo/com.msob7y.namida.metainfo.xml
     sources:
-      - type: archive
-        # produced by the release workflow (flutter build linux, non-login variant); replace with
-        # url: https://github.com/namidaco/namida/releases/download/<tag>/<asset>.tar.gz + sha256 for Flathub
+      # a `file` source, local `archive` sources are cached by path only and would keep reusing an old build.
+      # produced by the release workflow (flutter build linux); for Flathub replace with an `archive` source:
+      # url: https://github.com/namidaco/namida/releases/download/<tag>/<asset>.tar.gz + sha256
+      - type: file
         path: namida-linux.tar.gz
-        strip-components: 0
       - type: script
         dest-filename: namida-launcher
         commands:

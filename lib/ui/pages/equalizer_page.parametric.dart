@@ -109,21 +109,7 @@ class _ParametricEqualizerSectionState extends State<_ParametricEqualizerSection
                   ),
                   if (NamidaFeaturesVisibility.methodOpenSystemEqualizer && widget.isGlobal) ...[
                     const SizedBox(width: 2.0),
-                    IconButton(
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                      tooltip: lang.openApp,
-                      icon: Icon(
-                        Broken.export_2,
-                        size: 20.0,
-                        color: context.defaultIconColor(),
-                      ),
-                      onPressed: () => NamidaChannel.inst.openSystemEqualizer(
-                        Player.inst.androidSessionId,
-                        package: settings.customEQPackage.value,
-                      ),
-                    ),
+                    const _OpenSystemEqualizerButton(),
                   ],
                   const SizedBox(width: 8.0),
                   CustomSwitch(
@@ -1362,6 +1348,69 @@ class _EqualizerViewToggleItem extends StatelessWidget {
           size: 16.0,
         ),
       ),
+    );
+  }
+}
+
+class _OpenSystemEqualizerButton extends StatelessWidget {
+  const _OpenSystemEqualizerButton();
+
+  static Future<void> _openEqualizer() async {
+    final didOpen = await NamidaChannel.inst.openSystemEqualizer(
+      Player.inst.androidSessionId,
+      package: settings.customEQPackage.value,
+    );
+    if (!didOpen) _openCustomPackageDialog();
+  }
+
+  static void _openCustomPackageDialog() {
+    final controller = TextEditingController(text: settings.customEQPackage.value);
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        controller.dispose();
+      },
+      dialog: CustomBlurryDialog(
+        title: 'custom_eq_package'.toUpperCase(),
+        actions: [
+          IconButton(
+            tooltip: lang.restoreDefaults,
+            onPressed: () {
+              settings.customEQPackage.reset();
+              NamidaNavigator.inst.closeDialog();
+            },
+            icon: const Icon(Broken.refresh),
+          ),
+          const CancelButton(),
+          NamidaButton(
+            text: lang.save,
+            onTap: () {
+              settings.customEQPackage.save(controller.text);
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.only(top: 14.0),
+          child: CustomTagTextField(
+            controller: controller,
+            hintText: 'com.example.equalizer',
+            labelText: lang.value,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      horizontalPadding: 10.0,
+      tooltip: () => lang.openApp,
+      icon: Broken.export_2,
+      iconSize: 20.0,
+      iconColor: context.defaultIconColor(),
+      onPressed: _openEqualizer,
+      onLongPress: _openCustomPackageDialog,
     );
   }
 }

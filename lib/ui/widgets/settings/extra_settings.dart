@@ -1245,6 +1245,9 @@ class _ExtrasFlagsOptions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const divider = NamidaContainerDivider(
+      margin: EdgeInsets.symmetric(vertical: 4.0),
+    );
     return SizedBox(
       width: context.width,
       child: ConstrainedBox(
@@ -1256,59 +1259,17 @@ class _ExtrasFlagsOptions extends StatelessWidget {
             padding: EdgeInsets.zero,
             shrinkWrap: true,
             children: [
+              if (kAllowJellysInvasion) const JellysFlagsTiles(),
               ObxO(
-                rx: settings.extra.tapToScroll,
-                builder: (context, tapToScroll) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.cd,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: tapToScroll ?? false,
-                  onChanged: (isTrue) => settings.extra.tapToScroll.save(!isTrue),
-                  title: 'tap_to_scroll'.toUpperCase(),
-                  subtitle: 'tap anywhere on the scroll track to scroll',
+                rx: settings.gradientTiles,
+                builder: (context, gradientTiles) => CustomSwitchListTile(
+                  icon: Broken.colors_square,
+                  value: gradientTiles,
+                  onChanged: (isTrue) => settings.gradientTiles.save(!isTrue),
+                  title: 'gradient_tiles_and_cards'.toUpperCase(),
                 ),
               ),
-              ObxO(
-                rx: settings.extra.enhancedDragToScroll,
-                builder: (context, enhancedDragToScroll) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.arrow_swap,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: enhancedDragToScroll ?? true,
-                  onChanged: (isTrue) => settings.extra.enhancedDragToScroll.save(!isTrue),
-                  title: 'enhanced_drag_to_scroll'.toUpperCase(),
-                  subtitle: 'drag anywhere on the scroll track to scroll',
-                ),
-              ),
-              ObxO(
-                rx: settings.extra.scrollbarThumbLabel,
-                builder: (context, scrollbarThumbLabel) => CustomSwitchListTile(
-                  leading: const StackedIcon(
-                    baseIcon: Broken.row_vertical,
-                    secondaryIcon: Broken.text,
-                    secondaryIconSize: 12.0,
-                  ),
-                  value: scrollbarThumbLabel ?? false,
-                  onChanged: (isTrue) => settings.extra.scrollbarThumbLabel.save(!isTrue),
-                  title: 'scrollbar_thumb_label'.toUpperCase(),
-                  subtitle: 'show the current letter/section next to the scrollbar while dragging it',
-                ),
-              ),
-              if (NamidaFeaturesVisibility.smoothScrolling)
-                ObxO(
-                  rx: settings.extra.smoothScrolling,
-                  builder: (context, smoothScrolling) => CustomSwitchListTile(
-                    icon: Broken.coin,
-                    rotateIcon: 2,
-                    value: smoothScrolling ?? true,
-                    onChanged: (isTrue) => settings.extra.smoothScrolling.save(!isTrue),
-                    title: 'smooth_scrolling'.toUpperCase(),
-                  ),
-                ),
+              const BackgroundImagesFlagTile(),
               if (NamidaFeaturesVisibility.floatingArtworkEffect)
                 ObxO(
                   rx: settings.extra.floatingArtworkEffect,
@@ -1341,38 +1302,6 @@ class _ExtrasFlagsOptions extends StatelessWidget {
               //     subtitle: 'Transitions and animations finish almost instantly.',
               //   ),
               // ),
-              if (kAllowJellysInvasion) ...[
-                ObxO(
-                  rx: settings.extra.jellysInvasion,
-                  builder: (context, jellysInvasion) => CustomSwitchListTile(
-                    leading: const JellyMascot(height: 30.0),
-                    value: jellysInvasion ?? false,
-                    onChanged: (isTrue) => NamidaJellys.setInvasion(!isTrue, paletteFollows: true),
-                    title: 'jellys_invasion'.toUpperCase(),
-                    subtitle: 'Let jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}',
-                  ),
-                ),
-                ObxO(
-                  rx: settings.extra.jellysPalette,
-                  builder: (context, jellysPalette) => CustomSwitchListTile(
-                    icon: Broken.color_swatch,
-                    value: jellysPalette ?? false,
-                    onChanged: (isTrue) => NamidaJellys.setPaletteHijack(!isTrue),
-                    title: 'jellys_color_palette'.toUpperCase(),
-                  ),
-                ),
-              ],
-              const BackgroundImagesFlagTile(),
-              ObxO(
-                rx: settings.extra.keepVideoFrameOnSwitch,
-                builder: (context, keepVideoFrameOnSwitch) => CustomSwitchListTile(
-                  icon: Broken.video_play,
-                  value: keepVideoFrameOnSwitch ?? false,
-                  onChanged: (isTrue) => settings.extra.keepVideoFrameOnSwitch.save(!isTrue),
-                  title: 'keep_video_frame_on_switch'.toUpperCase(),
-                  subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
-                ),
-              ),
               if (NamidaFeaturesVisibility.mediaWaveHaptic)
                 ObxO(
                   rx: settings.extra.mediaWaveHaptic,
@@ -1384,16 +1313,62 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     subtitle: 'Haptic feedback following the rhythm.\nMight affect battery usage.',
                   ),
                 ),
+              divider,
+              if (NamidaFeaturesVisibility.smoothScrolling)
+                ObxO(
+                  rx: settings.extra.smoothScrolling,
+                  builder: (context, smoothScrolling) => CustomSwitchListTile(
+                    icon: Broken.coin,
+                    rotateIcon: 2,
+                    value: smoothScrolling ?? true,
+                    onChanged: (isTrue) => settings.extra.smoothScrolling.save(!isTrue),
+                    title: 'smooth_scrolling'.toUpperCase(),
+                  ),
+                ),
               ObxO(
-                rx: settings.gradientTiles,
-                builder: (context, gradientTiles) => CustomSwitchListTile(
-                  icon: Broken.colors_square,
-                  value: gradientTiles,
-                  onChanged: (isTrue) => settings.gradientTiles.save(!isTrue),
-                  title: 'gradient_tiles_and_cards'.toUpperCase(),
+                rx: settings.extra.scrollbarThumbLabel,
+                builder: (context, scrollbarThumbLabel) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.text,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: scrollbarThumbLabel ?? false,
+                  onChanged: (isTrue) => settings.extra.scrollbarThumbLabel.save(!isTrue),
+                  title: 'scrollbar_thumb_label'.toUpperCase(),
+                  subtitle: 'show the current letter/section next to the scrollbar while dragging it',
                 ),
               ),
-              if (isDesktop)
+              ObxO(
+                rx: settings.extra.enhancedDragToScroll,
+                builder: (context, enhancedDragToScroll) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.arrow_swap,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: enhancedDragToScroll ?? true,
+                  onChanged: (isTrue) => settings.extra.enhancedDragToScroll.save(!isTrue),
+                  title: 'enhanced_drag_to_scroll'.toUpperCase(),
+                  subtitle: 'drag anywhere on the scroll track to scroll',
+                ),
+              ),
+              ObxO(
+                rx: settings.extra.tapToScroll,
+                builder: (context, tapToScroll) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.cd,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: tapToScroll ?? false,
+                  onChanged: (isTrue) => settings.extra.tapToScroll.save(!isTrue),
+                  title: 'tap_to_scroll'.toUpperCase(),
+                  subtitle: 'tap anywhere on the scroll track to scroll',
+                ),
+              ),
+              if (isDesktop) ...[
+                divider,
                 ObxO(
                   rx: settings.desktopTitlebar,
                   builder: (context, desktopTitlebar) => CustomSwitchListTile(
@@ -1403,103 +1378,27 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     title: 'show_desktop_title_bar'.toUpperCase(),
                   ),
                 ),
-              if (isDesktop && !Platform.isWindows)
-                NamidaPopupWrapper(
-                  children: _getTitlebarIconsTypeChildren,
-                  child: CustomListTile(
-                    icon: Broken.close_circle,
-                    title: 'desktop_title_bar_icons_type'.toUpperCase(),
-                    trailing: NamidaPopupWrapper(
-                      children: _getTitlebarIconsTypeChildren,
-                      child: ObxO(
-                        rx: settings.desktopTitlebarType,
-                        builder: (context, type) => Text(
-                          type.name,
-                          style: context.textTheme.displayMedium,
-                          textAlign: TextAlign.end,
+                if (!Platform.isWindows)
+                  NamidaPopupWrapper(
+                    children: _getTitlebarIconsTypeChildren,
+                    child: CustomListTile(
+                      icon: Broken.close_circle,
+                      title: 'desktop_title_bar_icons_type'.toUpperCase(),
+                      trailing: NamidaPopupWrapper(
+                        children: _getTitlebarIconsTypeChildren,
+                        child: ObxO(
+                          rx: settings.desktopTitlebarType,
+                          builder: (context, type) => Text(
+                            type.name,
+                            style: context.textTheme.displayMedium,
+                            textAlign: TextAlign.end,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-
-              ObxO(
-                rx: settings.extra.ytStyleButtonSwitcher,
-                builder: (context, ytStyleButtonSwitcher) => CustomSwitchListTile(
-                  icon: Broken.video_octagon,
-                  value: ytStyleButtonSwitcher ?? false,
-                  onChanged: (isTrue) => settings.extra.ytStyleButtonSwitcher.save(!isTrue),
-                  title: 'yt_style_player_button_switcher'.toUpperCase(),
-                  subtitle: 'shows a button to switch between local style player and youtube style player',
-                ),
-              ),
-              ObxO(
-                rx: settings.extra.recentSearchesEnabled,
-                builder: (context, recentSearchesEnabled) => CustomSwitchListTile(
-                  icon: Broken.search_status,
-                  value: recentSearchesEnabled ?? false,
-                  onChanged: (isTrue) => settings.extra.setRecentSearchesEnabled(!isTrue),
-                  title: 'recent_searches'.toUpperCase(),
-                  subtitle: 'saves searches and shows them in the search page',
-                ),
-              ),
-              ObxO(
-                rx: settings.extra.resumeUIEnabled,
-                builder: (context, resumeUIEnabled) => CustomSwitchListTile(
-                  icon: Broken.play_circle,
-                  value: resumeUIEnabled,
-                  onChanged: (isTrue) => settings.extra.resumeUIEnabled.save(!isTrue),
-                  title: 'resume_ui'.toUpperCase(),
-                  subtitle: 'shows the resume button & highlights the last played item in pages like albums & playlists',
-                ),
-              ),
-
-              if (NamidaFeaturesVisibility.equalizerAvailable)
-                ObxO(
-                  rx: settings.customEQPackage,
-                  builder: (context, package) => CustomListTile(
-                    icon: Broken.chart_3,
-                    title: 'custom_eq_package'.toUpperCase(),
-                    trailingText: package ?? '',
-                    onTap: () {
-                      final controller = TextEditingController(text: package);
-                      NamidaNavigator.inst.navigateDialog(
-                        onDisposing: () {
-                          controller.dispose();
-                        },
-                        dialog: CustomBlurryDialog(
-                          title: 'custom_eq_package'.toUpperCase(),
-                          actions: [
-                            IconButton(
-                              tooltip: lang.restoreDefaults,
-                              onPressed: () {
-                                settings.customEQPackage.reset();
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                              icon: const Icon(Broken.refresh),
-                            ),
-                            const CancelButton(),
-                            NamidaButton(
-                              text: lang.save,
-                              onTap: () {
-                                settings.customEQPackage.save(controller.text);
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            ),
-                          ],
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 14.0),
-                            child: CustomTagTextField(
-                              controller: controller,
-                              hintText: 'com.example.equalizer',
-                              labelText: lang.value,
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+              ],
+              divider,
               ObxO(
                 rx: settings.visualDelayMS,
                 builder: (context, visualDelayMS) => CustomListTile(
@@ -1515,6 +1414,64 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     },
                     text: '$visualDelayMS ms',
                   ),
+                ),
+              ),
+              ObxO(
+                rx: settings.extra.resumeUIEnabled,
+                builder: (context, resumeUIEnabled) => CustomSwitchListTile(
+                  icon: Broken.play_circle,
+                  value: resumeUIEnabled,
+                  onChanged: (isTrue) => settings.extra.resumeUIEnabled.save(!isTrue),
+                  title: 'resume_ui'.toUpperCase(),
+                  subtitle: 'shows the resume button & highlights the last played item in pages like albums & playlists',
+                ),
+              ),
+              ObxO(
+                rx: settings.extra.recentSearchesEnabled,
+                builder: (context, recentSearchesEnabled) => CustomSwitchListTile(
+                  icon: Broken.search_status,
+                  value: recentSearchesEnabled ?? false,
+                  onChanged: (isTrue) => settings.extra.setRecentSearchesEnabled(!isTrue),
+                  title: 'recent_searches'.toUpperCase(),
+                  subtitle: 'saves searches and shows them in the search page',
+                ),
+              ),
+              NamidaPopupWrapper(
+                childrenDefault: _getSearchTypeChildren,
+                child: CustomListTile(
+                  icon: Broken.search_favorite,
+                  title: 'preferred_search_tab'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: _getSearchTypeChildren,
+                    child: ObxO(
+                      rx: settings.extra.preferredSearchType,
+                      builder: (context, type) => Text(
+                        type.name,
+                        style: context.textTheme.displayMedium,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              ObxO(
+                rx: settings.extra.ytStyleButtonSwitcher,
+                builder: (context, ytStyleButtonSwitcher) => CustomSwitchListTile(
+                  icon: Broken.video_octagon,
+                  value: ytStyleButtonSwitcher ?? false,
+                  onChanged: (isTrue) => settings.extra.ytStyleButtonSwitcher.save(!isTrue),
+                  title: 'yt_style_player_button_switcher'.toUpperCase(),
+                  subtitle: 'shows a button to switch between local style player and youtube style player',
+                ),
+              ),
+              ObxO(
+                rx: settings.extra.keepVideoFrameOnSwitch,
+                builder: (context, keepVideoFrameOnSwitch) => CustomSwitchListTile(
+                  icon: Broken.video_play,
+                  value: keepVideoFrameOnSwitch ?? false,
+                  onChanged: (isTrue) => settings.extra.keepVideoFrameOnSwitch.save(!isTrue),
+                  title: 'keep_video_frame_on_switch'.toUpperCase(),
+                  subtitle: 'Keep the last video frame while switching to an item whose video is already downloaded, instead of flashing the artwork in between.',
                 ),
               ),
               ObxO(
@@ -1543,28 +1500,42 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   );
                 },
               ),
-              NamidaPopupWrapper(
-                childrenDefault: _getSearchTypeChildren,
-                child: CustomListTile(
-                  icon: Broken.search_favorite,
-                  title: 'preferred_search_tab'.toUpperCase(),
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: _getSearchTypeChildren,
-                    child: ObxO(
-                      rx: settings.extra.preferredSearchType,
-                      builder: (context, type) => Text(
-                        type.name,
-                        style: context.textTheme.displayMedium,
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class JellysFlagsTiles extends StatelessWidget {
+  const JellysFlagsTiles({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ObxO(
+          rx: settings.extra.jellysInvasion,
+          builder: (context, jellysInvasion) => CustomSwitchListTile(
+            leading: const JellyMascot(height: 30.0),
+            value: jellysInvasion ?? false,
+            onChanged: (isTrue) => NamidaJellys.setInvasion(!isTrue, paletteFollows: true),
+            title: 'jellys_invasion'.toUpperCase(),
+            subtitle: 'Let jellyfishes drift around the app.\n${lang.performanceNote}.\nby ${NamidaAppIcons.jellyda.authorInfoText}',
+          ),
+        ),
+        ObxO(
+          rx: settings.extra.jellysPalette,
+          builder: (context, jellysPalette) => CustomSwitchListTile(
+            icon: Broken.color_swatch,
+            value: jellysPalette ?? false,
+            onChanged: (isTrue) => NamidaJellys.setPaletteHijack(!isTrue),
+            title: 'jellys_color_palette'.toUpperCase(),
+          ),
+        ),
+      ],
     );
   }
 }

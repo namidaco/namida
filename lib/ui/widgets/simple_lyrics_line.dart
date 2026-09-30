@@ -27,7 +27,7 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   /// translations/romanizations sharing the line's timestamp, one smaller line each below it.
   final int maxSecondaryLines;
 
-  /// word synced lines sweep word by word, others get a short reveal. null keeps plain text.
+  /// word synced lines sweep word by word, others get a short reveal or a whole-line sweep. null keeps plain text.
   final LyricsKaraokeEffects? karaoke;
 
   const SimpleLyricsLineWidget({
@@ -56,6 +56,7 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     wordBump: false,
     shimmer: true,
     feather: true,
+    untimedLineSweep: false,
   );
 
   /// tallest layout [fitToWidth] can pick for [lrc], for layouts reserving the room ahead of time.
@@ -231,6 +232,13 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     if (!identical(_currentLine.value, newLine)) _currentLine.value = newLine;
   }
 
+  Duration? _nextLineStartOf(LrcLine line) {
+    final lastIndex = _highlightTimestampsMap[line.timestamp]?.lastOrNull;
+    if (lastIndex == null) return null;
+    final nextIndex = lastIndex + 1;
+    return nextIndex < _lines.length ? _lines[nextIndex].timestamp : null;
+  }
+
   List<LrcLine> _secondaryLinesOf(LrcLine line) {
     final maxCount = widget.maxSecondaryLines;
     if (maxCount == 0) return const [];
@@ -259,6 +267,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
           final key = ValueKey(line!.timestamp);
           final direction = line.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
           final secondaryLines = _secondaryLinesOf(line);
+          final lineEnd = _nextLineStartOf(line);
           final primaryKey = secondaryLines.isEmpty ? key : null;
           final primary = widget.fitToWidth
               ? LayoutBuilder(
@@ -268,6 +277,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
                     final maxLines = _fitResultMaxLines;
                     return _PrimaryLine(
                       line: line,
+                      lineEnd: lineEnd,
                       style: _fitResultStyle,
                       textAlign: widget.textAlign,
                       textDirection: direction,
@@ -280,6 +290,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
               : _PrimaryLine(
                   key: primaryKey,
                   line: line,
+                  lineEnd: lineEnd,
                   style: widget.style,
                   textAlign: widget.textAlign,
                   textDirection: direction,
@@ -316,6 +327,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
 
 class _PrimaryLine extends StatelessWidget {
   final LrcLine line;
+  final Duration? lineEnd;
   final TextStyle? style;
   final TextAlign textAlign;
   final TextDirection textDirection;
@@ -326,6 +338,7 @@ class _PrimaryLine extends StatelessWidget {
   const _PrimaryLine({
     super.key,
     required this.line,
+    required this.lineEnd,
     required this.style,
     required this.textAlign,
     required this.textDirection,
@@ -353,6 +366,7 @@ class _PrimaryLine extends StatelessWidget {
     return Obx(
       (context) => LyricsKaraokeText(
         line: line,
+        lineEnd: lineEnd,
         textStyle: effectiveStyle,
         textAlign: textAlign,
         textDirection: textDirection,

@@ -393,7 +393,7 @@ class CustomListTile extends StatelessWidget {
                                   : [
                                       TextSpan(
                                         text: titleSuffix,
-                                        style: textTheme.displaySmall,
+                                        style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
                                       ),
                                     ],
                             ),
@@ -3529,7 +3529,7 @@ class _PickerSubtitle extends StatelessWidget {
         Flexible(
           child: Text(
             pickedText,
-            style: textStyle?.copyWith(fontWeight: FontWeight.w700),
+            style: textStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -3984,6 +3984,7 @@ class NamidaEndEdgeFeather extends StatelessWidget {
                   begin: AlignmentDirectional.centerStart,
                   end: AlignmentDirectional.centerEnd,
                   colors: [bgColor.withAlpha(0), bgColor],
+                  stops: [0.0, solidFromStop],
                 ),
               ),
             ),

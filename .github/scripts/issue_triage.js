@@ -4,6 +4,7 @@ const MARKER = '<!-- namida-triage -->';
 const OUTDATED_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
 const MIN_TITLE_LENGTH = 10;
 const MIN_PASTED_LOGS_LENGTH = 300;
+const APP_LOGS_ZIP_PREFILL = '📦 attach ';
 const NO_RESPONSE = '_No response_';
 const MAX_SEARCH_WORDS = 6;
 const MAX_DUPLICATES = 3;
@@ -81,6 +82,7 @@ const STOP_WORDS = new Set([
 const NOTE = {
   title: "✏️ **the title needs a bit more love**, a short summary of the problem helps a lot",
   logs: '📦 **logs are missing**, grab them from **Settings > About > Share Logs** and drop the zip in the logs section. app won\'t open? the "can\'t share logs?" section says where the log files live on your device',
+  logsZipNotAttached: "📦 **the logs zip isn't attached yet**, namida already saved it at the path in the logs section, just drag that zip in there",
   version: '🔢 **the version needs to be exact**, copy it from **Settings > About** (ex: `7.4.0-beta`), "latest" changes every few days',
   outdated: (reported, latest) =>
     `⏳ **you're on an older build** (\`${reported}\`), the latest beta is [\`${latest.tag}\`](${latest.url}). mind giving it a spin? might be fixed already`,
@@ -108,9 +110,11 @@ module.exports = async ({ github, context, core }) => {
   if (!isMaintainer) {
     if (isPlaceholderTitle(issue.title)) notes.push(NOTE.title);
 
-    if (isBugLike && fields.has(FIELD.logs) && !hasLogs(fields)) {
+    const shouldHaveLogs = isBugLike && fields.has(FIELD.logs);
+    const missingLogsNote = shouldHaveLogs ? findMissingLogsNote(fields) : null;
+    if (missingLogsNote) {
       desiredLabels.add(LABEL.needsLogs);
-      notes.push(NOTE.logs);
+      notes.push(missingLogsNote);
     }
 
     const reportedVersionText = fields.get(FIELD.version);
@@ -180,15 +184,18 @@ function isPlaceholderTitle(title) {
   return titleWithoutTags.length < MIN_TITLE_LENGTH;
 }
 
-function hasLogs(fields) {
-  const noLogsCheckbox = fields.get(FIELD.noLogs) ?? '';
-  const isNoLogsChecked = /- \[x\]/i.test(noLogsCheckbox);
-  if (isNoLogsChecked) return true;
-
+function findMissingLogsNote(fields) {
   const logs = fields.get(FIELD.logs) ?? '';
   const hasAttachment = /github\.com\/\S*?files\/\d+\//i.test(logs);
   const hasPastedLogs = logs.length > MIN_PASTED_LOGS_LENGTH;
-  return hasAttachment || hasPastedLogs;
+  if (hasAttachment || hasPastedLogs) return null;
+
+  const isAppZipPending = logs.includes(APP_LOGS_ZIP_PREFILL);
+  if (isAppZipPending) return NOTE.logsZipNotAttached;
+
+  const noLogsCheckbox = fields.get(FIELD.noLogs) ?? '';
+  const isNoLogsChecked = /- \[x\]/i.test(noLogsCheckbox);
+  return isNoLogsChecked ? null : NOTE.logs;
 }
 
 async function findNewerBeta(github, reported) {

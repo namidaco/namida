@@ -1601,8 +1601,8 @@ class _SelectionBarButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tooltip = this.tooltip;
     final button = NamidaInkWell(
-      width: 38.0,
-      height: 38.0,
+      width: 32.0,
+      height: 32.0,
       margin: const EdgeInsetsDirectional.only(start: 4.0),
       borderRadius: 11.0,
       bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.45),

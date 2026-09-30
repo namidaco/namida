@@ -944,8 +944,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                         dotRadius: (normalTextStyle.fontSize ?? 15.0) * 0.16,
                                       );
                                     } else if (selected && (hasParts || (!isBGLyrics && !selectedAndEmpty))) {
+                                      final lastIndexForTimestamp = indicesForTimestamp?.last ?? index;
+                                      final nextLineIndex = lastIndexForTimestamp + 1;
+                                      final lineEnd = nextLineIndex < lyrics.length ? lyrics[nextLineIndex].timestamp : null;
                                       textWidget = LyricsKaraokeText(
                                         line: lrc,
+                                        lineEnd: lineEnd,
                                         textStyle: textStyle,
                                         textAlign: textAlign,
                                         textDirection: textDirection,
@@ -1288,13 +1292,14 @@ class _LyricsEffects {
   /// instrumental gaps show three dots filling up until the next line, instead of an empty pill.
   static const interludeDots = true;
 
-  /// the current line's karaoke sweep, lines without word timing get a short reveal.
+  /// the current line's karaoke sweep, lines without word timing get a short reveal or a whole-line sweep.
   static const karaoke = LyricsKaraokeEffects(
     accentTint: true,
     glow: true,
     wordBump: true,
     shimmer: true,
     feather: true,
+    untimedLineSweep: false,
   );
 
   /// far jumps (seeks) scroll slower with an emphasized curve, adjacent lines keep the quick glide.
