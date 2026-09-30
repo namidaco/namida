@@ -149,7 +149,7 @@ modules:
   - name: namida
     buildsystem: simple
     build-commands:
-      - tar -xzf namida-linux.tar.gz
+      - tar --no-same-owner -xzf namida-linux.tar.gz
       # the flutter bundle keeps its own layout under /app/namida (namida, lib/, data/, bin/)
       - mkdir -p /app/namida
       - cp -a namida lib data /app/namida/
