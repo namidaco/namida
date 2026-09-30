@@ -1347,6 +1347,16 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     subtitle: "${lang.performanceNote}.\nMight affect battery usage.",
                   ),
                 ),
+              // ObxO(
+              //   rx: settings.extra.reduceAnimations,
+              //   builder: (context, reduceAnimations) => CustomSwitchListTile(
+              //     icon: Broken.flash_1,
+              //     value: reduceAnimations ?? false,
+              //     onChanged: (isTrue) => settings.extra.reduceAnimations.save(!isTrue),
+              //     title: 'reduce_animations'.toUpperCase(),
+              //     subtitle: 'Transitions and animations finish almost instantly.',
+              //   ),
+              // ),
               if (kAllowJellysInvasion) ...[
                 ObxO(
                   rx: settings.extra.jellysInvasion,

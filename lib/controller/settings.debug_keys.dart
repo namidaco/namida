@@ -32,6 +32,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     smoothScrolling,
     floatingArtworkEffect,
     tiltingCardsEffect,
+    reduceAnimations,
     jellysInvasion,
     jellysPalette,
     effectsSeasonAnnounced,

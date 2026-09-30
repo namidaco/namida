@@ -89,7 +89,7 @@ import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 void main(List<String> args) {
   runZonedGuarded(
     () async {
-      final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+      final widgetsBinding = _NamidaWidgetsBinding();
       FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
       final singleInstance = AppSingleInstanceBase.instance;
@@ -846,6 +846,12 @@ class _HttpCacheCustomCacheConfig extends GlobalCacheConfig {
         rangeRequestSplitThreshold: 512 * 1024, // 512KB
         customHttpClient: client,
       );
+}
+
+/// [AnimationController]s cut their durations while [disableAnimations] is on, same as with the platform setting.
+class _NamidaWidgetsBinding extends WidgetsFlutterBinding {
+  @override
+  bool get disableAnimations => settings.extra.reduceAnimations.value == true || super.disableAnimations;
 }
 
 class ScrollBehaviorModified extends ScrollBehavior {

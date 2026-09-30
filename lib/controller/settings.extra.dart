@@ -35,6 +35,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final smoothScrolling = _key<bool?>('smoothScrolling', null);
   late final floatingArtworkEffect = _key<bool?>('floatingArtworkEffect', null);
   late final tiltingCardsEffect = _key<bool?>('tiltingCardsEffect', null);
+  late final reduceAnimations = _key<bool?>('reduceAnimations', null);
   late final jellysInvasion = _key<bool?>('jellysInvasion', null);
   late final jellysPalette = _key<bool?>('jellysPalette', null);
   late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
