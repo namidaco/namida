@@ -15,6 +15,7 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final useSemitones = _key('useSemitones', false);
   late final isPerTrackAudioConfigOverriden = _key('isPerTrackAudioConfigOverriden', false);
   late final speeds = _keyList<double>('speeds', const [0.25, 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0]);
+  late final sleepTimerPresetsMin = _keyList<int>('sleepTimerPresetsMin', const [15, 30, 45, 60, 90, 120]);
 
   late final seekDurationInSeconds = _key('seekDurationInSeconds', 5);
   late final seekDurationInPercentage = _key('seekDurationInPercentage', 2);

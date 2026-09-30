@@ -81,6 +81,7 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     useSemitones,
     isPerTrackAudioConfigOverriden,
     speeds,
+    sleepTimerPresetsMin,
     seekDurationInSeconds,
     seekDurationInPercentage,
     isSeekDurationPercentage,

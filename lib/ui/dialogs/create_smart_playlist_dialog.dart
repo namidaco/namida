@@ -1616,7 +1616,6 @@ class _SyncedWheelSlider extends StatelessWidget {
       builder: (context, value, _) => ValueListenableBuilder(
         valueListenable: syncer.sliderText,
         builder: (context, text, _) => NamidaWheelSlider(
-          key: ValueKey(value),
           min: min,
           max: max,
           stepper: stepper,

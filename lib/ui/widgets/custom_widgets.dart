@@ -2211,9 +2211,23 @@ class NamidaWheelSlider extends StatefulWidget {
 }
 
 class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
-  late final _controller = FixedExtentScrollController(initialItem: (widget.initValue / widget.stepper / widget.multiplier).round());
+  late final _controller = FixedExtentScrollController(initialItem: _itemOf(widget.initValue));
+
+  /// the last value sent through [NamidaWheelSlider.onValueChanged], in [NamidaWheelSlider.initValue] form.
+  int? _reportedInitValue;
+
+  int _itemOf(int initValue) => (initValue / widget.stepper / widget.multiplier).round();
 
   static bool _isMultipleOfFive(int n) => n % 5 == 0;
+
+  @override
+  void didUpdateWidget(covariant NamidaWheelSlider oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final initValue = widget.initValue;
+    // -- outside changes only, our own report can map back to another item (extra value)
+    if (initValue == oldWidget.initValue || initValue == _reportedInitValue) return;
+    _controller.jumpToItem(_itemOf(initValue));
+  }
 
   @override
   void dispose() {
@@ -2274,6 +2288,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                     onSelectedItemChanged: (val) {
                       int finalValue = (val * widget.stepper * widget.multiplier + widget.min);
                       if ((widget.extraValue && finalValue > widget.max)) finalValue = -1;
+                      _reportedInitValue = finalValue < widget.min ? widget.max + 1 : finalValue - widget.min;
                       widget.onValueChanged(finalValue);
                       HapticFeedback.lightImpact();
                     },
@@ -2940,7 +2955,6 @@ class SubpageInfoContainer extends StatelessWidget {
                 final effectiveCount = count == null ? poolCount : count.withMaximum(poolCount);
                 final isAll = effectiveCount == poolCount;
                 return NamidaWheelSlider(
-                  key: ValueKey(poolCount),
                   initValue: effectiveCount - 1,
                   min: 0,
                   max: (poolCount - 1).withMinimum(1),
@@ -3899,28 +3913,36 @@ class SearchPageTitleRow extends StatelessWidget {
   }
 }
 
-/// fades the end edge of a horizontal scrollable into the page background.
+/// fades the end edge of a horizontal scrollable into [color], the page background by default.
 class NamidaEndEdgeFeather extends StatelessWidget {
   final double width;
+  final Color? color;
   final Widget child;
 
   const NamidaEndEdgeFeather({
     super.key,
     this.width = 16.0,
+    this.color,
     required this.child,
   });
 
+  /// drawn past the edge and clipped by the stack, same as the child's clip. an antialiased edge
+  /// there would leave the last pixel column of a fractional width uncovered.
+  static const _kEdgeOverdraw = 1.0;
+
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.scaffoldBackgroundColor;
+    final bgColor = color ?? context.theme.scaffoldBackgroundColor;
+    final overdrawnWidth = width + _kEdgeOverdraw;
+    final solidFromStop = width / overdrawnWidth;
     return Stack(
       children: [
         child,
         PositionedDirectional(
-          end: 0.0,
+          end: -_kEdgeOverdraw,
           top: 0.0,
           bottom: 0.0,
-          width: width,
+          width: overdrawnWidth,
           child: IgnorePointer(
             child: DecoratedBox(
               decoration: BoxDecoration(

@@ -26,6 +26,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer.dart';
+import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/about_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -237,7 +238,7 @@ class NamidaDrawer extends StatelessWidget {
               children: [
                 Obx(
                   (context) => NamidaWheelSlider(
-                    max: 180,
+                    max: _kSleepTimerMaxMinutes,
                     initValue: minutesRx.valueR,
                     onValueChanged: (val) => minutesRx.value = val,
                     text: "${minutesRx.valueR}m",
@@ -262,7 +263,80 @@ class NamidaDrawer extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(
+              height: 24.0,
+            ),
+            _SleepTimerPresetsRow(
+              minutesRx: minutesRx,
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  static const _kSleepTimerMaxMinutes = 180;
+
+  static String _sleepMinutesToText(int minutes) {
+    final hours = minutes ~/ 60;
+    final remainingMinutes = minutes % 60;
+    if (hours == 0) return '${minutes}m';
+    if (remainingMinutes == 0) return '${hours}h';
+    return '${hours}h ${remainingMinutes}m';
+  }
+
+  static void _openAddSleepPresetDialog(Rx<int> minutesRx) {
+    final currentMinutes = minutesRx.value;
+    final controller = TextEditingController(text: currentMinutes > 0 ? '$currentMinutes' : '');
+    final formKey = GlobalKey<FormState>();
+    const validRangeText = '1 - $_kSleepTimerMaxMinutes';
+
+    void submit() {
+      if (formKey.currentState?.validate() != true) return;
+      final minutes = int.parse(controller.text);
+      final isNewPreset = !settings.player.sleepTimerPresetsMin.value.contains(minutes);
+      if (isNewPreset) {
+        settings.player.sleepTimerPresetsMin.update(
+          (presets) => presets
+            ..add(minutes)
+            ..sort(),
+        );
+      }
+      minutesRx.value = minutes;
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: controller.dispose,
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: lang.minutes.capitalizeFirst(),
+          icon: Broken.timer_1,
+          normalTitleStyle: true,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.add,
+              onTap: submit,
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.only(top: 14.0),
+            child: CustomTagTextField(
+              controller: controller,
+              hintText: validRangeText,
+              labelText: lang.minutes.capitalizeFirst(),
+              isNumeric: true,
+              autofocus: true,
+              onFieldSubmitted: (_) => submit(),
+              validator: (value) {
+                final minutes = int.tryParse(value ?? '');
+                if (minutes == null || minutes < 1 || minutes > _kSleepTimerMaxMinutes) return validRangeText;
+                return null;
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -853,6 +927,106 @@ class _DesktopShortcutIcon extends StatelessWidget {
               size: size ?? iconSize,
               color: getColor(context),
             ),
+      ),
+    );
+  }
+}
+
+class _SleepTimerPresetsRow extends StatelessWidget {
+  final Rx<int> minutesRx;
+
+  const _SleepTimerPresetsRow({
+    required this.minutesRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return Row(
+      children: [
+        Expanded(
+          child: NamidaEndEdgeFeather(
+            color: theme.dialogTheme.backgroundColor,
+            child: ObxO(
+              rx: settings.player.sleepTimerPresetsMin,
+              builder: (context, presetsMin) => ObxO(
+                rx: minutesRx,
+                builder: (context, minutes) => SmoothSingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsetsDirectional.only(end: 16.0),
+                  child: Row(
+                    children: presetsMin
+                        .map(
+                          (presetMinutes) => _SleepTimerChip(
+                            selected: minutes == presetMinutes,
+                            onTap: () => minutesRx.value = presetMinutes,
+                            onLongPress: () => settings.player.sleepTimerPresetsMin.update((presets) => presets.remove(presetMinutes)),
+                            child: Text(
+                              NamidaDrawer._sleepMinutesToText(presetMinutes),
+                              style: textTheme.displaySmall,
+                            ),
+                          ),
+                        )
+                        .toFixedList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        _SleepTimerChip(
+          selected: false,
+          big: true,
+          onTap: () => NamidaDrawer._openAddSleepPresetDialog(minutesRx),
+          child: const Icon(
+            Broken.add,
+            size: 16.0,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SleepTimerChip extends StatelessWidget {
+  final bool selected;
+  final bool big;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final Widget child;
+
+  const _SleepTimerChip({
+    required this.selected,
+    this.big = false,
+    required this.onTap,
+    this.onLongPress,
+    required this.child,
+  });
+
+  static const _kHeight = 30.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final borderColor = selected ? theme.colorScheme.primary : Colors.transparent;
+    return NamidaInkWell(
+      alignment: .center,
+      animationDurationMS: 200,
+      height: big ? _kHeight : _kHeight * 0.75,
+      borderRadius: 8.0,
+      bgColor: theme.cardTheme.color,
+      margin: const EdgeInsets.symmetric(horizontal: 3.0),
+      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+      ),
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Center(
+        widthFactor: 1.0,
+        child: child,
       ),
     );
   }

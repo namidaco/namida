@@ -85,7 +85,6 @@ class AdvancedSettings extends SettingSubpageProvider {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     const artworkPartsMultiplier = 100;
-    bool changedArtworkCacheM = false; // to rebuild wheel slider
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.configure,
@@ -105,7 +104,6 @@ class AdvancedSettings extends SettingSubpageProvider {
                   childrenDefault: () => PerformanceMode.values.map(
                     (e) {
                       void onTap() {
-                        changedArtworkCacheM = !changedArtworkCacheM;
                         e.executeAndSave();
                         NamidaNavigator.inst.popMenu();
                       }
@@ -186,7 +184,6 @@ class AdvancedSettings extends SettingSubpageProvider {
                 trailing: ObxO(
                   rx: settings.artworkCacheHeightMultiplier,
                   builder: (context, artworkCacheHeightMultiplier) => NamidaWheelSlider(
-                    key: ValueKey(changedArtworkCacheM),
                     min: (0.5 * artworkPartsMultiplier).round(),
                     max: (1.5 * artworkPartsMultiplier).round(), // from 0.5 to 1.5 * 100 part
                     initValue: (artworkCacheHeightMultiplier * artworkPartsMultiplier).round(),

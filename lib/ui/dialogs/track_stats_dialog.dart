@@ -538,19 +538,15 @@ class TrackRatingRowWidget extends StatelessWidget {
           title: lang.setRating,
           subtitle: subtitle,
           trailing: ObxO(
-            rx: selectedFixedRatingRx,
-            builder: (context, fixedrating) => ObxO(
-              rx: selectedRatingRx,
-              builder: (context, rating) => NamidaWheelSlider(
-                key: ValueKey(fixedrating), // rebuild on selecting fixed rating
-                min: -1,
-                max: 100,
-                initValue: rating == 0 ? -1 : 100 - rating,
-                text: rating == 0 ? '' : '$rating',
-                onValueChanged: (val) {
-                  selectedRatingRx.value = val == -1 ? 0 : (100 - val);
-                },
-              ),
+            rx: selectedRatingRx,
+            builder: (context, rating) => NamidaWheelSlider(
+              min: -1,
+              max: 100,
+              initValue: rating == 0 ? -1 : 100 - rating,
+              text: rating == 0 ? '' : '$rating',
+              onValueChanged: (val) {
+                selectedRatingRx.value = val == -1 ? 0 : (100 - val);
+              },
             ),
           ),
         ),
