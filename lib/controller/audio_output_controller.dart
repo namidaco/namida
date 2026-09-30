@@ -34,12 +34,11 @@ class AudioOutputController {
   static List<AudioOutputForcedOff> getForcedOffOptionsOf(AudioOutputForcedOffCause cause) => switch (cause) {
     AudioOutputForcedOffCause.bitPerfect => const [
       AudioOutputForcedOff.equalizer, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.speed, AudioOutputForcedOff.pitch, //
-      AudioOutputForcedOff.skipSilence, AudioOutputForcedOff.monoAudio, AudioOutputForcedOff.volume, AudioOutputForcedOff.fadeOnPlayPause, //
-      AudioOutputForcedOff.crossfade, AudioOutputForcedOff.otherSounds, //
+      AudioOutputForcedOff.skipSilence, AudioOutputForcedOff.monoAudio, AudioOutputForcedOff.volume, AudioOutputForcedOff.systemVolume, //
+      AudioOutputForcedOff.fadeOnPlayPause, AudioOutputForcedOff.crossfade, AudioOutputForcedOff.otherSounds, //
     ],
     AudioOutputForcedOffCause.usbDirect => const [
-      AudioOutputForcedOff.crossfade, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.systemEffects, AudioOutputForcedOff.systemVolume, //
-      AudioOutputForcedOff.otherSounds, //
+      AudioOutputForcedOff.crossfade, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.systemEffects, AudioOutputForcedOff.otherSounds, //
     ],
   };
 
@@ -70,7 +69,8 @@ class AudioOutputController {
   }
 
   /// processing is only off while bit-perfect actually plays, fades and crossfade are decided ahead so they follow the setting.
-  /// usb direct feeds one stream to the dac, bypassing android's effects and volume, the dac's own volume keeps bit-perfect adjustable.
+  /// usb direct feeds one stream to the dac, bypassing android's effects, the dac follows android's media volume and
+  /// its own volume keeps bit-perfect adjustable, without one bit-perfect samples stay at full scale.
   /// both keep other apps off the device: desktop exclusive mode and usb direct own it, android's bit-perfect mixer mutes them.
   bool _isForcedOffBy(AudioOutputForcedOff option, AudioOutputForcedOffCause cause, {required bool reactive}) {
     final usbDirect = reactive ? usbDirectStatus.valueR : usbDirectStatus.value;
@@ -87,16 +87,16 @@ class AudioOutputController {
           AudioOutputForcedOff.skipSilence ||
           AudioOutputForcedOff.monoAudio => isBitPerfectActive,
           AudioOutputForcedOff.volume => isBitPerfectActive && !hasDacVolume,
+          AudioOutputForcedOff.systemVolume => isBitPerfectActive && isUsbDirectActive && !hasDacVolume,
           AudioOutputForcedOff.fadeOnPlayPause || AudioOutputForcedOff.crossfade => _isBitPerfectEnabled(reactive: reactive),
           AudioOutputForcedOff.otherSounds => isBitPerfectActive,
-          AudioOutputForcedOff.systemEffects || AudioOutputForcedOff.systemVolume => false,
+          AudioOutputForcedOff.systemEffects => false,
         };
       case AudioOutputForcedOffCause.usbDirect:
         return switch (option) {
           AudioOutputForcedOff.crossfade ||
           AudioOutputForcedOff.loudnessEnhancer ||
           AudioOutputForcedOff.systemEffects ||
-          AudioOutputForcedOff.systemVolume ||
           AudioOutputForcedOff.otherSounds => isUsbDirectActive,
           AudioOutputForcedOff.equalizer ||
           AudioOutputForcedOff.speed ||
@@ -104,6 +104,7 @@ class AudioOutputController {
           AudioOutputForcedOff.skipSilence ||
           AudioOutputForcedOff.monoAudio ||
           AudioOutputForcedOff.volume ||
+          AudioOutputForcedOff.systemVolume ||
           AudioOutputForcedOff.fadeOnPlayPause => false,
         };
     }

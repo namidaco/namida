@@ -1652,6 +1652,7 @@ class _AudioOutputSection extends StatelessWidget {
     final deviceName = status.deviceName ?? '';
     return switch (status.reason) {
       BitPerfectReasonMessage.active => lang.bitPerfectActiveOn(format: format, device: deviceName),
+      BitPerfectReasonMessage.ready => lang.bitPerfectUpTo(format: format),
       BitPerfectReasonMessage.unsupportedAndroid || BitPerfectReasonMessage.noDevice => lang.bitPerfectNoDevice,
       BitPerfectReasonMessage.unsupportedFormat => lang.bitPerfectUnsupportedFormat,
       BitPerfectReasonMessage.disabled => lang.bitPerfectSubtitle,
