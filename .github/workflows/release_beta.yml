@@ -5,32 +5,37 @@
 
 name: release_beta
 
+# A toggle means "publish this asset", whatever it needs gets built implicitly:
+#   linux    -> build_linux (deb/rpm/tar.gz + AUR)
+#   appimage -> build_linux (build only) + build_appimage
+#   flatpak  -> build_linux_portable + build_flatpak
+# source_run_id skips the builds and takes their artifacts from that run instead, to re-package only.
 on:
   workflow_dispatch:
     inputs:
       is_beta:
         type: boolean
         default: true
-      build_android:
+      android:
         type: boolean
         default: true
-      build_windows:
+      windows:
         type: boolean
         default: true
-      build_linux:
+      linux:
         description: deb/rpm/tar.gz + AUR (beta only)
         type: boolean
         default: true
-      build_linux_portable:
-        description: AppImage + portable tarball (beta only)
+      appimage:
+        description: beta only
         type: boolean
         default: true
-      build_flatpak:
+      flatpak:
         description: beta only
         type: boolean
         default: true
       source_run_id:
-        description: run id to pull the namida-linux-portable artifact from, when build_linux_portable is off
+        description: reuse the linux build artifacts from this run id instead of building (appimage/flatpak only)
         type: string
         default: ""
   workflow_call:
@@ -38,19 +43,19 @@ on:
       is_beta:
         type: boolean
         default: true
-      build_android:
+      android:
         type: boolean
         default: true
-      build_windows:
+      windows:
         type: boolean
         default: true
-      build_linux:
+      linux:
         type: boolean
         default: true
-      build_linux_portable:
+      appimage:
         type: boolean
         default: true
-      build_flatpak:
+      flatpak:
         type: boolean
         default: true
       source_run_id:
@@ -134,7 +139,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   setup_matrix:
-    if: ${{ inputs.build_android }}
+    if: ${{ inputs.android }}
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
@@ -148,7 +153,7 @@ jobs:
           fi
 
   build_android:
-    if: ${{ inputs.build_android }}
+    if: ${{ inputs.android }}
     needs: [create_release, setup_matrix]
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
@@ -260,7 +265,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_windows:
-    if: ${{ inputs.build_windows }}
+    if: ${{ inputs.windows }}
     needs: create_release
     strategy:
       fail-fast: false
@@ -391,7 +396,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
   build_linux:
-    if: ${{ inputs.is_beta && inputs.build_linux }}
+    if: ${{ inputs.is_beta && (inputs.linux || inputs.appimage) && inputs.source_run_id == '' }}
     needs: create_release
     runs-on: ubuntu-latest
     container:
@@ -467,7 +472,15 @@ jobs:
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
 
+      - name: Upload tarball artifact (input for the appimage job)
+        uses: actions/upload-artifact@v6
+        with:
+          name: namida-linux-arch
+          path: build_final/*.tar.gz
+          retention-days: 3
+
       - name: Upload files to Snapshot Release
+        if: ${{ inputs.linux }}
         uses: softprops/action-gh-release@v3
         with:
           repository: ${{ needs.create_release.outputs.target_repo }}
@@ -479,6 +492,7 @@ jobs:
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
       - name: Install SSH key for AUR
+        if: ${{ inputs.linux }}
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
@@ -486,6 +500,7 @@ jobs:
           name: id_ed25519
 
       - name: Publish to AUR
+        if: ${{ inputs.linux }}
         run: |
           # Parse version string (e.g. 5.6.5-beta+260114196)
           FULL_VERSION="${{ needs.create_release.outputs.version }}"
@@ -505,12 +520,63 @@ jobs:
           sed -i 's/if (( EUID == 0 ))/if (( EUID == -1 ))/' $(which makepkg)
           bash bump.sh "$PKGVER" "$BUILDNUMBER" "$TARBALL"
 
-  # Portable Linux payload, built on the oldest glibc we target (ubuntu-24.04 = glibc 2.39, libmpv2)
-  # instead of the arch container, so the AppImage / Flatpak run on non-rolling distros.
-  #   - Namida-x86_64-<ver>.AppImage (+ .zsync)      -> release asset
+  # AppImage from the arch tarball, packaged with quick-sharun in the pkgforge archlinux container.
+  # Bundles everything (glibc, gtk, webkit2gtk, mpv) so nothing is taken from the host.
+  build_appimage:
+    if: ${{ !cancelled() && inputs.is_beta && inputs.appimage && (inputs.source_run_id != '' || needs.build_linux.result == 'success') }}
+    needs: [create_release, build_linux]
+    runs-on: ubuntu-latest
+    container: ghcr.io/pkgforge-dev/archlinux:latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }}
+
+      - name: Preparing Container
+        uses: pkgforge-dev/anylinux-setup-action@b2d1ce4216f71162e00ae58fa11ee9aeb723d0d5 # v5
+
+      - name: Install runtime dependencies
+        run: |
+          pacman -S --needed --noconfirm mpv webkit2gtk-4.1
+          # smaller builds of the biggest libraries, from pkgforge-dev/archlinux-pkgs-debloated
+          get-debloated-pkgs --add-common --prefer-nano ffmpeg-mini webkit2gtk-4.1-mini
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: namida-linux-arch
+          path: build_final
+          run-id: ${{ inputs.source_run_id != '' && inputs.source_run_id || github.run_id }}
+          github-token: ${{ secrets.PAT }}
+
+      - name: Build AppImage
+        run: |
+          mkdir -p bundle
+          tar -xzf build_final/*.tar.gz -C bundle
+          rm -f build_final/*.tar.gz
+          IFS=/ read -r REPO_OWNER REPO_NAME <<< "${{ needs.create_release.outputs.target_repo }}"
+          # lets the self-updater hook / AppImageUpdate update from the latest release of the target repo
+          export UPINFO="gh-releases-zsync|${REPO_OWNER}|${REPO_NAME}|latest|Namida-x86_64-*.AppImage.zsync"
+          export VERSION="${{ needs.create_release.outputs.version_name }}"
+          bash scripts/make_appimage.sh bundle build_final
+
+      - name: Upload AppImage to Release
+        uses: softprops/action-gh-release@v3
+        with:
+          repository: ${{ needs.create_release.outputs.target_repo }}
+          make_latest: true
+          draft: ${{ !inputs.is_beta }}
+          tag_name: ${{ needs.create_release.outputs.tag }}
+          files: |
+            build_final/*.AppImage
+            build_final/*.AppImage.zsync
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+
+  # Portable Linux payload for the flatpak, built on the oldest glibc we target (ubuntu-24.04 = glibc 2.39)
+  # instead of the arch container.
   #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
   build_linux_portable:
-    if: ${{ inputs.is_beta && inputs.build_linux_portable }}
+    if: ${{ inputs.is_beta && inputs.flatpak && inputs.source_run_id == '' }}
     needs: create_release
     runs-on: ubuntu-24.04
 
@@ -552,14 +618,6 @@ jobs:
           mkdir -p build_final
           tar -czf build_final/namida-linux-portable.tar.gz -C build/linux/x64/release/bundle .
 
-      - name: Build AppImage
-        run: |
-          IFS=/ read -r REPO_OWNER REPO_NAME <<< "${{ needs.create_release.outputs.target_repo }}"
-          # lets AppImageUpdate / AppImageLauncher self-update from the latest release of the target repo
-          export APPIMAGE_UPDATE_INFO="gh-releases-zsync|${REPO_OWNER}|${REPO_NAME}|latest|Namida-x86_64-*.AppImage.zsync"
-          bash scripts/make_appimage.sh build/linux/x64/release/bundle \
-            "build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}.AppImage"
-
       - name: Upload tarball artifact
         uses: actions/upload-artifact@v6
         with:
@@ -567,22 +625,10 @@ jobs:
           path: build_final/namida-linux-portable.tar.gz
           retention-days: 3
 
-      - name: Upload AppImage to Release
-        uses: softprops/action-gh-release@v3
-        with:
-          repository: ${{ needs.create_release.outputs.target_repo }}
-          make_latest: true
-          draft: ${{ !inputs.is_beta }}
-          tag_name: ${{ needs.create_release.outputs.tag }}
-          files: |
-            build_final/*.AppImage
-            build_final/*.AppImage.zsync
-          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
-
   # Flatpak bundle from the portable tarball. libass/libplacebo/ffmpeg/mpv are compiled by the manifest
   # (cached between runs on the manifest hash), the app is dropped in prebuilt.
   build_flatpak:
-    if: ${{ !cancelled() && inputs.is_beta && inputs.build_flatpak && (!inputs.build_linux_portable || needs.build_linux_portable.result == 'success') }}
+    if: ${{ !cancelled() && inputs.is_beta && inputs.flatpak && (inputs.source_run_id != '' || needs.build_linux_portable.result == 'success') }}
     needs: [create_release, build_linux_portable]
     runs-on: ubuntu-latest
     container:

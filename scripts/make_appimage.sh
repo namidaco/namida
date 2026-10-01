@@ -1,38 +1,29 @@
 #!/usr/bin/env bash
 #
-# Builds a Namida AppImage from a `flutter build linux --release` bundle.
+# Builds a Namida AppImage from a `flutter build linux --release` bundle with quick-sharun
+# (https://github.com/pkgforge-dev/Anylinux-AppImages). Everything is bundled, including glibc, GTK
+# and webkit2gtk, so nothing is taken from the host and the AppImage runs on any distro.
+#
+# Must run on archlinux with the anylinux tools installed (pkgforge-dev/anylinux-setup-action)
+# and `mpv` + `webkit2gtk-4.1` installed from pacman.
 #
 # Usage:
-#   scripts/make_appimage.sh <bundle_dir> <output.AppImage>
-#   e.g. scripts/make_appimage.sh build/linux/x64/release/bundle build_final/Namida-x86_64-6.4.2-beta.AppImage
+#   scripts/make_appimage.sh <bundle_dir> <output_dir>
+#   e.g. scripts/make_appimage.sh build/linux/x64/release/bundle build_final
 #
 # Environment (all optional):
-#   APPIMAGE_UPDATE_INFO  appimagetool update string, e.g.
-#                         "gh-releases-zsync|namidaco|namida-snapshots|latest|Namida-*-x86_64.AppImage.zsync"
-#                         (also produces <output>.zsync next to the AppImage)
-#   APPIMAGETOOL          path to an appimagetool binary (downloaded automatically when unset)
-#   ARCH                  x86_64 (default) | aarch64
-#
-# Layout of the resulting AppDir:
-#   /AppRun, /com.msob7y.namida.desktop, /com.msob7y.namida.png, /.DirIcon
-#   /namida, /lib, /data, /bin, /share    <- the flutter bundle, copied verbatim to the AppDir root so that
-#                                            $APPDIR/bin/{ffmpeg,ffprobe} matches
-#                                            NamidaPlatformBuilder.getExecutablesDirectoryPath()
-#   /usr/lib                              <- libmpv.so.2 + its transitive deps that are not "system" libs
-#   /usr/share/{icons,metainfo}
-#
-# Deliberately NOT bundled: GTK3 + its GLib/pango/cairo stack, glibc, libstdc++, mesa/GL, X11/xcb, wayland, ALSA/JACK/PipeWire
-# (see the AppImage excludelist) - the host provides them, exactly like the .tar.gz build does.
-# The bundle should therefore be built on the OLDEST glibc you want to support (CI uses ubuntu-24.04).
+#   VERSION   version baked into the file name and metadata, e.g. 6.4.2-beta
+#   UPINFO    appimagetool update string, e.g.
+#             "gh-releases-zsync|namidaco|namida-snapshots|latest|Namida-x86_64-*.AppImage.zsync"
+#             (also produces <output>.zsync next to the AppImage)
 
 set -euo pipefail
 
-BUNDLE_DIR="${1:?usage: $0 <bundle_dir> <output.AppImage>}"
-OUT_FILE="${2:?usage: $0 <bundle_dir> <output.AppImage>}"
+BUNDLE_DIR="$(readlink -f "${1:?usage: $0 <bundle_dir> <output_dir>}")"
+OUT_DIR="$(readlink -f -m "${2:?usage: $0 <bundle_dir> <output_dir>}")"
 
 APP_ID="com.msob7y.namida"
-ARCH_NAME="${ARCH:-x86_64}"
-EXCLUDELIST_URL="https://raw.githubusercontent.com/AppImageCommunity/pkg2appimage/master/excludelist"
+ARCH_NAME="$(uname -m)"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LINUX_DIR="$REPO_ROOT/linux"
@@ -43,133 +34,44 @@ if [ ! -x "$BUNDLE_DIR/namida" ]; then
 fi
 
 WORK_DIR="$(mktemp -d)"
-APPDIR="$WORK_DIR/Namida.AppDir"
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-echo "==> Creating AppDir"
-mkdir -p "$APPDIR"
-cp -a "$BUNDLE_DIR"/. "$APPDIR"/
+# TryExec is dropped: integration tools resolve it against $PATH, which the AppImage is not on
+sed -e "s|^Icon=.*|Icon=$APP_ID|" -e "/^TryExec=/d" "$LINUX_DIR/$APP_ID.desktop" > "$WORK_DIR/$APP_ID.desktop"
+cp "$LINUX_DIR/icons/namida_512.png" "$WORK_DIR/$APP_ID.png"
 
-# ---------------------------------------------------------------------------
-# AppRun, desktop entry, icons, metainfo
-# ---------------------------------------------------------------------------
-cat > "$APPDIR/AppRun" <<'EOF'
-#!/bin/sh
-HERE="$(dirname "$(readlink -f "$0")")"
-export APPDIR="${APPDIR:-$HERE}"
-export LD_LIBRARY_PATH="$HERE/lib:$HERE/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-exec "$HERE/namida" "$@"
-EOF
-chmod +x "$APPDIR/AppRun"
-
-# TryExec is dropped: integration tools resolve it against $PATH, which the AppImage is not on.
-sed -e "s|^Icon=.*|Icon=$APP_ID|" \
-    -e "s|^Exec=.*|Exec=namida %F|" \
-    -e "/^TryExec=/d" \
-    "$LINUX_DIR/$APP_ID.desktop" > "$APPDIR/$APP_ID.desktop"
-
-cp "$LINUX_DIR/icons/namida_512.png" "$APPDIR/$APP_ID.png"
-ln -sf "$APP_ID.png" "$APPDIR/.DirIcon"
-for size in 128 256 512; do
-  install -Dm644 "$LINUX_DIR/icons/namida_$size.png" \
-    "$APPDIR/usr/share/icons/hicolor/${size}x${size}/apps/$APP_ID.png"
-done
-install -Dm644 "$LINUX_DIR/packaging/$APP_ID.metainfo.xml" \
-  "$APPDIR/usr/share/metainfo/$APP_ID.appdata.xml"
-
-# ---------------------------------------------------------------------------
-# libmpv (dlopen'ed by media_kit) + its non-system dependencies -> usr/lib
-# ---------------------------------------------------------------------------
-echo "==> Bundling libmpv"
-LIBMPV="$(ldconfig -p | awk '$1=="libmpv.so.2"{print $NF; exit}')"
-if [ -z "$LIBMPV" ]; then
-  echo "error: libmpv.so.2 not found on this machine (install libmpv2 / libmpv-dev)" >&2
-  exit 1
-fi
-
-EXCLUDES="$(curl -fsSL "$EXCLUDELIST_URL" 2>/dev/null | sed 's/#.*//' || true)"
-if [ -z "$EXCLUDES" ]; then
-  echo "warn: could not fetch $EXCLUDELIST_URL, using built-in fallback list" >&2
-  EXCLUDES="ld-linux-x86-64.so.2 libc.so.6 libdl.so.2 libm.so.6 libmvec.so.1 libpthread.so.0 libresolv.so.2
-librt.so.1 libutil.so.1 libanl.so.1 libnss_files.so.2 libnss_dns.so.2 libstdc++.so.6 libgcc_s.so.1
-libGL.so.1 libEGL.so.1 libGLdispatch.so.0 libGLX.so.0 libOpenGL.so.0 libdrm.so.2 libglapi.so.0 libgbm.so.1
-libxcb.so.1 libX11.so.6 libX11-xcb.so.1 libxcb-dri3.so.0 libxcb-dri2.so.0 libwayland-client.so.0
-libasound.so.2 libjack.so.0 libpipewire-0.3.so.0 libfontconfig.so.1 libfreetype.so.6 libharfbuzz.so.0
-libfribidi.so.0 libcom_err.so.2 libexpat.so.1 libgpg-error.so.0 libICE.so.6 libSM.so.6 libusb-1.0.so.0
-libuuid.so.1 libz.so.1 libgmp.so.10"
-fi
-# the GTK3 stack comes from the host like GTK itself. a bundled (older) copy shadows the one that host GTK,
-# its IM/GIO modules and webkit2gtk were built against, ex: libsecret: undefined symbol g_variant_builder_init_static
-EXCLUDES+="
-libglib-2.0.so.0 libgobject-2.0.so.0 libgio-2.0.so.0 libgmodule-2.0.so.0 libgthread-2.0.so.0 libffi.so.8
-libpcre2-8.so.0 libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libcairo.so.2 libcairo-gobject.so.2
-libpixman-1.so.0 libgdk_pixbuf-2.0.so.0 libepoxy.so.0"
-# one soname per line
-EXCLUDES="$(tr -s ' \t' '\n' <<< "$EXCLUDES" | grep -v '^$')"
-# libraries the flutter bundle already ships in lib/ must not be duplicated
-FLUTTER_LIBS="$(ls "$APPDIR/lib")"
-
-is_excluded() {
-  grep -qx -- "$1" <<< "$EXCLUDES" || grep -qx -- "$1" <<< "$FLUTTER_LIBS"
-}
-
-mkdir -p "$APPDIR/usr/lib"
-cp -L "$LIBMPV" "$APPDIR/usr/lib/libmpv.so.2"
-ln -sf libmpv.so.2 "$APPDIR/usr/lib/libmpv.so" # media_kit tries plain libmpv.so first
-echo "   bundle libmpv.so.2 ($LIBMPV)"
-
-declare -A SONAME_PATHS
-while read -r soname sopath; do
-  SONAME_PATHS[$soname]="$sopath"
-done < <(ldd "$LIBMPV" | awk '/=> \//{print $1" "$3}')
-
-# walks direct deps instead of ldd's flat closure: deps reachable only through an excluded lib come from the host
-# along with it, ex: a bundled libmount shadows the newer one host libgio needs (MOUNT_2_40 not found)
-declare -A VISITED_SONAMES
-PENDING_PATHS=("$LIBMPV")
-while [ ${#PENDING_PATHS[@]} -gt 0 ]; do
-  current_path="${PENDING_PATHS[-1]}"
-  unset 'PENDING_PATHS[-1]'
-  for soname in $(objdump -p "$current_path" | awk '$1=="NEEDED"{print $2}'); do
-    [ -n "${VISITED_SONAMES[$soname]:-}" ] && continue
-    VISITED_SONAMES[$soname]=1
-    if is_excluded "$soname"; then
-      echo "   skip   $soname"
-      continue
-    fi
-    sopath="${SONAME_PATHS[$soname]:-}"
-    if [ -z "$sopath" ]; then
-      echo "error: $soname (needed by $current_path) is not resolvable on this machine" >&2
-      exit 1
-    fi
-    cp -L "$sopath" "$APPDIR/usr/lib/$soname"
-    echo "   bundle $soname"
-    PENDING_PATHS+=("$sopath")
-  done
-done
-
-# ---------------------------------------------------------------------------
-# appimagetool
-# ---------------------------------------------------------------------------
-if [ -z "${APPIMAGETOOL:-}" ]; then
-  APPIMAGETOOL="$WORK_DIR/appimagetool"
-  echo "==> Downloading appimagetool ($ARCH_NAME)"
-  curl -fsSL -o "$APPIMAGETOOL" \
-    "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${ARCH_NAME}.AppImage"
-  chmod +x "$APPIMAGETOOL"
-fi
-
-mkdir -p "$(dirname "$OUT_FILE")"
+export APPDIR="$WORK_DIR/AppDir"
+export OUTPATH="$OUT_DIR"
 export ARCH="$ARCH_NAME"
-export APPIMAGE_EXTRACT_AND_RUN=1 # no FUSE needed (containers / CI)
-
-TOOL_ARGS=(--no-appstream)
-if [ -n "${APPIMAGE_UPDATE_INFO:-}" ]; then
-  TOOL_ARGS+=(-u "$APPIMAGE_UPDATE_INFO")
+export MAIN_BIN="namida"
+export DESKTOP="$WORK_DIR/$APP_ID.desktop"
+export ICON="$WORK_DIR/$APP_ID.png"
+export ADD_HOOKS="self-updater.hook"
+if [ -n "${VERSION:-}" ]; then
+  export OUTNAME="Namida-$ARCH_NAME-$VERSION.AppImage"
 fi
 
-echo "==> Building $OUT_FILE"
-"$APPIMAGETOOL" "${TOOL_ARGS[@]}" "$APPDIR" "$OUT_FILE"
+echo "==> Deploying with quick-sharun"
+# quick-sharun silently skips binaries without the executable bit
+chmod +x "$BUNDLE_DIR/namida" "$BUNDLE_DIR/bin/ffmpeg" "$BUNDLE_DIR/bin/ffprobe"
+# ffmpeg/ffprobe are our own builds from external/ffmpeg_build, libmpv and webkit2gtk are
+# dlopen'ed at runtime so they are listed explicitly, lib/ carries libapp.so and the plugins
+quick-sharun \
+  "$BUNDLE_DIR/namida" \
+  "$BUNDLE_DIR/bin/ffmpeg" \
+  "$BUNDLE_DIR/bin/ffprobe" \
+  "$BUNDLE_DIR/lib" \
+  /usr/lib/libmpv.so* \
+  /usr/lib/libwebkit2gtk-4.1.so*
+
+install -Dm644 "$LINUX_DIR/packaging/$APP_ID.metainfo.xml" \
+  "$APPDIR/share/metainfo/$APP_ID.appdata.xml"
+
+echo "==> Building AppImage"
+quick-sharun --make-appimage
+
+echo "==> Testing AppImage"
+quick-sharun --test "$OUT_DIR"/*.AppImage
 
 echo "==> Done"
-ls -la "$OUT_FILE"* 2>/dev/null || true
+ls -la "$OUT_DIR"
