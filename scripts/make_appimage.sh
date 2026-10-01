@@ -21,7 +21,7 @@
 #   /usr/lib                              <- libmpv.so.2 + its transitive deps that are not "system" libs
 #   /usr/share/{icons,metainfo}
 #
-# Deliberately NOT bundled: GTK3, glibc, libstdc++, mesa/GL, X11/xcb, wayland, ALSA/JACK/PipeWire
+# Deliberately NOT bundled: GTK3 + its GLib/pango/cairo stack, glibc, libstdc++, mesa/GL, X11/xcb, wayland, ALSA/JACK/PipeWire
 # (see the AppImage excludelist) - the host provides them, exactly like the .tar.gz build does.
 # The bundle should therefore be built on the OLDEST glibc you want to support (CI uses ubuntu-24.04).
 
@@ -98,6 +98,12 @@ libasound.so.2 libjack.so.0 libpipewire-0.3.so.0 libfontconfig.so.1 libfreetype.
 libfribidi.so.0 libcom_err.so.2 libexpat.so.1 libgpg-error.so.0 libICE.so.6 libSM.so.6 libusb-1.0.so.0
 libuuid.so.1 libz.so.1 libgmp.so.10"
 fi
+# the GTK3 stack comes from the host like GTK itself. a bundled (older) copy shadows the one that host GTK,
+# its IM/GIO modules and webkit2gtk were built against, ex: libsecret: undefined symbol g_variant_builder_init_static
+EXCLUDES+="
+libglib-2.0.so.0 libgobject-2.0.so.0 libgio-2.0.so.0 libgmodule-2.0.so.0 libgthread-2.0.so.0 libffi.so.8
+libpcre2-8.so.0 libpango-1.0.so.0 libpangocairo-1.0.so.0 libpangoft2-1.0.so.0 libcairo.so.2 libcairo-gobject.so.2
+libpixman-1.so.0 libgdk_pixbuf-2.0.so.0 libepoxy.so.0"
 # one soname per line
 EXCLUDES="$(tr -s ' \t' '\n' <<< "$EXCLUDES" | grep -v '^$')"
 # libraries the flutter bundle already ships in lib/ must not be duplicated
@@ -112,14 +118,34 @@ cp -L "$LIBMPV" "$APPDIR/usr/lib/libmpv.so.2"
 ln -sf libmpv.so.2 "$APPDIR/usr/lib/libmpv.so" # media_kit tries plain libmpv.so first
 echo "   bundle libmpv.so.2 ($LIBMPV)"
 
-# ldd prints the full transitive closure, so one pass is enough
-ldd "$LIBMPV" | awk '/=> \//{print $1" "$3}' | sort -u | while read -r soname sopath; do
-  if is_excluded "$soname"; then
-    echo "   skip   $soname"
-  else
+declare -A SONAME_PATHS
+while read -r soname sopath; do
+  SONAME_PATHS[$soname]="$sopath"
+done < <(ldd "$LIBMPV" | awk '/=> \//{print $1" "$3}')
+
+# walks direct deps instead of ldd's flat closure: deps reachable only through an excluded lib come from the host
+# along with it, ex: a bundled libmount shadows the newer one host libgio needs (MOUNT_2_40 not found)
+declare -A VISITED_SONAMES
+PENDING_PATHS=("$LIBMPV")
+while [ ${#PENDING_PATHS[@]} -gt 0 ]; do
+  current_path="${PENDING_PATHS[-1]}"
+  unset 'PENDING_PATHS[-1]'
+  for soname in $(objdump -p "$current_path" | awk '$1=="NEEDED"{print $2}'); do
+    [ -n "${VISITED_SONAMES[$soname]:-}" ] && continue
+    VISITED_SONAMES[$soname]=1
+    if is_excluded "$soname"; then
+      echo "   skip   $soname"
+      continue
+    fi
+    sopath="${SONAME_PATHS[$soname]:-}"
+    if [ -z "$sopath" ]; then
+      echo "error: $soname (needed by $current_path) is not resolvable on this machine" >&2
+      exit 1
+    fi
     cp -L "$sopath" "$APPDIR/usr/lib/$soname"
     echo "   bundle $soname"
-  fi
+    PENDING_PATHS+=("$sopath")
+  done
 done
 
 # ---------------------------------------------------------------------------
