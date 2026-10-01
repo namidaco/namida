@@ -2110,12 +2110,15 @@ class TracksAddOnTap {
                 title: lang.numberOfTracks,
                 subtitle: "${lang.unlimited}-$maxTracksCount",
                 trailing: Obx(
-                  (context) => NamidaWheelSlider(
-                    max: maxTracksCount,
-                    initValue: tracksNo.valueR,
-                    onValueChanged: (val) => tracksNo.value = val,
-                    text: tracksNo.valueR == 0 ? lang.unlimited : '${tracksNo.valueR}',
-                  ),
+                  (context) {
+                    final tracksCount = tracksNo.valueR;
+                    return NamidaWheelSlider(
+                      max: maxTracksCount,
+                      initValue: tracksCount,
+                      onValueChanged: (val) => tracksNo.value = val,
+                      text: tracksCount == 0 ? lang.unlimited : '$tracksCount',
+                    );
+                  },
                 ),
               ),
               Obx(
@@ -2131,13 +2134,16 @@ class TracksAddOnTap {
                   icon: Broken.chart_square,
                   title: '${lang.sample} (${insertionType == QueueInsertionType.algorithmDiscoverDate ? lang.firstListen : lang.totalListens})',
                   trailing: Obx(
-                    (context) => NamidaWheelSlider(
-                      min: 1,
-                      max: 100,
-                      initValue: sampleRx.value ?? recommendedSampleCount,
-                      onValueChanged: (val) => sampleRx.value = val,
-                      text: '${sampleRx.valueR ?? recommendedSampleCount}',
-                    ),
+                    (context) {
+                      final sampleCount = sampleRx.valueR ?? recommendedSampleCount;
+                      return NamidaWheelSlider(
+                        min: 1,
+                        max: 100,
+                        initValue: sampleCount,
+                        onValueChanged: (val) => sampleRx.value = val,
+                        text: '$sampleCount',
+                      );
+                    },
                   ),
                 ),
               if (recommendedSampleDaysCount != null)
@@ -2145,13 +2151,16 @@ class TracksAddOnTap {
                   icon: Broken.square,
                   title: '${lang.sample} (${lang.days})',
                   trailing: Obx(
-                    (context) => NamidaWheelSlider(
-                      min: 1,
-                      max: 100,
-                      initValue: sampleDaysRx.value ?? recommendedSampleDaysCount,
-                      onValueChanged: (val) => sampleDaysRx.value = val,
-                      text: '${sampleDaysRx.valueR ?? recommendedSampleDaysCount}',
-                    ),
+                    (context) {
+                      final sampleDaysCount = sampleDaysRx.valueR ?? recommendedSampleDaysCount;
+                      return NamidaWheelSlider(
+                        min: 1,
+                        max: 100,
+                        initValue: sampleDaysCount,
+                        onValueChanged: (val) => sampleDaysRx.value = val,
+                        text: '$sampleDaysCount',
+                      );
+                    },
                   ),
                 ),
               CustomListTile(

@@ -59,10 +59,10 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                         crossAxisAlignment: isMiniplayerAlwaysVisible ? CrossAxisAlignment.end : CrossAxisAlignment.center,
                         children: [
                           GestureDetector(
-                            onTap: () => stc.isMenuMinimized.value = !stc.isMenuMinimized.value,
+                            onTap: () => stc.isMenuMinimized.toggle(),
                             onTapDown: (value) => stc.isPressed.value = true,
                             onTapUp: (value) => stc.isPressed.value = false,
-                            onTapCancel: () => stc.isPressed.value = !stc.isPressed.value,
+                            onTapCancel: () => stc.isPressed.toggle(),
 
                             // dragging upwards or downwards
                             onPanEnd: (details) {

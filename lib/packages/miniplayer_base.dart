@@ -359,7 +359,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     instance.onTap = Player.inst.togglePlayPause;
     instance.onTapDown = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = true;
     instance.onTapUp = (_) => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = false;
-    instance.onTapCancel = () => MiniPlayerController.inst.isPlayPauseButtonHighlighted.value = !MiniPlayerController.inst.isPlayPauseButtonHighlighted.value;
+    instance.onTapCancel = () => MiniPlayerController.inst.isPlayPauseButtonHighlighted.toggle();
     instance.gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
   }
 
@@ -3016,8 +3016,10 @@ class PlayerVideoAudioChip extends StatelessWidget {
               menuWidget: Obx(
                 (context) {
                   final currentId = focusedMenuOptions.currentId(currentItem);
+                  // ignore: non_reactive_value_inside_obx
+                  final allowExperimentalCodecs = settings.youtube.allowExperimentalCodecs.value;
                   final ytVideos = focusedMenuOptions.streams.valueR?.videoStreams.withoutWebmIfNeccessaryOrExperimentalCodecs(
-                    allowExperimentalCodecs: settings.youtube.allowExperimentalCodecs.value,
+                    allowExperimentalCodecs: allowExperimentalCodecs,
                   );
                   final availableVideos = List<NamidaVideo>.from(focusedMenuOptions.localVideos.valueR);
                   YoutubeController.removeDuplicateCachedQualities(availableVideos, ytVideos, currentId);

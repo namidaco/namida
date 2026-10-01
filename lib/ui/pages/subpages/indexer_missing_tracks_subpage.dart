@@ -415,9 +415,16 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                                     ),
                                                     child: Padding(
                                                       padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
-                                                      child: Text(
-                                                        '${(HistoryController.inst.topTracksMapListens.value[Track.explicit(path)] ?? HistoryController.inst.topTracksMapListens.value[Video.explicit(path)])?.length ?? 0}',
-                                                        style: textTheme.displaySmall,
+                                                      child: ObxO(
+                                                        rx: HistoryController.inst.topTracksMapListens,
+                                                        builder: (context, topTracksMapListens) {
+                                                          final listens = topTracksMapListens[Track.explicit(path)] ?? topTracksMapListens[Video.explicit(path)];
+                                                          final listensCount = listens?.length ?? 0;
+                                                          return Text(
+                                                            '$listensCount',
+                                                            style: textTheme.displaySmall,
+                                                          );
+                                                        },
                                                       ),
                                                     ),
                                                   ),

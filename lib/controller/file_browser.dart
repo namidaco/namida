@@ -1103,7 +1103,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       visualDensity: VisualDensity.compact,
                       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       onPressed: () {
-                        _showHiddenFiles.value = !_showHiddenFiles.value;
+                        _showHiddenFiles.toggle();
                         _fetchFiles(_currentFolderPath);
                       },
                       icon: Obx(

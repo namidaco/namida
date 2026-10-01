@@ -265,7 +265,7 @@ class ScrollSearchController {
 extension LibraryTabStuff on LibraryTab {
   ScrollController get scrollController => ScrollSearchController.inst.scrollController;
   TextEditingController? get textSearchController => ScrollSearchController.inst._textSearchControllers.value[this];
-  TextEditingController? get textSearchControllerUI => ScrollSearchController.inst._textSearchControllers.valueR[this];
+  TextEditingController? get textSearchControllerR => ScrollSearchController.inst._textSearchControllers.valueR[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   RxBaseCore<bool> get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
   double get offsetOrZero => (ScrollSearchController.inst.scrollController.hasClients) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;

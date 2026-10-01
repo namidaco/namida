@@ -580,7 +580,7 @@ Future<void> showGeneralPopupDialog(
                     builder: (context, cleanup) => NamidaIconButton(
                       tooltip: () => shouldCleanUp.value ? lang.disableSearchCleanup : lang.enableSearchCleanup,
                       icon: cleanup ? Broken.shield_cross : Broken.shield_search,
-                      onPressed: () => shouldCleanUp.value = !shouldCleanUp.value,
+                      onPressed: () => shouldCleanUp.toggle(),
                     ),
                   ),
                 ],

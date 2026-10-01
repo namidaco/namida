@@ -561,7 +561,7 @@ class VideoController {
     YoutubeController.inst.stopLatestSingleDownload();
   }
 
-  bool isStreamCurrentlySelected(VideoStream stream, File? cacheFile) {
+  bool isStreamCurrentlySelectedR(VideoStream stream, File? cacheFile) {
     final current = currentVideo.valueR;
     if (current == null) return false;
     if (cacheFile != null) return current.path == cacheFile.path;

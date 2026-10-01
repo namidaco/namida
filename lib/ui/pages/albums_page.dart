@@ -129,7 +129,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
                     ),
                     textField: CustomTextField(
-                      textFieldController: libraryTab.textSearchControllerUI,
+                      textFieldController: libraryTab.textSearchControllerR,
                       textFieldHintText: lang.filterAlbums,
                       onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.album),
                     ),
@@ -142,7 +142,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                   SliverToBoxAdapter(child: listHeader),
                   Obx(
                     (context) {
-                      settings.albumListTileHeight.valueR;
+                      final albumTileExtent = settings.albumListTileHeight.valueR + 4.0 * 5;
 
                       final sort = settings.albumSorts.valueR.first;
                       final sortTextIsUseless =
@@ -161,7 +161,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                         builder: (context, _) => countPerRowResolved == 1
                             ? SliverFixedExtentList.builder(
                                 itemCount: finalAlbums.length,
-                                itemExtent: settings.albumListTileHeight.valueR + 4.0 * 5,
+                                itemExtent: albumTileExtent,
                                 itemBuilder: (context, i) {
                                   final albumId = finalAlbums[i];
                                   final tracks = albumId.getAlbumTracks();

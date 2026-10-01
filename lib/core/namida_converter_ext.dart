@@ -1366,14 +1366,10 @@ extension RouteUtils on NamidaRoute {
             },
           ),
           RouteType.SUBPAGE_queueTracks => _registerAndReturn(name?.getQueue()?.tracks, () => QueueController.inst.queuesMap.valueR),
-          RouteType.SUBPAGE_smartPlaylistTracks => _registerAndReturn(
-            SmartPlaylistsController.inst.smartPlaylistsMap.value[name]?.resolve(),
-            () => SmartPlaylistsController.inst.smartPlaylistsMap.valueR,
-          ),
+          RouteType.SUBPAGE_smartPlaylistTracks => SmartPlaylistsController.inst.smartPlaylistsMap.valueR[name]?.resolve(),
           RouteType.SUBPAGE_playlistTracks =>
             name == null ? null : _registerAndReturn(PlaylistController.inst.getPlaylist(name!)?.tracks, () => PlaylistController.inst.playlistsMap.valueR),
-          RouteType.SUBPAGE_favPlaylistTracks =>
-            name == null ? null : _registerAndReturn(PlaylistController.inst.favouritesPlaylist.value.tracks, () => PlaylistController.inst.favouritesPlaylist.valueR),
+          RouteType.SUBPAGE_favPlaylistTracks => name == null ? null : PlaylistController.inst.favouritesPlaylist.valueR.tracks,
           RouteType.SUBPAGE_historyTracks => HistoryController.inst.historyTracksR,
           // RouteType.SUBPAGE_mostPlayedTracks => HistoryController.inst.currentMostPlayedTracks,
           RouteType.SUBPAGE_recentlyAddedTracks => _registerAndReturn(Indexer.inst.recentlyAddedTracksSorted(), () => Indexer.inst.tracksInfoList.valueR),

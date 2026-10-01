@@ -48,7 +48,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
   RxBaseCore<bool> get cachedOnly => _cachedOnly;
 
   void toggleCachedOnly() {
-    _cachedOnly.value = !_cachedOnly.value;
+    _cachedOnly.toggle();
     if (scrollController?.hasClients ?? false) scrollController?.jumpTo(0);
   }
 

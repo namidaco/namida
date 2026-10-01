@@ -1214,10 +1214,13 @@ class IndexerSettings extends SettingSubpageProvider {
                         const CancelButton(),
                         Obx(
                           (context) {
+                            final albumIdentifiers = settings.albumIdentifiers.valueR;
+                            final tempIdentifiers = tempList.valueR;
+                            final hasChanges =
+                                albumIdentifiers.any((element) => !tempIdentifiers.contains(element)) ||
+                                tempIdentifiers.any((element) => !albumIdentifiers.contains(element)); // isEqualTo wont work cuz order shouldnt matter
                             return NamidaButton(
-                              enabled:
-                                  settings.albumIdentifiers.valueR.any((element) => !tempList.contains(element)) ||
-                                  tempList.valueR.any((element) => !settings.albumIdentifiers.value.contains(element)), // isEqualTo wont work cuz order shouldnt matter
+                              enabled: hasChanges,
                               text: lang.save,
                               onTap: () async {
                                 NamidaNavigator.inst.closeDialog();

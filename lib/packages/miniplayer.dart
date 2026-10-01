@@ -467,7 +467,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       loadQualities: (item) => VideoController.inst.fetchYTQualitiesForCurrent((item as Selectable).track),
       localVideos: VideoController.inst.currentVideoConfig.currentPossibleLocalVideos,
       streams: VideoController.inst.currentVideoConfig.currentYTStreams,
-      isStreamSelected: VideoController.inst.isStreamCurrentlySelected,
+      isStreamSelected: VideoController.inst.isStreamCurrentlySelectedR,
       downloadingStream: VideoController.inst.currentVideoConfig.currentDownloadingStream,
       downloadedBytes: VideoController.inst.currentVideoConfig.currentDownloadedBytes,
       onLocalVideoTap: (item, video) => VideoController.inst.setVideoQualityFromLocal(
@@ -584,7 +584,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     );
   }
 
-  static bool isYoutubeStreamSelected(VideoStream stream, File? cacheFile) {
+  static bool isYoutubeStreamSelectedR(VideoStream stream, File? cacheFile) {
     if (settings.youtube.isAudioOnlyMode.valueR) return false;
     final currentStream = Player.inst.currentVideoStream.valueR;
     if (currentStream != null) return currentStream.itag == stream.itag;
@@ -728,7 +728,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
       loadQualities: null,
       localVideos: YoutubeInfoController.current.currentCachedQualities,
       streams: YoutubeInfoController.current.currentYTStreams,
-      isStreamSelected: isYoutubeStreamSelected,
+      isStreamSelected: isYoutubeStreamSelectedR,
       downloadingStream: null,
       downloadedBytes: null,
       onLocalVideoTap: (item, video) async {

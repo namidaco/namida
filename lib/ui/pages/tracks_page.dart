@@ -55,7 +55,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
     final isVideo = widget.tab.isVideoFilter;
     if (isVideo == null) return allTracksLength;
     var videosLength = 0;
-    for (final videos in Indexer.inst.mainMapFoldersVideos.value.values) {
+    for (final videos in Indexer.inst.mainMapFoldersVideos.valueR.values) {
       videosLength += videos.length;
     }
     return isVideo ? videosLength : allTracksLength - videosLength;
@@ -159,7 +159,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   },
                 ),
                 textField: CustomTextField(
-                  textFieldController: libraryTab.textSearchControllerUI,
+                  textFieldController: libraryTab.textSearchControllerR,
                   textFieldHintText: lang.filterTracks,
                   onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.track),
                 ),

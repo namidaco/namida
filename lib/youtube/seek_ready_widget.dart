@@ -415,12 +415,15 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   child: Obx(
                     (context) {
                       final itemDurMS = _currentDurationR.inMilliseconds;
-                      final seek = (_seekPercentage.valueR * itemDurMS).round();
+                      final seekPercentage = _seekPercentage.valueR;
+                      final seek = (seekPercentage * itemDurMS).round();
+                      // ignore: non_reactive_value_inside_obx
+                      final displayActualPosition = settings.player.displayActualPositionWhenSeeking.value;
 
                       String finalText;
                       if (_currentSeekStuckWord != '') {
                         finalText = _currentSeekStuckWord;
-                      } else if (settings.player.displayActualPositionWhenSeeking.value) {
+                      } else if (displayActualPosition) {
                         int seekClamped = seek;
                         seekClamped = seekClamped.withMinimum(0);
                         seekClamped = seekClamped.withMaximum(itemDurMS);
@@ -444,7 +447,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                       final seekTextMaxOffset = (maxWidth - seekTextWidth - seekTextExtraMargin).withMinimum(seekTextExtraMargin);
                       return Transform.translate(
                         offset: Offset(
-                          (maxWidth * _seekPercentage.valueR - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, seekTextMaxOffset),
+                          (maxWidth * seekPercentage - seekTextWidth * 0.5).clampDouble(seekTextExtraMargin, seekTextMaxOffset),
                           -(12.0.withMinimum(heatMapCurrentHeight)),
                         ),
                         child: AnimatedBuilder(

@@ -402,7 +402,7 @@ class AdvancedSettings extends SettingSubpageProvider {
                   icon: Broken.broom,
                   active: removeDuplicates.valueR,
                   title: lang.removeDuplicates,
-                  onTap: () => removeDuplicates.value = !removeDuplicates.value,
+                  onTap: () => removeDuplicates.toggle(),
                 ),
               ),
               const SizedBox(height: 12.0),

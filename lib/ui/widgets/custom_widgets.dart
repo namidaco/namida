@@ -7578,7 +7578,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
                 subtitle: size.fileSizeFormatted,
                 active: false,
                 onTap: () {
-                  tempFilesDelete.value = !tempFilesDelete.value;
+                  tempFilesDelete.toggle();
                   if (tempFilesDelete.value) {
                     totalSizeToDelete.value += size;
                   } else {
@@ -7665,7 +7665,7 @@ class EnableDisablePlaylistReordering extends StatelessWidget {
             );
             return;
           }
-          playlistManager.canReorderItems.value = !playlistManager.canReorderItems.value;
+          playlistManager.canReorderItems.toggle();
         },
       ),
     );
