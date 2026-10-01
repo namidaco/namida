@@ -1,5 +1,6 @@
 name: 📺 YouTube Problem
 description: videos won't play, downloads fail, sign in acting up, etc
+title: "[BUG][YOUTUBE] "
 labels:
   - bug
 type: Bug

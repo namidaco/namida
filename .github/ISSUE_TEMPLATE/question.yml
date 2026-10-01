@@ -1,5 +1,6 @@
 name: ❓ Question
 description: i got a smol question / is it only me or..
+title: "[QUESTION] "
 labels:
   - question
 
