@@ -296,20 +296,37 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     }
   }
 
-  _PlaylistsSelection? _selection;
+  final _selection = _PlaylistsSelection();
+  final _isSelecting = false.obs;
+  final _selectionFocusNode = FocusNode(skipTraversal: true);
   final _collapsedSections = <PlaylistTagKey>{}.obs;
 
   @override
   void dispose() {
-    _selection?.dispose();
+    _selection.dispose();
+    _isSelecting.close();
+    _selectionFocusNode.dispose();
     _collapsedSections.close();
     super.dispose();
   }
 
+  void _startSelecting() {
+    _selection.reset();
+    _isSelecting.value = true;
+    FocusScope.of(context).autofocus(_selectionFocusNode);
+  }
+
   void _toggleSelecting() {
-    final selection = _selection;
-    selection?.dispose();
-    setState(() => _selection = selection == null ? _PlaylistsSelection() : null);
+    if (_isSelecting.value) {
+      _isSelecting.value = false;
+    } else {
+      _startSelecting();
+    }
+  }
+
+  void _toggleSectionSelection(List<String> names) {
+    if (!_isSelecting.value) _startSelecting();
+    _selection.toggleNames(names);
   }
 
   void _toggleSectionCollapsed(PlaylistTagKey key) {
@@ -359,7 +376,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     final countPerRowResolved = widget.countPerRow.resolve(context);
 
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
-    final selection = _selection;
+    final selectionBar = _PlaylistsSelectionBar(
+      selection: _selection,
+      onClose: _toggleSelecting,
+    );
 
     final page = BackgroundWrapper(
       child: Listener(
@@ -464,12 +484,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                   //   },
                                   // ),
                                   const SizedBox(width: 8.0),
-                                  NamidaButton(
-                                    icon: Broken.task_square,
-                                    iconSize: 20.0,
-                                    tooltip: () => lang.selectPlaylists,
-                                    onTap: _toggleSelecting,
-                                    colorScheme: selection != null ? context.theme.colorScheme.secondaryContainer : null,
+                                  ObxO(
+                                    rx: _isSelecting,
+                                    builder: (context, isSelecting) => NamidaButton(
+                                      icon: Broken.task_square,
+                                      iconSize: 20.0,
+                                      tooltip: () => lang.selectPlaylists,
+                                      onTap: _toggleSelecting,
+                                      colorScheme: isSelecting ? context.theme.colorScheme.secondaryContainer : null,
+                                    ),
                                   ),
                                   const SizedBox(width: 8.0),
                                   NamidaButton(
@@ -707,11 +730,15 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             extraMenuItems: isInsideDialog ? null : _buildTagsMenuItems,
                           ),
                         ),
-                      if (selection != null && !_isReordering)
+                      if (!_isReordering && !isInsideDialog)
                         PinnedHeaderSliver(
-                          child: _PlaylistsSelectionBar(
-                            selection: selection,
-                            onClose: _toggleSelecting,
+                          child: ObxO(
+                            rx: _isSelecting,
+                            builder: (context, isSelecting) => AnimatedShow(
+                              show: isSelecting,
+                              alignment: Alignment.topCenter,
+                              child: selectionBar,
+                            ),
                           ),
                         ),
                       _isReordering
@@ -814,48 +841,56 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
                                           final isGrouped = groupByTags && !isInsideDialog;
                                           if (!isGrouped) {
-                                            return _PlaylistsSliver(
-                                              names: playlistSearchList,
-                                              playlistsMap: playlistsMap,
-                                              countPerRow: widget.countPerRow,
-                                              countPerRowResolved: countPerRowResolved,
-                                              enableHero: enableHero,
-                                              shouldAnimate: _shouldAnimate,
-                                              extraTextResolver: extraTextResolver,
-                                              existingStatus: existingStatus,
-                                              onAddTap: onAddTap,
-                                              selection: selection,
+                                            return ObxO(
+                                              rx: _isSelecting,
+                                              builder: (context, isSelecting) => _PlaylistsSliver(
+                                                names: playlistSearchList,
+                                                playlistsMap: playlistsMap,
+                                                countPerRow: widget.countPerRow,
+                                                countPerRowResolved: countPerRowResolved,
+                                                enableHero: enableHero,
+                                                shouldAnimate: _shouldAnimate,
+                                                extraTextResolver: extraTextResolver,
+                                                existingStatus: existingStatus,
+                                                onAddTap: onAddTap,
+                                                selection: isSelecting ? _selection : null,
+                                              ),
                                             );
                                           }
 
                                           final sections = PlaylistController.inst.tagsFilter.groupByTopLevelTag(playlistSearchList);
                                           return ObxO(
-                                            rx: _collapsedSections,
-                                            builder: (context, collapsedSections) => SliverMainAxisGroup(
-                                              slivers: [
-                                                for (final section in sections) ...[
-                                                  SliverToBoxAdapter(
-                                                    child: _TagSectionHeader(
-                                                      section: section,
-                                                      isCollapsed: collapsedSections.contains(section.key),
-                                                      onTap: () => _toggleSectionCollapsed(section.key),
+                                            rx: _isSelecting,
+                                            builder: (context, isSelecting) => ObxO(
+                                              rx: _collapsedSections,
+                                              builder: (context, collapsedSections) => SliverMainAxisGroup(
+                                                slivers: [
+                                                  for (final section in sections) ...[
+                                                    SliverToBoxAdapter(
+                                                      child: _TagSectionHeader(
+                                                        section: section,
+                                                        isCollapsed: collapsedSections.contains(section.key),
+                                                        selection: isSelecting ? _selection : null,
+                                                        onTap: () => _toggleSectionCollapsed(section.key),
+                                                        onLongPress: () => _toggleSectionSelection(section.names),
+                                                      ),
                                                     ),
-                                                  ),
-                                                  if (!collapsedSections.contains(section.key))
-                                                    _PlaylistsSliver(
-                                                      names: section.names,
-                                                      playlistsMap: playlistsMap,
-                                                      countPerRow: widget.countPerRow,
-                                                      countPerRowResolved: countPerRowResolved,
-                                                      enableHero: false, // -- a playlist can show up in multiple sections
-                                                      shouldAnimate: _shouldAnimate,
-                                                      extraTextResolver: extraTextResolver,
-                                                      existingStatus: existingStatus,
-                                                      onAddTap: onAddTap,
-                                                      selection: selection,
-                                                    ),
+                                                    if (!collapsedSections.contains(section.key))
+                                                      _PlaylistsSliver(
+                                                        names: section.names,
+                                                        playlistsMap: playlistsMap,
+                                                        countPerRow: widget.countPerRow,
+                                                        countPerRowResolved: countPerRowResolved,
+                                                        enableHero: false, // -- a playlist can show up in multiple sections
+                                                        shouldAnimate: _shouldAnimate,
+                                                        extraTextResolver: extraTextResolver,
+                                                        existingStatus: existingStatus,
+                                                        onAddTap: onAddTap,
+                                                        selection: isSelecting ? _selection : null,
+                                                      ),
+                                                  ],
                                                 ],
-                                              ],
+                                              ),
                                             ),
                                           );
                                         },
@@ -876,9 +911,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
         ),
       ),
     );
-    if (selection == null) return page;
+    if (isInsideDialog) return page;
     return _SelectionShortcuts(
-      selection: selection,
+      selection: _selection,
+      isSelectingRx: _isSelecting,
+      focusNode: _selectionFocusNode,
       onClose: _toggleSelecting,
       child: page,
     );
@@ -941,6 +978,17 @@ class _PlaylistsSelection {
     selectedNames.refresh();
   }
 
+  void toggleNames(List<String> names) {
+    final selected = selectedNames.value;
+    final isAllSelected = names.every(selected.contains);
+    if (isAllSelected) {
+      selected.removeAll(names);
+    } else {
+      selected.addAll(names);
+    }
+    selectedNames.refresh();
+  }
+
   void invert() {
     final visibleNames = SearchSortController.inst.playlistSearchList.value;
     final selected = selectedNames.value;
@@ -954,6 +1002,11 @@ class _PlaylistsSelection {
   void _clear() {
     selectedNames.value.clear();
     selectedNames.refresh();
+  }
+
+  void reset() {
+    _anchorName = null;
+    _clear();
   }
 
   int countTracks() {
@@ -1224,6 +1277,8 @@ class _PlaylistsSliver extends StatelessWidget {
         const childAspectRatio = 0.8;
         final cardWidth = crossAxisExtent / countPerRowResolved;
         final cardHeight = cardWidth / childAspectRatio;
+        final cardImageSize = MultiArtworkCard.imageSizeOf(cardWidth);
+        final cardTextAreaHeight = (cardHeight - cardImageSize).withMinimum(0.0);
         return SliverGrid.builder(
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: countPerRowResolved,
@@ -1244,6 +1299,7 @@ class _PlaylistsSliver extends StatelessWidget {
                   countPerRow: countPerRow,
                   width: cardWidth,
                   height: cardHeight,
+                  textAreaHeight: cardTextAreaHeight,
                   enableHero: enableHero,
                   extraText: extraText,
                   isSelected: selectedNames.contains(key),
@@ -1257,6 +1313,7 @@ class _PlaylistsSliver extends StatelessWidget {
                 countPerRow: countPerRow,
                 width: cardWidth,
                 height: cardHeight,
+                textAreaHeight: cardTextAreaHeight,
                 enableHero: enableHero,
                 extraText: extraText,
                 isSelected: null,
@@ -1283,6 +1340,7 @@ class _PlaylistGridCard extends StatelessWidget {
   final CountPerRow countPerRow;
   final double width;
   final double height;
+  final double textAreaHeight;
   final bool enableHero;
   final String? extraText;
   final bool? isSelected;
@@ -1294,6 +1352,7 @@ class _PlaylistGridCard extends StatelessWidget {
     required this.countPerRow,
     required this.width,
     required this.height,
+    required this.textAreaHeight,
     required this.enableHero,
     required this.extraText,
     required this.isSelected,
@@ -1308,6 +1367,42 @@ class _PlaylistGridCard extends StatelessWidget {
     final remoteInfo = playlist.getRemoteInfo();
     final extraText = this.extraText;
     final isSelected = this.isSelected;
+    final m3uPath = playlist.m3uPath;
+    final iconSize = (textAreaHeight * 0.34).withMaximum(18.0);
+    Widget? sourceBadge;
+    if (m3uPath != null) {
+      sourceBadge = _PlaylistSourceBadge(
+        tooltip: () => "${lang.m3uPlaylist}\n${m3uPath.formatPath()}",
+        iconSize: iconSize,
+        textAreaHeight: textAreaHeight,
+        child: Icon(
+          Broken.music_filter,
+          size: iconSize,
+        ),
+      );
+    } else if (remoteInfo != null) {
+      final assetImagePath = remoteInfo.$2;
+      final assetImageHeight = iconSize * 0.9;
+      final Widget sourceIcon = assetImagePath != null
+          ? Image.asset(
+              assetImagePath,
+              height: assetImageHeight,
+            )
+          : Icon(
+              Broken.cloud,
+              size: iconSize,
+            );
+      sourceBadge = _PlaylistSourceBadge(
+        tooltip: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
+        iconSize: iconSize,
+        textAreaHeight: textAreaHeight,
+        child: sourceIcon,
+      );
+    }
+    final isPinned = playlist.isPinned;
+    final tagColors = PlaylistController.inst.tagsFilter.colorsOf(playlist.tags);
+    final hasMarks = isPinned || tagColors.isNotEmpty;
+    final marksBadgeBottom = (textAreaHeight - 1.0).withMinimum(0.0); // -- covers the image's antialiased edge row
     return MultiArtworkCard(
       enableHero: enableHero,
       heroTag: 'playlist_$name',
@@ -1320,64 +1415,22 @@ class _PlaylistGridCard extends StatelessWidget {
       onTap: onTap,
       artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(name),
       widgetsInStack: [
-        if (isSelected != null)
+        if (hasMarks)
           Positioned(
-            top: 8.0,
-            left: 8.0,
-            child: NamidaCheckMark(
-              size: 16.0,
-              active: isSelected,
+            bottom: marksBadgeBottom,
+            left: 0.0,
+            child: _PlaylistMarksBadge(
+              isPinned: isPinned,
+              tagColors: tagColors,
+              iconSize: iconSize,
             ),
           ),
-        Positioned(
-          bottom: 8.0,
-          left: 8.0,
-          child: Row(
-            children: [
-              if (playlist.isPinned) ...[
-                const Icon(
-                  Broken.paperclip,
-                  size: 18.0,
-                ),
-                const SizedBox(
-                  width: 4.0,
-                ),
-              ],
-              PlaylistTagsColorDots(
-                filter: PlaylistController.inst.tagsFilter,
-                tags: playlist.tags,
-              ),
-            ],
-          ),
-        ),
-        if (playlist.m3uPath != null)
+        if (sourceBadge != null)
           Positioned(
-            bottom: 8.0,
-            right: 8.0,
-            child: NamidaTooltip(
-              message: () => "${lang.m3uPlaylist}\n${playlist.m3uPath?.formatPath()}",
-              child: const Icon(Broken.music_filter, size: 18.0),
-            ),
-          )
-        else if (remoteInfo != null) ...[
-          Positioned(
-            bottom: 8.0,
-            right: 8.0,
-            child: NamidaTooltip(
-              message: () => "${lang.readOnlyPlaylist}\n${remoteInfo.$1}",
-              child: remoteInfo.$2 != null
-                  ? Image.asset(
-                      remoteInfo.$2!,
-                      height: 16.0,
-                    )
-                  : const Icon(
-                      Broken.cloud,
-                      size: 18.0,
-                    ),
-            ),
+            bottom: 0.0,
+            right: 0.0,
+            child: sourceBadge,
           ),
-          const SizedBox(width: 2.0),
-        ],
         if (extraText != null && extraText.isNotEmpty)
           Positioned(
             top: 0,
@@ -1394,7 +1447,126 @@ class _PlaylistGridCard extends StatelessWidget {
               ),
             ),
           ),
+        if (isSelected != null)
+          Positioned(
+            top: 0.0,
+            left: 0.0,
+            child: _PlaylistSelectionBadge(
+              isSelected: isSelected,
+            ),
+          ),
       ],
+    );
+  }
+}
+
+class _PlaylistSourceBadge extends StatelessWidget {
+  final String Function() tooltip;
+  final double iconSize;
+  final double textAreaHeight;
+  final Widget child;
+
+  const _PlaylistSourceBadge({
+    required this.tooltip,
+    required this.iconSize,
+    required this.textAreaHeight,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColor = context.theme.cardColor;
+    final cardColorTransparent = cardColor.withAlpha(0);
+    final fadeWidth = iconSize * 0.8;
+    final topPadding = iconSize * 0.2;
+    final rightPadding = iconSize * 0.45;
+    final bottomPadding = (textAreaHeight * 0.47 - iconSize).withMinimum(0.0);
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [cardColorTransparent, cardColor],
+                  stops: const [0.0, 0.4],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: fadeWidth, top: topPadding, right: rightPadding, bottom: bottomPadding),
+          child: NamidaTooltip(
+            message: tooltip,
+            child: child,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlaylistMarksBadge extends StatelessWidget {
+  final bool isPinned;
+  final List<int> tagColors;
+  final double iconSize;
+
+  const _PlaylistMarksBadge({
+    required this.isPinned,
+    required this.tagColors,
+    required this.iconSize,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final pinSize = iconSize * 0.8;
+    final dotSize = iconSize * 0.45;
+    final cornerRadius = Radius.circular(8.0.multipliedRadius);
+    return IgnorePointer(
+      child: NamidaBlurryContainer(
+        borderRadius: BorderRadius.only(topRight: cornerRadius),
+        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 3.0),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 3.0,
+          children: [
+            if (isPinned)
+              Icon(
+                Broken.paperclip,
+                size: pinSize,
+              ),
+            for (final color in tagColors)
+              PlaylistTagColorDot(
+                color: Color(color),
+                size: dotSize,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaylistSelectionBadge extends StatelessWidget {
+  final bool isSelected;
+
+  const _PlaylistSelectionBadge({
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cornerRadius = Radius.circular(8.0.multipliedRadius);
+    return IgnorePointer(
+      child: NamidaBlurryContainer(
+        borderRadius: BorderRadius.only(bottomRight: cornerRadius),
+        padding: const EdgeInsets.all(6.0),
+        child: NamidaCheckMark(
+          size: 16.0,
+          active: isSelected,
+        ),
+      ),
     );
   }
 }
@@ -1402,12 +1574,16 @@ class _PlaylistGridCard extends StatelessWidget {
 class _TagSectionHeader extends StatelessWidget {
   final PlaylistTagSection section;
   final bool isCollapsed;
+  final _PlaylistsSelection? selection;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
 
   const _TagSectionHeader({
     required this.section,
     required this.isCollapsed,
+    required this.selection,
     required this.onTap,
+    required this.onLongPress,
   });
 
   @override
@@ -1416,11 +1592,14 @@ class _TagSectionHeader extends StatelessWidget {
     final textTheme = theme.textTheme;
     final key = section.key;
     final color = section.color;
+    final selection = this.selection;
     return NamidaInkWell(
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
       bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.15),
       onTap: onTap,
+      onLongPress: onLongPress,
+      enableSecondaryTap: true,
       child: Row(
         children: [
           if (color != null)
@@ -1437,13 +1616,21 @@ class _TagSectionHeader extends StatelessWidget {
             width: 10.0,
           ),
           Expanded(
-            child: Text(
-              key.toText(),
-              style: textTheme.displayMedium,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Text(
+                key.toText(),
+                style: textTheme.displayMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
+          if (selection != null)
+            _TagSectionSelectButton(
+              selection: selection,
+              names: section.names,
+            ),
           Text(
             section.names.length.displayPlaylistKeyword,
             style: textTheme.displaySmall,
@@ -1456,6 +1643,38 @@ class _TagSectionHeader extends StatelessWidget {
             size: 16.0,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TagSectionSelectButton extends StatelessWidget {
+  final _PlaylistsSelection selection;
+  final List<String> names;
+
+  const _TagSectionSelectButton({
+    required this.selection,
+    required this.names,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaTooltip(
+      message: () => lang.selectAll,
+      child: NamidaInkWell(
+        margin: const EdgeInsetsDirectional.only(end: 2.0),
+        padding: const EdgeInsets.all(10.0),
+        onTap: () => selection.toggleNames(names),
+        child: ObxO(
+          rx: selection.selectedNames,
+          builder: (context, selectedNames) {
+            final isAllSelected = names.every(selectedNames.contains);
+            return NamidaCheckMark(
+              size: 16.0,
+              active: isAllSelected,
+            );
+          },
+        ),
       ),
     );
   }
@@ -1623,28 +1842,41 @@ class _SelectionBarButton extends StatelessWidget {
 
 class _SelectionShortcuts extends StatelessWidget {
   final _PlaylistsSelection selection;
+  final Rx<bool> isSelectingRx;
+  final FocusNode focusNode;
   final VoidCallback onClose;
   final Widget child;
 
   const _SelectionShortcuts({
     required this.selection,
+    required this.isSelectingRx,
+    required this.focusNode,
     required this.onClose,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: {
-        const SingleActivator(LogicalKeyboardKey.keyA, control: true): selection.selectAll,
-        const SingleActivator(LogicalKeyboardKey.keyI, control: true): selection.invert,
-        const SingleActivator(LogicalKeyboardKey.delete): selection.promptDelete,
-        const SingleActivator(LogicalKeyboardKey.escape): onClose,
+    final focusChild = Focus(
+      focusNode: focusNode,
+      child: child,
+    );
+    return ObxO(
+      rx: isSelectingRx,
+      builder: (context, isSelecting) {
+        final bindings = <ShortcutActivator, VoidCallback>{
+          if (isSelecting) ...{
+            const SingleActivator(LogicalKeyboardKey.keyA, control: true): selection.selectAll,
+            const SingleActivator(LogicalKeyboardKey.keyI, control: true): selection.invert,
+            const SingleActivator(LogicalKeyboardKey.delete): selection.promptDelete,
+            const SingleActivator(LogicalKeyboardKey.escape): onClose,
+          },
+        };
+        return CallbackShortcuts(
+          bindings: bindings,
+          child: focusChild,
+        );
       },
-      child: Focus(
-        autofocus: true,
-        child: child,
-      ),
     );
   }
 }

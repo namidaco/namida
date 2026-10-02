@@ -38,11 +38,13 @@ class MultiArtworkCard extends StatelessWidget {
     required this.height,
   });
 
+  static double imageSizeOf(double width) => (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+    final imageSize = imageSizeOf(width);
     final remainingVerticalSpace = (height - imageSize).withMinimum(0.0);
     final itemImagePercentageMultiplier = imageSize * 0.02;
     double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);

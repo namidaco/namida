@@ -313,7 +313,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                           if (widget.isEditable) ...[
                                             NamidaPopupItem(
                                               icon: Broken.edit_2,
-                                              title: lang.renamePlaylist,
+                                              title: lang.edit,
                                               onTap: () async {
                                                 final newName = await playlist.showRenamePlaylistSheet(playlistName: playlistCurrentName);
                                                 if (newName == null) return;

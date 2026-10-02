@@ -279,62 +279,22 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
+  void renamePlaylist() {
+    if (!shoulShowPlaylistUtils()) return;
+    cancelSkipTimer();
+    showRenamePlaylistDialog(
+      manager: PlaylistController.inst,
+      playlistName: playlistName!,
+      colorScheme: colorDelightened.value,
+    );
+  }
+
   void togglePlaylistPin() {
     if (!shoulShowPlaylistUtils()) return;
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
     NamidaNavigator.inst.closeDialog();
     PlaylistController.inst.updatePlaylistMetadata(playlistName, isPinned: !pl.isPinned);
-  }
-
-  void renamePlaylist() async {
-    // function button won't be visible if playlistName == null.
-    if (!shoulShowPlaylistUtils()) return;
-    cancelSkipTimer();
-
-    final controller = TextEditingController(text: playlistName);
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-    await openDialog(
-      onDisposing: () {
-        controller.dispose();
-      },
-      (theme) => Form(
-        key: formKey,
-        child: CustomBlurryDialog(
-          title: lang.renamePlaylist,
-          actions: [
-            const CancelButton(),
-            NamidaButton(
-              text: lang.save,
-              onTap: () async {
-                if (formKey.currentState!.validate()) {
-                  final didRename = await PlaylistController.inst.renamePlaylist(playlistName!, controller.text);
-                  if (didRename) {
-                    NamidaNavigator.inst.closeAllDialogs();
-                  } else {
-                    snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
-                  }
-                }
-              },
-            ),
-          ],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(
-                height: 20.0,
-              ),
-              CustomTagTextField(
-                controller: controller,
-                hintText: playlistName!,
-                labelText: lang.name,
-                validator: (value) => PlaylistController.inst.validatePlaylistName(value),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Future<void> deletePlaylist({bool deleteM3uFileOnly = false}) async {
@@ -717,10 +677,17 @@ Future<void> showGeneralPopupDialog(
               const SizedBox(
                 width: 8.0,
               ),
-              if (!playlistIsReadOnly) ...[
-                Expanded(child: bigIcon(Broken.edit_2, () => lang.renamePlaylist, renamePlaylist)),
-                const SizedBox(width: 8.0),
-              ],
+              // allow editing description
+              Expanded(
+                child: bigIcon(
+                  Broken.edit_2,
+                  () => lang.edit,
+                  renamePlaylist,
+                ),
+              ),
+              const SizedBox(
+                width: 8.0,
+              ),
               Expanded(child: bigIcon(Broken.trash, () => lang.deletePlaylist, deletePlaylist)),
               if (playlistIsReadOnly)
                 Expanded(

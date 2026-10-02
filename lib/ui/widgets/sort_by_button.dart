@@ -656,6 +656,7 @@ extension _GroupSortTypeIgnorePrefix on GroupSortType {
     GroupSortType.numberOfTracks ||
     GroupSortType.playCount ||
     GroupSortType.latestPlayed ||
+    GroupSortType.lastPlayed ||
     GroupSortType.firstListen ||
     GroupSortType.albumsCount ||
     GroupSortType.creationDate ||

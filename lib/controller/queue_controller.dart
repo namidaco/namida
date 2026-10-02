@@ -590,6 +590,8 @@ class _LatestPlayedForSourceManager {
 
   static final _modifiedTimesMap = <QueueSourceBase<dynamic>, int>{};
 
+  int? latestPlayedTime(QueueSourceBase source) => _modifiedTimesMap[source];
+
   late final _dBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.LATEST_PLAYED_FOR_SOURCE,
     config: const DBConfig(createIfNotExist: true),

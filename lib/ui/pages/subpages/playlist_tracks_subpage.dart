@@ -576,10 +576,14 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
               infoBox: (maxWidth) => SubpageInfoContainer(
                 bottomPadding: 0.0,
                 maxWidth: maxWidth,
+                type: MediaType.playlist,
+                onOpenMenu: () => NamidaDialogs.inst.showPlaylistDialog(playlist.name),
+                customArtworkManager: CustomArtworkManager.playlist(playlist.name),
                 source: queueSource,
                 title: playlist.name.translatePlaylistName(),
                 subtitle: playlist.creationDate.dateFormatted,
                 thirdLineText: playlist.moods.isNotEmpty ? playlist.moods.join(', ') : '',
+                description: playlist.comment,
                 heroTag: heroTag,
                 imageBuilder: (size) => MultiArtworkContainer(
                   heroTag: heroTag,

@@ -112,6 +112,7 @@ enum GroupSortType {
   numberOfTracks,
   playCount,
   latestPlayed,
+  lastPlayed,
   firstListen,
   albumsCount,
   creationDate,
@@ -196,6 +197,7 @@ enum GroupSortType {
     GroupSortType.modifiedDate,
     GroupSortType.duration,
     GroupSortType.numberOfTracks,
+    GroupSortType.lastPlayed,
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
@@ -212,6 +214,7 @@ enum GroupSortType {
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
+    GroupSortType.lastPlayed,
     GroupSortType.shuffle,
     GroupSortType.custom,
   ];
@@ -372,7 +375,7 @@ enum QueueSourceEnum {
   composer(false, supportResuming: true),
   genre(false, supportResuming: true),
   style(false, supportResuming: true),
-  playlist(true, supportResuming: true),
+  playlist(true, supportResuming: true, hasLastPlayedSort: true),
   folder(false),
   folderMusic(false),
   folderVideos(false),
@@ -397,7 +400,8 @@ enum QueueSourceEnum {
 
   final bool canHaveDuplicates;
   final bool supportResuming;
-  const QueueSourceEnum(this.canHaveDuplicates, {this.supportResuming = false});
+  final bool hasLastPlayedSort;
+  const QueueSourceEnum(this.canHaveDuplicates, {this.supportResuming = false, this.hasLastPlayedSort = false});
 }
 
 enum QueueSourceYoutubeIDEnum {
@@ -405,7 +409,7 @@ enum QueueSourceYoutubeIDEnum {
   // -- so that name matching works properly (workaround but sheshh)
 
   ytChannel(true),
-  ytPlaylist(true, supportResuming: true),
+  ytPlaylist(true, supportResuming: true, hasLastPlayedSort: true),
   ytSearch(false),
   ytPlayerQueue(true),
   ytMostPlayed(false),
@@ -431,16 +435,21 @@ enum QueueSourceYoutubeIDEnum {
 
   final bool canHaveDuplicates;
   final bool supportResuming;
-  const QueueSourceYoutubeIDEnum(this.canHaveDuplicates, {this.supportResuming = false});
+  final bool hasLastPlayedSort;
+  const QueueSourceYoutubeIDEnum(this.canHaveDuplicates, {this.supportResuming = false, this.hasLastPlayedSort = false});
 }
 
 sealed class QueueSourceBase<E extends Enum> {
   final E s;
   bool get canHaveDuplicates;
   bool get supportResuming;
+
+  /// sources with a last played sort keep tracking even when [resumingEnabled] is off.
+  bool get tracksLatestPlayed;
   String toText();
 
-  /// disabling it hides the resume fab, the highlighted item & stops tracking the latest played per source.
+  /// disabling it hides the resume fab, the highlighted item & stops tracking the latest played per source,
+  /// except for sources that have a last played sort (playlists).
   static bool get resumingEnabled => settings.extra.resumeUIEnabled.value;
 
   final String? title;
@@ -455,6 +464,8 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
   bool get supportResuming => s.supportResuming && QueueSourceBase.resumingEnabled;
+  @override
+  bool get tracksLatestPlayed => s.supportResuming && (s.hasLastPlayedSort || QueueSourceBase.resumingEnabled);
   @override
   String toText() => s.toText();
 
@@ -540,6 +551,8 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   bool get canHaveDuplicates => s.canHaveDuplicates;
   @override
   bool get supportResuming => s.supportResuming && QueueSourceBase.resumingEnabled;
+  @override
+  bool get tracksLatestPlayed => s.supportResuming && (s.hasLastPlayedSort || QueueSourceBase.resumingEnabled);
   @override
   String toText() => s.toText();
 
@@ -839,6 +852,7 @@ enum HomePageItems {
   recentArtists,
   topRecentAlbums,
   topRecentArtists,
+  pinnedPlaylists,
 }
 
 enum MixesItems {

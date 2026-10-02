@@ -43,6 +43,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -210,12 +211,51 @@ class YTUtils {
     );
   }
 
+  static Future<List<NamidaPopupItem>> getPlaylistMenuItems({
+    required BuildContext context,
+    required YoutubePlaylist playlist,
+    required QueueSourceYoutubeID queueSource,
+  }) async {
+    final isPinned = playlist.isPinned;
+    final playlistItems = playlist.isFav
+        ? const <NamidaPopupItem>[]
+        : [
+            NamidaPopupItem(
+              icon: Broken.tag,
+              title: '${lang.tags}/${lang.moods}',
+              onTap: () => showSetPlaylistsTagsDialog(
+                manager: YoutubePlaylistController.inst,
+                playlistsNames: [playlist.name],
+              ),
+            ),
+            NamidaPopupItem(
+              icon: isPinned ? Broken.paperclip_2 : Broken.paperclip,
+              title: isPinned ? lang.unpin : lang.pin,
+              onTap: () => YoutubePlaylistController.inst.updatePlaylistMetadata(playlist.name, isPinned: !isPinned),
+            ),
+            NamidaPopupItem(
+              icon: Broken.edit_2,
+              title: lang.edit,
+              onTap: () => playlist.showRenamePlaylistSheet(playlistName: playlist.name),
+            ),
+          ];
+    return getVideosMenuItems(
+      queueSource: queueSource,
+      context: context,
+      videos: playlist.tracks,
+      playlistName: '',
+      playlistToRemove: playlist,
+      playlistItems: playlistItems,
+    );
+  }
+
   static Future<List<NamidaPopupItem>> getVideosMenuItems({
     required QueueSourceYoutubeID queueSource,
     required BuildContext context,
     required List<YoutubeID> videos,
     required String playlistName,
     YoutubePlaylist? playlistToRemove,
+    List<NamidaPopupItem> playlistItems = const [],
     bool showPlayAllReverse = true,
   }) async {
     final playAfterVid = await getPlayerAfterVideo();
@@ -284,6 +324,7 @@ class YTUtils {
           subtitle: playlistName.translatePlaylistName(),
           onTap: () => YTUtils.onRemoveVideosFromPlaylist(k_PLAYLIST_NAME_HISTORY, videos),
         ),
+      ...playlistItems,
       if (playlistToRemove != null)
         NamidaPopupItem(
           icon: Broken.trash,

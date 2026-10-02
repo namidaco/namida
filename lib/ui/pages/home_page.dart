@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:history_manager/history_manager.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/base/generator_base.dart';
 import 'package:namida/base/loading_items_delay.dart';
@@ -45,6 +46,7 @@ import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/artist_card.dart';
+import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/queue_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/stats.dart';
@@ -53,6 +55,7 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/controller/yt_generators_controller.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -661,6 +664,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                                   case HomePageItems.recentArtists:
                                   case HomePageItems.topRecentAlbums:
                                   case HomePageItems.topRecentArtists:
+                                  case HomePageItems.pinnedPlaylists:
                                     return buildOtherSectionSliver(context, element);
                                 }
                               },
@@ -1062,6 +1066,16 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
           listens: (artist) => _topRecentArtists[artist] ?? 0,
         );
 
+      case HomePageItems.pinnedPlaylists:
+        return _PinnedPlaylistsList(
+          homepageItem: element,
+          playlistsMap: PlaylistController.inst.playlistsMap,
+          cardBuilder: (playlist, homepageItem) => _LocalPlaylistCard(
+            playlist: playlist,
+            homepageItem: homepageItem,
+          ),
+        );
+
       case HomePageItems.mixes:
       case HomePageItems.recentListens:
       case HomePageItems.topRecentListens:
@@ -1086,6 +1100,7 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
     HomePageItems.recentListens,
     HomePageItems.topRecentListens,
     HomePageItems.lostMemories,
+    HomePageItems.pinnedPlaylists,
   ];
 
   @override
@@ -1264,6 +1279,16 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
 
   @override
   Widget buildOtherSectionSliver(BuildContext context, HomePageItems element) {
+    if (element == HomePageItems.pinnedPlaylists) {
+      return _PinnedPlaylistsList(
+        homepageItem: element,
+        playlistsMap: YoutubePlaylistController.inst.playlistsMap,
+        cardBuilder: (playlist, homepageItem) => _YTPlaylistCard(
+          playlist: playlist,
+          homepageItem: homepageItem,
+        ),
+      );
+    }
     return const SliverToBoxAdapter(child: SizedBox());
   }
 }
@@ -1487,6 +1512,245 @@ class _ArtistsList extends StatelessWidget {
   }
 }
 
+class _PinnedPlaylistsList<T extends PlaylistItemWithDate, S> extends StatelessWidget {
+  final HomePageItems homepageItem;
+  final RxMap<String, GeneralPlaylist<T, S>> playlistsMap;
+  final Widget Function(GeneralPlaylist<T, S> playlist, HomePageItems homepageItem) cardBuilder;
+
+  const _PinnedPlaylistsList({
+    required this.homepageItem,
+    required this.playlistsMap,
+    required this.cardBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: ObxO(
+        rx: playlistsMap,
+        builder: (context, playlistsMap) {
+          final pinned = <GeneralPlaylist<T, S>>[];
+          for (final playlist in playlistsMap.values) {
+            if (playlist.isPinned) pinned.add(playlist);
+          }
+          return _HorizontalList(
+            isLoading: false,
+            homepageItem: homepageItem,
+            title: homepageItem.toText(),
+            leading: StackedIcon(
+              baseIcon: homepageItem.toMainIcon(),
+              secondaryIcon: homepageItem.toIcon(),
+            ),
+            height: 150.0 + 12.0,
+            itemCount: pinned.length,
+            itemExtent: 98.0 + 8.0,
+            itemBuilder: (context, index) => cardBuilder(pinned[index], homepageItem),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _LocalPlaylistCard extends StatelessWidget {
+  final LocalPlaylist playlist;
+  final HomePageItems homepageItem;
+
+  const _LocalPlaylistCard({
+    required this.playlist,
+    required this.homepageItem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final name = playlist.name;
+    final tracks = playlist.tracks;
+    return _PlaylistCard(
+      title: name.translatePlaylistName(),
+      subtitle: [
+        tracks.displayTrackKeyword,
+        tracks.totalDurationFormatted,
+      ].join(' • '),
+      imageBuilder: (imageSize) => MultiArtworkContainer(
+        heroTag: 'pinned_playlist_$name',
+        enableHero: false,
+        size: imageSize,
+        margin: EdgeInsets.zero,
+        tracks: tracks.toImageTracks(),
+        artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(name),
+      ),
+      onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(name),
+      onLongPress: () => NamidaDialogs.inst.showPlaylistDialog(name),
+      onPlayTap: tracks.isEmpty ? null : () => Player.inst.playOrPause(0, tracks, QueueSource.playlist(name), homePageItem: homepageItem),
+      width: 106.0,
+      height: 138.0,
+    );
+  }
+}
+
+class _YTPlaylistCard extends StatelessWidget {
+  final YoutubePlaylist playlist;
+  final HomePageItems homepageItem;
+
+  const _YTPlaylistCard({
+    required this.playlist,
+    required this.homepageItem,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final name = playlist.name;
+    final tracks = playlist.tracks;
+    final firstVideoId = tracks.firstOrNull?.id;
+    final queueSource = QueueSourceYoutubeID.ytPlaylist(name);
+    return NamidaPopupWrapper(
+      openOnTap: false,
+      childrenDefault: () => YTUtils.getPlaylistMenuItems(context: context, playlist: playlist, queueSource: queueSource),
+      child: _PlaylistCard(
+        title: name.translatePlaylistName(),
+        subtitle: tracks.length.displayVideoKeyword,
+        imageBuilder: (imageSize) => YoutubeThumbnail(
+          key: Key("$firstVideoId"),
+          type: ThumbnailType.playlist,
+          width: imageSize,
+          height: imageSize,
+          forceSquared: true,
+          isImportantInCache: true,
+          videoId: firstVideoId,
+          borderRadius: 10.0,
+        ),
+        onTap: () => YTNormalPlaylistSubpage(playlistName: name, queueSource: queueSource).navigate(),
+        onLongPress: null,
+        onPlayTap: tracks.isEmpty ? null : () => Player.inst.playOrPause(0, tracks, queueSource, homePageItem: homepageItem),
+        width: 106.0,
+        height: 138.0,
+      ),
+    );
+  }
+}
+
+class _PlaylistCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final Widget Function(double imageSize) imageBuilder;
+  final void Function() onTap;
+  final void Function()? onLongPress;
+  final void Function()? onPlayTap;
+  final double width;
+  final double height;
+
+  const _PlaylistCard({
+    required this.title,
+    required this.subtitle,
+    required this.imageBuilder,
+    required this.onTap,
+    required this.onLongPress,
+    required this.onPlayTap,
+    required this.width,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final onPlayTap = this.onPlayTap;
+    final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
+    final remainingVerticalSpace = (height - imageSize).withMinimum(0.0);
+    final itemImagePercentageMultiplier = imageSize * 0.015;
+    double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
+    final playIconBgOpacity = (imageSize / 200).clampDouble(0, 1);
+    final playIconBgColor = theme.cardColor.withOpacityExt(playIconBgOpacity);
+
+    final Widget? playButtonWidget = onPlayTap == null
+        ? null
+        : Positioned(
+            bottom: 2.0 + itemImagePercentageMultiplier,
+            right: 2.0 + itemImagePercentageMultiplier,
+            child: NamidaInkWell(
+              decoration: BoxDecoration(
+                color: playIconBgColor,
+                boxShadow: [
+                  BoxShadow(
+                    blurRadius: 6.0,
+                    offset: const Offset(0.0, 2.0),
+                    color: playIconBgColor.withOpacityExt(0.4),
+                  ),
+                ],
+              ),
+              borderRadius: 8.0.withMaximum(imageSize * 0.07),
+              onTap: onPlayTap,
+              padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+              child: Icon(
+                Broken.play,
+                size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+              ),
+            ),
+          );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.cardColor.withOpacityExt(0.9),
+          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          boxShadow: [
+            BoxShadow(
+              color: theme.shadowColor.withAlpha(50),
+              blurRadius: 12,
+              offset: const Offset(0, 2.0),
+            ),
+          ],
+        ),
+        child: NamidaInkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          enableSecondaryTap: true,
+          child: Column(
+            children: [
+              SizedBox.square(
+                dimension: imageSize,
+                child: Stack(
+                  children: [
+                    imageBuilder(imageSize),
+                    ?playButtonWidget,
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: imageSize,
+                height: remainingVerticalSpace,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
+                      Text(
+                        subtitle,
+                        style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _HorizontalList extends StatelessWidget {
   final HomePageItems homepageItem;
   final String title;
@@ -1615,6 +1879,7 @@ class _HorizontalList extends StatelessWidget {
                           HomePageItems.recentlyAdded || HomePageItems.recentQueues => lang.noTracksFound,
                           HomePageItems.recentAlbums || HomePageItems.recentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                           HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.none}: ${lang.noTracksInHistory}",
+                          HomePageItems.pinnedPlaylists => lang.none,
                         },
                         style: textTheme.displayMedium,
                         softWrap: false,

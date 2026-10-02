@@ -2133,6 +2133,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.dateModified => lang.dateModified,
     GroupSortType.duration => lang.duration,
     GroupSortType.numberOfTracks => lang.numberOfTracks,
+    GroupSortType.lastPlayed => lang.lastPlayed,
     GroupSortType.playCount => '${lang.totalListens} (${lang.tracks})',
     GroupSortType.firstListen => '${lang.firstListen} (${lang.tracks})',
     GroupSortType.latestPlayed => '${lang.recentListens} (${lang.tracks})',
@@ -2168,6 +2169,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.albumsCount => Broken.cards,
     GroupSortType.custom => Broken.format_circle,
     GroupSortType.shuffle => Broken.shuffle,
+    GroupSortType.lastPlayed => Broken.play_circle,
     GroupSortType.playCount => Broken.award,
     GroupSortType.latestPlayed => Broken.clock,
     GroupSortType.firstListen => Broken.calendar_search,
@@ -2507,6 +2509,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentArtists => lang.recentArtists,
     HomePageItems.topRecentAlbums => lang.topRecentAlbums,
     HomePageItems.topRecentArtists => lang.topRecentArtists,
+    HomePageItems.pinnedPlaylists => lang.pinnedPlaylists,
   };
 
   IconData toMainIcon() => switch (this) {
@@ -2520,6 +2523,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.recentArtists => Broken.undo,
     HomePageItems.topRecentAlbums => Broken.crown_1,
     HomePageItems.topRecentArtists => Broken.crown_1,
+    HomePageItems.pinnedPlaylists => Broken.paperclip,
   };
 
   IconData? toIcon() => switch (this) {
@@ -2533,6 +2537,7 @@ extension HomePageItemsL10n on HomePageItems {
     HomePageItems.topRecentAlbums => Broken.music_dashboard,
     HomePageItems.recentArtists => Broken.user,
     HomePageItems.topRecentArtists => Broken.user,
+    HomePageItems.pinnedPlaylists => Broken.music_playlist,
   };
 }
 

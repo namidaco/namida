@@ -152,6 +152,83 @@ void showSetTrackStatsDialogSimple({
   );
 }
 
+void showRenamePlaylistDialog<T extends PlaylistItemWithDate, E, S>({
+  required PlaylistManager<T, E, S> manager,
+  required String playlistName,
+  Color? colorScheme,
+}) {
+  final playlist = manager.playlistsMap.value[playlistName];
+  if (playlist == null) return;
+
+  final nameController = playlist.isReadOnly ? null : TextEditingController(text: playlistName);
+  final descriptionController = TextEditingController(text: playlist.comment);
+  final nameFormKey = GlobalKey<FormState>();
+
+  Future<void> onSave() async {
+    String name = playlistName;
+    if (nameController != null) {
+      final newName = nameController.text;
+      if (newName != playlistName) {
+        final isNameValid = nameFormKey.currentState!.validate();
+        if (!isNameValid) return;
+        final didRename = await manager.renamePlaylist(playlistName, newName);
+        if (!didRename) {
+          snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
+          return;
+        }
+        name = newName;
+      }
+    }
+    final newDescription = descriptionController.text.trim();
+    manager.updatePlaylistsMetadata({name: PlaylistMetadataEdit(comment: newDescription)});
+    NamidaNavigator.inst.closeAllDialogs();
+  }
+
+  NamidaNavigator.inst.navigateDialog(
+    colorScheme: colorScheme,
+    lighterDialogColor: true,
+    onDisposing: () {
+      nameController?.dispose();
+      descriptionController.dispose();
+    },
+    dialogBuilder: (theme) => CustomBlurryDialog(
+      title: nameController == null ? lang.edit : lang.edit,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.save,
+          onTap: onSave,
+        ),
+      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 20.0),
+          if (nameController != null) ...[
+            Form(
+              key: nameFormKey,
+              child: CustomTagTextField(
+                controller: nameController,
+                hintText: playlistName,
+                labelText: lang.name,
+                validator: manager.validatePlaylistName,
+              ),
+            ),
+            const SizedBox(height: 12.0),
+          ],
+          CustomTagTextField(
+            controller: descriptionController,
+            hintText: '',
+            labelText: lang.description,
+            maxLines: 4,
+            keyboardType: TextInputType.multiline,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 void showSetPlaylistsTagsDialog<T extends PlaylistItemWithDate, E, S>({
   required PlaylistManager<T, E, S> manager,
   required Iterable<String> playlistsNames,

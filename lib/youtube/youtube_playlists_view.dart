@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:history_manager/history_manager.dart';
@@ -21,7 +19,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -76,34 +73,6 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
     }
 
     return videos;
-  }
-
-  Future<List<NamidaPopupItem>> getMenuItems(BuildContext context, YoutubePlaylist playlist, QueueSourceYoutubeID queueSource) async {
-    final items = await YTUtils.getVideosMenuItems(
-      queueSource: queueSource,
-      context: context,
-      videos: playlist.tracks,
-      playlistName: '',
-      playlistToRemove: playlist,
-    );
-    if (playlist.isFav) return items;
-    final isPinned = playlist.isPinned;
-    items.addAll([
-      NamidaPopupItem(
-        icon: Broken.tag,
-        title: '${lang.tags}/${lang.moods}',
-        onTap: () => showSetPlaylistsTagsDialog(
-          manager: YoutubePlaylistController.inst,
-          playlistsNames: [playlist.name],
-        ),
-      ),
-      NamidaPopupItem(
-        icon: isPinned ? Broken.paperclip_2 : Broken.paperclip,
-        title: isPinned ? lang.unpin : lang.pin,
-        onTap: () => YoutubePlaylistController.inst.updatePlaylistMetadata(playlist.name, isPinned: !isPinned),
-      ),
-    ]);
-    return items;
   }
 
   void _onAddToPlaylist({required YoutubePlaylist playlist, required bool allIdsExist, required bool allowAddingEverything}) {
@@ -544,7 +513,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                     smallBoxText: favouritesPlaylist.value.tracks.length.formatDecimal(),
                     smallBoxIcon: Broken.play_cricle,
                     checkmarkStatus: allIdsExist,
-                    menuChildrenDefault: disableMenu ? null : () => getMenuItems(context, favouritesPlaylist.value, QueueSourceYoutubeID.ytFavourites),
+                    menuChildrenDefault: disableMenu
+                        ? null
+                        : () => YTUtils.getPlaylistMenuItems(context: context, playlist: favouritesPlaylist.value, queueSource: QueueSourceYoutubeID.ytFavourites),
                   );
                 },
               ),
@@ -691,7 +662,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                               final thirdLineText = tagsAndMoodsText.isEmpty ? modifiedDateText : '$modifiedDateText • $tagsAndMoodsText';
 
                               return NamidaPopupWrapper(
-                                childrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
+                                childrenDefault: disableMenu
+                                    ? null
+                                    : () => YTUtils.getPlaylistMenuItems(context: context, playlist: playlist, queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 openOnTap: false,
                                 child: YoutubeCard(
                                   thumbnailType: ThumbnailType.playlist,
@@ -733,7 +706,9 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                         size: 16.0,
                                       ),
                                   ],
-                                  menuChildrenDefault: disableMenu ? null : () => getMenuItems(context, playlist, QueueSourceYoutubeID.ytPlaylist(playlist.name)),
+                                  menuChildrenDefault: disableMenu
+                                      ? null
+                                      : () => YTUtils.getPlaylistMenuItems(context: context, playlist: playlist, queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 ),
                               );
                             },

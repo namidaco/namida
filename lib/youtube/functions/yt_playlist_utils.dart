@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:playlist_manager/module/playlist_id.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
@@ -248,25 +249,41 @@ extension YoutubePlaylistShare on YoutubePlaylist {
   Future<String?> showRenamePlaylistSheet({
     required String playlistName,
   }) async {
-    return await showNamidaBottomSheetWithTextField(
-      title: lang.renamePlaylist,
+    final descriptionController = TextEditingController(text: comment);
+    final newName = await showNamidaBottomSheetWithTextField(
+      title: lang.edit,
       textfieldConfig: BottomSheetTextFieldConfig(
         initalControllerText: playlistName,
         hintText: playlistName,
         labelText: lang.name,
-        validator: (value) => YoutubePlaylistController.inst.validatePlaylistName(value),
+        validator: (value) => value == playlistName ? null : YoutubePlaylistController.inst.validatePlaylistName(value),
       ),
+      extraTextfieldsConfig: [
+        BottomSheetTextFieldConfigWC(
+          controller: descriptionController,
+          hintText: '',
+          labelText: lang.description,
+          validator: (value) => null,
+        ),
+      ],
       buttonText: lang.save,
       onButtonTap: (text) async {
-        final didRename = await YoutubePlaylistController.inst.renamePlaylist(playlistName, text);
-        if (didRename) {
-          return true;
-        } else {
-          snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
-          return false;
+        String name = playlistName;
+        if (text != playlistName) {
+          final didRename = await YoutubePlaylistController.inst.renamePlaylist(playlistName, text);
+          if (!didRename) {
+            snackyy(title: lang.error, message: lang.couldntRenamePlaylist);
+            return false;
+          }
+          name = text;
         }
+        final newDescription = descriptionController.text.trim();
+        YoutubePlaylistController.inst.updatePlaylistsMetadata({name: PlaylistMetadataEdit(comment: newDescription)});
+        return true;
       },
     );
+    descriptionController.dispose();
+    return newName;
   }
 }
 

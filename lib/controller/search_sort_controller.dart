@@ -14,6 +14,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_ports_provider.dart';
@@ -477,6 +478,8 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.title => (tracks) => playlist?.name ?? '',
     GroupSortType.creationDate => (tracks) => playlist?.creationDate.dateFormatted ?? '',
     GroupSortType.modifiedDate => (tracks) => playlist?.modifiedDate.dateFormatted ?? '',
+    GroupSortType.lastPlayed =>
+      (tracks) => playlist == null ? '' : QueueController.latestPlayedForSourceManager.latestPlayedTime(QueueSource.playlist(playlist.name))?.dateFormattedOriginal ?? '',
     // ----
     GroupSortType.shuffle => null,
     GroupSortType.custom => null,
@@ -505,6 +508,7 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.title => (playlist) => playlist.name,
     GroupSortType.creationDate => (playlist) => playlist.creationDate.dateFormatted,
     GroupSortType.modifiedDate => (playlist) => playlist.modifiedDate.dateFormatted,
+    GroupSortType.lastPlayed => (playlist) => QueueController.latestPlayedForSourceManager.latestPlayedTime(QueueSource.playlist(playlist.name))?.dateFormattedOriginal,
     // ----
     GroupSortType.albumSort => null,
     GroupSortType.albumArtistSort => null,
@@ -634,6 +638,7 @@ class SearchSortController extends SearchPortsProvider {
     GroupSortType.numberOfTracks ||
     GroupSortType.playCount ||
     GroupSortType.latestPlayed ||
+    GroupSortType.lastPlayed ||
     GroupSortType.firstListen ||
     GroupSortType.albumsCount ||
     GroupSortType.creationDate ||
@@ -1575,6 +1580,8 @@ class SearchSortController extends SearchPortsProvider {
         return (p) => p.value.tracks.getFirstListen() ?? DateTime(99999).millisecondsSinceEpoch;
       case GroupSortType.latestPlayed:
         return (p) => -(p.value.tracks.getLatestListen() ?? 0);
+      case GroupSortType.lastPlayed:
+        return (p) => -(QueueController.latestPlayedForSourceManager.latestPlayedTime(QueueSource.playlist(p.key)) ?? 0);
       case GroupSortType.bpm:
         return (p) => p.value.tracks.getAverageBpm();
       case GroupSortType.album ||

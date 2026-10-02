@@ -1239,12 +1239,15 @@ Future<String?> showNamidaBottomSheetWithTextField({
                   ),
                   ...?extraTextfieldsConfig?.map(
                     (e) {
-                      return CustomTagTextField(
-                        controller: e.controller,
-                        hintText: e.hintText,
-                        labelText: e.labelText,
-                        validator: e.validator,
-                        maxLength: e.maxLength,
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 12.0),
+                        child: CustomTagTextField(
+                          controller: e.controller,
+                          hintText: e.hintText,
+                          labelText: e.labelText,
+                          validator: e.validator,
+                          maxLength: e.maxLength,
+                        ),
                       );
                     },
                   ),

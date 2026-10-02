@@ -882,7 +882,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
         return await item.execute(
           selectable: (finalItem) async {
             final qs = finalItem.trackWithDate?.queueSource;
-            if (qs != null && qs.supportResuming) {
+            if (qs != null && qs.tracksLatestPlayed) {
               QueueController.latestPlayedForSourceManager.update(qs, finalItem);
             }
             if (QueueSourceEnum.queuePage.supportResuming && QueueSourceBase.resumingEnabled) {
@@ -893,7 +893,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
           },
           youtubeID: (finalItem) async {
             final qs = finalItem.queueSource;
-            if (qs != null && qs.supportResuming) {
+            if (qs != null && qs.tracksLatestPlayed) {
               QueueController.latestPlayedForSourceManager.update(qs, finalItem);
             }
 

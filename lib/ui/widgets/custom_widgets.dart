@@ -2886,6 +2886,7 @@ class SubpageInfoContainer extends StatelessWidget {
   final String title;
   final String subtitle;
   final String thirdLineText;
+  final String description;
   final double? height;
   final double topPadding;
   final double bottomPadding;
@@ -2900,6 +2901,7 @@ class SubpageInfoContainer extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.thirdLineText = '',
+    this.description = '',
     this.height,
     required this.imageBuilder,
     required this.tracksFn,
@@ -3290,6 +3292,18 @@ class SubpageInfoContainer extends StatelessWidget {
                       maxLines: 1,
                       style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
                     ),
+                  ),
+                ),
+              ],
+              if (description.isNotEmpty) ...[
+                const SizedBox(height: 4.0),
+                Padding(
+                  padding: const EdgeInsets.only(left: 14.0),
+                  child: Text(
+                    description,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.22, 10.0, 18.0)),
                   ),
                 ),
               ],
