@@ -1049,6 +1049,7 @@ class Indexer<T extends Track> {
       if (didRemove && tr.isNetwork) networkTracksRemoved++;
       SearchSortController.inst.trackSearchList.value.remove(tr);
       SearchSortController.inst.trackSearchTemp.value.remove(tr);
+      SearchSortController.inst.trackSearchTempLessRelevant.value.remove(tr);
       allTracksMappedByPath.remove(tr.path);
       unawaited(_tracksDBManager.delete(tr.path));
       TrackTileManager.rebuildTrackInfo(tr);
@@ -1060,6 +1061,7 @@ class Indexer<T extends Track> {
     this.mainMapsGroup.refreshAll();
     SearchSortController.inst.trackSearchList.refresh();
     SearchSortController.inst.trackSearchTemp.refresh();
+    SearchSortController.inst.trackSearchTempLessRelevant.refresh();
     FoldersController.tracksAndVideos.currentFolder.refresh();
     FoldersController.tracks.currentFolder.refresh();
     FoldersController.videos.currentFolder.refresh();

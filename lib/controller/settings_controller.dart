@@ -145,6 +145,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final tracksSortSearch = _keyEnum('tracksSortSearch', isKuru ? SortType.mostPlayed : SortType.title, SortType.values);
   late final tracksSortSearchReversed = _key('tracksSortSearchReversed', false);
   late final tracksSortSearchIsAuto = _key('tracksSortSearchIsAuto_v2', true);
+  late final tracksSearchShowLessRelevant = _key('tracksSearchShowLessRelevant', false);
   late final albumSorts = _keyList('albumSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final albumSortReversed = _key('albumSortReversed', isKuru ? true : false);
   late final artistSorts = _keyList('artistSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);

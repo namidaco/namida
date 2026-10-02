@@ -910,6 +910,7 @@ class _SearchResultsView extends StatelessWidget {
               _TracksSectionList(
                 properties: properties,
               ),
+              const _TracksSectionLessRelevantToggle(),
 
               kBottomPaddingWidgetSliver,
             ],
@@ -1106,6 +1107,33 @@ class _TracksSectionList extends StatelessWidget {
           );
         },
       ),
+    );
+  }
+}
+
+class _TracksSectionLessRelevantToggle extends StatelessWidget {
+  const _TracksSectionLessRelevantToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final lessRelevantCount = SearchSortController.inst.trackSearchTempLessRelevant.valueR.length;
+        if (lessRelevantCount == 0) return const SliverToBoxAdapter();
+        final isShown = settings.tracksSearchShowLessRelevant.valueR;
+        return SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 8.0),
+          sliver: SliverToBoxAdapter(
+            child: NamidaInkWellButton(
+              icon: isShown ? Broken.arrow_up_3 : Broken.arrow_down_2,
+              text: isShown ? lang.showLess : '${lang.showMore} • $lessRelevantCount',
+              centered: true,
+              paddingMultiplier: 1.7,
+              onTap: SearchSortController.inst.toggleLessRelevantTracksSearch,
+            ),
+          ),
+        );
+      },
     );
   }
 }

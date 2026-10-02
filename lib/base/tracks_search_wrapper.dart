@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data' show Uint32List;
 
 import 'package:history_manager/history_manager.dart';
@@ -80,6 +81,7 @@ class TracksSearchWrapper {
     final lyricsCacheDirectory = params.lyricsCacheDirectory;
     final lyricsLocations = params.lyricsLocations;
     final maxListensCount = params.maxListensCount ?? 0;
+    final maxListensLog = math.log(maxListensCount + 1);
 
     var stitle = tsf.contains(TrackSearchFilter.title);
     final sfilename = tsf.contains(TrackSearchFilter.filename);
@@ -126,7 +128,7 @@ class TracksSearchWrapper {
       final track = Track.decide(path, isVideo);
 
       final listensCount = trMap.listensCount;
-      final listensScore = maxListensCount > 0 ? (((listensCount ?? 0) / maxListensCount).roundDecimals(1) * 100).round() : 0;
+      final listensMultiplier = _listensMultiplierOf(listensCount, maxListensLog);
 
       tracksExtended.add(
         _CustomTrackExtended(
@@ -221,7 +223,7 @@ class TracksSearchWrapper {
                   lyricsLocations,
                 ),
           listensCount: listensCount,
-          listensScore: listensScore,
+          listensMultiplier: listensMultiplier,
         ),
       );
     }
@@ -236,6 +238,16 @@ class TracksSearchWrapper {
       textCleanedMinorForSearch,
     );
   }
+
+  /// log scaled so few listens still count, the most played track doubles its score.
+  static int _listensMultiplierOf(int? listensCount, double maxListensLog) {
+    if (listensCount == null || listensCount <= 0) return _kListensBoostSteps;
+    final boost = (math.log(listensCount + 1) / maxListensLog * _kListensBoostSteps).round();
+    return _kListensBoostSteps + boost;
+  }
+
+  static const _kListensBoostSteps = 20;
+  static const _kRelevantScoreDivisor = 3;
 
   static _PropertySimple? _fillAllAvailableLyrics(Track track, String embedded, String lyricsCacheDirectory, LyricsLocations lyricsLocations) {
     final lyricsBuffer = StringBuffer();
@@ -373,23 +385,38 @@ class TracksSearchWrapper {
 
   List<Track> filter(String text, {bool? isVideo}) {
     final result = <Track>[];
-    _filter(text, (trExt) => result.add(trExt.track), isVideo: isVideo);
+    void onMatch(_CustomTrackExtended trExt) => result.add(trExt.track);
+    _filter(text, onMatch, onMatch, isVideo: isVideo);
     return result;
+  }
+
+  ({List<Track> relevant, List<Track> lessRelevant}) filterSplitByRelevance(String text, {bool? isVideo}) {
+    final relevant = <Track>[];
+    final lessRelevant = <Track>[];
+    _filter(text, (trExt) => relevant.add(trExt.track), (trExt) => lessRelevant.add(trExt.track), isVideo: isVideo);
+    return (relevant: relevant, lessRelevant: lessRelevant);
   }
 
   List<int> filterIndicesAsList(String text) {
     final result = <int>[];
-    _filter(text, (trExt) => result.add(trExt.ogIndex));
+    void onMatch(_CustomTrackExtended trExt) => result.add(trExt.ogIndex);
+    _filter(text, onMatch, onMatch);
     return result;
   }
 
   Set<int> filterIndicesAsSet(String text) {
     final result = <int>{};
-    _filter(text, (trExt) => result.add(trExt.ogIndex));
+    void onMatch(_CustomTrackExtended trExt) => result.add(trExt.ogIndex);
+    _filter(text, onMatch, onMatch);
     return result;
   }
 
-  void _filter(String text, void Function(_CustomTrackExtended trExt) onMatch, {bool? isVideo}) {
+  void _filter(
+    String text,
+    void Function(_CustomTrackExtended trExt) onRelevantMatch,
+    void Function(_CustomTrackExtended trExt) onLessRelevantMatch, {
+    bool? isVideo,
+  }) {
     final queryProperty = _splitTextCleanedAndCleanedMinor(text.trimAll(), textCleanedForSearch, textCleanedMinorForSearch);
 
     final calculator = _ScoreCalculator(
@@ -399,21 +426,30 @@ class TracksSearchWrapper {
     );
 
     final scored = <int, List<_CustomTrackExtended>>{};
+    int bestScore = 0;
 
     for (final trExt in _tracksExtended) {
       if (isVideo != null && (trExt.track is Video) != isVideo) continue;
       final score = calculator.calculate(trExt);
       // -- score must be > 0, otherwise would always show results with high listen counts
       if (score > 0) {
-        (scored[score + trExt.listensScore] ??= []).add(trExt);
+        if (score > bestScore) bestScore = score;
+        final scoreKey = score * trExt.listensMultiplier;
+        (scored[scoreKey] ??= []).add(trExt);
       }
     }
 
+    final relevantMinScore = bestScore ~/ _kRelevantScoreDivisor;
     final sortedKeys = scored.keys.toFixedList()..sort((a, b) => b.compareTo(a));
     for (final scoreKey in sortedKeys) {
       final innerList = scored[scoreKey]!;
       for (final e in innerList) {
-        onMatch(e);
+        final score = scoreKey ~/ e.listensMultiplier;
+        if (score >= relevantMinScore) {
+          onRelevantMatch(e);
+        } else {
+          onLessRelevantMatch(e);
+        }
       }
     }
   }
@@ -442,7 +478,7 @@ class _CustomTrackExtended {
   final _PropertySimple? year;
   final _PropertySimple? lyrics;
   final int? listensCount;
-  final int listensScore;
+  final int listensMultiplier;
 
   const _CustomTrackExtended({
     required this.ogIndex,
@@ -463,7 +499,7 @@ class _CustomTrackExtended {
     required this.year,
     required this.lyrics,
     required this.listensCount,
-    required this.listensScore,
+    required this.listensMultiplier,
   });
 }
 
@@ -567,7 +603,6 @@ class _ScoreCalculator {
   late final FuzzyMatcher _queryFuzzy = FuzzyMatcher(query.text);
   late final FuzzyMatcher? _queryMinorFuzzy = queryMinor == null ? null : FuzzyMatcher(queryMinor!.text);
 
-  static const int maxScore = 1200;
   int score = 0;
 
   void scorePropertySimple(_PropertySimple? propertyString, {int multiplier = 1}) {
@@ -628,37 +663,28 @@ class _ScoreCalculator {
     score += (matchingPercentageCleanedMinor * 300).round() * multiplier;
   }
 
-  bool scorePropertySimpleAndIsEnough(_PropertySimple? property, {int multiplier = 1}) {
-    scorePropertySimple(property, multiplier: multiplier);
-    return score >= maxScore;
-  }
-
-  bool scorePropertyAndIsEnough(_Property? property, {int multiplier = 1, bool allowFuzzy = false}) {
-    scoreProperty(property, multiplier: multiplier, allowFuzzy: allowFuzzy);
-    return score >= maxScore;
-  }
-
   int calculate(_CustomTrackExtended trExt) {
     score = 0;
 
-    if (scorePropertyAndIsEnough(trExt.splitTitle, multiplier: 6, allowFuzzy: true)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitArtist, multiplier: 2, allowFuzzy: true)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitAlbum, multiplier: 2, allowFuzzy: true)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitFilename, multiplier: 1, allowFuzzy: true)) return score;
+    // -- no early exit on a high score, it would rank below weaker matches that kept adding up (ex: filename repeating the title)
+    scoreProperty(trExt.splitTitle, multiplier: 6, allowFuzzy: true);
+    scoreProperty(trExt.splitArtist, multiplier: 2, allowFuzzy: true);
+    scoreProperty(trExt.splitAlbum, multiplier: 2, allowFuzzy: true);
+    scoreProperty(trExt.splitFilename, multiplier: 1, allowFuzzy: true);
     // -- prevent scoring more if already found in main properties
     // -- for example very useful to prevent lyrics in description from producing more score
     if (score > 0) return score;
-    if (scorePropertyAndIsEnough(trExt.splitFolder)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitAlbumArtist)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitGenre)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitStyle)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitComposer)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitComment)) return score;
-    if (scorePropertySimpleAndIsEnough(trExt.description)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitMoods)) return score;
-    if (scorePropertyAndIsEnough(trExt.splitTags)) return score;
-    if (scorePropertySimpleAndIsEnough(trExt.year)) return score;
-    if (scorePropertySimpleAndIsEnough(trExt.lyrics)) return score;
+    scoreProperty(trExt.splitFolder);
+    scoreProperty(trExt.splitAlbumArtist);
+    scoreProperty(trExt.splitGenre);
+    scoreProperty(trExt.splitStyle);
+    scoreProperty(trExt.splitComposer);
+    scoreProperty(trExt.splitComment);
+    scorePropertySimple(trExt.description);
+    scoreProperty(trExt.splitMoods);
+    scoreProperty(trExt.splitTags);
+    scorePropertySimple(trExt.year);
+    scorePropertySimple(trExt.lyrics);
 
     return score;
   }
@@ -752,6 +778,8 @@ class _StringMatcher {
       double maxRatioForQPart = 0.0;
       for (int pi = 0; pi < propertySplitsLength; pi++) {
         final pLength = propertyLengths[pi];
+        // -- a part under half the query part only matches by chance, ex: `a` in `take`
+        if (pLength * 2 < qLength) continue;
         if (_maxSimpleRatio(qLength, pLength, 0.4, 1.0) <= maxRatioForQPart) continue;
         if (!_canContain(qLength, qMask, pLength, propertyMasks[pi])) continue;
         final qpRatio = _simpleRatio(query.parts[qi], qLength, property.parts[pi], pLength, 0.4, 1.0);

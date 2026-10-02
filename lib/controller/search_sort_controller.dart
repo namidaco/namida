@@ -76,6 +76,7 @@ class SearchSortController extends SearchPortsProvider {
   };
 
   final trackSearchTemp = <Track>[].obs;
+  final trackSearchTempLessRelevant = <Track>[].obs;
   final albumSearchTemp = <AlbumIdentifierWrapper>[].obs;
   final playlistSearchTemp = <String>[].obs;
   RxList<String> get artistSearchTemp => _searchMapTemp[MediaType.artist]!;
@@ -172,7 +173,26 @@ class SearchSortController extends SearchPortsProvider {
 
   void setTracksSearchTemp(List<Track> tracks) {
     trackSearchTemp.value = _filterTracksKind(tracks, _activeTrSearchIsVideo);
+    trackSearchTempLessRelevant.clear();
     sortTracksSearch();
+  }
+
+  void toggleLessRelevantTracksSearch() {
+    final shouldShow = !settings.tracksSearchShowLessRelevant.value;
+    settings.tracksSearchShowLessRelevant.save(shouldShow);
+    final lessRelevant = trackSearchTempLessRelevant.value;
+    if (shouldShow) {
+      trackSearchTemp.value.addAll(lessRelevant);
+    } else {
+      final lessRelevantSet = lessRelevant.toSet();
+      trackSearchTemp.value.removeWhere(lessRelevantSet.contains);
+    }
+    final needsSorting = shouldShow && !settings.tracksSortSearchIsAuto.value;
+    if (needsSorting) {
+      sortTracksSearch();
+    } else {
+      trackSearchTemp.refresh();
+    }
   }
 
   bool? get _activeTrSearchIsVideo {
@@ -229,6 +249,7 @@ class SearchSortController extends SearchPortsProvider {
     switch (type) {
       case MediaType.track:
         trackSearchTemp.clear();
+        trackSearchTempLessRelevant.clear();
       case MediaType.album:
         albumSearchTemp.clear();
       case MediaType.playlist:
@@ -711,18 +732,22 @@ class SearchSortController extends SearchPortsProvider {
     return await super.preparePorts(
       type: MediaType.track,
       onResult: (result) {
-        final r = result as (List<Track>, bool, String, bool?);
-        final isTemp = r.$2;
-        final fetchedQuery = r.$3;
+        final r = result as (List<Track>, List<Track>, bool, String, bool?);
+        final isTemp = r.$3;
+        final fetchedQuery = r.$4;
         if (isTemp) {
           _onTempSearchEnded(MediaType.track, fetchedQuery);
           if (fetchedQuery == lastSearchText) {
-            trackSearchTemp.value = r.$1;
+            final relevant = r.$1;
+            final lessRelevant = r.$2;
+            if (settings.tracksSearchShowLessRelevant.value) relevant.addAll(lessRelevant);
+            trackSearchTemp.value = relevant;
+            trackSearchTempLessRelevant.value = lessRelevant;
             sortTracksSearch();
           }
         } else {
           final tab = _activeTracksTab;
-          if (fetchedQuery == tab.textSearchController?.text && r.$4 == tab.isVideoFilter) {
+          if (fetchedQuery == tab.textSearchController?.text && r.$5 == tab.isVideoFilter) {
             trackSearchList.value = r.$1;
             _trackSearchListTab = tab;
           }
@@ -841,6 +866,7 @@ class SearchSortController extends SearchPortsProvider {
     if (text == '') {
       if (temp) {
         trackSearchTemp.clear();
+        trackSearchTempLessRelevant.clear();
         _onTempSearchEnded(MediaType.track, null);
       } else {
         final tab = _activeTracksTab;
@@ -880,8 +906,13 @@ class SearchSortController extends SearchPortsProvider {
       final temp = p.temp;
       final isVideo = p.isVideo;
 
-      final result = searchWrapper.filter(text, isVideo: isVideo);
-      sendPort.send((result, temp, text, isVideo));
+      if (temp) {
+        final result = searchWrapper.filterSplitByRelevance(text, isVideo: isVideo);
+        sendPort.send((result.relevant, result.lessRelevant, temp, text, isVideo));
+      } else {
+        final result = searchWrapper.filter(text, isVideo: isVideo);
+        sendPort.send((result, const <Track>[], temp, text, isVideo));
+      }
     });
 
     sendPort.send(PortsProviderMessages.prepared);
