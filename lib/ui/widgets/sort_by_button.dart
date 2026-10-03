@@ -630,6 +630,7 @@ extension _SortTypeIgnorePrefix on SortType {
     SortType.bpm ||
     SortType.size ||
     SortType.rating ||
+    SortType.favourite ||
     SortType.shuffle ||
     SortType.shuffleDaily ||
     SortType.mostPlayed ||

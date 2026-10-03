@@ -389,6 +389,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.bpm => (e) => e.bpm ?? 0,
       SortType.size => (e) => e.size,
       SortType.rating => (e) => e.effectiveRating,
+      SortType.favourite => _createFavouriteComparable(),
       SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
       SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
@@ -409,6 +410,11 @@ class SearchSortController extends SearchPortsProvider {
     final random = math.Random();
     final assigned = <Track, double>{};
     return (e) => assigned[e] ??= random.nextDouble();
+  }
+
+  static Comparable Function(Track e) _createFavouriteComparable() {
+    final favouritesPlaylist = PlaylistController.inst.favouritesPlaylist;
+    return (e) => favouritesPlaylist.isSubItemFavourite(e) ? 0 : 1;
   }
 
   /// same order for the whole day regardless of the list order, since each key depends only on the track and the date.
@@ -550,7 +556,7 @@ class SearchSortController extends SearchPortsProvider {
       SortType.mostPlayed => (tr) => topTracksMapListens[tr]?.length.formatDecimal() ?? '0',
       SortType.latestPlayed => (tr) => topTracksMapListens[tr]?.lastOrNull?.dateFormatted,
       SortType.firstListen => (tr) => topTracksMapListens[tr]?.firstOrNull?.dateFormatted,
-      SortType.shuffle || SortType.shuffleDaily => null,
+      SortType.favourite || SortType.shuffle || SortType.shuffleDaily => null,
     };
   }
 
@@ -1329,6 +1335,9 @@ class SearchSortController extends SearchPortsProvider {
         break;
       case SortType.rating:
         sortThis((e) => e.effectiveRating);
+        break;
+      case SortType.favourite:
+        sortThis(_createFavouriteComparable());
         break;
       case SortType.shuffle:
         list.shuffle();

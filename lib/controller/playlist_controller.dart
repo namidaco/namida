@@ -177,7 +177,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return tracks;
   }
 
-  bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true}) {
+  bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true, bool deferListsSorting = false}) {
+    if (deferListsSorting) Indexer.inst.deferFavouriteSorting(track);
     final res = super.toggleTrackFavourite(
       TrackWithDate(dateAdded: currentTimeMS, track: track),
     );
@@ -1196,6 +1197,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       }
     }
   }
+
+  @override
+  void onFavouritesChanged(Iterable<Track>? items) => Indexer.inst.onFavouritesChanged(items);
 
   @override
   void onPlaylistItemsSort(List<SortType> sorts, bool reverse, List<TrackWithDate> items) {

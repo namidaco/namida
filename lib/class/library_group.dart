@@ -169,6 +169,127 @@ class LibraryGroup<T extends Track> {
     }
   }
 
+  /// moves [tracks] to where [mediasWithSorts] place them now, for when only their own sort keys changed.
+  /// returns the medias that had a list changed.
+  Set<MediaType> repositionTracksSync(
+    Iterable<T> tracks,
+    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
+    Map<MediaType, bool> mediaItemsTrackSortingReverse,
+    List<T> allTracks,
+    TrackExtended Function(T tr) trackToExtended,
+    List<AlbumIdentifier> albumIdentifier,
+  ) {
+    final changedMedias = <MediaType>{};
+
+    for (final entry in mediasWithSorts.entries) {
+      final type = entry.key;
+      final sorters = entry.value;
+      final sortersLength = sorters.length;
+      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
+
+      // -- all are taken out before any goes back, the binary search needs the rest of the list sorted
+      final insertions = <void Function()>[];
+
+      for (final tr in tracks) {
+        late final trExt = trackToExtended(tr);
+        final trackKeys = [for (final sorter in sorters) sorter(tr)];
+
+        int compareWithTrack(Track other) {
+          for (int i = 0; i < sortersLength; i++) {
+            final compare = sorters[i](other).compareTo(trackKeys[i]);
+            if (compare != 0) return reverse ? -compare : compare;
+          }
+          return 0;
+        }
+
+        void takeOut<E extends Track>(List<E>? list, E track) {
+          if (list == null) return;
+          final didRemove = list.remove(track);
+          if (didRemove) insertions.add(() => _insertSorted(list, track, compareWithTrack));
+        }
+
+        switch (type) {
+          case MediaType.track:
+            takeOut(allTracks, tr);
+          case MediaType.album:
+            for (final album in trExt.getAlbumsIdentifiersModified(albumIdentifier)) {
+              takeOut(mainMapAlbums.value[album], tr);
+            }
+          case MediaType.artist:
+            for (final artist in trExt.artistsList) {
+              takeOut(mainMapArtists.value[artist], tr);
+            }
+          case MediaType.albumArtist:
+            takeOut(mainMapAlbumArtists.value[trExt.albumArtist], tr);
+          case MediaType.composer:
+            for (final composer in trExt.composersList) {
+              takeOut(mainMapComposer.value[composer], tr);
+            }
+          case MediaType.genre:
+            for (final genre in trExt.genresList) {
+              takeOut(mainMapGenres.value[genre], tr);
+            }
+          case MediaType.style:
+            for (final style in trExt.stylesList) {
+              takeOut(mainMapStyles.value[style], tr);
+            }
+          case MediaType.folder:
+            takeOut(mainMapFoldersTracksAndVideos.value[tr.folder], tr);
+          case MediaType.folderMusic:
+            if (tr is! Video) takeOut(mainMapFoldersTracks.value[tr.folder], tr);
+          case MediaType.folderVideo:
+            if (tr is Video) takeOut(mainMapFoldersVideos.value[tr.folder], tr);
+          case MediaType.mood || MediaType.tag || MediaType.rating || MediaType.playlist:
+            null;
+        }
+      }
+
+      if (insertions.isEmpty) continue;
+      for (final insert in insertions) {
+        insert();
+      }
+      changedMedias.add(type);
+    }
+
+    return changedMedias;
+  }
+
+  /// [compareWithTrack] is positive when the item belongs after [track].
+  static void _insertSorted<E extends Track>(List<E> list, E track, int Function(Track other) compareWithTrack) {
+    int low = 0;
+    int high = list.length;
+    while (low < high) {
+      final mid = (low + high) >> 1;
+      if (compareWithTrack(list[mid]) > 0) {
+        high = mid;
+      } else {
+        low = mid + 1;
+      }
+    }
+    list.insert(low, track);
+  }
+
+  void refreshMedias(Iterable<MediaType> medias) {
+    for (final e in medias) {
+      _mediaTypeToRx(e)?.refresh();
+    }
+  }
+
+  RxBaseCore? _mediaTypeToRx(MediaType e) {
+    return switch (e) {
+      MediaType.album => mainMapAlbums.rx,
+      MediaType.artist => mainMapArtists.rx,
+      MediaType.albumArtist => mainMapAlbumArtists.rx,
+      MediaType.composer => mainMapComposer.rx,
+      MediaType.genre => mainMapGenres.rx,
+      MediaType.style => mainMapStyles.rx,
+      MediaType.folder => mainMapFoldersTracksAndVideos,
+      MediaType.folderMusic => mainMapFoldersTracks,
+      MediaType.folderVideo => mainMapFoldersVideos,
+      MediaType.track || MediaType.mood || MediaType.tag || MediaType.rating || MediaType.playlist => null,
+    };
+  }
+
   Iterable<List<T>>? _mediaTypeToLists(MediaType e, List<T> allTracks) {
     return switch (e) {
       MediaType.track => [allTracks],

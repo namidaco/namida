@@ -47,6 +47,7 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'indexer_artwork_extract_strategies.dart';
+part 'indexer_favourites_sorting.dart';
 
 class Indexer<T extends Track> {
   static Indexer get inst => _instance;
@@ -465,6 +466,14 @@ class Indexer<T extends Track> {
     }
     return requiredToSort;
   }
+
+  late final _favouritesSorting = _FavouritesSorting<T>(this);
+
+  /// null [tracks] means the favourites were replaced as a whole.
+  void onFavouritesChanged(Iterable<T>? tracks) => _favouritesSorting.onChanged(tracks);
+
+  /// [track] keeps its position in lists sorted by favourites until the current page changes.
+  void deferFavouriteSorting(T track) => _favouritesSorting.defer(track);
 
   /// re-sorts media subtracks that depend on history.
   Future<void> sortMediaTracksAndSubListsAfterHistoryPrepared() async {

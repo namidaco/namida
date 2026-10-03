@@ -2631,7 +2631,7 @@ class NamidaLocalLikeButton extends StatelessWidget {
         disabledColor: color,
         isLiked: favouritesPlaylist.isSubItemFavourite(track),
         removeConfirmationAction: lang.removeFromFavourites,
-        onTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track),
+        onTap: (isLiked) async => PlaylistController.inst.favouriteButtonOnPressed(track, deferListsSorting: true),
       ),
     );
   }
