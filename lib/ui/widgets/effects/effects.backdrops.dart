@@ -1,8 +1,8 @@
 part of 'effects.dart';
 
 abstract class NamidaBackdrops {
-  static const minDim = 60;
-  static const minBlur = 40;
+  static const minUnits = 1;
+  static const maxUnits = 10;
 
   static Future<String?> importImage({required String? replacing}) async {
     final pickedPaths = await NamidaStorage.inst.pickFiles(memetype: NamidaStorageFileMemeType.image);
@@ -43,8 +43,9 @@ class NamidaAppWallpaper extends StatelessWidget {
         final path = settings.appWallpaper.valueR;
         if (path == null) return const SizedBox();
         return _Backdrop(
-          blur: settings.appWallpaperBlur.valueR,
-          dim: settings.appWallpaperDim.valueR,
+          kind: _BackdropKind.appWallpaper,
+          blurUnits: settings.appWallpaperBlur.valueR,
+          dimUnits: settings.appWallpaperDim.valueR,
           hasVignette: false,
           isAnimated: false,
           imageBuilder: (width, height, isCrisp) => _BackdropFileImage(
@@ -88,8 +89,9 @@ class _PlayerArtworkBackdrop extends StatelessWidget {
             ? null
             : _Backdrop(
                 key: ValueKey(item),
-                blur: settings.playerBackgroundBlur.valueR,
-                dim: settings.playerBackgroundDim.valueR,
+                kind: _BackdropKind.player,
+                blurUnits: settings.playerBackgroundBlur.valueR,
+                dimUnits: settings.playerBackgroundDim.valueR,
                 hasVignette: settings.playerBackgroundVignette.valueR,
                 isAnimated: settings.playerBackgroundAnimated.valueR,
                 imageBuilder: (width, height, isCrisp) => _BackdropArtwork(
@@ -118,8 +120,9 @@ class _PlayerImageBackdrop extends StatelessWidget {
         final path = settings.playerBackgroundImage.valueR;
         if (path == null) return const SizedBox();
         return _Backdrop(
-          blur: settings.playerBackgroundBlur.valueR,
-          dim: settings.playerBackgroundDim.valueR,
+          kind: _BackdropKind.player,
+          blurUnits: settings.playerBackgroundBlur.valueR,
+          dimUnits: settings.playerBackgroundDim.valueR,
           hasVignette: settings.playerBackgroundVignette.valueR,
           isAnimated: settings.playerBackgroundAnimated.valueR,
           imageBuilder: (width, height, isCrisp) => _BackdropFileImage(
@@ -134,16 +137,18 @@ class _PlayerImageBackdrop extends StatelessWidget {
 }
 
 class _Backdrop extends StatelessWidget {
-  final int blur;
-  final int dim;
+  final _BackdropKind kind;
+  final int blurUnits;
+  final int dimUnits;
   final bool hasVignette;
   final bool isAnimated;
   final _BackdropImageBuilder imageBuilder;
 
   const _Backdrop({
     super.key,
-    required this.blur,
-    required this.dim,
+    required this.kind,
+    required this.blurUnits,
+    required this.dimUnits,
     required this.hasVignette,
     required this.isAnimated,
     required this.imageBuilder,
@@ -151,6 +156,12 @@ class _Backdrop extends StatelessWidget {
 
   static const _maxSigma = 40.0;
   static const _maxShrink = 8.0;
+
+  static double _unitsToFraction(int unitsPre, double minFraction) {
+    final units = unitsPre.withMinimum(NamidaBackdrops.minUnits).withMaximum(NamidaBackdrops.maxUnits);
+    final fractionPerUnit = (1.0 - minFraction) / (NamidaBackdrops.maxUnits - NamidaBackdrops.minUnits);
+    return minFraction + (units - NamidaBackdrops.minUnits) * fractionPerUnit;
+  }
 
   static const _vignette = BoxDecoration(
     gradient: RadialGradient(
@@ -162,13 +173,13 @@ class _Backdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blur = this.blur.withMinimum(NamidaBackdrops.minBlur);
-    final dim = this.dim.withMinimum(NamidaBackdrops.minDim);
-    final scrimColor = context.theme.scaffoldBackgroundColor.withOpacityExt(dim / 100);
+    final blurFraction = _unitsToFraction(blurUnits, kind.minBlurFraction);
+    final dimFraction = _unitsToFraction(dimUnits, kind.minDimFraction);
+    final scrimColor = context.theme.scaffoldBackgroundColor.withOpacityExt(dimFraction);
     return LayoutBuilder(
       builder: (context, constraints) {
         // -- blurred in a box this much smaller then stretched back, so the blur only ever runs over a fraction of the pixels
-        final sigma = blur / 100 * _maxSigma;
+        final sigma = blurFraction * _maxSigma;
         final shrink = (sigma / 4).clampDouble(1.0, _maxShrink);
         final width = constraints.maxWidth / shrink;
         final height = constraints.maxHeight / shrink;
@@ -337,6 +348,17 @@ class _BackdropArtwork extends StatelessWidget {
     }
     return const SizedBox();
   }
+}
+
+enum _BackdropKind {
+  appWallpaper(minBlurFraction: 0.25, minDimFraction: 0.4),
+  player(minBlurFraction: 0.5, minDimFraction: 0.5),
+  ;
+
+  final double minBlurFraction;
+  final double minDimFraction;
+
+  const _BackdropKind({required this.minBlurFraction, required this.minDimFraction});
 }
 
 typedef _BackdropImageBuilder = Widget Function(double width, double height, bool isCrisp);

@@ -90,10 +90,9 @@ class BackupController {
     final backupDirectoryPath = await _getBackupDirectoryPathEnsured(lang.automaticBackup);
     if (backupDirectoryPath == null) return;
 
-    final latestBackupDate = await _getLatestBackupFileDateSync.thready(backupDirectoryPath);
-    final diff = DateTime.now().difference(latestBackupDate).abs();
     final intervalDays = Duration(days: interval);
-    if (diff >= intervalDays) {
+    final hasBackupWithinInterval = await _hasBackupFileWithinIntervalSync.thready((dirPath: backupDirectoryPath, interval: intervalDays));
+    if (!hasBackupWithinInterval) {
       final itemsToBackup = [
         AppPaths.TRACKS_OLD,
         AppPaths.TRACKS_DB_INFO.file.path,
@@ -311,22 +310,22 @@ class BackupController {
     return matchingBackups;
   }
 
-  static DateTime _getLatestBackupFileDateSync(String dirPath) {
-    DateTime latestDate = DateTime(0);
-    final dir = Directory(dirPath);
+  static bool _hasBackupFileWithinIntervalSync(({String dirPath, Duration interval}) params) {
+    final interval = params.interval;
+    final now = DateTime.now();
+    final oldestAllowed = now.subtract(interval);
+    final newestAllowed = now.add(interval);
+    final dir = Directory(params.dirPath);
     final possibleFiles = dir.listSyncSafe();
     for (final pf in possibleFiles) {
       if (pf is File) {
         if (_isBackupFilename(pf.path.getFilename)) {
           final modifiedDate = pf.lastModifiedSync();
-
-          if (modifiedDate.isAfter(latestDate)) {
-            latestDate = modifiedDate;
-          }
+          if (modifiedDate.isAfter(oldestAllowed) && modifiedDate.isBefore(newestAllowed)) return true;
         }
       }
     }
-    return latestDate;
+    return false;
   }
 
   static void _trimExtraBackupFiles(String dirPath) {

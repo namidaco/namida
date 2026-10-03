@@ -522,6 +522,7 @@ jobs:
 
   # AppImage from the arch tarball, packaged with quick-sharun in the pkgforge archlinux container.
   # Bundles everything (glibc, gtk, webkit2gtk, mpv) so nothing is taken from the host.
+  # Mirrors https://github.com/pkgforge-dev/Namida-AppImage
   build_appimage:
     if: ${{ !cancelled() && inputs.is_beta && inputs.appimage && (inputs.source_run_id != '' || needs.build_linux.result == 'success') }}
     needs: [create_release, build_linux]

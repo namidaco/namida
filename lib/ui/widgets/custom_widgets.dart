@@ -6428,6 +6428,7 @@ class ShimmerWrapper extends StatelessWidget {
   final int shimmerDelayMS;
   final int shimmerDurationMS;
   final bool transparent;
+  final AlignmentGeometry alignment;
 
   const ShimmerWrapper({
     super.key,
@@ -6437,6 +6438,7 @@ class ShimmerWrapper extends StatelessWidget {
     this.shimmerDelayMS = 400,
     this.shimmerDurationMS = 700,
     this.transparent = true,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -6444,6 +6446,7 @@ class ShimmerWrapper extends StatelessWidget {
     final color = transparent ? Colors.transparent : context.theme.cardColor.withAlpha(120);
     return CustomAnimatedSwitcher(
       duration: fadeDurationMS.ms,
+      alignment: alignment,
       child: shimmerEnabled
           ? Animate(
               onPlay: (controller) => controller.repeat(),

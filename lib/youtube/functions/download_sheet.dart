@@ -471,6 +471,7 @@ Future<void> showDownloadVideoBottomSheet({
                                         children: [
                                           ShimmerWrapper(
                                             shimmerEnabled: isLoadingInfo,
+                                            alignment: AlignmentDirectional.centerStart,
                                             child: NamidaDummyContainer(
                                               borderRadius: 6.0,
                                               width: maxWidth,
@@ -485,6 +486,7 @@ Future<void> showDownloadVideoBottomSheet({
                                           const SizedBox(height: 2.0),
                                           ShimmerWrapper(
                                             shimmerEnabled: isLoadingInfo,
+                                            alignment: AlignmentDirectional.centerStart,
                                             child: NamidaDummyContainer(
                                               borderRadius: 4.0,
                                               width: maxWidth - 24.0,

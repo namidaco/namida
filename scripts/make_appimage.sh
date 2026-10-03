@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 #
+# Based on the unofficial AppImage by Samueru-sama / pkgforge-dev, which packaged Namida this way first:
+# https://github.com/pkgforge-dev/Namida-AppImage
+#
 # Builds a Namida AppImage from a `flutter build linux --release` bundle with quick-sharun
 # (https://github.com/pkgforge-dev/Anylinux-AppImages). Everything is bundled, including glibc, GTK
 # and webkit2gtk, so nothing is taken from the host and the AppImage runs on any distro.

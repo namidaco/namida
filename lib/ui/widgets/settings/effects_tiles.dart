@@ -394,18 +394,16 @@ class _PlayerBackgroundOptions extends StatelessWidget {
               ),
             if (source != PlayerBackground.none) ...[
               const SizedBox(height: 8.0),
-              _PercentageTile(
+              _BackdropUnitsTile(
                 icon: Broken.blur,
                 title: lang.blur,
-                min: NamidaBackdrops.minBlur,
-                percentage: settings.playerBackgroundBlur.valueR,
+                units: settings.playerBackgroundBlur.valueR,
                 onChanged: settings.playerBackgroundBlur.save,
               ),
-              _PercentageTile(
+              _BackdropUnitsTile(
                 icon: Broken.eye,
                 title: lang.dimIntensity,
-                min: NamidaBackdrops.minDim,
-                percentage: settings.playerBackgroundDim.valueR,
+                units: settings.playerBackgroundDim.valueR,
                 onChanged: settings.playerBackgroundDim.save,
               ),
               CustomSwitchListTile(
@@ -469,18 +467,16 @@ class _AppWallpaperOptions extends StatelessWidget {
                 title: lang.remove,
                 onTap: NamidaBackdrops.removeAppWallpaper,
               ),
-              _PercentageTile(
+              _BackdropUnitsTile(
                 icon: Broken.blur,
                 title: lang.blur,
-                min: NamidaBackdrops.minBlur,
-                percentage: settings.appWallpaperBlur.valueR,
+                units: settings.appWallpaperBlur.valueR,
                 onChanged: settings.appWallpaperBlur.save,
               ),
-              _PercentageTile(
+              _BackdropUnitsTile(
                 icon: Broken.eye,
                 title: lang.dimIntensity,
-                min: NamidaBackdrops.minDim,
-                percentage: settings.appWallpaperDim.valueR,
+                units: settings.appWallpaperDim.valueR,
                 onChanged: settings.appWallpaperDim.save,
               ),
             ],
@@ -586,33 +582,31 @@ class _ExtraSwitch extends StatelessWidget {
   }
 }
 
-class _PercentageTile extends StatelessWidget {
+class _BackdropUnitsTile extends StatelessWidget {
   final IconData icon;
   final String title;
-  final int min;
-  final int percentage;
-  final void Function(int percentage) onChanged;
+  final int units;
+  final void Function(int units) onChanged;
 
-  const _PercentageTile({
+  const _BackdropUnitsTile({
     required this.icon,
     required this.title,
-    this.min = 0,
-    required this.percentage,
+    required this.units,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final percentageInRange = percentage.withMinimum(min);
+    final unitsInRange = units.withMinimum(NamidaBackdrops.minUnits).withMaximum(NamidaBackdrops.maxUnits);
     return CustomListTile(
       icon: icon,
       title: title,
       trailing: NamidaWheelSlider(
-        min: min,
-        max: 100,
-        initValue: percentageInRange,
+        min: NamidaBackdrops.minUnits,
+        max: NamidaBackdrops.maxUnits,
+        initValue: unitsInRange,
         onValueChanged: onChanged,
-        text: '$percentageInRange%',
+        text: '${unitsInRange}x',
       ),
     );
   }
