@@ -197,7 +197,7 @@ class NamidaUtils {
   }
 
   static Future<void> shareUri(String url) async {
-    if (Platform.isWindows) {
+    if (Platform.isWindows || Platform.isLinux) {
       await shareText(url);
     } else {
       await Share.shareUri(Uri.parse(url));
@@ -205,6 +205,11 @@ class NamidaUtils {
   }
 
   static Future<void> shareText(String text) async {
+    if (Platform.isLinux) {
+      // -- linux has no share target, share_plus only opens a mailto link.
+      copyToClipboard(content: text, maxLinesMessage: 2);
+      return;
+    }
     await Share.share(text);
   }
 
