@@ -209,6 +209,7 @@ class SyncSender extends RxNotifier {
         batch.markItemDone(item); // -- nothing to send, or already sent
       }
       await batch.completion;
+      if (batch.isAllDone) EggHunt.collect(NamidaEgg.twins);
     } catch (e, st) {
       batch.finish();
       final deviceName = settings.sync.deviceIdNames.value[deviceId] ?? deviceId;

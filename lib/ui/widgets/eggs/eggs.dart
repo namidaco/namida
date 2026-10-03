@@ -44,6 +44,12 @@ abstract class EggHunt {
     collect(NamidaEgg.secretWord);
   }
 
+  static void announceFound(List<NamidaEgg> eggs) {
+    if (eggs.isEmpty) return;
+    final names = eggs.map((egg) => egg.toText()).join(', ');
+    _announce(eggs.first, message: names);
+  }
+
   static void _announce(NamidaEgg egg, {String? message}) {
     final collectedCount = settings.eggs.value.collectedCount();
     final title = message ?? egg.toText();
@@ -76,6 +82,7 @@ class UwuDialog extends StatefulWidget {
 }
 
 class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
+  static const _kCreepStare = Duration(seconds: 60);
   static final _kBeats = [
     (0.1, VibratorController.light),
     (0.19, VibratorController.light),
@@ -94,15 +101,19 @@ class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
   );
   bool _isCelebrating = false;
   int _beatsPlayed = 0;
+  Timer? _creepTimer;
 
   @override
   void initState() {
     super.initState();
     _finaleController.addListener(_playBeats);
+    final isCreepCollected = settings.eggs.value.isCollected(NamidaEgg.creep);
+    if (!isCreepCollected) _creepTimer = Timer(_kCreepStare, () => EggHunt.collect(NamidaEgg.creep));
   }
 
   @override
   void dispose() {
+    _creepTimer?.cancel();
     _finaleController.dispose();
     _blushController.dispose();
     super.dispose();
@@ -122,6 +133,7 @@ class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
 
   Future<void> _crackEgg() async {
     if (_isCelebrating) return;
+    final hadEconomyEgg = settings.eggs.value.isCollected(NamidaEgg.economy);
     final didUnlock = EggsController.inst.unlock(widget.unlockable);
     if (!didUnlock) return;
     setState(() => _isCelebrating = true);
@@ -129,6 +141,8 @@ class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
     if (!mounted) return;
     NamidaNavigator.inst.closeDialog();
     widget.onEnable();
+    final hasEconomyEgg = settings.eggs.value.isCollected(NamidaEgg.economy);
+    if (hasEconomyEgg && !hadEconomyEgg) EggHunt._announce(NamidaEgg.economy);
   }
 
   void _openNoSupportDialogs() {
@@ -248,7 +262,10 @@ class EggsSection extends StatefulWidget {
 
 class _EggsSectionState extends State<EggsSection> with _AfterRouteSettled {
   @override
-  void onRouteSettled() => EggsController.inst.collectPending();
+  void onRouteSettled() {
+    final found = EggsController.inst.collectPending();
+    EggHunt.announceFound(found);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -460,6 +477,18 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.newYear => 'New year',
     NamidaEgg.birthday => 'Birthday',
     NamidaEgg.anniversary => 'Anniversary',
+    NamidaEgg.economy => 'Economist',
+    NamidaEgg.nightOwl => 'Night owl',
+    NamidaEgg.veteran => 'Veteran',
+    NamidaEgg.chipmunk => 'Chipmunk',
+    NamidaEgg.broke => 'Broke',
+    NamidaEgg.hoarder => 'Hoarder',
+    NamidaEgg.tears => 'Tears',
+    NamidaEgg.creep => 'Creep',
+    NamidaEgg.lucky => 'Lucky',
+    NamidaEgg.goodnight => 'Goodnight',
+    NamidaEgg.twins => 'Twins',
+    NamidaEgg.colorful => 'Colorful',
   };
 
   String toHint() => switch (this) {
@@ -473,7 +502,27 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.newYear => 'spend new year\'s eve with namida, watch the top bar',
     NamidaEgg.birthday => 'namida was born on a cold january day',
     NamidaEgg.anniversary => 'namida grew up one october',
+    NamidaEgg.economy => 'buy, sell, buy, sell... five trades and the market notices',
+    NamidaEgg.nightOwl => '3am and still listening? go to sleep',
+    NamidaEgg.veteran => 'a whole year of memories in your history',
+    NamidaEgg.chipmunk => 'faster.. no, faster.. or squeakier',
+    NamidaEgg.broke => 'spend every last egg',
+    NamidaEgg.hoarder => 'save up five eggs without cracking any',
+    NamidaEgg.tears => 'namida means tears, got a song about them?',
+    NamidaEgg.creep => 'staring at the eggs for a whole minute... creepy',
+    NamidaEgg.lucky => 'sometimes she just feels generous',
+    NamidaEgg.goodnight => 'let the sleep timer tuck you in',
+    NamidaEgg.twins => 'sync with another device',
+    NamidaEgg.colorful => 'find every other egg',
   };
+}
+
+extension _NamidaEggLook on NamidaEgg {
+  bool get isRainbow => this == NamidaEgg.colorful;
+
+  bool get isShiny => worth > 1 || isRainbow;
+
+  Color colorOf(ColorScheme colorScheme) => worth > 1 ? _kGoldenEggColor : colorScheme.primary;
 }
 
 extension _EggUnlockableText on EggUnlockable {

@@ -120,6 +120,8 @@ class SyncBatch {
   /// completes once every item finished, or the batch got aborted.
   Future<void> get completion => _completer.future;
 
+  bool get isAllDone => _doneItems.length >= items.length;
+
   SyncBatch._({
     required this.id,
     required this.deviceId,

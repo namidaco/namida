@@ -1,5 +1,6 @@
 // by claude
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:namico_subscription_manager/core/enum.dart';
 
@@ -8,6 +9,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -23,7 +25,16 @@ class EggsController {
   static const _kLoyalListens = 10000;
   static const _kObsessedListens = 200;
   static const _kTsundereDismissals = 7;
+  static const _kEconomyTrades = 5;
+  static const _kHoarderBalance = 5;
+  static const _kNightOwlHour = 3;
+  static const _kVeteranAge = Duration(days: 365);
+  static const _kChipmunkSpeed = 2.0;
+  static const _kChipmunkPitch = 1.5;
+  static const _kLuckyOneIn = 50;
   static const _kSecretWords = {'uwu', 'kechi', 'baka', 'sussy baka'};
+  static final _tearsRegex = RegExp('namida|tears|涙|なみだ|ナミダ', caseSensitive: false);
+  static final _luckyRandom = math.Random();
 
   static const _kDateEggs = [
     _DateEggWindow(NamidaEgg.newYear, month: DateTime.december, day: 31, days: 2),
@@ -66,8 +77,16 @@ class EggsController {
     check(NamidaEgg.loyal, _isLoyal);
     check(NamidaEgg.obsessed, _isObsessed);
     check(NamidaEgg.albumPurist, _didPlayWholeAlbum);
+    check(NamidaEgg.nightOwl, _didListenAtNight);
+    check(NamidaEgg.veteran, _isVeteran);
+    check(NamidaEgg.chipmunk, _isChipmunk);
+    check(NamidaEgg.tears, _hasTearsTrack);
+    check(NamidaEgg.lucky, _rollLucky);
     final dateEgg = pendingDateEgg.value;
     if (dateEgg != null) check(dateEgg, () => true);
+    check(NamidaEgg.broke, () => data.didSpendEverything());
+    check(NamidaEgg.hoarder, () => data.balance() >= _kHoarderBalance);
+    check(NamidaEgg.colorful, () => data.hasCollectedAllExcept(NamidaEgg.colorful));
 
     if (found.isEmpty) return found;
     settings.eggs.save(data);
@@ -95,7 +114,8 @@ class EggsController {
     final data = settings.eggs.value;
     if (data.isUnlocked(item)) return true;
     if (data.balance() < 1) return false;
-    final updated = data.withUnlocked(item);
+    final unlocked = data.withUnlocked(item);
+    final updated = _withTrade(unlocked);
     settings.eggs.save(updated);
     return true;
   }
@@ -103,9 +123,17 @@ class EggsController {
   void relock(EggUnlockable item) {
     final data = settings.eggs.value;
     if (!data.isUnlocked(item)) return;
-    final updated = data.withLocked(item);
+    final locked = data.withLocked(item);
+    final updated = _withTrade(locked);
     settings.eggs.save(updated);
     if (!isSupporter()) _disableFeature(item);
+  }
+
+  EggsData _withTrade(EggsData data) {
+    if (data.isCollected(NamidaEgg.economy)) return data;
+    final traded = data.withTrade();
+    if (traded.trades < _kEconomyTrades) return traded;
+    return traded.withCollected(NamidaEgg.economy);
   }
 
   void _disableFeature(EggUnlockable item) {
@@ -185,6 +213,39 @@ class EggsController {
     final mostPlayed = HistoryController.inst.topTracksMapListens.value.entriesSortedByValueCount.firstOrNull;
     return mostPlayed != null && mostPlayed.value >= _kObsessedListens;
   }
+
+  bool _isVeteran() {
+    final oldest = HistoryController.inst.oldestTrack;
+    if (oldest == null) return false;
+    final ageMS = currentTimeMS - oldest.dateAdded;
+    return ageMS >= _kVeteranAge.inMilliseconds;
+  }
+
+  bool _didListenAtNight() {
+    const hourMS = 60 * 60 * 1000;
+    for (final dayTracks in HistoryController.inst.historyMap.value.values) {
+      final firstListen = dayTracks.firstOrNull;
+      if (firstListen == null) continue;
+      final firstDate = DateTime.fromMillisecondsSinceEpoch(firstListen.dateAdded);
+      final dayStartMS = DateTime(firstDate.year, firstDate.month, firstDate.day).millisecondsSinceEpoch;
+      for (final twd in dayTracks) {
+        final hour = (twd.dateAdded - dayStartMS) ~/ hourMS;
+        if (hour == _kNightOwlHour) return true;
+      }
+    }
+    return false;
+  }
+
+  bool _isChipmunk() => settings.player.speed.value >= _kChipmunkSpeed || settings.player.pitch.value >= _kChipmunkPitch;
+
+  bool _hasTearsTrack() {
+    for (final tr in Indexer.inst.allTracksMappedByPath.values) {
+      if (_tearsRegex.hasMatch(tr.title)) return true;
+    }
+    return false;
+  }
+
+  bool _rollLucky() => _luckyRandom.nextInt(_kLuckyOneIn) == 0;
 
   bool _didPlayWholeAlbum() {
     final tracksInfo = Indexer.inst.allTracksMappedByPath;

@@ -3,23 +3,34 @@ part of 'eggs.dart';
 class _EggPainter extends CustomPainter {
   final Color color;
   final bool isFilled;
+  final bool isRainbow;
   final Animation<double>? shine;
 
-  _EggPainter({required this.color, required this.isFilled, this.shine}) : super(repaint: shine);
+  _EggPainter({required this.color, required this.isFilled, this.isRainbow = false, this.shine}) : super(repaint: shine);
 
   @override
   void paint(Canvas canvas, Size size) {
     final shell = _EggBrush.shellOf(size);
-    _EggBrush.paintShell(canvas, size, shell, color, isFilled: isFilled, opacity: 1.0);
+    _EggBrush.paintShell(canvas, size, shell, color, isFilled: isFilled, isRainbow: isRainbow, opacity: 1.0);
     final shine = this.shine;
     if (shine != null) _EggBrush.paintShine(canvas, size, shell, shine.value);
   }
 
   @override
-  bool shouldRepaint(_EggPainter oldDelegate) => oldDelegate.color != color || oldDelegate.isFilled != isFilled || oldDelegate.shine != shine;
+  bool shouldRepaint(_EggPainter oldDelegate) => oldDelegate.color != color || oldDelegate.isFilled != isFilled || oldDelegate.isRainbow != isRainbow || oldDelegate.shine != shine;
 }
 
 abstract class _EggBrush {
+  static const _kRainbowColors = [
+    Color(0xFFFF6B6B), Color(0xFFFFB347), Color(0xFFFFE156), //
+    Color(0xFF6BE585), Color(0xFF5EB8FF), Color(0xFFB08CFF), //
+  ];
+  static const _kRainbowGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: _kRainbowColors,
+  );
+
   static Path shellOf(Size size) {
     final w = size.width;
     final h = size.height;
@@ -33,32 +44,54 @@ abstract class _EggBrush {
       ..close();
   }
 
-  static void paintShell(Canvas canvas, Size size, Path shell, Color color, {required bool isFilled, required double opacity}) {
+  static void paintShell(Canvas canvas, Size size, Path shell, Color color, {required bool isFilled, bool isRainbow = false, required double opacity}) {
+    final bounds = Offset.zero & size;
     if (!isFilled) {
       final outline = Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.3
-        ..color = color.withOpacityExt(0.45 * opacity);
+        ..strokeWidth = 1.3;
+      if (isRainbow) {
+        outline.shader = _rainbowShaderOf(bounds, 0.45 * opacity);
+      } else {
+        outline.color = color.withOpacityExt(0.45 * opacity);
+      }
       canvas.drawPath(shell, outline);
       return;
     }
-    final bounds = Offset.zero & size;
-    final lightColor = Color.alphaBlend(Colors.white.withOpacityExt(0.45), color);
-    final darkColor = Color.alphaBlend(Colors.black.withOpacityExt(0.25), color);
-    final gradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        lightColor.withOpacityExt(opacity),
-        color.withOpacityExt(opacity),
-        darkColor.withOpacityExt(opacity),
-      ],
-    );
-    final fill = Paint()..shader = gradient.createShader(bounds);
+    final fill = Paint();
+    if (isRainbow) {
+      fill.shader = _rainbowShaderOf(bounds, opacity);
+    } else {
+      final lightColor = Color.alphaBlend(Colors.white.withOpacityExt(0.45), color);
+      final darkColor = Color.alphaBlend(Colors.black.withOpacityExt(0.25), color);
+      final gradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          lightColor.withOpacityExt(opacity),
+          color.withOpacityExt(opacity),
+          darkColor.withOpacityExt(opacity),
+        ],
+      );
+      fill.shader = gradient.createShader(bounds);
+    }
     canvas.drawPath(shell, fill);
     final highlight = Paint()..color = Colors.white.withOpacityExt(0.4 * opacity);
     final highlightRect = Rect.fromLTWH(size.width * 0.24, size.height * 0.18, size.width * 0.18, size.height * 0.24);
     canvas.drawOval(highlightRect, highlight);
+  }
+
+  static Shader _rainbowShaderOf(Rect bounds, double opacity) {
+    if (opacity >= 1.0) return _kRainbowGradient.createShader(bounds);
+    final colors = [
+      for (final color in _kRainbowColors) color.withOpacityExt(opacity),
+    ];
+    final gradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: colors,
+    );
+    return gradient.createShader(bounds);
   }
 
   static void paintShine(Canvas canvas, Size size, Path shell, double progress) {

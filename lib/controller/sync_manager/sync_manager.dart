@@ -15,6 +15,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:queue/queue.dart' show Queue;
 import 'package:uuid/uuid.dart';
 
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -38,6 +39,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';

@@ -6,12 +6,17 @@ class EggsData {
   final int _collectedMask;
   final int _unlockedMask;
   final int dismissals;
+  final int trades;
 
-  const EggsData() : _collectedMask = 0, _unlockedMask = 0, dismissals = 0;
+  const EggsData() : _collectedMask = 0, _unlockedMask = 0, dismissals = 0, trades = 0;
 
-  const EggsData._(this._collectedMask, this._unlockedMask, this.dismissals);
+  const EggsData._(this._collectedMask, this._unlockedMask, this.dismissals, this.trades);
+
+  static final _allEggsMask = (1 << NamidaEgg.values.length) - 1;
 
   bool isCollected(NamidaEgg egg) => _collectedMask & egg._bit != 0;
+
+  bool hasCollectedAllExcept(NamidaEgg egg) => (_collectedMask | egg._bit) == _allEggsMask;
 
   bool isUnlocked(EggUnlockable item) => _unlockedMask & item._bit != 0;
 
@@ -41,20 +46,29 @@ class EggsData {
 
   int balance() => _earnedEggs() - _spentEggs();
 
-  EggsData withCollected(NamidaEgg egg) => EggsData._(_collectedMask | egg._bit, _unlockedMask, dismissals);
+  bool didSpendEverything() {
+    final spent = _spentEggs();
+    return spent > 0 && spent == _earnedEggs();
+  }
 
-  EggsData withUnlocked(EggUnlockable item) => EggsData._(_collectedMask, _unlockedMask | item._bit, dismissals);
+  EggsData withCollected(NamidaEgg egg) => EggsData._(_collectedMask | egg._bit, _unlockedMask, dismissals, trades);
 
-  EggsData withLocked(EggUnlockable item) => EggsData._(_collectedMask, _unlockedMask & ~item._bit, dismissals);
+  EggsData withUnlocked(EggUnlockable item) => EggsData._(_collectedMask, _unlockedMask | item._bit, dismissals, trades);
 
-  EggsData withDismissal() => EggsData._(_collectedMask, _unlockedMask, dismissals + 1);
+  EggsData withLocked(EggUnlockable item) => EggsData._(_collectedMask, _unlockedMask & ~item._bit, dismissals, trades);
+
+  EggsData withDismissal() => EggsData._(_collectedMask, _unlockedMask, dismissals + 1, trades);
+
+  EggsData withTrade() => EggsData._(_collectedMask, _unlockedMask, dismissals, trades + 1);
 
   static EggsData fromJson(Map<String, dynamic> json) {
     final dismissals = json['d'];
+    final trades = json['t'];
     return EggsData._(
       _maskOfNames(json['c'], NamidaEgg.values),
       _maskOfNames(json['u'], EggUnlockable.values),
       dismissals is int ? dismissals : 0,
+      trades is int ? trades : 0,
     );
   }
 
@@ -79,6 +93,7 @@ class EggsData {
         if (isUnlocked(item)) item.name,
     ],
     'd': dismissals,
+    't': trades,
   };
 }
 
@@ -93,6 +108,18 @@ enum NamidaEgg {
   newYear(1),
   birthday(1),
   anniversary(1),
+  economy(1),
+  nightOwl(1),
+  veteran(2),
+  chipmunk(1),
+  broke(1),
+  hoarder(1),
+  tears(1),
+  creep(1),
+  lucky(1),
+  goodnight(1),
+  twins(1),
+  colorful(1),
   ;
 
   final int worth;

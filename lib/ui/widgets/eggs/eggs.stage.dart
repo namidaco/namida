@@ -162,17 +162,18 @@ class _EggsStageState extends State<_EggsStage> with TickerProviderStateMixin, _
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final eggColor = theme.colorScheme.primary;
+    final colorScheme = theme.colorScheme;
+    final eggColor = colorScheme.primary;
     final shine = _waveController.drive(CurveTween(curve: const Interval(0.2, 0.8)));
     final slots = [
       for (final (index, egg) in NamidaEgg.values.indexed)
         _EggSlot(
           egg: egg,
           isCollected: _shown.contains(egg),
-          color: egg.worth > 1 ? _kGoldenEggColor : eggColor,
+          color: egg.colorOf(colorScheme),
           fall: _fallOf(egg),
           hop: _waveController.drive(_HopOffset(index)),
-          shine: egg.worth > 1 ? shine : null,
+          shine: egg.isShiny ? shine : null,
           wiggle: _wigglingEgg == egg ? _wiggleController : kAlwaysDismissedAnimation,
           onTap: () => _wiggle(egg),
         ),
@@ -271,7 +272,7 @@ class _EggSlot extends StatelessWidget {
     Widget eggWidget = SizedBox.fromSize(
       size: _kSize,
       child: CustomPaint(
-        painter: _EggPainter(color: color, isFilled: isCollected, shine: isCollected ? shine : null),
+        painter: _EggPainter(color: color, isFilled: isCollected, isRainbow: egg.isRainbow, shine: isCollected ? shine : null),
         child: questionMark,
       ),
     );
@@ -470,7 +471,9 @@ class _PoppingEggState extends State<_PoppingEgg> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.egg.worth > 1 ? _kGoldenEggColor : context.theme.colorScheme.primary;
+    final egg = widget.egg;
+    final colorScheme = context.theme.colorScheme;
+    final color = egg.colorOf(colorScheme);
     return Stack(
       clipBehavior: Clip.none,
       alignment: Alignment.center,
@@ -484,7 +487,7 @@ class _PoppingEggState extends State<_PoppingEgg> with SingleTickerProviderState
           scale: _controller.drive(_scale),
           child: CustomPaint(
             size: const Size(17.0, 22.0),
-            painter: _EggPainter(color: color, isFilled: true),
+            painter: _EggPainter(color: color, isFilled: true, isRainbow: egg.isRainbow),
           ),
         ),
       ],

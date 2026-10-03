@@ -2300,6 +2300,7 @@ class SussyBaka {
     final isUnlocked = settings.eggs.value.isUnlocked(unlockable);
     if (isUnlocked) return onEnable();
     final newEggs = eggs.collectPending();
+    EggHunt.announceFound(newEggs);
     NamidaNavigator.inst.navigateDialog(
       onDismissing: EggHunt.countDismissal,
       dialog: UwuDialog(
