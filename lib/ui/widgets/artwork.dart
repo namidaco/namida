@@ -18,6 +18,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -677,7 +678,7 @@ class MultiArtworks extends StatelessWidget {
   final File? artworkFile;
   final IconData? fallbackIcon;
   final int fadeMilliSeconds;
-  final bool wrapArtworkFileInFullscreenOpener;
+  final bool opensSingleImageInFullscreen;
 
   const MultiArtworks({
     super.key,
@@ -693,33 +694,53 @@ class MultiArtworks extends StatelessWidget {
     required this.artworkFile,
     this.fallbackIcon,
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
-    this.wrapArtworkFileInFullscreenOpener = false,
+    this.opensSingleImageInFullscreen = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final artworkFile = this.artworkFile;
-    final customArtworkWidget = artworkFile != null && artworkFile.existsSync()
-        ? ArtworkWidget(
-            key: ValueKey(artworkFile.path),
-            fadeMilliSeconds: fadeMilliSeconds,
-            thumbnailSize: thumbnailSize,
-            path: artworkFile.path,
-            forceSquared: true,
-            iconSize: iconSize,
-            blur: 0,
-            borderRadius: borderRadius,
-            compressed: false,
-            width: thumbnailSize,
-            height: thumbnailSize,
-            fallbackToFolderCover: fallbackToFolderCover,
-            icon: fallbackIcon,
-          )
-        : null;
+    Widget? customArtworkWidget;
+    if (artworkFile != null && artworkFile.existsSync()) {
+      final customArtwork = ArtworkWidget(
+        key: ValueKey(artworkFile.path),
+        fadeMilliSeconds: fadeMilliSeconds,
+        thumbnailSize: thumbnailSize,
+        path: artworkFile.path,
+        forceSquared: true,
+        iconSize: iconSize,
+        blur: 0,
+        borderRadius: borderRadius,
+        compressed: false,
+        width: thumbnailSize,
+        height: thumbnailSize,
+        fallbackToFolderCover: fallbackToFolderCover,
+        icon: fallbackIcon,
+      );
+      customArtworkWidget = opensSingleImageInFullscreen
+          ? _FullscreenImageOpener(
+              heroTag: heroTag,
+              imageFile: artworkFile,
+              child: customArtwork,
+            )
+          : customArtwork;
+    }
     late final imagePaths = [for (final t in tracks) t.pathToImage];
+    late final collageWidget = _ArtworkCollage(
+      cells: _CollageCells(
+        tracks: tracks,
+        imagePaths: imagePaths,
+        iconSize: iconSize,
+        fallbackToFolderCover: fallbackToFolderCover,
+        reduceQuality: reduceQuality,
+        fallbackIcon: fallbackIcon,
+        fadeMilliSeconds: fadeMilliSeconds,
+      ),
+    );
     return NamidaHero(
       tag: heroTag,
       enabled: !disableHero,
+      flightBorderRadius: borderRadius.multipliedRadius,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
@@ -727,227 +748,575 @@ class MultiArtworks extends StatelessWidget {
         child: SizedBox(
           height: thumbnailSize,
           width: thumbnailSize,
-          child: customArtworkWidget != null
-              ? wrapArtworkFileInFullscreenOpener
-                    ? NamidaArtworkExpandableToFullscreen(
-                        heroTag: heroTag,
-                        imageFile: () => artworkFile,
-                        fetchImage: () => null,
-                        onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
-                        themeColor: null,
-                        artwork: customArtworkWidget,
-                      )
-                    : customArtworkWidget
-              : tracks.isEmpty
-              ? ArtworkWidget(
-                  key: const Key(''),
-                  fadeMilliSeconds: fadeMilliSeconds,
-                  track: null,
-                  thumbnailSize: thumbnailSize,
-                  path: null,
-                  forceSquared: true,
-                  blur: 0,
-                  forceDummyArtwork: true,
-                  bgcolor: bgcolor,
-                  borderRadius: borderRadius,
-                  iconSize: iconSize,
-                  width: thumbnailSize,
-                  height: thumbnailSize,
-                  fallbackToFolderCover: fallbackToFolderCover,
-                  icon: fallbackIcon,
-                )
-              : LayoutBuilder(
-                  builder: (context, c) {
-                    return tracks.length == 1
-                        ? ArtworkWidget(
-                            key: Key(imagePaths[0]),
-                            fadeMilliSeconds: fadeMilliSeconds,
-                            thumbnailSize: thumbnailSize,
-                            track: tracks[0],
-                            path: imagePaths[0],
-                            forceSquared: true,
-                            blur: 0,
-                            borderRadius: 0,
-                            compressed: false,
-                            width: c.maxWidth,
-                            height: c.maxHeight,
-                            fallbackToFolderCover: fallbackToFolderCover,
-                            icon: fallbackIcon,
-                          )
-                        : tracks.length == 2
-                        ? Row(
-                            children: [
-                              ArtworkWidget(
-                                key: Key("0_${imagePaths[0]}"),
-                                fadeMilliSeconds: fadeMilliSeconds,
-                                thumbnailSize: thumbnailSize / 2,
-                                track: tracks[0],
-                                path: imagePaths[0],
-                                forceSquared: true,
-                                blur: 0,
-                                borderRadius: 0,
-                                iconSize: iconSize - 2.0,
-                                width: c.maxWidth / 2,
-                                height: c.maxHeight,
-                                fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 60 : 80,
-                                icon: fallbackIcon,
-                              ),
-                              ArtworkWidget(
-                                key: Key("1_${imagePaths[1]}"),
-                                fadeMilliSeconds: fadeMilliSeconds,
-                                thumbnailSize: thumbnailSize / 2,
-                                track: tracks[1],
-                                path: imagePaths[1],
-                                forceSquared: true,
-                                blur: 0,
-                                borderRadius: 0,
-                                iconSize: iconSize - 2.0,
-                                width: c.maxWidth / 2,
-                                height: c.maxHeight,
-                                fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 60 : 80,
-                                icon: fallbackIcon,
-                              ),
-                            ],
-                          )
-                        : tracks.length == 3
-                        ? Row(
-                            children: [
-                              Column(
-                                children: [
-                                  ArtworkWidget(
-                                    key: Key("0_${imagePaths[0]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[0],
-                                    path: imagePaths[0],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 2.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                  ArtworkWidget(
-                                    key: Key("1_${imagePaths[1]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[1],
-                                    path: imagePaths[1],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 2.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                ],
-                              ),
-                              ArtworkWidget(
-                                key: Key("2_${imagePaths[2]}"),
-                                fadeMilliSeconds: fadeMilliSeconds,
-                                thumbnailSize: thumbnailSize / 2,
-                                track: tracks[2],
-                                path: imagePaths[2],
-                                forceSquared: true,
-                                blur: 0,
-                                borderRadius: 0,
-                                iconSize: iconSize,
-                                width: c.maxWidth / 2,
-                                height: c.maxHeight,
-                                fallbackToFolderCover: fallbackToFolderCover,
-                                cacheHeight: reduceQuality ? 40 : 80,
-                                icon: fallbackIcon,
-                              ),
-                            ],
-                          )
-                        : Column(
-                            children: [
-                              Row(
-                                children: [
-                                  ArtworkWidget(
-                                    key: Key("0_${imagePaths[0]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[0],
-                                    path: imagePaths[0],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 3.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                  ArtworkWidget(
-                                    key: Key("1_${imagePaths[1]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[1],
-                                    path: imagePaths[1],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 3.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  ArtworkWidget(
-                                    key: Key("2_${imagePaths[2]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[2],
-                                    path: imagePaths[2],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 3.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                  ArtworkWidget(
-                                    key: Key("3_${imagePaths[3]}"),
-                                    fadeMilliSeconds: fadeMilliSeconds,
-                                    thumbnailSize: thumbnailSize / 2,
-                                    track: tracks[3],
-                                    path: imagePaths[3],
-                                    forceSquared: true,
-                                    blur: 0,
-                                    borderRadius: 0,
-                                    iconSize: iconSize - 3.0,
-                                    width: c.maxWidth / 2,
-                                    height: c.maxHeight / 2,
-                                    fallbackToFolderCover: fallbackToFolderCover,
-                                    cacheHeight: reduceQuality ? 40 : 80,
-                                    icon: fallbackIcon,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                  },
-                ),
+          child:
+              customArtworkWidget ??
+              (tracks.isEmpty
+                  ? ArtworkWidget(
+                      key: const Key(''),
+                      fadeMilliSeconds: fadeMilliSeconds,
+                      track: null,
+                      thumbnailSize: thumbnailSize,
+                      path: null,
+                      forceSquared: true,
+                      blur: 0,
+                      forceDummyArtwork: true,
+                      bgcolor: bgcolor,
+                      borderRadius: borderRadius,
+                      iconSize: iconSize,
+                      width: thumbnailSize,
+                      height: thumbnailSize,
+                      fallbackToFolderCover: fallbackToFolderCover,
+                      icon: fallbackIcon,
+                    )
+                  : opensSingleImageInFullscreen && tracks.length == 1
+                  ? _FullscreenImageOpener(
+                      heroTag: heroTag,
+                      imageFile: File(imagePaths[0]),
+                      child: collageWidget,
+                    )
+                  : collageWidget),
         ),
       ),
+    );
+  }
+}
+
+/// a wide strip of cropped covers, or one cover when there are too few unique artworks for a strip.
+///
+/// by claude
+class ArtworkStripBanner extends StatelessWidget {
+  final Iterable<Selectable> tracks;
+  final double width;
+  final double height;
+  final IconData? fallbackIcon;
+
+  const ArtworkStripBanner({
+    super.key,
+    required this.tracks,
+    required this.width,
+    required this.height,
+    this.fallbackIcon,
+  });
+
+  static const _kMinCells = 4;
+  static const _kCellAspectRatio = 0.6;
+
+  @override
+  Widget build(BuildContext context) {
+    final cellsCount = (width / (height * _kCellAspectRatio)).ceil().withMinimum(_kMinCells);
+    final imageTracks = tracks.toImageTracks(cellsCount);
+    final uniqueCount = imageTracks.length;
+    if (uniqueCount == 0) {
+      return ArtworkWidget(
+        key: const Key(''),
+        thumbnailSize: height,
+        path: null,
+        track: null,
+        forceDummyArtwork: true,
+        forceSquared: true,
+        blur: 0,
+        borderRadius: 0,
+        width: width,
+        height: height,
+        icon: fallbackIcon,
+      );
+    }
+    if (uniqueCount < _kMinCells) {
+      final tr = imageTracks.first;
+      final imagePath = tr.pathToImage;
+      return _FullscreenImageOpener(
+        heroTag: null,
+        imageFile: File(imagePath),
+        child: ArtworkWidget(
+          key: Key(imagePath),
+          thumbnailSize: height,
+          track: tr,
+          path: imagePath,
+          forceSquared: true,
+          blur: 0,
+          borderRadius: 0,
+          width: width,
+          height: height,
+          icon: fallbackIcon,
+        ),
+      );
+    }
+    final cellWidth = width / uniqueCount;
+    final cells = <Widget>[];
+    for (int i = 0; i < uniqueCount; i++) {
+      final tr = imageTracks[i];
+      final imagePath = tr.pathToImage;
+      cells.add(
+        ArtworkWidget(
+          key: Key('${i}_$imagePath'),
+          thumbnailSize: height,
+          track: tr,
+          path: imagePath,
+          forceSquared: true,
+          blur: 0,
+          borderRadius: 0,
+          width: cellWidth,
+          height: height,
+          icon: fallbackIcon,
+        ),
+      );
+    }
+    return SizedBox(
+      width: width,
+      height: height,
+      child: Row(
+        children: cells,
+      ),
+    );
+  }
+}
+
+class _FullscreenImageOpener extends StatelessWidget {
+  final Object? heroTag;
+  final File imageFile;
+  final Widget child;
+
+  const _FullscreenImageOpener({
+    required this.heroTag,
+    required this.imageFile,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaArtworkExpandableToFullscreen(
+      heroTag: heroTag,
+      imageFile: () => imageFile,
+      fetchImage: () => null,
+      onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
+      themeColor: null,
+      artwork: child,
+    );
+  }
+}
+
+// by claude
+class _ArtworkCollage extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _ArtworkCollage({
+    required this.cells,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final count = cells.tracks.length;
+    return ObxO(
+      rx: settings.artworkCollageStyle,
+      builder: (context, style) => switch (style) {
+        ArtworkCollageStyle.denseGrid when count >= 16 => _CollageGrid(cells: cells, perSide: 4),
+        ArtworkCollageStyle.denseGrid when count >= 9 => _CollageGrid(cells: cells, perSide: 3),
+        ArtworkCollageStyle.mosaic when count >= 6 => _CollageMosaic(cells: cells),
+        ArtworkCollageStyle.fanStack when count >= 2 => _CollageFan(cells: cells),
+        ArtworkCollageStyle.flow when count >= 3 => _CollageFlow(cells: cells),
+        ArtworkCollageStyle.stack when count >= 2 => _CollageStack(cells: cells),
+        ArtworkCollageStyle.collage when count >= 2 => _CollageSplit(cells: cells),
+        ArtworkCollageStyle.grid ||
+        ArtworkCollageStyle.denseGrid ||
+        ArtworkCollageStyle.mosaic ||
+        ArtworkCollageStyle.fanStack ||
+        ArtworkCollageStyle.flow ||
+        ArtworkCollageStyle.stack ||
+        ArtworkCollageStyle.collage => _CollageClassic(cells: cells),
+      },
+    );
+  }
+}
+
+class _CollageClassic extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageClassic({
+    required this.cells,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final width = c.maxWidth;
+        final height = c.maxHeight;
+        final halfWidth = width / 2;
+        final halfHeight = height / 2;
+        final iconSize = cells.iconSize;
+        return switch (cells.tracks.length) {
+          1 => cells.build(0, width, height, compressed: false),
+          2 => Row(
+            children: [
+              cells.build(0, halfWidth, height, iconSize: iconSize - 2.0),
+              cells.build(1, halfWidth, height, iconSize: iconSize - 2.0),
+            ],
+          ),
+          3 => Row(
+            children: [
+              Column(
+                children: [
+                  cells.build(0, halfWidth, halfHeight, iconSize: iconSize - 2.0),
+                  cells.build(1, halfWidth, halfHeight, iconSize: iconSize - 2.0),
+                ],
+              ),
+              cells.build(2, halfWidth, height),
+            ],
+          ),
+          _ => _CollageGrid(cells: cells, perSide: 2),
+        };
+      },
+    );
+  }
+}
+
+class _CollageGrid extends StatelessWidget {
+  final _CollageCells cells;
+  final int perSide;
+
+  const _CollageGrid({
+    required this.cells,
+    required this.perSide,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final iconSize = perSide == 2 ? cells.iconSize - 3.0 : cells.iconSize - 6.0;
+    return LayoutBuilder(
+      builder: (context, c) {
+        final cellWidth = c.maxWidth / perSide;
+        final cellHeight = c.maxHeight / perSide;
+        return Column(
+          children: [
+            for (int row = 0; row < perSide; row++)
+              Row(
+                children: [
+                  for (int col = 0; col < perSide; col++) cells.build(row * perSide + col, cellWidth, cellHeight, iconSize: iconSize),
+                ],
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CollageMosaic extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageMosaic({
+    required this.cells,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final smallIconSize = cells.iconSize - 6.0;
+    return LayoutBuilder(
+      builder: (context, c) {
+        final smallWidth = c.maxWidth / 3;
+        final smallHeight = c.maxHeight / 3;
+        return Column(
+          children: [
+            Row(
+              children: [
+                cells.build(0, smallWidth * 2, smallHeight * 2),
+                Column(
+                  children: [
+                    cells.build(1, smallWidth, smallHeight, iconSize: smallIconSize),
+                    cells.build(2, smallWidth, smallHeight, iconSize: smallIconSize),
+                  ],
+                ),
+              ],
+            ),
+            Row(
+              children: [
+                cells.build(3, smallWidth, smallHeight, iconSize: smallIconSize),
+                cells.build(4, smallWidth, smallHeight, iconSize: smallIconSize),
+                cells.build(5, smallWidth, smallHeight, iconSize: smallIconSize),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _CollageFan extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageFan({
+    required this.cells,
+  });
+
+  static const _kMaxCards = 5;
+  static const _kAngleStep = 0.13;
+  static const _kFitSafety = 0.98;
+  static const _kAlignment = Alignment(0.0, -0.3);
+
+  /// the widest the outermost card reaches once rotated around its bottom center, relative to its size.
+  static double _rotatedWidthFactor(double angle) => math.cos(angle) + 2 * math.sin(angle);
+
+  @override
+  Widget build(BuildContext context) {
+    final count = cells.tracks.length.withMaximum(_kMaxCards);
+    final maxLevel = count ~/ 2;
+    final cardSizePercentage = _kFitSafety / _rotatedWidthFactor(maxLevel * _kAngleStep);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final cardSize = math.min(c.maxWidth, c.maxHeight) * cardSizePercentage;
+        final cards = <Widget>[];
+        for (int i = count - 1; i >= 0; i--) {
+          final level = (i + 1) ~/ 2;
+          final angle = i.isOdd ? -level * _kAngleStep : level * _kAngleStep;
+          final card = cells.build(i, cardSize, cardSize, borderRadius: 8.0, boxShadow: _CollageCells.flatShadows);
+          cards.add(
+            Transform.rotate(
+              angle: angle,
+              alignment: Alignment.bottomCenter,
+              child: card,
+            ),
+          );
+        }
+        return RepaintBoundary(
+          child: Stack(
+            alignment: _kAlignment,
+            children: cards,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CollageFlow extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageFlow({
+    required this.cells,
+  });
+
+  static const _kMaxCards = 7;
+  static const _kCardSizePercentage = 0.7;
+  static const _kPerspective = 0.0015;
+  static const _kLevelOffsets = [0.17, 0.28, 0.36];
+  static const _kLevelAngles = [0.5, 0.7, 0.85];
+  static const _kLevelScales = [0.8, 0.7, 0.6];
+
+  @override
+  Widget build(BuildContext context) {
+    final count = cells.tracks.length.withMaximum(_kMaxCards);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final box = math.min(c.maxWidth, c.maxHeight);
+        final cardSize = box * _kCardSizePercentage;
+        final cards = <Widget>[];
+        for (int i = count - 1; i >= 0; i--) {
+          final card = cells.build(i, cardSize, cardSize, borderRadius: 6.0, boxShadow: _CollageCells.flatShadows);
+          if (i == 0) {
+            cards.add(card);
+            continue;
+          }
+          final level = (i - 1) ~/ 2;
+          final side = i.isOdd ? 1.0 : -1.0;
+          final offset = box * _kLevelOffsets[level] * side;
+          final angle = _kLevelAngles[level] * -side;
+          final scale = _kLevelScales[level];
+          final transform = Matrix4.identity()
+            ..setEntry(3, 2, _kPerspective)
+            ..translateByDouble(offset, 0.0, 0.0, 1.0)
+            ..rotateY(angle)
+            ..scaleByDouble(scale, scale, 1.0, 1.0);
+          cards.add(
+            Transform(
+              transform: transform,
+              alignment: Alignment.center,
+              child: card,
+            ),
+          );
+        }
+        return RepaintBoundary(
+          child: Stack(
+            alignment: Alignment.center,
+            children: cards,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CollageStack extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageStack({
+    required this.cells,
+  });
+
+  static const _kMaxCards = 3;
+  static const _kFrontSizePercentage = 0.9;
+  static const _kStepPercentage = 0.035;
+  static const _kShrinkPerLevel = 0.08;
+  static const _kDimPerLevel = 0.28;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final shadow = BoxShadow(
+      color: theme.shadowColor.withAlpha(90),
+      blurRadius: 6.0,
+      offset: const Offset(0.0, 2.0),
+    );
+    final count = cells.tracks.length.withMaximum(_kMaxCards);
+    return LayoutBuilder(
+      builder: (context, c) {
+        final box = math.min(c.maxWidth, c.maxHeight);
+        final frontSize = box * _kFrontSizePercentage;
+        final step = box * _kStepPercentage;
+        final frontTop = (box - frontSize) / 2 + (count - 1) * step / 2;
+        final cards = <Widget>[];
+        for (int i = count - 1; i >= 0; i--) {
+          final size = frontSize * (1.0 - i * _kShrinkPerLevel);
+          final dim = Positioned.fill(
+            child: ColoredBox(
+              color: Colors.black.withOpacityExt(i * _kDimPerLevel),
+            ),
+          );
+          final card = cells.build(i, size, size, borderRadius: 8.0, boxShadow: [shadow], onTopWidgets: i == 0 ? null : [dim]);
+          cards.add(
+            Positioned(
+              top: frontTop - i * step,
+              child: card,
+            ),
+          );
+        }
+        return Stack(
+          alignment: Alignment.center,
+          children: cards,
+        );
+      },
+    );
+  }
+}
+
+class _CollageSplit extends StatelessWidget {
+  final _CollageCells cells;
+
+  const _CollageSplit({
+    required this.cells,
+  });
+
+  static const _kMaxCovers = 3;
+
+  /// corners in box fractions. the main cut runs from (0.55, 0) down to (0.35, 1) so the right cover stays the biggest,
+  /// the left part is cut again from (0, 0.45) to the main cut's middle.
+  static const _kRightPart = [Offset(0.55, 0.0), Offset(1.0, 0.0), Offset(1.0, 1.0), Offset(0.35, 1.0)];
+  static const _kLeftPart = [Offset(0.0, 0.0), Offset(0.55, 0.0), Offset(0.35, 1.0), Offset(0.0, 1.0)];
+  static const _kTopLeftPart = [Offset(0.0, 0.0), Offset(0.55, 0.0), Offset(0.45, 0.5), Offset(0.0, 0.45)];
+  static const _kBottomLeftPart = [Offset(0.0, 0.45), Offset(0.45, 0.5), Offset(0.35, 1.0), Offset(0.0, 1.0)];
+
+  @override
+  Widget build(BuildContext context) {
+    final count = cells.tracks.length.withMaximum(_kMaxCovers);
+    final regions = count == 2 ? const [_kRightPart, _kLeftPart] : const [_kRightPart, _kTopLeftPart, _kBottomLeftPart];
+    return LayoutBuilder(
+      builder: (context, c) {
+        final width = c.maxWidth;
+        final height = c.maxHeight;
+        return Stack(
+          children: [
+            for (int i = 0; i < count; i++)
+              ClipPath(
+                clipper: _PolygonClipper(regions[i]),
+                child: cells.build(i, width, height),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _PolygonClipper extends CustomClipper<Path> {
+  final List<Offset> fractions;
+
+  const _PolygonClipper(this.fractions);
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final first = fractions.first;
+    path.moveTo(first.dx * size.width, first.dy * size.height);
+    for (int i = 1; i < fractions.length; i++) {
+      final point = fractions[i];
+      path.lineTo(point.dx * size.width, point.dy * size.height);
+    }
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_PolygonClipper oldClipper) => !identical(fractions, oldClipper.fractions);
+}
+
+class _CollageCells {
+  final List<Track> tracks;
+  final List<String> imagePaths;
+  final double iconSize;
+  final bool fallbackToFolderCover;
+  final bool reduceQuality;
+  final IconData? fallbackIcon;
+  final int fadeMilliSeconds;
+
+  const _CollageCells({
+    required this.tracks,
+    required this.imagePaths,
+    required this.iconSize,
+    required this.fallbackToFolderCover,
+    required this.reduceQuality,
+    required this.fallbackIcon,
+    required this.fadeMilliSeconds,
+  });
+
+  static const _kMinCacheHeight = 80.0;
+
+  /// unblurred, for rotated or perspective cards. a blurred shadow there misses the rect fast path and gets re-blurred every frame.
+  static const flatShadows = [
+    BoxShadow(color: Color(0x30000000), spreadRadius: 2.0),
+    BoxShadow(color: Color(0x50000000), spreadRadius: 0.75),
+  ];
+
+  Widget build(
+    int index,
+    double width,
+    double height, {
+    double? iconSize,
+    double borderRadius = 0.0,
+    bool compressed = true,
+    List<BoxShadow>? boxShadow,
+    List<Widget>? onTopWidgets,
+  }) {
+    final cellSize = math.min(width, height);
+    final qualityCacheHeight = cellSize.withMinimum(_kMinCacheHeight).round();
+    final cacheHeight = reduceQuality ? 40 : qualityCacheHeight;
+    return ArtworkWidget(
+      key: Key("${index}_${imagePaths[index]}"),
+      fadeMilliSeconds: fadeMilliSeconds,
+      thumbnailSize: cellSize,
+      track: tracks[index],
+      path: imagePaths[index],
+      forceSquared: true,
+      blur: 0,
+      borderRadius: borderRadius,
+      compressed: compressed,
+      iconSize: iconSize,
+      width: width,
+      height: height,
+      fallbackToFolderCover: fallbackToFolderCover,
+      cacheHeight: compressed ? cacheHeight : null,
+      boxShadow: boxShadow,
+      onTopWidgets: onTopWidgets,
+      icon: fallbackIcon,
     );
   }
 }

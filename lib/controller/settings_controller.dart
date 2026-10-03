@@ -120,6 +120,17 @@ class _SettingsController extends _SettingsKeysWriter {
     key: LibraryTab.values.asCodec(),
     value: const _CountPerRowCodec(),
   );
+  late final subpageInfoStyles = _keyMap<MediaType, SubpageInfoStyle>(
+    'subpageInfoStyles',
+    const {
+      MediaType.album: SubpageInfoStyle.heroBanner,
+      MediaType.genre: SubpageInfoStyle.blurBackdrop,
+      MediaType.playlist: SubpageInfoStyle.banner,
+    },
+    key: MediaType.values.asCodec(),
+    value: SubpageInfoStyle.values.asCodec(),
+  );
+  late final artworkCollageStyle = _keyEnum('artworkCollageStyle', ArtworkCollageStyle.grid, ArtworkCollageStyle.values);
   late final activeAlbumTypes = _keyMap<AlbumType, bool>(
     'activeAlbumTypes',
     const {AlbumType.single: true, AlbumType.normal: true},

@@ -114,6 +114,13 @@ extension MediaTypeUtils on MediaType {
       MediaType.playlist => LibraryTab.playlists,
     };
   }
+
+  MediaType toSubpageInfoType() => switch (this) {
+    MediaType.album => MediaType.album,
+    MediaType.artist || MediaType.albumArtist || MediaType.composer => MediaType.artist,
+    MediaType.genre || MediaType.style || MediaType.mood || MediaType.tag || MediaType.rating => MediaType.genre,
+    MediaType.track || MediaType.playlist || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo => MediaType.playlist,
+  };
 }
 
 extension LibraryTabsListUtils on List<LibraryTab> {
@@ -2001,6 +2008,46 @@ extension MediaTypeL10n on MediaType {
     MediaType.rating => lang.rating,
     MediaType.folderMusic => "${lang.folders}: ${lang.tracks}",
     MediaType.folderVideo => "${lang.folders}: ${lang.videos}",
+  };
+}
+
+extension SubpageInfoStyleL10n on SubpageInfoStyle {
+  String toText() => switch (this) {
+    SubpageInfoStyle.compact => 'Compact',
+    SubpageInfoStyle.banner => 'Banner',
+    SubpageInfoStyle.heroBanner => 'Hero Banner',
+    SubpageInfoStyle.overlay => 'Overlay',
+    SubpageInfoStyle.blurBackdrop => 'Blur Backdrop',
+  };
+
+  IconData toIcon() => switch (this) {
+    SubpageInfoStyle.compact => Broken.element_3,
+    SubpageInfoStyle.banner => Broken.card,
+    SubpageInfoStyle.heroBanner => Broken.maximize_4,
+    SubpageInfoStyle.overlay => Broken.layer,
+    SubpageInfoStyle.blurBackdrop => Broken.blur,
+  };
+}
+
+extension ArtworkCollageStyleL10n on ArtworkCollageStyle {
+  String toText() => switch (this) {
+    ArtworkCollageStyle.grid => 'Grid',
+    ArtworkCollageStyle.denseGrid => 'Dense Grid',
+    ArtworkCollageStyle.mosaic => 'Mosaic',
+    ArtworkCollageStyle.fanStack => 'Fan Stack',
+    ArtworkCollageStyle.flow => 'Flow',
+    ArtworkCollageStyle.stack => 'Stack',
+    ArtworkCollageStyle.collage => 'Collage',
+  };
+
+  IconData toIcon() => switch (this) {
+    ArtworkCollageStyle.grid => Broken.grid_2,
+    ArtworkCollageStyle.denseGrid => Broken.grid_1,
+    ArtworkCollageStyle.mosaic => Broken.element_4,
+    ArtworkCollageStyle.fanStack => Broken.note,
+    ArtworkCollageStyle.flow => Broken.slider_horizontal,
+    ArtworkCollageStyle.stack => Broken.cards,
+    ArtworkCollageStyle.collage => Broken.picture_frame,
   };
 }
 

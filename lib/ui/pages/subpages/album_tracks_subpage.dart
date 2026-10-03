@@ -17,6 +17,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -107,6 +108,9 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                         return NamidaListViewRaw(
                           infoBox: (maxWidth) => SubpageInfoContainer(
                             maxWidth: maxWidth,
+                            type: MediaType.album,
+                            onOpenMenu: () => NamidaDialogs.inst.showAlbumDialog(widget.albumIdentifier),
+                            customArtworkManager: NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier).toManager(),
                             title: name,
                             source: queueSource,
                             subtitle: tracks.albumArtist,
@@ -151,6 +155,31 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                     );
                             },
                             tracksFn: () => tracks,
+                            bannerBuilder: (width, height) {
+                              final info = NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier);
+                              final tracksPathToImage = tracks.pathToImage;
+                              final banner = NetworkArtwork.orLocal(
+                                key: Key(tracksPathToImage),
+                                path: tracksPathToImage,
+                                track: tracks.trackOfImage,
+                                info: info,
+                                thumbnailSize: height,
+                                width: width,
+                                height: height,
+                                forceSquared: true,
+                                compressed: true,
+                                borderRadius: 0.0,
+                                blur: 0.0,
+                              );
+                              return NamidaArtworkExpandableToFullscreen(
+                                artwork: banner,
+                                heroTag: null,
+                                imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
+                                fetchImage: () => null,
+                                onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
+                                themeColor: null,
+                              );
+                            },
                           ),
                           stickyHeader: TracksSearchWidgetBox(
                             state: this,

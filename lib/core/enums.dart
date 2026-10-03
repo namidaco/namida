@@ -1179,6 +1179,28 @@ enum ReplayGainType {
   }
 }
 
+enum SubpageInfoStyle {
+  compact,
+  banner,
+  heroBanner,
+  overlay,
+  blurBackdrop,
+}
+
+enum ArtworkCollageStyle {
+  grid(4),
+  denseGrid(16),
+  mosaic(6),
+  fanStack(5),
+  flow(7),
+  stack(4),
+  collage(3),
+  ;
+
+  final int maxImages;
+  const ArtworkCollageStyle(this.maxImages);
+}
+
 enum LibraryImageSource {
   local,
   lastfm,

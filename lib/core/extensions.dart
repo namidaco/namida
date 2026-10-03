@@ -36,26 +36,27 @@ export 'package:youtipie/youtipie.dart' show YTStringUtils;
 extension TracksSelectableUtils on Iterable<Selectable> {
   String get displayTrackKeyword => length.displayTrackKeyword;
 
-  List<Track> toImageTracks([int? limit = 4]) {
+  List<Track> toImageTracks([int? limit]) {
+    final collageStyle = settings.artworkCollageStyle.value;
+    limit ??= collageStyle.maxImages;
+    final scanLimit = limit * _kImageTracksScanMultiplier;
     final l = <Track>[];
-    String previousArtwork = '';
-    bool sameArtwork = true;
+    final seenArtworks = <String>{};
     try {
-      for (final Selectable p in withLimit(limit)) {
-        final currentArtwork = p.track.pathToImage;
-        if (sameArtwork && previousArtwork != '' && currentArtwork != previousArtwork) {
-          sameArtwork = false;
-        }
-        l.add(p.track);
-        previousArtwork = currentArtwork;
+      for (final Selectable p in take(scanLimit)) {
+        final tr = p.track;
+        final isNewArtwork = seenArtworks.add(tr.pathToImage);
+        if (!isNewArtwork) continue;
+        l.add(tr);
+        if (l.length >= limit) break;
       }
     } catch (_) {}
-    if (l.isEmpty) return [];
-    if (sameArtwork) return [l.first];
     return l;
   }
 
-  List<String> toImagePaths([int? limit = 4]) {
+  static const _kImageTracksScanMultiplier = 6;
+
+  List<String> toImagePaths([int? limit]) {
     return toImageTracks(limit).map((e) => e.pathToImage).toList();
   }
 }

@@ -225,6 +225,8 @@ extension SettingsControllerDebugKeys on _SettingsController {
     useAlbumStaggeredGridView,
     useSettingCollapsedTiles,
     mediaGridCounts,
+    subpageInfoStyles,
+    artworkCollageStyle,
     activeAlbumTypes,
     activeTrSearch,
     enableBlurEffect,

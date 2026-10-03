@@ -31,10 +31,12 @@ import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class HistoryTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -122,12 +124,22 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
         return LayoutWidthProvider(
           builder: (context, maxWidth) => SubpageInfoContainer(
             maxWidth: maxWidth,
+            type: MediaType.playlist,
+            onOpenMenu: () => NamidaDialogs.inst.showPlaylistDialog(k_PLAYLIST_NAME_HISTORY),
             key: _headerContainerKey,
             source: QueueSource.history,
             title: k_PLAYLIST_NAME_HISTORY.translatePlaylistName(),
             subtitle: lengthDummy ? '?' : totalHistoryItemsCount.displayTrackKeyword,
             heroTag: 'playlist_$k_PLAYLIST_NAME_HISTORY',
             tracksFn: () => HistoryController.inst.historyTracks,
+            bannerBuilder: (width, height) => ObxO(
+              rx: HistoryController.inst.historyMap,
+              builder: (context, historyMap) => ArtworkStripBanner(
+                tracks: getHistoryTracks(historyMap),
+                width: width,
+                height: height,
+              ),
+            ),
             imageBuilder: (size) => ObxO(
               rx: HistoryController.inst.historyMap,
               builder: (context, historyMap) => MultiArtworkContainer(
@@ -318,6 +330,8 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                 },
                 infoBox: (timeRangeChips, bottomPadding, maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,
+                  type: MediaType.playlist,
+                  onOpenMenu: () => NamidaDialogs.inst.showPlaylistDialog(k_PLAYLIST_NAME_MOST_PLAYED),
                   source: QueueSource.mostPlayed,
                   title: k_PLAYLIST_NAME_MOST_PLAYED.translatePlaylistName(),
                   subtitle: tracks.displayTrackKeyword,
@@ -328,6 +342,11 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                     tracks: tracks.toImageTracks(),
                   ),
                   tracksFn: () => HistoryController.inst.currentMostPlayedTracks,
+                  bannerBuilder: (width, height) => ArtworkStripBanner(
+                    tracks: tracks,
+                    width: width,
+                    height: height,
+                  ),
                   bottomPadding: bottomPadding,
                 ),
                 header: (timeRangeChips, bottomPadding) => timeRangeChips,
@@ -590,9 +609,13 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                   size: size,
                   tracks: tracksWithDate.toImageTracks(),
                   artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlist.name),
-                  wrapArtworkFileInFullscreenOpener: true,
                 ),
                 tracksFn: () => tracksWithDate,
+                bannerBuilder: (width, height) => ArtworkStripBanner(
+                  tracks: tracksWithDate,
+                  width: width,
+                  height: height,
+                ),
               ),
               onReorderStart: (index) => super.enablePullToRefresh = false,
               onReorderEnd: (index) => super.enablePullToRefresh = true,

@@ -1620,192 +1620,196 @@ class _ArtworkManager extends StatelessWidget {
   final CustomArtworkManager customArtworkManager;
   const _ArtworkManager({required this.customArtworkManager});
 
-  static final _lastfmImageSizeRegex = RegExp(r'\/i\/u\/(.+)\/');
-
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return NamidaIconButton(
       icon: Broken.gallery_edit,
-      onPressed: () async {
-        final alreadySetArtworkPossible = customArtworkManager.getArtworkFile();
-        final alreadySetArtworkGood = await alreadySetArtworkPossible.exists() && ((await alreadySetArtworkPossible.fileSize() ?? 0) > 0);
-        final alreadySetArtworkExisting = alreadySetArtworkGood ? alreadySetArtworkPossible : null;
+      onPressed: customArtworkManager.showEditDialog,
+    );
+  }
+}
 
-        void showSnackInfo([dynamic error]) {
-          if (error == null) {
-            snackyy(icon: Broken.gallery_edit, message: lang.succeeded, borderColor: Colors.green);
-          } else {
-            snackyy(icon: Broken.gallery_edit, message: "${lang.failed}:$error", borderColor: Colors.red);
-          }
+extension CustomArtworkManagerDialog on CustomArtworkManager {
+  static final _lastfmImageSizeRegex = RegExp(r'\/i\/u\/(.+)\/');
+
+  Future<void> showEditDialog() async {
+    final alreadySetArtworkPossible = getArtworkFile();
+    final alreadySetArtworkGood = await alreadySetArtworkPossible.exists() && ((await alreadySetArtworkPossible.fileSize() ?? 0) > 0);
+    final alreadySetArtworkExisting = alreadySetArtworkGood ? alreadySetArtworkPossible : null;
+
+    void showSnackInfo([dynamic error]) {
+      if (error == null) {
+        snackyy(icon: Broken.gallery_edit, message: lang.succeeded, borderColor: Colors.green);
+      } else {
+        snackyy(icon: Broken.gallery_edit, message: "${lang.failed}:$error", borderColor: Colors.red);
+      }
+    }
+
+    Future<void> onEdit() async {
+      final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
+      if (artworkFile != null) {
+        try {
+          await setArtworkFile(artworkFile, null);
+          showSnackInfo();
+        } catch (e) {
+          showSnackInfo(e);
         }
+      }
+    }
 
-        Future<void> onEdit() async {
-          final artworkFile = await NamidaFileBrowser.pickFile(memeType: NamidaStorageFileMemeType.image);
-          if (artworkFile != null) {
-            try {
-              await customArtworkManager.setArtworkFile(artworkFile, null);
-              showSnackInfo();
-            } catch (e) {
-              showSnackInfo(e);
-            }
-          }
-        }
+    Future<void> onDelete() async {
+      try {
+        await setArtworkFile(null, null);
+        showSnackInfo();
+      } catch (e) {
+        showSnackInfo(e);
+      }
+    }
 
-        Future<void> onDelete() async {
-          try {
-            await customArtworkManager.setArtworkFile(null, null);
-            showSnackInfo();
-          } catch (e) {
-            showSnackInfo(e);
-          }
-        }
+    final fetchPossibleArtworksFn = fetchPossibleArtworks;
+    if (alreadySetArtworkExisting != null || fetchPossibleArtworksFn != null) {
+      final possibleArtworks = Rxn<List<String>>();
+      CancelToken? cancelToken;
+      final possibleArtworksLoading = false.obs;
 
-        final fetchPossibleArtworksFn = customArtworkManager.fetchPossibleArtworks;
-        if (alreadySetArtworkExisting != null || fetchPossibleArtworksFn != null) {
-          final possibleArtworks = Rxn<List<String>>();
-          CancelToken? cancelToken;
-          final possibleArtworksLoading = false.obs;
+      if (fetchPossibleArtworksFn != null) {
+        possibleArtworksLoading.value = true;
+        cancelToken = CancelToken();
+        fetchPossibleArtworksFn(cancelToken).catchError((_) => null).then(
+          (value) {
+            possibleArtworks.value = value;
+            possibleArtworksLoading.value = false;
+          },
+        );
+      }
 
-          if (fetchPossibleArtworksFn != null) {
-            possibleArtworksLoading.value = true;
-            cancelToken = CancelToken();
-            fetchPossibleArtworksFn(cancelToken).catchError((_) => null).then(
-              (value) {
-                possibleArtworks.value = value;
-                possibleArtworksLoading.value = false;
+      NamidaNavigator.inst.navigateDialog(
+        onDisposing: () {
+          cancelToken?.cancel();
+          possibleArtworks.close();
+          possibleArtworksLoading.close();
+        },
+        dialog: CustomBlurryDialog(
+          title: lang.configure,
+          actions: [
+            NamidaButton(
+              colorScheme: Colors.red,
+              text: lang.delete.toUpperCase(),
+              onTap: () async {
+                await onDelete();
+                NamidaNavigator.inst.closeDialog();
               },
-            );
-          }
-
-          NamidaNavigator.inst.navigateDialog(
-            onDisposing: () {
-              cancelToken?.cancel();
-              possibleArtworks.close();
-              possibleArtworksLoading.close();
-            },
-            dialog: CustomBlurryDialog(
-              title: lang.configure,
-              actions: [
-                NamidaButton(
-                  colorScheme: Colors.red,
-                  text: lang.delete.toUpperCase(),
-                  onTap: () async {
-                    await onDelete();
-                    NamidaNavigator.inst.closeDialog();
-                  },
-                ),
-                NamidaButton(
-                  text: lang.pickFromStorage.toUpperCase(),
-                  onTap: () async {
-                    await onEdit();
-                    NamidaNavigator.inst.closeDialog();
-                  },
-                ),
-              ],
-              child: ObxO(
-                rx: possibleArtworks,
-                builder: (context, urls) {
-                  final extraCountText = fetchPossibleArtworksFn == null ? '' : " (${urls?.length ?? 0})";
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Text(
-                          lang.choose + extraCountText,
-                          style: textTheme.displayMedium,
-                        ),
-                      ),
-                      ObxO(
-                        rx: possibleArtworksLoading,
-                        builder: (context, loading) => SizedBox(
-                          height: fetchPossibleArtworksFn == null ? null : context.height * 0.4,
-                          width: context.width,
-                          child: loading
-                              ? Center(
-                                  child: ThreeArchedCircle(
-                                    color: theme.colorScheme.onSurface.withOpacityExt(0.5),
-                                    size: 32.0,
-                                  ),
-                                )
-                              : fetchPossibleArtworksFn == null
-                              ? null
-                              : urls == null || urls.isEmpty
-                              ? const Center(
-                                  child: NoResultsWidget(),
-                                )
-                              : SmoothGridView.builder(
-                                  padding: EdgeInsets.zero,
-                                  shrinkWrap: true,
-                                  scrollCacheExtent: ScrollCacheExtent.viewport(3),
-                                  itemCount: urls.length,
-                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 3,
-                                    mainAxisSpacing: 6.0,
-                                    crossAxisSpacing: 4.0,
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final url = urls[index];
-                                    return BorderRadiusClip(
-                                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                      child: FutureBuilder(
-                                        future: Rhttp.getBytes(url),
-                                        builder: (context, snapshot) {
-                                          final bytes = snapshot.data?.body;
-                                          return CustomAnimatedSwitcher(
-                                            layoutBuilder: (currentChild, previousChildren) {
-                                              return Stack(
-                                                alignment: Alignment.center,
-                                                children: <Widget>[
-                                                  ...previousChildren,
-                                                  if (currentChild != null) Positioned.fill(child: currentChild),
-                                                ],
-                                              );
-                                            },
-                                            duration: const Duration(milliseconds: 200),
-                                            child: bytes == null
-                                                ? ColoredBox(
-                                                    color: theme.cardColor,
-                                                  )
-                                                : TapDetector(
-                                                    onTap: () async {
-                                                      NamidaNavigator.inst.closeDialog();
-                                                      Uint8List? fullResbytes;
-                                                      try {
-                                                        final fullResUrl = url.replaceAll(_lastfmImageSizeRegex, '/i/u/ar0/');
-                                                        final res = await Rhttp.getBytes(fullResUrl);
-                                                        fullResbytes = res.body;
-                                                      } catch (_) {}
-
-                                                      try {
-                                                        await customArtworkManager.setArtworkFile(null, fullResbytes ?? bytes);
-                                                        showSnackInfo();
-                                                      } catch (e) {
-                                                        showSnackInfo(e);
-                                                      }
-                                                    },
-                                                    child: Image.memory(bytes),
-                                                  ),
+            ),
+            NamidaButton(
+              text: lang.pickFromStorage.toUpperCase(),
+              onTap: () async {
+                await onEdit();
+                NamidaNavigator.inst.closeDialog();
+              },
+            ),
+          ],
+          child: ObxO(
+            rx: possibleArtworks,
+            builder: (context, urls) {
+              final theme = context.theme;
+              final textTheme = theme.textTheme;
+              final extraCountText = fetchPossibleArtworksFn == null ? '' : " (${urls?.length ?? 0})";
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Text(
+                      lang.choose + extraCountText,
+                      style: textTheme.displayMedium,
+                    ),
+                  ),
+                  ObxO(
+                    rx: possibleArtworksLoading,
+                    builder: (context, loading) => SizedBox(
+                      height: fetchPossibleArtworksFn == null ? null : context.height * 0.4,
+                      width: context.width,
+                      child: loading
+                          ? Center(
+                              child: ThreeArchedCircle(
+                                color: theme.colorScheme.onSurface.withOpacityExt(0.5),
+                                size: 32.0,
+                              ),
+                            )
+                          : fetchPossibleArtworksFn == null
+                          ? null
+                          : urls == null || urls.isEmpty
+                          ? const Center(
+                              child: NoResultsWidget(),
+                            )
+                          : SmoothGridView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              scrollCacheExtent: ScrollCacheExtent.viewport(3),
+                              itemCount: urls.length,
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                mainAxisSpacing: 6.0,
+                                crossAxisSpacing: 4.0,
+                              ),
+                              itemBuilder: (context, index) {
+                                final url = urls[index];
+                                return BorderRadiusClip(
+                                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                                  child: FutureBuilder(
+                                    future: Rhttp.getBytes(url),
+                                    builder: (context, snapshot) {
+                                      final bytes = snapshot.data?.body;
+                                      return CustomAnimatedSwitcher(
+                                        layoutBuilder: (currentChild, previousChildren) {
+                                          return Stack(
+                                            alignment: Alignment.center,
+                                            children: <Widget>[
+                                              ...previousChildren,
+                                              if (currentChild != null) Positioned.fill(child: currentChild),
+                                            ],
                                           );
                                         },
-                                      ),
-                                    );
-                                  },
-                                ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-          );
-        } else {
-          await onEdit();
-        }
-      },
-    );
+                                        duration: const Duration(milliseconds: 200),
+                                        child: bytes == null
+                                            ? ColoredBox(
+                                                color: theme.cardColor,
+                                              )
+                                            : TapDetector(
+                                                onTap: () async {
+                                                  NamidaNavigator.inst.closeDialog();
+                                                  Uint8List? fullResbytes;
+                                                  try {
+                                                    final fullResUrl = url.replaceAll(_lastfmImageSizeRegex, '/i/u/ar0/');
+                                                    final res = await Rhttp.getBytes(fullResUrl);
+                                                    fullResbytes = res.body;
+                                                  } catch (_) {}
+
+                                                  try {
+                                                    await setArtworkFile(null, fullResbytes ?? bytes);
+                                                    showSnackInfo();
+                                                  } catch (e) {
+                                                    showSnackInfo(e);
+                                                  }
+                                                },
+                                                child: Image.memory(bytes),
+                                              ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      await onEdit();
+    }
   }
 }

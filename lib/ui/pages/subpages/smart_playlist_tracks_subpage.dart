@@ -14,9 +14,12 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/network_artwork.dart';
 
 class SmartPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -102,6 +105,9 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                     scrollController: _controller,
                     infoBox: (maxWidth) => SubpageInfoContainer(
                       maxWidth: maxWidth,
+                      type: MediaType.playlist,
+                      onOpenMenu: () => NamidaDialogs.inst.showSmartPlaylistDialog(widget.smartPlaylistWrapper),
+                      customArtworkManager: CustomArtworkManager.smartPlaylist(widget.smartPlaylistWrapper),
                       source: queueSource,
                       title: name,
                       subtitle: [
@@ -115,6 +121,11 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         tracks: _tracks.toImageTracks(),
                       ),
                       tracksFn: () => _tracks,
+                      bannerBuilder: (width, height) => ArtworkStripBanner(
+                        tracks: _tracks,
+                        width: width,
+                        height: height,
+                      ),
                     ),
                     stickyHeader: TracksSearchWidgetBoxBase(
                       state: this,

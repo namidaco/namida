@@ -12,6 +12,8 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -73,6 +75,8 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
                 ),
                 infoBox: (maxWidth) => SubpageInfoContainer(
                   maxWidth: maxWidth,
+                  type: widget.type,
+                  onOpenMenu: () => NamidaDialogs.inst.showGenreDialog(name, widget.type),
                   title: name,
                   source: queueSource,
                   subtitle: tracks.map((e) => e.originalArtist).takeUnique(10).join(', '),
@@ -83,6 +87,11 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
                     tracks: tracks.toImageTracks(),
                   ),
                   tracksFn: () => tracks,
+                  bannerBuilder: (width, height) => ArtworkStripBanner(
+                    tracks: tracks,
+                    width: width,
+                    height: height,
+                  ),
                 ),
                 itemCount: searchResults?.length ?? tracks.length,
                 itemExtent: Dimensions.inst.trackTileItemExtent,

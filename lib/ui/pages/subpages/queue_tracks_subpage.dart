@@ -4,6 +4,8 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 
@@ -27,6 +29,8 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
         queue: queue.tracks,
         infoBox: (maxWidth) => SubpageInfoContainer(
           maxWidth: maxWidth,
+          type: MediaType.playlist,
+          onOpenMenu: () => NamidaDialogs.inst.showQueueDialog(queue.date),
           source: queueSource,
           title: queue.date.dateFormattedOriginal,
           subtitle: queue.date.clockFormatted,
@@ -41,6 +45,11 @@ class QueueTracksPage extends StatelessWidget with NamidaRouteWidget {
             tracks: queue.tracks.toImageTracks(),
           ),
           tracksFn: () => queue.tracks,
+          bannerBuilder: (width, height) => ArtworkStripBanner(
+            tracks: queue.tracks,
+            width: width,
+            height: height,
+          ),
         ),
       ),
     );
