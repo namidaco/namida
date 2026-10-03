@@ -41,6 +41,7 @@ import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
@@ -1093,14 +1094,15 @@ Future<void> showGeneralPopupDialog(
                                   subtitle: availableAlbums.first.displayAlbumName,
                                   icon: Broken.music_dashboard,
                                   onTap: () => NamidaOnTaps.inst.onAlbumTap(availableAlbums.first),
-                                  trailing: IconButton(
-                                    tooltip: lang.addMoreFromThisAlbum,
+                                  trailing: NamidaIconButton(
+                                    tooltip: () => lang.addMoreFromThisAlbum,
+                                    icon: Broken.add,
                                     onPressed: () {
                                       NamidaNavigator.inst.closeDialog();
                                       final tracks = availableAlbums.first.getAlbumTracks();
                                       Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                                     },
-                                    icon: const Icon(Broken.add),
+                                    onLongPress: () => showQueueInsertionConfigDialog(QueueInsertionType.moreAlbum, title: lang.addMoreFromThisAlbum),
                                   ),
                                 ),
                               if (availableAlbums.length == 1 && albumToAddFrom != null)
@@ -1113,6 +1115,7 @@ Future<void> showGeneralPopupDialog(
                                     final tracks = albumToAddFrom.getAlbumTracks();
                                     Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreAlbum);
                                   },
+                                  onLongPress: () => showQueueInsertionConfigDialog(QueueInsertionType.moreAlbum, title: lang.addMoreFromThisAlbum),
                                   trailing: IgnorePointer(
                                     child: IconButton(
                                       onPressed: () {},
@@ -1131,6 +1134,23 @@ Future<void> showGeneralPopupDialog(
                                   titleText: lang.goToAlbum,
                                   textColorScheme: colorDelightened,
                                   childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  trailingBuilder: (iconWidget) => Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _AddMoreFromPicker(
+                                        insertionType: QueueInsertionType.moreAlbum,
+                                        tooltip: lang.addMoreFromThisAlbum,
+                                        items: () => availableAlbums.map(
+                                          (e) => NamidaPopupItem(
+                                            icon: Broken.music_dashboard,
+                                            title: e.displayAlbumName,
+                                            onTap: () => Player.inst.addToQueue(e.getAlbumTracks(), insertNext: true, insertionType: QueueInsertionType.moreAlbum),
+                                          ),
+                                        ),
+                                      ),
+                                      iconWidget,
+                                    ],
+                                  ),
                                   children: [
                                     Wrap(
                                       alignment: WrapAlignment.start,
@@ -1140,6 +1160,7 @@ Future<void> showGeneralPopupDialog(
                                             text: e.displayAlbumName,
                                             textTheme: theme.textTheme,
                                             onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
+                                            onLongPress: () => Player.inst.addToQueue(e.getAlbumTracks(), insertNext: true, insertionType: QueueInsertionType.moreAlbum),
                                           ),
                                         ),
                                       ],
@@ -1157,6 +1178,7 @@ Future<void> showGeneralPopupDialog(
                                     final tracks = artistToAddFrom.getArtistTracks();
                                     Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
                                   },
+                                  onLongPress: () => showQueueInsertionConfigDialog(QueueInsertionType.moreArtist, title: lang.addMoreFromThisArtist),
                                   trailing: IgnorePointer(
                                     child: IconButton(
                                       onPressed: () {},
@@ -1172,13 +1194,14 @@ Future<void> showGeneralPopupDialog(
                                   subtitle: availableArtists.first,
                                   icon: Broken.microphone,
                                   onTap: () => NamidaOnTaps.inst.onArtistTap(availableArtists.first, MediaType.artist),
-                                  trailing: IconButton(
-                                    tooltip: lang.addMoreFromThisArtist,
+                                  trailing: NamidaIconButton(
+                                    tooltip: () => lang.addMoreFromThisArtist,
+                                    icon: Broken.add,
                                     onPressed: () {
                                       final tracks = availableArtists.first.getArtistTracks();
                                       Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreArtist);
                                     },
-                                    icon: const Icon(Broken.add),
+                                    onLongPress: () => showQueueInsertionConfigDialog(QueueInsertionType.moreArtist, title: lang.addMoreFromThisArtist),
                                   ),
                                 ),
 
@@ -1192,6 +1215,23 @@ Future<void> showGeneralPopupDialog(
                                   titleText: lang.goToArtist,
                                   textColorScheme: colorDelightened,
                                   childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  trailingBuilder: (iconWidget) => Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _AddMoreFromPicker(
+                                        insertionType: QueueInsertionType.moreArtist,
+                                        tooltip: lang.addMoreFromThisArtist,
+                                        items: () => availableArtists.map(
+                                          (e) => NamidaPopupItem(
+                                            icon: Broken.microphone,
+                                            title: e,
+                                            onTap: () => Player.inst.addToQueue(e.getArtistTracks(), insertNext: true, insertionType: QueueInsertionType.moreArtist),
+                                          ),
+                                        ),
+                                      ),
+                                      iconWidget,
+                                    ],
+                                  ),
                                   children: [
                                     Wrap(
                                       alignment: WrapAlignment.start,
@@ -1201,6 +1241,7 @@ Future<void> showGeneralPopupDialog(
                                             text: e,
                                             textTheme: theme.textTheme,
                                             onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
+                                            onLongPress: () => Player.inst.addToQueue(e.getArtistTracks(), insertNext: true, insertionType: QueueInsertionType.moreArtist),
                                           ),
                                         ),
                                       ],
@@ -1239,15 +1280,14 @@ Future<void> showGeneralPopupDialog(
                                             size: 20.0,
                                           ),
                                         ),
-                                      IconButton(
-                                        tooltip: lang.addMoreFromThisFolder,
+                                      NamidaIconButton(
+                                        tooltip: () => lang.addMoreFromThisFolder,
+                                        icon: Broken.add,
                                         onPressed: () {
                                           final tracks = availableFolders.first.tracksDedicated();
                                           Player.inst.addToQueue(tracks, insertNext: true, insertionType: QueueInsertionType.moreFolder);
                                         },
-                                        icon: const Icon(
-                                          Broken.add,
-                                        ),
+                                        onLongPress: () => showQueueInsertionConfigDialog(QueueInsertionType.moreFolder, title: lang.addMoreFromThisFolder),
                                       ),
                                     ],
                                   ),
@@ -1285,14 +1325,14 @@ Future<void> showGeneralPopupDialog(
                                       IconButton(
                                         tooltip: "${lang.playAll} (${lang.sortBy})",
                                         icon: Icon(
-                                          Broken.sort,
+                                          Broken.setting_4,
                                           size: 20.0,
-                                          color: iconColor,
+                                          color: context.defaultIconColor(),
                                         ),
                                         iconSize: 20.0,
                                         onPressed: () {
                                           NamidaNavigator.inst.closeDialog();
-                                          SubpageInfoContainer.openAdvancedPlayDialog(() => tracks, source);
+                                          showAdvancedPlayDialog(() => tracks, source);
                                         },
                                       ),
                                     ],
@@ -1311,8 +1351,21 @@ Future<void> showGeneralPopupDialog(
                                   },
                                   onLongPress: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    SubpageInfoContainer.openAdvancedShuffleDialog(() => tracks, source);
+                                    showAdvancedShuffleDialog(() => tracks, source);
                                   },
+                                  trailing: IconButton(
+                                    tooltip: "${lang.shuffle} (${lang.filterBy})",
+                                    icon: Icon(
+                                      Broken.setting_4,
+                                      size: 20.0,
+                                      color: context.defaultIconColor(),
+                                    ),
+                                    iconSize: 20.0,
+                                    onPressed: () {
+                                      NamidaNavigator.inst.closeDialog();
+                                      showAdvancedShuffleDialog(() => tracks, source);
+                                    },
+                                  ),
                                 ),
 
                               if (!isSingle)
@@ -1591,11 +1644,13 @@ Future<void> showGeneralPopupDialog(
 class _SmallUnderlinedChip extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final TextTheme textTheme;
 
   const _SmallUnderlinedChip({
     required this.text,
     required this.onTap,
+    this.onLongPress,
     required this.textTheme,
   });
 
@@ -1606,6 +1661,7 @@ class _SmallUnderlinedChip extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 6.0,
         onTap: onTap,
+        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 3.0),
           child: Text(
@@ -1616,6 +1672,32 @@ class _SmallUnderlinedChip extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AddMoreFromPicker extends StatelessWidget {
+  final QueueInsertionType insertionType;
+  final String tooltip;
+  final Iterable<NamidaPopupItem> Function() items;
+
+  const _AddMoreFromPicker({
+    required this.insertionType,
+    required this.tooltip,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      openOnLongPress: false,
+      childrenDefault: items,
+      child: NamidaIconButton(
+        tooltip: () => tooltip,
+        icon: Broken.add,
+        iconSize: 20.0,
+        onLongPress: () => showQueueInsertionConfigDialog(insertionType, title: tooltip),
       ),
     );
   }

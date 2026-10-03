@@ -16,7 +16,6 @@ import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
-import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -42,6 +41,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
@@ -409,6 +409,7 @@ class NamidaOnTaps {
   void onTracksSortIconTap({
     required List<SortType> currentSorts,
     required bool currentReverse,
+    List<SortType>? allSorts,
     required void Function(List<SortType> sorts, bool reverse) onChanged,
   }) {
     List<SortType> newSorts = currentSorts;
@@ -417,7 +418,7 @@ class NamidaOnTaps {
     return _onSubPageSortIconTap<SortType>(
       minimumItems: 0,
       defaultSorts: const [],
-      allSortsList: List<SortType>.from(SortType.values),
+      allSortsList: List<SortType>.from(allSorts ?? SortType.values),
       sortToText: (sort) => sort.toText(),
       sortToIcon: (sort) => sort.toIcon(),
       currentSorts: currentSorts,
@@ -1355,7 +1356,6 @@ class TracksAddOnTap {
     showAddItemsToQueueDialog(
       onDisposing: null,
       context: context,
-      disabledSorts: null,
       tiles: (getAddTracksTile) {
         return [
           getAddTracksTile(
@@ -1812,9 +1812,7 @@ class TracksAddOnTap {
         isLoadingVideoDate.close();
         isLoadingMixPlaylist.close();
       },
-      disabledSorts: () => [
-        InsertionSortingType.rating, // cuz we have no rating system for yt
-      ],
+      forYoutube: true,
       context: context,
       tiles: (getAddTracksTile) {
         return [
@@ -2048,7 +2046,7 @@ class TracksAddOnTap {
   Future<void> showAddItemsToQueueDialog({
     required BuildContext context,
     required void Function()? onDisposing,
-    required List<InsertionSortingType> Function()? disabledSorts,
+    bool forYoutube = false,
     required List<Widget> Function(
       Widget Function({
         required String title,
@@ -2064,154 +2062,6 @@ class TracksAddOnTap {
     tiles,
   }) async {
     final shouldShowConfigureIcon = false.obs;
-
-    void openQueueInsertionConfigure(QueueInsertionType insertionType, String title) async {
-      final qinsertion = insertionType.toQueueInsertion();
-      final tracksNo = qinsertion.numberOfTracks.obs;
-      final insertN = qinsertion.insertNext.obs;
-      final sampleRx = qinsertion.sample.obs;
-      final sampleDaysRx = qinsertion.sampleDays.obs;
-      final sortBy = qinsertion.sortBy.obs;
-      final maxTracksCount = 200.withMaximum(allTracksInLibrary.length);
-      final recommendedSampleCount = insertionType.recommendedSampleCount;
-      final recommendedSampleDaysCount = insertionType.recommendedSampleDaysCount;
-      final textTheme = context.textTheme;
-      await NamidaNavigator.inst.navigateDialog(
-        onDisposing: () {
-          tracksNo.close();
-          insertN.close();
-          sampleRx.close();
-          sampleDaysRx.close();
-          sortBy.close();
-        },
-        dialog: CustomBlurryDialog(
-          title: lang.configure,
-          actions: [
-            const CancelButton(),
-            NamidaButton(
-              text: lang.save,
-              onTap: () {
-                final insertion = QueueInsertion(
-                  numberOfTracks: tracksNo.value,
-                  insertNext: insertN.value,
-                  sample: sampleRx.value,
-                  sampleDays: sampleDaysRx.value,
-                  sortBy: sortBy.value,
-                );
-                settings.queueInsertion.update((insertions) => insertions[insertionType] = insertion);
-                NamidaNavigator.inst.closeDialog();
-              },
-            ),
-          ],
-          child: Column(
-            children: [
-              NamidaInkWell(
-                borderRadius: 10.0,
-                bgColor: context.theme.cardColor,
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                child: Text(title, style: textTheme.displayLarge),
-              ),
-              const SizedBox(height: 24.0),
-              CustomListTile(
-                icon: Broken.computing,
-                title: lang.numberOfTracks,
-                subtitle: "${lang.unlimited}-$maxTracksCount",
-                trailing: Obx(
-                  (context) {
-                    final tracksCount = tracksNo.valueR;
-                    return NamidaWheelSlider(
-                      max: maxTracksCount,
-                      initValue: tracksCount,
-                      onValueChanged: (val) => tracksNo.value = val,
-                      text: tracksCount == 0 ? lang.unlimited : '$tracksCount',
-                    );
-                  },
-                ),
-              ),
-              Obx(
-                (context) => CustomSwitchListTile(
-                  icon: Broken.next,
-                  title: lang.playNext,
-                  value: insertN.valueR,
-                  onChanged: (isTrue) => insertN.value = !isTrue,
-                ),
-              ),
-              if (recommendedSampleCount != null)
-                CustomListTile(
-                  icon: Broken.chart_square,
-                  title: '${lang.sample} (${insertionType == QueueInsertionType.algorithmDiscoverDate ? lang.firstListen : lang.totalListens})',
-                  trailing: Obx(
-                    (context) {
-                      final sampleCount = sampleRx.valueR ?? recommendedSampleCount;
-                      return NamidaWheelSlider(
-                        min: 1,
-                        max: 100,
-                        initValue: sampleCount,
-                        onValueChanged: (val) => sampleRx.value = val,
-                        text: '$sampleCount',
-                      );
-                    },
-                  ),
-                ),
-              if (recommendedSampleDaysCount != null)
-                CustomListTile(
-                  icon: Broken.square,
-                  title: '${lang.sample} (${lang.days})',
-                  trailing: Obx(
-                    (context) {
-                      final sampleDaysCount = sampleDaysRx.valueR ?? recommendedSampleDaysCount;
-                      return NamidaWheelSlider(
-                        min: 1,
-                        max: 100,
-                        initValue: sampleDaysCount,
-                        onValueChanged: (val) => sampleDaysRx.value = val,
-                        text: '$sampleDaysCount',
-                      );
-                    },
-                  ),
-                ),
-              CustomListTile(
-                icon: Broken.sort,
-                title: lang.sortBy,
-                trailing: NamidaPopupWrapper(
-                  childrenDefault: () {
-                    final disabledOnes = disabledSorts != null ? disabledSorts() : null;
-                    final iterables = disabledOnes == null || disabledOnes.isEmpty
-                        ? InsertionSortingType.values
-                        : InsertionSortingType.values.where((element) => !disabledOnes.contains(element));
-                    return iterables.map(
-                      (e) => NamidaPopupItem(
-                        icon: e.toIcon(),
-                        title: e.toText(),
-                        selected: e == sortBy.value,
-                        onTap: () => sortBy.value = e,
-                      ),
-                    );
-                  },
-                  child: ObxO(
-                    rx: sortBy,
-                    builder: (context, sort) => Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          sort.toIcon(),
-                          size: 18.0,
-                        ),
-                        const SizedBox(width: 8.0),
-                        Text(
-                          sort.toText(),
-                          style: context.textTheme.displayMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
 
     Widget getAddTracksTile({
       required String title,
@@ -2235,7 +2085,7 @@ class TracksAddOnTap {
                     NamidaIconButton(
                       icon: Broken.setting_4,
                       iconSize: chip == true ? 20.0 : 24.0,
-                      onPressed: () => openQueueInsertionConfigure(insertionType, title),
+                      onPressed: () => showQueueInsertionConfigDialog(insertionType, title: title, forYoutube: forYoutube),
                     ).animateEntrance(
                       showWhen: shouldShowConfigureIcon.valueR,
                     ),

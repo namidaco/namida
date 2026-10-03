@@ -1144,49 +1144,7 @@ extension PerformanceModeUtils on PerformanceMode {
 }
 
 extension QueueInsertionTypeToQI on QueueInsertionType {
-  QueueInsertion toQueueInsertion() => settings.queueInsertion.value[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none);
-
-  /// NOTE: Modifies the original list.
-  List<Selectable> shuffleOrSort(List<Selectable> tracks) {
-    final sortBy = toQueueInsertion().sortBy;
-
-    switch (sortBy) {
-      case InsertionSortingType.listenCount:
-        if (this == QueueInsertionType.algorithm || this == QueueInsertionType.algorithmDiscoverDate || this == QueueInsertionType.algorithmTimeRange) {
-          // already sorted by repeated times inside [NamidaGenerator.generateRecommendedTrack].
-        } else {
-          tracks.sortByReverse((e) => HistoryController.inst.topTracksMapListens.value[e.track]?.length ?? 0);
-        }
-      case InsertionSortingType.rating:
-        tracks.sortByReverse((e) => e.track.effectiveRating);
-      case InsertionSortingType.random:
-        tracks.shuffle();
-      case InsertionSortingType.none: // do nothing
-    }
-
-    return tracks;
-  }
-
-  /// NOTE: Modifies the original list.
-  List<YoutubeID> shuffleOrSortYT(List<YoutubeID> videos) {
-    final sortBy = toQueueInsertion().sortBy;
-
-    switch (sortBy) {
-      case InsertionSortingType.listenCount:
-        if (this == QueueInsertionType.algorithm) {
-          // already sorted by repeated times inside [NamidaGenerator.generateRecommendedTrack].
-        } else {
-          videos.sortByReverse((e) => YoutubeHistoryController.inst.topTracksMapListens.value[e.id]?.length ?? 0);
-        }
-      case InsertionSortingType.random:
-        videos.shuffle();
-
-      case InsertionSortingType.rating: // no ratings yet
-      case InsertionSortingType.none: // do nothing
-    }
-
-    return videos;
-  }
+  QueueInsertion toQueueInsertion() => settings.queueInsertion.value[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true);
 }
 
 extension SponsorBlockCategoryExt on SponsorBlockCategory {
@@ -2508,22 +2466,6 @@ extension TrackPlayModeL10n on TrackPlayMode {
     TrackPlayMode.trackArtist => Broken.profile_2user,
     TrackPlayMode.trackGenre => Broken.smileys,
     TrackPlayMode.trackStyle => Broken.brush_1,
-  };
-}
-
-extension InsertionSortingTypeL10n on InsertionSortingType {
-  String toText() => switch (this) {
-    InsertionSortingType.listenCount => lang.totalListens,
-    InsertionSortingType.random => lang.random,
-    InsertionSortingType.rating => lang.rating,
-    InsertionSortingType.none => lang.defaultLabel,
-  };
-
-  IconData toIcon() => switch (this) {
-    InsertionSortingType.listenCount => Broken.award,
-    InsertionSortingType.random => Broken.format_circle,
-    InsertionSortingType.rating => Broken.grammerly,
-    InsertionSortingType.none => Broken.cd,
   };
 }
 

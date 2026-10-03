@@ -306,62 +306,122 @@
     "moreAlbum": {
       "numberOfTracks": 10,
       "insertNext": false,
-      "sortBy": "random"
+      "shuffle": true,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "moreArtist": {
       "numberOfTracks": 10,
       "insertNext": false,
-      "sortBy": "random"
+      "shuffle": true,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "moreFolder": {
       "numberOfTracks": 10,
       "insertNext": false,
-      "sortBy": "random"
+      "shuffle": true,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "random": {
       "numberOfTracks": 10,
       "insertNext": false,
-      "sortBy": "none"
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "listenTimeRange": {
       "numberOfTracks": 0,
       "insertNext": true,
-      "sortBy": "none"
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "mood": {
       "numberOfTracks": 20,
       "insertNext": true,
-      "sortBy": "listenCount"
+      "shuffle": false,
+      "sorts": [
+        "mostPlayed"
+      ],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "rating": {
       "numberOfTracks": 20,
       "insertNext": false,
-      "sortBy": "rating"
+      "shuffle": false,
+      "sorts": [
+        "rating"
+      ],
+      "sortReverse": true,
+      "filterMinimums": {}
     },
     "sameReleaseDate": {
       "numberOfTracks": 30,
       "insertNext": true,
-      "sortBy": "listenCount"
+      "shuffle": false,
+      "sorts": [
+        "mostPlayed"
+      ],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "algorithm": {
       "numberOfTracks": 20,
       "insertNext": true,
-      "sortBy": "none"
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "algorithmDiscoverDate": {
       "numberOfTracks": 20,
       "insertNext": true,
-      "sortBy": "listenCount"
+      "shuffle": false,
+      "sorts": [
+        "mostPlayed"
+      ],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "algorithmTimeRange": {
       "numberOfTracks": 20,
       "insertNext": true,
-      "sortBy": "none"
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     },
     "mix": {
       "numberOfTracks": 0,
       "insertNext": true,
-      "sortBy": "none"
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
+    },
+    "advancedPlay": {
+      "numberOfTracks": 0,
+      "insertNext": false,
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
+    },
+    "advancedShuffle": {
+      "numberOfTracks": 0,
+      "insertNext": false,
+      "shuffle": true,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {}
     }
   },
   "mediaItemsTrackSorting": {

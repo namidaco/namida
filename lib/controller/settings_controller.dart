@@ -315,9 +315,6 @@ class _SettingsController extends _SettingsKeysWriter {
   late final shuffleExcludeCount = _key('shuffleExcludeCount', 0);
   late final shuffleExcludeSort = _keyEnum('shuffleExcludeSort', SortType.latestPlayed, SortType.values);
   late final shuffleExcludeSortReverse = _key('shuffleExcludeSortReverse', false);
-  late final advancedPlaySorts = _keyList<SortType>('advancedPlaySorts', const [], item: SortType.values.asCodec());
-  late final advancedPlaySortReverse = _key('advancedPlaySortReverse', false);
-  late final advancedPlayMinimums = _keyMap<SortType, int>('advancedPlayMinimums', const {SortType.rating: 75}, key: SortType.values.asCodec());
 
   late final mostPlayedTimeRange = _keyEnum('mostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
   late final mostPlayedCustomDateRange = _keyObject('mostPlayedCustomDateRange', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
@@ -387,18 +384,20 @@ class _SettingsController extends _SettingsKeysWriter {
   late final queueInsertion = _keyMap<QueueInsertionType, QueueInsertion>(
     'queueInsertion',
     const {
-      QueueInsertionType.moreAlbum: QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
-      QueueInsertionType.moreArtist: QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
-      QueueInsertionType.moreFolder: QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.random),
-      QueueInsertionType.random: QueueInsertion(numberOfTracks: 10, insertNext: false, sortBy: InsertionSortingType.none),
-      QueueInsertionType.listenTimeRange: QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none),
-      QueueInsertionType.mood: QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
-      QueueInsertionType.rating: QueueInsertion(numberOfTracks: 20, insertNext: false, sortBy: InsertionSortingType.rating),
-      QueueInsertionType.sameReleaseDate: QueueInsertion(numberOfTracks: 30, insertNext: true, sortBy: InsertionSortingType.listenCount),
-      QueueInsertionType.algorithm: QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.none),
-      QueueInsertionType.algorithmDiscoverDate: QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.listenCount),
-      QueueInsertionType.algorithmTimeRange: QueueInsertion(numberOfTracks: 20, insertNext: true, sortBy: InsertionSortingType.none),
-      QueueInsertionType.mix: QueueInsertion(numberOfTracks: 0, insertNext: true, sortBy: InsertionSortingType.none),
+      QueueInsertionType.moreAlbum: QueueInsertion(numberOfTracks: 10, insertNext: false, shuffle: true),
+      QueueInsertionType.moreArtist: QueueInsertion(numberOfTracks: 10, insertNext: false, shuffle: true),
+      QueueInsertionType.moreFolder: QueueInsertion(numberOfTracks: 10, insertNext: false, shuffle: true),
+      QueueInsertionType.random: QueueInsertion(numberOfTracks: 10, insertNext: false),
+      QueueInsertionType.listenTimeRange: QueueInsertion(numberOfTracks: 0, insertNext: true),
+      QueueInsertionType.mood: QueueInsertion(numberOfTracks: 20, insertNext: true, sorts: [SortType.mostPlayed]),
+      QueueInsertionType.rating: QueueInsertion(numberOfTracks: 20, insertNext: false, sorts: [SortType.rating], sortReverse: true),
+      QueueInsertionType.sameReleaseDate: QueueInsertion(numberOfTracks: 30, insertNext: true, sorts: [SortType.mostPlayed]),
+      QueueInsertionType.algorithm: QueueInsertion(numberOfTracks: 20, insertNext: true),
+      QueueInsertionType.algorithmDiscoverDate: QueueInsertion(numberOfTracks: 20, insertNext: true),
+      QueueInsertionType.algorithmTimeRange: QueueInsertion(numberOfTracks: 20, insertNext: true),
+      QueueInsertionType.mix: QueueInsertion(numberOfTracks: 0, insertNext: true),
+      QueueInsertionType.advancedPlay: QueueInsertion(numberOfTracks: 0, insertNext: false),
+      QueueInsertionType.advancedShuffle: QueueInsertion(numberOfTracks: 0, insertNext: false, shuffle: true),
     },
     key: QueueInsertionType.values.asCodec(),
     value: _ObjectCodec(QueueInsertion.fromJson, (v) => v.toJson()),
@@ -504,6 +503,9 @@ class _SettingsController extends _SettingsKeysWriter {
     _dropKey('defaultBackupLocation');
     _dropKey('backupItemslist');
     _legacyWindowBounds = const _RectCodec().decode(_dropKey('windowBounds'));
+    _dropKey('advancedPlaySorts');
+    _dropKey('advancedPlaySortReverse');
+    _dropKey('advancedPlayMinimums');
 
     final tracksSort = _dropKey('tracksSort');
     if (tracksSort is String) {

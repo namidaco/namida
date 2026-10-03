@@ -538,14 +538,13 @@ class Player {
     bool showSnackBar = true,
     String? emptyTracksMessage,
   }) async {
-    final insertionDetails = insertionType?.toQueueInsertion();
-    final shouldInsertNext = insertionDetails?.insertNext ?? insertNext;
-    final maxCount = insertionDetails?.numberOfTracks == 0 ? null : insertionDetails?.numberOfTracks;
+    final insertion = insertionType?.toQueueInsertion();
+    final shouldInsertNext = insertion?.insertNext ?? insertNext;
     final newItem = tracks.firstOrNull;
     return await newItem?.execute(
           selectable: (_) async {
             final tracksCopy = List<Selectable>.from(tracks);
-            final finalTracks = (insertionType?.shuffleOrSort(tracksCopy) ?? tracksCopy).withLimit(maxCount);
+            final finalTracks = insertion?.apply(tracksCopy) ?? tracksCopy;
 
             if (showSnackBar && finalTracks.isEmpty) {
               snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);
@@ -573,7 +572,7 @@ class Player {
           },
           youtubeID: (_) async {
             final tracksCopy = List<YoutubeID>.from(tracks);
-            final finalVideos = (insertionType?.shuffleOrSortYT(tracksCopy) ?? tracksCopy).withLimit(maxCount);
+            final finalVideos = insertion?.applyYoutube(tracksCopy) ?? tracksCopy;
 
             if (showSnackBar && finalVideos.isEmpty) {
               snackyy(title: lang.note, message: emptyTracksMessage ?? lang.noTracksFound, top: false);

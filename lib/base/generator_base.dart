@@ -12,7 +12,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   List<T> generateItemsFromHistoryDates(DateTime? oldestDate, DateTime? newestDate, {bool sortByListensInRangeIfRequired = true}) {
     final items = historyController.generateTracksFromHistoryDates(oldestDate, newestDate, removeDuplicates: false);
 
-    final shouldDefaultSort = sortByListensInRangeIfRequired && QueueInsertionType.listenTimeRange.toQueueInsertion().sortBy == InsertionSortingType.none;
+    final shouldDefaultSort = sortByListensInRangeIfRequired && QueueInsertionType.listenTimeRange.toQueueInsertion().isUnsorted;
     if (shouldDefaultSort) {
       final listensCountInThisRange = <E, int>{};
       for (var item in items) {

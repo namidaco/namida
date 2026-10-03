@@ -19,6 +19,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
@@ -129,7 +130,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   NamidaIconButton(
                     icon: Broken.shuffle,
                     onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll, shuffle: true, gentlePlay: false),
-                    onLongPress: () => SubpageInfoContainer.openAdvancedShuffleDialog(() => SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll),
+                    onLongPress: () => showAdvancedShuffleDialog(() => SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll),
                     iconSize: 18.0,
                     horizontalPadding: 2.0,
                   ),
@@ -137,7 +138,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   NamidaIconButton(
                     icon: Broken.play,
                     onPressed: () => Player.inst.playOrPause(0, SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll, gentlePlay: false),
-                    onLongPress: () => SubpageInfoContainer.openAdvancedPlayDialog(() => SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll),
+                    onLongPress: () => showAdvancedPlayDialog(() => SearchSortController.inst.trackSearchList.value, QueueSource.allTracksAll),
                     iconSize: 18.0,
                     horizontalPadding: 2.0,
                   ),
