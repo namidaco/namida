@@ -759,6 +759,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   String? _audioDevice;
   bool _bitPerfect = false;
+  bool _exclusive = false;
   bool _mono = false;
 
   static const _kSignalPathProperties = [
@@ -787,7 +788,7 @@ class CustomMPVPlayer implements AVPlayer {
       decoderName: codecName.isEmpty ? null : 'FFmpeg $codecName',
       decoded: decoded,
       isBitPerfect: isBitPerfect,
-      outputType: _bitPerfect ? AudioSignalOutputType.desktopExclusive : AudioSignalOutputType.desktopShared,
+      outputType: _exclusive ? AudioSignalOutputType.desktopExclusive : AudioSignalOutputType.desktopShared,
       outputDriver: driver.isEmpty ? null : driver,
       outputDeviceName: deviceDescription.isEmpty ? null : deviceDescription,
       output: output,
@@ -826,7 +827,7 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   @override
-  Future<void> setAudioOutput(String? device, {required bool bitPerfect, required bool mono}) async {
+  Future<void> setAudioOutput(String? device, {required bool bitPerfect, required bool exclusive, required bool mono}) async {
     if (device != _audioDevice) {
       _audioDevice = device;
       final mpvDevice = device ?? 'auto';
@@ -838,9 +839,13 @@ class CustomMPVPlayer implements AVPlayer {
       _mono = isMonoApplied;
       await _setMpvProperty('audio-channels', isMonoApplied ? 'mono' : 'auto-safe');
     }
+    final isExclusiveApplied = exclusive || bitPerfect;
+    if (isExclusiveApplied != _exclusive) {
+      _exclusive = isExclusiveApplied;
+      await _setMpvProperty('audio-exclusive', isExclusiveApplied ? 'yes' : 'no');
+    }
     if (bitPerfect == _bitPerfect) return;
     _bitPerfect = bitPerfect;
-    await _setMpvProperty('audio-exclusive', bitPerfect ? 'yes' : 'no');
     _audioFilters.setBitPerfect(bitPerfect);
     await [
       _player.setRate(bitPerfect ? 1.0 : _speed),
@@ -1007,11 +1012,12 @@ class _MPVAudioFilters {
   static const _kEqualizerLabel = 'nmeq';
   static const _kSkipSilenceLabel = 'nmss';
 
+  static const _kLavfiInputFormatFilter = 'format=format=floatp';
   static const _kLimiterFilterName = 'alimiter';
   static const _kSkipSilenceFilterName = 'silenceremove';
   static const _kSkipSilenceParams =
       'start_periods=1:start_duration=0.15:start_threshold=-50dB:start_silence=0.05'
-      ':stop_periods=-1:stop_duration=0.15:stop_threshold=-50dB:stop_silence=0.05:detection=peak';
+      ':stop_periods=-1:stop_duration=2:stop_threshold=-50dB:stop_silence=2:detection=peak';
 
   /// media_kit's windows & macos libmpv ship a stripped ffmpeg whose only equalizing filter is `equalizer`,
   /// linux uses the system's libmpv.
@@ -1120,6 +1126,9 @@ class _MPVAudioFilters {
     if (_skipSilenceEnabled && !_MPVMissingFilters.contains(_kSkipSilenceFilterName)) {
       filters.add('@$_kSkipSilenceLabel:lavfi=[$_kSkipSilenceFilterName=$_kSkipSilenceParams]');
     }
+
+    // -- without `aresample` lavfi can't convert packed sources (wav, flac) and fails, mpv's own converter does it ahead.
+    if (filters.isNotEmpty) filters.insert(0, _kLavfiInputFormatFilter);
 
     // -- the filter media_kit sets on its own for rate & pitch, rebuilt since we own the property now.
     final rate = _player.state.rate;

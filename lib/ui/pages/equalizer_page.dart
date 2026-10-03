@@ -596,7 +596,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                 final is432HzEnabled = pitch == hz432Value;
                                 return _SliderTextWidget(
                                   icon: Broken.airpods,
-                                  min: isSemitones ? -12.0 : 0.0,
+                                  min: isSemitones ? -12.0 : 0.5,
                                   max: isSemitones ? 12.0 : 2.0,
                                   title: lang.pitch,
                                   subtitle: isSemitones ? '(${lang.semitones})' : '(${lang.percentage})',
@@ -657,7 +657,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                     key: pitchKey,
                                     min: -12.0,
                                     max: 12.0,
-                                    divisions: 24, // 24 steps = 0.5 semitone steps from -12 to +12
+                                    divisions: 48, // 48 steps = 0.5 semitone steps from -12 to +12
                                     incremental: 0.5,
                                     valueListenable: widget.updateConfig.pitchRx,
                                     valueModifier: _SliderTextWidget.ratioToSemitones,
@@ -670,6 +670,8 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                   )
                                 : _CuteSlider(
                                     key: pitchKey,
+                                    min: 0.5,
+                                    divisions: 150,
                                     valueListenable: widget.updateConfig.pitchRx,
                                     onChanged: (value) {
                                       widget.updateConfig.setPitch(value);
@@ -692,6 +694,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                         (context) => _SliderTextWidget(
                           icon: Broken.forward,
                           title: lang.speed,
+                          min: 0.1,
                           value: widget.updateConfig.speedRx.valueR,
                           onManualChange: (value) {
                             speedKey.currentState?.updateValNoRoundExternal(value);
@@ -744,6 +747,8 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                       ),
                       _CuteSlider(
                         key: speedKey,
+                        min: 0.1,
+                        divisions: 190,
                         valueListenable: widget.updateConfig.speedRx,
                         onChanged: (value) async {
                           await widget.updateConfig.setSpeed(value);
@@ -1291,6 +1296,7 @@ class _CuteSliderState extends State<_CuteSlider> {
   Widget build(BuildContext context) {
     final incremental = widget.incremental;
     final interaction = widget.tapToUpdate ? SliderInteraction.tapAndSlide : SliderInteraction.slideOnly;
+    final sliderValue = _currentVal.withMinimum(widget.min).withMaximum(widget.max); // -- can be outside, ex: pitch linked to speed
     return Row(
       children: [
         const SizedBox(width: 12.0),
@@ -1305,7 +1311,7 @@ class _CuteSliderState extends State<_CuteSlider> {
           child: Slider.adaptive(
             min: widget.min,
             max: widget.max,
-            value: _currentVal.withMaximum(widget.max), // cuz it can be more
+            value: sliderValue,
             onChanged: _updateVal,
             divisions: widget.divisions,
             label: widget.valToText(_currentVal),

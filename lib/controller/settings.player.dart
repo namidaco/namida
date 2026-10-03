@@ -43,6 +43,7 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final replayGainType = _keyEnum('replayGainType', isKuru ? ReplayGainType.volume : ReplayGainType.platform_default, ReplayGainType.values, sync: false);
   late final internalPlayer = _keyEnum('internalPlayer', InternalPlayerType.auto, InternalPlayerType.getAvailableForCurrentPlatform(), sync: false);
   late final bitPerfect = _key('bitPerfect', false, sync: false);
+  late final exclusiveMode = _key('exclusiveMode', false, sync: false);
   late final usbDirect = _key('usbDirect', false, sync: false);
   late final monoAudio = _key('monoAudio', false);
 

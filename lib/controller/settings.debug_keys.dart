@@ -98,6 +98,7 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     replayGainType,
     internalPlayer,
     bitPerfect,
+    exclusiveMode,
     usbDirect,
     monoAudio,
     audioOutputDevice,

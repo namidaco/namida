@@ -40,6 +40,9 @@ class AudioOutputController {
     AudioOutputForcedOffCause.usbDirect => const [
       AudioOutputForcedOff.crossfade, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.systemEffects, AudioOutputForcedOff.otherSounds, //
     ],
+    AudioOutputForcedOffCause.exclusiveMode => const [
+      AudioOutputForcedOff.crossfade, AudioOutputForcedOff.otherSounds, //
+    ],
   };
 
   StreamSubscription<AudioOutputEventMessage>? _androidEventsSub;
@@ -72,6 +75,7 @@ class AudioOutputController {
   /// usb direct feeds one stream to the dac, bypassing android's effects, the dac follows android's media volume and
   /// its own volume keeps bit-perfect adjustable, without one bit-perfect samples stay at full scale.
   /// both keep other apps off the device: desktop exclusive mode and usb direct own it, android's bit-perfect mixer mutes them.
+  /// desktop exclusive mode alone keeps processing, only crossfade's second player can't open the owned device.
   bool _isForcedOffBy(AudioOutputForcedOff option, AudioOutputForcedOffCause cause, {required bool reactive}) {
     final usbDirect = reactive ? usbDirectStatus.valueR : usbDirectStatus.value;
     final isUsbDirectActive = usbDirect?.isActive ?? false;
@@ -106,6 +110,21 @@ class AudioOutputController {
           AudioOutputForcedOff.volume ||
           AudioOutputForcedOff.systemVolume ||
           AudioOutputForcedOff.fadeOnPlayPause => false,
+        };
+      case AudioOutputForcedOffCause.exclusiveMode:
+        final isExclusiveMode = reactive ? settings.player.exclusiveMode.valueR : settings.player.exclusiveMode.value;
+        return switch (option) {
+          AudioOutputForcedOff.crossfade || AudioOutputForcedOff.otherSounds => isExclusiveMode,
+          AudioOutputForcedOff.equalizer ||
+          AudioOutputForcedOff.loudnessEnhancer ||
+          AudioOutputForcedOff.speed ||
+          AudioOutputForcedOff.pitch ||
+          AudioOutputForcedOff.skipSilence ||
+          AudioOutputForcedOff.monoAudio ||
+          AudioOutputForcedOff.volume ||
+          AudioOutputForcedOff.systemVolume ||
+          AudioOutputForcedOff.fadeOnPlayPause ||
+          AudioOutputForcedOff.systemEffects => false,
         };
     }
   }
@@ -151,6 +170,12 @@ class AudioOutputController {
     } else {
       await Player.inst.applyAudioOutput();
     }
+  }
+
+  /// desktop only.
+  Future<void> setExclusiveMode(bool enabled) async {
+    settings.player.exclusiveMode.save(enabled);
+    await Player.inst.applyAudioOutput();
   }
 
   Future<void> setMonoAudio(bool enabled) async {
@@ -381,6 +406,7 @@ enum AudioSignalOutputType {
 enum AudioOutputForcedOffCause {
   bitPerfect,
   usbDirect,
+  exclusiveMode,
 }
 
 enum AudioOutputForcedOff {

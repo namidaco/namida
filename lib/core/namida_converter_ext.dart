@@ -2833,16 +2833,19 @@ extension AudioOutputForcedOffCauseUtils on AudioOutputForcedOffCause {
   String toText() => switch (this) {
     AudioOutputForcedOffCause.bitPerfect => lang.bitPerfect,
     AudioOutputForcedOffCause.usbDirect => lang.usbDirect,
+    AudioOutputForcedOffCause.exclusiveMode => lang.exclusiveMode,
   };
 
   IconData toIcon() => switch (this) {
     AudioOutputForcedOffCause.bitPerfect => Broken.flash,
     AudioOutputForcedOffCause.usbDirect => Broken.cpu,
+    AudioOutputForcedOffCause.exclusiveMode => Broken.lock,
   };
 
   bool isAvailable() => switch (this) {
     AudioOutputForcedOffCause.bitPerfect => true,
     AudioOutputForcedOffCause.usbDirect => Platform.isAndroid,
+    AudioOutputForcedOffCause.exclusiveMode => !Platform.isAndroid,
   };
 }
 

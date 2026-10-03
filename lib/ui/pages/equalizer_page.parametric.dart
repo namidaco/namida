@@ -1784,6 +1784,26 @@ class _AudioOutputSection extends StatelessWidget {
                       },
                     ),
                   ),
+                ] else ...[
+                  const SizedBox(width: 8.0),
+                  Expanded(
+                    child: Obx(
+                      (context) {
+                        final isBitPerfect = settings.player.bitPerfect.valueR;
+                        final isExclusiveMode = settings.player.exclusiveMode.valueR;
+                        return AnimatedEnabled(
+                          enabled: !isBitPerfect,
+                          child: _OutputModeCard(
+                            icon: Broken.lock,
+                            title: lang.exclusiveMode,
+                            statusText: lang.exclusiveModeSubtitle,
+                            isEnabled: isBitPerfect || isExclusiveMode,
+                            onTap: () => output.setExclusiveMode(!isExclusiveMode),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ],
             ),

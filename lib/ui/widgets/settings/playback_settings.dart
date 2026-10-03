@@ -86,7 +86,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.onNotificationTap: [lang.onNotificationTap],
     _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.dismissibleMiniplayer],
     _PlaybackSettingsKeys.soundControl: [
-      lang.soundControl, lang.outputDevice, lang.bitPerfect, lang.usbDirect, lang.signalPath, lang.equalizer, lang.preamp, //
+      lang.soundControl, lang.outputDevice, lang.bitPerfect, lang.usbDirect, lang.exclusiveMode, lang.signalPath, lang.equalizer, lang.preamp, //
       lang.speed, lang.pitch, lang.volume, lang.loudnessEnhancer, lang.monoAudio, //
     ],
     _PlaybackSettingsKeys.replayGain: [lang.normalizeAudio, lang.normalizeAudioSubtitle],

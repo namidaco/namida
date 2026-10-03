@@ -2875,7 +2875,13 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       exoplayerCreator: () => _createAndroidPlayer(preferSWDecoders: false),
       exoplayerSWCreator: () => _createAndroidPlayer(preferSWDecoders: true),
     );
-    player.setAudioOutput(settings.player.audioOutputDevice.value, bitPerfect: settings.player.bitPerfect.value, mono: settings.player.monoAudio.value);
+    final playerSettings = settings.player;
+    player.setAudioOutput(
+      playerSettings.audioOutputDevice.value,
+      bitPerfect: playerSettings.bitPerfect.value,
+      exclusive: playerSettings.exclusiveMode.value,
+      mono: playerSettings.monoAudio.value,
+    );
     return player;
   }
 

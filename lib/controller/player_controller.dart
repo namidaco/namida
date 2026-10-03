@@ -369,8 +369,9 @@ class Player {
   Future<void> applyAudioOutput() {
     final device = settings.player.audioOutputDevice.value;
     final bitPerfect = settings.player.bitPerfect.value;
+    final exclusive = settings.player.exclusiveMode.value;
     final mono = settings.player.monoAudio.value;
-    return _audioHandler.executeOnPlayers((player) => player.setAudioOutput(device, bitPerfect: bitPerfect, mono: mono));
+    return _audioHandler.executeOnPlayers((player) => player.setAudioOutput(device, bitPerfect: bitPerfect, exclusive: exclusive, mono: mono));
   }
 
   /// saves the global equalizer and applies it, unless the current item has its own config.
