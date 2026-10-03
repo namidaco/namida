@@ -2198,7 +2198,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     const SizedBox(width: 10.0),
                                                   ],
 
-                                                  if (!isFullScreen && settings.extra.ytStyleButtonSwitcher.value == true) ...[
+                                                  if (!isFullScreen && settings.ytStyleButtonSwitcher.value == true) ...[
                                                     NamidaIconButton(
                                                       verticalPadding: 2.0,
                                                       horizontalPadding: 4.0,

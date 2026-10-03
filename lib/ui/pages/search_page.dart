@@ -128,7 +128,7 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    var initialSearchType = settings.extra.preferredSearchType.value;
+    var initialSearchType = settings.preferredSearchType.value;
     if (initialSearchType == .auto) {
       initialSearchType = ScrollSearchController.inst.currentSearchType.value;
     }

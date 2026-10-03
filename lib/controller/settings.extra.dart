@@ -1,5 +1,7 @@
 part of 'settings_controller.dart';
 
+/// state that changes all the time (tab and page indexes, window bounds, expansion states, effect toggles).
+/// preferences a user sets once go in [_SettingsController] or a feature file instead.
 class _ExtraSettings extends _SettingsKeysWriter {
   _ExtraSettings._internal();
 
@@ -21,31 +23,21 @@ class _ExtraSettings extends _SettingsKeysWriter {
     value: LibraryTab.values.asCodec(),
   );
   late final ytInitialHomePage = _keyEnum('ytInitialHomePage', YTHomePages.playlists, YTHomePages.values);
-  late final preferredSearchType = _keyEnum('preferredSearchType', SearchType.auto, SearchType.values);
-  late final resumeUIEnabled = _key('resumeUIEnabled', true);
 
   late final recentSearchesEnabled = _key<bool?>('recentSearchesEnabled', null);
   late final recentSearches = _keyList<String>('recentSearches', const []);
 
   static const _maxRecentSearches = 20;
 
-  late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null);
-  late final tapToScroll = _key<bool?>('tapToScroll', null);
-  late final enhancedDragToScroll = _key<bool?>('enhancedDragToScroll', null);
-  late final smoothScrolling = _key<bool?>('smoothScrolling', null);
   late final floatingArtworkEffect = _key<bool?>('floatingArtworkEffect', null);
   late final tiltingCardsEffect = _key<bool?>('tiltingCardsEffect', null);
   late final reduceAnimations = _key<bool?>('reduceAnimations', null);
   late final jellysInvasion = _key<bool?>('jellysInvasion', null);
   late final jellysPalette = _key<bool?>('jellysPalette', null);
   late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
-  late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null);
-  late final keepVideoFrameOnSwitch = _key<bool?>('keepVideoFrameOnSwitch', null);
   late final artistAlbumsExpanded = _key<bool?>('artistAlbumsExpanded', null);
   late final artistSinglesExpanded = _key<bool?>('artistSinglesExpanded', null);
   late final artistsMapGraphLayout = _key<bool?>('artistsMapGraphLayout', null);
-  late final ytStyleButtonSwitcher = _key<bool?>('ytStyleButtonSwitcher', null);
-  late final backgroundImages = _key<bool?>('backgroundImages', null);
 
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);
 

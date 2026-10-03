@@ -6803,7 +6803,7 @@ class NamidaScrollbar extends StatelessWidget {
   }
 
   ScrollbarThumbLabelResolver? _createThumbLabelIfEnabled() {
-    if (settings.extra.scrollbarThumbLabel.value != true) return null;
+    if (settings.scrollbarThumbLabel.value != true) return null;
     return thumbLabel?.call();
   }
 
@@ -6817,8 +6817,8 @@ class NamidaScrollbar extends StatelessWidget {
       thicknessWhileDragging: 8.5,
       minInteractiveSize: 60.0,
       pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
-      tapToScroll: () => settings.extra.tapToScroll.value ?? false,
-      enhancedDragToScroll: () => settings.extra.enhancedDragToScroll.value ?? true,
+      tapToScroll: () => settings.tapToScroll.value ?? false,
+      enhancedDragToScroll: () => settings.enhancedDragToScroll.value ?? true,
       onThumbLongPressStart: () => isScrollbarThumbDragging = true,
       onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
       thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,

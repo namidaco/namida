@@ -281,7 +281,7 @@ class AppWallpaperTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
     return ObxO(
-      rx: settings.extra.backgroundImages,
+      rx: settings.backgroundImages,
       builder: (context, backgroundImages) {
         if (backgroundImages != true) return const SizedBox();
         return CustomListTile(
@@ -307,9 +307,9 @@ class BackgroundImagesFlagTile extends StatelessWidget {
   const BackgroundImagesFlagTile({super.key});
 
   void _toggle(bool wasEnabled) {
-    if (!wasEnabled) return settings.extra.backgroundImages.save(true);
+    if (!wasEnabled) return settings.backgroundImages.save(true);
     settings.transaction(() {
-      settings.extra.backgroundImages.save(false);
+      settings.backgroundImages.save(false);
       if (settings.playerBackground.value == PlayerBackground.image) settings.playerBackground.save(PlayerBackground.none);
       NamidaBackdrops.removeAppWallpaper();
     });
@@ -318,7 +318,7 @@ class BackgroundImagesFlagTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: settings.extra.backgroundImages,
+      rx: settings.backgroundImages,
       builder: (context, backgroundImages) => CustomSwitchListTile(
         icon: Broken.gallery,
         value: backgroundImages ?? false,
@@ -368,7 +368,7 @@ class _PlayerBackgroundOptions extends StatelessWidget {
       (context) {
         final source = settings.playerBackground.valueR;
         final imagePath = settings.playerBackgroundImage.valueR;
-        final backgroundImages = settings.extra.backgroundImages.valueR == true;
+        final backgroundImages = settings.backgroundImages.valueR == true;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [

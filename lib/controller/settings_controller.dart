@@ -157,9 +157,21 @@ class _SettingsController extends _SettingsKeysWriter {
   late final tracksSortSearchReversed = _key('tracksSortSearchReversed', false);
   late final tracksSortSearchIsAuto = _key('tracksSortSearchIsAuto_v2', true);
   late final tracksSearchShowLessRelevant = _key('tracksSearchShowLessRelevant', false);
-  late final albumSorts = _keyList('albumSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final albumSorts = _keyList(
+    'albumSorts',
+    isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album],
+    item: GroupSortType.values.asCodec(),
+    isUnique: true,
+    isNonEmpty: true,
+  );
   late final albumSortReversed = _key('albumSortReversed', isKuru ? true : false);
-  late final artistSorts = _keyList('artistSorts', isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final artistSorts = _keyList(
+    'artistSorts',
+    isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList],
+    item: GroupSortType.values.asCodec(),
+    isUnique: true,
+    isNonEmpty: true,
+  );
   late final artistSortReversed = _key('artistSortReversed', isKuru ? true : false);
   late final genreSorts = _keyList('genreSorts', const [GroupSortType.genresList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final genreSortReversed = _key('genreSortReversed', false);
@@ -323,6 +335,16 @@ class _SettingsController extends _SettingsKeysWriter {
   late final trackTileSeparator = _key('trackTileSeparator', '•');
   late final displayFavouriteIconInListTile = _key('displayFavouriteIconInListTile', true);
   late final gradientTiles = _key('gradientTiles', true);
+  late final preferredSearchType = _keyEnum('preferredSearchType', SearchType.auto, SearchType.values);
+  late final resumeUIEnabled = _key('resumeUIEnabled', true);
+  late final ytStyleButtonSwitcher = _key<bool?>('ytStyleButtonSwitcher', null);
+  late final keepVideoFrameOnSwitch = _key<bool?>('keepVideoFrameOnSwitch', null, sync: false);
+  late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null, sync: false);
+  late final tapToScroll = _key<bool?>('tapToScroll', null, sync: false);
+  late final enhancedDragToScroll = _key<bool?>('enhancedDragToScroll', null, sync: false);
+  late final smoothScrolling = _key<bool?>('smoothScrolling', null, sync: false);
+  late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null, sync: false);
+  late final backgroundImages = _key<bool?>('backgroundImages', null, sync: false);
 
   late final editTagsKeepFileDates = _key('editTagsKeepFileDates', true);
   late final downloadFilesWriteUploadDate = _key('downloadFilesWriteUploadDate', false);

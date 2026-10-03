@@ -557,7 +557,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       mainAxisAlignment: MainAxisAlignment.end,
       mainAxisSize: MainAxisSize.max,
       children: [
-        if (widget.videoTileConfigs != null && settings.extra.ytStyleButtonSwitcher.value == true)
+        if (widget.videoTileConfigs != null && settings.ytStyleButtonSwitcher.value == true)
           MPCustomIconButton(
             tooltipCallback: () => lang.youtubeStyleMiniplayer,
             onPressed: () {

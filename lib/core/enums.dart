@@ -452,7 +452,7 @@ sealed class QueueSourceBase<E extends Enum> {
 
   /// disabling it hides the resume fab, the highlighted item & stops tracking the latest played per source,
   /// except for sources that have a last played sort (playlists).
-  static bool get resumingEnabled => settings.extra.resumeUIEnabled.value;
+  static bool get resumingEnabled => settings.resumeUIEnabled.value;
 
   final String? title;
   const QueueSourceBase._(this.s, {required this.title});
