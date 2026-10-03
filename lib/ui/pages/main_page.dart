@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show PaintingContextCallback;
 import 'package:flutter/services.dart';
 
 import 'package:namida/base/audio_handler.dart';
@@ -105,20 +108,13 @@ class MainPage extends StatelessWidget {
             children: [
               isMiniplayerAlwaysVisible
                   ? main
-                  : AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, _) {
-                        return Visibility(
-                          maintainState: true,
-                          visible: animation.value < 1,
-                          child: !settings.enableMiniplayerParallaxEffect.value
-                              ? main
-                              : Transform.scale(
-                                  scale: 1 - (animation.value * 0.05),
-                                  child: main,
-                                ),
-                        );
-                      },
+                  : ObxO(
+                      rx: settings.enableMiniplayerParallaxEffect,
+                      builder: (context, enableParallax) => _MiniplayerParallaxPage(
+                        animation: animation,
+                        enabled: enableParallax,
+                        child: main,
+                      ),
                     ),
 
               /// Search Box
@@ -1381,5 +1377,136 @@ class _AnimatedThemeState extends AnimatedWidgetBaseState<_AnimatedTheme> {
       data: !_animated || !_themeDidChange ? widget.data : _data?.evaluate(animation) ?? widget.data,
       child: widget.child,
     );
+  }
+}
+
+// by claude
+class _MiniplayerParallaxPage extends StatefulWidget {
+  final Animation<double> animation;
+  final bool enabled;
+  final Widget child;
+
+  const _MiniplayerParallaxPage({
+    required this.animation,
+    required this.enabled,
+    required this.child,
+  });
+
+  @override
+  State<_MiniplayerParallaxPage> createState() => _MiniplayerParallaxPageState();
+}
+
+class _MiniplayerParallaxPageState extends State<_MiniplayerParallaxPage> {
+  final _snapshotController = SnapshotController();
+  late final _painter = _MiniplayerParallaxPainter(widget.animation, widget.enabled);
+  late bool _isVisible = widget.animation.value < 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.animation.addListener(_onAnimationChanged);
+    _onAnimationChanged();
+  }
+
+  @override
+  void didUpdateWidget(covariant _MiniplayerParallaxPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.enabled != widget.enabled) {
+      _painter.setEnabled(widget.enabled);
+      _onAnimationChanged();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.animation.removeListener(_onAnimationChanged);
+    _snapshotController.dispose();
+    _painter.dispose();
+    super.dispose();
+  }
+
+  void _onAnimationChanged() {
+    final isVisible = widget.animation.value < 1.0;
+    _snapshotController.allowSnapshotting = isVisible && _painter.isScaling();
+    if (isVisible != _isVisible) setState(() => _isVisible = isVisible);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+      maintainState: true,
+      visible: _isVisible,
+      child: RepaintBoundary(
+        child: SnapshotWidget(
+          controller: _snapshotController,
+          painter: _painter,
+          mode: SnapshotMode.permissive,
+          autoresize: true,
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+// by claude
+class _MiniplayerParallaxPainter extends SnapshotPainter {
+  static const _kScalePerUnit = 0.05;
+  static const _kRestThreshold = 0.005;
+
+  final Animation<double> animation;
+  bool _isEnabled;
+  final _paint = Paint()..filterQuality = FilterQuality.low;
+
+  _MiniplayerParallaxPainter(this.animation, this._isEnabled) {
+    animation.addListener(_onAnimationTick);
+  }
+
+  void _onAnimationTick() {
+    if (_isEnabled) notifyListeners();
+  }
+
+  void setEnabled(bool isEnabled) {
+    if (_isEnabled == isEnabled) return;
+    _isEnabled = isEnabled;
+    notifyListeners();
+  }
+
+  bool isScaling() => _isEnabled && animation.value.abs() >= _kRestThreshold;
+
+  double _computeScale() => 1.0 - animation.value * _kScalePerUnit;
+
+  @override
+  void paint(PaintingContext context, Offset offset, Size size, PaintingContextCallback painter) {
+    if (!isScaling()) {
+      painter(context, offset);
+      return;
+    }
+    final scale = _computeScale();
+    final center = size.center(Offset.zero);
+    final transform = Matrix4.identity()
+      ..translateByDouble(center.dx, center.dy, 0.0, 1.0)
+      ..scaleByDouble(scale, scale, 1.0, 1.0)
+      ..translateByDouble(-center.dx, -center.dy, 0.0, 1.0);
+    context.pushTransform(true, offset, transform, painter);
+  }
+
+  @override
+  void paintSnapshot(PaintingContext context, Offset offset, Size size, ui.Image image, Size sourceSize, double pixelRatio) {
+    final scale = _computeScale();
+    final scaledSize = size * scale;
+    final bounds = offset & size;
+    final src = Offset.zero & sourceSize;
+    final dst = Alignment.center.inscribe(scaledSize, bounds);
+    context.canvas.drawImageRect(image, src, dst, _paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MiniplayerParallaxPainter oldPainter) => oldPainter.animation != animation || oldPainter._isEnabled != _isEnabled;
+
+  @override
+  void dispose() {
+    animation.removeListener(_onAnimationTick);
+    super.dispose();
   }
 }
