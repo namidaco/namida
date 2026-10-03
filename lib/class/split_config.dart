@@ -153,26 +153,32 @@ class SplitDelimiter {
     return SplitDelimiter._(regex);
   }
 
+  // -- split before trimming, `trimAll()` turns nbsp separators into spaces
   List<String> multiSplit(String text, List<String> blacklist) {
-    if (_regex == null) return [text];
-    if (blacklist.isNotEmpty && blacklist.any((element) => element == text)) return [text]; // 3 times faster if true, otherwise no difference.
+    if (_regex == null) return [text.trimAll()];
+    if (blacklist.isEmpty) return _splitTrimmed(text, _regex);
+    if (blacklist.any((element) => element == text)) return [text]; // 3 times faster if true, otherwise no difference.
 
     final listToAddLater = <String>[];
     String filteredString = text;
-    if (blacklist.isNotEmpty) {
-      for (var b in blacklist) {
-        final withoutBL = filteredString.split(b);
-        if (withoutBL.length > 1) {
-          filteredString = withoutBL.join();
-          listToAddLater.add(b);
-        }
+    for (final b in blacklist) {
+      final withoutBL = filteredString.split(b);
+      if (withoutBL.length > 1) {
+        filteredString = withoutBL.join();
+        listToAddLater.add(b);
       }
     }
 
-    final splitted = filteredString.split(_regex).map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    final splitted = _splitTrimmed(filteredString, _regex);
+    if (listToAddLater.isEmpty) return splitted;
     splitted.addAll(listToAddLater);
-    if (splitted.length > 1) splitted.sort((a, b) => text.indexOf(a).compareTo(text.indexOf(b)));
+    final textTrimmed = text.trimAll();
+    splitted.sort((a, b) => textTrimmed.indexOf(a).compareTo(textTrimmed.indexOf(b)));
     return splitted;
+  }
+
+  static List<String> _splitTrimmed(String text, RegExp regex) {
+    return text.split(regex).map((e) => e.trimAll()).where((e) => e.isNotEmpty).toList();
   }
 }
 
@@ -191,7 +197,7 @@ interface class SplitterConfig {
   List<String> splitText(String? string, {String? fallback}) {
     if (string == null) return fallback == null ? [] : [fallback];
     final config = this;
-    final splitted = config.delimiter.multiSplit(string.trimAll(), config.separatorsBlacklist);
+    final splitted = config.delimiter.multiSplit(string, config.separatorsBlacklist);
     if (splitted.isEmpty) return fallback == null ? [] : [fallback];
     return splitted;
   }
