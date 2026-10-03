@@ -678,7 +678,7 @@ class MultiArtworks extends StatelessWidget {
   final File? artworkFile;
   final IconData? fallbackIcon;
   final int fadeMilliSeconds;
-  final bool opensSingleImageInFullscreen;
+  final bool opensInFullscreen;
 
   const MultiArtworks({
     super.key,
@@ -694,8 +694,41 @@ class MultiArtworks extends StatelessWidget {
     required this.artworkFile,
     this.fallbackIcon,
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
-    this.opensSingleImageInFullscreen = false,
+    this.opensInFullscreen = false,
   });
+
+  void _openInFullscreen(int index) {
+    final images = <NamidaFullscreenImage>[];
+    for (final tr in tracks) {
+      final imagePath = tr.pathToImage;
+      final placeholder = ArtworkWidget(
+        key: Key(imagePath),
+        fadeMilliSeconds: 0,
+        thumbnailSize: thumbnailSize,
+        track: tr,
+        path: imagePath,
+        forceSquared: true,
+        blur: 0,
+        borderRadius: 0,
+        fallbackToFolderCover: fallbackToFolderCover,
+        icon: fallbackIcon,
+      );
+      images.add(
+        NamidaFullscreenImage(
+          imageFile: () => File(imagePath),
+          fetchImage: () => Indexer.inst.getArtwork(imagePath: imagePath, track: tr, compressed: false, checkFileFirst: false),
+          onSave: (_, _) => EditDeleteController.inst.saveTrackArtworkToStorage(tr),
+          placeholder: placeholder,
+        ),
+      );
+    }
+    NamidaArtworkFullscreen.open(
+      images: images,
+      initialIndex: index,
+      heroTag: heroTag,
+      themeColor: null,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -717,7 +750,7 @@ class MultiArtworks extends StatelessWidget {
         fallbackToFolderCover: fallbackToFolderCover,
         icon: fallbackIcon,
       );
-      customArtworkWidget = opensSingleImageInFullscreen
+      customArtworkWidget = opensInFullscreen
           ? _FullscreenImageOpener(
               heroTag: heroTag,
               imageFile: artworkFile,
@@ -735,6 +768,7 @@ class MultiArtworks extends StatelessWidget {
         reduceQuality: reduceQuality,
         fallbackIcon: fallbackIcon,
         fadeMilliSeconds: fadeMilliSeconds,
+        onCellTap: opensInFullscreen ? _openInFullscreen : null,
       ),
     );
     return NamidaHero(
@@ -767,12 +801,6 @@ class MultiArtworks extends StatelessWidget {
                       height: thumbnailSize,
                       fallbackToFolderCover: fallbackToFolderCover,
                       icon: fallbackIcon,
-                    )
-                  : opensSingleImageInFullscreen && tracks.length == 1
-                  ? _FullscreenImageOpener(
-                      heroTag: heroTag,
-                      imageFile: File(imagePaths[0]),
-                      child: collageWidget,
                     )
                   : collageWidget),
         ),
@@ -1267,6 +1295,7 @@ class _CollageCells {
   final bool reduceQuality;
   final IconData? fallbackIcon;
   final int fadeMilliSeconds;
+  final void Function(int index)? onCellTap;
 
   const _CollageCells({
     required this.tracks,
@@ -1276,6 +1305,7 @@ class _CollageCells {
     required this.reduceQuality,
     required this.fallbackIcon,
     required this.fadeMilliSeconds,
+    required this.onCellTap,
   });
 
   static const _kMinCacheHeight = 80.0;
@@ -1299,7 +1329,7 @@ class _CollageCells {
     final cellSize = math.min(width, height);
     final qualityCacheHeight = cellSize.withMinimum(_kMinCacheHeight).round();
     final cacheHeight = reduceQuality ? 40 : qualityCacheHeight;
-    return ArtworkWidget(
+    final artwork = ArtworkWidget(
       key: Key("${index}_${imagePaths[index]}"),
       fadeMilliSeconds: fadeMilliSeconds,
       thumbnailSize: cellSize,
@@ -1317,6 +1347,12 @@ class _CollageCells {
       boxShadow: boxShadow,
       onTopWidgets: onTopWidgets,
       icon: fallbackIcon,
+    );
+    final onCellTap = this.onCellTap;
+    if (onCellTap == null) return artwork;
+    return TapDetector(
+      onTap: () => onCellTap(index),
+      child: artwork,
     );
   }
 }

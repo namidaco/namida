@@ -3278,7 +3278,7 @@ class SubpageInfoContainer extends StatelessWidget {
                 bareForFan: true,
                 bareFanScale: isImageFullWidth ? 1.0 : _kThumbnailFanScale,
                 frameless: isHeroBanner,
-                opensSingleImageInFullscreen: true,
+                opensInFullscreen: true,
                 child: imageBuilder(imageMaxWidth),
               );
 
@@ -9198,40 +9198,18 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
     required this.themeColor,
   });
 
-  void openInFullscreen() async {
-    File? imgFile;
-    Uint8List? imgBytes;
-
-    imgFile = await imageFile();
-    if (imgFile != null && await imgFile.exists()) {
-      // -- good
-    } else {
-      final res = await fetchImage();
-      imgFile = res?.file;
-      imgBytes = res?.bytes;
-    }
-
-    final ImageProvider<Object>? imgProvider = imgFile != null
-        ? FileImage(imgFile)
-        : imgBytes != null
-        ? MemoryImage(imgBytes)
-        : null;
-    if (imgProvider == null) return;
-
-    NamidaNavigator.inst.navigateDialog(
-      scale: 1.0,
-      blackBg: true,
-      dialog: NamidaArtworkFullscreen(
-        title: '',
-        artwork: artwork,
-        imgProvider: imgProvider,
-        heroTag: heroTag,
-        save: () async {
-          final savePath = await onSave(imgFile, imgBytes);
-          NamidaOnTaps.inst.showSavedImageInSnack(savePath, themeColor?.call());
-        },
-        close: NamidaNavigator.inst.closeDialog,
-      ),
+  Future<void> openInFullscreen() {
+    final image = NamidaFullscreenImage(
+      imageFile: imageFile,
+      fetchImage: fetchImage,
+      onSave: onSave,
+      placeholder: artwork,
+    );
+    return NamidaArtworkFullscreen.open(
+      images: [image],
+      initialIndex: 0,
+      heroTag: heroTag,
+      themeColor: themeColor,
     );
   }
 
@@ -9245,41 +9223,95 @@ class NamidaArtworkExpandableToFullscreen extends StatelessWidget {
 }
 
 class NamidaArtworkFullscreen extends StatefulWidget {
-  final String title;
-  final Widget artwork;
-  final ImageProvider<Object> imgProvider;
+  final List<NamidaFullscreenImage> images;
+  final int initialIndex;
+  final _ResolvedFullscreenImage _initialImage;
+  final VoidCallback? _releaseInitialImage;
   final Object? heroTag;
-  final void Function() save;
-  final void Function() close;
+  final Color? Function()? themeColor;
 
-  const NamidaArtworkFullscreen({
-    super.key,
-    required this.title,
-    required this.artwork,
-    required this.imgProvider,
+  const NamidaArtworkFullscreen._({
+    required this.images,
+    required this.initialIndex,
+    required this._initialImage,
+    required this._releaseInitialImage,
     required this.heroTag,
-    required this.save,
-    required this.close,
+    required this.themeColor,
   });
+
+  static Future<void> open({
+    required List<NamidaFullscreenImage> images,
+    required int initialIndex,
+    required Object? heroTag,
+    required Color? Function()? themeColor,
+  }) async {
+    final initialImage = await images[initialIndex]._resolve();
+    if (initialImage == null) return;
+
+    final shownHeroTag = images.length == 1 ? heroTag : null;
+    final releaseInitialImage = shownHeroTag == null ? null : await ZoomableImage.preload(initialImage.provider);
+
+    NamidaNavigator.inst.navigateDialog(
+      scale: 1.0,
+      blackBg: true,
+      dialog: NamidaArtworkFullscreen._(
+        images: images,
+        initialIndex: initialIndex,
+        initialImage: initialImage,
+        releaseInitialImage: releaseInitialImage,
+        heroTag: shownHeroTag,
+        themeColor: themeColor,
+      ),
+    );
+  }
 
   @override
   State<NamidaArtworkFullscreen> createState() => _NamidaArtworkFullscreenState();
 }
 
 class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
+  static const _kPageAnimationDuration = Duration(milliseconds: 250);
+
   bool _showTopBar = false;
   double _heighestTopPadding = 0;
+
+  late final _currentIndex = widget.initialIndex.obs;
+  late final _resolvedImages = <int, _ResolvedFullscreenImage>{widget.initialIndex: widget._initialImage};
+  late final _pageController = widget.images.length > 1 ? PageController(initialPage: widget.initialIndex) : null;
 
   @override
   void initState() {
     NamidaNavigator.setSystemUIImmersiveMode(true);
     super.initState();
+    final releaseInitialImage = widget._releaseInitialImage;
+    // -- the initial page holds its own reference once this frame is built
+    if (releaseInitialImage != null) WidgetsBinding.instance.addPostFrameCallback((_) => releaseInitialImage());
   }
 
   @override
   void dispose() {
+    _pageController?.dispose();
+    _currentIndex.close();
     MiniPlayerController.inst.setImmersiveMode(null); // let that decide
     super.dispose();
+  }
+
+  Future<_ResolvedFullscreenImage?> _resolveImage(int index) async {
+    final resolved = await widget.images[index]._resolve();
+    if (resolved != null) _resolvedImages[index] = resolved;
+    return resolved;
+  }
+
+  void _save() async {
+    final index = _currentIndex.value;
+    final resolved = _resolvedImages[index];
+    if (resolved == null) return;
+    final savePath = await widget.images[index].onSave(resolved.file, resolved.bytes);
+    NamidaOnTaps.inst.showSavedImageInSnack(savePath, widget.themeColor?.call());
+  }
+
+  void _onPageChanged(int index) {
+    _currentIndex.value = index;
   }
 
   void _toggleAppBars() {
@@ -9290,22 +9322,80 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
     }
   }
 
+  KeyEventResult _onKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
+    final pageController = _pageController;
+    if (pageController == null) return KeyEventResult.ignored;
+    if (HardwareKeyboard.instance.isControlPressed) return KeyEventResult.ignored;
+
+    final key = event.logicalKey;
+    final isLeft = key == LogicalKeyboardKey.arrowLeft;
+    final isRight = key == LogicalKeyboardKey.arrowRight;
+    if (!isLeft && !isRight) return KeyEventResult.ignored;
+
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final isNext = isRight != isRtl;
+    if (isNext) {
+      pageController.nextPage(duration: _kPageAnimationDuration, curve: Curves.easeOutCubic);
+    } else {
+      pageController.previousPage(duration: _kPageAnimationDuration, curve: Curves.easeOutCubic);
+    }
+    return KeyEventResult.handled;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final heroTag = widget.heroTag;
     final topPadding = context.padding.top;
     if (topPadding > _heighestTopPadding) _heighestTopPadding = topPadding;
+
+    final images = widget.images;
+    final count = images.length;
+    final pageController = _pageController;
+    final pagingAxis = pageController == null ? null : Axis.horizontal;
+    final heroTag = widget.heroTag;
+
+    Widget buildPage(BuildContext context, int index) {
+      return _FullscreenImagePage(
+        index: index,
+        image: images[index],
+        resolved: _resolvedImages[index],
+        resolve: _resolveImage,
+        heroTag: heroTag,
+        pagingAxis: pagingAxis,
+        onTap: _toggleAppBars,
+      );
+    }
+
+    final content = pageController == null
+        ? buildPage(context, 0)
+        : Focus(
+            autofocus: true,
+            onKeyEvent: _onKeyEvent,
+            child: PageView.builder(
+              controller: pageController,
+              allowImplicitScrolling: true,
+              onPageChanged: _onPageChanged,
+              itemCount: count,
+              itemBuilder: buildPage,
+            ),
+          );
+
+    final pageIndicatorWidget = count > 1
+        ? ObxO(
+            rx: _currentIndex,
+            builder: (context, currentIndex) => Text(
+              '${currentIndex + 1}/$count',
+              style: context.textTheme.displayMedium,
+            ),
+          )
+        : null;
+
     return Stack(
       alignment: AlignmentGeometry.center,
       children: [
         LongPressDetector(
-          onLongPress: widget.save,
-          child: ZoomableImage(
-            imageProvider: widget.imgProvider,
-            placeholder: widget.artwork,
-            heroTag: heroTag,
-            onTap: _toggleAppBars,
-          ),
+          onLongPress: _save,
+          child: content,
         ),
         Positioned(
           top: 0,
@@ -9332,22 +9422,17 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
                           alignment: Alignment.centerLeft,
                           child: NamidaIconButton(
                             icon: Broken.arrow_left_2,
-                            onPressed: widget.close,
+                            onPressed: NamidaNavigator.inst.closeDialog,
                           ),
                         ),
                         Expanded(
-                          child: widget.title.isEmpty
-                              ? const SizedBox()
-                              : Text(
-                                  widget.title,
-                                  style: context.textTheme.displayMedium,
-                                ),
+                          child: pageIndicatorWidget ?? const SizedBox(),
                         ),
                         Align(
                           alignment: Alignment.centerRight,
                           child: NamidaIconButton(
                             icon: Broken.gallery_import,
-                            onPressed: widget.save,
+                            onPressed: _save,
                           ),
                         ),
                       ],
@@ -9361,6 +9446,99 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
       ],
     );
   }
+}
+
+class _FullscreenImagePage extends StatefulWidget {
+  final int index;
+  final NamidaFullscreenImage image;
+  final _ResolvedFullscreenImage? resolved;
+  final Future<_ResolvedFullscreenImage?> Function(int index) resolve;
+  final Object? heroTag;
+  final Axis? pagingAxis;
+  final VoidCallback onTap;
+
+  const _FullscreenImagePage({
+    required this.index,
+    required this.image,
+    required this.resolved,
+    required this.resolve,
+    required this.heroTag,
+    required this.pagingAxis,
+    required this.onTap,
+  });
+
+  @override
+  State<_FullscreenImagePage> createState() => _FullscreenImagePageState();
+}
+
+class _FullscreenImagePageState extends State<_FullscreenImagePage> {
+  late _ResolvedFullscreenImage? _resolved = widget.resolved;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_resolved == null) _resolve();
+  }
+
+  Future<void> _resolve() async {
+    final resolved = await widget.resolve(widget.index);
+    if (resolved != null) refreshState(() => _resolved = resolved);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = widget.image.placeholder;
+    final resolved = _resolved;
+    if (resolved == null) {
+      return TapDetector(
+        onTap: widget.onTap,
+        child: Center(
+          child: placeholder,
+        ),
+      );
+    }
+    return ZoomableImage(
+      imageProvider: resolved.provider,
+      placeholder: placeholder,
+      heroTag: widget.heroTag,
+      onTap: widget.onTap,
+      pagingAxis: widget.pagingAxis,
+    );
+  }
+}
+
+class NamidaFullscreenImage {
+  final FutureOr<File?> Function() imageFile;
+  final FutureOr<FArtwork?> Function() fetchImage;
+  final FutureOr<String?> Function(File? imgFile, Uint8List? bytes) onSave;
+  final Widget? placeholder;
+
+  const NamidaFullscreenImage({
+    required this.imageFile,
+    required this.fetchImage,
+    required this.onSave,
+    this.placeholder,
+  });
+
+  Future<_ResolvedFullscreenImage?> _resolve() async {
+    final file = await imageFile();
+    if (file != null && await file.exists()) return _ResolvedFullscreenImage.file(file);
+    final res = await fetchImage();
+    final fetchedFile = res?.file;
+    if (fetchedFile != null) return _ResolvedFullscreenImage.file(fetchedFile);
+    final fetchedBytes = res?.bytes;
+    if (fetchedBytes != null) return _ResolvedFullscreenImage.bytes(fetchedBytes);
+    return null;
+  }
+}
+
+class _ResolvedFullscreenImage {
+  final File? file;
+  final Uint8List? bytes;
+  final ImageProvider provider;
+
+  _ResolvedFullscreenImage.file(File this.file) : bytes = null, provider = FileImage(file);
+  _ResolvedFullscreenImage.bytes(Uint8List this.bytes) : file = null, provider = MemoryImage(bytes);
 }
 
 class ObxPrefer<T> extends StatelessWidget {

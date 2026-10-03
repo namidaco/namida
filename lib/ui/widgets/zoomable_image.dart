@@ -1,4 +1,5 @@
 // by claude
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -28,6 +29,14 @@ class ZoomableImage extends StatefulWidget {
     this.pagingAxis,
     this.filterQuality = FilterQuality.medium,
   });
+
+  /// loads ahead until the returned callback is called, a [ZoomableImage] built before that knows the image rect on its first layout.
+  static Future<VoidCallback> preload(ImageProvider imageProvider) async {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    final levels = _ImageLevels.acquire(imageProvider, view.physicalSize);
+    await levels.sizeKnown;
+    return levels.release;
+  }
 
   @override
   State<ZoomableImage> createState() => _ZoomableImageState();
@@ -82,7 +91,7 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     levels.addListener(_onLevelsChanged);
     _levels = levels;
     _syncFromLevels();
-    _hasImage = _transform.image != null;
+    _hasImage = _transform.image.value != null;
     _hasContentSize = !_transform.contentSize.isEmpty;
   }
 
@@ -96,7 +105,7 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
 
   void _onLevelsChanged() {
     _syncFromLevels();
-    final hasImage = _transform.image != null;
+    final hasImage = _transform.image.value != null;
     final hasContentSize = !_transform.contentSize.isEmpty;
     if (hasImage == _hasImage && hasContentSize == _hasContentSize) return;
     setState(() {
@@ -131,7 +140,7 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
     final level = _levelFor(_transform.scale);
     levels.ensureLevel(level);
     final leveledImage = level == 0 ? levels.base : levels.highest;
-    _transform.image = leveledImage ?? levels.preview;
+    _transform.image.value = leveledImage ?? levels.preview;
   }
 
   late final AnimationController _zoomAnimation = AnimationController(vsync: this, duration: const Duration(milliseconds: 260))..addListener(_onZoomTick);
@@ -276,17 +285,21 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    Widget child = _ZoomableImageRenderWidget(
+    Widget image = _ZoomImagePainter(
       transform: _transform,
       filterQuality: widget.filterQuality,
     );
     final heroTag = widget.heroTag;
     if (heroTag != null) {
-      child = NamidaHero(
+      image = NamidaHero(
         tag: heroTag,
-        child: child,
+        child: image,
       );
     }
+    Widget child = _ZoomViewport(
+      transform: _transform,
+      child: image,
+    );
     final placeholder = widget.placeholder;
     if (placeholder != null) {
       final contentSize = _transform.contentSize;
@@ -350,28 +363,116 @@ class _ZoomableImageState extends State<ZoomableImage> with TickerProviderStateM
   }
 }
 
-class _ZoomableImageRenderWidget extends LeafRenderObjectWidget {
+class _ZoomViewport extends SingleChildRenderObjectWidget {
+  final _ZoomTransform transform;
+
+  const _ZoomViewport({
+    required this.transform,
+    required super.child,
+  });
+
+  @override
+  _RenderZoomViewport createRenderObject(BuildContext context) => _RenderZoomViewport(transform);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderZoomViewport renderObject) {
+    renderObject.transform = transform;
+  }
+}
+
+/// lays the image out at its shown rect, so a hero around it flies from and to what is on screen.
+class _RenderZoomViewport extends RenderShiftedBox {
+  _RenderZoomViewport(this._transform) : super(null);
+
+  final _clipLayer = LayerHandle<ClipRectLayer>();
+  bool _isChildOverflowing = false;
+
+  _ZoomTransform _transform;
+  set transform(_ZoomTransform value) {
+    if (identical(_transform, value)) return;
+    if (attached) {
+      _transform.removeListener(markNeedsLayout);
+      value.addListener(markNeedsLayout);
+    }
+    _transform = value;
+    markNeedsLayout();
+  }
+
+  @override
+  bool get isRepaintBoundary => true;
+
+  @override
+  bool get sizedByParent => true;
+
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    _transform.addListener(markNeedsLayout);
+  }
+
+  @override
+  void detach() {
+    _transform.removeListener(markNeedsLayout);
+    super.detach();
+  }
+
+  @override
+  void dispose() {
+    _clipLayer.layer = null;
+    super.dispose();
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
+
+  @override
+  void performLayout() {
+    _transform.setViewport(size);
+    final child = this.child;
+    if (child == null) return;
+    final viewportRect = Offset.zero & size;
+    final childRect = _transform.contentSize.isEmpty ? viewportRect : _transform.imageRect();
+    child.layout(BoxConstraints.tight(childRect.size));
+    final childParentData = child.parentData as BoxParentData;
+    childParentData.offset = childRect.topLeft;
+    _isChildOverflowing = childRect.left < 0.0 || childRect.top < 0.0 || childRect.right > size.width || childRect.bottom > size.height;
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (!_isChildOverflowing) {
+      _clipLayer.layer = null;
+      super.paint(context, offset);
+      return;
+    }
+    final clipRect = Offset.zero & size;
+    _clipLayer.layer = context.pushClipRect(needsCompositing, offset, clipRect, super.paint, oldLayer: _clipLayer.layer);
+  }
+}
+
+class _ZoomImagePainter extends LeafRenderObjectWidget {
   final _ZoomTransform transform;
   final FilterQuality filterQuality;
 
-  const _ZoomableImageRenderWidget({
+  const _ZoomImagePainter({
     required this.transform,
     required this.filterQuality,
   });
 
   @override
-  _RenderZoomableImage createRenderObject(BuildContext context) => _RenderZoomableImage(transform, filterQuality);
+  _RenderZoomImagePainter createRenderObject(BuildContext context) => _RenderZoomImagePainter(transform, filterQuality);
 
   @override
-  void updateRenderObject(BuildContext context, _RenderZoomableImage renderObject) {
+  void updateRenderObject(BuildContext context, _RenderZoomImagePainter renderObject) {
     renderObject
       ..transform = transform
       ..filterQuality = filterQuality;
   }
 }
 
-class _RenderZoomableImage extends RenderBox {
-  _RenderZoomableImage(this._transform, this._filterQuality);
+/// covers its own box, which in place has the image aspect, so a hero flight lines up with any cropped source.
+class _RenderZoomImagePainter extends RenderBox {
+  _RenderZoomImagePainter(this._transform, this._filterQuality);
 
   static const _kNearestSamplingMinPhysicalPxPerImagePx = 2.0;
 
@@ -381,8 +482,8 @@ class _RenderZoomableImage extends RenderBox {
   set transform(_ZoomTransform value) {
     if (identical(_transform, value)) return;
     if (attached) {
-      _transform.removeListener(markNeedsPaint);
-      value.addListener(markNeedsPaint);
+      _transform.image.removeListener(markNeedsPaint);
+      value.image.addListener(markNeedsPaint);
     }
     _transform = value;
     markNeedsPaint();
@@ -396,20 +497,17 @@ class _RenderZoomableImage extends RenderBox {
   }
 
   @override
-  bool get isRepaintBoundary => true;
-
-  @override
   bool get sizedByParent => true;
 
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    _transform.addListener(markNeedsPaint);
+    _transform.image.addListener(markNeedsPaint);
   }
 
   @override
   void detach() {
-    _transform.removeListener(markNeedsPaint);
+    _transform.image.removeListener(markNeedsPaint);
     super.detach();
   }
 
@@ -417,33 +515,33 @@ class _RenderZoomableImage extends RenderBox {
   Size computeDryLayout(BoxConstraints constraints) => constraints.biggest;
 
   @override
-  void performLayout() {
-    _transform.setViewport(size);
-  }
-
-  @override
-  bool hitTestSelf(Offset position) => _transform.imageRect().contains(position);
+  bool hitTestSelf(Offset position) => true;
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    final image = _transform.image;
-    if (image == null) return;
-    final dst = _transform.imageRect();
-    final visible = dst.intersect(Offset.zero & size);
+    final image = _transform.image.value;
+    if (image == null || size.isEmpty) return;
+    final canvas = context.canvas;
+    final dst = offset & size;
+    final visible = dst.intersect(canvas.getLocalClipBounds());
     if (visible.isEmpty) return;
-    final srcPerDstX = image.width / dst.width;
-    final srcPerDstY = image.height / dst.height;
+    final imageWidth = image.width.toDouble();
+    final imageHeight = image.height.toDouble();
+    final dstPerSrc = math.max(size.width / imageWidth, size.height / imageHeight);
+    final srcPerDst = 1.0 / dstPerSrc;
+    final coverLeft = (imageWidth - size.width * srcPerDst) / 2;
+    final coverTop = (imageHeight - size.height * srcPerDst) / 2;
     final src = Rect.fromLTRB(
-      (visible.left - dst.left) * srcPerDstX,
-      (visible.top - dst.top) * srcPerDstY,
-      (visible.right - dst.left) * srcPerDstX,
-      (visible.bottom - dst.top) * srcPerDstY,
+      coverLeft + (visible.left - dst.left) * srcPerDst,
+      coverTop + (visible.top - dst.top) * srcPerDst,
+      coverLeft + (visible.right - dst.left) * srcPerDst,
+      coverTop + (visible.bottom - dst.top) * srcPerDst,
     );
-    final physicalPxPerImagePx = _transform.devicePixelRatio / srcPerDstX;
+    final physicalPxPerImagePx = _transform.devicePixelRatio * dstPerSrc;
     final isNativeLevel = _transform.isContentNative && image.width == _transform.contentSize.width;
     final shouldSampleNearest = isNativeLevel && physicalPxPerImagePx >= _kNearestSamplingMinPhysicalPxPerImagePx;
     _paint.filterQuality = shouldSampleNearest ? FilterQuality.none : _filterQuality;
-    context.canvas.drawImageRect(image, src, visible.shift(offset), _paint);
+    canvas.drawImageRect(image, src, visible, _paint);
   }
 }
 
@@ -511,7 +609,6 @@ class _ZoomTransform extends ChangeNotifier {
   double _coverScale = 1.0;
   double _scale = 1.0;
   Offset _translation = Offset.zero;
-  ui.Image? _image;
   bool _didFit = false;
   bool _isContentNative = false;
 
@@ -524,11 +621,13 @@ class _ZoomTransform extends ChangeNotifier {
   Offset get translation => _translation;
   Offset get viewportCenter => _viewport.center(Offset.zero);
 
-  ui.Image? get image => _image;
-  set image(ui.Image? value) {
-    if (identical(_image, value)) return;
-    _image = value;
-    notifyListeners();
+  /// apart from the geometry, so swapping a decoded level repaints without a relayout.
+  final image = ValueNotifier<ui.Image?>(null);
+
+  @override
+  void dispose() {
+    image.dispose();
+    super.dispose();
   }
 
   void setContent(Size size, {required bool isNative}) {
@@ -551,7 +650,7 @@ class _ZoomTransform extends ChangeNotifier {
 
   void reset() {
     _contentSize = Size.zero;
-    _image = null;
+    image.value = null;
     _scale = 1.0;
     _translation = Offset.zero;
     _didFit = false;
@@ -670,6 +769,9 @@ class _ImageLevels extends ChangeNotifier {
   ui.ImmutableBuffer? _buffer;
   ui.ImageDescriptor? _descriptor;
 
+  final _sizeKnownCompleter = Completer<void>();
+  Future<void> get sizeKnown => _sizeKnownCompleter.future;
+
   int nativeWidth = 0;
   int nativeHeight = 0;
   int baseWidth = 0;
@@ -706,6 +808,7 @@ class _ImageLevels extends ChangeNotifier {
 
   void _load() {
     _takeCachedPreview();
+    if (preview != null) _sizeKnownCompleter.complete();
     _isLoadingBase = true;
     final provider = _LevelsImageProvider(_provider, _decodeBase);
     final stream = provider.resolve(ImageConfiguration.empty);
@@ -749,6 +852,7 @@ class _ImageLevels extends ChangeNotifier {
     _descriptor = descriptor;
     nativeWidth = descriptor.width;
     nativeHeight = descriptor.height;
+    _sizeKnownCompleter.completeIfWasnt();
     if (!_isReleased) notifyListeners();
     final targetPx = _baseTargetPx;
     final fitWidth = targetPx.width / nativeWidth;
@@ -782,6 +886,7 @@ class _ImageLevels extends ChangeNotifier {
 
   void _onError(Object e, StackTrace? st) {
     _stopLoadingBase();
+    _sizeKnownCompleter.completeIfWasnt();
     if (_isReleased) {
       _disposeNativeIfIdle();
       return;

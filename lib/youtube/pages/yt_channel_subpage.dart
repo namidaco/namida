@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -26,6 +25,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_channel_controller.dart';
 import 'package:namida/base/youtube_streams_manager.dart';
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
@@ -37,7 +37,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -45,7 +44,6 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
-import 'package:namida/ui/widgets/zoomable_image.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -244,59 +242,40 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     return diff == null ? true : diff.abs() > const Duration(seconds: 180);
   }
 
-  File? _getThumbFileForCache(String url, {required bool temp}) {
-    return ThumbnailManager.inst.imageUrlToCacheFile(id: null, url: url, isTemp: temp, type: ThumbnailType.channel);
-  }
-
   void _onImageTap({
     required BuildContext context,
     required String channelID,
     required List<YoutiPieThumbnail> imagesList,
     required bool isPfp,
+    required String heroTag,
   }) async {
-    final files = <(String, File?)>[];
-    for (var item in imagesList) {
-      File? cf = _getThumbFileForCache(item.url, temp: false);
-      if (await cf?.exists() == false) cf = _getThumbFileForCache(item.url, temp: true);
-      files.add((item.url, cf));
-    }
+    final themeColor = context.theme.colorScheme.surface;
+    final urls = <String>[for (final item in imagesList) item.url];
 
     if (isPfp) {
-      final cf = _getThumbFileForCache(channelID, temp: false);
-      if (cf != null && await cf.exists()) files.add((channelID, cf));
+      final channelIDFile = await ThumbnailManager.inst.getYoutubeThumbnailFromCache(customUrl: channelID, type: ThumbnailType.channel);
+      if (channelIDFile != null) urls.add(channelID);
     }
-    if (files.isEmpty) return;
+    if (urls.isEmpty) return;
 
-    int fileIndex = 0;
+    Future<FArtwork> downloadImage(String url) async {
+      final file = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(customUrl: url, type: ThumbnailType.channel, isImportantInCache: isPfp);
+      return FArtwork(file: file);
+    }
 
-    final pageController = PageController(initialPage: fileIndex);
-
-    NamidaNavigator.inst.navigateDialog(
-      scale: 1.0,
-      blackBg: true,
-      dialog: LongPressDetector(
-        onLongPress: () async {
-          final file = files[fileIndex].$2;
-          if (file == null) return;
-          final savePath = await EditDeleteController.inst.saveImageToStorage(file);
-          // ignore: use_build_context_synchronously
-          NamidaOnTaps.inst.showSavedImageInSnack(savePath, context.theme.colorScheme.surface);
-        },
-        child: PageView.builder(
-          controller: pageController,
-          onPageChanged: (index) => fileIndex = index,
-          itemCount: files.length,
-          itemBuilder: (context, index) {
-            final fileWKey = files[index];
-            final file = fileWKey.$2;
-            return ZoomableImage(
-              imageProvider: file != null ? FileImage(file) : NetworkImage(fileWKey.$1),
-              heroTag: _getHeroTag(channelID, isPfp, fileWKey.$1),
-              pagingAxis: Axis.horizontal,
-            );
-          },
+    final images = <NamidaFullscreenImage>[
+      for (final url in urls)
+        NamidaFullscreenImage(
+          imageFile: () => ThumbnailManager.inst.getYoutubeThumbnailFromCache(customUrl: url, type: ThumbnailType.channel, isTemp: null),
+          fetchImage: () => downloadImage(url),
+          onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
         ),
-      ),
+    ];
+    NamidaArtworkFullscreen.open(
+      images: images,
+      initialIndex: 0,
+      heroTag: heroTag,
+      themeColor: () => themeColor,
     );
   }
 
@@ -341,15 +320,17 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     final subsCount = channelInfo?.subscribersCount;
     final subsCountText = channelInfo?.subscribersCountText;
 
+    final bannerHeroTag = _getHeroTag(channelID, false, bannerUrl);
     final bannerWidget = TapDetector(
       onTap: () => _onImageTap(
         context: context,
         channelID: channelID,
         imagesList: banners,
         isPfp: false,
+        heroTag: bannerHeroTag,
       ),
       child: NamidaHero(
-        tag: _getHeroTag(channelID, false, bannerUrl),
+        tag: bannerHeroTag,
         child: YoutubeThumbnail(
           type: ThumbnailType.channel, // banner akshully
           key: Key('${channelID}_$bannerUrl'),
@@ -371,15 +352,17 @@ class _YTChannelSubpageState extends State<YTChannelSubpage> with TickerProvider
     if (showSubpageInfoAtSide) {
       pfpImageWidth = pfpImageWidth.withMaximum(Dimensions.inst.sideInfoMaxWidth * 0.8);
     }
+    final pfpHeroTag = _getHeroTag(channelID, true, pfp);
     final pfpImageWidget = TapDetector(
       onTap: () => _onImageTap(
         context: context,
         channelID: channelID,
         imagesList: pfps,
         isPfp: true,
+        heroTag: pfpHeroTag,
       ),
       child: NamidaHero(
-        tag: _getHeroTag(channelID, true, pfp),
+        tag: pfpHeroTag,
         child: YoutubeThumbnail(
           type: ThumbnailType.channel,
           key: Key('${channelID}_$pfp'),

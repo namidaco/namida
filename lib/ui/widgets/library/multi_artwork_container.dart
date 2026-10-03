@@ -117,7 +117,7 @@ class MultiArtworkContainer extends StatelessWidget {
                               artworkFile: existingArtworkFile,
                               fallbackIcon: fallbackIcon,
                               fadeMilliSeconds: fadeMilliSeconds,
-                              opensSingleImageInFullscreen: scope?.opensSingleImageInFullscreen ?? false,
+                              opensInFullscreen: scope?.opensInFullscreen ?? false,
                             ),
                           ?child,
                           ?onTopWidget,
@@ -145,21 +145,21 @@ class MultiArtworkContainer extends StatelessWidget {
 }
 
 /// how a [MultiArtworkContainer] below draws itself: [frameless] drops the card frame and margins always,
-/// [bareForFan] only for a fan of cards, which then draws at [bareFanScale] past its box. [opensSingleImageInFullscreen] makes a lone image tappable.
+/// [bareForFan] only for a fan of cards, which then draws at [bareFanScale] past its box. [opensInFullscreen] opens the tapped image in a swipeable viewer.
 ///
 /// by claude
 class ArtworkContainerScope extends InheritedWidget {
   final bool bareForFan;
   final double bareFanScale;
   final bool frameless;
-  final bool opensSingleImageInFullscreen;
+  final bool opensInFullscreen;
 
   const ArtworkContainerScope({
     super.key,
     this.bareForFan = false,
     this.bareFanScale = 1.0,
     this.frameless = false,
-    this.opensSingleImageInFullscreen = false,
+    this.opensInFullscreen = false,
     required super.child,
   });
 
@@ -167,8 +167,8 @@ class ArtworkContainerScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ArtworkContainerScope oldWidget) =>
-      bareForFan != oldWidget.bareForFan ||
+      bareForFan != oldWidget.bareForFan || //
       bareFanScale != oldWidget.bareFanScale ||
       frameless != oldWidget.frameless ||
-      opensSingleImageInFullscreen != oldWidget.opensSingleImageInFullscreen;
+      opensInFullscreen != oldWidget.opensInFullscreen;
 }
