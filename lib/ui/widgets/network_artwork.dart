@@ -14,6 +14,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
@@ -248,8 +249,10 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
 
   String? _getFallbackArtworkPathExisting() {
     final path = widget.fallbackPath;
-    if (path == null || !File(path).existsSync()) return null;
-    return path;
+    if (path != null && File(path).existsSync()) return path;
+    final track = widget.fallbackTrack;
+    if (track == null) return null;
+    return Indexer.inst.getFallbackFolderArtworkPath(folder: track.folder);
   }
 
   /// returns `null` on transient failures (should retry later), and empty string when no image exists.
