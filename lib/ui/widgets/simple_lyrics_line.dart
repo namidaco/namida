@@ -20,6 +20,7 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   final bool softWrap;
   final Rxn<Lrc>? customSourceRx;
   final bool respectEndTimestamps;
+  final bool stretchToItemDuration;
 
   /// shrinks the font by [shrinkFactor] when the line overflows [maxLines], then allows one extra line.
   final bool fitToWidth;
@@ -38,6 +39,7 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     this.softWrap = false,
     this.customSourceRx,
     this.respectEndTimestamps = false,
+    this.stretchToItemDuration = true,
     this.fitToWidth = false,
     this.maxSecondaryLines = _defaultMaxSecondaryLines,
     this.karaoke = _leanKaraoke,
@@ -182,8 +184,9 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       return;
     }
     final romanizer = widget.maxSecondaryLines > 0 ? Romanizer.inst.lyricsRomanizer(lrc) : null;
+    final stretchMultiplier = widget.stretchToItemDuration ? Lyrics.inst.getStretchMultiplier(lrc) : 0.0;
     final uiInfo = lrc.forUiDisplay(
-      0,
+      stretchMultiplier,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
       extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
       romanizer: romanizer,
