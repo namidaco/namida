@@ -11,8 +11,11 @@ import 'package:namida/class/func_execute_limiter.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -21,6 +24,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 class QueueController {
   static final QueueController inst = QueueController._internal();
@@ -611,15 +615,77 @@ class _LatestPlayedForSourceManager {
         _mapRx.value[source] ??= item;
         final mt = map['_mt'] as int? ?? 0;
         if (mt > 0) _modifiedTimesMap[source] ??= mt;
+        if (source is QueueSource && source.s == QueueSourceEnum.album && source.albumIdentifier == null) {
+          _legacyAlbumSources.add((source: source, dbKey: entry.key));
+        }
       }
     }
     _mapRx.refresh();
+    if (Indexer.inst.mainMapsGroup.didFill) migrateLegacyAlbumSources();
+    _markAllSortsDirty();
+    _sortDirty();
+  }
+
+  // -- saved before the identifier joined the key, the saved track tells which album once the library is loaded.
+  final _legacyAlbumSources = <_LegacyAlbumSource>[];
+
+  void migrateLegacyAlbumSources() async {
+    if (_legacyAlbumSources.isEmpty) return;
+
+    final unresolved = <_LegacyAlbumSource>[];
+    final legacyKeys = <String>[];
+    final migratedEntries = <MapEntry<String, Map<String, dynamic>>>[];
+    for (final legacy in _legacyAlbumSources) {
+      final source = legacy.source;
+      final item = _mapRx.value[source];
+      if (item == null) continue;
+      final newSource = _resolveLegacyAlbumSource(source, item);
+      if (newSource == null) {
+        unresolved.add(legacy);
+        continue;
+      }
+      legacyKeys.add(legacy.dbKey);
+      _mapRx.value.remove(source);
+      final mt = _modifiedTimesMap.remove(source) ?? 0;
+      final existingMt = _modifiedTimesMap[newSource];
+      if (existingMt != null && existingMt >= mt) continue;
+      _mapRx.value[newSource] = item;
+      _modifiedTimesMap[newSource] = mt;
+      final newDbKey = newSource.toDbKey();
+      final newEntry = MapEntry(newDbKey, <String, dynamic>{
+        'p': item.toJson(),
+        't': item.playableType.jsonKey,
+        '_mt': mt,
+      });
+      migratedEntries.add(newEntry);
+    }
+    _legacyAlbumSources
+      ..clear()
+      ..addAll(unresolved);
+    if (legacyKeys.isEmpty) return;
+
+    _mapRx.refresh();
+    await _dBManager.putAll(migratedEntries, (e) => e);
+    await _dBManager.deleteBulk(legacyKeys);
+  }
+
+  static QueueSource? _resolveLegacyAlbumSource(QueueSource source, Playable item) {
+    if (item is! Selectable) return null;
+    final trackExt = item.track.toTrackExtOrNull();
+    if (trackExt == null) return null;
+    final identifiers = trackExt.albumsIdentifiersModified;
+    final title = source.title;
+    final sameTitleIdentifier = identifiers.firstWhereEff((e) => e.displayAlbumName == title);
+    final identifier = sameTitleIdentifier ?? identifiers.firstOrNull;
+    if (identifier == null) return null;
+    return QueueSource.album(identifier, null);
   }
 
   void update(QueueSourceBase source, Playable item) async {
     _mapRx[source] = item;
     final mt = currentTimeMS;
     _modifiedTimesMap[source] = mt;
+    _markSortDirty(source);
     await _dBManager.put(source.toDbKey(), {
       'p': item.toJson(),
       't': item.playableType.jsonKey,
@@ -693,7 +759,71 @@ class _LatestPlayedForSourceManager {
         '_mt': incomingMt,
       });
     }
-    if (anyChanged) _mapRx.refresh();
+    if (anyChanged) {
+      _mapRx.refresh();
+      _markAllSortsDirty();
+    }
+  }
+
+  // -- lists sorted by last played reorder on the next page change, never while being viewed.
+  final _dirtyMedias = <MediaType>{};
+  bool _isYTPlaylistsDirty = false;
+
+  void _markSortDirty(QueueSourceBase source) {
+    switch (source) {
+      case QueueSource():
+        final media = source.s.lastPlayedSortMedia;
+        if (media != null) _markMediaSortDirty(media);
+      case QueueSourceYoutubeID():
+        if (source.s.hasLastPlayedSort) _markYTPlaylistsSortDirty();
+    }
+  }
+
+  void _markAllSortsDirty() {
+    for (final s in QueueSourceEnum.values) {
+      final media = s.lastPlayedSortMedia;
+      if (media != null) _markMediaSortDirty(media);
+    }
+    _markYTPlaylistsSortDirty();
+  }
+
+  void _markMediaSortDirty(MediaType media) {
+    final sorts = settings.groupSortingOf(media)?.sorts;
+    if (sorts == null || !sorts.contains(GroupSortType.lastPlayed)) return;
+    _listenToPageChangeIfIdle();
+    _dirtyMedias.add(media);
+  }
+
+  void _markYTPlaylistsSortDirty() {
+    if (settings.ytPlaylistSort.value != GroupSortType.lastPlayed) return;
+    _listenToPageChangeIfIdle();
+    _isYTPlaylistsDirty = true;
+  }
+
+  void _listenToPageChangeIfIdle() {
+    if (_dirtyMedias.isEmpty && !_isYTPlaylistsDirty) NamidaNavigator.inst.currentWidgetStack.addListener(_sortDirty);
+  }
+
+  void _sortDirty() {
+    NamidaNavigator.inst.currentWidgetStack.removeListener(_sortDirty);
+    for (final media in _dirtyMedias) {
+      if (_isActiveMedia(media)) SearchSortController.inst.sortMedia(media);
+    }
+    _dirtyMedias.clear();
+    if (_isYTPlaylistsDirty) {
+      _isYTPlaylistsDirty = false;
+      YoutubePlaylistController.inst.sortPlaylists();
+    }
+  }
+
+  // -- inactive artist/genre types sort when switched to.
+  static bool _isActiveMedia(MediaType media) {
+    final activeMedia = switch (media) {
+      MediaType.artist || MediaType.albumArtist || MediaType.composer => settings.activeArtistType.value,
+      MediaType.genre || MediaType.style => settings.activeGenreType.value,
+      _ => media,
+    };
+    return activeMedia == media;
   }
 }
 
@@ -858,3 +988,5 @@ class _QueueSerializer {
     return (items, originalIndices);
   }
 }
+
+typedef _LegacyAlbumSource = ({QueueSource source, String dbKey});

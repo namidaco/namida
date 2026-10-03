@@ -143,7 +143,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                 final sortTextIsUseless =
                     sort == GroupSortType.artistsList ||
                     (countPerRowResolved == 1 && (sort == GroupSortType.albumsCount || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration));
-                final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
+                final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getArtistsExtraTextResolver(artistType, sort);
 
                 return ExpandableBoxColumn(
                   tab: libraryTab,
@@ -232,7 +232,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                       name: artist,
                                       albums: tracks.toUniqueAlbums(),
                                       type: artistType,
-                                      extraText: extraTextResolver?.call(tracks),
+                                      extraText: extraTextResolver?.call(artist, tracks),
                                     ),
                                   );
                                 },
@@ -265,7 +265,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                                           name: artist,
                                           artist: tracks,
                                           type: artistType,
-                                          bottomCenterText: extraTextResolver?.call(tracks),
+                                          bottomCenterText: extraTextResolver?.call(artist, tracks),
                                           width: cardWidth,
                                           height: cardHeight,
                                         ),

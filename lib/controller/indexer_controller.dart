@@ -28,6 +28,7 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -417,6 +418,7 @@ class Indexer<T extends Track> {
   Future<void> _afterIndexing() async {
     final mediaSorters = {for (final e in MediaType.values) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt(), settings.albumIdentifiers.value);
+    QueueController.latestPlayedForSourceManager.migrateLegacyAlbumSources();
     this.mainMapsGroup.sortAllSync(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
     this.mainMapsGroup.refreshAll();
     FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
@@ -2109,6 +2111,7 @@ class Indexer<T extends Track> {
                     ),
                 settings.albumIdentifiers.value,
               );
+              QueueController.latestPlayedForSourceManager.migrateLegacyAlbumSources();
 
               mainMapsGroup.sortAllSync(
                 mediaSorters,

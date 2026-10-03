@@ -93,7 +93,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
               final sortReverse = settings.genreSortReversed.valueR;
 
               final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
-              final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
+              final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGenresExtraTextResolver(genreType, sort);
 
               final String Function({required int count}) countToText = switch (genreType) {
                 MediaType.style => lang.countStyles,
@@ -170,7 +170,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                             itemBuilder: (context, i) {
                               final genre = SearchSortController.inst.genreSearchList[i];
                               final tracks = genre.getGenresTracksFor(genreType);
-                              final topRightText = extraTextResolver?.call(tracks);
+                              final topRightText = extraTextResolver?.call(genre, tracks);
                               return AnimatingGrid(
                                 countPerRowResolved: countPerRowResolved,
                                 columnCount: SearchSortController.inst.genreSearchList.length,

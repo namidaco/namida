@@ -136,6 +136,7 @@ enum GroupSortType {
     GroupSortType.year,
     GroupSortType.duration,
     GroupSortType.numberOfTracks,
+    GroupSortType.lastPlayed,
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
@@ -163,6 +164,7 @@ enum GroupSortType {
     GroupSortType.duration,
     GroupSortType.numberOfTracks,
     GroupSortType.albumsCount,
+    GroupSortType.lastPlayed,
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
@@ -179,6 +181,7 @@ enum GroupSortType {
     GroupSortType.genresList,
     GroupSortType.duration,
     GroupSortType.numberOfTracks,
+    GroupSortType.lastPlayed,
     GroupSortType.playCount,
     GroupSortType.firstListen,
     GroupSortType.latestPlayed,
@@ -371,13 +374,13 @@ enum TrackPlayMode {
 enum QueueSourceEnum {
   allTracksAll(false, supportResuming: true),
   allTracks(false, supportResuming: true),
-  album(false, supportResuming: true),
-  artist(false, supportResuming: true),
-  albumArtist(false, supportResuming: true),
-  composer(false, supportResuming: true),
-  genre(false, supportResuming: true),
-  style(false, supportResuming: true),
-  playlist(true, supportResuming: true, hasLastPlayedSort: true),
+  album(false, supportResuming: true, lastPlayedSortMedia: MediaType.album),
+  artist(false, supportResuming: true, lastPlayedSortMedia: MediaType.artist),
+  albumArtist(false, supportResuming: true, lastPlayedSortMedia: MediaType.albumArtist),
+  composer(false, supportResuming: true, lastPlayedSortMedia: MediaType.composer),
+  genre(false, supportResuming: true, lastPlayedSortMedia: MediaType.genre),
+  style(false, supportResuming: true, lastPlayedSortMedia: MediaType.style),
+  playlist(true, supportResuming: true, lastPlayedSortMedia: MediaType.playlist),
   folder(false),
   folderMusic(false),
   folderVideos(false),
@@ -402,8 +405,10 @@ enum QueueSourceEnum {
 
   final bool canHaveDuplicates;
   final bool supportResuming;
-  final bool hasLastPlayedSort;
-  const QueueSourceEnum(this.canHaveDuplicates, {this.supportResuming = false, this.hasLastPlayedSort = false});
+  final MediaType? lastPlayedSortMedia;
+  const QueueSourceEnum(this.canHaveDuplicates, {this.supportResuming = false, this.lastPlayedSortMedia});
+
+  bool get hasLastPlayedSort => lastPlayedSortMedia != null;
 }
 
 enum QueueSourceYoutubeIDEnum {
@@ -451,7 +456,7 @@ sealed class QueueSourceBase<E extends Enum> {
   String toText();
 
   /// disabling it hides the resume fab, the highlighted item & stops tracking the latest played per source,
-  /// except for sources that have a last played sort (playlists).
+  /// except for sources that have a last played sort.
   static bool get resumingEnabled => settings.resumeUIEnabled.value;
 
   final String? title;
@@ -471,11 +476,14 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   @override
   String toText() => s.toText();
 
-  const QueueSource._(super.s, {super.title}) : super._();
+  final AlbumIdentifierWrapper? albumIdentifier;
+
+  const QueueSource._(super.s, {super.title, this.albumIdentifier}) : super._();
 
   static const allTracksAll = QueueSource._(QueueSourceEnum.allTracksAll);
   static const allTracks = QueueSource._(QueueSourceEnum.allTracks);
-  static QueueSource album(AlbumIdentifierWrapper? identifier, String? name) => QueueSource._(QueueSourceEnum.album, title: identifier?.displayAlbumName ?? name);
+  static QueueSource album(AlbumIdentifierWrapper? identifier, String? name) =>
+      QueueSource._(QueueSourceEnum.album, title: identifier?.displayAlbumName ?? name, albumIdentifier: identifier);
   static QueueSource artist(String? name) => QueueSource._(QueueSourceEnum.artist, title: name);
   static QueueSource albumArtist(String? name) => QueueSource._(QueueSourceEnum.albumArtist, title: name);
   static QueueSource composer(String? name) => QueueSource._(QueueSourceEnum.composer, title: name);
@@ -507,9 +515,12 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   static QueueSource? fromJson(dynamic value) {
     String? sourceString;
     String? title;
+    AlbumIdentifierWrapper? albumIdentifier;
     if (value is Map) {
       sourceString = value['s'];
       title = value['t'];
+      final albumIdentifierMap = value['a'];
+      if (albumIdentifierMap is Map) albumIdentifier = AlbumIdentifierWrapper.fromMap(albumIdentifierMap.cast());
     } else if (value is String) {
       sourceString = value;
     }
@@ -517,7 +528,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
     if (sourceString != null) {
       final v = QueueSourceEnum.values.getEnum(sourceString);
       if (v != null) {
-        return QueueSource._(v, title: title);
+        return QueueSource._(v, title: title, albumIdentifier: albumIdentifier);
       }
     }
 
@@ -526,26 +537,28 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
 
   @override
   dynamic toJson() {
-    if (title == null) {
+    final albumIdentifier = this.albumIdentifier;
+    if (title == null && albumIdentifier == null) {
       return s.name;
     }
     return {
       't': title,
       's': s.name,
+      if (albumIdentifier != null) 'a': albumIdentifier.toMap(),
     };
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
-    return other is QueueSource && other.s == s && other.title == title;
+    return other is QueueSource && other.s == s && other.title == title && other.albumIdentifier == albumIdentifier;
   }
 
   @override
-  int get hashCode => s.hashCode ^ title.hashCode;
+  int get hashCode => s.hashCode ^ title.hashCode ^ albumIdentifier.hashCode;
 
   @override
-  String toString() => 'QueueSource(s: $s, title: $title)';
+  String toString() => 'QueueSource(s: $s, title: $title, albumIdentifier: $albumIdentifier)';
 }
 
 class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {

@@ -152,7 +152,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                           sort == GroupSortType.numberOfTracks ||
                           sort == GroupSortType.duration;
 
-                      final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolver(sort);
+                      final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getAlbumsExtraTextResolver(sort);
                       final useStaggeredGrid = settings.useAlbumStaggeredGridView.valueR;
 
                       return ObxPrefer(
@@ -172,7 +172,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                     child: AlbumTile(
                                       identifier: albumId,
                                       album: tracks,
-                                      extraText: extraTextResolver?.call(tracks),
+                                      extraText: extraTextResolver?.call(albumId, tracks),
                                     ),
                                   );
                                 },
@@ -198,7 +198,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                             identifier: albumId,
                                             album: tracks,
                                             staggered: true,
-                                            extraInfo: extraTextResolver?.call(tracks),
+                                            extraInfo: extraTextResolver?.call(albumId, tracks),
                                             width: cardWidth,
                                             height: null,
                                           ),
@@ -227,7 +227,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                                           identifier: albumId,
                                           album: tracks,
                                           staggered: false,
-                                          extraInfo: extraTextResolver?.call(tracks),
+                                          extraInfo: extraTextResolver?.call(albumId, tracks),
                                           width: cardWidth,
                                           height: cardHeight,
                                         ),
