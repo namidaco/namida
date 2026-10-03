@@ -269,6 +269,9 @@ class NamidaOnTaps {
       MediaType.artist: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],
       MediaType.style: [SortType.year, SortType.title],
+      MediaType.mood: [SortType.title],
+      MediaType.tag: [SortType.title],
+      MediaType.rating: [SortType.title],
       MediaType.folder: [SortType.filename],
       MediaType.folderMusic: [SortType.filename],
       MediaType.folderVideo: [SortType.filename],
@@ -304,7 +307,8 @@ class NamidaOnTaps {
       MediaType.artist || MediaType.albumArtist || MediaType.composer => GroupSortType.forArtists(media),
       MediaType.genre || MediaType.style => GroupSortType.forGenres(),
       MediaType.playlist => GroupSortType.forPlaylists(),
-      MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.mood || MediaType.tag || MediaType.rating => null,
+      MediaType.mood || MediaType.tag => GroupSortType.forMoodsTags(),
+      MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.rating => null,
     };
     if (sorting == null || availableSorts == null) return;
     final allSorts = availableSorts.where((e) => e != GroupSortType.shuffle && e != GroupSortType.custom).toList();

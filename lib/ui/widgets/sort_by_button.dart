@@ -244,6 +244,50 @@ class SortByMenuGenres with SortByMenuBase {
   ];
 }
 
+class SortByMenuMoodsTags with SortByMenuBase {
+  final MediaType type;
+
+  const SortByMenuMoodsTags(this.type);
+
+  @override
+  List<Widget> children(BuildContext context) {
+    final type = this.type;
+    final sortingRx = settings.groupSortingRxOf(type);
+    if (sortingRx == null) return [];
+    final (sortsRx, reverseRx) = sortingRx;
+    return [
+      _SortAdvancedHeader(
+        onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(type),
+      ),
+      Obx(
+        (context) {
+          final isReversed = reverseRx.valueR;
+          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sortsRx.valueR);
+          return SortOptionsCards(
+            isReversed: isReversed,
+            onReverseTap: () => SearchSortController.inst.sortMedia(type, reverse: !isReversed),
+            withSortKeyOptions: true,
+            prefixFilters: prefixFilters,
+          );
+        },
+      ),
+      ...GroupSortType.forMoodsTags().map(
+        (e) => ObxO(
+          rx: sortsRx,
+          builder: (context, sorts) => SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            trailingIcon: e.toIcon(),
+            active: sorts.first == e,
+            onTap: () => SearchSortController.inst.sortMedia(type, groupSorts: [e]),
+          ),
+        ),
+      ),
+    ];
+  }
+}
+
 class SortByMenuPlaylist with SortByMenuBase {
   const SortByMenuPlaylist();
 
@@ -663,6 +707,7 @@ extension _GroupSortTypeIgnorePrefix on GroupSortType {
     GroupSortType.creationDate ||
     GroupSortType.modifiedDate ||
     GroupSortType.shuffle ||
+    GroupSortType.shuffleDaily ||
     GroupSortType.custom => null,
   };
 }

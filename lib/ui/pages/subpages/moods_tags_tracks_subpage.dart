@@ -9,6 +9,8 @@ import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -83,6 +85,33 @@ class _MoodsTagsTracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<_MoodsTagsTracksPage> {
   @override
+  void initState() {
+    _sortTracks();
+    settings.mediaItemsTrackSorting.addListener(_onSortingChanged);
+    settings.mediaItemsTrackSortingReverse.addListener(_onSortingChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    settings.mediaItemsTrackSorting.removeListener(_onSortingChanged);
+    settings.mediaItemsTrackSortingReverse.removeListener(_onSortingChanged);
+    super.dispose();
+  }
+
+  void _sortTracks() {
+    final mediaType = widget.mediaType;
+    final comparables = SearchSortController.inst.getMediaTracksSortingComparables(mediaType);
+    final reverse = settings.mediaItemsTrackSortingReverse.value[mediaType] ?? false;
+    widget.tracks.sortByAltsPrecomputed(comparables, reverse: reverse);
+  }
+
+  void _onSortingChanged() {
+    _sortTracks();
+    setState(() {});
+  }
+
+  @override
   Iterable<TrackExtended> getTracksExtended() {
     return widget.tracks.map((e) => e.toTrackExt());
   }
@@ -124,7 +153,6 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
               ].join(' - '),
               type: widget.mediaType,
               pageTitle: widget.name,
-              disableSort: true,
             ),
             infoBox: (maxWidth) => SubpageInfoContainer(
               maxWidth: maxWidth,

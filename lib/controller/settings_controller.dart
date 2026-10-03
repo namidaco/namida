@@ -175,6 +175,10 @@ class _SettingsController extends _SettingsKeysWriter {
   late final artistSortReversed = _key('artistSortReversed', isKuru ? true : false);
   late final genreSorts = _keyList('genreSorts', const [GroupSortType.genresList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final genreSortReversed = _key('genreSortReversed', false);
+  late final moodSorts = _keyList('moodSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final moodSortReversed = _key('moodSortReversed', false);
+  late final tagSorts = _keyList('tagSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final tagSortReversed = _key('tagSortReversed', false);
   late final playlistSorts = _keyList('playlistSorts', const [GroupSortType.dateModified], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final playlistSortReversed = _key('playlistSortReversed', false);
   late final playlistsGroupByTags = _key('playlistsGroupByTags', false);
@@ -437,6 +441,9 @@ class _SettingsController extends _SettingsKeysWriter {
       MediaType.composer: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],
       MediaType.style: [SortType.year, SortType.title],
+      MediaType.mood: [SortType.title],
+      MediaType.tag: [SortType.title],
+      MediaType.rating: [SortType.title],
       MediaType.folder: [SortType.filename],
       MediaType.folderMusic: [SortType.filename],
       MediaType.folderVideo: [SortType.filename],
@@ -453,6 +460,9 @@ class _SettingsController extends _SettingsKeysWriter {
       MediaType.artist: false,
       MediaType.genre: false,
       MediaType.style: false,
+      MediaType.mood: false,
+      MediaType.tag: false,
+      MediaType.rating: false,
       MediaType.folder: false,
       MediaType.folderMusic: false,
       MediaType.folderVideo: false,
@@ -552,12 +562,16 @@ class _SettingsController extends _SettingsKeysWriter {
     return (sorts: sortsKey.value, isReverse: reverseKey.value);
   }
 
+  (Rx<List<GroupSortType>>, Rx<bool>)? groupSortingRxOf(MediaType media) => _groupSortingKeysOf(media);
+
   (_SettingsListKey<GroupSortType>, _SettingsKey<bool>)? _groupSortingKeysOf(MediaType media) => switch (media) {
     MediaType.album => (albumSorts, albumSortReversed),
     MediaType.artist || MediaType.albumArtist || MediaType.composer => (artistSorts, artistSortReversed),
     MediaType.genre || MediaType.style => (genreSorts, genreSortReversed),
     MediaType.playlist => (playlistSorts, playlistSortReversed),
-    MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.mood || MediaType.tag || MediaType.rating => null,
+    MediaType.mood => (moodSorts, moodSortReversed),
+    MediaType.tag => (tagSorts, tagSortReversed),
+    MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.rating => null,
   };
 
   void updateActiveTrSearch({required bool tracks, required bool videos}) {

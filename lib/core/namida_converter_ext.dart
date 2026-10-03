@@ -2195,6 +2195,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.artistSort => '${lang.artist} (${lang.sortBy})',
     GroupSortType.composerSort => '${lang.composer} (${lang.sortBy})',
     GroupSortType.shuffle => lang.random,
+    GroupSortType.shuffleDaily => '${lang.random} (${lang.daily})',
     GroupSortType.custom => lang.custom,
   };
 
@@ -2218,6 +2219,7 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.albumsCount => Broken.cards,
     GroupSortType.custom => Broken.format_circle,
     GroupSortType.shuffle => Broken.shuffle,
+    GroupSortType.shuffleDaily => Broken.calendar_tick,
     GroupSortType.lastPlayed => Broken.play_circle,
     GroupSortType.playCount => Broken.award,
     GroupSortType.latestPlayed => Broken.clock,

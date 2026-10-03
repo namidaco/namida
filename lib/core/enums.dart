@@ -124,6 +124,7 @@ enum GroupSortType {
   artistSort,
   composerSort,
   shuffle,
+  shuffleDaily,
   custom,
   ;
 
@@ -148,6 +149,7 @@ enum GroupSortType {
     GroupSortType.releaseType,
     GroupSortType.bpm,
     GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
   ];
 
   static List<GroupSortType> forArtists(MediaType artistType) => [
@@ -175,6 +177,7 @@ enum GroupSortType {
     GroupSortType.dateModified,
     GroupSortType.bpm,
     GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
   ];
 
   static List<GroupSortType> forGenres() => [
@@ -194,6 +197,22 @@ enum GroupSortType {
     GroupSortType.composer,
     GroupSortType.bpm,
     GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
+  ];
+
+  static List<GroupSortType> forMoodsTags() => [
+    GroupSortType.title,
+    GroupSortType.numberOfTracks,
+    GroupSortType.duration,
+    GroupSortType.lastPlayed,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.year,
+    GroupSortType.dateAdded,
+    GroupSortType.dateModified,
+    GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
   ];
 
   static List<GroupSortType> forPlaylists() => [
@@ -208,6 +227,7 @@ enum GroupSortType {
     GroupSortType.latestPlayed,
     GroupSortType.bpm,
     GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
     GroupSortType.custom,
   ];
 
@@ -221,6 +241,7 @@ enum GroupSortType {
     GroupSortType.latestPlayed,
     GroupSortType.lastPlayed,
     GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
     GroupSortType.custom,
   ];
 }
