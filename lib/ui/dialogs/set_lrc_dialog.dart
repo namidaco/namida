@@ -72,17 +72,23 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       ),
     );
   }
+  final isIgnoredRx = false.obs;
   if (await cachedLRC.exists()) {
-    availableLyrics.add(
-      LyricsModel(
-        lyrics: await cachedLRC.readLrcString(),
-        synced: true,
-        fromInternet: false,
-        isInCache: true,
-        file: cachedLRC,
-        isEmbedded: false,
-      ),
-    );
+    final cachedLRCLyrics = await cachedLRC.readLrcString();
+    if (LrcSearchUtils.isIgnoreMarker(cachedLRCLyrics)) {
+      isIgnoredRx.value = true;
+    } else {
+      availableLyrics.add(
+        LyricsModel(
+          lyrics: cachedLRCLyrics,
+          synced: true,
+          fromInternet: false,
+          isInCache: true,
+          file: cachedLRC,
+          isEmbedded: false,
+        ),
+      );
+    }
   }
 
   final deviceLyricsFiles = await lrcUtils.allDeviceLyricsFiles();
@@ -125,6 +131,24 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   void onPrioritizeEmbeddedChanged(bool prioritize) {
     settings.prioritizeEmbeddedLyrics.save(prioritize);
     markRequiresUpdating();
+  }
+
+  Future<void> setIgnored(bool ignore) async {
+    if (ignore) {
+      await lrcUtils.ignoreLyrics();
+      availableLyrics.value.removeWhere((l) => l.isInCache);
+      availableLyrics.refresh();
+    } else {
+      await cachedLRC.tryDeleting();
+    }
+    isIgnoredRx.value = ignore;
+    markRequiresUpdating();
+  }
+
+  // -- the marker would shadow a cached txt saved while ignored.
+  Future<File> saveLyricsByUser(String lyrics, bool synced) async {
+    if (isIgnoredRx.value) await setIgnored(false);
+    return Lyrics.inst.saveLyricsByUser(lrcUtils, lyrics, synced);
   }
 
   // -- saving again writes to the same file
@@ -256,7 +280,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   language: lrc.language,
                 );
                 final lyricsString = newLRC.format();
-                final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, lyricsString, true);
+                final file = await saveLyricsByUser(lyricsString, true);
                 final newLModel = LyricsModel(
                   lyrics: lyricsString,
                   synced: l.synced,
@@ -424,6 +448,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           title: lang.delete,
           onTap: () => showDeleteLyricsDialog(l),
         ),
+      if (l.isInCache)
+        NamidaPopupItem(
+          icon: Broken.eye_slash,
+          title: lang.ignore,
+          onTap: () => setIgnored(true),
+        ),
     ];
   }
 
@@ -485,7 +515,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     if (path != null) {
       final text = await File(path).readLrcString();
       final synced = text.isValidLRC();
-      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
+      final file = await saveLyricsByUser(text, synced);
       final lrcModel = LyricsModel(
         lyrics: text,
         synced: synced,
@@ -506,7 +536,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       text ??= pasteTextController.text;
       final synced = text.isValidLRC();
 
-      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
+      final file = await saveLyricsByUser(text, synced);
 
       final lrcModel = LyricsModel(
         lyrics: text,
@@ -596,7 +626,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       final text = editTextController.text;
       final synced = text.isValidLRC();
 
-      final file = await Lyrics.inst.saveLyricsByUser(lrcUtils, text, synced);
+      final file = await saveLyricsByUser(text, synced);
 
       final lrcModel = LyricsModel(
         lyrics: text,
@@ -669,6 +699,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       expandedLyrics.close();
       inUseRx.close();
       isEmbeddingRx.close();
+      isIgnoredRx.close();
       searchController.dispose();
     },
     colorScheme: colorScheme,
@@ -737,7 +768,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
               isLoading: isEmbedding,
               onTap: () async {
                 if (canSave) {
-                  await Lyrics.inst.saveLyricsByUser(lrcUtils, selected.lyrics, selected.synced);
+                  await saveLyricsByUser(selected.lyrics, selected.synced);
                   final newInUse = await markRequiresUpdating();
                   final isStillEmbeddedPrioritized = selected.synced && newInUse.isEmbedded && settings.prioritizeEmbeddedLyrics.value;
                   if (isStillEmbeddedPrioritized) {
@@ -982,6 +1013,12 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             onChanged: onPrioritizeEmbeddedChanged,
                           ),
                         ),
+                      if (isIgnoredRx.valueR)
+                        SliverToBoxAdapter(
+                          child: _IgnoredLyricsTile(
+                            onUnignore: () => setIgnored(false),
+                          ),
+                        ),
                       SuperSliverList.builder(
                         itemCount: availableLyricsValue.length,
                         itemBuilder: (context, index) {
@@ -1198,6 +1235,25 @@ class _PrioritizeEmbeddedLyricsTile extends StatelessWidget {
         value: prioritize,
         onChanged: (isTrue) => onChanged(!isTrue),
       ),
+    );
+  }
+}
+
+class _IgnoredLyricsTile extends StatelessWidget {
+  final VoidCallback onUnignore;
+
+  const _IgnoredLyricsTile({
+    required this.onUnignore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomSwitchListTile(
+      icon: Broken.eye_slash,
+      title: lang.ignore,
+      subtitle: lang.cache,
+      value: true,
+      onChanged: (isTrue) => onUnignore(),
     );
   }
 }

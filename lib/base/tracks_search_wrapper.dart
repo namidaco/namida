@@ -12,6 +12,7 @@ import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -263,6 +264,7 @@ class TracksSearchWrapper {
     final syncedInCache = lrcUtils.cachedLRCFile;
     if (syncedInCache.existsAndValidSync()) {
       lrcContent = syncedInCache.readLrcStringSync();
+      if (LrcSearchUtils.isIgnoreMarker(lrcContent)) return null;
     } else if (embedded.isNotEmpty) {
       lrcContent = embedded;
     }

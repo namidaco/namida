@@ -98,6 +98,15 @@ abstract class LrcSearchUtils {
     return fc;
   }
 
+  static const kIgnoreMarker = 'IGNORE';
+  static bool isIgnoreMarker(String lyrics) => lyrics.startsWith(kIgnoreMarker);
+
+  /// the cached lrc is looked up before the cached txt, so the marker also shadows a txt saved later.
+  Future<void> ignoreLyrics() async {
+    await cachedTxtFile.tryDeleting();
+    await saveLyricsToCache(kIgnoreMarker, true);
+  }
+
   @mustCallSuper
   Future<bool> hasLyrics() async {
     final files = await firstLyricsFiles(includeTxt: true);

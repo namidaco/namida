@@ -191,11 +191,14 @@ class Lyrics {
     if (checkInterrupted()) return null;
 
     final embedded = lrcUtils.embeddedLyrics;
-    if (embedded.startsWith('IGNORE')) return _noLyrics;
+    if (LrcSearchUtils.isIgnoreMarker(embedded)) return _noLyrics;
 
     final local = await pickLocalLyrics(lrcUtils, embedded);
     final localLyrics = local.isEmbedded ? embedded : await local.file?.readLrcString();
-    if (localLyrics != null) return _parseLocalLyrics(localLyrics);
+    if (localLyrics != null) {
+      if (LrcSearchUtils.isIgnoreMarker(localLyrics)) return _unavailableLyrics;
+      return _parseLocalLyrics(localLyrics);
+    }
 
     final source = _lyricsSource;
     final lookupKey = _onlineLookupKey(item);
@@ -239,7 +242,7 @@ class Lyrics {
   /// 3. track embedded
   /// 4. cached/device txt
   Future<LocalLyricsPick> pickLocalLyrics(LrcSearchUtils lrcUtils, String embedded) async {
-    if (embedded.startsWith('IGNORE')) return _noLocalLyrics;
+    if (LrcSearchUtils.isIgnoreMarker(embedded)) return _noLocalLyrics;
     final hasEmbedded = embedded != '';
     if (hasEmbedded && _lyricsPrioritizeEmbedded) return _embeddedLocalLyrics;
     if (_lyricsSource == LyricsSource.internet) return _noLocalLyrics;
