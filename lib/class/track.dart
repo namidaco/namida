@@ -315,6 +315,7 @@ class TrackExtended {
   final String originalAlbum;
   final List<String> albumsList;
   final String albumArtist;
+  final List<String> albumArtistsList;
   final String originalGenre;
   final List<String> genresList;
   final String originalStyle;
@@ -375,6 +376,7 @@ class TrackExtended {
     required this.originalAlbum,
     required this.albumsList,
     required this.albumArtist,
+    required this.albumArtistsList,
     required this.originalGenre,
     required this.genresList,
     required this.originalStyle,
@@ -574,6 +576,10 @@ class TrackExtended {
       originalAlbum: originalAlbum,
       albumsList: albumsList,
       albumArtist: albumArtist,
+      albumArtistsList: Indexer.splitAlbumArtist(
+        albumArtist,
+        config: splitConfig.artistsConfig,
+      ),
       originalGenre: json['originalGenre'] ?? '',
       genresList: Indexer.splitGenre(
         json['originalGenre'],
@@ -886,6 +892,12 @@ extension TrackExtUtils on TrackExtended {
           )
         : tagsList;
     final albumArtist = tag.albumArtist ?? this.albumArtist;
+    final finalalbumartists = tag.albumArtist != null
+        ? Indexer.splitAlbumArtist(
+            tag.albumArtist,
+            config: splittersConfigs.artistsConfig,
+          )
+        : albumArtistsList;
     final yearText = tag.year ?? this.year.toString();
     final year = TrackExtended.enforceYearFormat(tag.year) ?? this.year;
 
@@ -900,6 +912,7 @@ extension TrackExtUtils on TrackExtended {
       originalAlbum: originalAlbum,
       albumsList: finalalbums,
       albumArtist: albumArtist,
+      albumArtistsList: finalalbumartists,
       originalGenre: tag.genre ?? originalGenre,
       genresList: finalgenres,
       originalStyle: tag.style ?? originalStyle,
@@ -960,6 +973,7 @@ extension TrackExtUtils on TrackExtended {
     String? originalAlbum,
     List<String>? albumsList,
     String? albumArtist,
+    List<String>? albumArtistsList,
     String? originalGenre,
     List<String>? genresList,
     String? originalStyle,
@@ -1014,6 +1028,7 @@ extension TrackExtUtils on TrackExtended {
       originalAlbum: originalAlbum ?? this.originalAlbum,
       albumsList: albumsList ?? this.albumsList,
       albumArtist: albumArtist ?? this.albumArtist,
+      albumArtistsList: albumArtistsList ?? this.albumArtistsList,
       originalGenre: originalGenre ?? this.originalGenre,
       genresList: genresList ?? this.genresList,
       originalStyle: originalStyle ?? this.originalStyle,
@@ -1081,6 +1096,7 @@ extension TrackUtils on Track {
   String get originalAlbum => toTrackExt().originalAlbum;
   List<String> get albumsList => toTrackExt().albumsList;
   String get albumArtist => toTrackExt().albumArtist;
+  List<String> get albumArtistsList => toTrackExt().albumArtistsList;
   String get originalGenre => toTrackExt().originalGenre;
   List<String> get genresList => toTrackExt().genresList;
   String get originalStyle => toTrackExt().originalStyle;

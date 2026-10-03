@@ -349,6 +349,7 @@ class _SubsonicWebServer extends MusicWebServer {
       originalAlbum: album,
       albumsList: albums,
       albumArtist: albumArtist,
+      albumArtistsList: const [albumArtist],
       originalGenre: media.genre ?? '',
       genresList: genres,
       originalStyle: '',

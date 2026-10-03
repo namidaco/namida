@@ -1221,6 +1221,7 @@ final kDummyExtendedTrack = TrackExtended(
   originalAlbum: "",
   albumsList: [],
   albumArtist: "",
+  albumArtistsList: [],
   originalGenre: "",
   genresList: [],
   originalStyle: "",

@@ -59,7 +59,9 @@ class LibraryGroup<T extends Track> {
       }
 
       // -- Assigning Album Artist
-      mainMapAlbumArtists.addForce(trExt.albumArtist, tr);
+      for (var albumArtist in trExt.albumArtistsList) {
+        mainMapAlbumArtists.addForce(albumArtist, tr);
+      }
 
       // -- Assigning Composers
       for (var composer in trExt.composersList) {
@@ -220,7 +222,9 @@ class LibraryGroup<T extends Track> {
               takeOut(mainMapArtists.value[artist], tr);
             }
           case MediaType.albumArtist:
-            takeOut(mainMapAlbumArtists.value[trExt.albumArtist], tr);
+            for (final albumArtist in trExt.albumArtistsList) {
+              takeOut(mainMapAlbumArtists.value[albumArtist], tr);
+            }
           case MediaType.composer:
             for (final composer in trExt.composersList) {
               takeOut(mainMapComposer.value[composer], tr);

@@ -207,6 +207,10 @@ class _JellyfinServer extends MusicWebServer {
       originalAlbum: album,
       albumsList: albumsList,
       albumArtist: albumArtist,
+      albumArtistsList: Indexer.splitAlbumArtist(
+        albumArtist,
+        config: splitConfig.artistsConfig,
+      ),
       originalGenre: originalGenre,
       genresList: genresList,
       originalStyle: '',

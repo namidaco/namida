@@ -263,6 +263,10 @@ class Indexer<T extends Track> {
           oldtr.composer,
           config: splitConfig.artistsConfig,
         ),
+        albumArtistsList: Indexer.splitAlbumArtist(
+          oldtr.albumArtist,
+          config: splitConfig.artistsConfig,
+        ),
         genresList: Indexer.splitGenre(
           oldtr.originalGenre,
           config: splitConfig.genresConfig,
@@ -523,7 +527,9 @@ class Indexer<T extends Track> {
     for (var artist in trExt.artistsList) {
       removeAndDeleteEmpty(mainMapArtists.value, artist);
     }
-    removeAndDeleteEmpty(mainMapAlbumArtists.value, trExt.albumArtist);
+    for (var albumArtist in trExt.albumArtistsList) {
+      removeAndDeleteEmpty(mainMapAlbumArtists.value, albumArtist);
+    }
     for (var composer in trExt.composersList) {
       removeAndDeleteEmpty(mainMapComposer.value, composer);
     }
@@ -625,7 +631,15 @@ class Indexer<T extends Track> {
       for (final arOld in newOldArtists.$2) {
         removeCustom(MediaType.artist, mainMapArtists, arOld, oldTrack);
       }
-      addCustom(MediaType.albumArtist, mainMapAlbumArtists, oldTrack?.albumArtist, newTrack.albumArtist, newTrack);
+
+      // -- Assigning Album Artists
+      final newOldAlbumArtists = oldtr == null ? (newtr.albumArtistsList, const []) : differenceLists(newtr.albumArtistsList, oldtr.albumArtistsList);
+      for (final aaNew in newOldAlbumArtists.$1) {
+        addCustom(MediaType.albumArtist, mainMapAlbumArtists, null, aaNew, newTrack);
+      }
+      for (final aaOld in newOldAlbumArtists.$2) {
+        removeCustom(MediaType.albumArtist, mainMapAlbumArtists, aaOld, oldTrack);
+      }
 
       // -- Assigning Composers
       final newOldComposers = oldtr == null ? (newtr.composersList, const []) : differenceLists(newtr.composersList, oldtr.composersList);
@@ -794,6 +808,7 @@ class Indexer<T extends Track> {
         originalAlbum: UnknownTags.ALBUM,
         albumsList: [UnknownTags.ALBUM],
         albumArtist: UnknownTags.ALBUMARTIST,
+        albumArtistsList: const [UnknownTags.ALBUMARTIST],
         originalGenre: UnknownTags.GENRE,
         genresList: [UnknownTags.GENRE],
         originalStyle: UnknownTags.STYLE,
@@ -870,6 +885,12 @@ class Indexer<T extends Track> {
           config: splittersConfigs.artistsConfig,
         );
 
+        // -- Split Album Artists
+        final albumArtists = splitAlbumArtist(
+          albumArtist,
+          config: splittersConfigs.artistsConfig,
+        );
+
         // -- Split Genres
         final genres = splitGenre(
           tags.genre,
@@ -908,6 +929,7 @@ class Indexer<T extends Track> {
           originalAlbum: doMagic(tags.album),
           albumsList: albums,
           albumArtist: doMagic(tags.albumArtist),
+          albumArtistsList: albumArtists,
           originalGenre: doMagic(tags.genre),
           genresList: genres,
           originalStyle: doMagic(tags.style),
@@ -2257,6 +2279,16 @@ class Indexer<T extends Track> {
     );
   }
 
+  static List<String> splitAlbumArtist(
+    String? originalAlbumArtist, {
+    required ArtistsSplitConfig config,
+  }) {
+    return config.splitText(
+      originalAlbumArtist,
+      fallback: UnknownTags.ALBUMARTIST,
+    );
+  }
+
   static List<String> splitGenre(
     String? originalGenre, {
     required GenresSplitConfig config,
@@ -2452,6 +2484,10 @@ class Indexer<T extends Track> {
         originalAlbum: album ?? UnknownTags.ALBUM,
         albumsList: albums,
         albumArtist: albumArtist ?? UnknownTags.ALBUMARTIST,
+        albumArtistsList: Indexer.splitAlbumArtist(
+          albumArtist,
+          config: splitConfig.artistsConfig,
+        ),
         originalGenre: e.genre ?? UnknownTags.GENRE,
         genresList: genres,
         originalStyle: UnknownTags.STYLE,
