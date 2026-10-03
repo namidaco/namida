@@ -86,6 +86,15 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
             title: lang.enableFoldersHierarchy,
             value: enabled,
             onChanged: (_) => config.toggleFoldersHierarchy(),
+            trailingBeforeSwitch: enabled
+                ? ObxO(
+                    rx: config.skipSingleSubfolder,
+                    builder: (context, skipSingleSubfolder) => _SkipSingleSubfolderIcon(
+                      enabled: skipSingleSubfolder,
+                      onTap: config.toggleSkipSingleSubfolder,
+                    ),
+                  )
+                : null,
           ),
         ),
         const NamidaContainerDivider(
@@ -479,6 +488,29 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> with Tick
           child: child,
         );
       },
+    );
+  }
+}
+
+class _SkipSingleSubfolderIcon extends StatelessWidget {
+  final bool enabled;
+  final void Function() onTap;
+
+  const _SkipSingleSubfolderIcon({
+    required this.enabled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.theme.colorScheme;
+    final iconColor = enabled ? colorScheme.secondary : colorScheme.onSurface.withOpacityExt(0.4);
+    return NamidaIconButton(
+      tooltip: () => lang.skipSingleSubfolders,
+      icon: Broken.forward,
+      iconSize: 20.0,
+      iconColor: iconColor,
+      onPressed: onTap,
     );
   }
 }

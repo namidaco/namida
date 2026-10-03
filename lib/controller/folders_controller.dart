@@ -129,7 +129,7 @@ class FoldersController<T extends Folder, E extends Track> {
 
     _pathsTreeMapCurrent = nextNode;
 
-    if (!isFromStepOut) {
+    if (!isFromStepOut && _config.skipSingleSubfolder.value) {
       if (upcomingFolders.length == 1 && folderToTracks(folder)?.isEmpty == true) {
         stepIn(upcomingFolders.first);
         return;
@@ -168,7 +168,7 @@ class FoldersController<T extends Folder, E extends Track> {
     }
 
     T? folderToStepIn;
-    if (_config.enableFoldersHierarchy.value) {
+    if (_config.enableFoldersHierarchy.value && _config.skipSingleSubfolder.value) {
       do {
         folderToStepIn = _pathsTreeMapCurrent?.parent;
         _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
@@ -375,16 +375,25 @@ class FoldersPageConfig {
   final QueueSource Function(String? name) queueSource;
   final Rx<String?> defaultFolderStartupLocation;
   final Rx<bool> enableFoldersHierarchy;
+  final Rx<bool> skipSingleSubfolder;
   final void Function() toggleFoldersHierarchy;
+  final void Function() toggleSkipSingleSubfolder;
   final void Function() onDefaultStartupFolderChanged;
 
   const FoldersPageConfig._({
     required this.queueSource,
     required this.defaultFolderStartupLocation,
     required this.enableFoldersHierarchy,
+    required this.skipSingleSubfolder,
     required this.toggleFoldersHierarchy,
+    required this.toggleSkipSingleSubfolder,
     required this.onDefaultStartupFolderChanged,
   });
+
+  static void _toggleSkipSingleSubfolder() {
+    final newValue = !settings.foldersSkipSingleSubfolder.value;
+    settings.foldersSkipSingleSubfolder.save(newValue);
+  }
 
   factory FoldersPageConfig.tracksAndVideos() {
     return FoldersPageConfig._(
@@ -396,6 +405,8 @@ class FoldersPageConfig {
         settings.enableFoldersHierarchy.save(newValue);
         FoldersController.tracksAndVideos.onFoldersHierarchyChanged(newValue);
       },
+      skipSingleSubfolder: settings.foldersSkipSingleSubfolder,
+      toggleSkipSingleSubfolder: _toggleSkipSingleSubfolder,
       onDefaultStartupFolderChanged: () {
         settings.defaultFolderStartupLocation.save(FoldersController.tracksAndVideos.getCurrentFolderToBookmark());
       },
@@ -411,6 +422,8 @@ class FoldersPageConfig {
         settings.enableFoldersHierarchyTracks.save(newValue);
         FoldersController.tracks.onFoldersHierarchyChanged(newValue);
       },
+      skipSingleSubfolder: settings.foldersSkipSingleSubfolder,
+      toggleSkipSingleSubfolder: _toggleSkipSingleSubfolder,
       onDefaultStartupFolderChanged: () {
         settings.defaultFolderStartupLocation.save(FoldersController.tracks.getCurrentFolderToBookmark());
       },
@@ -426,6 +439,8 @@ class FoldersPageConfig {
         settings.enableFoldersHierarchyVideos.save(newValue);
         FoldersController.videos.onFoldersHierarchyChanged(newValue);
       },
+      skipSingleSubfolder: settings.foldersSkipSingleSubfolder,
+      toggleSkipSingleSubfolder: _toggleSkipSingleSubfolder,
       onDefaultStartupFolderChanged: () {
         settings.defaultFolderStartupLocationVideos.save(FoldersController.videos.getCurrentFolderToBookmark());
       },

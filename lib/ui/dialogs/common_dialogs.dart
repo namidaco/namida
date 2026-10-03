@@ -359,6 +359,7 @@ class NamidaDialogs {
       queueSource,
       thirdLineText: tracks.totalSizeFormatted,
       trailingIcon: isTracksRecursive ? Broken.cards : Broken.card,
+      folder: folder,
     );
   }
 }

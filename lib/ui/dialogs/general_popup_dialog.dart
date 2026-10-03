@@ -80,6 +80,7 @@ Future<void> showGeneralPopupDialog(
   bool comingFromPlaylistMenu = false,
   bool showPlayAllReverse = false,
   SmartPlaylistWrapper? smartPlaylistWrapper,
+  Folder? folder,
 }) async {
   final isSingle = tracks.length == 1;
   forceSingleArtwork ??= isSingle;
@@ -138,7 +139,7 @@ Future<void> showGeneralPopupDialog(
   /// name, identifier
   final Set<AlbumIdentifierWrapper> availableAlbums = tracks.toUniqueAlbums();
   final List<String> availableArtists = tracks.mappedUniquedList((e) => e.toTrackExt().artistsList);
-  final List<Folder> availableFolders = tracks.mapAsPhysical().mappedUniqued((e) => e.folder);
+  final List<Folder> availableFolders = folder != null ? [folder] : tracks.mapAsPhysical().mappedUniqued((e) => e.folder);
 
   final Iterable<YoutubeID> availableYoutubeIDs = tracks.map((e) => YoutubeID(id: e.youtubeID, playlistID: null)).where((element) => element.id.isNotEmpty);
   final String? firstVideolId = availableYoutubeIDs.firstOrNull?.id;
@@ -1217,17 +1218,21 @@ Future<void> showGeneralPopupDialog(
                                   icon: availableFolders.first is VideoFolder ? Broken.video_play : Broken.folder,
                                   onTap: () {
                                     NamidaNavigator.inst.closeDialog();
-                                    NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, null, trackToScrollTo: tracks.first);
+                                    NamidaOnTaps.inst.onFolderTapNavigate(availableFolders.first, null, trackToScrollTo: tracks.firstOrNull);
                                   },
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      if (NamidaChannel.inst.canOpenFileInExplorer && tracksExisting.isNotEmpty)
+                                      if (NamidaChannel.inst.canOpenFileInExplorer && (tracksExisting.isNotEmpty || folder != null))
                                         IconButton(
                                           tooltip: lang.openInFileExplorer,
                                           onPressed: () {
-                                            final path = tracksExisting.firstOrNull?.asPhysical()?.path ?? availableFolders.first.path;
-                                            NamidaChannel.inst.openFileInExplorer(path);
+                                            final existingTrackPath = tracksExisting.firstOrNull?.asPhysical()?.path;
+                                            if (existingTrackPath != null) {
+                                              NamidaChannel.inst.openFileInExplorer(existingTrackPath);
+                                            } else {
+                                              NamidaChannel.inst.openFileInExplorer(availableFolders.first.path, isDirectory: true);
+                                            }
                                           },
                                           icon: const Icon(
                                             Broken.export_1,

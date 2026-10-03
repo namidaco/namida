@@ -262,6 +262,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     enableFoldersHierarchy,
     enableFoldersHierarchyTracks,
     enableFoldersHierarchyVideos,
+    foldersSkipSingleSubfolder,
     displayArtistBeforeTitle,
     heatmapListensView,
     reverseListensView,

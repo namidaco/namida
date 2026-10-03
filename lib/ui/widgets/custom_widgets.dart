@@ -195,6 +195,7 @@ class CustomSwitchListTile extends StatelessWidget {
   final Color? bgColor;
   final bool dense;
   final bool extraDense;
+  final Widget? trailingBeforeSwitch;
 
   const CustomSwitchListTile({
     super.key,
@@ -213,6 +214,7 @@ class CustomSwitchListTile extends StatelessWidget {
     this.bgColor,
     this.dense = true,
     this.extraDense = false,
+    this.trailingBeforeSwitch,
   });
 
   @override
@@ -231,16 +233,17 @@ class CustomSwitchListTile extends StatelessWidget {
       onTap: () => onChanged(value),
       dense: dense,
       extraDense: extraDense,
-      trailing: IgnorePointer(
-        child: FittedBox(
-          child: Row(
-            children: [
-              const SizedBox(
-                width: 12.0,
-              ),
-              CustomSwitch(active: value, passedColor: passedColor),
-            ],
-          ),
+      trailing: FittedBox(
+        child: Row(
+          children: [
+            ?trailingBeforeSwitch,
+            const SizedBox(
+              width: 12.0,
+            ),
+            IgnorePointer(
+              child: CustomSwitch(active: value, passedColor: passedColor),
+            ),
+          ],
         ),
       ),
     );

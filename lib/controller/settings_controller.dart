@@ -201,6 +201,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enableFoldersHierarchy = _key('enableFoldersHierarchy', true);
   late final enableFoldersHierarchyTracks = _key('enableFoldersHierarchyTracks', true);
   late final enableFoldersHierarchyVideos = _key('enableFoldersHierarchyVideos', true);
+  late final foldersSkipSingleSubfolder = _key('foldersSkipSingleSubfolder', true);
   late final displayArtistBeforeTitle = _key('displayArtistBeforeTitle', true);
   late final heatmapListensView = _key('heatmapListensView', false);
   late final reverseListensView = _key('reverseListensView', true);
