@@ -173,16 +173,14 @@ class IndexerSettings extends SettingSubpageProvider {
     _maybeShowRefreshPromptDialog(true);
   }
 
+  /// [types] are offered as a switch inside the dialog, they must share the same tags as [initialType].
   void _pickServerFolder({
     required DirectoryIndexType initialType,
+    List<DirectoryIndexType>? types,
     DirectoryIndex? initialDir,
     required void Function(List<DirectoryIndex> dirsPath) onSuccessChoose,
   }) {
-    // -- uncomment to support in-place selections
-    // final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
-    // types.remove(DirectoryIndexType.unknown);
-    // types.remove(DirectoryIndexType.local);
-    final types = [initialType];
+    final selectableTypes = types ?? [initialType];
 
     final isURLHost = initialType.check(.isURLHost);
     final initialSource = initialDir?.sourceRaw;
@@ -218,7 +216,7 @@ class IndexerSettings extends SettingSubpageProvider {
     String? libraryIdHint;
     if (initialSource != null && isURLHost) {
       try {
-        final parsed = SMBServerInfo.fromUrl(initialSource);
+        final parsed = HostServerInfo.fromUrl(initialSource);
         initialDirSourceHint = parsed.host;
         shareHint = parsed.share;
         subdirHint = parsed.subdir;
@@ -422,70 +420,67 @@ class IndexerSettings extends SettingSubpageProvider {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const SizedBox(height: 8.0),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: types
-                            .map(
-                              (e) {
-                                final isSelected = e == selectedType;
-                                final assetImagePath = e.toAssetImage();
-                                Widget? assetWidget = assetImagePath == null
-                                    ? null
-                                    : Image.asset(
-                                        assetImagePath,
-                                        height: 22.0,
-                                      );
-                                assetWidget ??= Icon(
-                                  e.toIcon(),
-                                  size: 22.0,
-                                );
-                                final color = e.toColor(theme);
-                                return Expanded(
-                                  child: NamidaInkWell(
-                                    alignment: Alignment.center,
-                                    animationDurationMS: 200,
-                                    borderRadius: 8.0,
-                                    bgColor: color.withOpacityExt(0.2),
-                                    padding: const EdgeInsets.all(8.0),
-                                    decoration: BoxDecoration(
-                                      border: isSelected
-                                          ? Border.all(
-                                              color: color.withOpacityExt(0.6),
-                                              width: 1.2,
-                                            )
-                                          : null,
-                                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                    ),
-                                    onTap: () {
-                                      selectedTypeRx.value = e;
-                                    },
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        ...[
-                                          assetWidget,
-                                          const SizedBox(width: 12.0),
-                                        ],
-                                        Flexible(
-                                          child: Text(
-                                            e.toText(),
-                                            style: theme.textTheme.displayMedium,
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: selectableTypes
+                          .map(
+                            (e) {
+                              final isSelected = e == selectedType;
+                              final assetImagePath = e.toAssetImage();
+                              Widget? assetWidget = assetImagePath == null
+                                  ? null
+                                  : Image.asset(
+                                      assetImagePath,
+                                      height: 22.0,
+                                    );
+                              assetWidget ??= Icon(
+                                e.toIcon(),
+                                size: 22.0,
+                              );
+                              final color = e.toColor(theme);
+                              return Expanded(
+                                child: NamidaInkWell(
+                                  alignment: Alignment.center,
+                                  animationDurationMS: 200,
+                                  borderRadius: 8.0,
+                                  bgColor: color.withOpacityExt(0.2),
+                                  padding: const EdgeInsets.all(8.0),
+                                  decoration: BoxDecoration(
+                                    border: isSelected
+                                        ? Border.all(
+                                            color: color.withOpacityExt(0.6),
+                                            width: 1.2,
+                                          )
+                                        : null,
+                                    borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                                   ),
-                                );
-                              },
-                            )
-                            .addSeparators(
-                              separator: SizedBox(width: 8.0),
-                            )
-                            .toFixedList(),
-                      ),
+                                  onTap: () {
+                                    selectedTypeRx.value = e;
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ...[
+                                        assetWidget,
+                                        const SizedBox(width: 12.0),
+                                      ],
+                                      Flexible(
+                                        child: Text(
+                                          e.toText(),
+                                          style: theme.textTheme.displayMedium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                          .addSeparators(
+                            separator: SizedBox(width: 8.0),
+                          )
+                          .toFixedList(),
                     ),
                     if (initialType.check(.isFileBased)) ...[
                       const SizedBox(height: 8.0),
@@ -656,9 +651,15 @@ class IndexerSettings extends SettingSubpageProvider {
   }
 
   void _promptAddFolderType(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) {
-    final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
-    types.remove(DirectoryIndexType.unknown);
-    if (!NamidaFeaturesVisibility.showSafFolders) types.remove(DirectoryIndexType.saf);
+    final groups = <List<DirectoryIndexType>>[
+      const [DirectoryIndexType.local],
+      const [DirectoryIndexType.subsonic],
+      const [DirectoryIndexType.jellyfin],
+      const [DirectoryIndexType.webdav],
+      const [DirectoryIndexType.smb],
+      const [DirectoryIndexType.ftp, DirectoryIndexType.sftp],
+      if (NamidaFeaturesVisibility.showSafFolders) const [DirectoryIndexType.saf],
+    ];
     NamidaNavigator.inst.navigateDialog(
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
@@ -668,8 +669,9 @@ class IndexerSettings extends SettingSubpageProvider {
           CancelButton(addMargin: false),
         ],
         child: Column(
-          children: types.map(
-            (e) {
+          children: groups.map(
+            (group) {
+              final e = group.first;
               final assetImagePath = e.toAssetImage();
               final assetWidget = assetImagePath == null
                   ? null
@@ -677,21 +679,20 @@ class IndexerSettings extends SettingSubpageProvider {
                       assetImagePath,
                       height: 20.0,
                     );
+              final title = group.map((t) => t.toText()).join(' / ');
               return CustomListTile(
                 icon: assetWidget != null ? null : e.toIcon(),
                 leading: assetWidget,
-                title: e.toText(),
+                title: title,
                 subtitle: e.toSubtitle(),
                 onTap: () async {
                   NamidaNavigator.inst.closeDialog();
-                  switch (e) {
-                    case DirectoryIndexType.local:
-                      _pickLocalFolder(onSuccessChoose);
-                    case DirectoryIndexType.subsonic || DirectoryIndexType.jellyfin || DirectoryIndexType.webdav || DirectoryIndexType.smb:
-                      _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
-                    case DirectoryIndexType.saf:
-                      _pickSafFolder(onSuccessChoose);
-                    case DirectoryIndexType.unknown:
+                  if (e == DirectoryIndexType.local) {
+                    _pickLocalFolder(onSuccessChoose);
+                  } else if (e == DirectoryIndexType.saf) {
+                    _pickSafFolder(onSuccessChoose);
+                  } else {
+                    _pickServerFolder(initialType: e, types: group, onSuccessChoose: onSuccessChoose);
                   }
                 },
               );

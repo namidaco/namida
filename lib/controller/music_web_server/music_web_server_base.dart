@@ -8,8 +8,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:dartssh2/dartssh2.dart';
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
+import 'package:ftpconnect/ftpconnect.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
 import 'package:path/path.dart' as p;
@@ -47,10 +49,13 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
+part 'file_transfer_server.dart';
+part 'ftp_server.dart';
 part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';
 part 'saf_server.dart';
 part 'server_cache_controller.dart';
+part 'sftp_server.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
 part 'webdav_server.dart';
@@ -142,6 +147,15 @@ abstract class MusicWebServer {
   }
 }
 
+/// a temp copy that goes away once its reader is done.
+Stream<List<int>> _readThenDelete(File file, int start) async* {
+  try {
+    yield* file.openRead(start);
+  } finally {
+    file.tryDeleting();
+  }
+}
+
 extension _ServerEndpointUriExt on Uri {
   Uri buildEndpointUri(String endpointPath, Map<String, String> queryParameters) {
     final basePath = path.endsWith('/') ? path.substring(0, path.length - 1) : path;
@@ -152,6 +166,116 @@ extension _ServerEndpointUriExt on Uri {
         ...queryParameters,
       },
     );
+  }
+}
+
+class BasicAuth {
+  final String username;
+  final String password;
+
+  const BasicAuth({
+    required this.username,
+    required this.password,
+  });
+}
+
+/// `http://host?_share=x&_subdir=y&_p=port`, the encoding of host based servers (smb, ftp, sftp).
+class HostServerInfo {
+  final String host;
+  final String? share;
+  final String? subdir;
+  final String basePath;
+  final int? port;
+
+  const HostServerInfo({
+    required this.host,
+    required this.share,
+    required this.subdir,
+    required this.basePath,
+    required this.port,
+  });
+
+  static String _normalizePathSegment(String? segment) {
+    String normalized = (segment ?? '').trim();
+    if (normalized.startsWith('/')) {
+      normalized = normalized.substring(1);
+    }
+    if (normalized.endsWith('/')) {
+      normalized = normalized.substring(0, normalized.length - 1);
+    }
+    return normalized;
+  }
+
+  factory HostServerInfo.fromUrl(String url) {
+    final uri = Uri.parse(url);
+    final share = uri.queryParameters['_share'];
+    final subdir = uri.queryParameters['_subdir'];
+    final port = int.tryParse(uri.queryParameters['_p'] ?? '');
+
+    final normalizedShare = _normalizePathSegment(share);
+    final normalizedSubdir = _normalizePathSegment(subdir);
+
+    final segments = [
+      normalizedShare,
+      normalizedSubdir,
+    ].where((s) => s.isNotEmpty);
+
+    final basePath = segments.isEmpty ? '/' : '/${segments.join('/')}';
+
+    return HostServerInfo(
+      host: uri.host,
+      share: share,
+      subdir: subdir,
+      basePath: basePath,
+      port: port,
+    );
+  }
+
+  @override
+  String toString() {
+    return 'HostServerInfo(host: $host, share: $share, subdir: $subdir, basePath: $basePath, port: $port)';
+  }
+}
+
+class _ServerDiffManager {
+  final Uri serverUriParsed;
+  final Map<String, int> existingLibraryMapSoonToBeRemoved;
+
+  const _ServerDiffManager(
+    this.serverUriParsed,
+    this.existingLibraryMapSoonToBeRemoved,
+  );
+
+  static const _millisecondsAllowance = 1000;
+
+  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified) {
+    final uri = serverUriParsed.replace(
+      queryParameters: {
+        ...serverUriParsed.queryParameters,
+        'd': serverPath,
+      },
+    );
+    final uriString = uri.toString();
+    final canSkip = _checkCanSkipScan(uriString, remoteDateModified);
+
+    existingLibraryMapSoonToBeRemoved.remove(uriString); // mark exist
+
+    return canSkip;
+  }
+
+  bool _checkCanSkipScan(String fullPath, DateTime? remoteDateModified) {
+    final remoteModifiedMs = remoteDateModified?.millisecondsSinceEpoch;
+    if (remoteModifiedMs != null && remoteModifiedMs >= 0) {
+      final localModifiedMs = existingLibraryMapSoonToBeRemoved[fullPath];
+      if (localModifiedMs != null) {
+        if ((localModifiedMs - remoteModifiedMs).abs() <= _millisecondsAllowance) {
+          // -- can skip rescanning this
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 }
 
@@ -392,6 +516,8 @@ class _MusicWebServerAuthManager {
       DirectoryIndexType.jellyfin => _JellyfinServer.init(authDetails),
       DirectoryIndexType.webdav => _WebDAVServer.init(authDetails),
       DirectoryIndexType.smb => _SMBServer.init(authDetails),
+      DirectoryIndexType.ftp => _FTPServer.init(authDetails),
+      DirectoryIndexType.sftp => _SFTPServer.init(authDetails),
       DirectoryIndexType.saf => _SAFServer.init(authDetails),
     };
   }

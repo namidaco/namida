@@ -138,25 +138,13 @@ extension ServerAuthModelExt on ServerAuthModel {
           );
   }
 
-  WebDAVAuth toWebDAVAuthModel() {
+  BasicAuth toBasicAuthModel() {
     final authMap = toUrlParams();
 
     final username = authMap['u'] ?? '';
     final password = authMap['p'] ?? '';
 
-    return WebDAVAuth(
-      username: username,
-      password: password,
-    );
-  }
-
-  SMBAuth toSMBAuthModel() {
-    final authMap = toUrlParams();
-
-    final username = authMap['u'] ?? '';
-    final password = authMap['p'] ?? '';
-
-    return SMBAuth(
+    return BasicAuth(
       username: username,
       password: password,
     );

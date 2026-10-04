@@ -4,7 +4,7 @@ class _WebDAVServer extends MusicWebServer {
   _ClientApiWrapper? _api;
   late Uri _serverUri;
   Map<String, String>? _serverAuthHeaders;
-  late WebDAVAuth _authInfo;
+  late BasicAuth _authInfo;
   Uri _buildServerUri(String serverPath) {
     final basePath = _serverUri.path.endsWith('/') ? _serverUri.path : '${_serverUri.path}/';
     final trimmed = serverPath.startsWith('/') ? serverPath.substring(1) : serverPath;
@@ -18,7 +18,7 @@ class _WebDAVServer extends MusicWebServer {
   late final Future<bool> _ffmpegSupportsWebDAV = NamidaFFMPEG.inst.supportsWebDAV();
 
   _WebDAVServer.init(super.authDetails) {
-    _authInfo = authDetails.auth.toWebDAVAuthModel();
+    _authInfo = authDetails.auth.toBasicAuthModel();
     _api = _ClientApiWrapper(
       webdav.newClient(
         authDetails.dir.sourceRaw,
@@ -107,7 +107,7 @@ class _WebDAVServer extends MusicWebServer {
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
 
-    final diffState = _WebDAVDiffManager(serverUriParsed, serverTracksInLibrary);
+    final diffState = _ServerDiffManager(serverUriParsed, serverTracksInLibrary);
 
     try {
       final networkFiles = await api.readDir('/');
@@ -147,7 +147,7 @@ class _WebDAVServer extends MusicWebServer {
     required Set<AlbumIdentifier> identifiersSet,
     required int minDur,
     required int minSize,
-    required _WebDAVDiffManager diffState,
+    required _ServerDiffManager diffState,
   }) async* {
     final imageFiles = <webdav.File>[];
     final lrcFiles = <(webdav.File, bool)>[];
@@ -447,16 +447,6 @@ extension on DioException {
   }
 }
 
-class WebDAVAuth {
-  final String username;
-  final String password;
-
-  const WebDAVAuth({
-    required this.username,
-    required this.password,
-  });
-}
-
 class _ClientApiWrapper {
   final webdav.Client api;
   const _ClientApiWrapper(
@@ -543,44 +533,3 @@ class _ExtractInfo {
   });
 }
 
-class _WebDAVDiffManager {
-  final Uri serverUriParsed;
-  final Map<String, int> existingLibraryMapSoonToBeRemoved;
-
-  const _WebDAVDiffManager(
-    this.serverUriParsed,
-    this.existingLibraryMapSoonToBeRemoved,
-  );
-
-  static const _millisecondsAllowance = 1000;
-
-  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified) {
-    final uri = serverUriParsed.replace(
-      queryParameters: {
-        ...serverUriParsed.queryParameters,
-        'd': serverPath,
-      },
-    );
-    final uriString = uri.toString();
-    final canSkip = _checkCanSkipScan(uriString, remoteDateModified);
-
-    existingLibraryMapSoonToBeRemoved.remove(uriString); // mark exist
-
-    return canSkip;
-  }
-
-  bool _checkCanSkipScan(String fullPath, DateTime? remoteDateModified) {
-    final remoteModifiedMs = remoteDateModified?.millisecondsSinceEpoch;
-    if (remoteModifiedMs != null && remoteModifiedMs >= 0) {
-      final localModifiedMs = existingLibraryMapSoonToBeRemoved[fullPath];
-      if (localModifiedMs != null) {
-        if ((localModifiedMs - remoteModifiedMs).abs() <= _millisecondsAllowance) {
-          // -- can skip rescanning this
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-}

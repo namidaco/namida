@@ -67,7 +67,7 @@ class _SAFServer extends MusicWebServer {
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
-    final diffState = forceReIndex ? null : _WebDAVDiffManager(serverUriParsed, serverTracksInLibrary);
+    final diffState = forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary);
 
     final mediaIndices = <int>[];
     final lrcIndices = <int>[];
@@ -178,14 +178,6 @@ class _SAFServer extends MusicWebServer {
     final error = await _copyToFile(docId, tempFile);
     if (error != null) throw Exception(error);
     return _readThenDelete(tempFile, start);
-  }
-
-  static Stream<List<int>> _readThenDelete(File file, int start) async* {
-    try {
-      yield* file.openRead(start);
-    } finally {
-      file.tryDeleting();
-    }
   }
 
   String _documentUriOf(String docId) => '$_treeUri/document/${Uri.encodeComponent(docId)}';

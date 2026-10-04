@@ -322,6 +322,22 @@ enum DirectoryIndexType {
     .supportsPort,
     .isFileBased,
   }),
+  ftp({
+    .server,
+    .legacyAuthOnly,
+    .isURLHost,
+    .supportsSubdir,
+    .supportsPort,
+    .isFileBased,
+  }),
+  sftp({
+    .server,
+    .legacyAuthOnly,
+    .isURLHost,
+    .supportsSubdir,
+    .supportsPort,
+    .isFileBased,
+  }),
   saf({
     .server,
     .isFileBased,
@@ -347,6 +363,8 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => 'Jellyfin',
       DirectoryIndexType.webdav => 'WebDAV',
       DirectoryIndexType.smb => 'Samba (SMB v2/v3)',
+      DirectoryIndexType.ftp => 'FTP',
+      DirectoryIndexType.sftp => 'SFTP',
       DirectoryIndexType.saf => 'Storage Access Framework',
       DirectoryIndexType.unknown => lang.none,
     };
@@ -359,6 +377,8 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => null,
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
+      DirectoryIndexType.ftp => null,
+      DirectoryIndexType.sftp => 'SSH File Transfer',
       DirectoryIndexType.saf => 'RSAF, Google Drive, Nextcloud, file managers, etc...',
       DirectoryIndexType.unknown => null,
     };
@@ -371,6 +391,8 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => 'assets/icons/jellyfin.png',
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
+      DirectoryIndexType.ftp => null,
+      DirectoryIndexType.sftp => null,
       DirectoryIndexType.saf => null,
     };
   }
@@ -382,6 +404,8 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => Broken.cloud,
       DirectoryIndexType.webdav => Broken.global,
       DirectoryIndexType.smb => Broken.folder_cloud,
+      DirectoryIndexType.ftp => Broken.folder_connection,
+      DirectoryIndexType.sftp => Broken.security_safe,
       DirectoryIndexType.saf => Broken.document_cloud,
     };
   }
@@ -393,6 +417,8 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => const Color.fromARGB(255, 123, 104, 235),
       DirectoryIndexType.webdav => theme.colorScheme.primary,
       DirectoryIndexType.smb => theme.colorScheme.primary,
+      DirectoryIndexType.ftp => theme.colorScheme.primary,
+      DirectoryIndexType.sftp => theme.colorScheme.primary,
       DirectoryIndexType.saf => theme.colorScheme.primary,
     };
   }
@@ -419,6 +445,18 @@ enum DirectoryIndexType {
         password: '',
       ),
       DirectoryIndexType.smb => MusicWebServerAuthDetailsDemo(
+        type: this,
+        url: '192.168.1.100',
+        username: '',
+        password: '',
+      ),
+      DirectoryIndexType.ftp => MusicWebServerAuthDetailsDemo(
+        type: this,
+        url: '192.168.1.100',
+        username: 'anonymous',
+        password: '',
+      ),
+      DirectoryIndexType.sftp => MusicWebServerAuthDetailsDemo(
         type: this,
         url: '192.168.1.100',
         username: '',
