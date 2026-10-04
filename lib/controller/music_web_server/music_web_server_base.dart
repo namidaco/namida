@@ -32,6 +32,7 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectabl
 import 'package:namida/controller/music_web_server/server_auth_model.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -48,6 +49,7 @@ import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';
+part 'saf_server.dart';
 part 'server_cache_controller.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
@@ -390,6 +392,7 @@ class _MusicWebServerAuthManager {
       DirectoryIndexType.jellyfin => _JellyfinServer.init(authDetails),
       DirectoryIndexType.webdav => _WebDAVServer.init(authDetails),
       DirectoryIndexType.smb => _SMBServer.init(authDetails),
+      DirectoryIndexType.saf => _SAFServer.init(authDetails),
     };
   }
 

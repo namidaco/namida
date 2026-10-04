@@ -2,8 +2,12 @@ package com.msob7y.namida
 
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
+import android.os.storage.StorageManager
+import android.os.storage.StorageVolume
 import io.flutter.util.PathUtils
+import java.io.File
 
 public class StorageUtils(private val context: Context) {
 
@@ -27,6 +31,24 @@ public class StorageUtils(private val context: Context) {
       try {
         storagePaths.add(Environment.getExternalStoragePublicDirectory("").path)
       } catch (ignore: Exception) {}
+    }
+
+    // -- usb drives & car head units mount volumes that `getExternalFilesDirs` never lists
+    try {
+      val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+      for (volume in storageManager.storageVolumes) {
+        val path = volumeDirectory(volume) ?: continue
+        if (!storagePaths.contains(path) && File(path).exists()) storagePaths.add(path)
+      }
+    } catch (ignore: Exception) {}
+  }
+
+  private fun volumeDirectory(volume: StorageVolume): String? {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) return volume.directory?.absolutePath
+    return try {
+      StorageVolume::class.java.getMethod("getPath").invoke(volume) as? String
+    } catch (ignore: Exception) {
+      null
     }
   }
 

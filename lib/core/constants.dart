@@ -1355,6 +1355,7 @@ class NamidaFeaturesVisibility {
   static final displayStopButtonInNotif = _isAndroid;
   static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
+  static final showSafFolders = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isAndroid;

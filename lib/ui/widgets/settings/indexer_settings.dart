@@ -13,6 +13,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -120,15 +121,44 @@ class IndexerSettings extends SettingSubpageProvider {
   }
 
   void _reAuthDirIndex(DirectoryIndexServer e) {
-    _pickServerFolder(
-      initialType: e.type,
-      initialDir: e,
-      onSuccessChoose: (dirsPath) {
-        settings.directoriesToScan.update((list) => list.remove(e));
-        MusicWebServerAuthDetails.manager.deleteFromDb(e);
-        settings.directoriesToScan.update((list) => list.addAllNoDuplicates(dirsPath));
-      },
+    void onSuccessChoose(List<DirectoryIndex> dirsPath) {
+      settings.directoriesToScan.update((list) => list.remove(e));
+      MusicWebServerAuthDetails.manager.deleteFromDb(e);
+      settings.directoriesToScan.update((list) => list.addAllNoDuplicates(dirsPath));
+    }
+
+    if (e.type == DirectoryIndexType.saf) {
+      _pickSafFolder(onSuccessChoose);
+    } else {
+      _pickServerFolder(
+        initialType: e.type,
+        initialDir: e,
+        onSuccessChoose: onSuccessChoose,
+      );
+    }
+  }
+
+  /// saved with empty credentials so it goes through the same server flow as the others.
+  void _pickSafFolder(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) async {
+    final treeUri = await NamidaStorage.inst.safPickTree(note: lang.addFolder);
+
+    if (treeUri == null) {
+      snackyy(title: lang.note, message: lang.noFolderChosen);
+      return;
+    }
+
+    final dir = DirectoryIndexServer.saf(treeUri);
+    onSuccessChoose([dir]);
+
+    final authInfo = MusicWebServerAuthDetails.create(
+      dir: dir,
+      password: '',
+      share: null,
+      subdir: null,
+      legacyAuth: true,
     );
+    await authInfo.saveToDb(dir);
+    _maybeShowRefreshPromptDialog(true);
   }
 
   void _pickLocalFolder(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) async {
@@ -628,6 +658,7 @@ class IndexerSettings extends SettingSubpageProvider {
   void _promptAddFolderType(void Function(List<DirectoryIndex> dirsPath) onSuccessChoose) {
     final types = List<DirectoryIndexType>.from(DirectoryIndexType.values);
     types.remove(DirectoryIndexType.unknown);
+    if (!NamidaFeaturesVisibility.showSafFolders) types.remove(DirectoryIndexType.saf);
     NamidaNavigator.inst.navigateDialog(
       dialogBuilder: (theme) => CustomBlurryDialog(
         theme: theme,
@@ -658,6 +689,8 @@ class IndexerSettings extends SettingSubpageProvider {
                       _pickLocalFolder(onSuccessChoose);
                     case DirectoryIndexType.subsonic || DirectoryIndexType.jellyfin || DirectoryIndexType.webdav || DirectoryIndexType.smb:
                       _pickServerFolder(initialType: e, onSuccessChoose: onSuccessChoose);
+                    case DirectoryIndexType.saf:
+                      _pickSafFolder(onSuccessChoose);
                     case DirectoryIndexType.unknown:
                   }
                 },

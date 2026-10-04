@@ -90,6 +90,18 @@ final class DirectoryIndexServer extends DirectoryIndex {
     return DirectoryIndexServer.raw(uriCleanText, type, username);
   }
 
+  /// android document tree, the folder itself is read by the provider app that owns [treeUri].
+  factory DirectoryIndexServer.saf(String treeUri) {
+    final uri = Uri(
+      scheme: 'http',
+      host: 'saf',
+      queryParameters: {'_tree': treeUri},
+    );
+    return DirectoryIndexServer.raw(uri.toString(), DirectoryIndexType.saf, '');
+  }
+
+  String? safTreeUri() => Uri.parse(source).queryParameters['_tree'];
+
   factory DirectoryIndexServer.parseFromEncodedUrlPath(String path, {Uri? uri, void Function(String? id)? parseIdCallback}) {
     uri ??= Uri.parse(path);
     final username = uri.queryParameters['namida_u'];
@@ -149,6 +161,10 @@ final class DirectoryIndexServer extends DirectoryIndex {
 
   @override
   String toSourceInfo() {
+    if (type == DirectoryIndexType.saf) {
+      final treeUri = safTreeUri();
+      if (treeUri != null) return _safSourceInfo(treeUri);
+    }
     if (type.check(.isURLHost)) {
       final uri = Uri.parse(source);
       final port = uri.queryParameters['_p'];
@@ -169,6 +185,13 @@ final class DirectoryIndexServer extends DirectoryIndex {
       return sourceInfo;
     }
     return source;
+  }
+
+  /// `content://com.app.documents/tree/root%3AMusic` => `com.app.documents/root:Music`
+  static String _safSourceInfo(String treeUri) {
+    final uri = Uri.parse(treeUri);
+    final treeDocId = uri.pathSegments.length > 1 ? uri.pathSegments[1] : '';
+    return [uri.host, treeDocId].where((s) => s.isNotEmpty).join('/');
   }
 }
 
@@ -299,6 +322,10 @@ enum DirectoryIndexType {
     .supportsPort,
     .isFileBased,
   }),
+  saf({
+    .server,
+    .isFileBased,
+  }),
   unknown({}),
   ;
 
@@ -320,6 +347,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => 'Jellyfin',
       DirectoryIndexType.webdav => 'WebDAV',
       DirectoryIndexType.smb => 'Samba (SMB v2/v3)',
+      DirectoryIndexType.saf => 'Storage Access Framework',
       DirectoryIndexType.unknown => lang.none,
     };
   }
@@ -331,6 +359,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => null,
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
+      DirectoryIndexType.saf => 'RSAF, Google Drive, Nextcloud, file managers, etc...',
       DirectoryIndexType.unknown => null,
     };
   }
@@ -342,6 +371,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => 'assets/icons/jellyfin.png',
       DirectoryIndexType.webdav => null,
       DirectoryIndexType.smb => null,
+      DirectoryIndexType.saf => null,
     };
   }
 
@@ -352,6 +382,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => Broken.cloud,
       DirectoryIndexType.webdav => Broken.global,
       DirectoryIndexType.smb => Broken.folder_cloud,
+      DirectoryIndexType.saf => Broken.document_cloud,
     };
   }
 
@@ -362,6 +393,7 @@ enum DirectoryIndexType {
       DirectoryIndexType.jellyfin => const Color.fromARGB(255, 123, 104, 235),
       DirectoryIndexType.webdav => theme.colorScheme.primary,
       DirectoryIndexType.smb => theme.colorScheme.primary,
+      DirectoryIndexType.saf => theme.colorScheme.primary,
     };
   }
 
@@ -392,6 +424,7 @@ enum DirectoryIndexType {
         username: '',
         password: '',
       ),
+      DirectoryIndexType.saf => null,
     };
   }
 }

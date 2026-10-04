@@ -38,6 +38,41 @@ abstract class NamidaStorage {
   Future<bool> safHasAccess(String path) async => false;
   Future<bool> safRequestAccess(String path, {String? note}) async => false;
   Future<String?> safCopyFile(String sourcePath, String destPath) async => 'SAF is not supported on this platform';
+
+  Future<String?> safPickTree({String? note}) async => null;
+  Future<bool> safTreeHasAccess(String treeUri) async => false;
+  Future<SafTreeListing?> safListTree(String treeUri) async => null;
+  Future<String?> safCopyDocument(String documentUri, String destPath) async => 'SAF is not supported on this platform';
+}
+
+/// files under a document tree as parallel lists, [dirIndices] point into [dirs] (parent document ids).
+class SafTreeListing {
+  final List<String> ids;
+  final List<String> names;
+  final List<int> sizes;
+  final List<int> modifiedMS;
+  final List<int> dirIndices;
+  final List<String> dirs;
+
+  const SafTreeListing({
+    required this.ids,
+    required this.names,
+    required this.sizes,
+    required this.modifiedMS,
+    required this.dirIndices,
+    required this.dirs,
+  });
+
+  factory SafTreeListing.fromMap(Map<String, Object?> map) => SafTreeListing(
+    ids: List<String>.from(map['ids'] as List, growable: false),
+    names: List<String>.from(map['names'] as List, growable: false),
+    sizes: List<int>.from(map['sizes'] as List, growable: false),
+    modifiedMS: List<int>.from(map['modified'] as List, growable: false),
+    dirIndices: List<int>.from(map['dirIndices'] as List, growable: false),
+    dirs: List<String>.from(map['dirs'] as List, growable: false),
+  );
+
+  int get length => ids.length;
 }
 
 enum NamidaStorageFileMemeType {

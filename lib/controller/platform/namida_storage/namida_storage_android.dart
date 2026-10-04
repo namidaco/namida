@@ -130,4 +130,41 @@ class _NamidaStorageAndroid extends NamidaStorage {
       return e.toString();
     }
   }
+
+  @override
+  Future<String?> safPickTree({String? note}) async {
+    try {
+      return await _channel.invokeMethod<String?>('safPickTree', {'note': note});
+    } catch (e) {
+      snackyy(title: lang.error, message: e.toString(), isError: true);
+      return null;
+    }
+  }
+
+  @override
+  Future<bool> safTreeHasAccess(String treeUri) async {
+    try {
+      return await _channel.invokeMethod<bool>('safTreeHasAccess', {'treeUri': treeUri}) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<SafTreeListing?> safListTree(String treeUri) async {
+    final res = await _channel.invokeMapMethod<String, Object?>('safListTree', {'treeUri': treeUri});
+    return res == null ? null : SafTreeListing.fromMap(res);
+  }
+
+  @override
+  Future<String?> safCopyDocument(String documentUri, String destPath) async {
+    try {
+      return await _channel.invokeMethod<String?>('safCopyDocument', {
+        'documentUri': documentUri,
+        'dest': destPath,
+      });
+    } catch (e) {
+      return e.toString();
+    }
+  }
 }

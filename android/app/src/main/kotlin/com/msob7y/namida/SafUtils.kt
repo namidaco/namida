@@ -80,6 +80,92 @@ public class SafUtils(private val context: Context) {
     )
   }
 
+  // ------- document trees used as library folders, by claude -------
+
+  fun buildTreePickerIntent(): Intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+
+  fun persistReadPermission(uri: Uri) {
+    context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+  }
+
+  fun hasTreeAccess(treeUri: Uri): Boolean {
+    for (perm in context.contentResolver.persistedUriPermissions) {
+      if (perm.isReadPermission && perm.uri == treeUri) return true
+    }
+    return false
+  }
+
+  /** Every file under [treeUri] as parallel lists, `dirIndices` point into `dirs` (parent document ids). */
+  fun listTree(treeUri: Uri): Map<String, Any> {
+    val ids = ArrayList<String>()
+    val names = ArrayList<String>()
+    val sizes = ArrayList<Long>()
+    val modified = ArrayList<Long>()
+    val dirIndices = ArrayList<Int>()
+    val dirs = ArrayList<String>()
+    val projection =
+        arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+            DocumentsContract.Document.COLUMN_SIZE,
+            DocumentsContract.Document.COLUMN_LAST_MODIFIED,
+        )
+    val resolver = context.contentResolver
+    val pending = ArrayDeque<String>()
+    pending.add(DocumentsContract.getTreeDocumentId(treeUri))
+    while (pending.isNotEmpty()) {
+      val parentId = pending.removeFirst()
+      val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+      val cursor =
+          try {
+            resolver.query(childrenUri, projection, null, null, null)
+          } catch (_: Exception) {
+            null
+          } ?: continue
+      var dirIndex = -1
+      cursor.use {
+        while (it.moveToNext()) {
+          val id = it.getString(0) ?: continue
+          if (it.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) {
+            pending.add(id)
+            continue
+          }
+          if (dirIndex < 0) {
+            dirIndex = dirs.size
+            dirs.add(parentId)
+          }
+          ids.add(id)
+          names.add(it.getString(1) ?: "")
+          sizes.add(if (it.isNull(3)) -1L else it.getLong(3))
+          modified.add(if (it.isNull(4)) -1L else it.getLong(4))
+          dirIndices.add(dirIndex)
+        }
+      }
+    }
+    return mapOf(
+        "ids" to ids,
+        "names" to names,
+        "sizes" to sizes,
+        "modified" to modified,
+        "dirIndices" to dirIndices,
+        "dirs" to dirs,
+    )
+  }
+
+  /** Returns an error message, or null on success. */
+  fun copyDocumentToFile(documentUri: Uri, destPath: String): String? {
+    try {
+      val input = context.contentResolver.openInputStream(documentUri) ?: return "Failed to open `$documentUri`"
+      val dest = File(destPath)
+      dest.parentFile?.mkdirs()
+      input.use { inp -> dest.outputStream().use { inp.copyTo(it) } }
+      return null
+    } catch (e: Exception) {
+      return e.toString()
+    }
+  }
+
   /** Streams [sourcePath] contents over the document backing [destPath]. Returns an error message, or null on success. */
   fun copyFileToDocument(sourcePath: String, destPath: String): String? {
     val destUri = findDocumentUri(destPath) ?: return "No SAF permission covers `$destPath`"

@@ -46,8 +46,15 @@ object NamidaFileUtils {
           if (uriPath == null) return null
           val split = uriPath.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
           val rootDir = split[0].split("/tree/").last() // for directories
+          val relativePath = if (split.size > 1) split[1] else "" // empty when a volume root was picked
           fun buildPath(rootPath: String): String {
-            return rootPath + "/" + split[1]
+            return if (relativePath.isEmpty()) rootPath else rootPath + "/" + relativePath
+          }
+          val volumeId = rootDir.substringAfterLast('/')
+          if (!"primary".equals(volumeId, ignoreCase = true)) {
+            for (sp in storagePaths) {
+              if (sp.endsWith("/$volumeId") && File(buildPath(sp)).exists()) return buildPath(sp)
+            }
           }
           // -- this only to handle when same file path exists in 2 storages
           // -- we check manually if primary storage selected
