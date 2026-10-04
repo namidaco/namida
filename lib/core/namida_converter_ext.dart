@@ -3007,3 +3007,19 @@ extension ThemeModeL10n on ThemeMode {
     ThemeMode.system => Broken.autobrightness,
   };
 }
+
+extension WebhookEventL10n on WebhookEvent {
+  String toText() => switch (this) {
+    WebhookEvent.trackChanged => 'Track changed',
+    WebhookEvent.play => lang.play,
+    WebhookEvent.pause => lang.pause,
+  };
+}
+
+extension WebhookEventUtils on WebhookEvent {
+  IconData toIcon() => switch (this) {
+    WebhookEvent.trackChanged => Broken.music,
+    WebhookEvent.play => Broken.play,
+    WebhookEvent.pause => Broken.pause,
+  };
+}

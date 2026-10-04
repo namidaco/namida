@@ -16,6 +16,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
@@ -426,6 +427,21 @@ class AdvancedSettings extends SettingSubpageProvider {
     );
   }
 
+  void _showAdvancedFlagsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flag,
+        title: lang.configure,
+        normalTitleStyle: true,
+        horizontalInset: 32.0,
+        actions: const [
+          DoneButton(),
+        ],
+        child: const _AdvancedFlagsOptions(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SettingsCard(
@@ -433,6 +449,12 @@ class AdvancedSettings extends SettingSubpageProvider {
       subtitle: lang.advancedSettingsSubtitle,
       icon: Broken.hierarchy_3,
       // icon: Broken.danger,
+      trailing: NamidaIconButton(
+        icon: Broken.flag,
+        tooltip: () => lang.configure,
+        iconColor: context.defaultIconColor(),
+        onPressed: _showAdvancedFlagsDialog,
+      ),
       child: Column(
         children: [
           getPerformanceTile(context),
@@ -536,7 +558,6 @@ class AdvancedSettings extends SettingSubpageProvider {
               bgColor: getBgColor(_AdvancedSettingKeys.compressImages),
             ),
           ),
-
           _getCacheSliderWidget(
             stepper: 8 * 32,
             maxGB: 32,
@@ -1373,6 +1394,174 @@ class _CompressImagesListTile extends StatelessWidget {
           onTap: _onCompressImagePress,
         );
       },
+    );
+  }
+}
+
+class _AdvancedFlagsOptions extends StatelessWidget {
+  const _AdvancedFlagsOptions();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: context.width,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (NamidaFeaturesVisibility.showAndroidIntegrations) ...[
+            ObxO(
+              rx: settings.mediaBrowserQueue,
+              builder: (context, enabled) => CustomSwitchListTile(
+                icon: Broken.car,
+                title: 'android_auto_and_wear'.toUpperCase(),
+                value: enabled,
+                onChanged: (isTrue) => settings.mediaBrowserQueue.save(!isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.nowPlayingBroadcast,
+              builder: (context, enabled) => CustomSwitchListTile(
+                icon: Broken.radar_2,
+                title: 'now_playing_broadcast'.toUpperCase(),
+                subtitle: 'Intents for Tasker & automation apps',
+                value: enabled,
+                onChanged: (isTrue) => settings.nowPlayingBroadcast.save(!isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.scrobblerBroadcast,
+              builder: (context, enabled) => CustomSwitchListTile(
+                icon: Broken.export_1,
+                title: 'scrobbler_broadcast'.toUpperCase(),
+                subtitle: 'SLS api, for Pano Scrobbler & Simple Scrobbler',
+                value: enabled,
+                onChanged: (isTrue) => settings.scrobblerBroadcast.save(!isTrue),
+              ),
+            ),
+          ],
+          const _WebhookListTile(),
+        ],
+      ),
+    );
+  }
+}
+
+class _WebhookListTile extends StatelessWidget {
+  const _WebhookListTile();
+
+  void _openDialog() {
+    final urlController = TextEditingController(text: settings.webhookUrl.value);
+    final formKey = GlobalKey<FormState>();
+    final savedEvents = settings.webhookEvents.value;
+    final draftEvents = {for (final e in WebhookEvent.values) e: savedEvents.contains(e).obs};
+
+    void onSave() {
+      final isValid = formKey.currentState?.validate() ?? false;
+      if (!isValid) return;
+      final url = urlController.text.trim();
+      final events = <WebhookEvent>{
+        for (final e in WebhookEvent.values)
+          if (draftEvents[e]!.value) e,
+      };
+      settings.transaction(() {
+        settings.webhookUrl.save(url);
+        settings.webhookEvents.replace(events);
+      });
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    final eventsListenable = Listenable.merge(draftEvents.values.toList());
+
+    List<NamidaPopupItem> eventItems() {
+      return WebhookEvent.values.map(
+        (e) {
+          final rx = draftEvents[e]!;
+          return NamidaPopupItem(
+            selected: rx.value,
+            icon: e.toIcon(),
+            title: e.toText(),
+            onTap: () => rx.value = !rx.value,
+          );
+        },
+      ).toFixedList();
+    }
+
+    String? validateUrl(String? value) {
+      value ??= '';
+      if (value.trim().isEmpty) return null;
+      final uri = NowPlayingBroadcaster.parseWebhookUrl(value);
+      return uri == null ? 'Invalid URL' : null;
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        urlController.dispose();
+        for (final rx in draftEvents.values) {
+          rx.close();
+        }
+      },
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: 'webhook'.toUpperCase(),
+          normalTitleStyle: true,
+          icon: Broken.link_2,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.save,
+              onTap: onSave,
+            ),
+          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: urlController,
+                hintText: 'https://',
+                labelText: 'URL',
+                keyboardType: TextInputType.url,
+                validator: validateUrl,
+              ),
+              const SizedBox(height: 12.0),
+              NamidaPopupWrapper(
+                childrenDefault: eventItems,
+                refreshListenable: eventsListenable,
+                child: CustomListTile(
+                  icon: Broken.notification_status,
+                  title: 'Events',
+                  trailing: Obx(
+                    (context) {
+                      int activeCount = 0;
+                      for (final rx in draftEvents.values) {
+                        if (rx.valueR) activeCount++;
+                      }
+                      return Text(
+                        '$activeCount/${WebhookEvent.values.length}',
+                        style: context.textTheme.displayMedium,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.webhookUrl,
+      builder: (context, url) => CustomListTile(
+        icon: Broken.link_2,
+        title: 'webhook'.toUpperCase(),
+        subtitle: url.isEmpty ? null : url,
+        onTap: _openDialog,
+      ),
     );
   }
 }

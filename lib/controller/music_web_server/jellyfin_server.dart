@@ -250,6 +250,7 @@ class _JellyfinServer extends MusicWebServer {
       tagsList: [],
       gainData: null,
       sortInfo: null,
+      extraTags: null,
       hashKey: id,
       isVideo: isVideo,
       server: server,

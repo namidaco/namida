@@ -304,6 +304,12 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
           val mbAlbumArtistId = try { tag.getFirst(FieldKey.MUSICBRAINZ_RELEASEARTISTID) } catch (_: Exception) { "" }
           metadata["mbAlbumId"] = mbAlbumId
           metadata["mbAlbumArtistId"] = mbAlbumArtistId
+          val extraTags = HashMap<String, String>()
+          for ((picardName, fieldKey) in extraTagFields) {
+            val value = try { tag.getFirst(fieldKey) } catch (_: Exception) { "" }
+            if (value.isNotEmpty()) extraTags[picardName] = value
+          }
+          if (extraTags.isNotEmpty()) metadata["extraTags"] = extraTags
           val ratingRaw = tag.getFirst(FieldKey.RATING)
           metadata["bpm"] = tag.getFirst(FieldKey.BPM)
           metadata["country"] = tag.getAll(FieldKey.COUNTRY)
@@ -595,6 +601,20 @@ public class FAudioTagger : FlutterPlugin, MethodCallHandler {
     }
     eventChannels.clear()
   }
+
+  // -- picard tag names, same keys taglib produces on desktop
+  private val extraTagFields = listOf(
+    "MUSICBRAINZ_TRACKID" to FieldKey.MUSICBRAINZ_TRACK_ID,
+    "MUSICBRAINZ_RELEASETRACKID" to FieldKey.MUSICBRAINZ_RELEASE_TRACK_ID,
+    "MUSICBRAINZ_ALBUMID" to FieldKey.MUSICBRAINZ_RELEASEID,
+    "MUSICBRAINZ_ALBUMARTISTID" to FieldKey.MUSICBRAINZ_RELEASEARTISTID,
+    "MUSICBRAINZ_ARTISTID" to FieldKey.MUSICBRAINZ_ARTISTID,
+    "MUSICBRAINZ_RELEASEGROUPID" to FieldKey.MUSICBRAINZ_RELEASE_GROUP_ID,
+    "ACOUSTID_ID" to FieldKey.ACOUSTID_ID,
+    "ISRC" to FieldKey.ISRC,
+    "BARCODE" to FieldKey.BARCODE,
+    "CATALOGNUMBER" to FieldKey.CATALOG_NO,
+  )
 
   private val cleanupFilenameRegex = Regex("""[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]""", RegexOption.IGNORE_CASE)
   private val fullPathLimitAndroid = 4096

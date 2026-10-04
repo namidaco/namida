@@ -102,6 +102,9 @@ class FTags {
   final ReplayGainData? gainData;
   final FTagsSortInfo? sortInfo;
 
+  /// identifiers worth keeping, keyed by their picard tag name. see [pickExtraTags].
+  final Map<String, String>? extraTags;
+
   const FTags({
     required this.path,
     required this.artwork,
@@ -139,6 +142,7 @@ class FTags {
     required this.ratingPercentage,
     required this.gainData,
     required this.sortInfo,
+    this.extraTags,
   });
 
   const FTags.edit({
@@ -178,7 +182,45 @@ class FTags {
     this.ratingPercentage,
     this.gainData,
     this.sortInfo,
+    this.extraTags,
   });
+
+  static const _kExtraTagPrefixes = ['MUSICBRAINZ_', 'ACOUSTID_'];
+  static const _kExtraTagKeys = {'ISRC', 'BARCODE', 'CATALOGNUMBER'};
+
+  static bool _isExtraTagKey(String key) {
+    if (_kExtraTagKeys.contains(key)) return true;
+    for (final prefix in _kExtraTagPrefixes) {
+      if (key.startsWith(prefix)) return true;
+    }
+    return false;
+  }
+
+  static Map<String, String>? pickExtraTags(Map<String, List<String>> properties) {
+    Map<String, String>? picked;
+    for (final e in properties.entries) {
+      final key = e.key;
+      if (!_isExtraTagKey(key)) continue;
+      final value = e.value.firstWhereEff((v) => v.isNotEmpty);
+      if (value == null) continue;
+      picked ??= <String, String>{};
+      picked[key] = value;
+    }
+    return picked;
+  }
+
+  static Map<String, String>? _extraTagsFromMap(dynamic map) {
+    if (map is! Map || map.isEmpty) return null;
+    Map<String, String>? picked;
+    for (final e in map.entries) {
+      final key = e.key;
+      final value = e.value;
+      if (key is! String || value is! String || value.isEmpty) continue;
+      picked ??= <String, String>{};
+      picked[key] = value;
+    }
+    return picked;
+  }
 
   static String? _listToString(dynamic list) {
     if (list is! List || list.isEmpty) return null;
@@ -249,6 +291,7 @@ class FTags {
       ratingPercentage: ratingToPercentage(ratingString),
       gainData: ReplayGainData.fromPropertiesMap(map),
       sortInfo: FTagsSortInfo.fromAndroidMap(map),
+      extraTags: _extraTagsFromMap(map["extraTags"]),
     );
   }
 
@@ -289,6 +332,7 @@ class FTags {
       "mbAlbumArtistId": mbAlbumArtistId,
       "gainData": gainData?.toMap(),
       "sortInfo": sortInfo?.toMap(),
+      "extraTags": extraTags,
     };
   }
 

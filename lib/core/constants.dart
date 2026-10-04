@@ -1262,6 +1262,7 @@ final kDummyExtendedTrack = TrackExtended(
   hashKey: null,
   gainData: null,
   sortInfo: null,
+  extraTags: null,
   albumsIdentifiersWrappers: [],
   isVideo: false,
   server: null,
@@ -1356,6 +1357,7 @@ class NamidaFeaturesVisibility {
   static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
   static final showSafFolders = _isAndroid;
+  static final showAndroidIntegrations = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isAndroid;

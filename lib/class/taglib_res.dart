@@ -179,6 +179,7 @@ class TagLibRes {
         mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
         gainData: ReplayGainData.fromTagLibMap(properties),
         sortInfo: FTagsSortInfo.fromTagLibMap(properties),
+        extraTags: FTags.pickExtraTags(properties.propertiesMap),
         ratingPercentage: FTags.ratingToPercentage(info.rating),
         tempo: info.tempo,
         djmixer: info.djmixer,

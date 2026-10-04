@@ -68,6 +68,11 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<void> sendBroadcast(String action, Map<String, Object?> extras, {List<String>? packages}) async {
+    await _channel.invokeMethod('sendBroadcast', {'action': action, 'extras': extras, 'packages': packages});
+  }
+
+  @override
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {
     await _channel.invokeMethod('setUsbDacHandlerEnabled', {'enabled': enabled});
   }

@@ -360,6 +360,9 @@ class TrackExtended {
   final FTagsSortInfo? sortInfo;
   final String? hashKey;
 
+  /// identifiers keyed by their picard tag name (`MUSICBRAINZ_TRACKID`, `ISRC`, ...), see [FTags.pickExtraTags].
+  final Map<String, String>? extraTags;
+
   final List<AlbumIdentifierWrapper> albumsIdentifiersWrappers;
   final bool isVideo;
   final String? server;
@@ -419,6 +422,7 @@ class TrackExtended {
     required this.gainData,
     required this.sortInfo,
     required this.hashKey,
+    required this.extraTags,
     required this.albumsIdentifiersWrappers,
     required this.isVideo,
     required this.server,
@@ -638,10 +642,16 @@ class TrackExtended {
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
       hashKey: json['hashKey'],
+      extraTags: _extraTagsFromJson(json['extraTags']),
       albumsIdentifiersWrappers: albumsIdentifiersWrappers,
       isVideo: json['v'] ?? false,
       server: json['server'],
     );
+  }
+
+  static Map<String, String>? _extraTagsFromJson(dynamic json) {
+    if (json is! Map || json.isEmpty) return null;
+    return Map<String, String>.from(json);
   }
 
   Map<String, dynamic> toJsonWithoutPath() {
@@ -683,6 +693,7 @@ class TrackExtended {
       if (gainData != null) 'gainData': ?gainData?.toMap(),
       if (sortInfo != null) 'sortInfo': ?sortInfo?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
+      if (extraTags != null) 'extraTags': extraTags,
       if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toFixedList(),
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
@@ -947,6 +958,7 @@ extension TrackExtUtils on TrackExtended {
       tagsList: finaltagsEmbedded,
       gainData: tag.gainData ?? gainData,
       sortInfo: tag.sortInfo ?? sortInfo,
+      extraTags: tag.extraTags ?? extraTags,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -1020,6 +1032,7 @@ extension TrackExtUtils on TrackExtended {
     List<String>? tagsList,
     ReplayGainData? gainData,
     FTagsSortInfo? sortInfo,
+    Map<String, String>? extraTags,
     List<AlbumIdentifierWrapper>? albumsIdentifiersWrappers,
     bool? isVideo,
     required bool generatePathHash,
@@ -1075,6 +1088,7 @@ extension TrackExtUtils on TrackExtended {
       gainData: gainData ?? this.gainData,
       sortInfo: sortInfo ?? this.sortInfo,
       hashKey: newHashKey,
+      extraTags: extraTags ?? this.extraTags,
       albumsIdentifiersWrappers: albumsIdentifiersWrappers ?? this.albumsIdentifiersWrappers,
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,

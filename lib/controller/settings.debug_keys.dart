@@ -412,6 +412,11 @@ extension SettingsControllerDebugKeys on _SettingsController {
     fontScaleLRC,
     fontScaleLRCFull,
     canAskForBatteryOptimizations,
+    mediaBrowserQueue,
+    nowPlayingBroadcast,
+    scrobblerBroadcast,
+    webhookUrl,
+    webhookEvents,
     eggs,
   ];
 }

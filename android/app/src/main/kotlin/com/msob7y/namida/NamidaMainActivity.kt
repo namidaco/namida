@@ -145,6 +145,33 @@ class NamidaMainActivity : FlutterActivity() {
             withContext(Dispatchers.Main) { result.success(reports) }
           }
         }
+        "sendBroadcast" -> {
+          val action = call.argument<String>("action")
+          val extras = call.argument<Map<String, Any?>>("extras")
+          val packages = call.argument<List<String>>("packages")
+          if (action == null) {
+            result.success(false)
+          } else {
+            val intent = Intent(action)
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES)
+            extras?.forEach { (key, value) ->
+              when (value) {
+                is String -> intent.putExtra(key, value)
+                is Boolean -> intent.putExtra(key, value)
+                is Int -> intent.putExtra(key, value)
+                is Long -> intent.putExtra(key, value)
+                is Double -> intent.putExtra(key, value)
+              }
+            }
+            if (packages == null) {
+              sendBroadcast(intent)
+            } else {
+              // -- manifest receivers only get explicit broadcasts since android 8
+              for (pkg in packages) sendBroadcast(Intent(intent).setPackage(pkg))
+            }
+            result.success(true)
+          }
+        }
         "setMulticastLock" -> {
           val enabled = call.argument<Boolean>("enabled") ?: false
           try {

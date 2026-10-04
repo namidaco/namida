@@ -483,6 +483,16 @@ class _SettingsController extends _SettingsKeysWriter {
   late final fontScaleLRCFull = _key<double?>('fontScaleLRCFull', null);
 
   late final canAskForBatteryOptimizations = _key('canAskForBatteryOptimizations', true, sync: false);
+
+  /// queue published to media browser clients (android auto, wear).
+  late final mediaBrowserQueue = _key('mediaBrowserQueue', true, sync: false);
+  late final nowPlayingBroadcast = _key('nowPlayingBroadcast', false, sync: false);
+  late final scrobblerBroadcast = _key('scrobblerBroadcast', false, sync: false);
+  late final webhookUrl = _key('webhookUrl', '', sync: false);
+  late final webhookEvents = _keySet<WebhookEvent>('webhookEvents', _kDefaultWebhookEvents, item: WebhookEvent.values.asCodec(), sync: false);
+
+  static const _kDefaultWebhookEvents = {WebhookEvent.trackChanged, WebhookEvent.play, WebhookEvent.pause};
+
   bool didSupportNamida = false;
   late final eggs = _keyObject<EggsData>('eggs', const EggsData(), EggsData.fromJson, (v) => v.toJson());
 
@@ -589,6 +599,9 @@ class _SettingsController extends _SettingsKeysWriter {
       },
     );
   }
+
+  @override
+  Set<String> get sensitiveKeys => const {'webhookUrl'};
 
   @override
   String get filePath => AppPaths.SETTINGS;

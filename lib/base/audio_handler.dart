@@ -36,6 +36,7 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/platform/permission_manager/permission_manager.dart';
 import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -429,10 +430,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     HomeWidgetController.instance?.updateIsPlaying(isPlaying);
     _refreshWindowsTaskbar(isPlaying, null);
     _refreshTrayService(isPlaying, null);
+    NowPlayingBroadcaster.inst.onPlayingChanged(isPlaying, positionMS: currentPositionMS.value);
   }
 
   void _refreshPlatformStatusDependers(MediaItem media, bool isPlaying, bool isFavourite) {
     SMTCController.instance?.updateMetadata(media);
+    NowPlayingBroadcaster.inst.onItemChanged(media, isPlaying: isPlaying, positionMS: currentPositionMS.value);
     HomeWidgetController.instance?.updateAll(
       title: media.displayTitle ?? media.title,
       message: media.displaySubtitle ?? media.artist ?? media.album,
@@ -2394,6 +2397,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   bool get displayStopButtonInNotification => settings.displayStopButtonInNotification.value;
 
   @override
+  bool get publishQueueToMediaBrowser => settings.mediaBrowserQueue.value;
+
+  @override
   bool get defaultShouldStartPlayingOnNextPrev => settings.player.playOnNextPrev.value;
 
   @override
@@ -2938,6 +2944,12 @@ extension TrackToAudioSourceMediaItem on Selectable {
       genre: tr.originalGenre,
       duration: duration ?? Duration(milliseconds: tr.durationMS),
       artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_LAYER),
+      extras: {
+        NowPlayingExtras.path: tr.path,
+        NowPlayingExtras.queueIndex: currentIndex,
+        NowPlayingExtras.queueLength: queueLength,
+        ...?tr.extraTags,
+      },
     );
   }
 }
@@ -2973,6 +2985,11 @@ extension YoutubeIDToMediaItem on YoutubeID {
       displayTitle: videoTitle,
       displaySubtitle: videoChannelTitle,
       displayDescription: "${currentIndex + 1}/$queueLength",
+      extras: {
+        NowPlayingExtras.videoId: id,
+        NowPlayingExtras.queueIndex: currentIndex,
+        NowPlayingExtras.queueLength: queueLength,
+      },
       duration: videoDuration ?? Duration.zero,
       artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_LAYER),
     );

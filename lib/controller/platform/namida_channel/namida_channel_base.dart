@@ -61,6 +61,9 @@ abstract class NamidaChannel {
 
   Future<void> setMulticastLock(bool enabled) async {}
 
+  /// implicit when [packages] is null, otherwise one explicit broadcast per package.
+  Future<void> sendBroadcast(String action, Map<String, Object?> extras, {List<String>? packages}) async {}
+
   /// lets android offer namida as a plugged usb dac's default app.
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
 

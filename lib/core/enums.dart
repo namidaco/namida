@@ -1307,3 +1307,9 @@ enum DesktopTitlebarIconsType {
     };
   }
 }
+
+enum WebhookEvent {
+  trackChanged,
+  play,
+  pause,
+}
