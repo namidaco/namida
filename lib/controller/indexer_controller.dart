@@ -229,7 +229,7 @@ class Indexer<T extends Track> {
     _fetchMediaStoreTracks(); // to fill ids map
 
     final tracksDBPath = AppPaths.TRACKS_DB_INFO.file.path;
-    if (await File(tracksDBPath).existsAndValid((4 + 12) * 1024) || await File(AppPaths.TRACKS_OLD).existsAndValid()) {
+    if (await File(tracksDBPath).exists() || await File(AppPaths.TRACKS_OLD).existsAndValid()) {
       isIndexing.value = true;
       // -- only block load if the track file exists..
       await _readTrackData(completer);
@@ -237,7 +237,9 @@ class Indexer<T extends Track> {
       await _sortAll();
       isIndexing.value = false;
 
-      if (settings.refreshOnStartup.value) {
+      if (tracksInfoList.value.isEmpty) {
+        refreshLibraryAndCheckForDiff(forceReIndex: true);
+      } else if (settings.refreshOnStartup.value) {
         this.refreshLibraryAndCheckForDiff(allowDeletion: false, showFinishedSnackbar: false);
       } else {
         // main reason is to refresh fallback cover

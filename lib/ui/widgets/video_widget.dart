@@ -1144,7 +1144,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               final displayName = Player.inst.currentAudioStream.valueR?.audioTrack?.displayName ?? Player.inst.currentCachedAudio.valueR?.langaugeName;
               return _VideoWidgetActionChip(
                 leading: Icon(
-                  Broken.text_block,
+                  Broken.audio_square,
                   size: 16.0,
                   color: itemsColor,
                 ),
@@ -1170,7 +1170,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           return [
             _getQualityChip(
               title: lang.none,
-              icon: Broken.subtitle,
+              icon: Broken.text_block,
               onPlay: (_) {},
               selected: false,
               isCached: true,
@@ -1235,7 +1235,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     size: 12.0,
                   )
                 : Icon(
-                    Broken.subtitle,
+                    Broken.text_block,
                     size: 16.0,
                     color: enabled ? itemsColor : itemsColor.withOpacityExt(0.4),
                   ),

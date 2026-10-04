@@ -187,6 +187,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     _pendingCardSettleAction = null;
     highlightTimestampsMap = {};
     lyrics = [];
+    _lineEndsMS = Int32List(0);
+    _overlapEndMS = _kNoOverlapEndMS;
     if (hide) _updateIsCurrentLineEmpty(true);
     _latestUpdatedLineInfo.value = null;
     _currentIndex = null;
@@ -197,6 +199,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     if (lrc == null) {
       highlightTimestampsMap = {};
       lyrics = [];
+      _lineEndsMS = Int32List(0);
+      _overlapEndMS = _kNoOverlapEndMS;
       final isTextEmpty = txt == null ? true : _checkIfTextEmpty(txt.text);
       _updateIsCurrentLineEmpty(isTextEmpty);
       return;
@@ -214,8 +218,43 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
     lyrics = uiInfo.uiLyricsLines;
     highlightTimestampsMap = uiInfo.highlightTimestampsMap;
+    _lineEndsMS = _computeLineEndsMS(lyrics);
+    _overlapEndMS = _kNoOverlapEndMS;
 
     _updateHighlightedLine(Player.inst.nowPlayingPosition.value, jump: true);
+  }
+
+  /// last word end, the original's end for romanized copies, next line start for plain lines, -1 for bg lines.
+  static Int32List _computeLineEndsMS(List<LrcLine> lyrics) {
+    final length = lyrics.length;
+    final ends = Int32List(length);
+    for (int i = 0; i < length; i++) {
+      final line = lyrics[i];
+      if (line.isBGLyrics) {
+        ends[i] = -1;
+        continue;
+      }
+      final parts = line.parts;
+      if (parts != null && parts.isNotEmpty) {
+        ends[i] = parts.last.endTimestamp.inMilliseconds;
+      } else if (i > 0 && lyrics[i - 1].timestamp == line.timestamp) {
+        ends[i] = ends[i - 1];
+      } else {
+        ends[i] = i + 1 < length ? lyrics[i + 1].timestamp.inMilliseconds : -1;
+      }
+    }
+    return ends;
+  }
+
+  /// earliest end among the lines before [currentIndex] whose words still run past [positionMS].
+  int _nextOverlapEndMS(int currentIndex, int positionMS) {
+    final ends = _lineEndsMS;
+    var earliest = _kNoOverlapEndMS;
+    for (int i = currentIndex - 1; i >= 0; i--) {
+      final endMS = ends[i];
+      if (endMS > positionMS && endMS < earliest) earliest = endMS;
+    }
+    return earliest;
   }
 
   void _playerPositionListener() {
@@ -231,7 +270,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     // -- and index can be used to force reset (to force scroll to current line) etc
     // if (!force && _latestUpdatedLineInfo.value?.$1 == newLineDuration) return;
 
-    int? newIndexPre = newLineDuration == null ? null : highlightTimestampsMap[newLineDuration]?.firstOrNull;
+    if (newLineDuration == null) return;
+    int? newIndexPre = highlightTimestampsMap[newLineDuration]?.firstOrNull;
     if (newIndexPre == null) return;
 
     if (newIndexPre + 1 == lyrics.length) {
@@ -244,16 +284,21 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     }
     if (newIndexPre < 0) newIndexPre = 0;
 
-    if (!force && _currentIndex == newIndexPre) return;
+    final didOverlapEnd = durMS >= _overlapEndMS;
+    if (!force && !didOverlapEnd && _currentIndex == newIndexPre) return;
+
+    // -- stable per highlight state, so repeated ticks don't refresh the list
+    final positionMS = didOverlapEnd ? _overlapEndMS : newLineDuration.inMilliseconds;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       int newIndex = newIndexPre!;
-      _latestUpdatedLineInfo.value = (lrcDur?.timestamp, newIndex);
+      _overlapEndMS = _nextOverlapEndMS(newIndex, positionMS);
+      _latestUpdatedLineInfo.value = (newLineDuration, newIndex, positionMS);
 
       if (_canAnimateScroll.value || forceAnimate) {
         _currentIndex = newIndex;
         final list = _list;
-        if (list != null && list.canScroll) list.scrollToIndex(newIndex, jump: jump);
+        if (list != null && list.canScrollTo(newIndex)) list.scrollToIndex(newIndex, jump: jump);
         try {
           _currentLine = lyrics[newIndex].lyrics;
         } catch (_) {
@@ -295,7 +340,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     _list = state;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final index = _currentIndex;
-      if (index != null && identical(_list, state) && state.canScroll) state.scrollToIndex(index, jump: true);
+      if (index != null && identical(_list, state) && state.canScrollTo(index)) state.scrollToIndex(index, jump: true);
     });
   }
 
@@ -308,10 +353,16 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   final _scrollTick = _LyricsScrollTick();
 
-  final _latestUpdatedLineInfo = Rxn<(Duration?, int?)>();
+  final _latestUpdatedLineInfo = Rxn<(Duration? timestamp, int? index, int positionMS)>();
 
   var lyrics = <LrcLine>[];
   var highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
+  var _lineEndsMS = Int32List(0);
+
+  static const _kNoOverlapEndMS = 1 << 62;
+
+  /// position at which an earlier, still highlighted line ends and needs the highlight recomputed
+  int _overlapEndMS = _kNoOverlapEndMS;
 
   late final bool _largeText = widget.isFullScreenView || widget.largeText;
   late double _previousFontMultiplier = _fontMultiplier;
@@ -692,6 +743,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                     // -- the data it was built with instead of whatever the next track swapped in
                     final lyrics = this.lyrics;
                     final highlightTimestampsMap = this.highlightTimestampsMap;
+                    final lineEndsMS = _lineEndsMS;
 
                     final lrcListChild = ObxO(
                       key: const ValueKey('lrc_list'),
@@ -699,6 +751,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                       builder: (context, selectedInfo) {
                         final selectedIndex = selectedInfo?.$2;
                         final selectedLineTimestamp = selectedInfo?.$1;
+                        final positionMS = selectedInfo?.$3 ?? 0;
                         return CustomAnimatedSwitcher(
                           duration: const Duration(milliseconds: 800),
                           reverseDuration: widget.isFullScreenView ? null : Duration.zero, // 0 to make lyrics go instantly on switching animation, otherwise can look bad
@@ -730,7 +783,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                     final indicesForTimestamp = highlightTimestampsMap[lrc.timestamp];
                                     final textDirection = lrc.isRTL == true ? TextDirection.rtl : TextDirection.ltr;
 
-                                    final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp;
+                                    final isEarlierLineStillRunning = distanceDiffFromSelected != null && distanceDiffFromSelected < 0 && lineEndsMS[index] > positionMS;
+                                    final selected = distanceDiffFromSelected == 0 || isBGLyrics || selectedLineTimestamp == lrc.timestamp || isEarlierLineStillRunning;
                                     final selectedAndEmpty = selected && _checkIfTextEmpty(text);
                                     var bgColor = selected && !isBGLyrics
                                         ? Color.alphaBlend(miniplayerColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(
@@ -1753,7 +1807,8 @@ class _LyricsListState extends State<_LyricsList> {
   final _listController = ListController();
   final _scrollController = NamidaScrollController.create();
 
-  bool get canScroll => _listController.isAttached && _scrollController.hasClients;
+  // -- the list may still be the previous track's while the new lyrics are already swapped in
+  bool canScrollTo(int index) => index < widget.itemCount && _listController.isAttached && _scrollController.hasClients;
 
   @override
   void initState() {

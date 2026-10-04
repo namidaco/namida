@@ -98,7 +98,9 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/dart_lrc
   vibration: ^3.1.6
-  flutter_udid: ^4.1.2
+  flutter_udid:
+    git:
+      url: https://github.com/MSOB7YY/flutter_udid
   namico_db_wrapper:
     git:
       url: https://github.com/namidaco/namico_db_wrapper

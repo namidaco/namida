@@ -102,6 +102,8 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
   final _isTitleExpanded = false.obs;
   final _canDimMiniplayer = false.obs;
   Timer? _dimTimer;
+  final _mouseActivityClock = Stopwatch()..start();
+  int? _lastMouseActivityMs;
 
   void cancelDimTimer() {
     _dimTimer?.cancel();
@@ -112,22 +114,32 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
 
   void startDimTimer({Brightness? brightness}) {
     _dimTimer?.cancel();
-    if (settings.youtube.enableDimInLightMode.value == false && (brightness ?? namida.context?.brightness) != Brightness.dark) {
-      _canDimMiniplayer.value = false;
-      return;
-    }
-    final double defaultMiniplayerOpacity = settings.youtube.ytMiniplayerDimOpacity.value;
-    if (defaultMiniplayerOpacity <= 0) return;
-    final int defaultMiniplayerDimSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
-    if (defaultMiniplayerDimSeconds <= -1) return; // dont dim
-    final bool defaultKeepActive = defaultMiniplayerDimSeconds == 0;
-    if (defaultKeepActive) {
+    _dimTimer = null;
+    final int dimAfterSeconds = settings.youtube.ytMiniplayerDimAfterSeconds.value;
+    final bool canDimInCurrentTheme = settings.youtube.enableDimInLightMode.value || (brightness ?? namida.context?.brightness) == Brightness.dark;
+    final bool isDimEnabled = dimAfterSeconds >= 0 && canDimInCurrentTheme && settings.youtube.ytMiniplayerDimOpacity.value > 0;
+    final bool isAlwaysDim = dimAfterSeconds == 0;
+    _canDimMiniplayer.value = isDimEnabled && isAlwaysDim;
+    if (!isDimEnabled || isAlwaysDim) return;
+    final dimAfterMs = dimAfterSeconds * 1000;
+    _scheduleDim(dimAfterMs, dimAfterMs);
+  }
+
+  void _scheduleDim(int delayMs, int dimAfterMs) {
+    _dimTimer = Timer(Duration(milliseconds: delayMs), () {
+      final lastMouseActivityMs = _lastMouseActivityMs;
+      if (lastMouseActivityMs != null) {
+        final mouseIdleMs = _mouseActivityClock.elapsedMilliseconds - lastMouseActivityMs;
+        final remainingMs = dimAfterMs - mouseIdleMs;
+        if (remainingMs > 0) return _scheduleDim(remainingMs, dimAfterMs);
+      }
       _canDimMiniplayer.value = true;
-    } else {
-      _dimTimer = Timer(Duration(seconds: defaultMiniplayerDimSeconds), () {
-        _canDimMiniplayer.value = true;
-      });
-    }
+    });
+  }
+
+  void _onMouseActivity(PointerEvent _) {
+    _lastMouseActivityMs = _mouseActivityClock.elapsedMilliseconds;
+    if (_canDimMiniplayer.value) startDimTimer();
   }
 
   void _onVideoPageReset() {
@@ -544,66 +556,69 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                       ],
                     );
 
-                    return Stack(
-                      children: [
-                        CustomMultiChildLayout(
-                          delegate: _YTMiniplayerLayoutDelegate(bodyHeight: bodyHeight),
-                          children: [
-                            LayoutId(
-                              id: _YTMiniplayerSlot.header,
-                              child: headerRow,
-                            ),
-                            // -- kept mounted while collapsed: rebuilding the navigator, list & shimmers on the
-                            // -- first drag frame was a guaranteed jank, and the comments subpage survives too.
-                            LayoutId(
-                              id: _YTMiniplayerSlot.body,
-                              child: ValueConditionBuilder(
-                                listenable: percentage,
-                                condition: _isCollapsed,
-                                builder: (context, isCollapsed, child) => Visibility(
-                                  maintainState: true,
-                                  visible: !isCollapsed,
-                                  child: child!,
-                                ),
-                                child: miniplayerBody,
+                    return _MouseActivityListener(
+                      onMouseActivity: _onMouseActivity,
+                      child: Stack(
+                        children: [
+                          CustomMultiChildLayout(
+                            delegate: _YTMiniplayerLayoutDelegate(bodyHeight: bodyHeight),
+                            children: [
+                              LayoutId(
+                                id: _YTMiniplayerSlot.header,
+                                child: headerRow,
                               ),
-                            ),
-                            LayoutId(
-                              id: _YTMiniplayerSlot.queueChip,
-                              child: ValueConditionBuilder(
-                                listenable: percentage,
-                                condition: _isCollapsed,
-                                builder: (context, isCollapsed, child) => Visibility(
-                                  maintainState: true,
-                                  visible: !isCollapsed,
-                                  child: child!,
+                              // -- kept mounted while collapsed: rebuilding the navigator, list & shimmers on the
+                              // -- first drag frame was a guaranteed jank, and the comments subpage survives too.
+                              LayoutId(
+                                id: _YTMiniplayerSlot.body,
+                                child: ValueConditionBuilder(
+                                  listenable: percentage,
+                                  condition: _isCollapsed,
+                                  builder: (context, isCollapsed, child) => Visibility(
+                                    maintainState: true,
+                                    visible: !isCollapsed,
+                                    child: child!,
+                                  ),
+                                  child: miniplayerBody,
                                 ),
-                                child: queueChipLayer,
                               ),
-                            ),
-                            LayoutId(
-                              id: _YTMiniplayerSlot.bodyCover,
-                              child: IgnorePointer(
-                                child: FadeTransition(
-                                  opacity: geometry.bodyCoverOpacity,
-                                  child: ColoredBox(
-                                    color: miniplayerBGColor.withOpacityExt(1.0),
+                              LayoutId(
+                                id: _YTMiniplayerSlot.queueChip,
+                                child: ValueConditionBuilder(
+                                  listenable: percentage,
+                                  condition: _isCollapsed,
+                                  builder: (context, isCollapsed, child) => Visibility(
+                                    maintainState: true,
+                                    visible: !isCollapsed,
+                                    child: child!,
+                                  ),
+                                  child: queueChipLayer,
+                                ),
+                              ),
+                              LayoutId(
+                                id: _YTMiniplayerSlot.bodyCover,
+                                child: IgnorePointer(
+                                  child: FadeTransition(
+                                    opacity: geometry.bodyCoverOpacity,
+                                    child: ColoredBox(
+                                      color: miniplayerBGColor.withOpacityExt(1.0),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Positioned(
-                          top: 0.0,
-                          left: 0.0,
-                          right: 0.0,
-                          child: ListenableTranslate(
-                            offset: geometry.seekBarOffset,
-                            child: seekReadyWidget,
+                            ],
                           ),
-                        ),
-                      ],
+                          Positioned(
+                            top: 0.0,
+                            left: 0.0,
+                            right: 0.0,
+                            child: ListenableTranslate(
+                              offset: geometry.seekBarOffset,
+                              child: seekReadyWidget,
+                            ),
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -2056,6 +2071,34 @@ class _VideoFeather extends StatelessWidget {
         decoration: _decorationFor(color),
         child: SizedBox(height: height, width: double.infinity),
       ),
+    );
+  }
+}
+
+class _MouseActivityListener extends StatelessWidget {
+  final void Function(PointerEvent event) onMouseActivity;
+  final Widget child;
+
+  const _MouseActivityListener({
+    required this.onMouseActivity,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.brightness == Brightness.dark;
+    return Obx(
+      (context) {
+        final hasDimTimer = settings.youtube.ytMiniplayerDimAfterSeconds.valueR > 0 && settings.youtube.ytMiniplayerDimOpacity.valueR > 0;
+        final canDimInCurrentTheme = isDark || settings.youtube.enableDimInLightMode.valueR;
+        final onMouseActivity = hasDimTimer && canDimInCurrentTheme ? this.onMouseActivity : null;
+        return Listener(
+          onPointerHover: onMouseActivity,
+          onPointerSignal: onMouseActivity,
+          onPointerPanZoomUpdate: onMouseActivity,
+          child: child,
+        );
+      },
     );
   }
 }

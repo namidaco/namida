@@ -516,9 +516,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                     text: valInSet <= -1 ? '' : "${valInSet}s",
                     onValueChanged: (val) {
                       settings.youtube.ytMiniplayerDimAfterSeconds.save(val);
-                      if (val == 0) {
-                        YoutubeMiniplayerUiController.inst.startDimTimer(); // to dim instantly
-                      }
+                      YoutubeMiniplayerUiController.inst.startDimTimer();
                     },
                   ),
                 );
@@ -978,7 +976,10 @@ class _YTFlagsOptions extends StatelessWidget {
                     secondaryIconSize: 12.0,
                   ),
                   value: enableDimInLightMode,
-                  onChanged: (isTrue) => settings.youtube.enableDimInLightMode.save(!isTrue),
+                  onChanged: (isTrue) {
+                    settings.youtube.enableDimInLightMode.save(!isTrue);
+                    YoutubeMiniplayerUiController.inst.startDimTimer();
+                  },
                   title: 'enable_dim_in_light_mode'.toUpperCase(),
                 ),
               ),

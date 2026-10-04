@@ -398,7 +398,7 @@ class CustomListTile extends StatelessWidget {
                                   : [
                                       TextSpan(
                                         text: titleSuffix,
-                                        style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                                        style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
                                       ),
                                     ],
                             ),
@@ -2945,14 +2945,13 @@ class SubpageInfoContainer extends StatelessWidget {
       rx: settings.subpageInfoStyles,
       builder: (context, styles) {
         final style = styles[subpageInfoType] ?? SubpageInfoStyle.compact;
+        final layout = _SubpageInfoLayout.resolve(style, showSubpageInfoAtSide);
         final isBanner = style == SubpageInfoStyle.banner;
         final isHeroBanner = style == SubpageInfoStyle.heroBanner;
         final isSingleArtworkType = subpageInfoType == MediaType.album || subpageInfoType == MediaType.artist;
         final isOverlay = style == SubpageInfoStyle.overlay;
         final isBlurBackdrop = style == SubpageInfoStyle.blurBackdrop;
-        final isImageFullWidth = showSubpageInfoAtSide || isOverlay || isHeroBanner;
-        final isEdgeToEdge = isBanner || isHeroBanner;
-        final contentPadding = isEdgeToEdge ? EdgeInsets.zero : const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 4.0);
+        final contentPadding = layout.isEdgeToEdge ? EdgeInsets.zero : const EdgeInsets.only(top: 12.0, left: 12.0, right: 12.0, bottom: 4.0);
         final topMargin = style == SubpageInfoStyle.compact ? topPadding : 0.0;
 
         Widget content = Padding(
@@ -2981,7 +2980,7 @@ class SubpageInfoContainer extends StatelessWidget {
               } else if (showSubpageInfoAtSide) {
                 imageMaxWidth = maxWidth;
                 infoMaxWidth = maxWidth;
-              } else if (isImageFullWidth) {
+              } else if (layout.isImageFullWidth) {
                 imageMaxWidth = maxWidth.withMaximum(maxHeight * 0.55);
                 infoMaxWidth = maxWidth;
               } else {
@@ -2991,24 +2990,19 @@ class SubpageInfoContainer extends StatelessWidget {
 
               final imageWidget = ArtworkContainerScope(
                 bareForFan: true,
-                bareFanScale: isImageFullWidth ? 1.0 : _kThumbnailFanScale,
+                bareFanScale: layout.isImageFullWidth ? 1.0 : _kThumbnailFanScale,
                 frameless: isHeroBanner,
                 opensInFullscreen: true,
                 child: imageBuilder(imageMaxWidth),
               );
 
-              final isTextOverImage = (isOverlay || isHeroBanner) && !showSubpageInfoAtSide;
-              final fontBaseWidth = isTextOverImage ? maxWidth * _kOverlayFontWidthPercentage : infoMaxWidth;
-              final fontScale = isBannerTextBelow ? _kBannerStackedFontScale : 1.0;
+              final fontBaseWidth = layout.isTextOverImage ? maxWidth * _kOverlayFontWidthPercentage : infoMaxWidth;
+              final fontScale = isBannerTextBelow ? _kBannerStackedFontScale : layout.fontScale;
               double getFontSize(double p, double min, double max) => ((fontBaseWidth * 0.2).withMaximum(maxHeight * 0.1) * p * fontScale).clampDouble(min, max);
 
-              final int? titleMaxLines = isTextOverImage || isEdgeToEdge
-                  ? 2
-                  : isImageFullWidth
-                  ? null
-                  : 1;
-              final titleFontSize = getFontSize(isImageFullWidth || isBannerTextBelow ? 0.5 : 0.4, 10.0, 32.0);
-              final buttonsMaxWidth = isEdgeToEdge ? maxWidth - 24.0 : maxWidth;
+              final titleMaxLines = layout.titleMaxLines;
+              final titleFontSize = getFontSize(layout.isImageFullWidth || isBannerTextBelow ? 0.5 : 0.4, 10.0, 32.0);
+              final buttonsMaxWidth = layout.isEdgeToEdge ? maxWidth - 24.0 : maxWidth;
               final hasRoomForExtraButtons = buttonsMaxWidth >= _kExtraButtonsMinWidth;
               final onOpenMenu = this.onOpenMenu;
               final customArtworkManager = hasRoomForExtraButtons ? this.customArtworkManager : null;
@@ -3460,6 +3454,40 @@ class SubpageInfoContainer extends StatelessWidget {
   static const _kOverlayFontWidthPercentage = 0.65;
   static const _kHeroBannerHeightPercentage = 0.6;
   static const _kBackdropArtworkSize = 200.0;
+}
+
+class _SubpageInfoLayout {
+  final bool isImageFullWidth;
+  final bool isEdgeToEdge;
+  final bool isTextOverImage;
+  final int? titleMaxLines;
+  final double fontScale;
+
+  const _SubpageInfoLayout({
+    required this.isImageFullWidth,
+    required this.isEdgeToEdge,
+    this.isTextOverImage = false,
+    required this.titleMaxLines,
+    this.fontScale = 1.0,
+  });
+
+  static _SubpageInfoLayout resolve(SubpageInfoStyle style, bool showAtSide) {
+    if (showAtSide) {
+      return switch (style) {
+        SubpageInfoStyle.banner || SubpageInfoStyle.heroBanner => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: true, titleMaxLines: 2),
+        SubpageInfoStyle.compact ||
+        SubpageInfoStyle.overlay ||
+        SubpageInfoStyle.blurBackdrop => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: false, titleMaxLines: null),
+      };
+    }
+    return switch (style) {
+      SubpageInfoStyle.compact => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 1),
+      SubpageInfoStyle.banner => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: true, titleMaxLines: 2),
+      SubpageInfoStyle.heroBanner => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: true, isTextOverImage: true, titleMaxLines: 2),
+      SubpageInfoStyle.overlay => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: false, isTextOverImage: true, titleMaxLines: 2),
+      SubpageInfoStyle.blurBackdrop => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 2, fontScale: 1.25),
+    };
+  }
 }
 
 class _SubpageButtonsRow extends StatelessWidget {

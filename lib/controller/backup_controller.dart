@@ -251,36 +251,6 @@ class BackupController {
     } catch (_) {}
   }
 
-  Future<void> _ensureDbCheckpointedAndDeleteWALFilesForDir(String dirPath) async {
-    final toCheckpoint = <File>[];
-    final toDelete = <File>[];
-    const kDBWalNamesSuffixes = <String>{'-wal', '-shm', '-journal'};
-
-    await for (final f in Directory(dirPath).list(recursive: false)) {
-      if (f is File) {
-        final path = f.path;
-
-        if (path.endsWith('.db')) {
-          toCheckpoint.add(f);
-          continue;
-        }
-
-        if (kDBWalNamesSuffixes.any((s) => path.endsWith(s))) {
-          toDelete.add(f);
-          continue;
-        }
-      }
-    }
-    for (final f in toCheckpoint) {
-      await _ensureDbCheckpointed(f);
-    }
-    for (final f in toDelete) {
-      try {
-        await f.delete();
-      } catch (_) {}
-    }
-  }
-
   static const _kBackupFilenamePrefix = 'Namida Backup - ';
   static const _kPartialBackupSuffix = '.part';
 
@@ -393,6 +363,29 @@ class BackupController {
 
       isRestoringBackup.value = true;
 
+      await _extractBackup(backupzip);
+
+      Indexer.inst.calculateAllImageSizesInStorage();
+      // Indexer.inst.updateColorPalettesSizeInStorage();
+      await _readNewFiles();
+      snackyy(title: lang.restoredBackupSuccessfully, message: lang.restoredBackupSuccessfullySub);
+    } catch (e) {
+      snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: e.toString());
+    } finally {
+      isRestoringBackup.value = false;
+    }
+  }
+
+  Future<void> _extractBackup(File backupzip) {
+    return NamicoDBWrapper.suspend(() async {
+      // -- leftover wal files would otherwise be applied onto the restored dbs
+      await _checkpointDbFilesInDirsSync.thready([
+        AppDirs.USER_DATA,
+        AppDirs.YOUTUBE_MAIN_DIRECTORY,
+        AppDirs.YOUTIPIE_CACHE,
+        AppDirs.YT_DOWNLOAD_TASKS,
+      ]);
+
       await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
 
       // after finishing, extracts zip files inside the main zip
@@ -420,22 +413,19 @@ class BackupController {
         if (!isEmptyLeftover) await _zipManager.extractZip(zipFile: backupItem, destinationDir: destinationDir);
         await backupItem.tryDeleting();
       }
+    });
+  }
 
-      await [
-        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.USER_DATA),
-        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YOUTUBE_MAIN_DIRECTORY),
-        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YOUTIPIE_CACHE),
-        _ensureDbCheckpointedAndDeleteWALFilesForDir(AppDirs.YT_DOWNLOAD_TASKS),
-      ].executeAllAndSilentReportErrors();
-
-      Indexer.inst.calculateAllImageSizesInStorage();
-      // Indexer.inst.updateColorPalettesSizeInStorage();
-      await _readNewFiles();
-      snackyy(title: lang.restoredBackupSuccessfully, message: lang.restoredBackupSuccessfullySub);
-    } catch (e) {
-      snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: e.toString());
-    } finally {
-      isRestoringBackup.value = false;
+  static void _checkpointDbFilesInDirsSync(List<String> dirsPaths) {
+    for (final dirPath in dirsPaths) {
+      final dir = Directory(dirPath);
+      for (final f in dir.listSyncSafe()) {
+        if (f is! File || !f.path.endsWith('.db')) continue;
+        final dbInfo = DbWrapperFileInfo.fromFile(dbFile: f);
+        try {
+          DBWrapper.checkpointFilesSync(dbInfo);
+        } catch (_) {}
+      }
     }
   }
 

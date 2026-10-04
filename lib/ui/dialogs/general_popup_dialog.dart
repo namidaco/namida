@@ -1323,7 +1323,7 @@ Future<void> showGeneralPopupDialog(
                                           },
                                         ),
                                       IconButton(
-                                        tooltip: "${lang.playAll} (${lang.sortBy})",
+                                        tooltip: "${lang.playAll} (${lang.advanced})",
                                         icon: Icon(
                                           Broken.setting_4,
                                           size: 20.0,
@@ -1349,12 +1349,8 @@ Future<void> showGeneralPopupDialog(
                                     NamidaNavigator.inst.closeDialog();
                                     Player.inst.playOrPause(0, tracks, source, shuffle: true);
                                   },
-                                  onLongPress: () {
-                                    NamidaNavigator.inst.closeDialog();
-                                    showAdvancedShuffleDialog(() => tracks, source);
-                                  },
                                   trailing: IconButton(
-                                    tooltip: "${lang.shuffle} (${lang.filterBy})",
+                                    tooltip: "${lang.shuffle} (${lang.advanced})",
                                     icon: Icon(
                                       Broken.setting_4,
                                       size: 20.0,

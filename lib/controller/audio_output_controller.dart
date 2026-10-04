@@ -376,6 +376,7 @@ class AudioSignalPath {
       'audio/eac3' || 'audio/eac3-joc' => 'E-AC-3',
       'audio/vnd.dts' || 'audio/vnd.dts.hd' => 'DTS',
       'audio/true-hd' => 'TrueHD',
+      'audio/x-wavpack' => 'WavPack',
       _ => mime.splitLast('/').replaceFirst('x-', '').toUpperCase(),
     };
   }

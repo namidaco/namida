@@ -152,6 +152,6 @@ class _YTReportingLog extends Logger {
     StackTrace? stackTrace,
   }) {
     _showError(message.toString(), exception: error);
-    super.e(message, time: time, error: error, stackTrace: stackTrace);
+    logger.error(message, e: error, st: stackTrace);
   }
 }
