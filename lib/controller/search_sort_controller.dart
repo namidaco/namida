@@ -45,6 +45,7 @@ class SearchSortController extends SearchPortsProvider {
       composerSearchTemp.isNotEmpty ||
       genreSearchTemp.isNotEmpty ||
       styleSearchTemp.isNotEmpty ||
+      languageSearchTemp.isNotEmpty ||
       playlistSearchTemp.isNotEmpty ||
       folderTracksSearchTemp.isNotEmpty ||
       folderVideosSearchTemp.isNotEmpty ||
@@ -56,10 +57,12 @@ class SearchSortController extends SearchPortsProvider {
   final playlistSearchList = <String>[].obs;
   RxList<String> get artistSearchList => _searchMap[MediaType.artist]!;
   RxList<String> get genreSearchList => _searchMap[MediaType.genre]!;
+  RxList<String> get languageSearchList => _searchMap[MediaType.language]!;
 
   final _searchMap = <MediaType, RxList<String>>{
     MediaType.artist: <String>[].obs,
     MediaType.genre: <String>[].obs,
+    MediaType.language: <String>[].obs,
   };
 
   // -- Temporary lists, used for global search --
@@ -69,6 +72,7 @@ class SearchSortController extends SearchPortsProvider {
     MediaType.composer: <String>[].obs,
     MediaType.genre: <String>[].obs,
     MediaType.style: <String>[].obs,
+    MediaType.language: <String>[].obs,
     MediaType.folder: <String>[].obs,
     MediaType.folderMusic: <String>[].obs,
     MediaType.folderVideo: <String>[].obs,
@@ -85,6 +89,7 @@ class SearchSortController extends SearchPortsProvider {
   RxList<String> get composerSearchTemp => _searchMapTemp[MediaType.composer]!;
   RxList<String> get genreSearchTemp => _searchMapTemp[MediaType.genre]!;
   RxList<String> get styleSearchTemp => _searchMapTemp[MediaType.style]!;
+  RxList<String> get languageSearchTemp => _searchMapTemp[MediaType.language]!;
   RxList<String> get folderTracksSearchTemp => _searchMapTemp[MediaType.folderMusic]!;
   RxList<String> get folderVideosSearchTemp => _searchMapTemp[MediaType.folderVideo]!;
   RxList<String> get moodSearchTemp => _searchMapTemp[MediaType.mood]!;
@@ -281,6 +286,9 @@ class SearchSortController extends SearchPortsProvider {
       case MediaType.style:
         _searchMediaType(type: settings.activeGenreType.value, text: text);
         break;
+      case MediaType.language:
+        _searchMediaType(type: MediaType.language, text: text);
+        break;
       case MediaType.playlist:
         _searchPlaylists(text);
         break;
@@ -376,6 +384,11 @@ class SearchSortController extends SearchPortsProvider {
   Comparable Function(MapEntry<String, List<Track>>)? _getGenresSortingComparable(MediaType genreType, GroupSortType sortBy) {
     if (sortBy == GroupSortType.lastPlayed) return _createLastPlayedComparable(_genreQueueSourceOf(genreType));
     return _getMediaSortingComparable(sortBy, overrideKey: GroupSortType.genresList, filter: TrackSearchFilter.genre);
+  }
+
+  Comparable Function(MapEntry<String, List<Track>>)? _getLanguagesSortingComparable(GroupSortType sortBy) {
+    if (sortBy == GroupSortType.lastPlayed) return _createLastPlayedComparable(QueueSource.language);
+    return _getMediaSortingComparable(sortBy, overrideKey: GroupSortType.title, filter: TrackSearchFilter.language);
   }
 
   Comparable Function(MapEntry<String, List<Track>>)? _getMoodsTagsSortingComparable(MediaType type, GroupSortType sortBy) {
@@ -538,6 +551,11 @@ class SearchSortController extends SearchPortsProvider {
     return _wrapTracksExtraTextResolver(sort);
   }
 
+  String? Function(String language, List<Track> tracks)? getLanguagesExtraTextResolver(GroupSortType sort) {
+    if (sort == GroupSortType.lastPlayed) return _createLastPlayedExtraTextResolver(QueueSource.language);
+    return _wrapTracksExtraTextResolver(sort);
+  }
+
   String? Function(String name, List<Track> tracks)? getMoodsTagsExtraTextResolver(MediaType type, GroupSortType sort) {
     if (sort == GroupSortType.lastPlayed) return _createLastPlayedExtraTextResolver(_moodsTagsQueueSourceOf(type));
     return _wrapTracksExtraTextResolver(sort);
@@ -654,6 +672,17 @@ class SearchSortController extends SearchPortsProvider {
       extraTextOf: getGenresExtraTextResolver(genreType, sort),
       tracksOf: (genre) => genre.getGenresTracksFor(genreType),
       nameOf: (genre) => genre,
+    );
+  }
+
+  String? Function(String language)? getLanguagesSortLabelResolver() {
+    final sort = settings.languageSorts.value.first;
+    return _buildGroupSortLabelResolver(
+      sort,
+      sortKey: _getLanguagesSortingComparable(sort),
+      extraTextOf: getLanguagesExtraTextResolver(sort),
+      tracksOf: (language) => language.getLanguagesTracks(),
+      nameOf: (language) => language,
     );
   }
 
@@ -804,6 +833,7 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.composer => () => _prepareMediaPorts(Indexer.inst.mainMapComposer.value.keys, MediaType.composer),
       MediaType.genre => () => _prepareMediaPorts(Indexer.inst.mainMapGenres.value.keys, MediaType.genre),
       MediaType.style => () => _prepareMediaPorts(Indexer.inst.mainMapStyles.value.keys, MediaType.style),
+      MediaType.language => () => _prepareMediaPorts(Indexer.inst.mainMapLanguages.value.keys, MediaType.language),
       MediaType.folder => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersTracksAndVideos.mapToPaths(), MediaType.folder),
       MediaType.folderMusic => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersTracks.mapToPaths(), MediaType.folderMusic),
       MediaType.folderVideo => () => _prepareMediaPorts(Indexer.inst.mainMapFoldersVideos.mapToPaths(), MediaType.folderVideo),
@@ -1046,6 +1076,7 @@ class SearchSortController extends SearchPortsProvider {
       MediaType.composer => Indexer.inst.mainMapComposer.value.keys,
       MediaType.genre => Indexer.inst.mainMapGenres.value.keys,
       MediaType.style => Indexer.inst.mainMapStyles.value.keys,
+      MediaType.language => Indexer.inst.mainMapLanguages.value.keys,
       MediaType.folder => Indexer.inst.mainMapFoldersTracksAndVideos.mapToPaths(),
       MediaType.folderMusic => Indexer.inst.mainMapFoldersTracks.mapToPaths(),
       MediaType.folderVideo => Indexer.inst.mainMapFoldersVideos.mapToPaths(),
@@ -1206,6 +1237,7 @@ class SearchSortController extends SearchPortsProvider {
     await Future.delayed(Duration.zero, _sortAlbums);
     await Future.delayed(Duration.zero, () => _sortArtistsCurrent(artistType: settings.activeArtistType.value));
     await Future.delayed(Duration.zero, () => _sortGenresCurrent(genreType: settings.activeGenreType.value));
+    await Future.delayed(Duration.zero, _sortLanguages);
     await Future.delayed(Duration.zero, _sortPlaylists);
   }
 
@@ -1225,6 +1257,9 @@ class SearchSortController extends SearchPortsProvider {
       case MediaType.genre:
       case MediaType.style:
         _sortGenresCurrent(genreType: settings.activeGenreType.value, sorts: groupSorts, reverse: reverse);
+        break;
+      case MediaType.language:
+        _sortLanguages(sorts: groupSorts, reverse: reverse);
         break;
       case MediaType.playlist:
         _sortPlaylists(sorts: groupSorts, reverse: reverse);
@@ -1606,6 +1641,38 @@ class SearchSortController extends SearchPortsProvider {
 
     settings.updateGroupSortingAll(genreType, sorts, reverse);
     _searchMediaType(type: genreType, text: LibraryTab.genres.textSearchController?.text ?? '');
+  }
+
+  /// Sorts Languages and Saves automatically to settings
+  void _sortLanguages({List<GroupSortType>? sorts, bool? reverse}) {
+    sorts ??= settings.languageSorts.value;
+    reverse ??= settings.languageSortReversed.value;
+
+    final finalMap = Indexer.inst.mainMapLanguages;
+    final languagesList = finalMap.value.entries.toFixedList();
+
+    if (sorts.first == GroupSortType.shuffle) {
+      languagesList.shuffle();
+    } else {
+      final allSorts = {
+        ...sorts,
+        GroupSortType.title,
+        GroupSortType.year,
+        GroupSortType.dateModified,
+      };
+      final allComparables = <Comparable Function(MapEntry<String, List<Track>>)>[];
+      for (final sort in allSorts) {
+        final comparable = _getLanguagesSortingComparable(sort);
+        if (comparable != null) allComparables.add(comparable);
+      }
+      languagesList.sortByAltsPrecomputed(allComparables, reverse: reverse);
+    }
+
+    finalMap.value.assignAllEntries(languagesList);
+    finalMap.refresh();
+
+    settings.updateGroupSortingAll(MediaType.language, sorts, reverse);
+    _searchMediaType(type: MediaType.language, text: LibraryTab.languages.textSearchController?.text ?? '');
   }
 
   void _saveMoodsTagsSorting(MediaType type, {List<GroupSortType>? sorts, bool? reverse}) {

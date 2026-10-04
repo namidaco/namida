@@ -242,6 +242,8 @@ extension SettingsControllerDebugKeys on _SettingsController {
     artistSortReversed,
     genreSorts,
     genreSortReversed,
+    languageSorts,
+    languageSortReversed,
     moodSorts,
     moodSortReversed,
     tagSorts,

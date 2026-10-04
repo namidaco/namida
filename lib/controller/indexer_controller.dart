@@ -39,6 +39,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/iso639.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -103,6 +104,7 @@ class Indexer<T extends Track> {
   LibraryItemMap get mainMapComposer => mainMapsGroup.mainMapComposer;
   LibraryItemMap get mainMapGenres => mainMapsGroup.mainMapGenres;
   LibraryItemMap get mainMapStyles => mainMapsGroup.mainMapStyles;
+  LibraryItemMap get mainMapLanguages => mainMapsGroup.mainMapLanguages;
   RxMap<Folder, List<T>> get mainMapFoldersTracksAndVideos => mainMapsGroup.mainMapFoldersTracksAndVideos;
   RxMap<Folder, List<T>> get mainMapFoldersTracks => mainMapsGroup.mainMapFoldersTracks;
   RxMap<VideoFolder, List<Video>> get mainMapFoldersVideos => mainMapsGroup.mainMapFoldersVideos;
@@ -120,6 +122,7 @@ class Indexer<T extends Track> {
     return switch (type) {
       MediaType.genre => Indexer.inst.mainMapGenres,
       MediaType.style => Indexer.inst.mainMapStyles,
+      MediaType.language => Indexer.inst.mainMapLanguages,
       _ => Indexer.inst.mainMapGenres,
     };
   }
@@ -275,6 +278,7 @@ class Indexer<T extends Track> {
           oldtr.originalStyle,
           config: splitConfig.genresConfig,
         ),
+        languagesList: Iso639.splitToLabels(oldtr.language),
         moodList: Indexer.splitGeneral(
           oldtr.originalMood,
           config: splitConfig.generalConfig,
@@ -450,7 +454,8 @@ class Indexer<T extends Track> {
         MediaType.albumArtist ||
         MediaType.composer ||
         MediaType.genre ||
-        MediaType.style => () => SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
+        MediaType.style ||
+        MediaType.language => () => SearchSortController.inst.searchMedia(e.toLibraryTab().textSearchController?.text ?? '', e),
         MediaType.folder => FoldersController.tracksAndVideos.refreshAfterSorting,
         MediaType.folderMusic => FoldersController.tracks.refreshAfterSorting,
         MediaType.folderVideo => FoldersController.videos.refreshAfterSorting,
@@ -493,6 +498,7 @@ class Indexer<T extends Track> {
           MediaType.album => settings.albumSorts.value.any((e) => e.requiresHistory),
           MediaType.artist || MediaType.albumArtist || MediaType.composer => settings.artistSorts.value.any((e) => e.requiresHistory),
           MediaType.genre || MediaType.style => settings.genreSorts.value.any((e) => e.requiresHistory),
+          MediaType.language => settings.languageSorts.value.any((e) => e.requiresHistory),
           MediaType.playlist => settings.playlistSorts.value.any((e) => e.requiresHistory),
           MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstOrNull?.requiresHistory ?? false,
           MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstOrNull?.requiresHistory ?? false,
@@ -539,6 +545,9 @@ class Indexer<T extends Track> {
     for (var style in trExt.stylesList) {
       removeAndDeleteEmpty(mainMapStyles.value, style);
     }
+    for (var language in trExt.languagesList) {
+      removeAndDeleteEmpty(mainMapLanguages.value, language);
+    }
 
     tr is Video ? removeAndDeleteEmpty(mainMapFoldersVideos.value, tr.folder) : removeAndDeleteEmpty(mainMapFoldersTracks.value, tr.folder);
     removeAndDeleteEmpty(mainMapFoldersTracksAndVideos.value, tr.folder);
@@ -553,6 +562,7 @@ class Indexer<T extends Track> {
     final mainMapComposer = this.mainMapComposer.value;
     final mainMapGenres = this.mainMapGenres.value;
     final mainMapStyles = this.mainMapStyles.value;
+    final mainMapLanguages = this.mainMapLanguages.value;
     final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
     final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
@@ -564,6 +574,7 @@ class Indexer<T extends Track> {
       MediaType.composer: (map: mainMapComposer, newKeys: [], modifiedKeys: {}),
       MediaType.genre: (map: mainMapGenres, newKeys: [], modifiedKeys: {}),
       MediaType.style: (map: mainMapStyles, newKeys: [], modifiedKeys: {}),
+      MediaType.language: (map: mainMapLanguages, newKeys: [], modifiedKeys: {}),
       MediaType.folder: (map: mainMapFoldersTracksAndVideos, newKeys: [], modifiedKeys: {}),
       MediaType.folderMusic: (map: mainMapFoldersTracks, newKeys: [], modifiedKeys: {}),
       MediaType.folderVideo: (map: mainMapFoldersVideos, newKeys: [], modifiedKeys: {}),
@@ -666,6 +677,15 @@ class Indexer<T extends Track> {
       }
       for (final styOld in newOldStyles.$2) {
         removeCustom(MediaType.style, mainMapStyles, styOld, oldTrack);
+      }
+
+      // -- Assigning Languages
+      final newOldLanguages = oldtr == null ? (newtr.languagesList, const []) : differenceLists(newtr.languagesList, oldtr.languagesList);
+      for (final lanNew in newOldLanguages.$1) {
+        addCustom(MediaType.language, mainMapLanguages, null, lanNew, newTrack);
+      }
+      for (final lanOld in newOldLanguages.$2) {
+        removeCustom(MediaType.language, mainMapLanguages, lanOld, oldTrack);
       }
 
       // -- Assigning Folders
@@ -838,6 +858,7 @@ class Indexer<T extends Track> {
         discNo: 0,
         discTo: 0,
         language: '',
+        languagesList: const [],
         lyrics: '',
         label: '',
         releaseType: '',
@@ -955,6 +976,7 @@ class Indexer<T extends Track> {
           discNo: discNoParsed?.$1,
           discTo: discNoParsed?.$2,
           language: tags.language,
+          languagesList: Iso639.splitToLabels(tags.language),
           lyrics: tags.lyrics,
           label: tags.recordLabel,
           releaseType: tags.releaseType,
@@ -1976,6 +1998,18 @@ class Indexer<T extends Track> {
     return items;
   }
 
+  Map<String, int> getLibraryMoodsCounts() {
+    final counts = <String, int>{};
+    _loopLibraryMoods((name, tr) => counts[name] = (counts[name] ?? 0) + 1);
+    return counts;
+  }
+
+  Map<String, int> getLibraryTagsCounts() {
+    final counts = <String, int>{};
+    _loopLibraryTags((name, tr) => counts[name] = (counts[name] ?? 0) + 1);
+    return counts;
+  }
+
   List<Track>? getTracksForMood(String? name) {
     if (name == null) return null;
     final trs = <Track>[];
@@ -2520,6 +2554,7 @@ class Indexer<T extends Track> {
         discNo: disc ?? 0,
         discTo: discTo ?? 0,
         language: '',
+        languagesList: const [],
         lyrics: '',
         label: '',
         releaseType: '',

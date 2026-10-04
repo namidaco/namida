@@ -900,6 +900,7 @@ class TrackTileManager {
     TrackTileItem.albumArtist: (track, _) => track.albumArtist,
     TrackTileItem.genres: (track, _) => track.originalGenre,
     TrackTileItem.styles: (track, _) => track.originalStyle,
+    TrackTileItem.languages: (track, _) => track.languagesList.join(', '),
     TrackTileItem.duration: (track, _) => track.durationMS.milliSecondsLabel,
     TrackTileItem.year: (track, _) => track.year.yearFormatted,
     TrackTileItem.trackNumber: (track, _) => track.trackNo.toString(),

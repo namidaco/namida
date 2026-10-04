@@ -10,6 +10,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -342,7 +343,10 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
 
   final editedTags = <TagField, String>{};
 
-  final suggestionsProvider = TextSuggestionsProvider();
+  final lrcUtils = LrcSearchUtilsSelectable(track.toTrackExt(), track);
+  final suggestionsProvider = TextSuggestionsProvider(
+    languageHintText: () => _buildLanguageHintText(tagsControllers, lrcUtils),
+  );
 
   Widget getTagTextField(TagField tag) {
     return _TagTextField(
@@ -2102,6 +2106,28 @@ String? _ratingsValidator(String? value) {
   if (intval == null) return lang.nameContainsBadCharacter;
   if (intval < 0 || intval > 100) return '0-100';
   return null;
+}
+
+/// lyrics first, titles are a weaker hint. local lyrics are read only here, when the language field is actually focused.
+String _buildLanguageHintText(Map<TagField, TextEditingController?> tagsControllers, LrcSearchUtilsSelectable lrcUtils) {
+  final buffer = StringBuffer();
+  final embeddedLyrics = tagsControllers[TagField.lyrics]?.text ?? '';
+  if (embeddedLyrics.isNotEmpty) {
+    buffer.writeln(embeddedLyrics);
+  } else {
+    final cachedLyricsFiles = [lrcUtils.cachedLRCFile, lrcUtils.cachedTxtFile];
+    for (final file in cachedLyricsFiles) {
+      try {
+        buffer.writeln(file.readAsStringSync());
+        break;
+      } catch (_) {}
+    }
+  }
+  const titleFields = [TagField.title, TagField.album, TagField.artist];
+  for (final field in titleFields) {
+    buffer.writeln(tagsControllers[field]?.text);
+  }
+  return buffer.toString();
 }
 
 extension _TagFieldMultiEdit on TagField {

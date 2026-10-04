@@ -67,6 +67,7 @@ import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/current_queue_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
+import 'package:namida/ui/pages/languages_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/moods_tags_page.dart';
@@ -105,6 +106,7 @@ extension MediaTypeUtils on MediaType {
       MediaType.album => LibraryTab.albums,
       MediaType.artist || MediaType.albumArtist || MediaType.composer => LibraryTab.artists,
       MediaType.genre || MediaType.style => LibraryTab.genres,
+      MediaType.language => LibraryTab.languages,
       MediaType.folder => LibraryTab.folders,
       MediaType.folderMusic => LibraryTab.foldersMusic,
       MediaType.folderVideo => LibraryTab.foldersVideos,
@@ -115,10 +117,16 @@ extension MediaTypeUtils on MediaType {
     };
   }
 
+  String toGenreHeroTag(String name) => switch (this) {
+    MediaType.style => 'style_$name',
+    MediaType.language => 'language_$name',
+    _ => 'genre_$name',
+  };
+
   MediaType toSubpageInfoType() => switch (this) {
     MediaType.album => MediaType.album,
     MediaType.artist || MediaType.albumArtist || MediaType.composer => MediaType.artist,
-    MediaType.genre || MediaType.style || MediaType.mood || MediaType.tag || MediaType.rating => MediaType.genre,
+    MediaType.genre || MediaType.style || MediaType.language || MediaType.mood || MediaType.tag || MediaType.rating => MediaType.genre,
     MediaType.track || MediaType.playlist || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo => MediaType.playlist,
   };
 }
@@ -148,6 +156,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.albums => MediaType.album,
       LibraryTab.artists => MediaType.artist,
       LibraryTab.genres => MediaType.genre,
+      LibraryTab.languages => MediaType.language,
       LibraryTab.playlists => MediaType.playlist,
       LibraryTab.smartPlaylists => null,
       LibraryTab.folders => MediaType.folder,
@@ -186,6 +195,11 @@ extension LibraryTabUtils on LibraryTab {
         enableHero: enableHero,
       ),
       LibraryTab.genres => GenresPage(
+        countPerRow: gridCount,
+        animateTiles: animateTiles,
+        enableHero: enableHero,
+      ),
+      LibraryTab.languages => LanguagesPage(
         countPerRow: gridCount,
         animateTiles: animateTiles,
         enableHero: enableHero,
@@ -1227,6 +1241,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.SUBPAGE_composerTracks => QueueSource.composer(name),
       RouteType.SUBPAGE_genreTracks => QueueSource.genre(name),
       RouteType.SUBPAGE_styleTracks => QueueSource.style(name),
+      RouteType.SUBPAGE_languageTracks => QueueSource.language(name),
       RouteType.SUBPAGE_queueTracks => QueueSource.queuePageByName(name),
       RouteType.SUBPAGE_playlistTracks => QueueSource.playlist(name),
       RouteType.SUBPAGE_favPlaylistTracks => QueueSource.favourites,
@@ -1264,6 +1279,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_composerTracks => name?.getComposerTracks(),
           RouteType.SUBPAGE_genreTracks => name?.getGenresTracks(),
           RouteType.SUBPAGE_styleTracks => name?.getStylesTracks(),
+          RouteType.SUBPAGE_languageTracks => name?.getLanguagesTracks(),
           RouteType.SUBPAGE_moodsTracks => Indexer.inst.getTracksForMood(name),
           RouteType.SUBPAGE_tagsTracks => Indexer.inst.getTracksForTag(name),
           RouteType.SUBPAGE_ratingTracks => Indexer.inst.getTracksForRating(name),
@@ -1308,6 +1324,7 @@ extension RouteUtils on NamidaRoute {
           RouteType.SUBPAGE_composerTracks => _registerAndReturn(name?.getComposerTracks(), () => Indexer.inst.mainMapComposer.valueR),
           RouteType.SUBPAGE_genreTracks => _registerAndReturn(name?.getGenresTracks(), () => Indexer.inst.mainMapGenres.valueR),
           RouteType.SUBPAGE_styleTracks => _registerAndReturn(name?.getStylesTracks(), () => Indexer.inst.mainMapStyles.valueR),
+          RouteType.SUBPAGE_languageTracks => _registerAndReturn(name?.getLanguagesTracks(), () => Indexer.inst.mainMapLanguages.valueR),
 
           RouteType.SUBPAGE_moodsTracks => _registerAndReturn(
             Indexer.inst.getTracksForMood(name),
@@ -1471,6 +1488,7 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_composerTracks ||
         route == RouteType.SUBPAGE_genreTracks ||
         route == RouteType.SUBPAGE_styleTracks ||
+        route == RouteType.SUBPAGE_languageTracks ||
         route == RouteType.SUBPAGE_moodsTracks ||
         route == RouteType.SUBPAGE_tagsTracks ||
         route == RouteType.SUBPAGE_ratingTracks ||
@@ -1669,6 +1687,9 @@ extension RouteUtils on NamidaRoute {
             case RouteType.SUBPAGE_styleTracks:
               NamidaDialogs.inst.showGenreDialog(name, MediaType.style);
               break;
+            case RouteType.SUBPAGE_languageTracks:
+              NamidaDialogs.inst.showGenreDialog(name, MediaType.language);
+              break;
             case RouteType.SUBPAGE_moodsTracks:
               NamidaDialogs.inst.showMoodDialog(name, tracksListInside().whereType<Track>().toList());
               break;
@@ -1758,6 +1779,7 @@ extension TracksFromMaps on String {
   List<Track> getComposerTracks() => Indexer.inst.mainMapComposer.value[this] ?? [];
   List<Track> getGenresTracks() => Indexer.inst.mainMapGenres.value[this] ?? [];
   List<Track> getStylesTracks() => Indexer.inst.mainMapStyles.value[this] ?? [];
+  List<Track> getLanguagesTracks() => Indexer.inst.mainMapLanguages.value[this] ?? [];
 
   List<Track> getGenresTracksFor(MediaType type) {
     return Indexer.inst.getGenreMapFor(type).value[this] ?? [];
@@ -1907,6 +1929,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.mostPlayed => lang.mostPlayed,
     LibraryTab.moods => lang.moods,
     LibraryTab.tags => lang.tags,
+    LibraryTab.languages => lang.languages,
     LibraryTab.rating => lang.rating,
     LibraryTab.stats => lang.stats,
     LibraryTab.party => lang.partyListeningParty,
@@ -1944,6 +1967,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.mostPlayed => Broken.award,
     LibraryTab.moods => Broken.emoji_happy,
     LibraryTab.tags => Broken.tag,
+    LibraryTab.languages => Broken.language_square,
     LibraryTab.rating => Broken.grammerly,
     LibraryTab.stats => Broken.chart_21,
     LibraryTab.party => Broken.people,
@@ -1959,6 +1983,7 @@ extension MediaTypeL10n on MediaType {
     MediaType.composer => lang.composer,
     MediaType.genre => lang.genres,
     MediaType.style => lang.styles,
+    MediaType.language => lang.languages,
     MediaType.playlist => lang.playlists,
     MediaType.folder => lang.folders,
     MediaType.mood => lang.moods,
@@ -2198,6 +2223,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.albumArtist => lang.albumArtist,
     TrackTileItem.genres => lang.genres,
     TrackTileItem.styles => lang.styles,
+    TrackTileItem.languages => lang.languages,
     TrackTileItem.composer => lang.composer,
     TrackTileItem.year => lang.year,
     TrackTileItem.bitrate => lang.bitrate,
@@ -2236,6 +2262,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.albumArtist => Broken.user,
     TrackTileItem.genres => Broken.smileys,
     TrackTileItem.styles => Broken.brush_1,
+    TrackTileItem.languages => Broken.language_square,
     TrackTileItem.composer => Broken.profile_2user,
     TrackTileItem.year => Broken.calendar,
     TrackTileItem.bitrate => Broken.voice_cricle,
@@ -2277,6 +2304,7 @@ extension QueueSourceL10n on QueueSourceEnum {
     QueueSourceEnum.composer => lang.composer,
     QueueSourceEnum.genre => lang.genre,
     QueueSourceEnum.style => lang.style,
+    QueueSourceEnum.language => lang.language,
     QueueSourceEnum.playlist => lang.playlist,
     QueueSourceEnum.favourites => lang.favourites,
     QueueSourceEnum.history => lang.history,
@@ -2708,6 +2736,7 @@ extension TrackSearchFilterL10n on TrackSearchFilter {
     TrackSearchFilter.albumartist => lang.albumArtist,
     TrackSearchFilter.genre => lang.genre,
     TrackSearchFilter.style => lang.style,
+    TrackSearchFilter.language => lang.language,
     TrackSearchFilter.composer => lang.composer,
     TrackSearchFilter.comment => lang.comment,
     TrackSearchFilter.description => lang.description,

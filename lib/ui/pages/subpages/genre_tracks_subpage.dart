@@ -11,6 +11,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -20,7 +21,11 @@ import 'package:namida/ui/widgets/library/track_tile.dart';
 
 class GenreTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
-  RouteType get route => type == MediaType.style ? RouteType.SUBPAGE_styleTracks : RouteType.SUBPAGE_genreTracks;
+  RouteType get route => switch (type) {
+    MediaType.style => RouteType.SUBPAGE_styleTracks,
+    MediaType.language => RouteType.SUBPAGE_languageTracks,
+    _ => RouteType.SUBPAGE_genreTracks,
+  };
 
   @override
   final String name;
@@ -51,9 +56,12 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
     final name = widget.name;
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
-    final isStyle = widget.type == MediaType.style;
-    final queueSource = isStyle ? QueueSource.style(name) : QueueSource.genre(name);
-    final heroTag = isStyle ? 'style_$name' : 'genre_$name';
+    final queueSource = switch (widget.type) {
+      MediaType.style => QueueSource.style(name),
+      MediaType.language => QueueSource.language(name),
+      _ => QueueSource.genre(name),
+    };
+    final heroTag = widget.type.toGenreHeroTag(name);
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(

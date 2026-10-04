@@ -16,6 +16,7 @@ class LibraryGroup<T extends Track> {
     mainMapComposer.update(other.mainMapComposer);
     mainMapGenres.update(other.mainMapGenres);
     mainMapStyles.update(other.mainMapStyles);
+    mainMapLanguages.update(other.mainMapLanguages);
     mainMapFoldersTracksAndVideos.value = other.mainMapFoldersTracksAndVideos.value as Map<Folder, List<T>>;
     mainMapFoldersTracks.value = other.mainMapFoldersTracks.value as Map<Folder, List<T>>;
     mainMapFoldersVideos.value = other.mainMapFoldersVideos.value;
@@ -29,6 +30,7 @@ class LibraryGroup<T extends Track> {
   final mainMapComposer = LibraryItemMap();
   final mainMapGenres = LibraryItemMap();
   final mainMapStyles = LibraryItemMap();
+  final mainMapLanguages = LibraryItemMap();
   final mainMapFoldersTracksAndVideos = <Folder, List<T>>{}.obs;
   final mainMapFoldersTracks = <Folder, List<T>>{}.obs;
   final mainMapFoldersVideos = <VideoFolder, List<Video>>{}.obs;
@@ -40,6 +42,7 @@ class LibraryGroup<T extends Track> {
     final mainMapComposer = this.mainMapComposer.value..clear();
     final mainMapGenres = this.mainMapGenres.value..clear();
     final mainMapStyles = this.mainMapStyles.value..clear();
+    final mainMapLanguages = this.mainMapLanguages.value..clear();
     final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value..clear();
     final mainMapFoldersTracks = this.mainMapFoldersTracks.value..clear();
     final mainMapFoldersVideos = this.mainMapFoldersVideos.value..clear();
@@ -78,6 +81,11 @@ class LibraryGroup<T extends Track> {
         mainMapStyles.addForce(style, tr);
       }
 
+      // -- Assigning Languages
+      for (var language in trExt.languagesList) {
+        mainMapLanguages.addForce(language, tr);
+      }
+
       // -- Assigning Folders
       if (tr is Video) {
         final folder = tr.folder;
@@ -100,6 +108,7 @@ class LibraryGroup<T extends Track> {
     this.mainMapComposer.refresh();
     this.mainMapGenres.refresh();
     this.mainMapStyles.refresh();
+    this.mainMapLanguages.refresh();
     this.mainMapFoldersTracksAndVideos.refresh();
     this.mainMapFoldersTracks.refresh();
     this.mainMapFoldersVideos.refresh();
@@ -237,6 +246,10 @@ class LibraryGroup<T extends Track> {
             for (final style in trExt.stylesList) {
               takeOut(mainMapStyles.value[style], tr);
             }
+          case MediaType.language:
+            for (final language in trExt.languagesList) {
+              takeOut(mainMapLanguages.value[language], tr);
+            }
           case MediaType.folder:
             takeOut(mainMapFoldersTracksAndVideos.value[tr.folder], tr);
           case MediaType.folderMusic:
@@ -287,6 +300,7 @@ class LibraryGroup<T extends Track> {
       MediaType.composer => mainMapComposer.rx,
       MediaType.genre => mainMapGenres.rx,
       MediaType.style => mainMapStyles.rx,
+      MediaType.language => mainMapLanguages.rx,
       MediaType.folder => mainMapFoldersTracksAndVideos,
       MediaType.folderMusic => mainMapFoldersTracks,
       MediaType.folderVideo => mainMapFoldersVideos,
@@ -303,6 +317,7 @@ class LibraryGroup<T extends Track> {
       MediaType.composer => mainMapComposer.value.values as Iterable<List<T>>,
       MediaType.genre => mainMapGenres.value.values as Iterable<List<T>>,
       MediaType.style => mainMapStyles.value.values as Iterable<List<T>>,
+      MediaType.language => mainMapLanguages.value.values as Iterable<List<T>>,
       MediaType.folder => mainMapFoldersTracksAndVideos.values,
       MediaType.folderMusic => mainMapFoldersTracks.values,
       MediaType.folderVideo => mainMapFoldersVideos.values as Iterable<List<T>>,

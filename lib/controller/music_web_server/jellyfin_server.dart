@@ -240,6 +240,7 @@ class _JellyfinServer extends MusicWebServer {
       discNo: item.parentIndexNumber ?? 0,
       discTo: 0,
       language: '',
+      languagesList: const [],
       lyrics: '',
       label: '',
       releaseType: '',

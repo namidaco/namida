@@ -237,6 +237,7 @@ class _SearchFiltersHeader extends StatelessWidget {
     .composer,
     .genre,
     .style,
+    .language,
     .playlist,
     .folderMusic,
     .folderVideo,
@@ -803,6 +804,24 @@ class _SearchResultsView extends StatelessWidget {
                   heroTag: 'style_$styleName',
                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(styleName, MediaType.style),
                   onTap: () => NamidaOnTaps.inst.onGenreTap(styleName, MediaType.style),
+                  width: 106.0,
+                  height: 138.0,
+                ),
+              ),
+
+              // == Languages ==
+              _multiArtworkSection(
+                title: lang.languages,
+                icon: Broken.language_square,
+                rx: searchController.languageSearchTemp,
+                type: MediaType.language,
+                cardBuilder: (languageName) => MultiArtworkCard(
+                  tracks: languageName.getLanguagesTracks(),
+                  name: languageName,
+                  countPerRow: Dimensions.genreSearchGridCount,
+                  heroTag: 'language_$languageName',
+                  showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(languageName, MediaType.language),
+                  onTap: () => NamidaOnTaps.inst.onGenreTap(languageName, MediaType.language),
                   width: 106.0,
                   height: 138.0,
                 ),

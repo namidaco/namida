@@ -229,6 +229,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
       MediaType.composer => _createTextRule(SmartPlaylistRuleFilterTextSource.composer, pageTitle),
       MediaType.genre => _createTextRule(SmartPlaylistRuleFilterTextSource.genre, pageTitle),
       MediaType.style => _createTextRule(SmartPlaylistRuleFilterTextSource.style, pageTitle),
+      MediaType.language => _createTextRule(SmartPlaylistRuleFilterTextSource.language, pageTitle),
       MediaType.folder => _createTextRule(SmartPlaylistRuleFilterTextSource.folderName, pageTitle),
       MediaType.folderMusic => _createTextRule(SmartPlaylistRuleFilterTextSource.folderName, pageTitle),
       MediaType.folderVideo => _createTextRule(SmartPlaylistRuleFilterTextSource.folderName, pageTitle),

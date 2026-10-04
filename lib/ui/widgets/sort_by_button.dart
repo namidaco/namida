@@ -244,6 +244,42 @@ class SortByMenuGenres with SortByMenuBase {
   ];
 }
 
+class SortByMenuLanguages with SortByMenuBase {
+  const SortByMenuLanguages();
+
+  @override
+  List<Widget> children(BuildContext context) => [
+    _SortAdvancedHeader(
+      onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(MediaType.language),
+    ),
+    Obx(
+      (context) {
+        final isReversed = settings.languageSortReversed.valueR;
+        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(settings.languageSorts.valueR);
+        return SortOptionsCards(
+          isReversed: isReversed,
+          onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !isReversed),
+          withSortKeyOptions: true,
+          prefixFilters: prefixFilters,
+        );
+      },
+    ),
+    ...GroupSortType.forLanguages().map(
+      (e) => ObxO(
+        rx: settings.languageSorts,
+        builder: (context, languageSorts) => SmallListTile(
+          borderRadius: 12.0,
+          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+          title: e.toText(),
+          trailingIcon: e.toIcon(),
+          active: languageSorts.first == e,
+          onTap: () => SearchSortController.inst.sortMedia(MediaType.language, groupSorts: [e]),
+        ),
+      ),
+    ),
+  ];
+}
+
 class SortByMenuMoodsTags with SortByMenuBase {
   final MediaType type;
 

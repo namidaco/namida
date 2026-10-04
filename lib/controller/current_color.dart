@@ -564,7 +564,8 @@ class CurrentColor {
           RouteType.SUBPAGE_albumArtistTracks ||
           RouteType.SUBPAGE_composerTracks ||
           RouteType.SUBPAGE_genreTracks ||
-          RouteType.SUBPAGE_styleTracks:
+          RouteType.SUBPAGE_styleTracks ||
+          RouteType.SUBPAGE_languageTracks:
         currentRoute?.updateColorScheme();
       default:
         null;

@@ -175,6 +175,8 @@ class _SettingsController extends _SettingsKeysWriter {
   late final artistSortReversed = _key('artistSortReversed', isKuru ? true : false);
   late final genreSorts = _keyList('genreSorts', const [GroupSortType.genresList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final genreSortReversed = _key('genreSortReversed', false);
+  late final languageSorts = _keyList('languageSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final languageSortReversed = _key('languageSortReversed', false);
   late final moodSorts = _keyList('moodSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final moodSortReversed = _key('moodSortReversed', false);
   late final tagSorts = _keyList('tagSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
@@ -440,6 +442,7 @@ class _SettingsController extends _SettingsKeysWriter {
       MediaType.composer: [SortType.year, SortType.title],
       MediaType.genre: [SortType.year, SortType.title],
       MediaType.style: [SortType.year, SortType.title],
+      MediaType.language: [SortType.year, SortType.title],
       MediaType.mood: [SortType.title],
       MediaType.tag: [SortType.title],
       MediaType.rating: [SortType.title],
@@ -459,6 +462,7 @@ class _SettingsController extends _SettingsKeysWriter {
       MediaType.artist: false,
       MediaType.genre: false,
       MediaType.style: false,
+      MediaType.language: false,
       MediaType.mood: false,
       MediaType.tag: false,
       MediaType.rating: false,
@@ -570,6 +574,7 @@ class _SettingsController extends _SettingsKeysWriter {
     MediaType.album => (albumSorts, albumSortReversed),
     MediaType.artist || MediaType.albumArtist || MediaType.composer => (artistSorts, artistSortReversed),
     MediaType.genre || MediaType.style => (genreSorts, genreSortReversed),
+    MediaType.language => (languageSorts, languageSortReversed),
     MediaType.playlist => (playlistSorts, playlistSortReversed),
     MediaType.mood => (moodSorts, moodSortReversed),
     MediaType.tag => (tagSorts, tagSortReversed),

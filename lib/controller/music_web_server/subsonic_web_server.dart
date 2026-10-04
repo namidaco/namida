@@ -379,6 +379,7 @@ class _SubsonicWebServer extends MusicWebServer {
       discNo: media.discNumber ?? 0,
       discTo: 0,
       language: '',
+      languagesList: const [],
       lyrics: '',
       label: '',
       releaseType: '',

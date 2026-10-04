@@ -106,13 +106,18 @@ class NamidaDialogs {
 
   Future<void> showGenreDialog(String name, [MediaType type = MediaType.genre]) async {
     final tracks = name.getGenresTracksFor(type);
+    final queueSource = switch (type) {
+      MediaType.style => QueueSource.style(name),
+      MediaType.language => QueueSource.language(name),
+      _ => QueueSource.genre(name),
+    };
     await showGeneralPopupDialog(
       tracks,
       name,
       [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - '),
-      type == MediaType.style ? QueueSource.style(name) : QueueSource.genre(name),
+      queueSource,
       extractColor: false,
-      heroTag: type == MediaType.style ? 'style_$name' : 'genre_$name',
+      heroTag: type.toGenreHeroTag(name),
       forceSquared: true,
     );
   }

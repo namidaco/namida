@@ -190,6 +190,7 @@ class _TrackStatsResolver extends HistoryStatsResolver<Track> {
       MediaType.album => [ext.originalAlbum],
       MediaType.genre => ext.genresList,
       MediaType.style => ext.stylesList,
+      MediaType.language => ext.languagesList,
       MediaType.mood => ext.moodList,
       MediaType.tag => ext.tagsList,
       _ => const [],

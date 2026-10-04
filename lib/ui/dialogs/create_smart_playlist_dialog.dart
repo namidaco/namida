@@ -1903,15 +1903,17 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
               ValueListenableBuilder(
                 valueListenable: widget.controller,
                 builder: (context, value, child) {
+                  final values = _suggestionsProvider.valuesFor(suggestionsSource);
                   final results = TextSuggestionsMatcher.filter(
-                    values: _suggestionsProvider.valuesFor(suggestionsSource),
+                    values: values,
                     query: value.text,
                     excludeLowercased: _buildAlreadyAddedLiterals(),
                   );
                   if (results.isEmpty) return const SizedBox();
                   return TextSuggestionsChipsRow(
                     padding: const EdgeInsets.only(top: 8.0),
-                    suggestions: results,
+                    values: values,
+                    indices: results,
                     onTap: _addLiteralFromSuggestion,
                   );
                 },

@@ -39,6 +39,7 @@ class TracksSearchWrapper {
     final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     final addMoods = filters.contains(TrackSearchFilter.moods);
     final addTags = filters.contains(TrackSearchFilter.tags);
+    final addLanguages = filters.contains(TrackSearchFilter.language);
     final maxListensCount = topTracksMapListens.values.firstOrNull?.length;
     final lyricsLocations = addLyrics ? LyricsLocations.fromSettings() : null;
     return (
@@ -58,6 +59,7 @@ class TracksSearchWrapper {
               lyrics: addLyrics ? e.lyrics : null,
               moods: addMoods ? e.effectiveMoods : null,
               tags: addTags ? e.effectiveTags : null,
+              languages: addLanguages ? e.languagesList : null,
               path: e.path,
               isVideo: e.isVideo,
               listensCount: topTracksMapListens[e.asTrack()]?.length,
@@ -98,6 +100,7 @@ class TracksSearchWrapper {
     final syear = tsf.contains(TrackSearchFilter.year);
     final smoods = tsf.contains(TrackSearchFilter.moods);
     final stags = tsf.contains(TrackSearchFilter.tags);
+    final slanguages = tsf.contains(TrackSearchFilter.language);
     final slyrics = tsf.contains(TrackSearchFilter.lyrics);
 
     if (tsf.isEmpty) stitle = true;
@@ -202,6 +205,13 @@ class TracksSearchWrapper {
           splitTags: stags
               ? _mapListCleanedAndCleanedMinorOrNull(
                   trMap.tags,
+                  textCleanedForSearch,
+                  textCleanedMinorForSearch,
+                )
+              : null,
+          splitLanguages: slanguages
+              ? _mapListCleanedAndCleanedMinorOrNull(
+                  trMap.languages,
                   textCleanedForSearch,
                   textCleanedMinorForSearch,
                 )
@@ -477,6 +487,7 @@ class _CustomTrackExtended {
   final _PropertySimple? description;
   final _Property? splitMoods;
   final _Property? splitTags;
+  final _Property? splitLanguages;
   final _PropertySimple? year;
   final _PropertySimple? lyrics;
   final int? listensCount;
@@ -498,6 +509,7 @@ class _CustomTrackExtended {
     required this.description,
     required this.splitMoods,
     required this.splitTags,
+    required this.splitLanguages,
     required this.year,
     required this.lyrics,
     required this.listensCount,
@@ -685,6 +697,7 @@ class _ScoreCalculator {
     scorePropertySimple(trExt.description);
     scoreProperty(trExt.splitMoods);
     scoreProperty(trExt.splitTags);
+    scoreProperty(trExt.splitLanguages);
     scorePropertySimple(trExt.year);
     scorePropertySimple(trExt.lyrics);
 
@@ -842,6 +855,7 @@ typedef TracksSearchTrackParams = ({
   String? lyrics,
   List<String>? moods,
   List<String>? tags,
+  List<String>? languages,
   String path,
   bool isVideo,
   int? listensCount,

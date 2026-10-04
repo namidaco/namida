@@ -18,6 +18,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/iso639.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
@@ -347,6 +348,7 @@ class TrackExtended {
   final int discNo;
   final int discTo;
   final String language;
+  final List<String> languagesList;
   final String lyrics;
   final String label;
   final String releaseType;
@@ -406,6 +408,7 @@ class TrackExtended {
     required this.discNo,
     required this.discTo,
     required this.language,
+    required this.languagesList,
     required this.lyrics,
     required this.label,
     required this.releaseType,
@@ -621,6 +624,7 @@ class TrackExtended {
       discNo: json['discNo'] ?? 0,
       discTo: json['discTo'] ?? 0,
       language: json['language'] ?? '',
+      languagesList: Iso639.splitToLabels(json['language']),
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
       releaseType: json['releaseType'] ?? '',
@@ -933,6 +937,7 @@ extension TrackExtUtils on TrackExtended {
       discNo: discNoParsed?.$1 ?? discNo,
       discTo: discNoParsed?.$2 ?? discTo,
       language: tag.language ?? language,
+      languagesList: tag.language != null ? Iso639.splitToLabels(tag.language) : languagesList,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
       releaseType: tag.releaseType ?? releaseType,
@@ -1005,6 +1010,7 @@ extension TrackExtUtils on TrackExtended {
     int? discNo,
     int? discTo,
     String? language,
+    List<String>? languagesList,
     String? lyrics,
     String? label,
     String? releaseType,
@@ -1058,6 +1064,7 @@ extension TrackExtUtils on TrackExtended {
       discNo: discNo ?? this.discNo,
       discTo: discTo ?? this.discTo,
       language: language ?? this.language,
+      languagesList: languagesList ?? this.languagesList,
       lyrics: lyrics ?? this.lyrics,
       label: label ?? this.label,
       releaseType: releaseType ?? this.releaseType,
@@ -1126,6 +1133,7 @@ extension TrackUtils on Track {
   int get discNo => toTrackExt().discNo;
   int get discTo => toTrackExt().discTo;
   String get language => toTrackExt().language;
+  List<String> get languagesList => toTrackExt().languagesList;
   String get lyrics => toTrackExt().lyrics;
   String get label => toTrackExt().label;
   String get releaseType => toTrackExt().releaseType;

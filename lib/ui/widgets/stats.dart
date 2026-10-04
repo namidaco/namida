@@ -90,6 +90,7 @@ class StatsSection extends StatelessWidget {
           (context) {
             final allTracks = Indexer.inst.tracksInfoList.valueR;
             final stylesR = Indexer.inst.mainMapStyles.valueR;
+            final languagesLength = Indexer.inst.mainMapLanguages.valueR.length;
             int? stylesLength = stylesR.length;
             if (stylesLength <= 1) {
               final firstStyle = stylesR.keys.firstOrNull;
@@ -105,6 +106,7 @@ class StatsSection extends StatelessWidget {
                 StatsMiniTile(icon: Broken.microphone, label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
                 StatsMiniTile(icon: Broken.smileys, label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
                 if (stylesLength != null) StatsMiniTile(icon: Broken.brush_1, label: lang.styles, value: stylesLength.formatDecimal()),
+                if (languagesLength > 0) StatsMiniTile(icon: Broken.language_square, label: lang.languages, value: languagesLength.formatDecimal()),
                 StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
                 Obx(
                   (context) {
@@ -254,6 +256,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   static const _donutTypes = [
     MediaType.genre,
     MediaType.style,
+    MediaType.language,
     MediaType.mood,
     MediaType.tag,
     MediaType.artist,
@@ -484,6 +487,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
 
   static IconData _categoryIcon(MediaType type) => switch (type) {
     MediaType.style => Broken.brush_1,
+    MediaType.language => Broken.language_square,
     MediaType.mood => Broken.emoji_happy,
     MediaType.tag => Broken.tag,
     MediaType.artist => Broken.microphone,
@@ -495,6 +499,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
 
   static String _categoryCountText(MediaType type, int count) => switch (type) {
     MediaType.style => lang.countStyles(count: count),
+    MediaType.language => lang.countLanguages(count: count),
     MediaType.mood => lang.countMoods(count: count),
     MediaType.tag => lang.countTags(count: count),
     MediaType.artist => lang.countArtists(count: count),

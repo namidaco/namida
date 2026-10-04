@@ -215,6 +215,26 @@ enum GroupSortType {
     GroupSortType.shuffleDaily,
   ];
 
+  static List<GroupSortType> forLanguages() => [
+    GroupSortType.title,
+    GroupSortType.duration,
+    GroupSortType.numberOfTracks,
+    GroupSortType.lastPlayed,
+    GroupSortType.playCount,
+    GroupSortType.firstListen,
+    GroupSortType.latestPlayed,
+    GroupSortType.year,
+    GroupSortType.artistsList,
+    GroupSortType.album,
+    GroupSortType.albumArtist,
+    GroupSortType.dateAdded,
+    GroupSortType.dateModified,
+    GroupSortType.composer,
+    GroupSortType.bpm,
+    GroupSortType.shuffle,
+    GroupSortType.shuffleDaily,
+  ];
+
   static List<GroupSortType> forPlaylists() => [
     GroupSortType.title,
     GroupSortType.creationDate,
@@ -269,6 +289,7 @@ enum TrackTileItem {
   albumArtist,
   genres,
   styles,
+  languages,
   composer,
   trackNumber,
   discNumber,
@@ -308,6 +329,7 @@ enum TrackSearchFilter {
   albumartist,
   genre,
   style,
+  language,
   composer,
   comment,
   description(canAffectPerformance: true),
@@ -354,6 +376,7 @@ enum LibraryTab {
   moods,
   tags,
   rating,
+  languages,
   stats,
   party;
 
@@ -401,6 +424,7 @@ enum QueueSourceEnum {
   composer(false, supportResuming: true, lastPlayedSortMedia: MediaType.composer),
   genre(false, supportResuming: true, lastPlayedSortMedia: MediaType.genre),
   style(false, supportResuming: true, lastPlayedSortMedia: MediaType.style),
+  language(false, supportResuming: true, lastPlayedSortMedia: MediaType.language),
   playlist(true, supportResuming: true, lastPlayedSortMedia: MediaType.playlist),
   folder(false),
   folderMusic(false),
@@ -510,6 +534,7 @@ class QueueSource extends QueueSourceBase<QueueSourceEnum> {
   static QueueSource composer(String? name) => QueueSource._(QueueSourceEnum.composer, title: name);
   static QueueSource genre(String? name) => QueueSource._(QueueSourceEnum.genre, title: name);
   static QueueSource style(String? name) => QueueSource._(QueueSourceEnum.style, title: name);
+  static QueueSource language(String? name) => QueueSource._(QueueSourceEnum.language, title: name);
   static QueueSource playlist(String? name) => QueueSource._(QueueSourceEnum.playlist, title: name);
   static QueueSource folder(String? name) => QueueSource._(QueueSourceEnum.folder, title: name);
   static QueueSource folderMusic(String? name) => QueueSource._(QueueSourceEnum.folderMusic, title: name);
@@ -678,11 +703,11 @@ enum TagField {
   description,
   synopsis,
   lyrics,
+  language,
   remixer,
   trackTotal,
   discTotal,
   lyricist,
-  language,
   recordLabel,
   releaseType,
   country,
@@ -723,6 +748,7 @@ enum RouteType {
   PAGE_artistsMap,
   PAGE_moods,
   PAGE_tags,
+  PAGE_languages,
   PAGE_rating,
   PAGE_stats,
   PAGE_yourYear,
@@ -742,6 +768,7 @@ enum RouteType {
   SUBPAGE_composerTracks,
   SUBPAGE_genreTracks,
   SUBPAGE_styleTracks,
+  SUBPAGE_languageTracks,
   SUBPAGE_playlistTracks,
   SUBPAGE_favPlaylistTracks,
   SUBPAGE_historyTracks,
@@ -792,6 +819,7 @@ enum MediaType {
   composer,
   genre,
   style,
+  language,
   playlist,
   mood,
   tag,

@@ -466,7 +466,7 @@ Future<void> showTrackInfoDialog(
                               if (shouldShowTheField(trackExt.language == ''))
                                 TrackInfoListTile(
                                   title: lang.language,
-                                  value: trackExt.language,
+                                  value: trackExt.languagesList.join(', '),
                                   icon: Broken.language_circle,
                                 ),
 

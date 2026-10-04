@@ -1251,6 +1251,7 @@ final kDummyExtendedTrack = TrackExtended(
   discNo: 0,
   discTo: 0,
   language: "",
+  languagesList: [],
   lyrics: "",
   label: "",
   releaseType: "",

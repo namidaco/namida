@@ -38,7 +38,7 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
 
   final _portalController = OverlayPortalController();
   final _focusNode = FocusNode();
-  final _results = ValueNotifier<List<String>>(const []);
+  final _results = ValueNotifier<List<int>>(const []);
 
   late RegExp? _separatorsRegex;
 
@@ -131,10 +131,10 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
     results.isEmpty ? _hide() : _show();
   }
 
-  void _onSelect(String suggestion) {
+  void _onSelect(String value) {
     widget.controller.value = TextSuggestionsMatcher.applySuggestion(
       current: widget.controller.value,
-      suggestion: suggestion,
+      suggestion: value,
       separatorsRegex: _separatorsRegex,
     );
     widget.onChanged?.call(widget.controller.text);
@@ -159,7 +159,8 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
     return ValueListenableBuilder(
       valueListenable: _results,
       builder: (context, results, _) {
-        if (results.isEmpty) return const SizedBox.shrink();
+        final values = _values;
+        if (results.isEmpty || values == null) return const SizedBox.shrink();
         final height = math.min(maxHeight, results.length * _itemExtent + _verticalPadding * 2);
         final originY = opensUp ? -height - _fieldGap : fieldSize.height + _fieldGap;
         return Transform(
@@ -174,7 +175,8 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
                   height: height,
                   itemExtent: _itemExtent,
                   verticalPadding: _verticalPadding,
-                  suggestions: results,
+                  values: values,
+                  indices: results,
                   onTap: _onSelect,
                 ),
               ),
@@ -206,15 +208,17 @@ class _SuggestionsList extends StatelessWidget {
   final double height;
   final double itemExtent;
   final double verticalPadding;
-  final List<String> suggestions;
-  final void Function(String suggestion) onTap;
+  final TextSuggestionsValues values;
+  final List<int> indices;
+  final void Function(String value) onTap;
 
   const _SuggestionsList({
     required this.width,
     required this.height,
     required this.itemExtent,
     required this.verticalPadding,
-    required this.suggestions,
+    required this.values,
+    required this.indices,
     required this.onTap,
   });
 
@@ -241,19 +245,19 @@ class _SuggestionsList extends StatelessWidget {
         borderRadius: borderRadius,
         child: SuperSmoothListView.builder(
           padding: EdgeInsets.symmetric(vertical: verticalPadding),
-          itemCount: suggestions.length,
+          itemCount: indices.length,
           itemExtent: itemExtent,
           itemBuilder: (context, index) {
-            final suggestion = suggestions[index];
+            final valueIndex = indices[index];
             return NamidaInkWell(
               width: width,
               borderRadius: 6.0,
               margin: const EdgeInsets.symmetric(horizontal: 8.0),
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               alignment: Alignment.centerLeft,
-              onTap: () => onTap(suggestion),
+              onTap: () => onTap(values.values[valueIndex]),
               child: Text(
-                suggestion,
+                values.labelAt(valueIndex),
                 style: context.textTheme.displaySmall,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -267,13 +271,15 @@ class _SuggestionsList extends StatelessWidget {
 }
 
 class TextSuggestionsChipsRow extends StatelessWidget {
-  final List<String> suggestions;
-  final void Function(String suggestion) onTap;
+  final TextSuggestionsValues values;
+  final List<int> indices;
+  final void Function(String value) onTap;
   final EdgeInsetsGeometry? padding;
 
   const TextSuggestionsChipsRow({
     super.key,
-    required this.suggestions,
+    required this.values,
+    required this.indices,
     required this.onTap,
     this.padding,
   });
@@ -287,20 +293,20 @@ class TextSuggestionsChipsRow extends StatelessWidget {
         height: 28.0,
         child: SuperSmoothListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: suggestions.length,
+          itemCount: indices.length,
           itemBuilder: (context, index) {
-            final suggestion = suggestions[index];
+            final valueIndex = indices[index];
             return NamidaInkWell(
               margin: const EdgeInsets.only(right: 6.0),
               borderRadius: 99.0,
               bgColor: bgColor,
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
-              onTap: () => onTap(suggestion),
+              onTap: () => onTap(values.values[valueIndex]),
               child: Align(
                 alignment: Alignment.center,
                 widthFactor: 1.0,
                 child: Text(
-                  suggestion,
+                  values.labelAt(valueIndex),
                   style: context.textTheme.displaySmall,
                   maxLines: 1,
                 ),
