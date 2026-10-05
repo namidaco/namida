@@ -333,7 +333,7 @@ class Player {
 
   void toggleFavouriteForCurrentItem() {
     final current = currentItem.value;
-    if (current != null) _audioHandler.onNotificationFavouriteButtonPressed(current);
+    if (current != null) _audioHandler.toggleItemFavourite(current);
   }
 
   bool get displayFavouriteButtonAsLike => _audioHandler.displayFavouriteButtonAsLikeInNotification;

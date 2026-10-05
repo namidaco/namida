@@ -177,6 +177,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return tracks;
   }
 
+  /// adds [track] without prompting, or removes it when already inside [playlist].
+  Future<void> toggleTrackInPlaylist(LocalPlaylist playlist, Track track) async {
+    final index = playlist.tracks.indexWhere((e) => e.track == track);
+    if (index >= 0) {
+      await removeTracksFromPlaylist(playlist, [index]);
+    } else {
+      await addTracksToPlaylistRaw(playlist, [track], null, (e, dateAdded) => TrackWithDate(dateAdded: dateAdded, track: e));
+    }
+  }
+
   bool favouriteButtonOnPressed(Track track, {bool refreshNotification = true, bool deferListsSorting = false}) {
     if (deferListsSorting) Indexer.inst.deferFavouriteSorting(track);
     final res = super.toggleTrackFavourite(

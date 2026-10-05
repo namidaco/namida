@@ -9,6 +9,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -28,6 +29,7 @@ import 'package:namida/ui/widgets/disabled_by_pill.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
 enum _PlaybackSettingsKeys with SettingKeysBase {
   enableVideoPlayback,
@@ -35,8 +37,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   videoQuality,
   localVideoMatching,
   keepScreenAwake,
-  displayFavButtonInNotif(NamidaFeaturesAvailablity.android),
-  displayStopButtonInNotif(NamidaFeaturesAvailablity.android),
+  notificationButtons(NamidaFeaturesAvailablity.android),
   displayArtworkOnLockscreen(NamidaFeaturesAvailablity.android12and_below),
   killPlayerAfterDismissing(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux])),
   onNotificationTap(NamidaFeaturesAvailablity.android),
@@ -79,8 +80,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.videoQuality: [lang.videoQuality],
     _PlaybackSettingsKeys.localVideoMatching: [lang.localVideoMatching],
     _PlaybackSettingsKeys.keepScreenAwake: [lang.keepScreenAwakeWhen],
-    _PlaybackSettingsKeys.displayFavButtonInNotif: [lang.displayFavButtonInNotification],
-    _PlaybackSettingsKeys.displayStopButtonInNotif: [lang.displayStopButtonInNotification],
+    _PlaybackSettingsKeys.notificationButtons: [lang.notificationButtons],
     _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.displayArtworkOnLockscreen],
     _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.killPlayerAfterDismissingApp],
     _PlaybackSettingsKeys.onNotificationTap: [lang.onNotificationTap],
@@ -543,35 +543,32 @@ class PlaybackSettings extends SettingSubpageProvider {
         ),
       ),
       getItemWrapper(
-        key: _PlaybackSettingsKeys.displayFavButtonInNotif,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.displayFavButtonInNotif),
-            title: lang.displayFavButtonInNotification,
-            icon: Broken.heart_tick,
-            value: settings.displayFavouriteButtonInNotification.valueR,
-            onChanged: (val) {
-              settings.displayFavouriteButtonInNotification.save(!val);
-              Player.inst.refreshNotification();
-              if (!val && NamidaFeaturesVisibility.displayFavButtonInNotifMightCauseIssue) {
-                snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
-              }
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.displayStopButtonInNotif,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.displayStopButtonInNotif),
-            title: lang.displayStopButtonInNotification,
-            icon: Broken.close_circle,
-            value: settings.displayStopButtonInNotification.valueR,
-            onChanged: (val) {
-              settings.displayStopButtonInNotification.save(!val);
-              Player.inst.refreshNotification();
-            },
+        key: _PlaybackSettingsKeys.notificationButtons,
+        child: ObxO(
+          rx: settings.notificationButtons,
+          builder: (context, notificationButtons) => CustomListTile(
+            bgColor: getBgColor(_PlaybackSettingsKeys.notificationButtons),
+            icon: Broken.notification_bing,
+            title: lang.notificationButtons,
+            subtitle: notificationButtons.map((e) => e.toText()).join(', '),
+            trailing: const Icon(
+              Broken.arrow_right_3,
+              size: 18.0,
+            ),
+            onTap: () => NamidaNavigator.inst.navigateDialog(
+              scale: 1.0,
+              dialog: CustomBlurryDialog(
+                title: "${lang.notificationButtons} (${lang.reorderable})",
+                actions: const [
+                  DoneButton(),
+                ],
+                child: SizedBox(
+                  width: namida.width,
+                  height: namida.height * 0.5,
+                  child: const _NotificationButtonsEditor(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -1225,3 +1222,306 @@ class _ForcedOffWrapper extends StatelessWidget {
     );
   }
 }
+
+class _NotificationButtonsEditor extends StatefulWidget {
+  const _NotificationButtonsEditor();
+
+  @override
+  State<_NotificationButtonsEditor> createState() => _NotificationButtonsEditorState();
+}
+
+class _NotificationButtonsEditorState extends State<_NotificationButtonsEditor> {
+  /// android 13+ always shows previous, play/pause & next first, only the rest can be changed.
+  static final _isSystemLayout = NamidaFeaturesAvailablity.android13and_plus.resolve();
+  static const _kMaxButtons = 5;
+  static const _kLockedOpacity = 0.5;
+
+  late final RxList<_NotificationButtonItem> _itemsRx;
+
+  @override
+  void initState() {
+    super.initState();
+    final activeButtons = settings.notificationButtons.value.ensurePlayPause();
+    final activeItems = activeButtons.where(_isEditable).map((button) => (button: button, active: true));
+    final inactiveItems = NotificationButton.values.where((button) => _isEditable(button) && !activeButtons.contains(button)).map((button) => (button: button, active: false));
+    _itemsRx = <_NotificationButtonItem>[...activeItems, ...inactiveItems].obs;
+  }
+
+  @override
+  void dispose() {
+    _itemsRx.close();
+    super.dispose();
+  }
+
+  static bool _isEditable(NotificationButton button) => !_isSystemLayout || !button.isTransport;
+
+  static bool _isLocked(NotificationButton button) => _isSystemLayout ? button.isTransport : button == NotificationButton.playPause;
+
+  static List<NotificationButton> _getActiveButtons(List<_NotificationButtonItem> items) {
+    return [
+      if (_isSystemLayout) ...NotificationButton.transportButtons,
+      ...items.where((item) => item.active).map((item) => item.button),
+    ];
+  }
+
+  void _save() {
+    final buttons = _getActiveButtons(_itemsRx.value);
+    settings.notificationButtons.replace(buttons);
+  }
+
+  /// shows why when the limit is reached.
+  bool _canActivateOneMore() {
+    final maxActive = _isSystemLayout ? _kMaxButtons - NotificationButton.transportButtons.length : _kMaxButtons;
+    final activeCount = _itemsRx.value.where((e) => e.active).length;
+    if (activeCount >= maxActive) {
+      snackyy(title: lang.note, message: '${lang.maximum}: $maxActive');
+      return false;
+    }
+    if (activeCount + 1 == _kMaxButtons && NamidaFeaturesVisibility.notificationButtonsMightDisplaceArtwork) {
+      snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
+    }
+    return true;
+  }
+
+  void _setActive(int index, bool active) {
+    if (active && !_canActivateOneMore()) return;
+    final button = _itemsRx.value[index].button;
+    _itemsRx[index] = (button: button, active: active);
+    _save();
+  }
+
+  void _onTap(int index) {
+    final (:button, :active) = _itemsRx.value[index];
+    if (button == NotificationButton.playPause) return;
+    if (button == NotificationButton.addToPlaylist) {
+      _pickPlaylists(index, active);
+      return;
+    }
+    _setActive(index, !active);
+  }
+
+  void _pickPlaylists(int index, bool isActive) {
+    if (!isActive && !_canActivateOneMore()) return;
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _NotificationPlaylistsDialog(
+        onConfirm: (hasPlaylist) {
+          if (hasPlaylist != isActive) _setActive(index, hasPlaylist);
+        },
+      ),
+    );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex -= 1;
+    final item = _itemsRx.value.removeAt(oldIndex);
+    _itemsRx.value.insert(newIndex, item);
+    _itemsRx.refresh();
+    _save();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: _itemsRx,
+      builder: (context, items) => Column(
+        children: [
+          _NotificationButtonsPreview(
+            buttons: _getActiveButtons(items),
+            isLocked: _isLocked,
+          ),
+          const SizedBox(height: 8.0),
+          Expanded(
+            child: NamidaListView(
+              showScrollbarOnStart: true,
+              itemExtent: null,
+              listBottomPadding: 0,
+              itemCount: items.length,
+              onReorder: _onReorder,
+              itemBuilder: (context, i) {
+                final (:button, :active) = items[i];
+                final title = "${i + 1}. ${button.toText()}";
+                void onTap() => _onTap(i);
+                final tile = button == NotificationButton.addToPlaylist
+                    ? _NotificationPlaylistsTile(
+                        title: title,
+                        active: active,
+                        onTap: onTap,
+                      )
+                    : ListTileWithCheckMark(
+                        title: title,
+                        icon: button.toIcon(),
+                        active: active,
+                        onTap: onTap,
+                      );
+                final isLocked = _isLocked(button);
+                final shownTile = isLocked
+                    ? Opacity(
+                        opacity: _kLockedOpacity,
+                        child: tile,
+                      )
+                    : tile;
+                return Padding(
+                  key: ValueKey(button),
+                  padding: const EdgeInsets.all(3.0),
+                  child: shownTile,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationPlaylistsTile extends StatelessWidget {
+  final String title;
+  final bool active;
+  final void Function() onTap;
+
+  const _NotificationPlaylistsTile({
+    required this.title,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final playlistNames = [settings.notificationButtonsPlaylist.valueR, settings.notificationButtonsYTPlaylist.valueR].nonNulls.join(', ');
+        return ListTileWithCheckMark(
+          title: title,
+          subtitle: playlistNames,
+          icon: NotificationButton.addToPlaylist.toIcon(),
+          active: active,
+          onTap: onTap,
+        );
+      },
+    );
+  }
+}
+
+class _NotificationButtonsPreview extends StatelessWidget {
+  final List<NotificationButton> buttons;
+  final bool Function(NotificationButton button) isLocked;
+
+  const _NotificationButtonsPreview({
+    required this.buttons,
+    required this.isLocked,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final iconColor = theme.iconTheme.color;
+    final lockedIconColor = iconColor?.withOpacityExt(_NotificationButtonsEditorState._kLockedOpacity);
+    final icons = buttons
+        .map(
+          (button) => Icon(
+            button.toIcon(),
+            size: 20.0,
+            color: isLocked(button) ? lockedIconColor : iconColor,
+          ),
+        )
+        .toFixedList();
+    return NamidaInkWell(
+      bgColor: theme.cardColor,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: icons,
+      ),
+    );
+  }
+}
+
+class _NotificationPlaylistsDialog extends StatefulWidget {
+  final void Function(bool hasPlaylist) onConfirm;
+
+  const _NotificationPlaylistsDialog({
+    required this.onConfirm,
+  });
+
+  @override
+  State<_NotificationPlaylistsDialog> createState() => _NotificationPlaylistsDialogState();
+}
+
+class _NotificationPlaylistsDialogState extends State<_NotificationPlaylistsDialog> {
+  final _localPlaylistRx = Rxn<String>(settings.notificationButtonsPlaylist.value);
+  final _ytPlaylistRx = Rxn<String>(settings.notificationButtonsYTPlaylist.value);
+  final _localNames = PlaylistController.inst.playlistsMap.value.keys.toFixedList();
+  final _ytNames = YoutubePlaylistController.inst.playlistsMap.value.keys.toFixedList();
+
+  @override
+  void dispose() {
+    _localPlaylistRx.close();
+    _ytPlaylistRx.close();
+    super.dispose();
+  }
+
+  void _confirm() {
+    final localName = _localPlaylistRx.value;
+    final ytName = _ytPlaylistRx.value;
+    settings.notificationButtonsPlaylist.save(localName);
+    settings.notificationButtonsYTPlaylist.save(ytName);
+    NamidaNavigator.inst.closeDialog();
+    widget.onConfirm(localName != null || ytName != null);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final localCount = _localNames.length;
+    return CustomBlurryDialog(
+      title: lang.addToPlaylist,
+      icon: Broken.music_library_2,
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.confirm,
+          onTap: _confirm,
+        ),
+      ],
+      child: SizedBox(
+        width: namida.width,
+        height: namida.height * 0.5,
+        child: SuperSmoothListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: localCount + _ytNames.length + 2,
+          itemBuilder: (context, index) {
+            if (index == 0 || index == localCount + 1) {
+              final source = index == 0 ? lang.local : lang.youtube;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
+                child: Text(
+                  "${lang.playlists} ($source)",
+                  style: textTheme.displayMedium,
+                ),
+              );
+            }
+            final isLocal = index <= localCount;
+            final name = isLocal ? _localNames[index - 1] : _ytNames[index - localCount - 2];
+            final selectedRx = isLocal ? _localPlaylistRx : _ytPlaylistRx;
+            return Padding(
+              padding: const EdgeInsets.all(3.0),
+              child: ObxO(
+                rx: selectedRx,
+                builder: (context, selected) => ListTileWithCheckMark(
+                  icon: Broken.music_library_2,
+                  title: name.translatePlaylistName(),
+                  active: name == selected,
+                  onTap: () => selectedRx.value = name == selected ? null : name,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+typedef _NotificationButtonItem = ({NotificationButton button, bool active});

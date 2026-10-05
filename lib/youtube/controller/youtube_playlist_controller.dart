@@ -76,13 +76,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       playlist,
       videoIdsList,
       () => NamidaOnTaps.inst.showDuplicatedDialogAction(duplicationActions),
-      (id, dateAdded) {
-        return YoutubeID(
-          id: id,
-          watchNull: YTWatch(dateMSNull: dateAdded, isYTMusic: false),
-          playlistID: playlist.playlistID,
-        );
-      },
+      (id, dateAdded) => _toPlaylistItem(id, dateAdded, playlist),
     );
 
     if (addedVideosLength == null) return;
@@ -105,6 +99,24 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
               toMessage: toMessage,
             )
           : null,
+    );
+  }
+
+  /// adds [videoId] without prompting, or removes it when already inside [playlist].
+  Future<void> toggleVideoInPlaylist(YoutubePlaylist playlist, String videoId) async {
+    final index = playlist.tracks.indexWhere((e) => e.id == videoId);
+    if (index >= 0) {
+      await removeTracksFromPlaylist(playlist, [index]);
+    } else {
+      await addTracksToPlaylistRaw(playlist, [videoId], null, (id, dateAdded) => _toPlaylistItem(id, dateAdded, playlist));
+    }
+  }
+
+  static YoutubeID _toPlaylistItem(String videoId, int dateAdded, YoutubePlaylist playlist) {
+    return YoutubeID(
+      id: videoId,
+      watchNull: YTWatch(dateMSNull: dateAdded, isYTMusic: false),
+      playlistID: playlist.playlistID,
     );
   }
 

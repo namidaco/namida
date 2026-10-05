@@ -70,7 +70,9 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
-class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
+part 'audio_handler.notification_buttons.dart';
+
+class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> with _NotificationButtonsMixin<Q> {
   @override
   bool getLoudnessEnhancerEnabledTrackValue() => settings.player.replayGainType.value.isLoudnessEnhancerEnabled;
   @override
@@ -109,6 +111,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
 
   NamidaAudioVideoHandler() {
     AudioCacheController.inst.updateAudioCacheMap();
+    _initNotificationButtons();
     playWhenReady.addListener(() {
       final ye = playWhenReady.value;
       CurrentColor.inst.switchColorPalettes(playWhenReady: ye);
@@ -144,6 +147,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       final shuffled = isQueueShuffled;
       if (wasShuffled != shuffled) MiniPlayerController.inst.animateQueueToCurrentTrack(jump: false, minZero: true);
       refreshPlaybackStateModes();
+      _refreshNotificationButtonsIfShown(NotificationButton.shuffle);
       SMTCController.instance?.updateShuffle(shuffled);
     }
 
@@ -391,7 +395,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
     if (generation != _notificationUpdateGeneration) return;
     mediaItem.add(media);
-    playbackState.add(transformEvent(PlaybackEvent(currentIndex: currentIndex.value), isItemFavourite, itemIndex));
+    playbackState.add(_transformEvent(PlaybackEvent(currentIndex: currentIndex.value), item, isItemFavourite, itemIndex));
 
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
@@ -411,7 +415,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (generation != _notificationUpdateGeneration) return;
     final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
     mediaItem.add(media);
-    playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, itemIndex));
+    playbackState.add(_transformEvent(PlaybackEvent(currentIndex: index), item, isItemFavourite, itemIndex));
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
 
@@ -420,7 +424,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     if (item is! YoutubeID) return;
     final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
     final index = currentIndex.value;
-    playbackState.add(transformEvent(PlaybackEvent(currentIndex: index), isItemFavourite, index));
+    playbackState.add(_transformEvent(PlaybackEvent(currentIndex: index), item, isItemFavourite, index));
     final media = mediaItem.value;
     if (media != null) _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
   }
@@ -2250,7 +2254,19 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  void onNotificationFavouriteButtonPressed(Q item) {
+  bool _isItemFavourite(Q item) {
+    final isFavourite = item.execute(selectable: (finalItem) => finalItem.track.isFavourite, youtubeID: _isYoutubeIDFavouriteOrLiked);
+    return isFavourite ?? false;
+  }
+
+  @override
+  void onFavouriteRatingRequested(Q item, bool favourite) {
+    final isFavourite = _isItemFavourite(item);
+    if (isFavourite != favourite) toggleItemFavourite(item);
+  }
+
+  @override
+  void toggleItemFavourite(Q item) {
     item.execute(
       selectable: (finalItem) {
         final newStat = PlaylistController.inst.favouriteButtonOnPressed(finalItem.track, refreshNotification: false);
@@ -2280,6 +2296,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   void _onRepeatModeChanged() {
     resetGaplessPlaybackData();
     refreshPlaybackStateModes();
+    _refreshNotificationButtonsIfShown(NotificationButton.repeatMode);
     final repeatMode = displayRepeatMode;
     SMTCController.instance?.updateRepeatMode(repeatMode);
     HomeWidgetController.instance?.updateRepeatMode(repeatMode, numberOfRepeats.value);
@@ -2321,10 +2338,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     item?.execute(
       selectable: (finalItem) async {
         final isFav = finalItem.track.isFavourite;
-        playbackState.add(transformEvent(event, isFav, currentIndex.value));
+        playbackState.add(_transformEvent(event, finalItem, isFav, currentIndex.value));
       },
       youtubeID: (finalItem) async {
-        playbackState.add(transformEvent(event, _isYoutubeIDFavouriteOrLiked(finalItem), currentIndex.value));
+        final isFav = _isYoutubeIDFavouriteOrLiked(finalItem);
+        playbackState.add(_transformEvent(event, finalItem, isFav, currentIndex.value));
       },
     );
   }
@@ -2387,14 +2405,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   @override
   int get defaultCrossFadeTriggerStartOffsetSeconds => settings.player.crossFadeAutoTriggerSeconds.value;
 
-  @override
-  bool get displayFavouriteButtonInNotification => settings.displayFavouriteButtonInNotification.value;
-
-  @override
   bool get displayFavouriteButtonAsLikeInNotification => currentItem.value is YoutubeID && YtVideoLikeManager.preferLikeOverFavourite;
-
-  @override
-  bool get displayStopButtonInNotification => settings.displayStopButtonInNotification.value;
 
   @override
   bool get publishQueueToMediaBrowser => settings.mediaBrowserQueue.value;
@@ -2529,6 +2540,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   /// returns the requested mode.
+  @override
   PlayerRepeatMode userCycleRepeatMode() {
     final repeatMode = displayRepeatMode.nextElement(PlayerRepeatMode.values);
     userSetRepeatMode(repeatMode);
@@ -2679,10 +2691,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
   }
 
   @override
-  Future<void> fastForward() async => await onFastForward();
+  Future<void> fastForward() => Player.inst.seekSecondsForward();
 
   @override
-  Future<void> rewind() async => await onRewind();
+  Future<void> rewind() => Player.inst.seekSecondsBackward();
 
   @override
   Future<dynamic> customAction(String name, [Map<String, dynamic>? extras]) async {
@@ -2693,7 +2705,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       case HomeWidgetController.actionCycleRepeat:
         userCycleRepeatMode();
       default:
-        return super.customAction(name, extras);
+        final isNotificationButton = await _onNotificationButtonPressed(name);
+        if (!isNotificationButton) return super.customAction(name, extras);
     }
   }
 
@@ -2804,12 +2817,6 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
       } catch (_) {}
     }
   }
-
-  @override
-  MediaControlsProvider get mediaControls => _mediaControls;
-  static final _mediaControls = Platform.isAndroid && NamidaFeaturesAvailablity.android13and_plus.resolve()
-      ? MediaControlsProvider.android13plus() // can crash on android below 13
-      : MediaControlsProvider.main();
 
   // -- builders
 

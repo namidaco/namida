@@ -2570,6 +2570,47 @@ extension NotificationTapActionL10n on NotificationTapAction {
   };
 }
 
+extension NotificationButtonUtils on NotificationButton {
+  String toText() => switch (this) {
+    NotificationButton.previous => lang.previous,
+    NotificationButton.playPause => "${lang.play}/${lang.pause}",
+    NotificationButton.next => lang.next,
+    NotificationButton.favourite => lang.favourite,
+    NotificationButton.stop => lang.stop,
+    NotificationButton.shuffle => lang.shuffle,
+    NotificationButton.repeatMode => lang.repeatMode,
+    NotificationButton.seekBackward => lang.seekBackward,
+    NotificationButton.seekForward => lang.seekForward,
+    NotificationButton.sleepTimer => lang.sleepTimer,
+    NotificationButton.addToPlaylist => lang.addToPlaylist,
+  };
+
+  IconData toIcon() => switch (this) {
+    NotificationButton.previous => Broken.previous,
+    NotificationButton.playPause => Broken.play,
+    NotificationButton.next => Broken.next,
+    NotificationButton.favourite => Broken.heart,
+    NotificationButton.stop => Broken.close_circle,
+    NotificationButton.shuffle => Broken.shuffle,
+    NotificationButton.repeatMode => Broken.repeat,
+    NotificationButton.seekBackward => Broken.backward,
+    NotificationButton.seekForward => Broken.forward,
+    NotificationButton.sleepTimer => Broken.timer_1,
+    NotificationButton.addToPlaylist => Broken.music_library_2,
+  };
+}
+
+extension NotificationButtonListUtils on List<NotificationButton> {
+  /// play/pause can't be removed, it goes back after previous when missing.
+  List<NotificationButton> ensurePlayPause() {
+    if (contains(NotificationButton.playPause)) return this;
+    final previousIndex = indexOf(NotificationButton.previous);
+    final buttons = [...this];
+    buttons.insert(previousIndex + 1, NotificationButton.playPause);
+    return buttons;
+  }
+}
+
 extension OnYoutubeLinkOpenActionL10n on OnYoutubeLinkOpenAction {
   String toText() => switch (this) {
     OnYoutubeLinkOpenAction.showDownload => lang.download,

@@ -262,8 +262,10 @@ class _SettingsController extends _SettingsKeysWriter {
   late final serversMaxCacheInMB = _key('serversMaxCacheInMB', isDesktop ? 12 * 1024 : (isKuru ? -1 : 4 * 1024), sync: false);
   late final imagesMaxCacheInMB = _key('imagesMaxCacheInMB', isDesktop || isKuru ? 2 * 1024 : 8 * 32, sync: false);
   late final hideStatusBarInExpandedMiniplayer = _key('hideStatusBarInExpandedMiniplayer', false);
-  late final displayFavouriteButtonInNotification = _key('displayFavouriteButtonInNotification', false);
-  late final displayStopButtonInNotification = _key('displayStopButtonInNotification', true);
+  static const _kDefaultNotificationButtons = [NotificationButton.previous, NotificationButton.playPause, NotificationButton.next, NotificationButton.stop];
+  late final notificationButtons = _keyList('notificationButtons', _kDefaultNotificationButtons, item: NotificationButton.values.asCodec(), isUnique: true, isNonEmpty: true);
+  late final notificationButtonsPlaylist = _key<String?>('notificationButtonsPlaylist', null);
+  late final notificationButtonsYTPlaylist = _key<String?>('notificationButtonsYTPlaylist', null);
   late final enableSearchCleanup = _key('enableSearchCleanup', true);
   late final enableBottomNavBar = _key('enableBottomNavBar', true);
   late final displayAudioInfoMiniplayer = _key('displayAudioInfoMiniplayer', false);
@@ -543,6 +545,16 @@ class _SettingsController extends _SettingsKeysWriter {
     for (final name in const ['albumSort', 'artistSort', 'genreSort', 'playlistSort']) {
       final listName = '${name}s';
       _migrateKey(name, listName, (json) => json is String && _raw[listName] == null ? [json] : null);
+    }
+
+    final isFavouriteInNotification = _dropKey('displayFavouriteButtonInNotification') == true;
+    final isStopInNotification = _dropKey('displayStopButtonInNotification') != false;
+    final didCustomizeNotification = isFavouriteInNotification || !isStopInNotification;
+    if (didCustomizeNotification && _raw['notificationButtons'] == null) {
+      _raw['notificationButtons'] = <String>[
+        if (isFavouriteInNotification) NotificationButton.favourite.name,
+        ..._kDefaultNotificationButtons.where((button) => button != NotificationButton.stop || isStopInNotification).map((button) => button.name),
+      ];
     }
   }
 

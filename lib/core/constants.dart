@@ -1352,9 +1352,7 @@ class NamidaFeaturesVisibility {
 
   static final wallpaperColors = NamidaFeaturesAvailablity.android12and_plus.resolve();
   static final displayArtworkOnLockscreen = NamidaFeaturesAvailablity.android12and_below.resolve();
-  static final displayFavButtonInNotif = _isAndroid;
-  static final displayFavButtonInNotifMightCauseIssue = displayFavButtonInNotif && NamidaFeaturesAvailablity.android11and_below.resolve();
-  static final displayStopButtonInNotif = _isAndroid;
+  static final notificationButtonsMightDisplaceArtwork = NamidaFeaturesAvailablity.android11and_below.resolve();
   static final displayAppIcons = _isAndroid;
   static final showEqualizerBands = _isAndroid;
   static final showSafFolders = _isAndroid;

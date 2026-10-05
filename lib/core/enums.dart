@@ -920,6 +920,26 @@ enum NotificationTapAction {
   openQueue,
 }
 
+enum NotificationButton {
+  previous(isTransport: true),
+  playPause(isTransport: true),
+  next(isTransport: true),
+  favourite,
+  stop,
+  shuffle,
+  repeatMode,
+  seekBackward,
+  seekForward,
+  sleepTimer,
+  addToPlaylist,
+  ;
+
+  final bool isTransport;
+  const NotificationButton({this.isTransport = false});
+
+  static final transportButtons = values.where((button) => button.isTransport).toFixedList();
+}
+
 enum SearchType {
   localTracks,
   youtube,

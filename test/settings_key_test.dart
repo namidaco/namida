@@ -349,6 +349,18 @@ void main() {
       if (!except.contains(e)) e.name,
   ];
 
+  test('old notification toggles migrate to notification buttons', () async {
+    const transport = [NotificationButton.previous, NotificationButton.playPause, NotificationButton.next];
+    await loadFile(settings, {'_v': 2, 'displayFavouriteButtonInNotification': true, 'displayStopButtonInNotification': false});
+    expect(settings.notificationButtons.value, [NotificationButton.favourite, ...transport]);
+    expect(settings.buildJson().containsKey('displayFavouriteButtonInNotification'), false);
+    expect(settings.buildJson().containsKey('displayStopButtonInNotification'), false);
+
+    await loadFile(settings, {'_v': 2, 'displayStopButtonInNotification': true});
+    expect(settings.notificationButtons.value, [...transport, NotificationButton.stop]);
+    expect(settings.buildJson().containsKey('notificationButtons'), false);
+  });
+
   group('keys', () {
     test('direct writes throw, the value stays', () async {
       await loadSync(null);

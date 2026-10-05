@@ -225,8 +225,14 @@
   "serversMaxCacheInMB": 12288,
   "imagesMaxCacheInMB": -1,
   "hideStatusBarInExpandedMiniplayer": true,
-  "displayFavouriteButtonInNotification": false,
-  "displayStopButtonInNotification": true,
+  "notificationButtons": [
+    "previous",
+    "playPause",
+    "next",
+    "stop"
+  ],
+  "notificationButtonsPlaylist": null,
+  "notificationButtonsYTPlaylist": null,
   "enableSearchCleanup": true,
   "enableBottomNavBar": true,
   "displayAudioInfoMiniplayer": true,
