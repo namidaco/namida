@@ -197,7 +197,8 @@ class IndexerSettings extends SettingSubpageProvider {
     final libraryIdController = initialType.check(.supportsLibraryId) ? TextEditingController(text: null) : null;
     final subdirController = initialType.check(.supportsSubdir) ? TextEditingController(text: null) : null;
     final portController = initialType.check(.supportsPort) ? TextEditingController(text: null) : null;
-    final availableSharesRx = shareNameController == null && libraryIdController == null ? null : <ServerShareWrapper>{}.obs;
+    final shareTargetController = shareNameController ?? libraryIdController; // -- smb shares or jellyfin libraries
+    final availableSharesRx = shareTargetController == null ? null : <ServerShareWrapper>{}.obs;
     final formKey = GlobalKey<FormState>();
 
     if (availableSharesRx != null) {
@@ -481,7 +482,7 @@ class IndexerSettings extends SettingSubpageProvider {
                           )
                           .toFixedList(),
                     ),
-                    if (initialType.check(.isFileBased)) ...[
+                    if (initialType.check(.downloadsWholeFiles)) ...[
                       const SizedBox(height: 8.0),
                       NamidaCoolBox(
                         colorScheme: mainColorScheme,
@@ -568,7 +569,7 @@ class IndexerSettings extends SettingSubpageProvider {
                                             margin: const EdgeInsets.symmetric(horizontal: 3.0),
                                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                             onTap: () {
-                                              libraryIdController?.text = e.id;
+                                              shareTargetController?.text = e.id;
                                             },
                                             child: Text(
                                               e.name,

@@ -295,6 +295,7 @@ enum DirectoryIndexTypeTag {
   supportsPort,
   supportsLibraryId,
   isFileBased,
+  downloadsWholeFiles,
 }
 
 enum DirectoryIndexType {
@@ -329,6 +330,7 @@ enum DirectoryIndexType {
     .supportsSubdir,
     .supportsPort,
     .isFileBased,
+    .downloadsWholeFiles,
   }),
   sftp({
     .server,

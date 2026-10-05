@@ -4,8 +4,9 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' show Random;
+import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:dartssh2/dartssh2.dart';
@@ -20,7 +21,6 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
-import 'package:namida/class/media_info.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -53,6 +53,7 @@ part 'file_transfer_server.dart';
 part 'ftp_server.dart';
 part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';
+part 'local_range_proxy.dart';
 part 'saf_server.dart';
 part 'server_cache_controller.dart';
 part 'sftp_server.dart';
@@ -148,9 +149,9 @@ abstract class MusicWebServer {
 }
 
 /// a temp copy that goes away once its reader is done.
-Stream<List<int>> _readThenDelete(File file, int start) async* {
+Stream<List<int>> _readThenDelete(File file, int start, [int? end]) async* {
   try {
-    yield* file.openRead(start);
+    yield* file.openRead(start, end);
   } finally {
     file.tryDeleting();
   }

@@ -15,6 +15,7 @@ class _WebDAVServer extends MusicWebServer {
 
   // -- it's safe to assume that webdav(http) is supported for all platforms, however it's kept
   // -- in case the system one was picked and didn't support it.
+  // -- only used for files taglib can't read.
   late final Future<bool> _ffmpegSupportsWebDAV = NamidaFFMPEG.inst.supportsWebDAV();
 
   _WebDAVServer.init(super.authDetails) {
@@ -70,17 +71,12 @@ class _WebDAVServer extends MusicWebServer {
     final uriString = uri.toString();
     final name = serverPath.getFilename;
     final isVideo = name.isVideo();
-    final File? tempFile = await TagsExtractor.extractThumbnailCustom(
+    final artwork = await NamidaTaggerController.inst.extractArtwork(
       trackPath: uriString,
-      filename: null,
-      artworkDirectory: null,
       isVideo: isVideo,
+      httpHeaders: _serverAuthHeaders,
     );
-
-    final bytes = await tempFile?.readAsBytes();
-    tempFile?.tryDeleting();
-
-    return bytes;
+    return artwork?.bytes;
   }
 
   @override
@@ -285,38 +281,29 @@ class _WebDAVServer extends MusicWebServer {
       }
     }
 
-    // -- prefer already existing images
+    // -- a sibling image wins over the embedded artwork already saved while reading tags
     for (final img in imageFiles) {
       final imgPath = img.path;
       if (imgPath != null) {
         try {
-          final bytes = await _api?.read(imgPath);
           final serverPathWOExt = p.basenameWithoutExtension(imgPath);
-          final artworksToExtract = artworksToExtractLater[serverPathWOExt];
-          if (artworksToExtract != null) {
-            for (final e in artworksToExtract) {
-              await _writeOrExtractArtwork(e, bytes);
-            }
-            artworksToExtractLater.remove(serverPathWOExt);
+          final artworksToWrite = artworksToExtractLater[serverPathWOExt];
+          if (artworksToWrite == null) continue;
+          final bytes = await _api?.read(imgPath);
+          if (bytes == null || bytes.isEmpty) continue;
+          for (final e in artworksToWrite) {
+            await _writeSiblingArtwork(e, bytes);
           }
         } catch (_) {}
-      }
-    }
-
-    // -- extract remaining that had no cover.png
-    for (final artworksToExtract in artworksToExtractLater.values) {
-      for (final e in artworksToExtract) {
-        await _writeOrExtractArtwork(e, null);
       }
     }
     artworksToExtractLater.clear();
   }
 
-  Future<void> _writeOrExtractArtwork(_ExtractInfo info, List<int>? bytes) async {
+  Future<void> _writeSiblingArtwork(_ExtractInfo info, List<int> bytes) async {
     final serverPath = info.serverPath;
-    final ffmpegInfo = info.ffmpegInfo;
-    final name = serverPath.getFilename;
-    final isVideo = name.isVideo();
+    final tags = info.tags;
+    final isVideo = info.name.isVideo();
     final artworkDirectory = isVideo ? AppDirs.THUMBNAILS : AppDirs.ARTWORKS;
     final filename = TagsExtractor.buildImageFilename(
       path: serverPath,
@@ -324,28 +311,18 @@ class _WebDAVServer extends MusicWebServer {
       isNetwork: true,
       networkId: serverPath,
       infoCallback: () => (
-        albumName: ffmpegInfo?.format?.tags?.album,
-        albumArtist: ffmpegInfo?.format?.tags?.albumArtist,
-        year: ffmpegInfo?.format?.tags?.date,
-        mbAlbumId: ffmpegInfo?.format?.tags?.mbAlbumId,
-        mbAlbumArtistId: ffmpegInfo?.format?.tags?.mbAlbumArtistId,
-        title: ffmpegInfo?.format?.tags?.title,
-        artist: ffmpegInfo?.format?.tags?.artist,
+        albumName: tags.album,
+        albumArtist: tags.albumArtist,
+        year: tags.year,
+        mbAlbumId: tags.mbAlbumId,
+        mbAlbumArtistId: tags.mbAlbumArtistId,
+        title: tags.title,
+        artist: tags.artist,
       ),
       hashKeyCallback: () => serverPath.toFastHashKey(),
       parentDirPath: artworkDirectory,
     );
-
-    if (bytes != null && bytes.isNotEmpty) {
-      await FileParts.join(artworkDirectory, filename).writeAsBytes(bytes);
-    } else {
-      await TagsExtractor.extractThumbnailCustom(
-        trackPath: info.uriString,
-        filename: filename,
-        artworkDirectory: artworkDirectory,
-        isVideo: isVideo,
-      );
-    }
+    await FileParts.join(artworkDirectory, filename).writeAsBytes(bytes);
   }
 
   Future<(FAudioModel, String, File?)?> _fetchFileAndExtractInfo(
@@ -356,28 +333,38 @@ class _WebDAVServer extends MusicWebServer {
     Map<String, List<_ExtractInfo>> artworksToExtractLater,
   ) async {
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
-    if (await _ffmpegSupportsWebDAV) {
-      final uri = _buildServerUri(serverPath);
-      final uriString = uri.toString();
-      final ffmpegInfo = await NamidaFFMPEG.inst.ffmpegExtractMetadata(uriString);
-
+    final effectiveName = name ?? serverPath.getFilename;
+    final uri = _buildServerUri(serverPath);
+    final uriString = uri.toString();
+    final model = await NamidaTaggerController.inst.extractMetadata(
+      trackPath: uriString,
+      isVideo: effectiveName.isVideo(),
+      extractArtwork: extractArtwork,
+      saveArtworkToCache: true,
+      isNetwork: true,
+      networkId: serverPath,
+      httpHeaders: _serverAuthHeaders,
+    );
+    if (!model.hasError) {
       if (extractArtwork) {
-        name ??= serverPath.getFilename;
         final extractInfo = _ExtractInfo(
           serverPath: serverPath,
-          uriString: uriString,
-          name: name,
-          ffmpegInfo: ffmpegInfo,
+          name: effectiveName,
+          tags: model.tags,
           identifiersSet: identifiersSet,
         );
         final serverPathWOExt = p.basenameWithoutExtension(serverPath);
         artworksToExtractLater[serverPathWOExt] ??= [];
         artworksToExtractLater[serverPathWOExt]!.add(extractInfo);
       }
+      return (model, serverPath, null);
+    }
 
-      final model = ffmpegInfo?.toFAudioModel(artwork: null);
-      if (model != null) {
-        return (model, serverPath, null);
+    if (await _ffmpegSupportsWebDAV) {
+      final ffmpegInfo = await NamidaFFMPEG.inst.ffmpegExtractMetadata(uriString);
+      final ffmpegModel = ffmpegInfo?.toFAudioModel(artwork: null);
+      if (ffmpegModel != null) {
+        return (ffmpegModel, serverPath, null);
       }
     }
 
@@ -519,16 +506,14 @@ class _ClientApiWrapper {
 
 class _ExtractInfo {
   final String serverPath;
-  final String uriString;
   final String name;
-  final MediaInfo? ffmpegInfo;
+  final FTags tags;
   final Set<AlbumIdentifier> identifiersSet;
 
   const _ExtractInfo({
     required this.serverPath,
-    required this.uriString,
     required this.name,
-    required this.ffmpegInfo,
+    required this.tags,
     required this.identifiersSet,
   });
 }

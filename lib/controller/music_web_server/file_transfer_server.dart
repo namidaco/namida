@@ -8,11 +8,17 @@ abstract class _FileTransferServer extends MusicWebServer {
   /// files fetched at once while indexing.
   int get _fetchConcurrency;
 
+  /// whether [_openRead] fetches only the requested range, tags are then read through [_LocalRangeProxy] instead of downloading whole files.
+  bool get _canReadRanges;
+
   String get _basePath;
 
   Future<List<_RemoteEntry>> _listDir(String dirPath);
 
-  Future<Stream<List<int>>> _openRead(String path, int start);
+  /// [end] is exclusive, defaults to the end of the file.
+  Future<Stream<List<int>>> _openRead(String path, int start, [int? end]);
+
+  Future<int> _fileSize(String path);
 
   void _onFetchError(Object error) {}
 
@@ -38,10 +44,22 @@ abstract class _FileTransferServer extends MusicWebServer {
 
   @override
   Future<Uint8List?> getImage(String id) async {
+    final isVideo = id.isVideo();
+    if (_canReadRanges) {
+      try {
+        final size = await _fileSize(id);
+        final url = await _LocalRangeProxy.inst.urlFor(this, id, size);
+        final artwork = await NamidaTaggerController.inst.extractArtwork(trackPath: url, isVideo: isVideo);
+        return artwork?.bytes;
+      } catch (_) {
+        return null;
+      }
+    }
+
     final tempFile = _tempFileFor(id);
     try {
       await _downloadToFile(id, tempFile);
-      final artwork = await NamidaTaggerController.inst.extractArtwork(trackPath: tempFile.path, isVideo: id.isVideo());
+      final artwork = await NamidaTaggerController.inst.extractArtwork(trackPath: tempFile.path, isVideo: isVideo);
       return artwork?.bytes;
     } catch (_) {
       return null;
@@ -97,20 +115,26 @@ abstract class _FileTransferServer extends MusicWebServer {
     }
 
     final tracksByNameWOExt = lrcFiles.isEmpty ? null : <String, TrackExtended>{};
-    final concurrency = _fetchConcurrency;
     final total = mediaFiles.length;
-    for (int i = 0; i < total; i += concurrency) {
-      final end = (i + concurrency).withMaximum(total);
-      final futures = <Future<TrackExtended?>>[];
-      for (int j = i; j < end; j++) {
-        futures.add(_processFile(mediaFiles[j], scan));
+    if (total > 0) {
+      // -- a sliding window, a new file starts as soon as any finishes instead of each batch waiting for its slowest
+      final processed = StreamController<(int, TrackExtended?)>();
+      int nextIndex = 0;
+      Future<void> worker() async {
+        while (nextIndex < total) {
+          final index = nextIndex++;
+          final trExt = await _processFile(mediaFiles[index], scan);
+          processed.add((index, trExt));
+        }
       }
-      final results = await Future.wait(futures);
-      for (int j = 0; j < results.length; j++) {
-        final trExt = results[j];
+
+      final workersCount = _fetchConcurrency.withMaximum(total);
+      final workers = Future.wait(List.generate(workersCount, (_) => worker()));
+      workers.whenComplete(processed.close).ignoreError();
+      await for (final (index, trExt) in processed.stream) {
         if (trExt == null) continue;
         yield trExt;
-        tracksByNameWOExt?[mediaFiles[i + j].name.getFilenameWOExt] = trExt;
+        tracksByNameWOExt?[mediaFiles[index].name.getFilenameWOExt] = trExt;
       }
     }
 
@@ -142,17 +166,8 @@ abstract class _FileTransferServer extends MusicWebServer {
       if (canSkip) return null;
     }
 
-    final tempFile = _tempFileFor(path);
     try {
-      await _downloadToFile(path, tempFile);
-      final trackInfo = await NamidaTaggerController.inst.extractMetadata(
-        trackPath: tempFile.path,
-        isVideo: entry.name.isVideo(),
-        extractArtwork: scan.extractArtwork,
-        saveArtworkToCache: scan.extractArtwork,
-        isNetwork: true,
-        networkId: path,
-      );
+      final trackInfo = await _extractMetadata(entry, scan.extractArtwork);
       final trExt = await Indexer.convertServerTagToTrack(
         path: path,
         trackInfo: trackInfo,
@@ -187,6 +202,38 @@ abstract class _FileTransferServer extends MusicWebServer {
       return trExt.copyWith(generatePathHash: true, path: newUri.toString());
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<FAudioModel> _extractMetadata(_RemoteEntry entry, bool extractArtwork) async {
+    final path = entry.path;
+    final size = entry.size;
+    final isVideo = entry.name.isVideo();
+    if (_canReadRanges && size != null) {
+      final url = await _LocalRangeProxy.inst.urlFor(this, path, size);
+      final trackInfo = await NamidaTaggerController.inst.extractMetadata(
+        trackPath: url,
+        isVideo: isVideo,
+        extractArtwork: extractArtwork,
+        saveArtworkToCache: extractArtwork,
+        isNetwork: true,
+        networkId: path,
+      );
+      if (!trackInfo.hasError) return trackInfo;
+      // -- the whole file tells apart a network error (skipped) from a file taglib can't read (filename info)
+    }
+
+    final tempFile = _tempFileFor(path);
+    try {
+      await _downloadToFile(path, tempFile);
+      return await NamidaTaggerController.inst.extractMetadata(
+        trackPath: tempFile.path,
+        isVideo: isVideo,
+        extractArtwork: extractArtwork,
+        saveArtworkToCache: extractArtwork,
+        isNetwork: true,
+        networkId: path,
+      );
     } finally {
       tempFile.tryDeleting();
     }

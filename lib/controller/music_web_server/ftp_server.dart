@@ -14,6 +14,9 @@ class _FTPServer extends _FileTransferServer {
   int get _fetchConcurrency => 1;
 
   @override
+  bool get _canReadRanges => false;
+
+  @override
   String get _basePath => _serverInfo.basePath;
 
   /// one command at a time, the control socket is shared.
@@ -87,11 +90,14 @@ class _FTPServer extends _FileTransferServer {
   });
 
   @override
-  Future<Stream<List<int>>> _openRead(String path, int start) async {
+  Future<Stream<List<int>>> _openRead(String path, int start, [int? end]) async {
     final tempFile = _tempFileFor(path);
     await _downloadToFile(path, tempFile);
-    return _readThenDelete(tempFile, start);
+    return _readThenDelete(tempFile, start, end);
   }
+
+  @override
+  Future<int> _fileSize(String path) => _run((client) => client.sizeFile(path));
 
   @override
   Future<MusicWebServerError?> ping() async {

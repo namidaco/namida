@@ -14,6 +14,9 @@ class _SFTPServer extends _FileTransferServer {
   int get _fetchConcurrency => 4;
 
   @override
+  bool get _canReadRanges => true;
+
+  @override
   String get _basePath => _serverInfo.basePath;
 
   Future<SftpClient> _getClient() async {
@@ -73,10 +76,20 @@ class _SFTPServer extends _FileTransferServer {
   }
 
   @override
-  Future<Stream<List<int>>> _openRead(String path, int start) async {
+  Future<Stream<List<int>>> _openRead(String path, int start, [int? end]) async {
     final client = await _getClient();
     final file = await client.open(path);
-    return _closeAfter(file.read(offset: start), file);
+    final length = end == null ? null : end - start;
+    return _closeAfter(file.read(offset: start, length: length), file);
+  }
+
+  @override
+  Future<int> _fileSize(String path) async {
+    final client = await _getClient();
+    final attrs = await client.stat(path);
+    final size = attrs.size;
+    if (size == null) throw Exception('Unknown size: $path');
+    return size;
   }
 
   static Stream<List<int>> _closeAfter(Stream<Uint8List> stream, SftpFile file) async* {

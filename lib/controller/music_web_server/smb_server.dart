@@ -5,12 +5,16 @@ class _SMBServer extends _FileTransferServer {
   late final _serverInfo = HostServerInfo.fromUrl(authDetails.dir.sourceRaw);
   late final _auth = authDetails.auth.toBasicAuthModel();
 
-  Completer<SmbConnect?>? _connectionCompleter;
+  static const _kConnectionsCount = 4; // -- smb_connect sends one request at a time per connection
+  final _connectionCompleters = List<Completer<SmbConnect?>?>.filled(_kConnectionsCount, null);
 
   _SMBServer.init(super.authDetails);
 
   @override
   int get _fetchConcurrency => 10;
+
+  @override
+  bool get _canReadRanges => true;
 
   @override
   String get _basePath => _serverInfo.basePath;
@@ -39,14 +43,14 @@ class _SMBServer extends _FileTransferServer {
     );
   }
 
-  Future<SmbConnect> _getConnection() async {
-    final pending = _connectionCompleter;
+  Future<SmbConnect> _getConnection([int index = 0]) async {
+    final pending = _connectionCompleters[index];
     if (pending != null) {
       final res = await pending.future;
       if (res != null) return res;
     }
 
-    final completer = _connectionCompleter = Completer<SmbConnect?>();
+    final completer = _connectionCompleters[index] = Completer<SmbConnect?>();
     try {
       final host = _serverInfo.host;
       if (host.isEmpty) throw Exception('SMB host is empty');
@@ -63,15 +67,77 @@ class _SMBServer extends _FileTransferServer {
       return connection;
     } catch (e) {
       completer.complete(null);
-      _connectionCompleter = null;
+      _connectionCompleters[index] = null;
       rethrow;
     }
   }
 
+  /// a file always goes through the same connection, its open read handle lives there.
+  Future<SmbConnect> _getConnectionFor(String path) {
+    final index = path.hashCode % _kConnectionsCount;
+    return _getConnection(index);
+  }
+
   @override
   void dispose() async {
-    (await _connectionCompleter?.future)?.close();
-    _connectionCompleter = null;
+    for (final entry in _readHandles.values) {
+      entry.close();
+    }
+    _readHandles.clear();
+    _listedFiles.clear();
+    for (int i = 0; i < _kConnectionsCount; i++) {
+      final completer = _connectionCompleters[i];
+      _connectionCompleters[i] = null;
+      (await completer?.future)?.close();
+    }
+  }
+
+  static const _kReadHandleIdleTimeout = Duration(seconds: 3);
+  final _readHandles = <String, _SmbReadHandleEntry>{};
+
+  /// keeps the file open between the range reads of one file, sparing an open & close round trip for each.
+  Future<Uint8List> _readRange(String path, int start, int end) async {
+    final entry = _readHandles[path] ??= _SmbReadHandleEntry(_openReadHandle(path));
+    entry.idleTimer?.cancel();
+    entry.activeReads++;
+    try {
+      final handle = await entry.handle;
+      return await handle.read(start, end - start);
+    } catch (_) {
+      if (_readHandles[path] == entry) _readHandles.remove(path); // -- reopened on the next read
+      rethrow;
+    } finally {
+      entry.activeReads--;
+      if (entry.activeReads == 0) {
+        if (_readHandles[path] == entry) {
+          entry.idleTimer = Timer(_kReadHandleIdleTimeout, () => _closeReadHandle(path, entry));
+        } else {
+          entry.close();
+        }
+      }
+    }
+  }
+
+  Future<SmbReadHandle> _openReadHandle(String path) async {
+    final connection = await _getConnectionFor(path);
+    final smbFile = _listedFiles[path] ?? await connection.file(path);
+    return connection.openReadHandle(smbFile);
+  }
+
+  static const _kListedFilesCacheSize = 2048;
+  final _listedFiles = <String, SmbFile>{};
+
+  /// files from the latest listings, sparing a lookup round trip when they're opened right after.
+  void _rememberListedFile(SmbFile file) {
+    final path = file.path;
+    _listedFiles.remove(path);
+    if (_listedFiles.length >= _kListedFilesCacheSize) _listedFiles.remove(_listedFiles.keys.first);
+    _listedFiles[path] = file;
+  }
+
+  void _closeReadHandle(String path, _SmbReadHandleEntry entry) {
+    if (_readHandles[path] == entry) _readHandles.remove(path);
+    entry.close();
   }
 
   @override
@@ -81,6 +147,7 @@ class _SMBServer extends _FileTransferServer {
     final files = await connection.listFiles(folder);
     final entries = <_RemoteEntry>[];
     for (final file in files) {
+      if (!file.isDirectory()) _rememberListedFile(file);
       entries.add(
         _RemoteEntry(
           path: file.path,
@@ -95,10 +162,21 @@ class _SMBServer extends _FileTransferServer {
   }
 
   @override
-  Future<Stream<List<int>>> _openRead(String path, int start) async {
-    final connection = await _getConnection();
+  Future<Stream<List<int>>> _openRead(String path, int start, [int? end]) async {
+    if (end != null) {
+      final bytes = await _readRange(path, start, end);
+      return Stream.value(bytes);
+    }
+    final connection = await _getConnectionFor(path);
     final smbFile = await connection.file(path);
-    return connection.openRead(smbFile, start);
+    return connection.openRead(smbFile, start, end);
+  }
+
+  @override
+  Future<int> _fileSize(String path) async {
+    final connection = await _getConnectionFor(path);
+    final smbFile = await connection.file(path);
+    return smbFile.size;
   }
 
   @override
@@ -153,5 +231,18 @@ class _SMBServer extends _FileTransferServer {
     if (error is! SmbAuthException && !errorText.contains('unauthorized') && !errorText.contains('access denied')) return;
     final dir = authDetails.dir;
     if (dir is DirectoryIndexServer) MusicWebServerAuthDetails.manager.deleteFromDb(dir);
+  }
+}
+
+class _SmbReadHandleEntry {
+  final Future<SmbReadHandle> handle;
+  int activeReads = 0;
+  Timer? idleTimer;
+
+  _SmbReadHandleEntry(this.handle);
+
+  void close() {
+    idleTimer?.cancel();
+    handle.then((h) => h.close()).ignoreError();
   }
 }
