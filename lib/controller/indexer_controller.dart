@@ -1072,10 +1072,11 @@ class Indexer<T extends Track> {
     _currentFileNamesMap[trackExt.path.getFilename] = true;
 
     if (!alreadyExists) {
-      tracksInfoList.add(tr);
+      tracksInfoList.value.add(tr);
       if (tr.isNetwork) networkTracksCount.value++;
       SearchSortController.inst.onTrackIndexed(tr);
       allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
+      _scheduleTracksListsRefresh();
     } else {
       final list = allTracksMappedByYTID[trackExt.youtubeID] ??= [];
       if (!list.contains(tr)) {
@@ -1087,6 +1088,20 @@ class Indexer<T extends Track> {
       artworksInStorage.value++;
       if (artwork.size != null) artworksSizeInStorage.value += artwork.size!;
     }
+  }
+
+  Timer? _tracksListsRefreshTimer;
+
+  // -- each refresh rebuilds every visible tracks list, so rapid adds (indexing) share one
+  void _scheduleTracksListsRefresh() {
+    _tracksListsRefreshTimer ??= Timer(
+      const Duration(milliseconds: 300),
+      () {
+        _tracksListsRefreshTimer = null;
+        tracksInfoList.refresh();
+        SearchSortController.inst.trackSearchList.refresh();
+      },
+    );
   }
 
   /// Removes track entries from related lists, this doesNOT delete tracks from system or remove stats entries
@@ -1444,7 +1459,7 @@ class Indexer<T extends Track> {
         _addTrackToLists(e, null);
       }
     } else {
-      NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
+      // NamidaTaggerController.inst.currentPathsBeingExtracted.clear();
       final audioFilesWithoutDuplicates = <String>[];
       if (prevDuplicated) {
         /// skip duplicated tracks according to filename
@@ -1460,18 +1475,11 @@ class Indexer<T extends Track> {
       final finalAudios = prevDuplicated ? audioFilesWithoutDuplicates : audioFiles.toList();
       final filesToExtractCount = finalAudios.length + modifiedFiles.length;
       _indexingTotalCount.value += filesToExtractCount;
-      int listParts;
-      const int listPartsMultiplier = 30; // more is okay with taglib, most work is io
-      if (Platform.isAndroid || Platform.isIOS) {
-        listParts = (Platform.numberOfProcessors * 0.5 * listPartsMultiplier).round().withMinimum(2);
-      } else {
-        // lil bit more luxurious on desktop
-        listParts = (Platform.numberOfProcessors * 0.8 * listPartsMultiplier).round().withMinimum(2);
-      }
       final keyWrapper = ExtractingPathKey.create();
 
-      Future<void> extractAll(List<String> chunkList, {required bool isModified}) async {
-        if (chunkList.isEmpty) return;
+      // -- the extractor reads on its own pool of native threads
+      Future<void> extractAll(List<String> paths, {required bool isModified}) async {
+        if (paths.isEmpty) return;
 
         final splittersConfigs = _createSplitConfig();
         Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
@@ -1494,7 +1502,7 @@ class Indexer<T extends Track> {
         );
 
         final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
-          paths: chunkList,
+          paths: paths,
           keyWrapper: keyWrapper,
           extractArtwork: null,
           overrideArtwork: isModified,
@@ -1513,20 +1521,11 @@ class Indexer<T extends Track> {
         }
       }
 
-      Future<void> extractAllInParts(List<String> audios, {required bool isModified}) async {
-        final audioFilesParts = audios.split(listParts);
-        final audioFilesCompleters = List.generate(audioFilesParts.length, (_) => Completer<void>());
-        audioFilesParts.loopAdv((part, partIndex) {
-          extractAll(part, isModified: isModified).then((value) => audioFilesCompleters[partIndex].complete());
-        });
-        await Future.wait(audioFilesCompleters.map((e) => e.future));
-      }
-
-      await extractAllInParts(finalAudios, isModified: false);
+      await extractAll(finalAudios, isModified: false);
       if (modifiedFiles.isNotEmpty) {
         Indexer.clearMemoryImageCache();
         final modifiedAudios = modifiedFiles.toList();
-        await extractAllInParts(modifiedAudios, isModified: true);
+        await extractAll(modifiedAudios, isModified: true);
       }
     }
 

@@ -1,7 +1,7 @@
 part of 'ffmpeg_executer.dart';
 
 class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
-  final _ffmpegKitQueue = Queue(parallel: 128); // concurrent executions could result in being stuck/failed if session size exceeded
+  final _ffmpegKitQueue = Queue(parallel: 10); // -- ffmpeg-kit runs 10 sessions at a time, extra ones would wait there and eat into the timeout
 
   Future<T?> _enqueue<T>(Future<T?> Function() fn, {bool noTimeout = false}) async {
     return await _ffmpegKitQueue.add<T?>(() async {

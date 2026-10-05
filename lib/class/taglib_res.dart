@@ -1,8 +1,5 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
-import 'dart:isolate';
-import 'dart:typed_data';
-
 import 'package:flutter_taglib/flutter_taglib.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -18,57 +15,40 @@ class TagLibRes {
     required this.properties,
   });
 
-  static Future<TagLibRes?> readIsolate(String trackPath, {required bool extractArtwork}) async {
+  static Future<TagLibRes?> read(String trackPath, {required bool extractArtwork, Map<String, String>? httpHeaders}) async {
     try {
-      return await Isolate.run(() => readSync(trackPath, extractArtwork: extractArtwork));
+      final stream = TagLibFile.readBatchNative([trackPath], threads: 1, readCover: extractArtwork, headers: httpHeaders);
+      final res = await stream.single;
+      return fromBatchResult(res);
     } catch (e, st) {
       logger.error('Error reading tags', e: e, st: st);
       return null;
     }
   }
 
-  static Future<Uint8List?> getArtworkIsolate(String trackPath) async {
-    try {
-      return await Isolate.run(() => getArtworkSync(trackPath));
-    } catch (e, st) {
-      logger.error('Error getting artwork', e: e, st: st);
-      return null;
-    }
+  /// unordered, emits each result once read.
+  static Stream<TagLibBatchResult> readBatch(List<String> paths, {required int threads, required bool extractArtwork}) {
+    return TagLibFile.readBatchNative(paths, threads: threads, readCover: extractArtwork);
   }
 
-  static TagLibRes? readSync(String trackPath, {required bool extractArtwork}) {
-    TagLibFile? tagFile;
-    try {
-      tagFile = TagLibFile.open(trackPath);
-      if (tagFile == null) return null;
+  static TagLibRes? fromBatchResult(TagLibBatchResult res) {
+    final audioInfo = res.audioInfo;
+    if (audioInfo == null) return null;
 
-      final artworkBytes = extractArtwork ? tagFile.coverData : null;
-      return TagLibRes._(
-        originalPath: trackPath,
-        properties: TagLibPropertiesWrapper._(
-          audioInfo: tagFile.audioInfo,
-          artwork: artworkBytes == null
-              ? null
-              : FArtwork(
-                  bytes: artworkBytes,
-                  size: artworkBytes.length,
-                ),
-          propertiesMap: tagFile.properties,
-        ),
-      );
-    } finally {
-      tagFile?.close();
-    }
-  }
-
-  static Uint8List? getArtworkSync(String trackPath) {
-    TagLibFile? tagFile;
-    try {
-      tagFile = TagLibFile.open(trackPath);
-      return tagFile?.coverData;
-    } finally {
-      tagFile?.close();
-    }
+    final artworkBytes = res.coverData;
+    return TagLibRes._(
+      originalPath: res.path,
+      properties: TagLibPropertiesWrapper._(
+        audioInfo: audioInfo,
+        artwork: artworkBytes == null
+            ? null
+            : FArtwork(
+                bytes: artworkBytes,
+                size: artworkBytes.length,
+              ),
+        propertiesMap: res.properties,
+      ),
+    );
   }
 
   static String? writeSync(String trackPath, {required Map<String, List<String>> newPropertiesMap, required FArtwork? artwork}) {

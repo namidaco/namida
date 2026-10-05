@@ -29,7 +29,6 @@ class _TagsExtractorTagLib extends TagsExtractor {
 
   @override
   Future<FAudioModel> extractMetadata({
-    _TagLibIsolateManager? executer,
     required String trackPath,
     required bool extractArtwork,
     required String? artworkDirectory,
@@ -38,19 +37,37 @@ class _TagsExtractorTagLib extends TagsExtractor {
     required bool isVideo,
     required bool isNetwork,
     String? networkId,
+    Map<String, String>? httpHeaders,
   }) async {
-    final taglibInfo = executer != null
-        ? await executer.read(
-            _TagLibIsolateRequestReadTags(
-              path: trackPath,
-              extractArtwork: extractArtwork,
-            ),
-          )
-        : await TagLibRes.readIsolate(
-            trackPath,
-            extractArtwork: extractArtwork,
-          );
+    final taglibInfo = await TagLibRes.read(
+      trackPath,
+      extractArtwork: extractArtwork,
+      httpHeaders: httpHeaders,
+    );
+    return _toFAudioModel(
+      taglibInfo: taglibInfo,
+      trackPath: trackPath,
+      extractArtwork: extractArtwork,
+      artworkDirectory: artworkDirectory,
+      identifiers: identifiers,
+      overrideArtwork: overrideArtwork,
+      isVideo: isVideo,
+      isNetwork: isNetwork,
+      networkId: networkId,
+    );
+  }
 
+  Future<FAudioModel> _toFAudioModel({
+    required TagLibRes? taglibInfo,
+    required String trackPath,
+    required bool extractArtwork,
+    required String? artworkDirectory,
+    required Set<AlbumIdentifier>? identifiers,
+    required bool overrideArtwork,
+    required bool isVideo,
+    required bool isNetwork,
+    String? networkId,
+  }) async {
     if (taglibInfo != null && isVideo) {
       try {
         // final stats = await File(trackPath).stat();
@@ -61,6 +78,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
     final taglibInfoProps = taglibInfo?.properties;
     FArtwork artwork = taglibInfoProps?.artwork ?? FArtwork();
     if (extractArtwork) {
+      final canExtractWithFFmpeg = isVideo || taglibInfo == null; // -- taglib already checked for embedded artwork
       if (artworkDirectory != null && artwork.file == null) {
         final filename = TagsExtractor.buildImageFilename(
           path: trackPath,
@@ -97,19 +115,22 @@ class _TagsExtractorTagLib extends TagsExtractor {
         } else {
           artwork.file = possibleThumbFile;
 
-          File? artworkFile = artwork.file;
-          if (overrideArtwork || artworkFile == null || !await artworkFile.exists()) {
-            final File? thumbFile = await TagsExtractor.extractThumbnailCustom(
-              trackPath: trackPath,
-              filename: filename,
-              artworkDirectory: artworkDirectory,
-              isVideo: isVideo,
-              overrideOldArtwork: overrideArtwork,
-            );
+          final shouldExtract = overrideArtwork || !await possibleThumbFile.exists();
+          if (shouldExtract) {
+            File? thumbFile;
+            if (canExtractWithFFmpeg) {
+              thumbFile = await TagsExtractor.extractThumbnailCustom(
+                trackPath: trackPath,
+                filename: filename,
+                artworkDirectory: artworkDirectory,
+                isVideo: isVideo,
+                overrideOldArtwork: overrideArtwork,
+              );
+            }
             artwork.file = thumbFile;
           }
         }
-      } else if (artworkDirectory == null && artwork.file == null && artwork.bytes == null) {
+      } else if (canExtractWithFFmpeg && artworkDirectory == null && artwork.file == null && artwork.bytes == null) {
         // -- otherwise the artwork should be within info as bytes.
         Uint8List? artworkBytes = artwork.bytes;
         if (overrideArtwork || artworkBytes == null || artworkBytes.isEmpty) {
@@ -138,41 +159,78 @@ class _TagsExtractorTagLib extends TagsExtractor {
     required String? videoArtworkDirectory,
     bool overrideArtwork = false,
     required bool isNetwork,
-  }) async* {
-    final key = keyWrapper.next();
+  }) {
+    final threadsCount = Platform.numberOfProcessors;
+    // final pathKeysCount = threadsCount.withMaximum(paths.length);
+    // final pathKeys = List.generate(pathKeysCount, (_) => keyWrapper.next(), growable: false); // -- one shown path per reading thread
+    final controller = StreamController<FAudioModel>();
+    int remaining = paths.length;
+    // int receivedCount = 0;
 
-    // -- create with each batch to avoid piling up the main executer
-    final executer = _TagLibIsolateManager();
-    await executer.initialize();
-
-    for (final path in paths) {
-      currentPathsBeingExtracted[key] = path;
+    // -- concurrent, so artwork writes don't queue behind each other
+    Future<void> onResult(String path, TagLibRes? taglibInfo) async {
+      // final pathKey = pathKeys[receivedCount % pathKeysCount];
+      // receivedCount++;
+      // currentPathsBeingExtracted[pathKey] = path;
       final isVideo = path.isVideo();
       final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;
-      final info = await extractMetadata(
-        executer: executer,
-        trackPath: path,
-        artworkDirectory: artworkDirectory,
-        extractArtwork: extractArtwork,
-        overrideArtwork: overrideArtwork,
-        isVideo: isVideo,
-        isNetwork: isNetwork,
-      );
-      yield info;
+      FAudioModel info;
+      try {
+        info = await _toFAudioModel(
+          taglibInfo: taglibInfo,
+          trackPath: path,
+          extractArtwork: extractArtwork,
+          artworkDirectory: artworkDirectory,
+          identifiers: null,
+          overrideArtwork: overrideArtwork,
+          isVideo: isVideo,
+          isNetwork: isNetwork,
+        );
+      } catch (e, st) {
+        logger.error('Error extracting metadata', e: e, st: st);
+        info = FAudioModel.dummy(path, null);
+      }
+      controller.add(info);
+      remaining--;
+      if (remaining == 0) {
+        // for (final pathKey in pathKeys) {
+          // currentPathsBeingExtracted.remove(pathKey);
+        // }
+        controller.close();
+      }
     }
-    executer.dispose();
-    currentPathsBeingExtracted.remove(key);
+
+    if (paths.isEmpty) {
+      controller.close();
+    } else {
+      TagLibRes.readBatch(paths, threads: threadsCount, extractArtwork: extractArtwork).listen(
+        (res) {
+          final taglibInfo = TagLibRes.fromBatchResult(res);
+          onResult(res.path, taglibInfo);
+        },
+        onError: (Object e, StackTrace st) {
+          // -- batch couldn't start, nothing was read
+          logger.error('Error reading tags batch', e: e, st: st);
+          for (final path in paths) {
+            onResult(path, null);
+          }
+        },
+      );
+    }
+    return controller.stream;
   }
 
   @override
-  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo}) async {
-    Uint8List? bytes;
+  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo, Map<String, String>? httpHeaders}) async {
+    final taglibInfo = await TagLibRes.read(
+      trackPath,
+      extractArtwork: true,
+      httpHeaders: httpHeaders,
+    );
+    Uint8List? bytes = taglibInfo?.properties.artwork?.bytes;
 
-    try {
-      bytes = await TagLibRes.getArtworkIsolate(trackPath);
-    } catch (_) {}
-
-    if (bytes == null) {
+    final canExtractWithFFmpeg = isVideo || taglibInfo == null; // -- taglib already checked for embedded artwork
+    if (bytes == null && canExtractWithFFmpeg) {
       final File? tempFile = await TagsExtractor.extractThumbnailCustom(
         trackPath: trackPath,
         filename: null,
@@ -277,10 +335,6 @@ class _TagLibIsolateManager with PortsProvider<SendPort> {
 
   Future<void> dispose() => disposePort();
 
-  Future<TagLibRes?> read(_TagLibIsolateRequestReadTags request) async {
-    return await _executeIsolate(request) as TagLibRes?;
-  }
-
   Future<String?> write(_TagLibIsolateRequestWriteTags request) async {
     return await _executeIsolate(request) as String?;
   }
@@ -341,19 +395,6 @@ class _TagLibIsolateManager with PortsProvider<SendPort> {
     if (completer != null && completer.isCompleted == false) {
       completer.complete(result[1]);
     }
-  }
-}
-
-class _TagLibIsolateRequestReadTags extends _TagLibIsolateRequestBase<TagLibRes?> {
-  final bool extractArtwork;
-  const _TagLibIsolateRequestReadTags({required super.path, required this.extractArtwork});
-
-  @override
-  TagLibRes? execute() {
-    return TagLibRes.readSync(
-      path,
-      extractArtwork: extractArtwork,
-    );
   }
 }
 

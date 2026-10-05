@@ -16,7 +16,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
-import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -1183,7 +1182,7 @@ class IndexerSettings extends SettingSubpageProvider {
               ),
             ),
           ),
-          const _ExtractingPathsWidget(itemPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0)),
+          // const _ExtractingPathsWidget(itemPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0)),
           getItemWrapper(
             key: _IndexerSettingsKeys.preventDuplicatedTracks,
             child: Obx(
@@ -2069,63 +2068,63 @@ class RefreshLibraryIconState extends State<RefreshLibraryIcon> with TickerProvi
   }
 }
 
-class _ExtractingPathsWidget extends StatefulWidget {
-  final EdgeInsetsGeometry itemPadding;
-  const _ExtractingPathsWidget({required this.itemPadding});
+// class _ExtractingPathsWidget extends StatefulWidget {
+//   final EdgeInsetsGeometry itemPadding;
+//   const _ExtractingPathsWidget({required this.itemPadding});
 
-  @override
-  State<_ExtractingPathsWidget> createState() => __ExtractingPathsWidgetState();
-}
+//   @override
+//   State<_ExtractingPathsWidget> createState() => __ExtractingPathsWidgetState();
+// }
 
-class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
-  final _scrollController = ScrollController();
-  bool _isPathsExpanded = false;
+// class __ExtractingPathsWidgetState extends State<_ExtractingPathsWidget> {
+//   final _scrollController = ScrollController();
+//   bool _isPathsExpanded = false;
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+//   @override
+//   void dispose() {
+//     _scrollController.dispose();
+//     super.dispose();
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    return NamidaInkWell(
-      onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
-      child: ObxO(
-        rx: NamidaTaggerController.inst.currentPathsBeingExtracted,
-        builder: (context, pathsMap) {
-          final paths = pathsMap.values.toFixedList();
-          return paths.isEmpty
-              ? const SizedBox()
-              : SizedBox(
-                  height: 128.0,
-                  child: NamidaScrollbar(
-                    showOnStart: true,
-                    controller: _scrollController,
-                    child: SuperSmoothListView.builder(
-                      controller: _scrollController,
-                      itemCount: paths.length,
-                      itemBuilder: (context, index) {
-                        final e = paths[index];
-                        return Padding(
-                          padding: widget.itemPadding,
-                          child: Text(
-                            e,
-                            maxLines: _isPathsExpanded ? null : 1,
-                            overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
-                            style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                );
-        },
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     final textTheme = context.textTheme;
+//     return NamidaInkWell(
+//       onTap: () => setState(() => _isPathsExpanded = !_isPathsExpanded),
+//       child: ObxO(
+//         rx: NamidaTaggerController.inst.currentPathsBeingExtracted,
+//         builder: (context, pathsMap) {
+//           final paths = pathsMap.values.toFixedList();
+//           return paths.isEmpty
+//               ? const SizedBox()
+//               : SizedBox(
+//                   height: 128.0,
+//                   child: NamidaScrollbar(
+//                     showOnStart: true,
+//                     controller: _scrollController,
+//                     child: SuperSmoothListView.builder(
+//                       controller: _scrollController,
+//                       itemCount: paths.length,
+//                       itemBuilder: (context, index) {
+//                         final e = paths[index];
+//                         return Padding(
+//                           padding: widget.itemPadding,
+//                           child: Text(
+//                             e,
+//                             maxLines: _isPathsExpanded ? null : 1,
+//                             overflow: _isPathsExpanded ? null : TextOverflow.ellipsis,
+//                             style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                 );
+//         },
+//       ),
+//     );
+//   }
+// }
 
 class _LocalFilesSmallChip extends StatelessWidget {
   final IconData icon;

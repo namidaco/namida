@@ -11,7 +11,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart' show RxDMap;
 
 class NamidaTaggerController {
   static final NamidaTaggerController inst = NamidaTaggerController._internal();
@@ -21,7 +20,7 @@ class NamidaTaggerController {
 
   bool get _defaultKeepFileDates => settings.editTagsKeepFileDates.value;
 
-  RxDMap<int, String> get currentPathsBeingExtracted => _extractor.currentPathsBeingExtracted;
+  // RxDMap<int, String> get currentPathsBeingExtracted => _extractor.currentPathsBeingExtracted;
 
   Future<void> updateLogsPath() => _extractor.updateLogsPath();
 
@@ -56,6 +55,7 @@ class NamidaTaggerController {
     required bool isVideo,
     required bool isNetwork,
     String? networkId,
+    Map<String, String>? httpHeaders,
   }) async {
     extractArtwork ??= settings.cacheArtworks.value;
     saveArtworkToCache ??= settings.cacheArtworks.value;
@@ -69,16 +69,19 @@ class NamidaTaggerController {
       isVideo: isVideo,
       isNetwork: isNetwork,
       networkId: networkId,
+      httpHeaders: httpHeaders,
     );
   }
 
   Future<FArtwork?> extractArtwork({
     required String trackPath,
     required bool isVideo,
+    Map<String, String>? httpHeaders,
   }) async {
     return _extractor.extractArtwork(
       trackPath: trackPath,
       isVideo: isVideo,
+      httpHeaders: httpHeaders,
     );
   }
 

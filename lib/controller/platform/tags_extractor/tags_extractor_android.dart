@@ -73,7 +73,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
   }
 
   @override
-  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo}) async {
+  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo, Map<String, String>? httpHeaders}) async {
     Uint8List? bytes;
     try {
       bytes = await _channel.invokeMethod<Uint8List?>("getArtwork", {
@@ -107,6 +107,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     FAudioModel? trackInfo,
     required bool isNetwork,
     String? networkId,
+    Map<String, String>? httpHeaders,
   }) async {
     if (trackInfo == null && tagger && !isVideo) {
       trackInfo = await _readAllData(
@@ -221,7 +222,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
       streamSub?.cancel();
       streamSubIndices?.cancel();
       _streamControllers.remove(streamKey);
-      currentPathsBeingExtracted.remove(streamKey);
+      // currentPathsBeingExtracted.remove(streamKey);
     }
 
     void onExtract(FAudioModel info, int index) {
@@ -261,7 +262,7 @@ class _TagsExtractorAndroid extends TagsExtractor {
     final channelEventIndices = EventChannel('faudiotagger/stream/$streamKey.index');
     streamSubIndices = channelEventIndices.receiveBroadcastStream().listen(
       (index) {
-        currentPathsBeingExtracted[streamKey] = paths[index as int];
+        // currentPathsBeingExtracted[streamKey] = paths[index as int];
       },
     );
     streamSub = channelEvent.receiveBroadcastStream().listen((event) {

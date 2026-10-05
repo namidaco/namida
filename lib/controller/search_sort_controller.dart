@@ -116,7 +116,7 @@ class SearchSortController extends SearchPortsProvider {
 
   void onTrackIndexed(Track tr) {
     final isVideo = _trackSearchListTab.isVideoFilter;
-    if (isVideo == null || (tr is Video) == isVideo) trackSearchList.add(tr);
+    if (isVideo == null || (tr is Video) == isVideo) trackSearchList.value.add(tr); // -- refreshed by the indexer
   }
 
   RxMap<String, LocalPlaylist> get playlistsMap => PlaylistController.inst.playlistsMap;

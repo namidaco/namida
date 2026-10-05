@@ -24,6 +24,7 @@ class _TagsExtractorDesktop extends TagsExtractor {
     required bool isVideo,
     required bool isNetwork,
     String? networkId,
+    Map<String, String>? httpHeaders,
   }) async {
     final ffmpegInfo = executer != null ? await executer.extractMetadata(trackPath) : await ffmpegController.ffmpegExtractMetadata(trackPath);
 
@@ -100,14 +101,14 @@ class _TagsExtractorDesktop extends TagsExtractor {
     bool overrideArtwork = false,
     required bool isNetwork,
   }) async* {
-    final key = keyWrapper.next();
+    // final key = keyWrapper.next();
 
     // -- create with each batch to avoid piling up the main executer
     final executer = FFMPEGExecuter.platform();
     await executer.init();
 
     for (final path in paths) {
-      currentPathsBeingExtracted[key] = path;
+      // currentPathsBeingExtracted[key] = path;
       final isVideo = path.isVideo();
       final artworkDirectory = isVideo ? videoArtworkDirectory : audioArtworkDirectory;
       final info = await extractMetadata(
@@ -122,11 +123,11 @@ class _TagsExtractorDesktop extends TagsExtractor {
       yield info;
     }
     executer.dispose();
-    currentPathsBeingExtracted.remove(key);
+    // currentPathsBeingExtracted.remove(key);
   }
 
   @override
-  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo}) async {
+  Future<FArtwork?> extractArtwork({required String trackPath, required bool isVideo, Map<String, String>? httpHeaders}) async {
     Uint8List? bytes;
 
     final File? tempFile = await TagsExtractor.extractThumbnailCustom(

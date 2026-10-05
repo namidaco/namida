@@ -16,7 +16,7 @@ abstract class TagsExtractor {
   }
 
   final _streamControllers = <int, StreamController<FAudioModel>>{};
-  final currentPathsBeingExtracted = <int, String>{}.obsThrottle(const Duration(milliseconds: 20));
+  // final currentPathsBeingExtracted = <int, String>{}.obsThrottle(const Duration(milliseconds: 20));
 
   static final _safDeniedVolumes = <String>{};
   static void resetSafDeniedVolumes() => _safDeniedVolumes.clear();
@@ -35,6 +35,7 @@ abstract class TagsExtractor {
     required bool isVideo,
     required bool isNetwork,
     String? networkId,
+    Map<String, String>? httpHeaders,
   });
 
   FutureOr<Stream<FAudioModel>> extractMetadataAsStream({
@@ -50,6 +51,7 @@ abstract class TagsExtractor {
   Future<FArtwork?> extractArtwork({
     required String trackPath,
     required bool isVideo,
+    Map<String, String>? httpHeaders,
   });
 
   Future<String?> writeTags({
