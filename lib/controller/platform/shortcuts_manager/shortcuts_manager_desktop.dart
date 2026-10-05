@@ -368,11 +368,6 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
   );
 
-  static bool _isTextFieldFocused() {
-    final context = FocusManager.instance.primaryFocus?.context;
-    return context != null && context.findAncestorStateOfType<EditableTextState>() != null;
-  }
-
   @override
   void init() {
     _attachment = FocusManager.instance.rootScope.attach(
@@ -387,7 +382,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         for (int i = 0; i < candidates.length; i++) {
           final activator = candidates[i];
           if (activator.acceptsMatchedTrigger(event, keyboard)) {
-            if (activator.skipInTextFields && _isTextFieldFocused()) return KeyEventResult.ignored;
+            if (activator.skipInTextFields && ShortcutsManager.isTextFieldFocused()) return KeyEventResult.ignored;
             activator.callback();
             return KeyEventResult.handled;
           }

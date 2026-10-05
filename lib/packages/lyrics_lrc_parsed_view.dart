@@ -212,7 +212,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     final uiInfo = lrc.forUiDisplay(
       stretchMultiplier,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
-      extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
+      extraOffsetDuration: Duration(milliseconds: settings.visualDelayMS.value),
       romanizer: Romanizer.inst.lyricsRomanizer(lrc),
     );
 

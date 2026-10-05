@@ -188,7 +188,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     final uiInfo = lrc.forUiDisplay(
       stretchMultiplier,
       durationDifferenceToInsertEmptyLine: const Duration(seconds: 1),
-      extraOffsetDuration: Duration(milliseconds: -settings.visualDelayMS.value),
+      extraOffsetDuration: Duration(milliseconds: settings.visualDelayMS.value),
       romanizer: romanizer,
     );
     _lines = uiInfo.uiLyricsLines;

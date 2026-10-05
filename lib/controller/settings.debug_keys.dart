@@ -346,6 +346,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     customEQPackage,
     stretchLyricsDuration,
     visualDelayMS,
+    lyricsEditorLatencyMS,
     timeCapsuleYears,
     playlistAddTracksAtBeginning,
     playlistAddTracksAtBeginningYT,

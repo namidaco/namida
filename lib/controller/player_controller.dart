@@ -135,6 +135,10 @@ class Player {
   RxBaseCore<int> get currentIndex => _audioHandler.currentIndex;
   RxBaseCore<int> get nowPlayingPosition => _audioHandler.currentPositionMS;
   int get nowPlayingPositionR => _audioHandler.currentPositionMS.valueR;
+
+  /// [nowPlayingPosition] is updated every ~200ms, this one is exact.
+  int getExactPositionMS() => _audioHandler.currentPlayer.position.inMilliseconds;
+
   int get seekCount => _audioHandler.seekCount;
   int get lastSeekPositionMS => _audioHandler.lastSeekPositionMS;
   RxBaseCore<double> get currentSpeed => _audioHandler.currentSpeed;
@@ -412,10 +416,15 @@ class Player {
   void endSpeedUp([_]) {
     final speed = _defaultSpeedUpValue;
     if (speed <= 0) return;
+    restoreUserSpeed();
+    _isSpeedModifierActive.value = null;
+  }
+
+  /// the item's own speed, or the global one.
+  Future<void> restoreUserSpeed() {
     final currentConfig = Player.audioConfigs.map.value[Player.inst.currentItem.value?.key ?? ''];
     final originalSpeed = currentConfig?.speed ?? settings.player.speed.value;
-    Player.inst.setSpeed(originalSpeed);
-    _isSpeedModifierActive.value = null;
+    return Player.inst.setSpeed(originalSpeed);
   }
 
   void startFastForward([_]) {
@@ -765,8 +774,9 @@ class Player {
     await _audioHandler.onPlayRaw();
   }
 
-  Future<void> pause() async {
-    await _audioHandler.userPause();
+  /// [fadeMillis] 0 pauses right away, null uses the fade setting.
+  Future<void> pause({int? fadeMillis}) async {
+    await _audioHandler.userPause(pauseFadeMillis: fadeMillis);
   }
 
   /// Pauses without the party gate, closing the app shouldn't pause the party for everyone.

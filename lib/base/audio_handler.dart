@@ -2493,9 +2493,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> {
     return play();
   }
 
-  Future<void> userPause() {
+  Future<void> userPause({int? pauseFadeMillis}) {
     if (partyGate?.interceptPause(isUserInitiated: true) == true) return Future.value();
-    return pause();
+    return pause(pauseFadeMillis: pauseFadeMillis);
   }
 
   Future<void> userTogglePlayPause() => playWhenReady.value ? userPause() : userPlay();

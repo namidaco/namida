@@ -17,7 +17,7 @@ class SpectrumController {
 
   static const bandCount = 16;
   static const _stride = bandCount + 1;
-  static const _framesPerSecond = 30;
+  static const framesPerSecond = 30;
   static const _maxDuration = Duration(hours: 2);
 
   static const _maxGuessAheadMS = 400.0;
@@ -88,7 +88,7 @@ class SpectrumController {
   double sample(double positionMS, Float32List bands) {
     final lastFrame = _frameCount - 1;
     if (lastFrame < 0) return 0.0;
-    final framePosition = (positionMS * _framesPerSecond / 1000).clampDouble(0.0, lastFrame.toDouble());
+    final framePosition = (positionMS * framesPerSecond / 1000).clampDouble(0.0, lastFrame.toDouble());
     final frame = framePosition.floor();
     final nextFrame = frame < lastFrame ? frame + 1 : frame;
     final toNext = framePosition - frame;
@@ -103,6 +103,19 @@ class SpectrumController {
     final beat = rows[offset + bandCount];
     final nextBeat = rows[nextOffset + bandCount];
     return (beat + (nextBeat - beat) * toNext) / 255;
+  }
+
+  /// 0..1 mean of bands `[fromBand, toBand)` at the frame nearest [positionMS].
+  double averageBands(double positionMS, int fromBand, int toBand) {
+    final frame = (positionMS * framesPerSecond / 1000).round();
+    if (frame < 0 || frame >= _frameCount) return 0.0;
+    final rows = _rows;
+    final offset = frame * _stride;
+    var sum = 0;
+    for (int b = fromBand; b < toBand; b++) {
+      sum += rows[offset + b];
+    }
+    return sum / ((toBand - fromBand) * 255);
   }
 
   Future<void> _extractIfNeeded() async {
@@ -142,10 +155,10 @@ class SpectrumController {
   }
 
   static Uint8List _extractAndCache(String path, String cacheFilePath) {
-    final data = NamidaSpectrum.extract(path, framesPerSecond: _framesPerSecond, bandCount: bandCount);
+    final data = NamidaSpectrum.extract(path, framesPerSecond: framesPerSecond, bandCount: bandCount);
     final rows = data.rows;
     if (rows.isEmpty) throw Exception('${data.error.name} for $path');
-    if (data.bandCount != bandCount || data.framesPerSecond != _framesPerSecond) return _emptyRows;
+    if (data.bandCount != bandCount || data.framesPerSecond != framesPerSecond) return _emptyRows;
     _writeCache(cacheFilePath, rows);
     return rows;
   }
@@ -186,7 +199,7 @@ class SpectrumController {
     header[1] = 0x53;
     header[2] = 0x50;
     header[3] = _formatVersion;
-    header[4] = _framesPerSecond;
+    header[4] = framesPerSecond;
     header[5] = bandCount;
     return header;
   }

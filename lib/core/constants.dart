@@ -955,6 +955,7 @@ class AppDirs {
   static final VIDEOS_CACHE_TEMP = _join(USER_DATA, 'Videos', 'Temp');
   static final THUMBNAILS = _join(USER_DATA, 'Thumbnails'); // extracted video thumbnails
   static final LYRICS = _join(USER_DATA, 'Lyrics');
+  static final LYRICS_DRAFTS = _join(USER_DATA, 'Lyrics Drafts');
   static final SUBTITLES = _join(USER_DATA, 'Subtitles');
   static final M3UBackup = _join(USER_DATA, 'M3U Backup'); // backups m3u on first found
   static final RECENTLY_DELETED = _join(USER_DATA, 'Recently Deleted'); // stores files that was deleted recently

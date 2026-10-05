@@ -13,6 +13,11 @@ abstract class ShortcutsManager {
     );
   }
 
+  static bool isTextFieldFocused() {
+    final context = FocusManager.instance.primaryFocus?.context;
+    return context != null && context.findAncestorStateOfType<EditableTextState>() != null;
+  }
+
   late final Map<ShortcutKeyActivator, VoidCallback> bindings = Map.fromEntries(
     _keysToRegister.map(
       (e) => MapEntry(

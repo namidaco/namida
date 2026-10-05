@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:lrc/lrc.dart';
 import 'package:path/path.dart' as p;
 
 import 'package:namida/class/track.dart';
@@ -105,6 +106,13 @@ abstract class LrcSearchUtils {
   Future<void> ignoreLyrics() async {
     await cachedTxtFile.tryDeleting();
     await saveLyricsToCache(kIgnoreMarker, true);
+  }
+
+  Future<void> removeIgnoreMarker() async {
+    final cachedLRC = cachedLRCFile;
+    if (!await cachedLRC.exists()) return;
+    final cachedLyrics = await cachedLRC.readLrcString();
+    if (isIgnoreMarker(cachedLyrics)) await cachedLRC.tryDeleting();
   }
 
   @mustCallSuper

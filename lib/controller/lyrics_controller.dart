@@ -22,6 +22,7 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -83,6 +84,13 @@ class Lyrics {
     }
   }
 
+  /// shows [lrc] in the lyrics views until the next [updateLyrics].
+  void previewLyrics(Lrc lrc) {
+    currentLyricsText.value = LrcText.empty;
+    currentLyricsLRC.value = lrc;
+    _updateWidgets(lrc, null);
+  }
+
   void resetLyrics({bool hide = true}) {
     currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;
@@ -95,15 +103,27 @@ class Lyrics {
   static final _lengthSplitRegex = RegExp(r'[:.]');
 
   /// timestamps multiplier for spedup/slowed/nightcore versions, 0 means no stretching.
-  double getStretchMultiplier(Lrc lrc) {
-    if (!settings.stretchLyricsDuration.value) return 0.0;
+  double getStretchMultiplier(Lrc lrc) => getStretchMultiplierFor(lrc, _getCurrentItemDurationMS());
+
+  static double getStretchMultiplierFor(Lrc lrc, int itemDurationMS) {
     final lengthText = lrc.length;
     if (lengthText == null || lengthText.isEmpty) return 0.0;
+    if (!settings.stretchLyricsDuration.value) return 0.0;
     final lyricsDurationMicro = _parseLengthMicro(lengthText);
     if (lyricsDurationMicro == null || lyricsDurationMicro <= 0) return 0.0;
-    final itemDurationMS = _getCurrentItemDurationMS();
     return itemDurationMS * 1000 / lyricsDurationMicro;
   }
+
+  /// value of the `[length:]` tag, [getStretchMultiplier] compares it to the item duration.
+  static String formatLengthTag(int milliseconds) {
+    final duration = Duration(milliseconds: milliseconds);
+    final min = duration.inMinutes;
+    final sec = duration.inSeconds.remainder(60);
+    final ms = milliseconds.remainder(1000);
+    return '${_pad2(min)}:${_pad2(sec)}.${ms.toString().padLeft(3, '0')}';
+  }
+
+  static String _pad2(int n) => n.toString().padLeft(2, '0');
 
   static int? _parseLengthMicro(String lengthText) {
     final parts = lengthText.split(_lengthSplitRegex);
@@ -322,6 +342,25 @@ class Lyrics {
     }
     if (deviceFile != null) return deviceFile;
     return lrcUtils.saveLyricsToCache(lyrics, isSynced);
+  }
+
+  Future<bool> embedLyricsByUser(Track track, String lyrics) async {
+    final hasPermission = await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE);
+    if (!hasPermission) return false;
+    bool didEmbed = false;
+    await NamidaTaggerController.inst
+        .updateTracksMetadata(
+          tracks: [track],
+          editedTags: {TagField.lyrics: lyrics},
+          onEdit: (didUpdate, error, _) {
+            didEmbed = didUpdate;
+            if (didUpdate) return;
+            final message = error ?? 'Unknown Error';
+            snackyy(title: lang.metadataEditFailed, message: message, isError: true);
+          },
+        )
+        .ignoreError();
+    return didEmbed;
   }
 
   /// with [LyricsSource.internet] nothing local was looked up, a lyrics file that is already there must not get replaced.
@@ -666,16 +705,6 @@ class _LRCProvidersSearcher {
     return maxIndex <= 0 ? artist : artist.substring(0, maxIndex);
   }
 
-  static String _pad2(int n) => n.toString().padLeft(2, '0');
-
-  static String _formatLength(int milliseconds) {
-    final duration = Duration(milliseconds: milliseconds);
-    final min = duration.inMinutes;
-    final sec = duration.inSeconds.remainder(60);
-    final ms = milliseconds.remainder(1000);
-    return '${_pad2(min)}:${_pad2(sec)}.${ms.toString().padLeft(3, '0')}';
-  }
-
   static int _targetDurationMS(LRCSearchDetails? details) {
     if (details == null || details.isDurationModified) return 0;
     return details.durationMS;
@@ -716,7 +745,7 @@ class _LRCProvidersSearcher {
     if (artist != '') lrcBuffer.writeln('[ar:$artist]');
     if (album != '') lrcBuffer.writeln('[al:$album]');
     if (title != '') lrcBuffer.writeln('[ti:$title]');
-    if (durationMS > 0) lrcBuffer.writeln('[length:${_formatLength(durationMS)}]');
+    if (durationMS > 0) lrcBuffer.writeln('[length:${Lyrics.formatLengthTag(durationMS)}]');
     lrcBuffer.write(lyrics);
     return lrcBuffer.toString();
   }
@@ -840,7 +869,7 @@ class _LRCProvidersSearcher {
         final lrc = utf8.decode(base64Decode(content)).trim();
         if (lrc == '') continue;
         final durMS = c['duration'] is num ? (c['duration'] as num).round() : targetMS;
-        final lyrics = lrc.contains('[length:') || durMS <= 0 ? lrc : '[length:${_formatLength(durMS)}]\n$lrc';
+        final lyrics = lrc.contains('[length:') || durMS <= 0 ? lrc : '[length:${Lyrics.formatLengthTag(durMS)}]\n$lrc';
         fetched.add(_model(lyrics, true, LyricsProvider.kugou));
       } catch (_) {
         session.markFailure();
