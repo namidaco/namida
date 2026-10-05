@@ -6,11 +6,11 @@ import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart' hide ReorderableListView, ReorderCallback, SliverReorderableList, ReorderableDragStartListener, ReorderableDelayedDragStartListener, Tooltip;
+import 'package:flutter/physics.dart';
 import 'package:flutter/rendering.dart' as fr;
 import 'package:flutter/services.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
-import 'package:checkmark/checkmark.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_scrollbar_modified/flutter_scrollbar_modified.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -79,6 +79,7 @@ import 'custom_reorderable_list.dart';
 
 export 'popup_wrapper.dart';
 
+part 'check_marks.dart';
 part 'smooth_scroll.dart';
 
 class NamidaReordererableListener extends StatelessWidget {
@@ -1351,7 +1352,6 @@ class SmallListTile extends StatelessWidget {
   final IconData? icon;
   final IconData? trailingIcon;
   final bool active;
-  final bool displayAnimatedCheck;
   final bool compact;
   final Color? color;
   final double? iconSize;
@@ -1372,7 +1372,6 @@ class SmallListTile extends StatelessWidget {
     this.active = false,
     this.icon,
     this.trailingIcon,
-    this.displayAnimatedCheck = false,
     this.compact = true,
     this.subtitle,
     this.color,
@@ -1453,14 +1452,7 @@ class SmallListTile extends StatelessWidget {
               ),
             )
           : null,
-      trailing: displayAnimatedCheck
-          ? NamidaCheckMark(
-              size: 18.0,
-              activeColor: color,
-              inactiveColor: color,
-              active: settings.artistSortReversed.value,
-            )
-          : trailingIcon != null
+      trailing: trailingIcon != null
           ? Icon(
               trailingIcon,
               color: color,
@@ -1469,148 +1461,6 @@ class SmallListTile extends StatelessWidget {
           : trailing,
       onTap: onTap,
       onLongPress: onLongPress,
-    );
-  }
-}
-
-class ListTileWithCheckMark extends StatelessWidget {
-  final bool active;
-  final RxBase<bool>? activeRx;
-  final bool halfActive;
-  final void Function()? onTap;
-  final String? title;
-  final String subtitle;
-  final IconData? icon;
-  final Color? tileColor;
-  final Widget? titleWidget;
-  final Widget? leading;
-  final double? iconSize;
-  final bool dense;
-  final bool expanded;
-  final double borderRadius;
-
-  const ListTileWithCheckMark({
-    super.key,
-    this.active = false,
-    this.activeRx,
-    this.halfActive = false,
-    this.onTap,
-    this.title,
-    this.subtitle = '',
-    this.icon = Broken.arrange_circle,
-    this.tileColor,
-    this.titleWidget,
-    this.leading,
-    this.iconSize,
-    this.dense = false,
-    this.expanded = true,
-    this.borderRadius = 14.0,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final br = BorderRadius.circular(borderRadius.multipliedRadius);
-    final titleWidgetFinal = Padding(
-      padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          titleWidget ??
-              Text(
-                title ?? lang.reverseOrder,
-                style: textTheme.displayMedium,
-              ),
-          if (subtitle != '')
-            Text(
-              subtitle,
-              style: textTheme.displaySmall,
-            ),
-        ],
-      ),
-    );
-    return Material(
-      borderRadius: br,
-      color: tileColor ?? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!),
-      child: InkWell(
-        borderRadius: br,
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          child: Row(
-            mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-            children: [
-              if (leading != null)
-                leading!
-              else if (icon != null)
-                Icon(
-                  icon,
-                  size: iconSize,
-                ),
-              expanded
-                  ? Expanded(
-                      child: titleWidgetFinal,
-                    )
-                  : Flexible(
-                      child: titleWidgetFinal,
-                    ),
-              halfActive
-                  ? Icon(
-                      Broken.minus,
-                      size: 18.0,
-                      color: theme.colorScheme.secondary,
-                    )
-                  : activeRx != null
-                  ? ObxO(
-                      rx: activeRx!,
-                      builder: (context, active) => NamidaCheckMark(
-                        size: 18.0,
-                        active: active,
-                      ),
-                    )
-                  : NamidaCheckMark(
-                      size: 18.0,
-                      active: active,
-                    ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class NamidaCheckMark extends StatelessWidget {
-  final double size;
-  final bool active;
-  final Color? activeColor;
-  final Color? inactiveColor;
-
-  const NamidaCheckMark({
-    super.key,
-    required this.size,
-    required this.active,
-    this.activeColor,
-    this.inactiveColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CheckMark(
-        duration: const Duration(milliseconds: 800),
-        curve: Curves.fastLinearToSlowEaseIn,
-        strokeWidth: 2,
-        activeColor: activeColor ?? theme.colorScheme.secondary,
-        inactiveColor: inactiveColor ?? theme.colorScheme.secondary,
-        active: active,
-      ),
     );
   }
 }

@@ -218,6 +218,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                         NamidaCheckMark(
                                           size: 16.0,
                                           active: didGrantStoragePermission,
+                                          burst: true,
                                         ),
                                       ],
                                     ),

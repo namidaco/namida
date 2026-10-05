@@ -1048,6 +1048,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
               activeRx: didRead,
               icon: Broken.info_circle,
               title: lang.iReadAndAgree,
+              burst: true,
               onTap: didRead.toggle,
             ),
           ],

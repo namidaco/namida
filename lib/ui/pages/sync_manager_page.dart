@@ -787,16 +787,11 @@ class _SyncItemsGroupTile extends StatelessWidget {
             child: StackedIcon(
               iconSize: 28.0,
               baseIcon: Broken.video_square,
-              smallChild: ytPartiallySelected
-                  ? Icon(
-                      Broken.minus,
-                      size: 12.0,
-                      color: context.theme.colorScheme.secondary,
-                    )
-                  : NamidaCheckMark(
-                      size: 12.0,
-                      active: ytAllSelected,
-                    ),
+              smallChild: NamidaTristateCheckMark(
+                size: 12.0,
+                active: ytAllSelected,
+                halfActive: ytPartiallySelected,
+              ),
             ),
           ),
         ),

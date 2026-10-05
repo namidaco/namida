@@ -2021,6 +2021,7 @@ class _ImportDoneCheckMark extends StatelessWidget {
       builder: (context, isParsing) => NamidaCheckMark(
         size: 20.0,
         active: !isParsing,
+        burst: true,
       ),
     );
   }

@@ -428,9 +428,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                     : isSingle
                     ? Padding(
                         padding: const EdgeInsets.all(2.0),
-                        child: Checkbox.adaptive(
-                          value: _newContainsVideo[pl.playlistId] ?? pl.containsVideo,
-                          onChanged: (value) => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
+                        child: NamidaCheckMark(
+                          size: 18.0,
+                          active: showBorder,
                         ),
                       )
                     : _newContainsVideo[pl.playlistId] == true

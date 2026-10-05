@@ -161,17 +161,9 @@ class YtUtilsPlaylist {
                               bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
                               onTap: () => privacyRx.value = e,
                               trailing:
-                                  const SizedBox(
-                                    width: 16.0,
-                                    height: 16.0,
-                                    child: Checkbox.adaptive(
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.all(Radius.circular(6.0)),
-                                      ),
-                                      value: true,
-                                      onChanged: null,
-                                    ),
+                                  NamidaCheckMark(
+                                    size: 16.0,
+                                    active: privacy == e,
                                   ).animateEntrance(
                                     showWhen: privacy == e,
                                     allCurves: Curves.fastLinearToSlowEaseIn,

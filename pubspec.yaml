@@ -183,7 +183,6 @@ dependencies:
 
   # ---- UI Widgets ----
   sleek_circular_slider: ^2.0.1
-  checkmark: ^0.0.2
   like_button: <=2.0.5
   flutter_scrollbar_modified:
     git:

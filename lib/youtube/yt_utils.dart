@@ -1034,14 +1034,9 @@ class YTUtils {
         title: lang.clear,
         trailingWidgets: [
           Obx(
-            (context) => Checkbox.adaptive(
-              splashRadius: 28.0,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-              ),
-              value: allSelected.valueR,
-              onChanged: (_) {
+            (context) => NamidaIconButton(
+              icon: null,
+              onPressed: () {
                 final newVal = allSelected.toggle();
                 if (newVal == true) {
                   for (var e in audiosCached) {
@@ -1067,6 +1062,10 @@ class YTUtils {
                 }
                 reEvaluateTotalSize();
               },
+              child: NamidaCheckMark(
+                size: 20.0,
+                active: allSelected.valueR,
+              ),
             ),
           ),
         ],

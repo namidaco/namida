@@ -442,26 +442,26 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                         },
                       ),
                       Obx(
-                        (context) => Checkbox.adaptive(
-                          splashRadius: 20.0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          tristate: true,
-                          value: _selectedList.isEmpty
-                              ? false
-                              : _selectedList.length != widget.ids.length
-                              ? null
-                              : true,
-                          onChanged: (value) {
-                            if (_selectedList.length != widget.ids.length) {
-                              _addAllYTIDsToSelected();
-                            } else {
-                              _selectedList.clear();
-                            }
-                          },
-                        ),
+                        (context) {
+                          final selectedCount = _selectedList.length;
+                          final isAllSelected = selectedCount > 0 && selectedCount == widget.ids.length;
+                          final isPartiallySelected = selectedCount > 0 && !isAllSelected;
+                          return NamidaIconButton(
+                            icon: null,
+                            onPressed: () {
+                              if (_selectedList.length != widget.ids.length) {
+                                _addAllYTIDsToSelected();
+                              } else {
+                                _selectedList.clear();
+                              }
+                            },
+                            child: NamidaTristateCheckMark(
+                              size: 22.0,
+                              active: isAllSelected,
+                              halfActive: isPartiallySelected,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -644,16 +644,12 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                             iconSize: 20.0,
                                             onPressed: () => _onEditIconTap(id: id, originalIndex: originalIndex),
                                           ),
-                                        Checkbox.adaptive(
-                                          visualDensity: VisualDensity.compact,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(4.0.multipliedRadius),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                          child: NamidaCheckMark(
+                                            size: 20.0,
+                                            active: isSelected,
                                           ),
-                                          value: isSelected,
-                                          onChanged: (value) {
-                                            _onItemTap(id);
-                                            _didManuallyEditSelection = true;
-                                          },
                                         ),
                                         const SizedBox(width: 8.0),
                                       ],
