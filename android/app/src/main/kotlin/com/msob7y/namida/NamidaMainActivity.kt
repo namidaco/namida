@@ -172,6 +172,21 @@ class NamidaMainActivity : FlutterActivity() {
             result.success(true)
           }
         }
+        "sendSuperLyric" -> {
+          val sent = SuperLyricPublisher.send(
+            title = call.argument<String>("title"),
+            artist = call.argument<String>("artist"),
+            album = call.argument<String>("album"),
+            text = call.argument<String>("text"),
+            startMS = call.argument<Number>("startMS")?.toLong() ?: 0L,
+            endMS = call.argument<Number>("endMS")?.toLong() ?: 0L,
+          )
+          result.success(sent)
+        }
+        "releaseSuperLyric" -> {
+          SuperLyricPublisher.release()
+          result.success(null)
+        }
         "setMulticastLock" -> {
           val enabled = call.argument<Boolean>("enabled") ?: false
           try {

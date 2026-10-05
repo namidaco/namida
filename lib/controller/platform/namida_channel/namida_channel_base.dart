@@ -64,6 +64,11 @@ abstract class NamidaChannel {
   /// implicit when [packages] is null, otherwise one explicit broadcast per package.
   Future<void> sendBroadcast(String action, Map<String, Object?> extras, {List<String>? packages}) async {}
 
+  /// null [text] sends a stop. false when the SuperLyric module isn't active.
+  Future<bool> sendSuperLyric({required String? title, required String? artist, required String? album, required String? text, required int startMS, required int endMS}) async => false;
+
+  Future<void> releaseSuperLyric() async {}
+
   /// lets android offer namida as a plugged usb dac's default app.
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
 

@@ -493,6 +493,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final scrobblerBroadcast = _key('scrobblerBroadcast', false, sync: false);
   late final webhookUrl = _key('webhookUrl', '', sync: false);
   late final webhookEvents = _keySet<WebhookEvent>('webhookEvents', _kDefaultWebhookEvents, item: WebhookEvent.values.asCodec(), sync: false);
+  late final lyricsIntegrations = _keySet<LyricsIntegration>('lyricsIntegrations', const {}, item: LyricsIntegration.values.asCodec(), sync: false);
 
   static const _kDefaultWebhookEvents = {WebhookEvent.trackChanged, WebhookEvent.play, WebhookEvent.pause};
 

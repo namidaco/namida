@@ -34,6 +34,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
@@ -285,6 +286,8 @@ Future<bool> _mainAppInitialization() async {
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
     ].executeAllAndSilentReportErrors();
+
+    LyricsIntegrations.init();
 
     // -- best to initialize last, so that tracks are prepared (for info/colors) and rhttp is initialized (for network), etc.
     try {

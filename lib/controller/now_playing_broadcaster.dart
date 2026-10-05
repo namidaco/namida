@@ -167,6 +167,9 @@ class NowPlayingExtras {
   static const queueIndex = 'queueIndex';
   static const queueLength = 'queueLength';
   static const mbTrackId = 'MUSICBRAINZ_TRACKID';
+
+  /// colorOS lyrics json, too big for broadcasts & webhooks.
+  static const lyricInfo = 'lyricInfo';
 }
 
 class _NowPlayingEvent {
@@ -190,6 +193,6 @@ class _NowPlayingEvent {
       'genre': media.genre,
       'durationMS': media.duration?.inMilliseconds,
       ...?media.extras,
-    };
+    }..remove(NowPlayingExtras.lyricInfo);
   }
 }

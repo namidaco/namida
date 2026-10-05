@@ -33,6 +33,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
+import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -394,7 +395,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     final generation = ++_notificationUpdateGeneration;
     final media = await item.toMediaItem(currentIndex.value, currentQueue.value.length, duration);
     if (generation != _notificationUpdateGeneration) return;
-    mediaItem.add(media);
+    final publishedMedia = LyricsIntegrations.prepareMediaItem(media);
+    mediaItem.add(publishedMedia);
     playbackState.add(_transformEvent(PlaybackEvent(currentIndex: currentIndex.value), item, isItemFavourite, itemIndex));
 
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
@@ -414,9 +416,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     final media = await youtubeIdMediaItem(index, ql);
     if (generation != _notificationUpdateGeneration) return;
     final isItemFavourite = _isYoutubeIDFavouriteOrLiked(item);
-    mediaItem.add(media);
+    final publishedMedia = LyricsIntegrations.prepareMediaItem(media);
+    mediaItem.add(publishedMedia);
     playbackState.add(_transformEvent(PlaybackEvent(currentIndex: index), item, isItemFavourite, itemIndex));
     _refreshPlatformStatusDependers(media, playWhenReady.value, isItemFavourite);
+  }
+
+  /// for extras arriving after [media] was published, ignored once another item took over.
+  void republishMediaItem(MediaItem media) {
+    if (mediaItem.value?.id != media.id) return;
+    mediaItem.add(media);
   }
 
   void _refreshNotificationFavouriteStatus() {

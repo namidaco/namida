@@ -73,6 +73,24 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<bool> sendSuperLyric({required String? title, required String? artist, required String? album, required String? text, required int startMS, required int endMS}) async {
+    final sent = await _channel.invokeMethod<bool>('sendSuperLyric', {
+      'title': title,
+      'artist': artist,
+      'album': album,
+      'text': text,
+      'startMS': startMS,
+      'endMS': endMS,
+    });
+    return sent ?? false;
+  }
+
+  @override
+  Future<void> releaseSuperLyric() async {
+    await _channel.invokeMethod('releaseSuperLyric');
+  }
+
+  @override
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {
     await _channel.invokeMethod('setUsbDacHandlerEnabled', {'enabled': enabled});
   }

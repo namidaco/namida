@@ -419,6 +419,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     scrobblerBroadcast,
     webhookUrl,
     webhookEvents,
+    lyricsIntegrations,
     eggs,
   ];
 }

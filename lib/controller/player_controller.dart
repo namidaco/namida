@@ -215,6 +215,9 @@ class Player {
 
   void refreshPlatformIcons() => _audioHandler.refreshPlatformIcons();
 
+  MediaItem? get currentMediaItem => _audioHandler.mediaItem.value;
+  void republishMediaItem(MediaItem media) => _audioHandler.republishMediaItem(media);
+
   // -- error playing track
   void cancelPlayErrorSkipTimer() => _audioHandler.cancelPlayErrorSkipTimer();
   RxBaseCore<int> get playErrorRemainingSecondsToSkip => _audioHandler.playErrorRemainingSecondsToSkip;

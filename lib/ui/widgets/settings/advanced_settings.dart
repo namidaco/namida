@@ -1438,9 +1438,54 @@ class _AdvancedFlagsOptions extends StatelessWidget {
                 onChanged: (isTrue) => settings.scrobblerBroadcast.save(!isTrue),
               ),
             ),
+            const _LyricsIntegrationsListTile(),
           ],
           const _WebhookListTile(),
         ],
+      ),
+    );
+  }
+}
+
+class _LyricsIntegrationsListTile extends StatelessWidget {
+  const _LyricsIntegrationsListTile();
+
+  void _toggle(LyricsIntegration integration) {
+    settings.lyricsIntegrations.update((value) {
+      if (!value.remove(integration)) value.add(integration);
+    });
+  }
+
+  List<NamidaPopupItem> _items() {
+    final enabled = settings.lyricsIntegrations.value;
+    return LyricsIntegration.values
+        .map(
+          (e) => NamidaPopupItem(
+            selected: enabled.contains(e),
+            icon: e.toIcon(),
+            title: e.toText(),
+            subtitle: e.sendsPerLine ? lang.performanceNote : '',
+            onTap: () => _toggle(e),
+          ),
+        )
+        .toFixedList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: _items,
+      refreshListenable: settings.lyricsIntegrations,
+      child: ObxO(
+        rx: settings.lyricsIntegrations,
+        builder: (context, enabled) => CustomListTile(
+          icon: Broken.message_text,
+          title: 'status_bar_lyrics'.toUpperCase(),
+          trailing: Text(
+            '${enabled.length}/${LyricsIntegration.values.length}',
+            style: context.textTheme.displayMedium,
+          ),
+        ),
       ),
     );
   }

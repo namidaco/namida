@@ -1333,3 +1333,13 @@ enum WebhookEvent {
   play,
   pause,
 }
+
+enum LyricsIntegration {
+  lyricInfo,
+  superLyric(sendsPerLine: true),
+  flymeTicker(sendsPerLine: true),
+  ;
+
+  final bool sendsPerLine;
+  const LyricsIntegration({this.sendsPerLine = false});
+}

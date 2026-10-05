@@ -3064,3 +3064,19 @@ extension WebhookEventUtils on WebhookEvent {
     WebhookEvent.pause => Broken.pause,
   };
 }
+
+extension LyricsIntegrationL10n on LyricsIntegration {
+  String toText() => switch (this) {
+    LyricsIntegration.lyricInfo => 'ColorOS & HyperLyric',
+    LyricsIntegration.superLyric => 'SuperLyric',
+    LyricsIntegration.flymeTicker => 'Flyme & Lyricon',
+  };
+}
+
+extension LyricsIntegrationUtils on LyricsIntegration {
+  IconData toIcon() => switch (this) {
+    LyricsIntegration.lyricInfo => Broken.mobile,
+    LyricsIntegration.superLyric => Broken.status,
+    LyricsIntegration.flymeTicker => Broken.notification_status,
+  };
+}

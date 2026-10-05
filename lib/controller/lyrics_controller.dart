@@ -17,6 +17,7 @@ import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -54,7 +55,8 @@ class Lyrics {
   final currentLyricsLRC = Rxn<Lrc>();
   final lyricsCanBeAvailable = true.obs;
 
-  bool get _lyricsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
+  bool get _lyricsViewsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
+  bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive;
   bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
@@ -151,7 +153,7 @@ class Lyrics {
 
   Future<void> updateLyrics(Playable item) async {
     await _updateLyrics(item);
-    if (!settings.tutorial.lyricsFullscreenTipSeen.value) {
+    if (_lyricsViewsEnabled && !settings.tutorial.lyricsFullscreenTipSeen.value) {
       if (currentLyricsLRC.value != null || currentLyricsText.value.text.isNotEmpty) {
         snackyy(
           message: lang.longPressTheLyricsToEnterFullscreen,
