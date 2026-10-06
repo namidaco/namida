@@ -2841,7 +2841,7 @@ class SubpageInfoContainer extends StatelessWidget {
                 infoMaxWidth = maxWidth - 24.0;
               } else if (isBanner) {
                 bannerHeight = (maxWidth * 0.34).clampDouble(96.0, maxHeight * 0.25);
-                final besideThumbnailSize = (maxWidth * _kBannerThumbnailPercentage).clampDouble(88.0, 176.0);
+                final besideThumbnailSize = (maxWidth * _kBannerThumbnailPercentage).clampDouble(96.0, 200.0);
                 final besideInfoWidth = maxWidth - besideThumbnailSize - _kBannerThumbnailInsets;
                 isBannerTextBelow = showSubpageInfoAtSide || besideInfoWidth < _kBannerMinBesideTextWidth;
                 thumbnailSize = isBannerTextBelow ? (maxWidth * _kBannerStackedThumbnailPercentage).clampDouble(88.0, 240.0) : besideThumbnailSize;
@@ -2854,7 +2854,8 @@ class SubpageInfoContainer extends StatelessWidget {
                 imageMaxWidth = maxWidth.withMaximum(maxHeight * 0.55);
                 infoMaxWidth = maxWidth;
               } else {
-                imageMaxWidth = (maxWidth * _kThumbnailWidthPercentage).withMaximum(maxHeight * _kThumbnailHeightPercentage);
+                final thumbnailScale = subpageInfoType == MediaType.artist ? _kArtistThumbnailScale : 1.0;
+                imageMaxWidth = (maxWidth * _kThumbnailWidthPercentage).withMaximum(maxHeight * _kThumbnailHeightPercentage) * thumbnailScale;
                 infoMaxWidth = maxWidth - imageMaxWidth;
               }
 
@@ -3307,7 +3308,7 @@ class SubpageInfoContainer extends StatelessWidget {
   static const _kBannerThumbnailInsets = 24.0 + 24.0 + 14.0;
   static const _kBannerThumbnailOverlap = 0.45;
   static const _kBannerFeatherPercentage = 0.8;
-  static const _kBannerThumbnailPercentage = 0.3;
+  static const _kBannerThumbnailPercentage = 0.34;
   static const _kBannerStackedThumbnailPercentage = 0.7;
   static const _kBannerStackedFontScale = 1.2;
   static const _kBannerMinBesideTextWidth = 140.0;
@@ -3318,6 +3319,7 @@ class SubpageInfoContainer extends StatelessWidget {
   static const _kExtraButtonsMinWidth = 310.0;
   static const _kThumbnailWidthPercentage = 0.5;
   static const _kThumbnailHeightPercentage = 0.35;
+  static const _kArtistThumbnailScale = 0.85;
 
   /// a frameless fan in a thumbnail spills a little into the surrounding padding instead of leaving it empty.
   static const _kThumbnailFanScale = 1.12;
@@ -6167,11 +6169,14 @@ class NamidaScrollbar extends StatelessWidget {
 }
 
 class NamidaScrollbarWithController extends StatefulWidget {
+  /// used as is and never disposed, a new one is created otherwise.
+  final ScrollController? controller;
   final bool showOnStart;
   final double scrollStep;
   final Widget Function(ScrollController sc) child;
   const NamidaScrollbarWithController({
     super.key,
+    this.controller,
     this.showOnStart = false,
     this.scrollStep = 0.0,
     required this.child,
@@ -6183,15 +6188,19 @@ class NamidaScrollbarWithController extends StatefulWidget {
 
 class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithController> {
   late final ScrollController _sc;
+  late final bool _ownsController;
+
   @override
   void initState() {
-    _sc = NamidaScrollController.create();
+    final controller = widget.controller;
+    _ownsController = controller == null;
+    _sc = controller ?? NamidaScrollController.create();
     super.initState();
   }
 
   @override
   void dispose() {
-    _sc.dispose();
+    if (_ownsController) _sc.dispose();
     super.dispose();
   }
 
@@ -8565,6 +8574,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
   final VoidCallback? _releaseInitialImage;
   final Object? heroTag;
   final Color? Function()? themeColor;
+  final Future<String?> Function(BuildContext context)? onSaveCollage;
 
   const NamidaArtworkFullscreen._({
     required this.images,
@@ -8573,6 +8583,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
     required this._releaseInitialImage,
     required this.heroTag,
     required this.themeColor,
+    required this.onSaveCollage,
   });
 
   static Future<void> open({
@@ -8580,6 +8591,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
     required int initialIndex,
     required Object? heroTag,
     required Color? Function()? themeColor,
+    Future<String?> Function(BuildContext context)? onSaveCollage,
   }) async {
     final initialImage = await images[initialIndex]._resolve();
     if (initialImage == null) return;
@@ -8597,6 +8609,7 @@ class NamidaArtworkFullscreen extends StatefulWidget {
         releaseInitialImage: releaseInitialImage,
         heroTag: shownHeroTag,
         themeColor: themeColor,
+        onSaveCollage: onSaveCollage,
       ),
     );
   }
@@ -8646,6 +8659,11 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
     NamidaOnTaps.inst.showSavedImageInSnack(savePath, widget.themeColor?.call());
   }
 
+  void _saveCollage(Future<String?> Function(BuildContext context) onSaveCollage) async {
+    final savePath = await onSaveCollage(context);
+    NamidaOnTaps.inst.showSavedImageInSnack(savePath, widget.themeColor?.call());
+  }
+
   void _onPageChanged(int index) {
     _currentIndex.value = index;
   }
@@ -8686,6 +8704,7 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
 
     final images = widget.images;
     final count = images.length;
+    final onSaveCollage = widget.onSaveCollage;
     final pageController = _pageController;
     final pagingAxis = pageController == null ? null : Axis.horizontal;
     final heroTag = widget.heroTag;
@@ -8764,6 +8783,15 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
                         Expanded(
                           child: pageIndicatorWidget ?? const SizedBox(),
                         ),
+                        if (onSaveCollage != null)
+                          ObxO(
+                            rx: settings.artworkCollageStyle,
+                            builder: (context, collageStyle) => NamidaIconButton(
+                              tooltip: () => '${lang.save} (${collageStyle.toText()})',
+                              icon: collageStyle.toIcon(),
+                              onPressed: () => _saveCollage(onSaveCollage),
+                            ),
+                          ),
                         Align(
                           alignment: Alignment.centerRight,
                           child: NamidaIconButton(

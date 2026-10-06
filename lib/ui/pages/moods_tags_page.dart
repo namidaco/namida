@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:super_sliver_list/super_sliver_list.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -104,6 +105,7 @@ class _MoodsOrTagsPage extends StatefulWidget with NamidaRouteWidget {
 class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
   var _allEntries = <MapEntry<String, List<Track>>>[];
   var _entries = <MapEntry<String, List<Track>>>[];
+  KeysSearchWrapper<MapEntry<String, List<Track>>>? _searchWrapper;
   late final _sortingRx = settings.groupSortingRxOf(widget.type);
   late final _libraryTab = widget.type.toLibraryTab();
 
@@ -137,6 +139,7 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
       _ => Indexer.inst.getTracksGroupedByMoods(sort: false),
     };
     _allEntries = allAvailableMap.entries.toFixedList();
+    _searchWrapper = null;
     _sortEntries();
     final searchText = _libraryTab.textSearchController?.text ?? '';
     _filterEntries(searchText);
@@ -148,10 +151,16 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
   }
 
   void _filterEntries(String text) {
-    _entries = text.isEmpty ? _allEntries : SearchSortController.inst.filterMoodsTagsEntries(_allEntries, text);
+    if (text.isEmpty) {
+      _entries = _allEntries;
+      return;
+    }
+    final searchWrapper = _searchWrapper ??= SearchSortController.inst.createMoodsTagsSearchWrapper(_allEntries);
+    _entries = searchWrapper.filter(text);
   }
 
   void _onSortingChanged() {
+    _searchWrapper = null;
     _sortEntries();
     final searchText = _libraryTab.textSearchController?.text ?? '';
     _filterEntries(searchText);

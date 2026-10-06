@@ -128,7 +128,7 @@ class Subtitles {
     //   snackyy(
     //     message: lang.noSubtitlesFound,
     //     top: false,
-    //     icon: Broken.subtitle,
+    //     icon: Broken.text_block,
     //   );
     // }
   }
@@ -159,7 +159,7 @@ class Subtitles {
       snackyy(
         message: "${lang.failed}: ${track.displayName}",
         top: false,
-        icon: Broken.subtitle,
+        icon: Broken.text_block,
       );
       return;
     }
@@ -333,7 +333,7 @@ class Subtitles {
             message: "${lang.failed}: ${track.displayName}",
             top: false,
             isError: true,
-            icon: Broken.subtitle,
+            icon: Broken.text_block,
           );
         }
         return;

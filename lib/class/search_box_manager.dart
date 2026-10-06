@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
 class SearchBoxManager {
@@ -47,19 +47,12 @@ class SearchBoxManager {
 
   String _defaultTextResolver(String value) => value;
 
-  Iterable<String> filterPlaylistNames(Iterable<String> itemsNames, String searchQuery) {
-    return filterPlaylistNamesWithResolver(itemsNames, searchQuery, _defaultTextResolver);
+  List<String> filterPlaylistNames(List<String> itemsNames, String searchQuery, {KeysSearchWeights? weights}) {
+    return filterPlaylistNamesWithResolver(itemsNames, searchQuery, _defaultTextResolver, weights: weights);
   }
 
-  Iterable<T> filterPlaylistNamesWithResolver<T>(Iterable<T> items, String searchQuery, String? Function(T item) toTextResolver) sync* {
-    final cleanup = settings.enableSearchCleanup.value;
-    final queryCleaned = cleanup ? searchQuery.cleanUpForComparison : searchQuery.toLowerCase();
-    for (final item in items) {
-      final itemText = toTextResolver(item);
-      if (itemText != null) {
-        final isMatch = (cleanup ? itemText.cleanUpForComparison : itemText.toLowerCase()).contains(queryCleaned);
-        if (isMatch) yield item;
-      }
-    }
+  List<T> filterPlaylistNamesWithResolver<T>(List<T> items, String searchQuery, String? Function(T item) toTextResolver, {KeysSearchWeights? weights}) {
+    final searchWrapper = KeysSearchWrapper.init(items, title: toTextResolver, weights: weights, cleanup: settings.enableSearchCleanup.value);
+    return searchWrapper.filter(searchQuery);
   }
 }

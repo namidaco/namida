@@ -393,7 +393,8 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                       itemExtent: Dimensions.youtubeCardItemExtent,
                       itemCount: playlist.tracks.length,
                       itemBuilder: (context, index) {
-                        final video = playlist.tracks[index];
+                        final videoIndex = widget.reversedList ? playlist.tracks.length - 1 - index : index;
+                        final video = playlist.tracks[videoIndex];
                         return FadeDismissible(
                           key: Key("Diss_$index$video"),
                           draggableRx: YoutubePlaylistController.inst.canReorderItems,

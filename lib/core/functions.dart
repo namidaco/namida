@@ -42,7 +42,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
-import 'package:namida/ui/pages/equalizer_page.dart';
+import 'package:namida/ui/pages/sound_control_page.dart';
 import 'package:namida/ui/pages/subpages/album_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/artist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/genre_tracks_subpage.dart';
@@ -80,16 +80,18 @@ class NamidaOnTaps {
     SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSorts.value, settings.albumSortReversed.value);
 
     final albumIds = <AlbumIdentifierWrapper>[];
+    final epsIds = <AlbumIdentifierWrapper>[];
     final singlesIds = <AlbumIdentifierWrapper>[];
     final extrasIds = <AlbumIdentifierWrapper>[];
     for (final a in albumIdsFinalList) {
       final albumArtist = (albumIdsMap[a.key] ?? a.key.getAlbumTracks()).albumArtist;
       if (albumArtist.contains(name)) {
-        if (a.key.isSingle()) {
-          singlesIds.add(a.key);
-        } else {
-          albumIds.add(a.key);
-        }
+        final idsOfType = switch (a.key.getAlbumType()) {
+          AlbumType.single => singlesIds,
+          AlbumType.ep => epsIds,
+          AlbumType.normal => albumIds,
+        };
+        idsOfType.add(a.key);
       } else {
         extrasIds.add(a.key);
       }
@@ -99,10 +101,41 @@ class NamidaOnTaps {
       name: name,
       tracks: tracks,
       albumIdentifiers: albumIds,
+      epsIdentifiers: epsIds,
       singlesIdentifiers: singlesIds,
       extrasIdentifiers: extrasIds,
       type: type,
     ).navigate();
+  }
+
+  void onArtistsTap(List<String> artists) {
+    if (artists.length <= 1) {
+      final artist = artists.firstOrNull;
+      if (artist != null) onArtistTap(artist, MediaType.artist);
+      return;
+    }
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.goToArtist,
+        normalTitleStyle: true,
+        icon: Broken.profile_2user,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: artists
+              .map(
+                (e) => CustomListTile(
+                  icon: Broken.microphone,
+                  title: e,
+                  onTap: () {
+                    NamidaNavigator.inst.closeDialog();
+                    onArtistTap(e, MediaType.artist);
+                  },
+                ),
+              )
+              .toFixedList(),
+        ),
+      ),
+    );
   }
 
   Future<void> onAlbumTap(AlbumIdentifierWrapper? albumIdentifier) async {
@@ -254,10 +287,12 @@ class NamidaOnTaps {
       final playlist = PlaylistController.inst.getPlaylist(name);
       if (playlist == null) return;
 
-      final Map<TrackWithDate, int> twdAndIndexes = {};
-      for (var twd in tracksWithDates) {
-        final index = playlist.tracks.indexOf(twd);
-        if (index > -1) twdAndIndexes[twd] = index;
+      final twdAndIndexes = <TrackWithDate, int>{};
+      final tracksToFind = tracksWithDates.toSet();
+      final playlistTracks = playlist.tracks;
+      for (int i = 0; i < playlistTracks.length && tracksToFind.isNotEmpty; i++) {
+        final twd = playlistTracks[i];
+        if (tracksToFind.remove(twd)) twdAndIndexes[twd] = i;
       }
 
       await PlaylistController.inst.removeTracksFromPlaylist(playlist, twdAndIndexes.values.toList());

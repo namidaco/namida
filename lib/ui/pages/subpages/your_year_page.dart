@@ -384,7 +384,7 @@ class _YourYearPageState extends State<YourYearPage> {
 
       // -- obsession & session
       if (s.obsessions.isNotEmpty || s.longestSession != null) {
-        final obsessions = s.obsessions;
+        final obsessions = s.obsessions.length > 5 ? s.obsessions.sublist(0, 5) : s.obsessions;
         final session = s.longestSession;
         pages.add(
           _StoryPage(

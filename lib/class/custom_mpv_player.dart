@@ -353,11 +353,11 @@ class CustomMPVPlayer implements AVPlayer {
           start: config.initialPosition,
         );
 
-        await _tryOpen(mainMedia).then((_) async {
-          final videoTrack = mk.VideoTrack(_resolveVideoTrackSource(videoOptions), null, null);
-          await _setVideoTrack(videoTrack);
-          _updateAudioTracks();
-        });
+        await _tryOpen(mainMedia);
+        final videoTrackSource = await _resolveVideoTrackSource(videoOptions, durationCompleter.future);
+        final videoTrack = mk.VideoTrack(videoTrackSource, null, null);
+        await _setVideoTrack(videoTrack);
+        _updateAudioTracks();
       }
 
       // -- `open` always loads paused, undoing a play requested meanwhile (crossfade)
@@ -436,41 +436,52 @@ class CustomMPVPlayer implements AVPlayer {
   // }
 
   // -- mpv can't loop a single external video track, so the animation is turned into an `edl://`
-  // -- timeline that repeats it enough times to outlast the audio. it stays a normal track, so seeking still works.
+  // -- timeline that repeats it up to the audio's exact length, mpv only ends the file once every track is done.
+  // -- it stays a normal track, so seeking still works.
   bool _loopingVideoApplied = false;
 
   static const _kMaxLoopingVideoRepeats = 3000;
-  static const _kFallbackLoopingVideoDuration = Duration(minutes: 30);
 
   /// Returns the source to add as a video track, an `edl://` looping timeline when the animation asks for it.
-  String _resolveVideoTrackSource(VideoSourceOptions videoOptions) {
+  Future<String> _resolveVideoTrackSource(VideoSourceOptions videoOptions, Future<Duration?> audioDurationFuture) async {
     final source = videoOptions.source as UriSource;
-    final loopingSource = _enableExperimentalFeatures && videoOptions.loop ? _buildLoopingVideoSource(source, videoOptions.durationMS) : null;
+    final sourceDurationMS = videoOptions.durationMS;
+    String? loopingSource;
+    if (_enableExperimentalFeatures && videoOptions.loop && sourceDurationMS != null && sourceDurationMS > 0) {
+      // -- `open` resets the duration, the new one only comes once the file is loaded
+      final audioDuration = await audioDurationFuture.timeout(_durationWaitTimeout, onTimeout: () => null);
+      if (audioDuration != null) loopingSource = _buildLoopingVideoSource(source, sourceDurationMS, audioDuration.inMilliseconds);
+    }
     _loopingVideoApplied = loopingSource != null;
     return loopingSource ?? source.uri.toString();
   }
 
-  String? _buildLoopingVideoSource(UriSource source, int? sourceDurationMS) {
-    if (sourceDurationMS == null || sourceDurationMS <= 0) return null;
+  String? _buildLoopingVideoSource(UriSource source, int sourceDurationMS, int targetMS) {
+    if (targetMS <= sourceDurationMS) return null;
 
-    final audioDuration = _player.state.duration;
-    final targetMS = (audioDuration > Duration.zero ? audioDuration : _kFallbackLoopingVideoDuration).inMilliseconds;
+    final neededRepeats = targetMS ~/ sourceDurationMS;
+    final isCapped = neededRepeats > _kMaxLoopingVideoRepeats;
+    final fullRepeats = isCapped ? _kMaxLoopingVideoRepeats : neededRepeats;
+    final remainderMS = isCapped ? 0 : targetMS - fullRepeats * sourceDurationMS;
 
-    final repeats = (targetMS / sourceDurationMS).ceil() + 1;
-    if (repeats <= 1) return null;
-
-    // -- byte length prefixed, that way the path needs no escaping at all
+    // -- byte length prefixed, that way the path needs no escaping at all.
+    // -- explicit lengths keep the total exact even if the file's own duration differs slightly.
     final path = source.uri.isScheme('file') ? source.uri.toFilePath() : source.uri.toString();
-    final segment = '%${utf8.encode(path).length}%$path';
-    final repeatsClamped = repeats.clampInt(2, _kMaxLoopingVideoRepeats);
-    final buffer = StringBuffer();
-    buffer.write('edl://');
-    for (int i = 0; i < repeatsClamped; i++) {
+    final segmentPath = '%${utf8.encode(path).length}%$path';
+    final segmentSeconds = _edlSeconds(sourceDurationMS);
+    final segment = '$segmentPath,length=$segmentSeconds;';
+    final buffer = StringBuffer('edl://');
+    for (int i = 0; i < fullRepeats; i++) {
       buffer.write(segment);
-      buffer.write(';');
+    }
+    if (remainderMS > 0) {
+      final remainderSeconds = _edlSeconds(remainderMS);
+      buffer.write('$segmentPath,length=$remainderSeconds;');
     }
     return buffer.toString();
   }
+
+  static String _edlSeconds(int ms) => (ms / 1000).toStringAsFixed(3);
 
   // modified version of setAudioTrack
   // source: package:media_kit/src/player/native/player/real.dart

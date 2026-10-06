@@ -68,8 +68,8 @@ import 'package:namida/ui/pages/artists_page.dart';
 import 'package:namida/ui/pages/current_queue_page.dart';
 import 'package:namida/ui/pages/folders_page.dart';
 import 'package:namida/ui/pages/genres_page.dart';
-import 'package:namida/ui/pages/languages_page.dart';
 import 'package:namida/ui/pages/home_page.dart';
+import 'package:namida/ui/pages/languages_page.dart';
 import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/moods_tags_page.dart';
 import 'package:namida/ui/pages/party_page.dart';
@@ -210,25 +210,26 @@ extension LibraryTabUtils on LibraryTab {
         animateTiles: animateTiles,
         enableHero: enableHero,
       ),
-      LibraryTab.smartPlaylists => const SmartPlaylistsPage(),
+      LibraryTab.smartPlaylists => const SmartPlaylistsPage(isLibraryTab: true),
       LibraryTab.folders => FoldersPage.tracksAndVideos(),
       LibraryTab.foldersMusic => FoldersPage.tracks(),
       LibraryTab.foldersVideos => FoldersPage.videos(),
       LibraryTab.home => const HomePageLocal(),
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.search => const NamidaDummyPage(),
-      LibraryTab.queues => const QueuesPage(),
+      LibraryTab.queues => const QueuesPage(isLibraryTab: true),
       LibraryTab.currentQueue => const CurrentQueuePage(),
       LibraryTab.favourites => const NormalPlaylistTracksPage(
         playlistName: k_PLAYLIST_NAME_FAV,
         disableAnimation: true,
+        isLibraryTab: true,
       ),
-      LibraryTab.history => const HistoryTracksPage(),
-      LibraryTab.mostPlayed => const MostPlayedTracksPage(),
+      LibraryTab.history => const HistoryTracksPage(isLibraryTab: true),
+      LibraryTab.mostPlayed => const MostPlayedTracksPage(isLibraryTab: true),
       LibraryTab.moods => const MoodsPage(),
       LibraryTab.tags => const TagsPage(),
       LibraryTab.rating => const RatingsPage(),
-      LibraryTab.stats => const StatsPage(isYoutube: false),
+      LibraryTab.stats => const StatsPage(isYoutube: false, isLibraryTab: true),
       LibraryTab.party => const NamidaPartyPage(),
     };
   }
@@ -643,6 +644,7 @@ extension DataSaverModeUtils on DataSaverMode {
 extension TrackExecuteActionsUtils on TrackExecuteActions {
   String toText() => switch (this) {
     TrackExecuteActions.none => lang.none,
+    TrackExecuteActions.play => "${lang.play} (${lang.single})",
     TrackExecuteActions.playnext => lang.playNext,
     TrackExecuteActions.playlast => lang.playLast,
     TrackExecuteActions.playafter => lang.playAfter,
@@ -720,6 +722,8 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     switch (this) {
       case TrackExecuteActions.none:
         return;
+      case TrackExecuteActions.play:
+        Player.inst.playOrPause(0, [item], info.queueSource);
       case TrackExecuteActions.playnext:
         Player.inst.addToQueue([item], insertNext: true);
       case TrackExecuteActions.playlast:
@@ -884,10 +888,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       case TrackExecuteActions.goToArtist:
         item.execute(
           selectable: (finalItem) {
-            final artist = finalItem.track.artistsList.firstOrNull;
-            if (artist != null) {
-              NamidaOnTaps.inst.onArtistTap(artist, MediaType.artist);
-            }
+            NamidaOnTaps.inst.onArtistsTap(finalItem.track.artistsList);
           },
           youtubeID: (finalItem) async {
             final channelId = await YoutubeInfoController.utils.getVideoChannelID(finalItem.id);
@@ -1765,14 +1766,27 @@ extension RouteUtils on NamidaRoute {
 
 extension AlbumsFromMaps on AlbumIdentifierWrapper {
   List<Track> getAlbumTracks() => Indexer.inst.mainMapAlbums.value[this.modifiedOnly()] ?? [];
-  bool isSingle() {
+  bool isSingle() => getAlbumType() == AlbumType.single;
+
+  AlbumType getAlbumType() {
     final tracks = getAlbumTracks();
+    final leadingTrack = tracks.firstOrNull;
+    if (leadingTrack == null) return AlbumType.normal;
+    final releaseType = leadingTrack.releaseType;
+    if (releaseType.isNotEmpty) return _albumTypeOfReleaseType(releaseType);
     if (tracks.length == 1) {
-      final tr = tracks[0];
-      final isAlbum = tr.trackTo > 1 || tr.trackNo > 1;
-      return !isAlbum;
+      final isAlbum = leadingTrack.trackTo > 1 || leadingTrack.trackNo > 1;
+      if (!isAlbum) return AlbumType.single;
     }
-    return false;
+    return AlbumType.normal;
+  }
+
+  /// primary type comes first, ex: `single; live`.
+  static AlbumType _albumTypeOfReleaseType(String releaseType) {
+    final releaseTypeLower = releaseType.toLowerCase();
+    if (releaseTypeLower.startsWith('single')) return AlbumType.single;
+    if (releaseTypeLower.startsWith('ep')) return AlbumType.ep;
+    return AlbumType.normal;
   }
 }
 
@@ -2484,6 +2498,20 @@ extension WakelockModeL10n on WakelockMode {
   };
 }
 
+extension CrossfadeModeL10n on CrossfadeMode {
+  String toText() => switch (this) {
+    CrossfadeMode.standard => lang.defaultLabel,
+    CrossfadeMode.smart => lang.smart,
+    CrossfadeMode.beatMatched => lang.beatMatching,
+  };
+
+  IconData toIcon() => switch (this) {
+    CrossfadeMode.standard => Broken.blend,
+    CrossfadeMode.smart => Broken.magicpen,
+    CrossfadeMode.beatMatched => Broken.buy_crypto,
+  };
+}
+
 extension LocalVideoMatchingTypeL10n on LocalVideoMatchingType {
   String toText() => switch (this) {
     LocalVideoMatchingType.auto => lang.auto,
@@ -2618,7 +2646,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.nextChapter => Broken.arrow_square_right,
     NotificationButton.sleepTimer => Broken.timer_1,
     NotificationButton.addToPlaylist => Broken.music_library_2,
-    NotificationButton.bookmark => Broken.bookmark,
+    NotificationButton.bookmark => Broken.book_saved,
   };
 }
 

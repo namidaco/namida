@@ -5,6 +5,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/search_box_manager.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -633,7 +634,13 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
                           final searchQuery = searchBoxManager.searchQuery.valueR;
                           if (searchQuery.isNotEmpty) {
-                            playlistsNames = searchBoxManager.filterPlaylistNames(playlistsNames, searchQuery).toList();
+                            final playlistsTracks = playlistsNames.map((name) => playlistsMap[name]!.tracks).toFixedList();
+                            final searchWeights = KeysSearchWrapper.createWeights(
+                              playlistsTracks,
+                              listensCount: (tracks) => tracks.getTotalListenCount(),
+                              tracksCount: (tracks) => tracks.length,
+                            );
+                            playlistsNames = searchBoxManager.filterPlaylistNames(playlistsNames, searchQuery, weights: searchWeights);
                           }
 
                           final tagsFilter = YoutubePlaylistController.inst.tagsFilter;

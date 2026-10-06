@@ -17,6 +17,7 @@ class MultiArtworkCard extends StatelessWidget {
   final String heroTag;
   final void Function()? onTap;
   final void Function()? showMenuFunction;
+  final String? topRightText;
   final List<Widget> widgetsInStack;
   final bool enableHero;
   final File? artworkFile;
@@ -31,6 +32,7 @@ class MultiArtworkCard extends StatelessWidget {
     this.onTap,
     this.showMenuFunction,
     required this.heroTag,
+    this.topRightText,
     this.widgetsInStack = const [],
     this.enableHero = true,
     this.artworkFile,
@@ -48,6 +50,8 @@ class MultiArtworkCard extends StatelessWidget {
     final remainingVerticalSpace = (height - imageSize).withMinimum(0.0);
     final itemImagePercentageMultiplier = imageSize * 0.02;
     double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);
+    final topRightText = this.topRightText;
+    final topRightFontSize = getFontSize(0.24).withMaximum(12.0);
     return Container(
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
@@ -113,6 +117,28 @@ class MultiArtworkCard extends StatelessWidget {
               ),
             ),
           ),
+          if (topRightText != null && topRightText.isNotEmpty)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: NamidaBlurryContainer(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: imageSize * 0.8),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      topRightText,
+                      style: textTheme.displaySmall?.copyWith(
+                        fontSize: topRightFontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           Positioned.fill(
             child: NamidaInkWell(
               onTap: onTap,

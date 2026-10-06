@@ -48,7 +48,6 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const libraryTab = LibraryTab.languages;
     final scrollController = libraryTab.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
@@ -134,25 +133,7 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                                   height: cardHeight,
                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(language, MediaType.language),
                                   onTap: () => NamidaOnTaps.inst.onGenreTap(language, MediaType.language),
-                                  widgetsInStack: topRightText == null
-                                      ? const []
-                                      : [
-                                          Positioned(
-                                            top: 0,
-                                            right: 0,
-                                            child: NamidaBlurryContainer(
-                                              child: Text(
-                                                topRightText,
-                                                style: textTheme.displaySmall?.copyWith(
-                                                  fontSize: 12.0,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                softWrap: false,
-                                                overflow: TextOverflow.fade,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                  topRightText: topRightText,
                                 ),
                               );
                             },

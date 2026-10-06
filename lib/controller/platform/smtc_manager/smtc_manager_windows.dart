@@ -25,6 +25,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
 
       smtc?.shuffleChangeStream.listen((shuffle) => settings.player.shuffleQueue.save(shuffle));
       smtc?.repeatModeChangeStream.listen((repeatMode) => Player.inst.setRepeatMode(repeatMode.toPlayerRepeatMode()));
+      smtc?.positionChangeStream.listen(Player.inst.seek);
 
       smtc?.buttonPressStream.listen((event) {
         switch (event) {
@@ -105,11 +106,14 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
   @override
   void updateTimeline(int positionMS, int? durationMS) {
     _ensureEnabled();
+    final endTimeMS = durationMS ?? 0;
     smtc?.updateTimeline(
       swin.PlaybackTimeline(
         startTimeMs: 0,
-        endTimeMs: durationMS ?? 0,
+        endTimeMs: endTimeMS,
         positionMs: positionMS,
+        minSeekTimeMs: 0,
+        maxSeekTimeMs: endTimeMS,
       ),
     );
   }

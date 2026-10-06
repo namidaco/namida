@@ -34,6 +34,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     effectsSeasonAnnounced,
     artistAlbumsExpanded,
     artistSinglesExpanded,
+    artistEpsExpanded,
     artistsMapGraphLayout,
     lastPlayedIndex,
     ytAddToPlaylistsTabIndex,

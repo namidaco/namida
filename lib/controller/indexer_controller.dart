@@ -1326,10 +1326,7 @@ class Indexer<T extends Track> {
         final isDir = await Directory(path).exists().ignoreError() ?? false;
         if (!isDir) return <String>[path];
         final files = await Directory(path).listAllIsolate(recursive: true).ignoreError() ?? [];
-        return <String>[
-          for (final f in files)
-            if (f is File) f.path,
-        ];
+        return files.whereType<File>().map((f) => f.path).where(NamidaFileExtensionsWrapper.audioAndVideo.isPathValid).toFixedList();
       },
       concurrency: 4, // -- each directory listing spawns an isolate
     );
@@ -1996,18 +1993,6 @@ class Indexer<T extends Track> {
       await _trackStatsDBManager.put(oldNew.value.path, oldValueDB);
       // await _trackStatsDBManager.delete(oldNew.key.path); // not so important ig, preserve just in case
     }
-  }
-
-  Set<String> getAllLibraryMoods() {
-    final items = <String>{};
-    _loopLibraryMoods((name, tr) => items.add(name));
-    return items;
-  }
-
-  Set<String> getAllLibraryTags() {
-    final items = <String>{};
-    _loopLibraryTags((name, tr) => items.add(name));
-    return items;
   }
 
   Map<String, int> getLibraryMoodsCounts() {

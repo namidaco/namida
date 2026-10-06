@@ -413,7 +413,9 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SUBPAGE_mostPlayedTracks;
 
-  const MostPlayedTracksPage({super.key});
+  final bool isLibraryTab;
+
+  const MostPlayedTracksPage({super.key, this.isLibraryTab = false});
 
   @override
   Widget build(BuildContext context) {
@@ -433,6 +435,7 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
               final tracks = listensMap.keysSortedByValue.toList();
               return MostPlayedItemsPage(
                 isInFullPage: true,
+                scrollController: isLibraryTab ? LibraryTab.mostPlayed.scrollController : null,
                 itemExtent: Dimensions.inst.trackTileItemExtent,
                 historyController: HistoryController.inst,
                 onSavingTimeRange: ({dateCustom, isStartOfDay, mptr}) {
@@ -647,7 +650,8 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
 
   final String playlistName;
   final bool disableAnimation;
-  const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false});
+  final bool isLibraryTab;
+  const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false, this.isLibraryTab = false});
 
   @override
   State<NormalPlaylistTracksPage> createState() => _NormalPlaylistTracksPageState();
@@ -663,6 +667,9 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
 
   @override
   RxBaseCore listChangesListenerRx() => PlaylistController.inst.playlistsMap;
+
+  @override
+  ScrollController? get providedScrollController => widget.isLibraryTab ? LibraryTab.favourites.scrollController : null;
 
   late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
   late String? _playlistRemoteSourceKey = PlaylistController.inst.getPlaylist(widget.playlistName)?.remoteSource?.sourceKey;

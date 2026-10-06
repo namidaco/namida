@@ -101,6 +101,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderSt
       ),
       maxPercentage: _drawerWidth * drawerScale / width,
       initiallySwipeable: settings.swipeableDrawer.value,
+      isEdgeSwipeOnly: () => NamidaNavigator.inst.currentRoute?.route.isDrawerEdgeSwipeOnly == true,
       child: MainScreenStack(
         animation: animation,
       ),

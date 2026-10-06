@@ -17,14 +17,27 @@ abstract class NamidaTrayManager {
   }
 
   static Future<void> toggleWindow() async {
-    if (await windowManager.isVisible()) {
-      await NamidaTrayManager.hideWindow();
-    } else {
-      await NamidaTrayManager.showWindow();
+    final isMinimized = await windowManager.isMinimized();
+    if (!isMinimized) {
+      final isVisible = await windowManager.isVisible();
+      if (isVisible) return NamidaTrayManager.hideWindow();
     }
+    await NamidaTrayManager._showWindow(isMinimized: isMinimized);
   }
 
   static Future<void> showWindow() async {
+    final isMinimized = await windowManager.isMinimized();
+    await _showWindow(isMinimized: isMinimized);
+  }
+
+  static Future<void> _showWindow({required bool isMinimized}) async {
+    if (isMinimized) {
+      // -- focus() restores natively only while still minimized, restore() would unmaximize an already restored window
+      await windowManager.show();
+      await windowManager.focus();
+      return;
+    }
+
     if (Platform.isLinux) {
       // trigger refresh, otherwise won't show mostly
       await windowManager.hide();

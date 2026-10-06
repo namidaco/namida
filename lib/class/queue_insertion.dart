@@ -191,13 +191,14 @@ class TrackMinimum {
   });
 
   static const supportedSorts = [
-    SortType.rating, SortType.mostPlayed, SortType.duration, SortType.bitrate, //
-    SortType.bpm, SortType.size, SortType.year, //
+    SortType.rating, SortType.mostPlayed, SortType.latestPlayed, SortType.duration, //
+    SortType.bitrate, SortType.bpm, SortType.size, SortType.year, //
   ];
 
   static TrackMinimum? of(SortType sort) => switch (sort) {
     SortType.rating => TrackMinimum(min: 0, max: 100, stepper: 5, defaultValue: 75, formatter: (v) => '$v%', valueOf: (tr) => tr.effectiveRating),
     SortType.mostPlayed => TrackMinimum(min: 0, max: 500, stepper: 1, defaultValue: 0, formatter: (v) => '$v', valueOf: _listensCountOf),
+    SortType.latestPlayed => _ofDaysSinceLastListen(),
     SortType.duration => TrackMinimum(min: 0, max: 1200, stepper: 10, defaultValue: 0, formatter: (v) => v.secondsLabel, valueOf: (tr) => tr.durationMS / 1000),
     SortType.bitrate => TrackMinimum(min: 0, max: 1411, stepper: 1, defaultValue: 0, formatter: (v) => '$v kb/s', valueOf: (tr) => tr.bitrate),
     SortType.bpm => TrackMinimum(min: 0, max: 300, stepper: 1, defaultValue: 0, formatter: (v) => '$v BPM', valueOf: (tr) => tr.bpm),
@@ -207,6 +208,22 @@ class TrackMinimum {
   };
 
   static int _listensCountOf(Track tr) => HistoryController.inst.topTracksMapListens.value[tr]?.length ?? 0;
+
+  static TrackMinimum _ofDaysSinceLastListen() {
+    final nowMS = DateTime.now().millisecondsSinceEpoch;
+    return TrackMinimum(
+      min: 0,
+      max: 365,
+      stepper: 1,
+      defaultValue: 0,
+      formatter: (v) => v.displayDayKeyword,
+      valueOf: (tr) {
+        final lastListenMS = HistoryController.inst.topTracksMapListens.value[tr]?.lastOrNull;
+        if (lastListenMS == null) return double.infinity;
+        return (nowMS - lastListenMS) / Duration.millisecondsPerDay;
+      },
+    );
+  }
 
   static int? _yearOf(Track tr) {
     final year = tr.year;

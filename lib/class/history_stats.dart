@@ -268,6 +268,7 @@ class HistoryStatsSnapshot<E> {
   static const sessionGapMS = 15 * 60 * 1000;
   static const rediscoveryGapDays = 180;
   static const heavyRotationCount = 10;
+  static const maxObsessionsCount = 50;
 
   static HistoryStatsSnapshot<E> compute<T extends ItemWithDate, E>({
     required HistoryManager<T, E> history,
@@ -277,7 +278,7 @@ class HistoryStatsSnapshot<E> {
     required Map<int, Map<String, int>> dailyListenTime,
     required List<String> listenTimeKeys,
     required int totalListenSeconds,
-    int topCount = 20,
+    int topCount = 100,
     int? monthlyTopYear,
   }) {
     final map = history.historyMap.value;
@@ -391,7 +392,7 @@ class HistoryStatsSnapshot<E> {
     if (dayCounts.isNotEmpty) _collectObsessions(obsessionByItem, dayCounts, prevDay);
     final obsessions = obsessionByItem.values.where((e) => e.count >= 2).toList();
     obsessions.sort((a, b) => b.count.compareTo(a.count));
-    if (obsessions.length > 3) obsessions.length = 3;
+    if (obsessions.length > maxObsessionsCount) obsessions.length = maxObsessionsCount;
 
     // ---- per unique item aggregation ----
     final artistsCount = <String, int>{};

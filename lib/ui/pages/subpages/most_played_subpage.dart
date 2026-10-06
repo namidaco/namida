@@ -22,6 +22,9 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatefulWidget {
   final Widget Function(BuildContext context, int i) itemBuilder;
   final int itemsCount;
   final bool isInFullPage;
+
+  /// used as is and never disposed, a new one is created otherwise when [isInFullPage].
+  final ScrollController? scrollController;
   final VoidCallback? onTimeRangeChanged;
 
   const MostPlayedItemsPage({
@@ -34,6 +37,7 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatefulWidget {
     required this.itemBuilder,
     required this.itemsCount,
     required this.isInFullPage,
+    this.scrollController,
     this.onTimeRangeChanged,
   });
 
@@ -43,16 +47,24 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatefulWidget {
 
 class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPlayedItemsPage<T, E>> {
   ScrollController? _scrollController;
+  ScrollController? _ownedScrollController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.isInFullPage) _scrollController = NamidaScrollController.create();
+    final scrollController = widget.scrollController;
+    if (scrollController != null) {
+      _scrollController = scrollController;
+    } else if (widget.isInFullPage) {
+      final ownedScrollController = NamidaScrollController.create();
+      _ownedScrollController = ownedScrollController;
+      _scrollController = ownedScrollController;
+    }
   }
 
   @override
   void dispose() {
-    _scrollController?.dispose();
+    _ownedScrollController?.dispose();
     super.dispose();
   }
 

@@ -79,12 +79,12 @@ class BookmarksController {
       return [...bookmarks, bookmark]..sortBy((e) => e.positionMS);
     });
     if (newBookmarks == null) {
-      snackyy(icon: Broken.bookmark, message: '${lang.bookmarks}: ${lang.alreadyExists} ($positionLabel)');
+      snackyy(icon: Broken.book_saved, message: '${lang.bookmarks}: ${lang.alreadyExists} ($positionLabel)');
       return;
     }
     VibratorController.medium();
     snackyy(
-      icon: Broken.bookmark,
+      icon: Broken.book_saved,
       message: '${lang.bookmarks}: ${lang.added} ($positionLabel)',
       button: SnackbarButton(
         text: lang.undo,

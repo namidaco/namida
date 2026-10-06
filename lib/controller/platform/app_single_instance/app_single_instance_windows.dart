@@ -8,8 +8,14 @@ class AppSingleInstanceWindows extends AppSingleInstanceBase {
       args,
       "namida_instance",
       bringWindowToFront: true,
-      onSecondWindow: (args) => NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p),
+      onSecondWindow: _onSecondWindow,
+      exitFunction: () async => Namida.terminateProcessWindows(),
     );
+  }
+
+  void _onSecondWindow(List<String> args) {
+    NamidaReceiveIntentManager.executeReceivedItems(args, (p) => p, (p) => p);
+    NamidaTrayManager.showWindow();
   }
 
   @override

@@ -19,14 +19,22 @@ import 'package:namida/ui/widgets/text_suggestions.dart';
 class CreateSmartPlaylistDialog extends StatefulWidget {
   final SmartPlaylistWrapper? initialSmartPlaylistWrapper;
   final Completer<SmartPlaylistWrapper?>? _onSearchCompleter;
+  final SmartPlaylist? _prefillSmartPlaylist;
 
-  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylistWrapper}) : _onSearchCompleter = null;
+  const CreateSmartPlaylistDialog({super.key, this.initialSmartPlaylistWrapper}) : _onSearchCompleter = null, _prefillSmartPlaylist = null;
 
   const CreateSmartPlaylistDialog.forTempSmartSearch({
     super.key,
     this.initialSmartPlaylistWrapper,
     required Completer<SmartPlaylistWrapper?> completer,
-  }) : _onSearchCompleter = completer;
+  }) : _onSearchCompleter = completer,
+       _prefillSmartPlaylist = null;
+
+  const CreateSmartPlaylistDialog._prefilled({
+    required SmartPlaylist prefill,
+  }) : initialSmartPlaylistWrapper = null,
+       _onSearchCompleter = null,
+       _prefillSmartPlaylist = prefill;
 
   @override
   State<CreateSmartPlaylistDialog> createState() => _CreateSmartPlaylistDialogState();
@@ -79,7 +87,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
 
   @override
   void initState() {
-    final sp = widget.initialSmartPlaylistWrapper?.value;
+    final sp = widget.initialSmartPlaylistWrapper?.value ?? widget._prefillSmartPlaylist;
     if (sp != null) {
       _nameController.text = sp.name;
       _joiner = sp.joiner;
@@ -156,6 +164,13 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
         await SmartPlaylistsController.inst.create(smartPlaylist);
       }
     }
+  }
+
+  void _createSmartPlaylistFromSearch() {
+    final prefill = _buildSmartPlaylistFromCurrentParams().copyWith(name: '');
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CreateSmartPlaylistDialog._prefilled(prefill: prefill),
+    );
   }
 
   void _setJoiner(SmartJoiner joiner) {
@@ -360,13 +375,21 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                   ],
                 ),
 
-              if (isForTempSearch && ruleGroupsAreValid)
+              if (isForTempSearch && ruleGroupsAreValid) ...[
                 NamidaIconButton(
                   horizontalPadding: 8.0,
                   icon: Broken.refresh,
                   iconSize: 20.0,
                   onPressed: _resetEverything,
                 ),
+                NamidaIconButton(
+                  horizontalPadding: 8.0,
+                  icon: Broken.add_square,
+                  iconSize: 20.0,
+                  tooltip: () => lang.createNewSmartPlaylist,
+                  onPressed: _createSmartPlaylistFromSearch,
+                ),
+              ],
             ],
           ),
           actions: [

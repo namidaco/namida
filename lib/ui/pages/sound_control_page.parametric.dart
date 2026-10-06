@@ -1,5 +1,5 @@
 // parametric equalizer and audio output ui by claude
-part of 'equalizer_page.dart';
+part of 'sound_control_page.dart';
 
 class _ParametricEqualizerSection extends StatefulWidget {
   final _SoundControlMainSlidersColumnUpdateConfig updateConfig;

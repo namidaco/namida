@@ -34,9 +34,9 @@ import 'package:namida/ui/widgets/disabled_by_pill.dart';
 import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
-part 'equalizer_page.parametric.dart';
-part 'equalizer_page.signal_path.dart';
-part 'equalizer_page.sound_effects.dart';
+part 'sound_control_page.parametric.dart';
+part 'sound_control_page.signal_path.dart';
+part 'sound_control_page.sound_effects.dart';
 
 class SoundControlMainSlidersColumn extends StatefulWidget {
   final double verticalInBetweenPadding;

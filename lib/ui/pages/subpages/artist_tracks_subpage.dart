@@ -41,6 +41,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
 
   final List<Track> tracks;
   final List<AlbumIdentifierWrapper> albumIdentifiers;
+  final List<AlbumIdentifierWrapper> epsIdentifiers;
   final List<AlbumIdentifierWrapper> singlesIdentifiers;
   final List<AlbumIdentifierWrapper> extrasIdentifiers;
   final MediaType type;
@@ -50,6 +51,7 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
     required this.name,
     required this.tracks,
     required this.albumIdentifiers,
+    required this.epsIdentifiers,
     required this.singlesIdentifiers,
     required this.extrasIdentifiers,
     required this.type,
@@ -80,8 +82,9 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
     final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value ?? true;
+    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value ?? false;
     final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value ?? false; // cuz no space
-    final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
+    final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.epsIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
     final heroTag = 'artist_$name';
     return AnimationLimiter(
       child: BackgroundWrapper(
@@ -106,6 +109,16 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                         identifiers: widget.albumIdentifiers,
                         initiallyExpanded: albumsInitiallyExpanded,
                         onExpansionChanged: (value) => settings.extra.artistAlbumsExpanded.save(value),
+                      ),
+                    ],
+                    if (widget.epsIdentifiers.isNotEmpty) ...[
+                      const SizedBox(height: 6.0),
+                      _AlbumsRow(
+                        title: lang.eps,
+                        icon: Broken.music_playlist,
+                        identifiers: widget.epsIdentifiers,
+                        initiallyExpanded: epsInitiallyExpanded,
+                        onExpansionChanged: (value) => settings.extra.artistEpsExpanded.save(value),
                       ),
                     ],
                     if (widget.singlesIdentifiers.isNotEmpty) ...[

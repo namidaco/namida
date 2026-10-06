@@ -1,5 +1,5 @@
 // signal path ui by claude
-part of 'equalizer_page.dart';
+part of 'sound_control_page.dart';
 
 class _SignalPathSheet extends StatefulWidget {
   final double maxHeight;

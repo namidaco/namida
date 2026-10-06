@@ -19,6 +19,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
+part 'keys_search_wrapper.dart';
+
 // deep performance optimizations by claude, wrote some scary masking and bits shifting thingys
 class TracksSearchWrapper {
   final bool cleanup;
@@ -627,7 +629,7 @@ class _ScoreCalculator {
     }
   }
 
-  void scoreProperty(_Property? property, {int multiplier = 1, bool allowFuzzy = false}) {
+  void scoreProperty(_Property? property, {int multiplier = 1, bool allowFuzzy = false, bool preferPrefix = false}) {
     if (property == null) return;
 
     final cleaned = property.cleaned;
@@ -665,6 +667,15 @@ class _ScoreCalculator {
       return;
     }
 
+    // -- names are mostly filtered by typing their start, the start length relative to the name shouldn't matter
+    if (preferPrefix) {
+      final startsWithQuery = cleaned.text.startsWith(query.text) || (cleanedMinor != null && queryMinorText != null && cleanedMinor.text.startsWith(queryMinorText));
+      if (startsWithQuery) {
+        score += 200 * multiplier;
+        return;
+      }
+    }
+
     final matchingPercentageCleaned = matcher.compareMatchingPercentage(query, cleaned, fuzzy: allowFuzzy ? _queryFuzzy : null);
     if (matchingPercentageCleaned > 0) {
       score += (matchingPercentageCleaned * 200).round() * multiplier;
@@ -700,6 +711,22 @@ class _ScoreCalculator {
     scoreProperty(trExt.splitLanguages);
     scorePropertySimple(trExt.year);
     scorePropertySimple(trExt.lyrics);
+
+    return score;
+  }
+
+  int calculateKey(_SearchKey key) {
+    score = 0;
+
+    scoreProperty(key.title, multiplier: 6, allowFuzzy: true, preferPrefix: true);
+    scoreProperty(key.subtitle, multiplier: 2, allowFuzzy: true, preferPrefix: true);
+    if (score > 0) return score;
+    final extras = key.extras;
+    if (extras != null) {
+      for (final extra in extras) {
+        scoreProperty(extra);
+      }
+    }
 
     return score;
   }

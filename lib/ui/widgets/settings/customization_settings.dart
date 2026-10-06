@@ -420,11 +420,7 @@ class CustomizationSettings extends SettingSubpageProvider {
       var values = TrackExecuteActions.values;
       if (excludePlayerActions || excludeDelete || excludeFocus || !includePlayingItemActions) {
         final valuesToExclude = <TrackExecuteActions>[
-          if (excludePlayerActions) ...[
-            TrackExecuteActions.playnext,
-            TrackExecuteActions.playlast,
-            TrackExecuteActions.playafter,
-          ],
+          if (excludePlayerActions) ...TrackExecuteActions.playerActions,
           if (excludeDelete) ...[
             TrackExecuteActions.delete,
           ],

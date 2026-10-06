@@ -523,13 +523,13 @@ class Namida extends StatefulWidget {
         Namida._disposeAllResources().ignoreError(),
       ],
     );
-    if (Platform.isWindows) _terminateProcessWindows();
+    if (Platform.isWindows) terminateProcessWindows();
     await windowManager.destroy().ignoreError();
     return exit(0); // -- destroy alone can take seconds to actually close the process
   }
 
   /// `exit` (ExitProcess) runs dll detach routines while the engine & gpu threads are still alive, some gpu drivers hang or crash there.
-  static void _terminateProcessWindows() {
+  static void terminateProcessWindows() {
     final kernel32 = ffi.DynamicLibrary.open('kernel32.dll');
     final getCurrentProcess = kernel32.lookupFunction<ffi.IntPtr Function(), int Function()>('GetCurrentProcess');
     final terminateProcess = kernel32.lookupFunction<ffi.Int32 Function(ffi.IntPtr process, ffi.Uint32 exitCode), int Function(int process, int exitCode)>('TerminateProcess');

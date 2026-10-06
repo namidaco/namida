@@ -109,7 +109,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       button: didAddTracks
           ? SnackbarButton(
               text: lang.undo,
-              function: () async => await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate),
+              function: () async {
+                await updatePropertyInPlaylist(playlist.name, tracks: oldTracksList, modifiedDate: originalModifyDate);
+                final restoredPlaylist = getPlaylist(playlist.name);
+                if (restoredPlaylist != null) await onPlaylistTracksChanged(restoredPlaylist); // -- rewrites the m3u, its pending write still holds the added tracks
+              },
             )
           : null,
       merge: didAddTracks
@@ -707,7 +711,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         remoteSource: PlaylistRemoteSource(sourceKey: serverKey, remoteId: spl.id),
       );
 
-      newPl = ensureNewSourceItemsSorted(newPl);
+      newPl = await ensureNewSourceItemsSorted(newPl);
       await importPlaylistForce(newPl, sortPlaylists: false);
 
       anyChanged = true;

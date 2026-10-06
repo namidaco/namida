@@ -37,6 +37,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
   late final artistAlbumsExpanded = _key<bool?>('artistAlbumsExpanded', null);
   late final artistSinglesExpanded = _key<bool?>('artistSinglesExpanded', null);
+  late final artistEpsExpanded = _key<bool?>('artistEpsExpanded', null);
   late final artistsMapGraphLayout = _key<bool?>('artistsMapGraphLayout', null);
 
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);

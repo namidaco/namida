@@ -736,6 +736,7 @@ class TrackExtended {
       if (label.isNotEmpty) 'label': label,
       if (releaseType.isNotEmpty) 'releaseType': releaseType,
       if (bpm != null && bpm! > 0) 'bpm': bpm,
+      if (musicalKey.isNotEmpty) 'musicalKey': musicalKey,
       if (rating > 0) 'rating': rating,
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': ?gainData?.toMap(),
@@ -1001,6 +1002,7 @@ extension TrackExtUtils on TrackExtended {
       label: tag.recordLabel ?? label,
       releaseType: tag.releaseType ?? releaseType,
       bpm: tag.bpm ?? bpm,
+      musicalKey: tag.musicalKey ?? musicalKey,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
       tagsList: finaltagsEmbedded,
@@ -1077,6 +1079,7 @@ extension TrackExtUtils on TrackExtended {
     String? label,
     String? releaseType,
     int? bpm,
+    String? musicalKey,
     double? rating,
     String? originalTags,
     List<String>? tagsList,
@@ -1132,6 +1135,7 @@ extension TrackExtUtils on TrackExtended {
       label: label ?? this.label,
       releaseType: releaseType ?? this.releaseType,
       bpm: bpm ?? this.bpm,
+      musicalKey: musicalKey ?? this.musicalKey,
       rating: rating ?? this.rating,
       originalTags: originalTags ?? this.originalTags,
       tagsList: tagsList ?? this.tagsList,
@@ -1203,6 +1207,7 @@ extension TrackUtils on Track {
   String get label => toTrackExt().label;
   String get releaseType => toTrackExt().releaseType;
   int? get bpm => toTrackExt().bpm;
+  String get musicalKey => toTrackExt().musicalKey;
 
   int? get lastPlayedPositionInMs => statsRaw?.lastPositionInMs;
   TrackStats? get statsRaw => Indexer.inst.trackStatsMap.value[this];

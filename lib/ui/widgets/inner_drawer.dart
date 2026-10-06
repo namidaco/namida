@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:namida/core/constants.dart';
@@ -17,6 +18,7 @@ class NamidaInnerDrawer extends StatefulWidget {
   final double borderRadius;
   final double maxPercentage;
   final bool initiallySwipeable;
+  final bool Function() isEdgeSwipeOnly;
 
   const NamidaInnerDrawer({
     super.key,
@@ -28,6 +30,7 @@ class NamidaInnerDrawer extends StatefulWidget {
     this.borderRadius = 0,
     this.maxPercentage = 0.472,
     required this.initiallySwipeable,
+    required this.isEdgeSwipeOnly,
   });
 
   @override
@@ -80,6 +83,14 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
   late bool _canSwipe = widget.initiallySwipeable;
   bool _isOpened = false;
   double _distanceTraveled = 0;
+
+  static const _kEdgeSwipeWidth = 24.0;
+
+  bool _canAcceptDragPointer(PointerEvent event) {
+    if (controller.value > controller.lowerBound) return true;
+    if (!widget.isEdgeSwipeOnly()) return true;
+    return event.localPosition.dx <= _kEdgeSwipeWidth;
+  }
 
   void _recalculateDistanceTraveled() {
     _distanceTraveled = controller.value * context.width;
@@ -206,33 +217,42 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
         );
         return _canSwipe
             // -- touch absorber
-            ? HorizontalDragDetector(
+            ? RawGestureDetector(
                 behavior: HitTestBehavior.translucent,
-                onDown: (details) {
-                  controller.stop();
-                  _recalculateDistanceTraveled();
-                },
-                onUpdate: (details) {
-                  double toAdd = details.delta.dx;
-                  if (controller.value > widget.maxPercentage) {
-                    double toSubtract = (toAdd * (0.15 + controller.value));
-                    toAdd -= toSubtract;
-                  }
+                gestures: {
+                  _DrawerDragGestureRecognizer: GestureRecognizerFactoryWithHandlers<_DrawerDragGestureRecognizer>(
+                    () => _DrawerDragGestureRecognizer(canAcceptPointer: _canAcceptDragPointer, debugOwner: this),
+                    (instance) {
+                      instance
+                        ..onDown = (details) {
+                          controller.stop();
+                          _recalculateDistanceTraveled();
+                        }
+                        ..onUpdate = (details) {
+                          double toAdd = details.delta.dx;
+                          if (controller.value > widget.maxPercentage) {
+                            double toSubtract = (toAdd * (0.15 + controller.value));
+                            toAdd -= toSubtract;
+                          }
 
-                  _distanceTraveled = (_distanceTraveled + toAdd).withMinimum(0);
-                  controller.animateTo(_distanceTraveled / context.width);
-                },
-                onEnd: (details) {
-                  final velocity = details.velocity.pixelsPerSecond.dx;
-                  if (velocity > 300) {
-                    _openDrawer();
-                  } else if (velocity < -300) {
-                    _closeDrawer();
-                  } else if (animationValue > (_upperBoundRx.value * 0.4)) {
-                    _openDrawer();
-                  } else {
-                    _closeDrawer();
-                  }
+                          _distanceTraveled = (_distanceTraveled + toAdd).withMinimum(0);
+                          controller.animateTo(_distanceTraveled / context.width);
+                        }
+                        ..onEnd = (details) {
+                          final velocity = details.velocity.pixelsPerSecond.dx;
+                          if (velocity > 300) {
+                            _openDrawer();
+                          } else if (velocity < -300) {
+                            _closeDrawer();
+                          } else if (animationValue > (_upperBoundRx.value * 0.4)) {
+                            _openDrawer();
+                          } else {
+                            _closeDrawer();
+                          }
+                        }
+                        ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
+                    },
+                  ),
                 },
                 child: finalBuilder,
               )
@@ -240,4 +260,17 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
       },
     );
   }
+}
+
+// by claude
+class _DrawerDragGestureRecognizer extends HorizontalDragGestureRecognizer {
+  final bool Function(PointerEvent event) canAcceptPointer;
+
+  _DrawerDragGestureRecognizer({required this.canAcceptPointer, super.debugOwner});
+
+  @override
+  bool isPointerAllowed(PointerEvent event) => super.isPointerAllowed(event) && canAcceptPointer(event);
+
+  @override
+  bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) => super.isPointerPanZoomAllowed(event) && canAcceptPointer(event);
 }

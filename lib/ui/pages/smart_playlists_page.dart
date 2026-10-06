@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -22,7 +23,9 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_smartPlaylists;
 
-  const SmartPlaylistsPage({super.key});
+  final bool isLibraryTab;
+
+  const SmartPlaylistsPage({super.key, this.isLibraryTab = false});
 
   static const _tileItemExtent = 68.0;
 
@@ -49,6 +52,7 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
           ),
           Expanded(
             child: NamidaScrollbarWithController(
+              controller: isLibraryTab ? LibraryTab.smartPlaylists.scrollController : null,
               child: (sc) => AnimationLimiter(
                 child: SmoothCustomScrollView(
                   controller: sc,

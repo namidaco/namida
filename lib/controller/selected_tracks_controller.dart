@@ -23,6 +23,20 @@ class SelectedTracksController {
 
   final selectedPlaylistsNames = <Track, String>{};
 
+  QueueSourceBase? _selectionSource;
+  bool _hasMixedSelectionSources = false;
+
+  bool get isSelectedFromPlayerQueue => !_hasMixedSelectionSources && _selectionSource == QueueSource.playerQueue;
+
+  void _onSelectingFrom(QueueSourceBase? source) {
+    if (_tracksOrTwdList.value.isEmpty) {
+      _selectionSource = source;
+      _hasMixedSelectionSources = false;
+    } else if (source != _selectionSource) {
+      _hasMixedSelectionSources = true;
+    }
+  }
+
   final _tracksOrTwdList = <Selectable>[].obs;
   final _allTracksHashCodes = <Track, bool>{}.obs;
 
@@ -53,7 +67,7 @@ class SelectedTracksController {
   // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
   bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
 
-  void selectOrUnselect(Selectable track, int index, QueueSourceBase source, String? playlistName, {bool ranged = false}) {
+  void selectOrUnselect(Selectable track, int index, QueueSourceBase source, String? playlistName, {bool ranged = false, List<Selectable>? tracksOverride}) {
     playlistName ??= '';
     final rawTrack = track.track;
     if (isTrackSelected(track)) {
@@ -63,6 +77,7 @@ class SelectedTracksController {
       selectedPlaylistsNames.remove(rawTrack);
     } else {
       void selectSingle() {
+        _onSelectingFrom(source);
         _allTracksHashCodes[rawTrack] = true;
         _tracksOrTwdList.add(track);
         selectedPlaylistsNames[rawTrack] = playlistName!;
@@ -70,7 +85,7 @@ class SelectedTracksController {
 
       if (ranged && _tracksOrTwdList.value.isNotEmpty) {
         int largestSelectedIndex = -1;
-        final currentInfo = _getCurrentActiveTracksList(queueSource: source);
+        final currentInfo = _getCurrentActiveTracksList(queueSource: source, tracksOverride: tracksOverride);
         final tracks = currentInfo.$1 ?? [];
         final queueSource = currentInfo.$2;
         // -- find the largest selected index by reverse looping tracks list and breaking on first match
@@ -84,7 +99,7 @@ class SelectedTracksController {
           }
         }
         if (largestSelectedIndex > -1 && index > largestSelectedIndex) {
-          selectAllTracks(range: (largestSelectedIndex, index), source: queueSource);
+          selectAllTracks(range: (largestSelectedIndex, index), source: queueSource, tracksOverride: tracksOverride);
         } else {
           selectSingle();
         }
@@ -109,6 +124,8 @@ class SelectedTracksController {
   }
 
   void clearEverything() {
+    _selectionSource = null;
+    _hasMixedSelectionSources = false;
     _tracksOrTwdList.clear();
     _allTracksHashCodes.clear();
     selectedPlaylistsNames.clear();
@@ -117,11 +134,13 @@ class SelectedTracksController {
     bottomPadding.value = 0.0;
   }
 
-  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList({QueueSourceBase? queueSource}) {
+  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList({QueueSourceBase? queueSource, List<Selectable>? tracksOverride}) {
     List<Selectable>? tracks;
 
     NamidaRoute? routeTracks; // if the tracks are obtained from route
-    if (queueSource == QueueSource.playerQueue || (MiniPlayerController.inst.isInQueue && !Dimensions.inst.miniplayerIsWideScreen)) {
+    if (tracksOverride != null) {
+      tracks = tracksOverride;
+    } else if (queueSource == QueueSource.playerQueue || (MiniPlayerController.inst.isInQueue && !Dimensions.inst.miniplayerIsWideScreen)) {
       tracks = Player.inst.currentQueue.value.whereType<Selectable>().toList();
       queueSource ??= QueueSource.playerQueue;
     } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
@@ -137,8 +156,8 @@ class SelectedTracksController {
     return (tracks, queueSource, routeTracks);
   }
 
-  void selectAllTracks({(int, int)? range, QueueSourceBase? source}) {
-    final currentInfo = _getCurrentActiveTracksList(queueSource: source);
+  void selectAllTracks({(int, int)? range, QueueSourceBase? source, List<Selectable>? tracksOverride}) {
+    final currentInfo = _getCurrentActiveTracksList(queueSource: source, tracksOverride: tracksOverride);
     final tracks = currentInfo.$1;
     final routeTracks = currentInfo.$3;
 
@@ -155,6 +174,7 @@ class SelectedTracksController {
     }
     // ----------
 
+    _onSelectingFrom(currentInfo.$2);
     final pln = playlistNameToAdd;
     final hashMap = _allTracksHashCodes.value;
     final trMainList = _tracksOrTwdList.value;

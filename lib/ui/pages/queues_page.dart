@@ -4,6 +4,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -18,12 +19,15 @@ class QueuesPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.PAGE_queue;
 
-  const QueuesPage({super.key});
+  final bool isLibraryTab;
+
+  const QueuesPage({super.key, this.isLibraryTab = false});
 
   @override
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: NamidaScrollbarWithController(
+        controller: isLibraryTab ? LibraryTab.queues.scrollController : null,
         child: (sc) => AnimationLimiter(
           child: SmoothCustomScrollView(
             controller: sc,

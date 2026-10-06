@@ -38,6 +38,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/pages/queues_page.dart';
 import 'package:namida/ui/pages/subpages/your_year_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -251,11 +252,11 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       final int mostRecentListened14DaysMSSE = timeNow.subtract(Duration(days: 14)).millisecondsSinceEpoch;
       final underrated = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
         if (isItemFavourite(item)) return false; // alr favourited
-        final listensCount = topTracksMapListens[item]?.length;
-        if (listensCount != null && listensCount > 8) return false; // alr listened enough
+        final listens = topTracksMapListens[item];
+        if (listens == null || listens.isEmpty) return false; // never listened, not underrated
+        if (listens.length > 8) return false; // alr listened enough
         if (getItemDateAdded(item) > mostRecentAdded7DaysMSSE) return false; // its very recently added
-        final lastListen = topTracksMapListens[item]?.lastOrNull;
-        if (lastListen != null && lastListen > mostRecentListened14DaysMSSE) return false; // recently listened
+        if (listens.last > mostRecentListened14DaysMSSE) return false; // recently listened
         return true;
       });
 
@@ -2021,6 +2022,23 @@ class _MixesCardState extends State<_MixesCard> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 6.0),
+                        NamidaInkWell(
+                          onTap: () => showGeneralPopupDialog(
+                            widget.tracks,
+                            widget.title,
+                            widget.tracks.length.displayTrackKeyword,
+                            QueueSource.homePageItem,
+                          ),
+                          borderRadius: 8.0,
+                          padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
+                          bgColor: contentColor.withOpacityExt(0.6),
+                          child: const MoreIcon(
+                            iconSize: 20.0,
+                            iconColor: contentColorAlt,
+                            padding: 0.0,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -2036,8 +2054,9 @@ class _MixesCardState extends State<_MixesCard> {
                         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                       ),
                       child: TrackTilePropertiesProvider(
-                        configs: const TrackTilePropertiesConfigs(
+                        configs: TrackTilePropertiesConfigs(
                           queueSource: QueueSource.homePageItem,
+                          rangeSelectionTracks: widget.tracks,
                         ),
                         builder: (properties) => SuperSmoothListView.builder(
                           itemExtent: Dimensions.inst.trackTileItemExtent,

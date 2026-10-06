@@ -185,25 +185,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                                   height: cardHeight,
                                   showMenuFunction: () => NamidaDialogs.inst.showGenreDialog(genre, genreType),
                                   onTap: () => NamidaOnTaps.inst.onGenreTap(genre, genreType),
-                                  widgetsInStack: topRightText == null
-                                      ? const []
-                                      : [
-                                          Positioned(
-                                            top: 0,
-                                            right: 0,
-                                            child: NamidaBlurryContainer(
-                                              child: Text(
-                                                topRightText,
-                                                style: textTheme.displaySmall?.copyWith(
-                                                  fontSize: 12.0,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                softWrap: false,
-                                                overflow: TextOverflow.fade,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                  topRightText: topRightText,
                                 ),
                               );
                             },

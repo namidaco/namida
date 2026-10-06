@@ -169,6 +169,7 @@ class TagLibRes {
         recordLabel: info.recordLabel,
         releaseType: info.releaseType,
         bpm: parsy(info.bpm),
+        musicalKey: info.musicalKey,
         mbAlbumId: info.MUSICBRAINZ_ALBUMID,
         mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
         gainData: ReplayGainData.fromTagLibMap(properties),
@@ -263,6 +264,7 @@ class TagLibPropertiesWrapper {
   String? get recordLabel => _getPropertyFallbacks(_TagLibFieldsFallback.label);
   String? get releaseType => _getPropertyFallbacks(_TagLibFieldsFallback.releaseType);
   String? get bpm => _getPropertyFirst(TagLibField.bpm);
+  String? get musicalKey => _getPropertyFirstFallbacks(_TagLibFieldsFallback.musicalKey);
   String? get sampleRate => _getPropertyFirst(TagLibField.sampleRate);
   String? get tempo => _getPropertyFirst(TagLibField.tempo);
   String? get mixer => _getPropertyFirst(TagLibField.mixer);
@@ -332,6 +334,10 @@ class _TagLibFieldsFallback {
   static const List<_TagProperty> releaseType = [
     _TagProperty.key(TagLibField.releaseType),
     _TagProperty.key(TagLibField.MUSICBRAINZ_ALBUMTYPE),
+  ];
+  static const List<_TagProperty> musicalKey = [
+    _TagProperty.key(TagLibField.initialKey),
+    _TagProperty.key(TagLibField.key),
   ];
 }
 
@@ -422,6 +428,7 @@ class TagLibField {
   static const djmixer = 'DJMIXER';
   static const bpm = 'BPM';
   static const initialKey = 'INITIALKEY';
+  static const key = 'KEY';
   static const length = 'LENGTH';
   static const channels = 'CHANNELS';
   static const sampleRate = 'SAMPLERATE';

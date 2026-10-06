@@ -50,7 +50,7 @@ class _BookmarksSectionState extends State<BookmarksSection> with _ItemBookmarks
               child: Row(
                 children: [
                   const Icon(
-                    Broken.bookmark,
+                    Broken.book_saved,
                     size: 20.0,
                   ),
                   const SizedBox(width: 12.0),
@@ -283,7 +283,7 @@ class _BookmarkTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              Broken.bookmark,
+              Broken.book_saved,
               size: 18.0,
               color: theme.colorScheme.primary,
             ),

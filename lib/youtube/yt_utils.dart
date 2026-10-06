@@ -406,7 +406,7 @@ class YTUtils {
       final bookmarksCount = BookmarksController.inst.currentBookmarks.value.length;
       if (bookmarksCount > 0) {
         bookmarksItem = NamidaPopupItem(
-          icon: Broken.bookmark,
+          icon: Broken.book_saved,
           title: '${lang.bookmarks}: $bookmarksCount',
           onTap: () => showBookmarksSheet(currentItem),
         );

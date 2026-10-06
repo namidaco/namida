@@ -370,6 +370,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     final isInsideDialog = tracksToAdd != null;
     final enableHero = !isInsideDialog;
     const libraryTab = LibraryTab.playlists;
+    final isScrolledToTop = libraryTab.scrollPosition <= 0;
+    final enableTopSectionHero = enableHero && isScrolledToTop; // -- flights aren't clipped, cards partially scrolled away would cover the filter bar
     final scrollController = isInsideDialog ? null : libraryTab.scrollController;
     final defaultCardHorizontalPadding = Dimensions.inst.availableAppContentWidth * 0.045;
     final defaultCardHorizontalPaddingCenter = Dimensions.inst.availableAppContentWidth * 0.035;
@@ -444,7 +446,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                       if (!isInsideDialog)
                         SliverToBoxAdapter(
                           child: NamidaHero(
-                            enabled: enableHero,
+                            enabled: enableTopSectionHero,
                             tag: 'PlaylistPage_TopRow',
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -530,7 +532,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     SizedBox(width: defaultCardHorizontalPadding),
                                     Expanded(
                                       child: NamidaHero(
-                                        enabled: enableHero,
+                                        enabled: enableTopSectionHero,
                                         tag: 'DPC_history',
                                         child: ObxO(
                                           rx: HistoryController.inst.totalHistoryItemsCount,
@@ -548,7 +550,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     SizedBox(width: defaultCardHorizontalPaddingCenter),
                                     Expanded(
                                       child: NamidaHero(
-                                        enabled: enableHero,
+                                        enabled: enableTopSectionHero,
                                         tag: 'DPC_mostplayed',
                                         child: Obx(
                                           (context) => DefaultPlaylistCard(
@@ -571,7 +573,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     SizedBox(width: defaultCardHorizontalPadding),
                                     Expanded(
                                       child: NamidaHero(
-                                        enabled: enableHero,
+                                        enabled: enableTopSectionHero,
                                         tag: 'DPC_favs',
                                         child: ObxOClass(
                                           rx: PlaylistController.inst.favouritesPlaylist,
@@ -588,7 +590,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     SizedBox(width: defaultCardHorizontalPaddingCenter),
                                     Expanded(
                                       child: NamidaHero(
-                                        enabled: enableHero,
+                                        enabled: enableTopSectionHero,
                                         tag: 'DPC_queues',
                                         child: Obx(
                                           (context) => DefaultPlaylistCard(
@@ -808,17 +810,19 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                           List<String> playlistSearchList;
                                           if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
                                             // -- put playlists having the tracks at first
-                                            final playlistSearchListSorted = <String>[];
+                                            final playlistSearchListWritable = <String>[];
                                             final shouldReSort = existingStatus.isEmpty; // sort only once, so that refresh won't make them jump around
 
                                             for (final key in playlistSearchListPre) {
                                               final playlist = playlistsMap[key]!;
                                               if (playlist.isReadOnly) continue; // -- can't add tracks to read-only playlists
-                                              playlistSearchListSorted.add(key);
+                                              playlistSearchListWritable.add(key);
                                               final allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
                                               existingStatus[key] = allTracksExist;
                                             }
-                                            playlistSearchListSorted.sortBy((key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1));
+                                            final playlistSearchListSorted = playlistSearchListWritable.sortedByPrecomputed(
+                                              (key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1),
+                                            );
                                             if (shouldReSort) {
                                               int index = 0;
                                               for (final p in playlistSearchListSorted) {
@@ -1362,10 +1366,8 @@ class _PlaylistGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final name = playlist.name;
     final remoteInfo = playlist.getRemoteInfo();
-    final extraText = this.extraText;
     final isSelected = this.isSelected;
     final m3uPath = playlist.m3uPath;
     final iconSize = (textAreaHeight * 0.34).withMaximum(18.0);
@@ -1414,7 +1416,14 @@ class _PlaylistGridCard extends StatelessWidget {
       showMenuFunction: onLongPress,
       onTap: onTap,
       artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(name),
+      topRightText: extraText,
       widgetsInStack: [
+        if (isSelected != null)
+          Positioned.fill(
+            child: _PlaylistSelectionHighlight(
+              isSelected: isSelected,
+            ),
+          ),
         if (hasMarks)
           Positioned(
             bottom: marksBadgeBottom,
@@ -1430,22 +1439,6 @@ class _PlaylistGridCard extends StatelessWidget {
             bottom: 0.0,
             right: 0.0,
             child: sourceBadge,
-          ),
-        if (extraText != null && extraText.isNotEmpty)
-          Positioned(
-            top: 0,
-            right: 0,
-            child: NamidaBlurryContainer(
-              child: Text(
-                extraText,
-                style: textTheme.displaySmall?.copyWith(
-                  fontSize: 12.0,
-                  fontWeight: FontWeight.bold,
-                ),
-                softWrap: false,
-                overflow: TextOverflow.fade,
-              ),
-            ),
           ),
         if (isSelected != null)
           Positioned(
@@ -1565,6 +1558,35 @@ class _PlaylistSelectionBadge extends StatelessWidget {
         child: NamidaCheckMark(
           size: 16.0,
           active: isSelected,
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaylistSelectionHighlight extends StatelessWidget {
+  final bool isSelected;
+
+  const _PlaylistSelectionHighlight({
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final secondary = context.theme.colorScheme.secondary;
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: isSelected ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: secondary.withOpacityExt(0.12),
+            border: Border.all(
+              color: secondary.withOpacityExt(0.8),
+              width: 2.0,
+            ),
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          ),
         ),
       ),
     );

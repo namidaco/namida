@@ -1,5 +1,5 @@
 // by claude
-part of 'equalizer_page.dart';
+part of 'sound_control_page.dart';
 
 /// tapping an effect toggles it, dragging across an enabled one sets its intensity.
 class _SoundEffectsSection extends StatelessWidget {

@@ -530,42 +530,45 @@ class _MapTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final tracks = name.getArtistTracksFor(type);
     final pathToImage = tracks.pathToImage;
-    return NamidaInkWell(
-      onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, tracks),
-      onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
-      enableSecondaryTap: true,
-      borderRadius: 0.0,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(_kRingWidth),
-            child: NetworkArtwork.orLocal(
-              key: Key(pathToImage),
-              info: NetworkArtworkInfo.artist(name),
-              path: pathToImage,
-              track: tracks.trackOfImage,
-              thumbnailSize: artworkExtent,
-              borderRadius: 0.0,
-              forceSquared: true,
-              blur: 0.0,
-              isCircle: true,
-              iconSize: 22.0,
+    // -- an image loading in one tile would otherwise repaint every visible tile
+    return RepaintBoundary(
+      child: NamidaInkWell(
+        onTap: () => NamidaOnTaps.inst.onArtistTap(name, type, tracks),
+        onLongPress: () => NamidaDialogs.inst.showArtistDialog(name, type),
+        enableSecondaryTap: true,
+        borderRadius: 0.0,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(_kRingWidth),
+              child: NetworkArtwork.orLocal(
+                key: Key(pathToImage),
+                info: NetworkArtworkInfo.artist(name),
+                path: pathToImage,
+                track: tracks.trackOfImage,
+                thumbnailSize: artworkExtent,
+                borderRadius: 0.0,
+                forceSquared: true,
+                blur: 0.0,
+                isCircle: true,
+                iconSize: 22.0,
+              ),
             ),
-          ),
-          const SizedBox(
-            height: 3.0,
-          ),
-          Expanded(
-            child: Text(
-              name,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              softWrap: false,
-              overflow: TextOverflow.fade,
-              style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+            const SizedBox(
+              height: 3.0,
             ),
-          ),
-        ],
+            Expanded(
+              child: Text(
+                name,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+                style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -615,11 +618,12 @@ class _MapPaintState extends ChangeNotifier {
   int get hovered => _hovered;
   TextPainter? get hoveredLabel => _hoveredLabel;
 
-  /// tiles keep a fixed ring size, so they only repaint once the line widths drift visibly.
+  /// repaints only once the line widths drift visibly, tiles keep a fixed ring size so they can drift further.
   set scale(double value) {
     if (value == _scale) return;
     _scale = value;
-    if (_tilesMode && (value / _paintedScale - 1.0).abs() < 0.25) return;
+    final maxDrift = _tilesMode ? 0.25 : 0.08;
+    if ((value / _paintedScale - 1.0).abs() < maxDrift) return;
     _paintedScale = value;
     notifyListeners();
   }

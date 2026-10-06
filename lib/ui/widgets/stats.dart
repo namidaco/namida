@@ -13,6 +13,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -34,7 +35,8 @@ import 'package:namida/youtube/yt_utils.dart';
 
 class StatsPage extends StatelessWidget with NamidaRouteWidget {
   final bool isYoutube;
-  const StatsPage({super.key, required this.isYoutube});
+  final bool isLibraryTab;
+  const StatsPage({super.key, required this.isYoutube, this.isLibraryTab = false});
 
   @override
   RouteType get route => RouteType.PAGE_stats;
@@ -43,6 +45,7 @@ class StatsPage extends StatelessWidget with NamidaRouteWidget {
   Widget build(BuildContext context) {
     return BackgroundWrapper(
       child: SmoothCustomScrollView(
+        controller: isLibraryTab ? LibraryTab.stats.scrollController : null,
         slivers: [
           const SliverToBoxAdapter(
             child: StatsSection(),
@@ -270,7 +273,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   final _donutType = ValueNotifier(MediaType.genre);
   bool _isYoutube = false;
   bool _loading = true;
-  bool _showAllArtists = false;
+  final _shownCounts = <_ExpandableStatsList, int>{};
   bool _sharingAll = false;
   int _requestId = 0;
 
@@ -345,8 +348,21 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   void _selectPeriod(MostPlayedTimeRange mptr, [DateRange? custom]) {
     _mptr = mptr;
     _custom = custom;
-    _showAllArtists = false;
+    _shownCounts.clear();
     _compute();
+  }
+
+  int _shownCountOf(_ExpandableStatsList list) => _shownCounts[list] ?? list.initialCount;
+
+  List<T> _shownItemsOf<T>(_ExpandableStatsList list, List<T> all) {
+    final shownCount = _shownCountOf(list);
+    return all.length > shownCount ? all.sublist(0, shownCount) : all;
+  }
+
+  void _onShowMoreTap(_ExpandableStatsList list, int totalCount) {
+    final shownCount = _shownCountOf(list);
+    final newShownCount = shownCount >= totalCount ? list.initialCount : shownCount + list.step;
+    setState(() => _shownCounts[list] = newShownCount);
   }
 
   void _openCustomCalendar() {
@@ -792,6 +808,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           final obsessions = s.obsessions;
+          final shownObsessions = _shownItemsOf(_ExpandableStatsList.obsessions, obsessions);
           final session = s.longestSession;
           final textTheme = context.theme.textTheme;
           return StatsChartCard(
@@ -811,9 +828,14 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   _buildItemsList(
                     context,
                     s,
-                    obsessions.map((o) => StatsRankEntry(o.item, o.count)).toList(),
-                    trailingTexts: obsessions.map((o) => StatsFormat.day(o.day)).toList(),
-                    listensRangeMS: obsessions.map((o) => (HistoryManager.daysSince1970ToMilliseconds(o.day), HistoryManager.daysSince1970ToMilliseconds(o.day + 1) - 1)).toList(),
+                    shownObsessions.map((o) => StatsRankEntry(o.item, o.count)).toList(),
+                    trailingTexts: shownObsessions.map((o) => StatsFormat.day(o.day)).toList(),
+                    listensRangeMS: shownObsessions.map((o) => (HistoryManager.daysSince1970ToMilliseconds(o.day), HistoryManager.daysSince1970ToMilliseconds(o.day + 1) - 1)).toList(),
+                  ),
+                if (obsessions.length > _ExpandableStatsList.obsessions.initialCount)
+                  _ShowMoreButton(
+                    isFullyShown: shownObsessions.length >= obsessions.length,
+                    onTap: () => _onShowMoreTap(_ExpandableStatsList.obsessions, obsessions.length),
                   ),
                 if (session != null) ...[
                   const SizedBox(height: 10.0),
@@ -932,7 +954,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
           );
         }
         final items = (s as HistoryStatsSnapshot<Track>).topItems;
-        final shown = items.length > 10 ? items.sublist(0, 10) : items;
+        final shown = _shownItemsOf(_ExpandableStatsList.topItems, items);
         final queue = shown.map((e) => e.key).toList();
         return StatsChartCard(
           title: '${lang.top} $itemsLabel',
@@ -940,17 +962,24 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
           copyText: () => items.map((e) => '${e.key.toTrackExt().originalArtist} - ${e.key.toTrackExt().title} • ${e.count}').join('\n'),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: List.generate(
-              shown.length,
-              (i) => StatsTopTrackTile(
-                track: shown[i].key,
-                index: i,
-                count: shown[i].count,
-                queue: queue,
-                listensRangeMS: (HistoryManager.daysSince1970ToMilliseconds(s.firstDay), HistoryManager.daysSince1970ToMilliseconds(s.lastDay + 1) - 1),
+            children: [
+              ...List.generate(
+                shown.length,
+                (i) => StatsTopTrackTile(
+                  track: shown[i].key,
+                  index: i,
+                  count: shown[i].count,
+                  queue: queue,
+                  listensRangeMS: (HistoryManager.daysSince1970ToMilliseconds(s.firstDay), HistoryManager.daysSince1970ToMilliseconds(s.lastDay + 1) - 1),
+                ),
+                growable: false,
               ),
-              growable: false,
-            ),
+              if (items.length > _ExpandableStatsList.topItems.initialCount)
+                _ShowMoreButton(
+                  isFullyShown: shown.length >= items.length,
+                  onTap: () => _onShowMoreTap(_ExpandableStatsList.topItems, items.length),
+                ),
+            ],
           ),
         );
       },
@@ -1019,7 +1048,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           final all = s.topArtists;
-          final shown = _showAllArtists || all.length <= 10 ? all : all.sublist(0, 10);
+          final shown = _shownItemsOf(_ExpandableStatsList.topArtists, all);
           final data = shown.map((e) => ChartData(e.key, e.count)).toFixedList();
           return StatsChartCard(
             title: '${lang.top} $artistsLabel',
@@ -1032,27 +1061,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   data: data,
                   onTap: isYoutube ? null : (i) => NamidaOnTaps.inst.onArtistTap(shown[i].key, MediaType.artist),
                 ),
-                if (all.length > 10)
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: NamidaInkWell(
-                      borderRadius: 6.0,
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                      onTap: () => setState(() => _showAllArtists = !_showAllArtists),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!_showAllArtists) ...[
-                            Text(
-                              lang.showMore,
-                              style: context.theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(width: 4.0),
-                          ],
-                          Icon(_showAllArtists ? Broken.arrow_up_3 : Broken.arrow_down_2, size: 14.0),
-                        ],
-                      ),
-                    ),
+                if (all.length > _ExpandableStatsList.topArtists.initialCount)
+                  _ShowMoreButton(
+                    isFullyShown: shown.length >= all.length,
+                    onTap: () => _onShowMoreTap(_ExpandableStatsList.topArtists, all.length),
                   ),
               ],
             ),
@@ -1088,7 +1100,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           final textTheme = context.theme.textTheme;
-          final shown = s.completedAlbums.length > 10 ? s.completedAlbums.sublist(0, 10) : s.completedAlbums;
+          final shown = _shownItemsOf(_ExpandableStatsList.completedAlbums, s.completedAlbums);
           return StatsChartCard(
             title: lang.completedAlbums,
             subtitle: lang.countAlbums(count: s.completedAlbums.length),
@@ -1096,33 +1108,38 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             copyText: () => s.completedAlbums.map((e) => '${e.name} • ${lang.countTracks(count: e.tracks)} • ${e.listens}').join('\n'),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: shown
-                  .map(
-                    (e) => NamidaInkWell(
-                      borderRadius: 10.0,
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                      onTap: () => NamidaOnTaps.inst.onAlbumTap(e.key as AlbumIdentifierWrapper),
-                      child: Row(
-                        children: [
-                          Icon(Broken.music_dashboard, size: 18.0, color: context.defaultIconColor()),
-                          const SizedBox(width: 10.0),
-                          Expanded(
-                            child: Text(
-                              e.name,
-                              style: textTheme.displayMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w600),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+              children: [
+                ...shown.map(
+                  (e) => NamidaInkWell(
+                    borderRadius: 10.0,
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                    onTap: () => NamidaOnTaps.inst.onAlbumTap(e.key as AlbumIdentifierWrapper),
+                    child: Row(
+                      children: [
+                        Icon(Broken.music_dashboard, size: 18.0, color: context.defaultIconColor()),
+                        const SizedBox(width: 10.0),
+                        Expanded(
+                          child: Text(
+                            e.name,
+                            style: textTheme.displayMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w600),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: 8.0),
-                          Text(lang.countTracks(count: e.tracks), style: textTheme.displaySmall?.copyWith(fontSize: 11.0)),
-                          const SizedBox(width: 8.0),
-                          Text(e.listens.formatDecimal(), style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700)),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8.0),
+                        Text(lang.countTracks(count: e.tracks), style: textTheme.displaySmall?.copyWith(fontSize: 11.0)),
+                        const SizedBox(width: 8.0),
+                        Text(e.listens.formatDecimal(), style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700)),
+                      ],
                     ),
-                  )
-                  .toList(),
+                  ),
+                ),
+                if (s.completedAlbums.length > _ExpandableStatsList.completedAlbums.initialCount)
+                  _ShowMoreButton(
+                    isFullyShown: shown.length >= s.completedAlbums.length,
+                    onTap: () => _onShowMoreTap(_ExpandableStatsList.completedAlbums, s.completedAlbums.length),
+                  ),
+              ],
             ),
           );
         },
@@ -1388,4 +1405,51 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       ),
     );
   }
+}
+
+class _ShowMoreButton extends StatelessWidget {
+  final bool isFullyShown;
+  final void Function() onTap;
+
+  const _ShowMoreButton({
+    required this.isFullyShown,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: NamidaInkWell(
+        borderRadius: 6.0,
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!isFullyShown) ...[
+              Text(
+                lang.showMore,
+                style: context.theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(width: 4.0),
+            ],
+            Icon(isFullyShown ? Broken.arrow_up_3 : Broken.arrow_down_2, size: 14.0),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _ExpandableStatsList {
+  obsessions(initialCount: 5, step: 5),
+  topItems(initialCount: 10, step: 10),
+  topArtists(initialCount: 10, step: 10),
+  completedAlbums(initialCount: 10, step: 10),
+  ;
+
+  final int initialCount;
+  final int step;
+  const _ExpandableStatsList({required this.initialCount, required this.step});
 }

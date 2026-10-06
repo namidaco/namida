@@ -751,7 +751,7 @@ enum RouteType {
   PAGE_widePlayer,
   PAGE_smartPlaylists,
   PAGE_discover,
-  PAGE_artistsMap,
+  PAGE_artistsMap(isDrawerEdgeSwipeOnly: true),
   PAGE_moods,
   PAGE_tags,
   PAGE_languages,
@@ -814,6 +814,10 @@ enum RouteType {
 
   /// others
   UNKNOWN,
+  ;
+
+  final bool isDrawerEdgeSwipeOnly;
+  const RouteType({this.isDrawerEdgeSwipeOnly = false});
 }
 
 /// Used for search and sort.
@@ -1098,9 +1102,10 @@ enum YTVisibleMixesPlaces {
 
 enum TrackExecuteActions {
   none,
-  playnext,
-  playlast,
-  playafter,
+  play(isPlayerAction: true),
+  playnext(isPlayerAction: true),
+  playlast(isPlayerAction: true),
+  playafter(isPlayerAction: true),
   addtoplaylist,
   addBookmark(isPlayingItemOnly: true),
   openinfo,
@@ -1125,9 +1130,11 @@ enum TrackExecuteActions {
   delete,
   ;
 
+  final bool isPlayerAction;
   final bool isPlayingItemOnly;
-  const TrackExecuteActions({this.isPlayingItemOnly = false});
+  const TrackExecuteActions({this.isPlayerAction = false, this.isPlayingItemOnly = false});
 
+  static final playerActions = values.where((action) => action.isPlayerAction).toFixedList();
   static final playingItemOnlyActions = values.where((action) => action.isPlayingItemOnly).toFixedList();
 }
 
@@ -1305,6 +1312,7 @@ enum LibraryImageSource {
 
 enum AlbumType {
   single,
+  ep,
   normal,
 }
 

@@ -645,6 +645,30 @@ class Player {
     return done;
   }
 
+  Future<bool> moveItemsToNext(List<int> indices, {bool vibrate = true}) async {
+    final done = await _audioHandler.moveItemsToNext(indices);
+    if (done && vibrate) VibratorController.light();
+    return done;
+  }
+
+  Future<bool> moveItemsToLast(List<int> indices, {bool vibrate = true}) async {
+    final done = await _audioHandler.moveItemsToLast(indices);
+    if (done && vibrate) VibratorController.light();
+    return done;
+  }
+
+  /// every queue index holding one of [tracks], duplicates included.
+  List<int> queueIndicesOf(Iterable<Selectable> tracks) {
+    final tracksSet = tracks.map((e) => e.track).toSet();
+    final queue = currentQueue.value;
+    final indices = <int>[];
+    for (int i = 0; i < queue.length; i++) {
+      final item = queue[i];
+      if (item is Selectable && tracksSet.contains(item.track)) indices.add(i);
+    }
+    return indices;
+  }
+
   SnackbarController? _latestSnacky;
   Future<void> removeFromQueueWithUndo(int index) async {
     _latestSnacky?.close();

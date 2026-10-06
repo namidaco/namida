@@ -47,7 +47,7 @@ import 'package:namida/packages/miniplayer_raw.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
-import 'package:namida/ui/pages/equalizer_page.dart';
+import 'package:namida/ui/pages/sound_control_page.dart';
 import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -438,6 +438,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       showBufferBars: false,
       clampCircleEdges: false,
       useReducedProgressColor: true,
+      enableGlow: true,
     );
 
     final topRightButton = _TopActionButton(

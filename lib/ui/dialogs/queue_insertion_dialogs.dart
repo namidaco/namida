@@ -618,7 +618,7 @@ class _ShuffleExclusionTile extends StatelessWidget {
             ),
             trailing: NamidaWheelSlider(
               initValue: excludeCount,
-              max: 100,
+              max: 500,
               onValueChanged: settings.shuffleExcludeCount.save,
               text: excludeCount > 0 ? excludeCount.displayTrackKeyword : lang.none,
             ),

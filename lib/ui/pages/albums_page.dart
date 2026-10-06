@@ -273,6 +273,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
     return [
       buildTile(AlbumType.single, Broken.music_square, lang.singles),
+      buildTile(AlbumType.ep, Broken.music_playlist, lang.eps),
       buildTile(AlbumType.normal, Broken.music_dashboard, lang.albums),
     ];
   }

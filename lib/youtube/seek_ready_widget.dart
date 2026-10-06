@@ -41,6 +41,7 @@ class SeekReadyWidget extends StatefulWidget {
   final bool showBufferBars;
   final bool? clampCircleEdges;
   final bool useReducedProgressColor;
+  final bool enableGlow;
   final bool Function()? canDrag;
   final void Function(bool isDragging)? onDraggingChange;
 
@@ -56,6 +57,7 @@ class SeekReadyWidget extends StatefulWidget {
     this.showBufferBars = true,
     this.clampCircleEdges,
     this.useReducedProgressColor = false,
+    this.enableGlow = false,
     this.canDrag,
     this.onDraggingChange,
   });
@@ -553,6 +555,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                     final buffered = Player.inst.buffered.valueR;
                     final videoCached = Player.inst.currentCachedVideo.valueR != null;
                     final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
+                    final isGlowEnabled = widget.enableGlow && settings.enableGlowEffect.valueR;
                     return SizedBox(
                       width: maxWidth,
                       child: Stack(
@@ -635,6 +638,15 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                 borderRadius: const BorderRadius.all(
                                   Radius.circular(6.0),
                                 ),
+                                boxShadow: isGlowEnabled
+                                    ? [
+                                        BoxShadow(
+                                          color: progressColor.withOpacityExt(0.5),
+                                          blurRadius: 4.0,
+                                          offset: const Offset(0.0, 1.5),
+                                        ),
+                                      ]
+                                    : null,
                               ),
                               child: ObxO(
                                 rx: Player.inst.nowPlayingPosition,

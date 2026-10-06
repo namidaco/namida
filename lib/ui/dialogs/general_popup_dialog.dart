@@ -24,6 +24,7 @@ import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -102,6 +103,22 @@ Future<void> showGeneralPopupDialog(
   }
 
   final isSingleAndFromQueue = index != null && isSingle && source == QueueSource.playerQueue;
+  final isSelectionFromQueue = source == QueueSource.selectedTracks && SelectedTracksController.inst.isSelectedFromPlayerQueue;
+  void Function()? moveToNextInQueue;
+  void Function()? moveToLastInQueue;
+  if (isSingleAndFromQueue) {
+    moveToNextInQueue = () => Player.inst.moveToNext(index).closeDialog();
+    moveToLastInQueue = () => Player.inst.moveToLast(index).closeDialog();
+  } else if (isSelectionFromQueue) {
+    moveToNextInQueue = () {
+      final indices = Player.inst.queueIndicesOf(tracks);
+      Player.inst.moveItemsToNext(indices).closeDialog();
+    };
+    moveToLastInQueue = () {
+      final indices = Player.inst.queueIndicesOf(tracks);
+      Player.inst.moveItemsToLast(indices).closeDialog();
+    };
+  }
   final isSingleAndCurrentTrack = isSingle && tracks.first == Player.inst.currentTrack?.track;
   final int? stopAfterItems = isSingleAndFromQueue
       ? Player.inst.sleepAfterItemsForIndex(index)
@@ -1351,7 +1368,7 @@ Future<void> showGeneralPopupDialog(
                                         icon: Icon(
                                           Broken.setting_4,
                                           size: 20.0,
-                                          color: context.defaultIconColor(),
+                                          color: iconColor,
                                         ),
                                         iconSize: 20.0,
                                         onPressed: () {
@@ -1378,7 +1395,7 @@ Future<void> showGeneralPopupDialog(
                                     icon: Icon(
                                       Broken.setting_4,
                                       size: 20.0,
-                                      color: context.defaultIconColor(),
+                                      color: iconColor,
                                     ),
                                     iconSize: 20.0,
                                     onPressed: () {
@@ -1625,7 +1642,7 @@ Future<void> showGeneralPopupDialog(
                                         NamidaNavigator.inst.closeDialog();
                                         Player.inst.addToQueue(tracks, insertNext: true, showSnackBar: !isSingle);
                                       },
-                                      onLongPress: isSingleAndFromQueue ? () => Player.inst.moveToNext(index).closeDialog() : null,
+                                      onLongPress: moveToNextInQueue,
                                     ),
                                   ),
                                   Container(
@@ -1643,7 +1660,7 @@ Future<void> showGeneralPopupDialog(
                                         NamidaNavigator.inst.closeDialog();
                                         Player.inst.addToQueue(tracks, showSnackBar: !isSingle);
                                       },
-                                      onLongPress: isSingleAndFromQueue ? () => Player.inst.moveToLast(index).closeDialog() : null,
+                                      onLongPress: moveToLastInQueue,
                                     ),
                                   ),
                                 ],

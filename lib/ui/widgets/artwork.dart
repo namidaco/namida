@@ -26,6 +26,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/image_advanced.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
+import 'package:namida/ui/widgets/stats_charts.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 class ArtworkWidget extends StatefulWidget {
@@ -727,7 +728,48 @@ class MultiArtworks extends StatelessWidget {
       initialIndex: index,
       heroTag: heroTag,
       themeColor: null,
+      onSaveCollage: tracks.length > 1 ? _saveCollage : null,
     );
+  }
+
+  _CollageCells _createCollageCells({required int fadeMilliSeconds, required bool reduceQuality, required void Function(int index)? onCellTap}) {
+    return _CollageCells(
+      tracks: tracks,
+      imagePaths: [for (final t in tracks) t.pathToImage],
+      iconSize: iconSize,
+      fallbackToFolderCover: fallbackToFolderCover,
+      reduceQuality: reduceQuality,
+      fallbackIcon: fallbackIcon,
+      fadeMilliSeconds: fadeMilliSeconds,
+      onCellTap: onCellTap,
+    );
+  }
+
+  /// renders the collage in the current style off-screen, then saves it as a png.
+  Future<String?> _saveCollage(BuildContext context) async {
+    const collageSize = 720.0;
+    final boundaryKey = GlobalKey();
+    final cells = _createCollageCells(fadeMilliSeconds: 0, reduceQuality: false, onCellTap: null);
+    final entry = OverlayEntry(
+      builder: (context) => StatsExportOffstage(
+        width: collageSize,
+        child: RepaintBoundary(
+          key: boundaryKey,
+          child: SizedBox.square(
+            dimension: collageSize,
+            child: _ArtworkCollage(cells: cells),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(entry);
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final paths = await StatsExport.capture([boundaryKey], (_) => 'namida_collage_$timestamp.png');
+    entry.remove();
+    entry.dispose();
+    final path = paths.firstOrNull;
+    if (path == null) return null;
+    return EditDeleteController.inst.saveImageToStorage(File(path));
   }
 
   @override
@@ -758,16 +800,10 @@ class MultiArtworks extends StatelessWidget {
             )
           : customArtwork;
     }
-    late final imagePaths = [for (final t in tracks) t.pathToImage];
     late final collageWidget = _ArtworkCollage(
-      cells: _CollageCells(
-        tracks: tracks,
-        imagePaths: imagePaths,
-        iconSize: iconSize,
-        fallbackToFolderCover: fallbackToFolderCover,
-        reduceQuality: reduceQuality,
-        fallbackIcon: fallbackIcon,
+      cells: _createCollageCells(
         fadeMilliSeconds: fadeMilliSeconds,
+        reduceQuality: reduceQuality,
         onCellTap: opensInFullscreen ? _openInFullscreen : null,
       ),
     );

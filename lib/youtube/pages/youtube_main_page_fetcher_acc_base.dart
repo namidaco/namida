@@ -289,7 +289,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
       builder: (context, query) {
         List<T>? filteredItems;
         if (query.isNotEmpty) {
-          filteredItems = searchBoxManager.filterPlaylistNamesWithResolver(listItems.items, query, searchTextResolver).toList();
+          filteredItems = searchBoxManager.filterPlaylistNamesWithResolver(listItems.items, query, searchTextResolver);
         }
         return _buildDefaultSliverListRaw(listItems, filteredItems ?? listItems.items);
       },
