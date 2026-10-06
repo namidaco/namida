@@ -61,6 +61,7 @@ class CustomMPVPlayer implements AVPlayer {
       if (_processingState != ProcessingState.completed) {
         if (p < Duration.zero) p = Duration.zero;
         _position = p;
+        _sincePositionReport.reset();
         _updatePosition();
       }
     });
@@ -107,6 +108,8 @@ class CustomMPVPlayer implements AVPlayer {
 
   ProcessingState _processingState = ProcessingState.idle;
   Duration _position = Duration.zero;
+
+  final _sincePositionReport = Stopwatch()..start();
 
   final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, libass: true, bufferSize: 64 * 1024 * 1024));
   late final _audioFilters = _MPVAudioFilters(_player);
@@ -267,7 +270,13 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Duration get bufferedPosition => _player.state.buffer;
   @override
-  Duration get position => _position;
+  Duration get position {
+    if (!_player.state.playing || _processingState != ProcessingState.ready) return _position;
+    final rate = _bitPerfect ? 1.0 : _speed;
+    final movedOnMicroseconds = (_sincePositionReport.elapsedMicroseconds * rate).round();
+    return _position + Duration(microseconds: movedOnMicroseconds);
+  }
+
   @override
   Duration? get duration => _player.state.duration;
   @override
@@ -278,6 +287,10 @@ class CustomMPVPlayer implements AVPlayer {
   double get pitch => _pitch;
   @override
   bool get playing => _player.state.playing;
+
+  /// media_kit rebuilds the whole filter chain on every rate change.
+  @override
+  bool get supportsSeamlessSpeedChange => false;
 
   @override
   UriSource? get audioSource => _audioSource;
@@ -696,7 +709,10 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Future<void> seek(Duration? position) async {
     if (_kSkipSeekWhenLoopNotApplied && !_loopingVideoApplied && _videoOptions?.loop == true) return;
-    return _player.seek(position ?? Duration.zero);
+    final target = position ?? Duration.zero;
+    _position = target;
+    _sincePositionReport.reset();
+    return _player.seek(target);
   }
 
   @override

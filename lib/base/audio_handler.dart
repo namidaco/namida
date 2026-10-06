@@ -46,6 +46,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/party/party_player_gate.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smtc_controller.dart';
 import 'package:namida/controller/subtitles_controller.dart';
@@ -93,6 +94,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   set partyGate(PartyPlayerGate? gate) {
     _partyGate = gate;
     if (gate == null) forcedRepeatMode.value = null;
+    refreshCrossfadeTransition();
   }
 
   bool get _willPlayWhenReady => playWhenReady.value;
@@ -896,6 +898,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     // -- should be done here so that if info fetching takes time, crossfade out still works.
     // -- otherwise the previous item would keep playing indefinetly.
     beginEarlyCrossFadeOutIfRequired();
+    RhythmController.inst.onItemPlaying();
     if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
     return _fnLimiter.executeFuture(
       () async {
@@ -2415,6 +2418,29 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   @override
   int get defaultCrossFadeTriggerStartOffsetSeconds => settings.player.crossFadeAutoTriggerSeconds.value;
+
+  late final _beatMatchedTransition = BeatMatchedCrossfadeTransition<Q>(
+    timingOf: RhythmController.inst.timingOf,
+    gridOf: RhythmController.inst.gridOf,
+  );
+  late final _flowShuffler = RhythmController.inst.createFlowShuffler<Q>();
+  late final _defaultTransition = DefaultCrossfadeTransition<Q>();
+  late final _smartTransition = SmartCrossfadeTransition<Q>(timingOf: RhythmController.inst.timingOf);
+
+  @override
+  QueueShuffler<Q> get queueShuffler => RhythmController.inst.isBeatMatching ? _flowShuffler : super.queueShuffler;
+
+  void refreshCrossfadeTransition() {
+    // -- moved starts and changed tempos would never stay in sync with the party
+    final mode = _partyGate == null ? settings.player.crossfadeMode.value : CrossfadeMode.standard;
+    final transition = switch (mode) {
+      CrossfadeMode.standard => _defaultTransition,
+      CrossfadeMode.smart => _smartTransition,
+      CrossfadeMode.beatMatched => _beatMatchedTransition,
+    };
+    setCrossfadeTransition(transition);
+    if (mode != CrossfadeMode.standard) RhythmController.inst.ensureLoaded();
+  }
 
   bool get displayFavouriteButtonAsLikeInNotification => currentItem.value is YoutubeID && YtVideoLikeManager.preferLikeOverFavourite;
 

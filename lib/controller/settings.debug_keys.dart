@@ -86,6 +86,7 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     enableCrossFade,
     crossFadeDurationMS,
     crossFadeAutoTriggerSeconds,
+    crossfadeMode,
     playOnNextPrev,
     skipSilenceEnabled,
     pauseOnVolume0,

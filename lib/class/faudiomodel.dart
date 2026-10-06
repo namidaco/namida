@@ -96,6 +96,7 @@ class FTags {
   final String? recordLabel;
   final String? releaseType;
   final int? bpm;
+  final String? musicalKey;
   final String? mbAlbumId;
   final String? mbAlbumArtistId;
 
@@ -142,6 +143,7 @@ class FTags {
     required this.recordLabel,
     required this.releaseType,
     required this.bpm,
+    required this.musicalKey,
     this.mbAlbumId,
     this.mbAlbumArtistId,
     required this.ratingPercentage,

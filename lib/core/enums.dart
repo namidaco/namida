@@ -727,6 +727,12 @@ enum WakelockMode {
   expandedAndVideo,
 }
 
+enum CrossfadeMode {
+  standard,
+  smart,
+  beatMatched,
+}
+
 enum RouteType {
   // ----- Pages -----
   PAGE_Home,

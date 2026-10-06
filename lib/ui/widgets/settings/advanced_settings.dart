@@ -1627,7 +1627,7 @@ class _RhythmScanListTile extends StatelessWidget {
         final isScanning = rhythm.isScanning.valueR;
         final progress = isScanning ? '${rhythm.scanDone.valueR}/${rhythm.scanTotal.valueR}' : null;
         return CustomListTile(
-          icon: Broken.activity,
+          icon: Broken.buy_crypto,
           title: 'analyze_rhythm'.toUpperCase(),
           subtitle: progress,
           onTap: rhythm.toggleLibraryScan,

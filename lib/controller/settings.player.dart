@@ -29,6 +29,7 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final enableCrossFade = _key('enableCrossFade', isKuru ? true : false);
   late final crossFadeDurationMS = _key('crossFadeDurationMS', isKuru ? 1500 : 500);
   late final crossFadeAutoTriggerSeconds = _key('crossFadeAutoTriggerSeconds', isKuru ? 0 : 5);
+  late final crossfadeMode = _keyEnum('crossfadeMode', CrossfadeMode.standard, CrossfadeMode.values);
   late final playOnNextPrev = _key('playOnNextPrev', isKuru ? false : true);
   late final skipSilenceEnabled = _key('skipSilenceEnabled', false);
   late final pauseOnVolume0 = _key('pauseOnVolume0', true);

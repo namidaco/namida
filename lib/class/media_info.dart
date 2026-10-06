@@ -123,6 +123,7 @@ class MIFormatTags {
 
   final String? date;
   final int? bpm;
+  final String? musicalKey;
   final double? rating;
   final String? language;
   final String? artist;
@@ -162,6 +163,7 @@ class MIFormatTags {
   const MIFormatTags({
     required this.date,
     required this.bpm,
+    required this.musicalKey,
     required this.rating,
     required this.language,
     required this.artist,
@@ -221,6 +223,7 @@ class MIFormatTags {
     return MIFormatTags(
       date: map.getOrUpperCase("date") ?? map["Date"],
       bpm: MediaInfo.extractInt(map.getOrLowerCase("BPM")) ?? MediaInfo.extractInt(map.getOrLowerCase("TBPM")) ?? MediaInfo.extractNum(map.getOrLowerCase("FBPM"))?.round(),
+      musicalKey: map.getOrLowerCase("INITIALKEY") ?? map.getOrLowerCase("TKEY") ?? map.getOrLowerCase("KEY"),
       rating: ratingPercentage,
       language: map.getOrLowerCase("LANGUAGE") ?? map["Language"],
       artist: map.getOrUpperCase("artist") ?? map["Artist"],
@@ -262,6 +265,7 @@ class MIFormatTags {
   Map<dynamic, dynamic> toMap() => {
     "date": date,
     "BPM": bpm,
+    "INITIALKEY": musicalKey,
     "rating": rating,
     "LANGUAGE": language,
     "artist": artist,

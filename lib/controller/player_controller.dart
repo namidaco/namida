@@ -245,6 +245,7 @@ class Player {
     } else {
       _audioHandler = NamidaAudioVideoHandler();
     }
+    _audioHandler.refreshCrossfadeTransition();
 
     void videoInfoListener() {
       final info = _audioHandler.videoPlayerInfo.value;
@@ -806,6 +807,8 @@ class Player {
   Future<void> resetGaplessPlaybackData() async {
     await _audioHandler.resetGaplessPlaybackData();
   }
+
+  void refreshCrossfadeTransition() => _audioHandler.refreshCrossfadeTransition();
 
   Future<void> pauseRaw() async {
     await _audioHandler.onPauseRaw();

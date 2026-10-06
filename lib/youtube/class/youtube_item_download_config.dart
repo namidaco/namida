@@ -314,6 +314,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       mixer: null,
       tempo: null,
       bpm: null,
+      musicalKey: null,
       gainData: null,
       sortInfo: FTagsSortInfo.orNull(
         title: ffmpegTags[FFMPEGTagField.titleSort.tagKey],

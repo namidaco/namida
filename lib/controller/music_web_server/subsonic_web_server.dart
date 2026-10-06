@@ -385,6 +385,7 @@ class _SubsonicWebServer extends MusicWebServer {
       label: '',
       releaseType: '',
       bpm: 0,
+      musicalKey: '',
       rating: (media.userRating ?? 0) / 5.0,
       originalTags: null,
       tagsList: [],

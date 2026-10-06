@@ -10,6 +10,7 @@ import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -93,7 +94,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.replayGain: [lang.normalizeAudio, lang.normalizeAudioSubtitle],
     _PlaybackSettingsKeys.skipSilence: [lang.skipSilence],
     _PlaybackSettingsKeys.gaplessPlayback: [lang.gaplessPlayback],
-    _PlaybackSettingsKeys.crossfade: [lang.enableCrossfadeEffect, lang.crossfadeDuration, lang.crossfadeTriggerSeconds(seconds: 0)],
+    _PlaybackSettingsKeys.crossfade: [lang.enableCrossfadeEffect, lang.crossfadeDuration, lang.crossfadeTriggerSeconds(seconds: 0), lang.style, lang.smart, lang.beatMatching],
     _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.enableFadeEffectOnPlayPause, lang.playFadeDuration, lang.pauseFadeDuration],
     _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.playAfterNextPrev],
     _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
@@ -800,6 +801,7 @@ class PlaybackSettings extends SettingSubpageProvider {
                   },
                 ),
               ),
+              const _CrossfadeModeTile(),
             ],
           ),
         ),
@@ -1538,6 +1540,43 @@ class _NotificationPlaylistsDialogState extends State<_NotificationPlaylistsDial
           },
         ),
       ),
+    );
+  }
+}
+
+class _CrossfadeModeTile extends StatelessWidget {
+  const _CrossfadeModeTile();
+
+  void _showModes(BuildContext context) {
+    final menu = NamidaPopupWrapper(
+      childrenDefault: () => CrossfadeMode.values.map(
+        (e) => NamidaPopupItem(
+          icon: e.toIcon(),
+          title: e.toText(),
+          selected: e == settings.player.crossfadeMode.value,
+          onTap: () {
+            RhythmController.inst.setMode(e);
+            NamidaNavigator.inst.popMenu();
+          },
+        ),
+      ),
+    );
+    menu.showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final mode = settings.player.crossfadeMode.valueR;
+        return CustomListTile(
+          enabled: RhythmController.inst.hasAutoTransitionsR,
+          icon: Broken.brush_3,
+          title: lang.style,
+          trailingText: mode.toText(),
+          onTap: () => _showModes(context),
+        );
+      },
     );
   }
 }

@@ -392,6 +392,7 @@ class TrackExtended {
   final String label;
   final String releaseType;
   final int? bpm;
+  final String musicalKey;
   final double rating;
   final String? originalTags;
   final List<String> tagsList;
@@ -458,6 +459,7 @@ class TrackExtended {
     required this.label,
     required this.releaseType,
     required this.bpm,
+    required this.musicalKey,
     required this.rating,
     required this.originalTags,
     required this.tagsList,
@@ -676,6 +678,7 @@ class TrackExtended {
       label: json['label'] ?? '',
       releaseType: json['releaseType'] ?? '',
       bpm: json['bpm'] as int?,
+      musicalKey: json['musicalKey'] ?? '',
       rating: json['rating'] ?? 0.0,
       originalTags: json['originalTags'],
       tagsList: Indexer.splitGeneral(
