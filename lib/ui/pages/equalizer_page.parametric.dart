@@ -1023,7 +1023,7 @@ class _EqualizerPresetOptions extends StatelessWidget {
               icon: Broken.headphone,
               title: lang.useForDevice(device: deviceName),
               trailing: NamidaCheckMark(
-                size: 16.0,
+                size: 18.0,
                 active: isDevicePreset,
               ),
               onTap: () {
@@ -1667,7 +1667,7 @@ class _AudioOutputSection extends StatelessWidget {
                     icon: Broken.autobrightness,
                     title: lang.systemDefault,
                     trailing: NamidaCheckMark(
-                      size: 16.0,
+                      size: 18.0,
                       active: selectedKey == null,
                     ),
                     onTap: () => select(null),
@@ -1681,7 +1681,7 @@ class _AudioOutputSection extends StatelessWidget {
                       title: device.isUsbDirect ? '${device.name} (${lang.usbDirect})' : device.name,
                       subtitle: device.maxSampleRate > 0 ? lang.bitPerfectUpTo(format: _EqualizerFormat.audioFormat(device.maxBitDepth, device.maxSampleRate)) : null,
                       trailing: NamidaCheckMark(
-                        size: 16.0,
+                        size: 18.0,
                         active: device.isUsbDirect || (!isUsbDirectActive && selectedKey == device.key),
                       ),
                       onTap: device.isUsbDirect ? null : () => select(device),

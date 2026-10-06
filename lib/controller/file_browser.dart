@@ -1566,7 +1566,7 @@ class _FileSystemChip extends StatelessWidget {
           ),
           const SizedBox(width: 4.0),
           NamidaCheckMark(
-            size: 16.0,
+            size: 18.0,
             active: selected,
           ).animateEntrance(
             showWhen: displayCheckMark,

@@ -2040,7 +2040,6 @@ class _TrackInfo<E, S> extends StatelessWidget {
       builder: (context, currentLikeStatus) {
         final isUserLiked = currentLikeStatus == LikeStatus.liked;
         return NamidaLoadingSwitcher(
-          size: 32.0,
           builder: (loadingController) => NamidaRawLikeButton(
             key: ValueKey(textData.itemToLike),
             size: 32.0,
@@ -3144,7 +3143,7 @@ class PlayerVideoAudioChip extends StatelessWidget {
                               ].joinText(separator: ' • '),
                               trailing: NamidaCheckMark(
                                 active: isCurrent,
-                                size: 12.0,
+                                size: 14.0,
                               ),
                             );
                           },
@@ -3173,7 +3172,7 @@ class PlayerVideoAudioChip extends StatelessWidget {
                                 ].join(' • '),
                                 trailing: NamidaCheckMark(
                                   active: isCurrent,
-                                  size: 12.0,
+                                  size: 14.0,
                                 ),
                               );
                             },
@@ -3219,7 +3218,7 @@ class PlayerVideoAudioChip extends StatelessWidget {
                             trailing: isCurrent
                                 ? NamidaCheckMark(
                                     active: true,
-                                    size: 12.0,
+                                    size: 14.0,
                                   )
                                 : null,
                           );

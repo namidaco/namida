@@ -444,7 +444,6 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
 
     final subscribeTextWidget = canDisplaySubscribeTextWidget
         ? NamidaLoadingSwitcher(
-            size: 24.0,
             builder: (loadingController) => NamidaButton(
               dense: true,
               minHeight: NamidaButton.kDefaultMinHeight * 0.9,

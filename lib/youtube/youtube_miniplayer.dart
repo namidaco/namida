@@ -1343,7 +1343,6 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                       : videoLikeCount.formatDecimalShort(isTitleExpanded),
                                   icon: Broken.like_1,
                                   smallIconWidget: NamidaLoadingSwitcher(
-                                    size: 24.0,
                                     controller: likeLoadingController,
                                     builder: (likeLoadingController) => NamidaRawLikeButton(
                                       isLiked: isUserLiked,
@@ -1385,7 +1384,6 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     title: (videoDislikeCount ?? 0) < 1 ? lang.dislike : videoDislikeCount?.formatDecimalShort(isTitleExpanded) ?? '?',
                                     icon: Broken.dislike,
                                     smallIconWidget: NamidaLoadingSwitcher(
-                                      size: 24.0,
                                       controller: dislikeLoadingController,
                                       builder: (dislikeLoadingController) => NamidaRawLikeButton(
                                         isLiked: isUserDisLiked,

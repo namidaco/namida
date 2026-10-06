@@ -214,7 +214,7 @@ class YoutubeCard extends StatelessWidget {
                               ),
                             if (checkmarkStatus != null) ...[
                               const Spacer(),
-                              NamidaCheckMark(size: 12.0, active: checkmarkStatus!),
+                              NamidaCheckMark(size: 14.0, active: checkmarkStatus!),
                             ],
                           ],
                         ),

@@ -216,7 +216,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                                         ),
                                         const SizedBox(width: 12.0),
                                         NamidaCheckMark(
-                                          size: 16.0,
+                                          size: 18.0,
                                           active: didGrantStoragePermission,
                                           burst: true,
                                         ),

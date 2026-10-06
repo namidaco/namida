@@ -2265,23 +2265,20 @@ class NamidaLoadingController {
 class NamidaLoadingSwitcher extends StatefulWidget {
   final NamidaLoadingController? controller;
   final Widget Function(NamidaLoadingController loadingController) builder;
-  final double? size;
-  final bool showLoading;
 
   const NamidaLoadingSwitcher({
     super.key,
     this.controller,
     required this.builder,
-    this.size,
-    this.showLoading = true,
   });
 
   @override
   State<NamidaLoadingSwitcher> createState() => _NamidaLoadingSwitcherState();
 }
 
-class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
+class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> with TickerProviderStateMixin {
   late final NamidaLoadingController loadingController;
+  _LoadingDimPulse? _dimPulse;
 
   @override
   void initState() {
@@ -2293,46 +2290,69 @@ class _NamidaLoadingSwitcherState extends State<NamidaLoadingSwitcher> {
   }
 
   void _startLoading() {
-    if (mounted) setState(() => loadingController._isLoading = true);
+    if (!mounted) return;
+    final dimPulse = _dimPulse ??= _LoadingDimPulse(this);
+    dimPulse.start();
+    setState(() => loadingController._isLoading = true);
   }
 
   void _stopLoading() {
-    if (mounted) setState(() => loadingController._isLoading = false);
+    if (!mounted) return;
+    _dimPulse?.stop();
+    setState(() => loadingController._isLoading = false);
   }
 
   @override
   void dispose() {
     if (widget.controller == null) loadingController.dispose();
+    _dimPulse?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final child = widget.builder(loadingController);
-    final isLoading = loadingController.isLoading;
-    return Stack(
-      fit: StackFit.loose,
-      alignment: Alignment.center,
-      children: [
-        AnimatedOpacity(
-          opacity: isLoading ? 0.5 : 1.0,
-          duration: const Duration(milliseconds: 200),
-          child: child,
-        ),
-        if (isLoading && widget.showLoading)
-          IgnorePointer(
-            child: AnimatedOpacity(
-              opacity: isLoading ? 0.8 : 0.0,
-              duration: const Duration(milliseconds: 200),
-              child: SizedBox(
-                width: widget.size,
-                height: widget.size,
-                child: widget.size == null ? const CircularProgressIndicator(strokeWidth: 4.0) : const CircularProgressIndicator(strokeWidth: 2.0),
-              ),
-            ),
-          ),
-      ],
+    return FadeTransition(
+      opacity: _dimPulse?.opacity ?? kAlwaysCompleteAnimation,
+      child: widget.builder(loadingController),
     );
+  }
+}
+
+class _LoadingDimPulse {
+  final AnimationController fade;
+  final AnimationController pulse;
+  late final opacity = _DimPulseOpacity(fade: fade, pulse: pulse);
+
+  _LoadingDimPulse(TickerProvider vsync)
+    : fade = AnimationController(vsync: vsync, duration: _kLoadingFadeDuration),
+      pulse = AnimationController(vsync: vsync, duration: _kLoadingCycle ~/ 2) {
+    fade.addStatusListener(_onFadeStatus);
+  }
+
+  void _onFadeStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed) pulse.stop();
+  }
+
+  void start() {
+    if (!pulse.isAnimating) pulse.repeat(reverse: true);
+    fade.forward();
+  }
+
+  void stop() => fade.reverse();
+
+  void dispose() {
+    fade.dispose();
+    pulse.dispose();
+  }
+}
+
+class _DimPulseOpacity extends CompoundAnimation<double> {
+  _DimPulseOpacity({required Animation<double> fade, required Animation<double> pulse}) : super(first: fade, next: pulse);
+
+  @override
+  double get value {
+    final pulseDepth = Curves.easeInOut.transform(next.value);
+    return 1.0 - first.value * (0.3 + 0.3 * pulseDepth);
   }
 }
 

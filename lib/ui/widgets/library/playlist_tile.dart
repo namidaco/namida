@@ -135,7 +135,7 @@ class PlaylistTile extends StatelessWidget {
                       const SizedBox(width: 12.0),
                       if (checkmarkStatus != null) ...[
                         NamidaCheckMark(
-                          size: 12.0,
+                          size: 14.0,
                           active: checkmarkStatus!,
                         ),
                         const SizedBox(width: 6.0),

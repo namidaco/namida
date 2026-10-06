@@ -351,7 +351,6 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             NamidaLoadingSwitcher(
-                              size: 18.0,
                               builder: (loadingController) => NamidaRawLikeButton(
                                 isLiked: isUserLiked,
                                 likedIcon: Broken.like_filled,

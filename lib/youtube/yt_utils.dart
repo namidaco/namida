@@ -1075,7 +1075,7 @@ class YTUtils {
                 reEvaluateTotalSize();
               },
               child: NamidaCheckMark(
-                size: 20.0,
+                size: 18.0,
                 active: allSelected.valueR,
               ),
             ),

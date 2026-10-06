@@ -1670,7 +1670,7 @@ class _TagSectionSelectButton extends StatelessWidget {
           builder: (context, selectedNames) {
             final isAllSelected = names.every(selectedNames.contains);
             return NamidaCheckMark(
-              size: 16.0,
+              size: 18.0,
               active: isAllSelected,
             );
           },

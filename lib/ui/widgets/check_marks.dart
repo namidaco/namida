@@ -2,11 +2,13 @@ part of 'custom_widgets.dart';
 
 // by claude
 
-const _kCheckStart = Offset(0.3083, 0.5167);
-const _kCheckCorner = Offset(0.4375, 0.6417);
-const _kCheckEnd = Offset(0.6917, 0.375);
-const _kCheckStroke = 0.1;
+const _kCheckStart = Offset(0.27, 0.52);
+const _kCheckCorner = Offset(0.425, 0.67);
+const _kCheckEnd = Offset(0.73, 0.35);
+const _kCheckStroke = 0.12;
 const _kMorphDuration = Duration(milliseconds: 600);
+const _kLoadingCycle = Duration(milliseconds: 1000);
+const _kLoadingFadeDuration = Duration(milliseconds: 200);
 
 // rewritten by claude, new one tints or outlines the tile when active and supports a tristate check
 class ListTileWithCheckMark extends StatelessWidget {
@@ -93,28 +95,53 @@ class ListTileWithCheckMark extends StatelessWidget {
 class NamidaCheckMark extends StatefulWidget {
   final double size;
   final bool active;
+  final bool loading;
   final bool burst;
 
   const NamidaCheckMark({
     super.key,
     required this.size,
     required this.active,
+    this.loading = false,
     this.burst = false,
   });
+
+  bool get _isShownActive => active && !loading;
 
   @override
   State<NamidaCheckMark> createState() => _NamidaCheckMarkState();
 }
 
-class _NamidaCheckMarkState extends State<NamidaCheckMark> with SingleTickerProviderStateMixin {
+class _NamidaCheckMarkState extends State<NamidaCheckMark> with TickerProviderStateMixin {
   _DiscCheckAnimation? _animation;
+  _CheckLoadingAnimation? _loading;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.loading) _startLoading();
+  }
+
+  void _startLoading() {
+    final loading = _loading ??= _CheckLoadingAnimation(this);
+    loading.start();
+  }
 
   @override
   void didUpdateWidget(covariant NamidaCheckMark oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active == oldWidget.active) return;
-    final animation = _animation ??= _DiscCheckAnimation(this, wasActive: oldWidget.active);
-    if (widget.active) {
+    if (widget.loading != oldWidget.loading) {
+      if (widget.loading) {
+        _startLoading();
+      } else {
+        _loading?.stop();
+      }
+    }
+    final wasShownActive = oldWidget._isShownActive;
+    final isShownActive = widget._isShownActive;
+    if (isShownActive == wasShownActive) return;
+    final animation = _animation ??= _DiscCheckAnimation(this, wasActive: wasShownActive);
+    if (isShownActive) {
       animation.controller.forward();
     } else {
       animation.controller.reverse();
@@ -124,6 +151,7 @@ class _NamidaCheckMarkState extends State<NamidaCheckMark> with SingleTickerProv
   @override
   void dispose() {
     _animation?.dispose();
+    _loading?.dispose();
     super.dispose();
   }
 
@@ -136,7 +164,8 @@ class _NamidaCheckMarkState extends State<NamidaCheckMark> with SingleTickerProv
       size: Size.square(widget.size),
       painter: _DiscCheckPainter(
         animation: _animation,
-        active: widget.active,
+        loading: _loading,
+        active: widget._isShownActive,
         burst: widget.burst,
         color: color,
         checkColor: colorScheme.onSecondary,
@@ -273,12 +302,12 @@ class _CheckTileFrame extends StatelessWidget {
     }
     final check = halfActive == null
         ? NamidaCheckMark(
-            size: 20.0,
+            size: 18.0,
             active: active,
             burst: tile.burst,
           )
         : NamidaTristateCheckMark(
-            size: 20.0,
+            size: 18.0,
             active: active,
             halfActive: halfActive,
           );
@@ -333,10 +362,12 @@ class _CheckTileIcon extends StatelessWidget {
 }
 
 class _DiscCheckPainter extends CustomPainter {
-  static const _ringRadius = 0.379;
-  static const _ringStroke = 0.075;
-  static const _discRadius = 0.4167;
-  static const _pulseStroke = 0.058;
+  static const _ringRadius = 0.455;
+  static const _ringStroke = 0.09;
+  static const _discRadius = 0.5;
+  static const _pulseStroke = 0.07;
+  static const _rippleStroke = 0.067;
+  static const _rippleCurve = Cubic(0.2, 0.7, 0.3, 1.0);
   static const _pulseCurve = Cubic(0.2, 0.7, 0.3, 1.0);
   static final _burstDirections = List<Offset>.generate(
     8,
@@ -350,6 +381,7 @@ class _DiscCheckPainter extends CustomPainter {
   static final _checkSecondLength = (_kCheckEnd - _kCheckCorner).distance;
 
   final _DiscCheckAnimation? animation;
+  final _CheckLoadingAnimation? loading;
   final bool active;
   final bool burst;
   final Color color;
@@ -358,12 +390,13 @@ class _DiscCheckPainter extends CustomPainter {
 
   _DiscCheckPainter({
     required this.animation,
+    required this.loading,
     required this.active,
     required this.burst,
     required this.color,
     required this.checkColor,
     required this.ringColor,
-  }) : super(repaint: animation?.controller);
+  }) : super(repaint: Listenable.merge([animation?.controller, loading?.fade, loading?.ripple]));
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -375,13 +408,10 @@ class _DiscCheckPainter extends CustomPainter {
     final center = size.center(Offset.zero);
     final discRadius = side * _discRadius;
 
-    if (disc < 1.0) {
-      final ringPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = side * _ringStroke
-        ..color = ringColor;
-      canvas.drawCircle(center, side * _ringRadius, ringPaint);
-    }
+    final loading = this.loading;
+    final loadingAmount = loading?.fade.value ?? 0.0;
+    if (loading != null && loadingAmount > 0.0) _paintRipples(canvas, center, side, loading.ripple.value, loadingAmount);
+    if (disc < 1.0) _paintRing(canvas, center, side, loadingAmount);
     if (disc > 0.0) {
       final discPaint = Paint()..color = color;
       canvas.drawCircle(center, discRadius * disc, discPaint);
@@ -396,7 +426,7 @@ class _DiscCheckPainter extends CustomPainter {
 
   void _paintPulse(Canvas canvas, Offset center, double side, double discRadius, double pulse) {
     final opacity = 0.6 * (1.0 - pulse);
-    final radius = discRadius * (1.0 + 0.75 * pulse);
+    final radius = discRadius * (1.0 + 0.5 * pulse);
     final pulsePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = side * _pulseStroke
@@ -404,15 +434,41 @@ class _DiscCheckPainter extends CustomPainter {
     canvas.drawCircle(center, radius, pulsePaint);
   }
 
+  void _paintRing(Canvas canvas, Offset center, double side, double loadingAmount) {
+    final ringStrokeColor = Color.lerp(ringColor, color, loadingAmount)!;
+    final ringPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = side * _ringStroke
+      ..color = ringStrokeColor;
+    canvas.drawCircle(center, side * _ringRadius, ringPaint);
+  }
+
+  void _paintRipples(Canvas canvas, Offset center, double side, double cycles, double loadingAmount) {
+    final ripplePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = side * _rippleStroke;
+    _paintRipple(canvas, center, side, cycles % 1.0, loadingAmount, ripplePaint);
+    final lateCycles = cycles - 0.5;
+    if (lateCycles >= 0.0) _paintRipple(canvas, center, side, lateCycles % 1.0, loadingAmount, ripplePaint);
+  }
+
+  void _paintRipple(Canvas canvas, Offset center, double side, double phase, double loadingAmount, Paint ripplePaint) {
+    final spread = _rippleCurve.transform(phase);
+    final radius = side * _ringRadius * (1.0 + 0.6 * spread);
+    final opacity = 0.7 * (1.0 - spread) * loadingAmount;
+    ripplePaint.color = color.withOpacityExt(opacity);
+    canvas.drawCircle(center, radius, ripplePaint);
+  }
+
   void _paintBurst(Canvas canvas, Offset center, double side, double pulse) {
-    final distance = side * (0.42 + 0.53 * pulse);
+    final distance = side * (0.5 + 0.64 * pulse);
     final opacity = 1.0 - pulse;
     final shrink = 1.0 - 0.8 * pulse;
     final altOpacity = ringColor.a * opacity;
     final mainPaint = Paint()..color = color.withOpacityExt(opacity);
     final altPaint = Paint()..color = ringColor.withOpacityExt(altOpacity);
-    final mainRadius = side * 0.055 * shrink;
-    final altRadius = side * 0.04 * shrink;
+    final mainRadius = side * 0.066 * shrink;
+    final altRadius = side * 0.048 * shrink;
     for (int i = 0; i < _burstDirections.length; i++) {
       final isMain = i.isEven;
       final particleCenter = center + _burstDirections[i] * distance;
@@ -447,6 +503,7 @@ class _DiscCheckPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DiscCheckPainter oldDelegate) {
     return oldDelegate.animation != animation ||
+        oldDelegate.loading != loading ||
         oldDelegate.active != active ||
         oldDelegate.burst != burst ||
         oldDelegate.color != color ||
@@ -456,9 +513,9 @@ class _DiscCheckPainter extends CustomPainter {
 }
 
 class _TristateCheckPainter extends CustomPainter {
-  static const _boxInset = 0.125;
-  static const _boxRadius = 0.25;
-  static const _boxStroke = 0.075;
+  static const _boxInset = 0.05;
+  static const _boxRadius = 0.3;
+  static const _boxStroke = 0.09;
   static const _popDurationMS = 340;
 
   final AnimationController? controller;
@@ -582,6 +639,50 @@ class _DiscCheckAnimation {
   }
 }
 
+class _CheckLoadingAnimation {
+  static final _cyclesSimulation = _ElapsedCyclesSimulation(_kLoadingCycle);
+
+  final AnimationController fade;
+  final AnimationController ripple;
+
+  _CheckLoadingAnimation(TickerProvider vsync)
+    : fade = AnimationController(vsync: vsync, duration: _kLoadingFadeDuration),
+      ripple = AnimationController.unbounded(vsync: vsync) {
+    fade.addStatusListener(_onFadeStatus);
+  }
+
+  void _onFadeStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed) ripple.stop();
+  }
+
+  void start() {
+    if (!ripple.isAnimating) ripple.animateWith(_cyclesSimulation);
+    fade.forward();
+  }
+
+  void stop() => fade.reverse();
+
+  void dispose() {
+    fade.dispose();
+    ripple.dispose();
+  }
+}
+
+class _ElapsedCyclesSimulation extends Simulation {
+  final double cycleSeconds;
+
+  _ElapsedCyclesSimulation(Duration cycle) : cycleSeconds = cycle.inMicroseconds / Duration.microsecondsPerSecond;
+
+  @override
+  double x(double time) => time / cycleSeconds;
+
+  @override
+  double dx(double time) => 1.0 / cycleSeconds;
+
+  @override
+  bool isDone(double time) => false;
+}
+
 class _MorphFrame {
   final Offset start;
   final Offset corner;
@@ -598,7 +699,7 @@ class _MorphFrame {
   });
 
   static const off = _MorphFrame(start: Offset(0.5, 0.5), corner: Offset(0.5, 0.5), end: Offset(0.5, 0.5), fill: 0.0, line: 0.0);
-  static const half = _MorphFrame(start: Offset(0.3125, 0.5), corner: Offset(0.5, 0.5), end: Offset(0.6875, 0.5), fill: 1.0, line: 1.0);
+  static const half = _MorphFrame(start: Offset(0.275, 0.5), corner: Offset(0.5, 0.5), end: Offset(0.725, 0.5), fill: 1.0, line: 1.0);
   static const on = _MorphFrame(start: _kCheckStart, corner: _kCheckCorner, end: _kCheckEnd, fill: 1.0, line: 1.0);
 
   static double springProgress(SpringSimulation spring, double t) {

@@ -456,7 +456,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                               }
                             },
                             child: NamidaTristateCheckMark(
-                              size: 22.0,
+                              size: 20.0,
                               active: isAllSelected,
                               halfActive: isPartiallySelected,
                             ),
@@ -647,7 +647,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                         Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                           child: NamidaCheckMark(
-                                            size: 20.0,
+                                            size: 18.0,
                                             active: isSelected,
                                           ),
                                         ),

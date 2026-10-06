@@ -361,7 +361,6 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
       color: theme.colorScheme.secondary.withOpacityExt(0.5),
     );
     return NamidaLoadingSwitcher(
-      showLoading: false,
       builder: (loadingController) => NamidaInkWell(
         animationDurationMS: 200,
         margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -420,17 +419,13 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               SizedBox(
                 width: 22.0,
                 height: 22.0,
-                child: loadingController.isLoading
-                    ? const Padding(
-                        padding: EdgeInsets.all(2.0),
-                        child: CircularProgressIndicator(strokeWidth: 2.0),
-                      )
-                    : isSingle
+                child: isSingle
                     ? Padding(
                         padding: const EdgeInsets.all(2.0),
                         child: NamidaCheckMark(
                           size: 18.0,
                           active: showBorder,
+                          loading: loadingController.isLoading,
                         ),
                       )
                     : _newContainsVideo[pl.playlistId] == true

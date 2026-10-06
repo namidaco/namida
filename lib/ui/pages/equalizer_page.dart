@@ -507,7 +507,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                     ObxO(
                       rx: settings.player.isPerTrackAudioConfigOverriden,
                       builder: (context, overriden) => NamidaCheckMark(
-                        size: 16.0,
+                        size: 18.0,
                         active: overriden,
                       ),
                     ),

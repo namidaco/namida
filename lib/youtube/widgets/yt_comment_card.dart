@@ -463,7 +463,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                       children: [
                                         if (comment != null)
                                           NamidaLoadingSwitcher(
-                                            size: 16.0,
                                             builder: (loadingController) => NamidaRawLikeButton(
                                               isLiked: currentLikeStatus == LikeStatus.liked,
                                               likedIcon: Broken.like_filled,
@@ -496,7 +495,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                         const SizedBox(width: 12.0),
                                         if (comment != null)
                                           NamidaLoadingSwitcher(
-                                            size: 16.0,
                                             builder: (loadingController) => NamidaRawLikeButton(
                                               isLiked: currentLikeStatus == LikeStatus.disliked,
                                               likedIcon: Broken.dislike_filled,
