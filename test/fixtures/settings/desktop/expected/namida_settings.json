@@ -226,7 +226,7 @@
   "enableM3USync": false,
   "enableM3USyncStartup": true,
   "importServerPlaylists": true,
-  "prioritizeEmbeddedLyrics": false,
+  "embeddedLyricsPriority": "off",
   "romanizeLyrics": true,
   "romanizeSorting": false,
   "swipeableDrawer": true,

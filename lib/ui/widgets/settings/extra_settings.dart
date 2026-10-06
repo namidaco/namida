@@ -28,6 +28,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
+import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
@@ -765,14 +766,9 @@ class ExtrasSettings extends SettingSubpageProvider {
                 ),
                 getItemWrapper(
                   key: _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
-                  child: Obx(
-                    (context) => CustomSwitchListTile(
-                      bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
-                      icon: Broken.mobile_programming,
-                      title: lang.prioritizeEmbeddedLyrics,
-                      value: settings.prioritizeEmbeddedLyrics.valueR,
-                      onChanged: (p0) => settings.prioritizeEmbeddedLyrics.save(!p0),
-                    ),
+                  child: EmbeddedLyricsPriorityTile(
+                    bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
+                    onChanged: settings.embeddedLyricsPriority.save,
                   ),
                 ),
                 getItemWrapper(

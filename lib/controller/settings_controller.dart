@@ -276,7 +276,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enableM3USync = _key('enableM3USync', false, sync: false);
   late final enableM3USyncStartup = _key('enableM3USyncStartup', true, sync: false);
   late final importServerPlaylists = _key('importServerPlaylists', true, sync: false);
-  late final prioritizeEmbeddedLyrics = _key('prioritizeEmbeddedLyrics', true);
+  late final embeddedLyricsPriority = _keyEnum('embeddedLyricsPriority', EmbeddedLyricsPriority.onlyWhenSynced, EmbeddedLyricsPriority.values);
   late final romanizeLyrics = _key('romanizeLyrics', false);
   late final romanizeSorting = _key('romanizeSorting', false);
   late final swipeableDrawer = _key('swipeableDrawer', true);
@@ -558,6 +558,9 @@ class _SettingsController extends _SettingsKeysWriter {
         ..._kDefaultNotificationButtons.where((button) => button != NotificationButton.stop || isStopInNotification).map((button) => button.name),
       ];
     }
+
+    // -- `true` was the old default, only an explicit `false` is kept
+    _migrateKey('prioritizeEmbeddedLyrics', 'embeddedLyricsPriority', (json) => json == false && _raw['embeddedLyricsPriority'] == null ? EmbeddedLyricsPriority.off.name : null);
   }
 
   void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {

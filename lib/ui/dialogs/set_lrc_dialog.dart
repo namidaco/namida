@@ -16,6 +16,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -133,8 +134,8 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     }
   }
 
-  void onPrioritizeEmbeddedChanged(bool prioritize) {
-    settings.prioritizeEmbeddedLyrics.save(prioritize);
+  void onEmbeddedLyricsPriorityChanged(EmbeddedLyricsPriority priority) {
+    settings.embeddedLyricsPriority.save(priority);
     markRequiresUpdating();
   }
 
@@ -370,11 +371,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     selectedLyrics.value = l;
     final inUse = inUseRx.value;
     if (inUse == null || isLyricsInUse(l, inUse)) return;
-    final isEmbeddedPrioritized = inUse.isEmbedded && settings.prioritizeEmbeddedLyrics.value;
     if (l.isEmbedded && inUse.file != null) {
       final message = lang.lyricsFilesArePrioritized(setting: lang.prioritizeEmbeddedLyrics);
       snackyy(title: lang.note, message: message, icon: Broken.info_circle);
-    } else if (l.file != null && isEmbeddedPrioritized) {
+    } else if (l.file != null && inUse.isEmbeddedPrioritized) {
       final message = lang.embeddedLyricsArePrioritized(setting: lang.prioritizeEmbeddedLyrics);
       snackyy(title: lang.note, message: message, icon: Broken.info_circle);
     }
@@ -606,7 +606,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                 if (canSave) {
                   await saveLyricsByUser(selected.lyrics, selected.synced);
                   final newInUse = await markRequiresUpdating();
-                  final isStillEmbeddedPrioritized = selected.synced && newInUse.isEmbedded && settings.prioritizeEmbeddedLyrics.value;
+                  final isStillEmbeddedPrioritized = selected.synced && newInUse.isEmbeddedPrioritized;
                   if (isStillEmbeddedPrioritized) {
                     snackyy(
                       title: lang.note,
@@ -616,7 +616,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       button: SnackbarButton(
                         text: lang.disable,
                         function: () {
-                          settings.prioritizeEmbeddedLyrics.save(false);
+                          settings.embeddedLyricsPriority.save(EmbeddedLyricsPriority.off);
                           if (item == Player.inst.currentItem.value) Lyrics.inst.updateLyrics(item);
                         },
                       ),
@@ -844,8 +844,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                     slivers: [
                       if (hasEmbedded)
                         SliverToBoxAdapter(
-                          child: _PrioritizeEmbeddedLyricsTile(
-                            onChanged: onPrioritizeEmbeddedChanged,
+                          child: EmbeddedLyricsPriorityTile(
+                            subtitle: lang.global,
+                            onChanged: onEmbeddedLyricsPriorityChanged,
                           ),
                         ),
                       if (isIgnoredRx.valueR)
@@ -1052,23 +1053,48 @@ class _LyricsFontScaleStepper extends StatelessWidget {
   }
 }
 
-class _PrioritizeEmbeddedLyricsTile extends StatelessWidget {
-  final void Function(bool prioritize) onChanged;
+class EmbeddedLyricsPriorityTile extends StatelessWidget {
+  final Color? bgColor;
+  final String? subtitle;
+  final void Function(EmbeddedLyricsPriority priority) onChanged;
 
-  const _PrioritizeEmbeddedLyricsTile({
+  const EmbeddedLyricsPriorityTile({
+    super.key,
+    this.bgColor,
+    this.subtitle,
     required this.onChanged,
   });
+
+  Iterable<NamidaPopupItem> _getChildren() {
+    final current = settings.embeddedLyricsPriority.value;
+    return EmbeddedLyricsPriority.values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.mobile_programming,
+        title: e.toText(),
+        selected: e == current,
+        onTap: () => onChanged(e),
+      ),
+    );
+  }
+
+  void _showPopup(BuildContext context) {
+    final popup = NamidaPopupWrapper(
+      childrenDefault: _getChildren,
+    );
+    popup.showPopupMenu(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: settings.prioritizeEmbeddedLyrics,
-      builder: (context, prioritize) => CustomSwitchListTile(
+      rx: settings.embeddedLyricsPriority,
+      builder: (context, priority) => CustomListTile(
+        bgColor: bgColor,
         icon: Broken.mobile_programming,
         title: lang.prioritizeEmbeddedLyrics,
-        subtitle: lang.global,
-        value: prioritize,
-        onChanged: (isTrue) => onChanged(!isTrue),
+        subtitle: subtitle,
+        trailingText: priority.toText(),
+        onTap: () => _showPopup(context),
       ),
     );
   }

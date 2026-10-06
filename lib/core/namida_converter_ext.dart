@@ -2453,6 +2453,14 @@ extension LyricsSourceL10n on LyricsSource {
   };
 }
 
+extension EmbeddedLyricsPriorityL10n on EmbeddedLyricsPriority {
+  String toText() => switch (this) {
+    EmbeddedLyricsPriority.off => lang.never,
+    EmbeddedLyricsPriority.onlyWhenSynced => lang.synced,
+    EmbeddedLyricsPriority.always => lang.always,
+  };
+}
+
 extension LyricsSaveLocationL10n on LyricsSaveLocation {
   String toText() => switch (this) {
     LyricsSaveLocation.cache => lang.cache,

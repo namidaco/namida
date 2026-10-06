@@ -849,6 +849,12 @@ enum LyricsSource {
   internet,
 }
 
+enum EmbeddedLyricsPriority {
+  off,
+  onlyWhenSynced,
+  always,
+}
+
 enum LyricsSaveLocation {
   cache,
   trackFolder,

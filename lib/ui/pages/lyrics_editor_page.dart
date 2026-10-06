@@ -623,7 +623,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
         button: SnackbarButton(
           text: lang.disable,
           function: () {
-            settings.prioritizeEmbeddedLyrics.save(false);
+            settings.embeddedLyricsPriority.save(EmbeddedLyricsPriority.off);
             if (_isSameItem(Player.inst.currentItem.value)) Lyrics.inst.updateLyrics(widget.item);
           },
         ),

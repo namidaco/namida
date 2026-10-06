@@ -57,7 +57,7 @@ class Lyrics {
 
   bool get _lyricsViewsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
   bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive;
-  bool get _lyricsPrioritizeEmbedded => settings.prioritizeEmbeddedLyrics.value;
+  EmbeddedLyricsPriority get _embeddedLyricsPriority => settings.embeddedLyricsPriority.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
   final _lrcSearchManager = _LRCSearchManager();
@@ -216,6 +216,8 @@ class Lyrics {
     if (LrcSearchUtils.isIgnoreMarker(embedded)) return _noLyrics;
 
     final local = await pickLocalLyrics(lrcUtils, embedded);
+    final embeddedLrc = local.embeddedLrc;
+    if (embeddedLrc != null) return (lrc: embeddedLrc, txt: null, canBeAvailable: true);
     final localLyrics = local.isEmbedded ? embedded : await local.file?.readLrcString();
     if (localLyrics != null) {
       if (LrcSearchUtils.isIgnoreMarker(localLyrics)) return _unavailableLyrics;
@@ -254,26 +256,37 @@ class Lyrics {
     return _unavailableLyrics;
   }
 
-  static const LocalLyricsPick _noLocalLyrics = (file: null, isEmbedded: false);
-  static const LocalLyricsPick _embeddedLocalLyrics = (file: null, isEmbedded: true);
+  static const LocalLyricsPick _noLocalLyrics = (file: null, isEmbedded: false, isEmbeddedPrioritized: false, embeddedLrc: null);
+  static const LocalLyricsPick _embeddedLocalLyrics = (file: null, isEmbedded: true, isEmbeddedPrioritized: false, embeddedLrc: null);
+  static const LocalLyricsPick _prioritizedEmbeddedLocalLyrics = (file: null, isEmbedded: true, isEmbeddedPrioritized: true, embeddedLrc: null);
 
   /// the local lyrics [updateLyrics] shows before searching online, [embedded] can be newer than the ones in [lrcUtils].
   ///
-  /// 1. track embedded, when prioritized
+  /// 1. track embedded, when prioritized (only synced ones with [EmbeddedLyricsPriority.onlyWhenSynced], already parsed into `embeddedLrc`)
   /// 2. cached/device lrc, the location lyrics are saved in goes first
   /// 3. track embedded
   /// 4. cached/device txt
   Future<LocalLyricsPick> pickLocalLyrics(LrcSearchUtils lrcUtils, String embedded) async {
     if (LrcSearchUtils.isIgnoreMarker(embedded)) return _noLocalLyrics;
     final hasEmbedded = embedded != '';
-    if (hasEmbedded && _lyricsPrioritizeEmbedded) return _embeddedLocalLyrics;
+    if (hasEmbedded) {
+      switch (_embeddedLyricsPriority) {
+        case EmbeddedLyricsPriority.off:
+          break;
+        case EmbeddedLyricsPriority.onlyWhenSynced:
+          final embeddedLrc = embedded.parseLRC();
+          if (embeddedLrc != null) return (file: null, isEmbedded: true, isEmbeddedPrioritized: true, embeddedLrc: embeddedLrc);
+        case EmbeddedLyricsPriority.always:
+          return _prioritizedEmbeddedLocalLyrics;
+      }
+    }
     if (_lyricsSource == LyricsSource.internet) return _noLocalLyrics;
 
     final files = await lrcUtils.firstLyricsFiles(includeTxt: !hasEmbedded);
     final lrc = files.lrc;
-    if (lrc != null) return (file: lrc, isEmbedded: false);
+    if (lrc != null) return (file: lrc, isEmbedded: false, isEmbeddedPrioritized: false, embeddedLrc: null);
     if (hasEmbedded) return _embeddedLocalLyrics;
-    return (file: files.txt, isEmbedded: false);
+    return (file: files.txt, isEmbedded: false, isEmbeddedPrioritized: false, embeddedLrc: null);
   }
 
   _LyricsResolveResult _parseLocalLyrics(String lyrics) {
@@ -1023,7 +1036,7 @@ class LrcText {
   }
 }
 
-typedef LocalLyricsPick = ({File? file, bool isEmbedded});
+typedef LocalLyricsPick = ({File? file, bool isEmbedded, bool isEmbeddedPrioritized, Lrc? embeddedLrc});
 
 typedef _LyricsResolveResult = ({Lrc? lrc, LrcText? txt, bool canBeAvailable});
 typedef _LRCFetchResult = ({Lrc? lrc, String? txt, bool didSearchFail});
