@@ -67,7 +67,7 @@ quick-sharun \
   /usr/lib/libmpv.so* \
   /usr/lib/libwebkit2gtk-4.1.so*
 
-install -Dm644 "$LINUX_DIR/packaging/$APP_ID.metainfo.xml" \
+install -Dm644 "$BUNDLE_DIR/share/metainfo/$APP_ID.metainfo.xml" \
   "$APPDIR/share/metainfo/$APP_ID.appdata.xml"
 
 echo "==> Building AppImage"

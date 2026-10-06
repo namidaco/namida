@@ -576,6 +576,7 @@ jobs:
   # Portable Linux payload for the flatpak, built on the oldest glibc we target (ubuntu-24.04 = glibc 2.39)
   # instead of the arch container.
   #   - namida-linux-portable.tar.gz                  -> workflow artifact consumed by build_flatpak
+  #   - Namida-x86_64-<ver>-flatpak-payload.tar.gz    -> release asset, the source of the Flathub manifest
   build_linux_portable:
     if: ${{ inputs.is_beta && inputs.flatpak && inputs.source_run_id == '' }}
     needs: create_release
@@ -644,21 +645,33 @@ jobs:
       - uses: actions/download-artifact@v7
         with:
           name: namida-linux-portable
-          path: linux/packaging/flatpak
+          path: build_final
           run-id: ${{ inputs.source_run_id != '' && inputs.source_run_id || github.run_id }}
           github-token: ${{ secrets.PAT }}
 
-      - name: Place tarball where the manifest expects it
-        run: mv linux/packaging/flatpak/namida-linux-portable.tar.gz linux/packaging/flatpak/namida-linux.tar.gz
+      - name: Name the payload and place it where the manifest expects it
+        run: |
+          PAYLOAD="build_final/Namida-x86_64-${{ needs.create_release.outputs.version_name }}-flatpak-payload.tar.gz"
+          mv build_final/namida-linux-portable.tar.gz "$PAYLOAD"
+          cp "$PAYLOAD" linux/packaging/flatpak/namida-linux.tar.gz
 
       - name: Build Flatpak
         uses: flathub-infra/flatpak-github-actions/flatpak-builder@933e9e8ca36e85046ebca8e211f0785c6becac40
         with:
-          manifest-path: linux/packaging/flatpak/com.msob7y.namida.yml
+          manifest-path: linux/packaging/flatpak/app.namida.Namida.yml
           bundle: Namida-x86_64-${{ needs.create_release.outputs.version_name }}.flatpak
           arch: x86_64
-          cache-key: flatpak-builder-${{ hashFiles('linux/packaging/flatpak/com.msob7y.namida.yml') }}
+          cache-key: flatpak-builder-${{ hashFiles('linux/packaging/flatpak/app.namida.Namida.yml') }}
           upload-artifact: false
+
+      # the same checks Flathub runs on submissions, report only
+      - name: Lint for Flathub
+        continue-on-error: true
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user --noninteractive -y flathub org.flatpak.Builder
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest linux/packaging/flatpak/app.namida.Namida.yml || true
+          flatpak run --command=flatpak-builder-lint org.flatpak.Builder repo repo
 
       - name: Upload Flatpak to Release
         uses: softprops/action-gh-release@v3
@@ -667,5 +680,7 @@ jobs:
           make_latest: true
           draft: ${{ !inputs.is_beta }}
           tag_name: ${{ needs.create_release.outputs.tag }}
-          files: Namida-x86_64-*.flatpak
+          files: |
+            Namida-x86_64-*.flatpak
+            build_final/Namida-x86_64-*-flatpak-payload.tar.gz
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}

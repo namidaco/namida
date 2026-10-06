@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.msob7y.namida</id>
+  <launchable type="desktop-id">com.msob7y.namida.desktop</launchable>
+
+  <name>Namida</name>
+  <summary>Feature-rich music and video player</summary>
+  <developer id="app.namida">
+    <name>namidaco</name>
+  </developer>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary=https://github.com/namidaco/namida/blob/main/LICENSE</project_license>
+
+  <url type="homepage">https://namida.app</url>
+  <url type="bugtracker">https://github.com/namidaco/namida/issues</url>
+  <url type="vcs-browser">https://github.com/namidaco/namida</url>
+  <url type="translate">https://github.com/namidaco/namida-translations</url>
+  <url type="donation">https://www.buymeacoffee.com/namidaco</url>
+
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+    <control>touch</control>
+  </supports>
+
+  <description>
+    <p>
+      A beautiful and feature-rich music and video player, with YouTube support.
+    </p>
+    <ul>
+      <li>Fast indexer and tag editor, with artist and genre separators</li>
+      <li>Albums, artists, genres, folders, playlists, queues and history</li>
+      <li>Parametric equalizer, crossfade, gapless playback and replay gain</li>
+      <li>YouTube streaming, downloads and offline playback</li>
+      <li>Subsonic, Jellyfin, WebDAV and SMB libraries</li>
+      <li>Synced lyrics, waveform seekbar and dynamic theming</li>
+    </ul>
+  </description>
+
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Video</category>
+    <category>Player</category>
+  </categories>
+
+  <content_rating type="oars-1.1" />
+
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_light_1.jpg</image>
+      <caption>Home, genres and playlists</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_light_2.jpg</image>
+      <caption>Sorting, most played and generated mixes</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_dark_1.jpg</image>
+      <caption>Settings, player with lyrics and track options</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_dark_2.jpg</image>
+      <caption>Queues, search and artist separators</caption>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="@FLUTTER_VERSION@" date="@NAMIDA_RELEASE_DATE@">
+      <url type="details">https://github.com/namidaco/namida-snapshots/releases/tag/@FLUTTER_VERSION@</url>
+    </release>
+  </releases>
+</component>

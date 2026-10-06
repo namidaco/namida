@@ -127,10 +127,12 @@ MyApplication* my_application_new() {
   // like GTK and desktop environments map this running application to its
   // corresponding .desktop file. This ensures better integration by allowing
   // the application to be recognized beyond its binary name.
-  g_set_prgname(APPLICATION_ID);
+  const gchar* flatpak_id = g_getenv("FLATPAK_ID");
+  const gchar* application_id = flatpak_id != nullptr ? flatpak_id : APPLICATION_ID;
+  g_set_prgname(application_id);
 
   return MY_APPLICATION(g_object_new(my_application_get_type(),
-                                     "application-id", APPLICATION_ID,
+                                     "application-id", application_id,
                                      "flags", G_APPLICATION_NON_UNIQUE,
                                      nullptr));
 }

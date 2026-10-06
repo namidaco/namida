@@ -2,7 +2,7 @@ part of 'app_single_instance.dart';
 
 // by claude
 class AppSingleInstanceLinux extends AppSingleInstanceBase {
-  static const String _busName = 'com.msob7y.namida';
+  static final String _busName = NamidaPlatformBuilder.linuxAppId;
   static const String _objectPath = '/com/msob7y/namida';
   static const String _interfaceName = 'com.msob7y.namida.Instance';
 

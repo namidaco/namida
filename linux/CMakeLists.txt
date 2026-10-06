@@ -116,7 +116,9 @@ foreach(icon_size 128 256 512)
     RENAME "${BINARY_NAME}.png"
   )
 endforeach()
-install(FILES "packaging/${APPLICATION_ID}.metainfo.xml"
+string(TIMESTAMP NAMIDA_RELEASE_DATE "%Y-%m-%d" UTC)
+configure_file("packaging/${APPLICATION_ID}.metainfo.xml.in" "${APPLICATION_ID}.metainfo.xml" @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${APPLICATION_ID}.metainfo.xml"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo/"
 )
 

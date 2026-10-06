@@ -99,7 +99,7 @@ class _CustomMPRISService extends MPRISService {
     : super(
         "namida",
         identity: "Namida",
-        desktopEntry: "com.msob7y.namida",
+        desktopEntry: NamidaPlatformBuilder.linuxAppId,
         emitSeekedSignal: true,
         canControl: true,
         canQuit: true,

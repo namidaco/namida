@@ -161,6 +161,8 @@ class NamidaPlatformBuilder {
     return FileParts.joinPath(home, '.namida');
   }
 
+  static final String linuxAppId = Platform.environment['FLATPAK_ID'] ?? 'com.msob7y.namida';
+
   static String? get linuxUserHome => Platform.environment['HOME'] ?? Platform.environment['XDG_DATA_HOME'];
   static String? get linuxNamidaHome {
     final home = linuxUserHome;

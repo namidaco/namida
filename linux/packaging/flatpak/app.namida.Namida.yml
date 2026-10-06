@@ -8,20 +8,23 @@
 #
 # Local build (needs flatpak-builder + org.gnome.Sdk//49):
 #   cp <namida tarball> linux/packaging/flatpak/namida-linux.tar.gz
-#   flatpak-builder --user --install-deps-from=flathub --force-clean --repo=repo build-dir linux/packaging/flatpak/com.msob7y.namida.yml
-#   flatpak build-bundle repo Namida-x86_64.flatpak com.msob7y.namida
+#   flatpak-builder --user --install-deps-from=flathub --force-clean --repo=repo build-dir linux/packaging/flatpak/app.namida.Namida.yml
+#   flatpak build-bundle repo Namida-x86_64.flatpak app.namida.Namida
 #   flatpak install --user Namida-x86_64.flatpak
 #
-# For a Flathub submission the `namida` module source must become a `url:` + `sha256:` pointing at the
-# release asset (see README.md in this folder).
+# This file is copied as-is to Flathub, only `namida-source.json` differs there (release url + sha256).
 
-app-id: com.msob7y.namida
+app-id: app.namida.Namida
 # gnome's runtime is the freedesktop one plus webkit2gtk-4.1, which the sign-in
 # window and the poToken webview need.
 runtime: org.gnome.Platform
 runtime-version: '49'
 sdk: org.gnome.Sdk
 command: namida
+# the bundle keeps the com.msob7y.namida names the other linux packages use
+rename-desktop-file: com.msob7y.namida.desktop
+rename-appdata-file: com.msob7y.namida.metainfo.xml
+rename-icon: namida
 
 finish-args:
   - --share=ipc
@@ -158,17 +161,12 @@ modules:
       - ln -sf /app/bin/ffmpeg /app/namida/bin/ffmpeg
       - ln -sf /app/bin/ffprobe /app/namida/bin/ffprobe
       - install -Dm755 namida-launcher /app/bin/namida
-      # only the icon needs renaming, flatpak exports app-id-prefixed icons only
-      - install -Dm644 share/applications/com.msob7y.namida.desktop /app/share/applications/com.msob7y.namida.desktop
-      - sed -i -e 's|^Icon=.*|Icon=com.msob7y.namida|' -e '/^TryExec=/d' /app/share/applications/com.msob7y.namida.desktop
-      - for s in 128 256 512; do install -Dm644 share/icons/hicolor/${s}x${s}/apps/namida.png /app/share/icons/hicolor/${s}x${s}/apps/com.msob7y.namida.png; done
-      - install -Dm644 share/metainfo/com.msob7y.namida.metainfo.xml /app/share/metainfo/com.msob7y.namida.metainfo.xml
+      - cp -a share /app/
+      # the window takes its app id from FLATPAK_ID, the bundle's StartupWMClass would point at the old one
+      - desktop-file-edit --remove-key=TryExec --remove-key=StartupWMClass /app/share/applications/com.msob7y.namida.desktop
     sources:
-      # a `file` source, local `archive` sources are cached by path only and would keep reusing an old build.
-      # produced by the release workflow (flutter build linux); for Flathub replace with an `archive` source:
-      # url: https://github.com/namidaco/namida/releases/download/<tag>/<asset>.tar.gz + sha256
-      - type: file
-        path: namida-linux.tar.gz
+      # local: the tarball from the release workflow, Flathub: the release asset (url + sha256 + x-checker-data)
+      - namida-source.json
       - type: script
         dest-filename: namida-launcher
         commands:

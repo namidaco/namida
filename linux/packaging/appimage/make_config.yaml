@@ -1,7 +1,7 @@
 display_name: Namida
 generic_name: Media Player
 icon: linux/icons/namida_512.png
-metainfo: linux/packaging/com.msob7y.namida.metainfo.xml
+metainfo: build/linux/x64/release/bundle/share/metainfo/com.msob7y.namida.metainfo.xml
 startup_notify: true
 
 categories:
