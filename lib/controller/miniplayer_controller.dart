@@ -449,9 +449,9 @@ class MiniPlayerController {
     // used to actuate on fast flicks too
 
     if (speed > threshold || distance > _actuationOffset * _sActuationMulti) {
-      snapToPrev();
+      _snapToAdjacent(forward: false, jumpChapters: false);
     } else if (-speed > threshold || -distance > _actuationOffset * _sActuationMulti) {
-      snapToNext();
+      _snapToAdjacent(forward: true, jumpChapters: false);
     } else {
       _snapToCurrent();
     }
@@ -606,7 +606,7 @@ class MiniPlayerController {
     if (haptic && (_prevOffset - _offset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
-  Future<void> snapToPrev() => _snapToAdjacent(forward: false);
+  Future<void> snapToPrev() => _snapToAdjacent(forward: false, jumpChapters: true);
 
   void _snapToCurrent() {
     // -- if a transition is in flight then "current" is the item it was heading to,
@@ -626,7 +626,7 @@ class MiniPlayerController {
     if ((_sPrevOffset - _sOffset).abs() > _actuationOffset) VibratorController.interfaceHapticOrNull?.verylight();
   }
 
-  Future<void> snapToNext() => _snapToAdjacent(forward: true);
+  Future<void> snapToNext() => _snapToAdjacent(forward: true, jumpChapters: true);
 
   MiniplayerDisplayIndices _indicesAround(int current) => (
     prev: Player.inst.previousIndexFor(current),
@@ -664,16 +664,18 @@ class MiniPlayerController {
     );
   }
 
-  Future<void> _snapToAdjacent({required bool forward}) async {
+  Future<void> _snapToAdjacent({required bool forward, required bool jumpChapters}) async {
+    Future<void> skip() => forward ? Player.inst.next(jumpChapters: jumpChapters) : Player.inst.previous(jumpChapters: jumpChapters);
+
     if (Player.inst.partyGate?.canSkip == false) {
       // -- the party will refuse it, animating towards an item we never reach would only flash
       _snapToCurrent();
-      return forward ? Player.inst.next() : Player.inst.previous();
+      return skip();
     }
-    if (!forward && Player.inst.previousWillReplay) {
-      // -- previous only replays the current item, there is nothing to animate towards.
+    if (Player.inst.skipWillStayInItem(forward: forward, jumpChapters: jumpChapters)) {
+      // -- the skip stays inside the current item, there is nothing to animate towards.
       _snapToCurrent();
-      return Player.inst.previous();
+      return skip();
     }
     if (!(forward ? Player.inst.canJumpToNext : Player.inst.canJumpToPrevious)) {
       _snapToCurrent(); // -- snap back if was dragged, settling on whatever is still in flight
@@ -697,7 +699,7 @@ class MiniPlayerController {
     }
     _pendingSnapDir = dir;
 
-    final indexChangeFuture = forward ? Player.inst.next() : Player.inst.previous();
+    final indexChangeFuture = skip();
     _pendingIndexChange = indexChangeFuture;
 
     try {

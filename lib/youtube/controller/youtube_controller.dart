@@ -25,10 +25,12 @@ import 'package:youtipie/youtipie.dart' hide ExecuteDelayedMinUtils, logger;
 
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/files_download_manager.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -1071,6 +1073,8 @@ class YoutubeController {
 
       FTags? cachedTags;
       List<File>? chapterFiles;
+      // -- split & trimmed outputs are one chapter each
+      final embeddedChapters = splitByChapters || chapter != null ? null : ChaptersController.fromStreamSegments(pageResult?.streamSegments);
 
       final downloadedFile = await _downloadYoutubeVideoRaw(
         groupName: groupName,
@@ -1087,7 +1091,7 @@ class YoutubeController {
         onAudioFileReady: (audioFile) async {
           final path = audioFile.path;
           final thumbnailFile = await getEffectiveThumbnail();
-          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile, chapters: embeddedChapters);
           await NamidaTaggerController.inst.writeTagsRaw(
             path: path,
             newTags: newTags,
@@ -1096,7 +1100,7 @@ class YoutubeController {
         onVideoFileReady: (videoFile) async {
           final path = videoFile.path;
           final thumbnailFile = await getEffectiveThumbnail();
-          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+          final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile, chapters: embeddedChapters);
           await NamidaTaggerController.inst.writeTagsRaw(
             path: path,
             newTags: newTags,
@@ -1149,7 +1153,8 @@ class YoutubeController {
 
                 // -- cutting drops the cover art & can drop tags depending on the container
                 final thumbnailFile = await getEffectiveThumbnail();
-                final newTags = cachedTags ??= config.buildTagsValues(path: path, thumbnailFile: thumbnailFile);
+                final chaptersAfterCuts = embeddedChapters == null ? null : _chaptersAfterCuts(embeddedChapters, sponsorRanges);
+                final newTags = config.buildTagsValues(path: path, thumbnailFile: thumbnailFile, chapters: chaptersAfterCuts);
                 await NamidaTaggerController.inst.writeTagsRaw(
                   path: path,
                   newTags: newTags,
@@ -1419,6 +1424,24 @@ class YoutubeController {
       if (endMS > startMS) ranges.add((startMS, endMS));
     }
     return ranges;
+  }
+
+  /// shifts each chapter back by what was cut before it, one starting inside a cut moves to where the cut was.
+  static List<MediaChapter>? _chaptersAfterCuts(List<MediaChapter> chapters, List<(int, int)> sortedCutRangesMS) {
+    final shifted = <MediaChapter>[];
+    for (final chapter in chapters) {
+      final startMS = chapter.startMS;
+      int removedMS = 0;
+      for (final cut in sortedCutRangesMS) {
+        if (cut.$1 >= startMS) break;
+        removedMS += cut.$2.withMaximum(startMS) - cut.$1;
+      }
+      final newStartMS = startMS - removedMS;
+      // -- the previous chapter was cut entirely
+      if (shifted.isNotEmpty && shifted.last.startMS >= newStartMS) shifted.removeLast();
+      shifted.add(MediaChapter(startMS: newStartMS, title: chapter.title));
+    }
+    return shifted.length < 2 ? null : shifted;
   }
 
   /// Splits [outputFile] into one file per youtube chapter inside [_getChaptersDirectoryPath], removing

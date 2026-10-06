@@ -733,7 +733,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
           },
         );
       case TrackExecuteActions.addBookmark:
-        if (BookmarksController.inst.isCurrent(item)) await BookmarksController.inst.addAtCurrentPosition();
+        if (Player.inst.isCurrentItem(item)) await BookmarksController.inst.addAtCurrentPosition();
       case TrackExecuteActions.openinfo:
         item.execute(
           selectable: (finalItem) {
@@ -2586,6 +2586,8 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.repeatMode => lang.repeatMode,
     NotificationButton.seekBackward => lang.seekBackward,
     NotificationButton.seekForward => lang.seekForward,
+    NotificationButton.previousChapter => lang.previousChapter,
+    NotificationButton.nextChapter => lang.nextChapter,
     NotificationButton.sleepTimer => lang.sleepTimer,
     NotificationButton.addToPlaylist => lang.addToPlaylist,
     NotificationButton.bookmark => lang.addBookmark,
@@ -2601,6 +2603,8 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.repeatMode => Broken.repeat,
     NotificationButton.seekBackward => Broken.backward,
     NotificationButton.seekForward => Broken.forward,
+    NotificationButton.previousChapter => Broken.arrow_square_left,
+    NotificationButton.nextChapter => Broken.arrow_square_right,
     NotificationButton.sleepTimer => Broken.timer_1,
     NotificationButton.addToPlaylist => Broken.music_library_2,
     NotificationButton.bookmark => Broken.bookmark,

@@ -23,6 +23,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
+import 'package:namida/ui/dialogs/chapters_sheet.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -325,6 +326,9 @@ Future<void> showTrackInfoDialog(
                             BookmarksSection(
                               item: track,
                             ),
+                            ChaptersSection(
+                              item: track,
+                            ),
                             if (trackExt == null)
                               ...trackPathDetailTilesSection
                             else ...<Widget>[
@@ -532,7 +536,7 @@ Future<void> showTrackInfoDialog(
                                 ),
                               const SizedBox(height: 12.0),
                             ],
-                          ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 3).toFixedList(),
+                          ].addSeparators(separator: NamidaContainerDivider(color: color.value), skipFirst: 4).toFixedList(),
                         ),
                       ],
                     ),

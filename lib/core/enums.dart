@@ -930,6 +930,8 @@ enum NotificationButton {
   repeatMode,
   seekBackward,
   seekForward,
+  previousChapter,
+  nextChapter,
   sleepTimer,
   addToPlaylist,
   bookmark,

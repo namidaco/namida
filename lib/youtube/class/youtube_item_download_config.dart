@@ -8,6 +8,7 @@ import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/media_chapter.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -276,6 +277,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     required String path,
     required File? thumbnailFile,
     ({String title, String album, String trackNumber, String trackTotal})? chapterOverrides,
+    List<MediaChapter>? chapters,
   }) {
     final ffmpegTags = this.ffmpegTags;
     double? doubleFromString(String? value) => value == null ? null : double.tryParse(ffmpegTags[FFMPEGTagField.rating.tagKey] ?? '');
@@ -320,6 +322,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
         artist: ffmpegTags[FFMPEGTagField.artistSort.tagKey],
         composer: ffmpegTags[FFMPEGTagField.composerSort.tagKey],
       ),
+      chapters: chapters,
     );
   }
 }

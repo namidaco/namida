@@ -26,6 +26,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
+import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/eggs_controller.dart';
@@ -303,6 +304,7 @@ Future<bool> _mainAppInitialization() async {
     NamidaNavigator.setDefaultSystemUIOverlayStyle.ignoreError();
     ScrollSearchController.inst.initialize();
     Subtitles.inst.initialize();
+    ChaptersController.inst.initialize();
   } catch (e, st) {
     logger.error('_mainAppInitialization 2', e: e, st: st);
   }

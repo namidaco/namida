@@ -63,6 +63,18 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       callback: Player.inst.next,
       title: () => lang.next,
     ),
+    ShortcutKeyActivator(
+      key: LogicalKeyboardKey.arrowLeft,
+      shift: true,
+      callback: () => ChaptersController.inst.seekToAdjacent(forward: false),
+      title: () => lang.previousChapter,
+    ),
+    ShortcutKeyActivator(
+      key: LogicalKeyboardKey.arrowRight,
+      shift: true,
+      callback: () => ChaptersController.inst.seekToAdjacent(forward: true),
+      title: () => lang.nextChapter,
+    ),
 
     // -------------------
     ShortcutKeyActivator(

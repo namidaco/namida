@@ -7,13 +7,11 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
-import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
-import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 
 class BookmarksController {
@@ -50,16 +48,6 @@ class BookmarksController {
         return stats?.bookmarks;
       },
     );
-  }
-
-  bool isCurrent(Playable item) {
-    final current = Player.inst.currentItem.value;
-    if (current == null) return false;
-    final isSame = item.execute(
-      selectable: (finalItem) => current is Selectable && current.track == finalItem.track,
-      youtubeID: (finalItem) => current is YoutubeID && current.id == finalItem.id,
-    );
-    return isSame == true;
   }
 
   Future<void> addAtCurrentPosition() => _addToCurrentItem(Player.inst.nowPlayingPosition.value);
@@ -134,21 +122,11 @@ class BookmarksController {
       selectable: (finalItem) => Indexer.inst.updateTrackStats(finalItem.track, bookmarks: bookmarks),
       youtubeID: (finalItem) => YoutubeController.inst.statsManager.updateStats(finalItem, bookmarks: bookmarks),
     );
-    if (isCurrent(item)) _currentBookmarks.value = bookmarks;
+    if (Player.inst.isCurrentItem(item)) _currentBookmarks.value = bookmarks;
   }
 
   void play(Playable item, PlayableBookmark bookmark) {
-    final position = Duration(milliseconds: bookmark.positionMS);
-    if (isCurrent(item)) {
-      Player.inst.seek(position);
-      return;
-    }
-    final source = item.execute<QueueSourceBase>(
-      selectable: (_) => QueueSource.others(null),
-      youtubeID: (_) => QueueSourceYoutubeID.ytPlayerQueue,
-    );
-    if (source == null) return;
-    Player.inst.playOrPause(0, [item], source, gentlePlay: true, startPosition: position);
+    Player.inst.seekOrPlayAt(item, Duration(milliseconds: bookmark.positionMS));
   }
 
   static int _seekbarReachMS(int durationMS, double widthPx) => (_kSeekbarReachPx / widthPx * durationMS).round();

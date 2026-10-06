@@ -361,6 +361,7 @@ class _SubsonicWebServer extends MusicWebServer {
       trackNo: media.track ?? 0,
       trackTo: 0,
       durationMS: media.duration?.inMilliseconds ?? 0,
+      chapters: null,
       year: year ?? 0,
       yearText: yearString,
       size: media.size ?? 0,

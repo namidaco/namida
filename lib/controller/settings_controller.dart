@@ -284,6 +284,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enableClipboardMonitoring = _key('enableClipboardMonitoring', false, sync: false);
   late final artworkGestureDoubleTapLRC = _key('artworkGestureDoubleTapLRC', true);
   late final previousButtonReplays = _key('previousButtonReplays', false);
+  late final skipButtonsJumpChapters = _key('skipButtonsJumpChapters', false);
   late final refreshOnStartup = _key('refreshOnStartup', false, sync: false);
   late final alwaysExpandedSearchbar = _key('alwaysExpandedSearchbar', isKuru ? true : false);
   late final mixedQueue = _key('mixedQueue', false);

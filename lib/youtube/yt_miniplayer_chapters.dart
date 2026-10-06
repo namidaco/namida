@@ -133,31 +133,17 @@ class _StreamSegmentsRowState extends State<_StreamSegmentsRow> {
   }
 }
 
-class _ChaptersTracker {
-  static const _kUnboundedMS = 1 << 40;
-
-  final currentIndex = (-1).obs;
+class _ChaptersTracker extends ChaptersTracker {
   List<StreamSegment> _segments;
-  List<int> _startsMS;
-  int _rangeStartMS = 0;
-  int _rangeEndMS = 0;
 
-  _ChaptersTracker(List<StreamSegment> segments) : _segments = segments, _startsMS = _buildStartsMS(segments) {
-    _resolve(Player.inst.nowPlayingPosition.value);
-    Player.inst.nowPlayingPosition.addListener(_onPositionChange);
-  }
+  _ChaptersTracker(List<StreamSegment> segments) : _segments = segments, super(_buildStartsMS(segments));
 
   List<StreamSegment> get segments => _segments;
 
   void updateSegments(List<StreamSegment> segments) {
     _segments = segments;
-    _startsMS = _buildStartsMS(segments);
-    _resolve(Player.inst.nowPlayingPosition.value);
-  }
-
-  void dispose() {
-    Player.inst.nowPlayingPosition.removeListener(_onPositionChange);
-    currentIndex.close();
+    final startsMS = _buildStartsMS(segments);
+    updateStartsMS(startsMS);
   }
 
   static List<int> _buildStartsMS(List<StreamSegment> segments) {
@@ -171,29 +157,6 @@ class _ChaptersTracker {
     );
   }
 
-  int? startMSOf(int index) {
-    final startMS = _startsMS[index];
-    return startMS < 0 ? null : startMS;
-  }
-
-  int? endMSOf(int index, int? videoDurationMS) {
-    final startsMS = _startsMS;
-    for (int i = index + 1; i < startsMS.length; i++) {
-      final startMS = startsMS[i];
-      if (startMS >= 0) return startMS;
-    }
-    return videoDurationMS;
-  }
-
-  (int, int)? rangeMSOf(int index, int? videoDurationMS) {
-    final startMS = startMSOf(index);
-    final endMS = endMSOf(index, videoDurationMS);
-    if (startMS == null || endMS == null || endMS <= startMS) return null;
-    return (startMS, endMS);
-  }
-
-  static String lengthLabel((int, int) rangeMS) => ((rangeMS.$2 - rangeMS.$1) ~/ 1000).secondsLabel;
-
   YoutubeDownloadChapter? downloadChapterOf(int index) {
     final startMS = startMSOf(index);
     if (startMS == null) return null;
@@ -204,33 +167,6 @@ class _ChaptersTracker {
       number: index + 1,
       total: _segments.length,
     );
-  }
-
-  void seekTo(int index) {
-    final startMS = startMSOf(index);
-    if (startMS != null) Player.inst.seek(Duration(milliseconds: startMS + 1));
-  }
-
-  void _onPositionChange() {
-    final positionMS = Player.inst.nowPlayingPosition.value;
-    if (positionMS >= _rangeStartMS && positionMS < _rangeEndMS) return;
-    _resolve(positionMS);
-  }
-
-  /// same bounds as `findByMillisecond`, a chapter counts from 1ms before its start.
-  void _resolve(int positionMS) {
-    final startsMS = _startsMS;
-    int index = -1;
-    for (int i = startsMS.length - 1; i >= 0; i--) {
-      final startMS = startsMS[i];
-      if (startMS >= 0 && positionMS + 1 >= startMS) {
-        index = i;
-        break;
-      }
-    }
-    _rangeStartMS = index < 0 ? -_kUnboundedMS : startsMS[index] - 1;
-    _rangeEndMS = (endMSOf(index, null) ?? _kUnboundedMS) - 1;
-    currentIndex.value = index;
   }
 }
 
@@ -323,15 +259,15 @@ class _ChapterTile extends StatelessWidget {
       childrenDefault: () => _chapterMenuItems(videoId, tracker, index),
       child: ObxOSelect(
         rx: tracker.currentIndex,
-        selector: (currentIndex) => _ChapterStatus.of(index, currentIndex),
+        selector: (currentIndex) => ChapterStatus.of(index, currentIndex),
         builder: (context, status) {
           final theme = context.theme;
           final textTheme = theme.textTheme;
           final segment = tracker.segments[index];
           final url = segment.thumbnail?.url;
           final rangeMS = tracker.rangeMSOf(index, videoDurationMS);
-          final isCurrent = status == _ChapterStatus.current;
-          final isPlayed = status == _ChapterStatus.played;
+          final isCurrent = status == ChapterStatus.current;
+          final isPlayed = status == ChapterStatus.played;
           final titleStyle = textTheme.displaySmall?.copyWith(
             fontSize: _kTitleFontSize,
             fontWeight: FontWeight.w500,
@@ -360,7 +296,7 @@ class _ChapterTile extends StatelessWidget {
                     videoId: videoId,
                     preferLowerRes: true,
                     customUrl: url,
-                    smallBoxText: rangeMS == null ? null : _ChaptersTracker.lengthLabel(rangeMS),
+                    smallBoxText: rangeMS == null ? null : ChaptersTracker.lengthLabel(rangeMS),
                     smallBoxIcon: isCurrent ? Broken.play : null,
                     forceSquared: true,
                     onTopWidgets: isPlayed ? (_) => const [_PlayedScrim()] : null,
@@ -371,7 +307,7 @@ class _ChapterTile extends StatelessWidget {
                   child: isCurrent && rangeMS != null
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.5),
-                          child: _ChapterProgressBar(
+                          child: ChapterProgressBar(
                             rangeMS: rangeMS,
                           ),
                         )
@@ -548,15 +484,15 @@ class _ChapterSheetRow extends StatelessWidget {
       childrenDefault: menuItems,
       child: ObxOSelect(
         rx: tracker.currentIndex,
-        selector: (currentIndex) => _ChapterStatus.of(index, currentIndex),
+        selector: (currentIndex) => ChapterStatus.of(index, currentIndex),
         builder: (context, status) {
           final theme = context.theme;
           final textTheme = theme.textTheme;
           final segment = tracker.segments[index];
           final url = segment.thumbnail?.url;
           final rangeMS = tracker.rangeMSOf(index, videoDurationMS);
-          final isCurrent = status == _ChapterStatus.current;
-          final isPlayed = status == _ChapterStatus.played;
+          final isCurrent = status == ChapterStatus.current;
+          final isPlayed = status == ChapterStatus.played;
           final startLabel = segment.startSeconds?.secondsLabel;
 
           return NamidaInkWell(
@@ -578,7 +514,7 @@ class _ChapterSheetRow extends StatelessWidget {
                   videoId: videoId,
                   preferLowerRes: true,
                   customUrl: url,
-                  smallBoxText: rangeMS == null ? null : _ChaptersTracker.lengthLabel(rangeMS),
+                  smallBoxText: rangeMS == null ? null : ChaptersTracker.lengthLabel(rangeMS),
                   smallBoxIcon: isCurrent ? Broken.play : null,
                   forceSquared: true,
                   onTopWidgets: isPlayed ? (_) => const [_PlayedScrim()] : null,
@@ -610,7 +546,7 @@ class _ChapterSheetRow extends StatelessWidget {
                       SizedBox(
                         height: _kProgressHeight,
                         child: isCurrent && rangeMS != null
-                            ? _ChapterProgressBar(
+                            ? ChapterProgressBar(
                                 rangeMS: rangeMS,
                               )
                             : null,
@@ -632,61 +568,6 @@ class _ChapterSheetRow extends StatelessWidget {
         },
       ),
     );
-  }
-}
-
-class _ChapterProgressBar extends StatelessWidget {
-  final (int, int) rangeMS;
-
-  const _ChapterProgressBar({
-    required this.rangeMS,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
-    return RepaintBoundary(
-      child: CustomPaint(
-        size: Size.infinite,
-        painter: _ChapterProgressPainter(
-          startMS: rangeMS.$1,
-          endMS: rangeMS.$2,
-          trackColor: colorScheme.onSecondaryContainer.withOpacityExt(0.15),
-          fillColor: colorScheme.primary,
-        ),
-      ),
-    );
-  }
-}
-
-class _ChapterProgressPainter extends CustomPainter {
-  final int startMS;
-  final int endMS;
-  final Color trackColor;
-  final Color fillColor;
-  final Paint _trackPaint;
-  final Paint _fillPaint;
-
-  _ChapterProgressPainter({
-    required this.startMS,
-    required this.endMS,
-    required this.trackColor,
-    required this.fillColor,
-  }) : _trackPaint = Paint()..color = trackColor,
-       _fillPaint = Paint()..color = fillColor,
-       super(repaint: Player.inst.nowPlayingPosition);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final radius = Radius.circular(size.height / 2);
-    canvas.drawRRect(RRect.fromLTRBR(0.0, 0.0, size.width, size.height, radius), _trackPaint);
-    final fraction = ((Player.inst.nowPlayingPosition.value - startMS) / (endMS - startMS)).clampDouble(0.0, 1.0);
-    if (fraction > 0.0) canvas.drawRRect(RRect.fromLTRBR(0.0, 0.0, size.width * fraction, size.height, radius), _fillPaint);
-  }
-
-  @override
-  bool shouldRepaint(_ChapterProgressPainter oldDelegate) {
-    return oldDelegate.startMS != startMS || oldDelegate.endMS != endMS || oldDelegate.trackColor != trackColor || oldDelegate.fillColor != fillColor;
   }
 }
 
@@ -731,16 +612,4 @@ List<NamidaPopupItem> _chapterMenuItems(String videoId, _ChaptersTracker tracker
       ),
     ),
   ];
-}
-
-enum _ChapterStatus {
-  played,
-  current,
-  upcoming;
-
-  static _ChapterStatus of(int index, int currentIndex) {
-    if (index < currentIndex) return played;
-    if (index == currentIndex) return current;
-    return upcoming;
-  }
 }

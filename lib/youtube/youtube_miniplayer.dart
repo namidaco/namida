@@ -16,6 +16,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -40,6 +41,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';

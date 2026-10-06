@@ -22,6 +22,7 @@ import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
+import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -51,6 +52,7 @@ import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
+import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
@@ -2229,10 +2231,11 @@ class WaveformMiniplayer extends StatelessWidget {
     MiniPlayerController.inst.seekValue.value = null;
   }
 
-  bool _snapSeekToBookmark(double maxWidth) {
+  bool _snapSeekToMarker(double maxWidth) {
     final ms = MiniPlayerController.inst.seekValue.value;
     if (ms == null) return false;
-    final snappedMS = BookmarksController.inst.snapTapToBookmarkMS(ms, _currentDurationInMS, maxWidth);
+    final durationMS = _currentDurationInMS;
+    final snappedMS = BookmarksController.inst.snapTapToBookmarkMS(ms, durationMS, maxWidth) ?? ChaptersController.inst.snapTapToChapterMS(ms, durationMS, maxWidth);
     if (snappedMS == null) return false;
     MiniPlayerController.inst.seekValue.value = snappedMS;
     return true;
@@ -2293,8 +2296,8 @@ class WaveformMiniplayer extends StatelessWidget {
                     final wasLongPress = _longPress.handleTapUp(details.localPosition.dx, constraints.maxWidth, _currentDurationInMS);
                     if (wasLongPress) return;
                     onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth);
-                    final didSnapToBookmark = _snapSeekToBookmark(constraints.maxWidth);
-                    onSeekEnd(allowMagnet: !didSnapToBookmark);
+                    final didSnapToMarker = _snapSeekToMarker(constraints.maxWidth);
+                    onSeekEnd(allowMagnet: !didSnapToMarker);
                   },
                   onTapCancel: () => onSeekEnd(allowSeek: false),
                   onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
@@ -2302,7 +2305,9 @@ class WaveformMiniplayer extends StatelessWidget {
                   child: Stack(
                     alignment: Alignment.centerLeft,
                     children: [
-                      const WaveformComponent(),
+                      const ChapterGapsClip(
+                        child: WaveformComponent(),
+                      ),
                       const Positioned.fill(
                         child: BookmarkTicks(
                           tickWidth: 1.5,

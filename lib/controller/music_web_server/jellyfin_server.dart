@@ -222,6 +222,7 @@ class _JellyfinServer extends MusicWebServer {
       trackNo: item.indexNumber ?? 0,
       trackTo: 0,
       durationMS: durationMs,
+      chapters: null,
       year: year,
       yearText: yearString,
       size: size,

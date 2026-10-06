@@ -48,6 +48,13 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     if (_notificationButtons.contains(button)) _refreshNotificationButtons();
   }
 
+  /// chapter buttons are hidden while the current item has no chapters.
+  void refreshChapterNotificationButtons() {
+    final buttons = _notificationButtons;
+    final isChapterShown = buttons.contains(NotificationButton.previousChapter) || buttons.contains(NotificationButton.nextChapter);
+    if (isChapterShown) _refreshNotificationButtons();
+  }
+
   void _refreshNotificationButtons() {
     final item = currentItem.value;
     if (item == null) return;
@@ -129,6 +136,8 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
       NotificationButton.repeatMode => _repeatModeControl(),
       NotificationButton.seekBackward => _seekControl(button, 'backward', lang.seekBackward),
       NotificationButton.seekForward => _seekControl(button, 'forward', lang.seekForward),
+      NotificationButton.previousChapter => _chapterControl(button, item, 'drawable/arrow_square_left', lang.previousChapter),
+      NotificationButton.nextChapter => _chapterControl(button, item, 'drawable/arrow_square_right', lang.nextChapter),
       NotificationButton.sleepTimer => _sleepTimerControl(),
       NotificationButton.addToPlaylist => _playlistControl(item),
       NotificationButton.bookmark => _customControl(button, 'drawable/bookmark', lang.addBookmark),
@@ -204,6 +213,11 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     return 'drawable/$direction';
   }
 
+  static MediaControl? _chapterControl(NotificationButton button, Playable? item, String androidIcon, String label) {
+    if (item == null || !ChaptersController.inst.hasCurrentChapters) return null;
+    return _customControl(button, androidIcon, label);
+  }
+
   MediaControl? _playlistControl(Playable? item) {
     final membership = _getPlaylistMembership(item);
     if (membership == null) return null;
@@ -277,6 +291,10 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
         await Player.inst.seekSecondsBackward();
       case NotificationButton.seekForward:
         await Player.inst.seekSecondsForward();
+      case NotificationButton.previousChapter:
+        await ChaptersController.inst.seekToAdjacent(forward: false);
+      case NotificationButton.nextChapter:
+        await ChaptersController.inst.seekToAdjacent(forward: true);
       case NotificationButton.sleepTimer:
         _toggleSleepTimer();
       case NotificationButton.addToPlaylist:

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -104,7 +105,7 @@ class _BookmarksSheetState extends State<_BookmarksSheet> with _ItemBookmarksMix
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    final isCurrent = BookmarksController.inst.isCurrent(widget.item);
+    final isCurrent = Player.inst.isCurrentItem(widget.item);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -200,7 +201,7 @@ mixin _ItemBookmarksMixin<T extends StatefulWidget> on State<T> {
 
   void _loadBookmarks() async {
     final controller = BookmarksController.inst;
-    if (controller.isCurrent(_item)) {
+    if (Player.inst.isCurrentItem(_item)) {
       _bookmarks.value = controller.currentBookmarks.value;
       return;
     }
@@ -211,7 +212,7 @@ mixin _ItemBookmarksMixin<T extends StatefulWidget> on State<T> {
 
   void _onCurrentBookmarksChanged() {
     final controller = BookmarksController.inst;
-    if (controller.isCurrent(_item)) _bookmarks.value = controller.currentBookmarks.value;
+    if (Player.inst.isCurrentItem(_item)) _bookmarks.value = controller.currentBookmarks.value;
   }
 
   void _onRemove(PlayableBookmark bookmark) async {

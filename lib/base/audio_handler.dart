@@ -26,6 +26,7 @@ import 'package:namida/controller/artwork_prefetcher.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
+import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -2496,6 +2497,17 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     return secondsToReplay > 0 && currentPositionMS.value > secondsToReplay * 1000;
   }
 
+  /// null when the skip should leave the current item.
+  int? _skipChapterTargetMS({required bool forward}) {
+    if (!settings.skipButtonsJumpChapters.value) return null;
+    return ChaptersController.inst.adjacentChapterStartMS(forward: forward);
+  }
+
+  bool skipWillStayInItem({required bool forward, required bool jumpChapters}) {
+    if (jumpChapters && _skipChapterTargetMS(forward: forward) != null) return true;
+    return !forward && previousButtonWillReplay;
+  }
+
   // ------------------------------------------------------------
 
   Future<void> togglePlayPause() {
@@ -2526,14 +2538,14 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     return seek(position);
   }
 
-  Future<void> userSkipToNext() {
+  Future<void> userSkipToNext({bool jumpChapters = true}) {
     if (partyGate?.interceptSkip(offset: 1) == true) return Future.value();
-    return skipToNext();
+    return skipToNext(jumpChapters: jumpChapters);
   }
 
-  Future<void> userSkipToPrevious() {
+  Future<void> userSkipToPrevious({bool jumpChapters = true}) {
     if (partyGate?.interceptSkip(offset: -1) == true) return Future.value();
-    return skipToPrevious();
+    return skipToPrevious(jumpChapters: jumpChapters);
   }
 
   Future<void> userSkipToQueueItem(int index) {
@@ -2641,7 +2653,24 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   }
 
   @override
-  Future<void> skipToPrevious({bool isManualSkip = true}) async {
+  Future<void> skipToNext({bool? andPlay, bool isManualSkip = true, bool jumpChapters = true}) async {
+    final chapterTargetMS = isManualSkip && jumpChapters ? _skipChapterTargetMS(forward: true) : null;
+    if (chapterTargetMS != null) {
+      await seek(Duration(milliseconds: chapterTargetMS));
+      return;
+    }
+
+    await super.skipToNext(andPlay: andPlay, isManualSkip: isManualSkip);
+  }
+
+  @override
+  Future<void> skipToPrevious({bool isManualSkip = true, bool jumpChapters = true}) async {
+    final chapterTargetMS = isManualSkip && jumpChapters ? _skipChapterTargetMS(forward: false) : null;
+    if (chapterTargetMS != null) {
+      await seek(Duration(milliseconds: chapterTargetMS));
+      return;
+    }
+
     if (previousButtonWillReplay) {
       await seek(Duration.zero);
       return;

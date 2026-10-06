@@ -339,6 +339,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     enableClipboardMonitoring,
     artworkGestureDoubleTapLRC,
     previousButtonReplays,
+    skipButtonsJumpChapters,
     refreshOnStartup,
     alwaysExpandedSearchbar,
     mixedQueue,

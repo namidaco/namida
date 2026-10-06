@@ -3,8 +3,10 @@
 import 'package:flutter_taglib/flutter_taglib.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/core/extensions.dart';
 
 class TagLibRes {
   final String originalPath;
@@ -17,7 +19,7 @@ class TagLibRes {
 
   static Future<TagLibRes?> read(String trackPath, {required bool extractArtwork, Map<String, String>? httpHeaders}) async {
     try {
-      final stream = TagLibFile.readBatchNative([trackPath], threads: 1, readCover: extractArtwork, headers: httpHeaders);
+      final stream = TagLibFile.readBatchNative([trackPath], threads: 1, readCover: extractArtwork, readChapters: true, headers: httpHeaders);
       final res = await stream.single;
       return fromBatchResult(res);
     } catch (e, st) {
@@ -28,7 +30,7 @@ class TagLibRes {
 
   /// unordered, emits each result once read.
   static Stream<TagLibBatchResult> readBatch(List<String> paths, {required int threads, required bool extractArtwork}) {
-    return TagLibFile.readBatchNative(paths, threads: threads, readCover: extractArtwork);
+    return TagLibFile.readBatchNative(paths, threads: threads, readCover: extractArtwork, readChapters: true);
   }
 
   static TagLibRes? fromBatchResult(TagLibBatchResult res) {
@@ -47,11 +49,18 @@ class TagLibRes {
                 size: artworkBytes.length,
               ),
         propertiesMap: res.properties,
+        chapters: _toMediaChapters(res.chapters),
       ),
     );
   }
 
-  static String? writeSync(String trackPath, {required Map<String, List<String>> newPropertiesMap, required FArtwork? artwork}) {
+  /// a single chapter has nothing to navigate between.
+  static List<MediaChapter>? _toMediaChapters(List<TagLibChapter> chapters) {
+    if (chapters.length < 2) return null;
+    return chapters.map((e) => MediaChapter(startMS: e.start.inMilliseconds, title: e.title.trim())).toFixedList();
+  }
+
+  static String? writeSync(String trackPath, {required Map<String, List<String>> newPropertiesMap, required FArtwork? artwork, required List<MediaChapter>? chapters}) {
     TagLibFile? tagFile;
     try {
       tagFile = TagLibFile.open(trackPath);
@@ -68,6 +77,10 @@ class TagLibRes {
       final newCoverBytes = artwork?.bytes ?? artwork?.file?.readAsBytesSync();
       if (newCoverBytes != null) {
         tagFile.setCover(data: newCoverBytes);
+      }
+      if (chapters != null) {
+        final tagLibChapters = chapters.map((e) => TagLibChapter(start: Duration(milliseconds: e.startMS), title: e.title)).toFixedList();
+        tagFile.setChapters(tagLibChapters);
       }
       tagFile.save();
       return null;
@@ -129,6 +142,7 @@ class TagLibRes {
       tags: FTags(
         path: this.originalPath,
         artwork: artwork ?? FArtwork(),
+        chapters: properties.chapters,
         title: info.title,
         album: info.album,
         albumArtist: info.albumArtist,
@@ -185,11 +199,13 @@ class TagLibPropertiesWrapper {
   final FArtwork? artwork;
   final AudioInfo audioInfo;
   final Map<String, List<String>> propertiesMap;
+  final List<MediaChapter>? chapters;
 
   const TagLibPropertiesWrapper._({
     required this.artwork,
     required this.audioInfo,
     required this.propertiesMap,
+    required this.chapters,
   });
 
   String? _getProperty(String field) {

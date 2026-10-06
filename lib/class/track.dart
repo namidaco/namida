@@ -6,6 +6,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/video.dart';
@@ -401,6 +402,9 @@ class TrackExtended {
   /// identifiers keyed by their picard tag name (`MUSICBRAINZ_TRACKID`, `ISRC`, ...), see [FTags.pickExtraTags].
   final Map<String, String>? extraTags;
 
+  /// sorted by start, null when the file has less than 2.
+  final List<MediaChapter>? chapters;
+
   final List<AlbumIdentifierWrapper> albumsIdentifiersWrappers;
   final bool isVideo;
   final String? server;
@@ -461,6 +465,7 @@ class TrackExtended {
     required this.sortInfo,
     required this.hashKey,
     required this.extraTags,
+    required this.chapters,
     required this.albumsIdentifiersWrappers,
     required this.isVideo,
     required this.server,
@@ -681,6 +686,7 @@ class TrackExtended {
       sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
       hashKey: json['hashKey'],
       extraTags: _extraTagsFromJson(json['extraTags']),
+      chapters: MediaChapter.listFromJson(json['chapters']),
       albumsIdentifiersWrappers: albumsIdentifiersWrappers,
       isVideo: json['v'] ?? false,
       server: json['server'],
@@ -705,6 +711,7 @@ class TrackExtended {
       if (trackNo > 0) 'trackNo': trackNo,
       if (trackTo > 0) 'trackTo': trackTo,
       if (durationMS > 0) 'durationMS': durationMS,
+      'chapters': ?chapters?.map((e) => e.toJson()).toFixedList(),
       if (year > 0) 'year': year,
       if (yearText.isNotEmpty) 'yearText': yearText,
       if (size > 0) 'size': size,
@@ -1003,6 +1010,7 @@ extension TrackExtUtils on TrackExtended {
       channels: channels,
       dateAdded: dateAdded,
       durationMS: durationMS,
+      chapters: chapters,
       format: format,
       sampleRate: sampleRate,
       bits: bits,
@@ -1042,6 +1050,7 @@ extension TrackExtUtils on TrackExtended {
 
     /// track's duration in milliseconds.
     int? durationMS,
+    List<MediaChapter>? chapters,
     int? year,
     String? yearText,
     int? size,
@@ -1127,6 +1136,7 @@ extension TrackExtUtils on TrackExtended {
       sortInfo: sortInfo ?? this.sortInfo,
       hashKey: newHashKey,
       extraTags: extraTags ?? this.extraTags,
+      chapters: chapters ?? this.chapters,
       albumsIdentifiersWrappers: albumsIdentifiersWrappers ?? this.albumsIdentifiersWrappers,
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,

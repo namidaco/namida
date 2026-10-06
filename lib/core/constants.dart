@@ -1264,6 +1264,7 @@ final kDummyExtendedTrack = TrackExtended(
   gainData: null,
   sortInfo: null,
   extraTags: null,
+  chapters: null,
   albumsIdentifiersWrappers: [],
   isVideo: false,
   server: null,

@@ -349,6 +349,8 @@ class Player {
     }
   }
 
+  void refreshChapterNotificationButtons() => _audioHandler.refreshChapterNotificationButtons();
+
   Future<void> setAudioOnlyPlayback(bool audioOnly) async {
     await _audioHandler.setAudioOnlyPlayback(audioOnly);
   }
@@ -813,15 +815,17 @@ class Player {
     await _audioHandler.userTogglePlayPause();
   }
 
-  Future<void> next() async {
-    await _audioHandler.userSkipToNext();
+  /// [jumpChapters] false always leaves the item, ex: swipes.
+  Future<void> next({bool jumpChapters = true}) async {
+    await _audioHandler.userSkipToNext(jumpChapters: jumpChapters);
   }
 
-  Future<void> previous() async {
-    await _audioHandler.userSkipToPrevious();
+  Future<void> previous({bool jumpChapters = true}) async {
+    await _audioHandler.userSkipToPrevious(jumpChapters: jumpChapters);
   }
 
-  bool get previousWillReplay => _audioHandler.previousButtonWillReplay;
+  /// previous replaying the item or skips jumping between chapters, the ui shouldn't animate towards another item.
+  bool skipWillStayInItem({required bool forward, required bool jumpChapters}) => _audioHandler.skipWillStayInItem(forward: forward, jumpChapters: jumpChapters);
 
   Future<void> skipToQueueItem(int index) async {
     if (_audioHandler.partyGate == null) _audioHandler.setPlayWhenReady(true);
@@ -830,6 +834,30 @@ class Player {
 
   Future<void> seek(Duration position) async {
     await _audioHandler.userSeek(position);
+  }
+
+  bool isCurrentItem(Playable item) {
+    final current = _audioHandler.currentItem.value;
+    if (current == null) return false;
+    final isSame = item.execute(
+      selectable: (finalItem) => current is Selectable && current.track == finalItem.track,
+      youtubeID: (finalItem) => current is YoutubeID && current.id == finalItem.id,
+    );
+    return isSame == true;
+  }
+
+  /// seeks when [item] is already playing, otherwise plays it next from [position].
+  void seekOrPlayAt(Playable item, Duration position) {
+    if (isCurrentItem(item)) {
+      seek(position);
+      return;
+    }
+    final source = item.execute<QueueSourceBase>(
+      selectable: (_) => QueueSource.others(null),
+      youtubeID: (_) => QueueSourceYoutubeID.ytPlayerQueue,
+    );
+    if (source == null) return;
+    playOrPause(0, [item], source, gentlePlay: true, startPosition: position);
   }
 
   /// Default value is set to user preference [seekDurationInSeconds]

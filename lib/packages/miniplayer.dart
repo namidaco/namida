@@ -38,6 +38,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/chapters_sheet.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
@@ -391,6 +392,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                             ]
                           : null,
                     ),
+                  WidgetSpan(
+                    child: CurrentChapterBadge(
+                      item: currentItem,
+                    ),
+                  ),
                 ],
               ),
               maxLines: 2,
@@ -456,6 +462,11 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                     style: TextStyle(color: onSecondary, fontSize: 10.0),
                   ),
                 ],
+                WidgetSpan(
+                  child: CurrentChapterBadge(
+                    item: currentItem,
+                  ),
+                ),
               ],
             ),
             maxLines: 2,

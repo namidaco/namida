@@ -408,6 +408,7 @@ class _TagLibIsolateRequestWriteTags extends _TagLibIsolateRequestBase<String?> 
       path,
       newPropertiesMap: newTags.toTagLibMap(),
       artwork: newTags.artwork,
+      chapters: newTags.chapters,
     );
   }
 }

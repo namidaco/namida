@@ -56,6 +56,7 @@ enum _PlaybackSettingsKeys with SettingKeysBase {
   onConnect(NamidaFeaturesAvailablity.android),
   jumpToFirstTrackAfterFinishing,
   previousButtonReplays,
+  skipButtonsJumpChapters,
   seekDuration,
   minimumTrackDurToRestoreLastPosition,
   countListenAfter,
@@ -102,6 +103,7 @@ class PlaybackSettings extends SettingSubpageProvider {
     _PlaybackSettingsKeys.onConnect: [lang.onDeviceConnect],
     _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
     _PlaybackSettingsKeys.previousButtonReplays: [lang.previousButtonReplays, lang.previousButtonReplaysSubtitle],
+    _PlaybackSettingsKeys.skipButtonsJumpChapters: [lang.skipButtonsJumpChapters, lang.chapters],
     _PlaybackSettingsKeys.seekDuration: [lang.seekDuration, lang.seekDurationInfo],
     _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.minTrackDurationToRestoreLastPosition],
     _PlaybackSettingsKeys.countListenAfter: [lang.minValueToCountTrackListen],
@@ -311,6 +313,21 @@ class PlaybackSettings extends SettingSubpageProvider {
           subtitle: lang.previousButtonReplaysSubtitle,
           onChanged: (value) => settings.previousButtonReplays.save(!value),
           value: settings.previousButtonReplays.valueR,
+        ),
+      ),
+    );
+  }
+
+  Widget getSkipButtonsJumpChaptersWidget() {
+    return getItemWrapper(
+      key: _PlaybackSettingsKeys.skipButtonsJumpChapters,
+      child: Obx(
+        (context) => CustomSwitchListTile(
+          bgColor: getBgColor(_PlaybackSettingsKeys.skipButtonsJumpChapters),
+          icon: Broken.arrow_square_right,
+          title: lang.skipButtonsJumpChapters,
+          onChanged: (value) => settings.skipButtonsJumpChapters.save(!value),
+          value: settings.skipButtonsJumpChapters.valueR,
         ),
       ),
     );
@@ -1058,6 +1075,7 @@ class PlaybackSettings extends SettingSubpageProvider {
       ),
       getJumpToFirstTrackAfterFinishingWidget(),
       getPreviousButtonReplaysWidget(),
+      getSkipButtonsJumpChaptersWidget(),
       getItemWrapper(
         key: _PlaybackSettingsKeys.seekDuration,
         child: Obx(

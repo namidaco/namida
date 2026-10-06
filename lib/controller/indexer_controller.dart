@@ -842,6 +842,7 @@ class Indexer<T extends Track> {
         trackNo: 0,
         trackTo: 0,
         durationMS: 0,
+        chapters: null,
         year: 0,
         yearText: '',
         size: fileStat?.size ?? 0,
@@ -997,6 +998,7 @@ class Indexer<T extends Track> {
           gainData: tags.gainData,
           sortInfo: tags.sortInfo,
           extraTags: tags.extraTags,
+          chapters: tags.chapters,
           generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
         );
 
@@ -2544,6 +2546,7 @@ class Indexer<T extends Track> {
         trackNo: e.track ?? 0,
         trackTo: trackTo ?? 0,
         durationMS: e.duration ?? 0, // `e.duration` => milliseconds
+        chapters: null,
         year: TrackExtended.enforceYearFormat(yearString) ?? 0,
         yearText: yearString ?? '',
         size: e.size,
