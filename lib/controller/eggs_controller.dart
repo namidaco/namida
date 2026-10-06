@@ -113,7 +113,7 @@ class EggsController {
   bool unlock(EggUnlockable item) {
     final data = settings.eggs.value;
     if (data.isUnlocked(item)) return true;
-    if (data.balance() < 1) return false;
+    if (data.balance() < item.price) return false;
     final unlocked = data.withUnlocked(item);
     final updated = _withTrade(unlocked);
     settings.eggs.save(updated);

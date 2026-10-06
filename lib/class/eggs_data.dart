@@ -39,7 +39,7 @@ class EggsData {
   int _spentEggs() {
     int spent = 0;
     for (final item in EggUnlockable.values) {
-      if (isUnlocked(item)) spent++;
+      if (isUnlocked(item)) spent += item.price;
     }
     return spent;
   }
@@ -128,19 +128,24 @@ enum NamidaEgg {
 }
 
 enum EggUnlockable {
-  crossfade,
-  partyMode,
-  starfield,
-  galaxy,
-  aurora,
-  fireworks,
-  deepOcean,
-  mirroredBars,
-  glow,
-  outline,
-  edgeLights,
-  playerBackgroundImage,
-  appWallpaper,
+  crossfade(3),
+  partyMode(3),
+  starfield(2),
+  galaxy(2),
+  aurora(2),
+  fireworks(2),
+  deepOcean(2),
+  mirroredBars(2),
+  glow(2),
+  outline(2),
+  edgeLights(2),
+  playerBackgroundImage(3),
+  appWallpaper(3),
+  ;
+
+  final int price;
+
+  const EggUnlockable(this.price);
 }
 
 extension _NamidaEggBit on NamidaEgg {

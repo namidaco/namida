@@ -205,6 +205,7 @@ class _UwuDialogState extends State<UwuDialog> with TickerProviderStateMixin {
           ),
           actions: [
             _CrackEggButton(
+              price: widget.unlockable.price,
               onTap: _crackEgg,
             ),
             const NamidaSupportButton(
@@ -324,22 +325,23 @@ class DateEggAppBarIcon extends StatelessWidget {
 }
 
 class _CrackEggButton extends StatelessWidget {
+  final int price;
   final void Function() onTap;
 
-  const _CrackEggButton({required this.onTap});
+  const _CrackEggButton({required this.price, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
       rx: settings.eggs,
       builder: (context, data) {
-        final canCrack = data.balance() > 0;
+        final canCrack = data.balance() >= price;
         return NamidaButton(
           enabled: canCrack,
           iconWidget: _FloatingEgg(
             isActive: canCrack,
           ),
-          text: 'crack an egg',
+          text: 'crack $price eggs',
           onTap: onTap,
         );
       },
@@ -358,7 +360,7 @@ class _UnlockedTile extends StatelessWidget {
         normalTitleStyle: true,
         icon: Broken.wallet_add,
         title: 'sell it back?',
-        bodyText: '${item.toText()} gets locked again, and you get your egg back',
+        bodyText: '${item.toText()} gets locked again, and you get your ${item.price} eggs back',
         actions: [
           const CancelButton(),
           NamidaButton(
@@ -380,7 +382,7 @@ class _UnlockedTile extends StatelessWidget {
       title: item.toText(),
       trailing: NamidaIconButton(
         icon: Broken.wallet_add,
-        tooltip: () => 'sell back for 1 egg',
+        tooltip: () => 'sell back for ${item.price} eggs',
         onPressed: _confirmSelling,
       ),
     );
