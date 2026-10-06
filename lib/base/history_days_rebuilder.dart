@@ -76,49 +76,59 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
 
   double get yearsRowHeight => 32.0;
 
-  Widget getYearsRowWidget(BuildContext context, void Function(int year) onYearTap) {
+  Widget getYearsRowWidget(BuildContext context, void Function(int year) onYearTap, {Widget? trailing}) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    return SizedBox(
-      height: yearsRowHeight,
-      width: context.width,
-      child: ColoredBox(
-        color: theme.scaffoldBackgroundColor,
-        child: SmoothSingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Row(
-              children: [
-                ...historyYears.map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                    child: TapDetector(
-                      onTap: () => onYearTap(e),
-                      child: AnimatedDecoration(
-                        duration: const Duration(milliseconds: 250),
-                        decoration: BoxDecoration(
-                          color: currentActiveYear == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                          child: Text(
-                            '$e',
-                            style: textTheme.displaySmall?.copyWith(
-                              color: currentActiveYear == e ? Colors.white.withAlpha(240) : null,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+    final yearsWidget = SmoothSingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Row(
+          children: [
+            ...historyYears.map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                child: TapDetector(
+                  onTap: () => onYearTap(e),
+                  child: AnimatedDecoration(
+                    duration: const Duration(milliseconds: 250),
+                    decoration: BoxDecoration(
+                      color: currentActiveYear == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
+                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                      child: Text(
+                        '$e',
+                        style: textTheme.displaySmall?.copyWith(
+                          color: currentActiveYear == e ? Colors.white.withAlpha(240) : null,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
+      ),
+    );
+    return SizedBox(
+      height: yearsRowHeight,
+      width: context.width,
+      child: ColoredBox(
+        color: theme.scaffoldBackgroundColor,
+        child: trailing == null
+            ? yearsWidget
+            : Row(
+                children: [
+                  Expanded(
+                    child: yearsWidget,
+                  ),
+                  trailing,
+                ],
+              ),
       ),
     );
   }

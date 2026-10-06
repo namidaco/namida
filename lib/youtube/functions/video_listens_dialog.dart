@@ -15,8 +15,9 @@ import 'package:namida/youtube/yt_utils.dart';
 void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [], Color? colorScheme}) async {
   final releaseDate = await YoutubeInfoController.utils.getVideoReleaseDate(videoId);
   final subtitle = releaseDate?.dateAndClockFormattedOriginal;
+  final listens = datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? <int>[];
   showListensDialog(
-    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [],
+    datesOfListen: listens,
     subtitle: subtitle,
     colorScheme: colorScheme,
     colorSchemeFunction: () async {
@@ -28,7 +29,7 @@ void showVideoListensDialog(String videoId, {List<int> datesOfListen = const [],
       return null;
     },
     colorSchemeFunctionSync: null,
-    onListenTap: (listen) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: listen),
+    onListenTap: (listen) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: listen, listensToNavigate: listens),
     onTopListensRangeTap: (customRange) {
       YTUtils.onYoutubeMostPlayedPlaylistTap(
         mptr: .custom,

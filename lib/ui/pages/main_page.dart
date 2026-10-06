@@ -22,6 +22,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
@@ -38,6 +39,7 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
+import 'package:namida/ui/widgets/history_listens_navigation.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
 import 'package:namida/ui/widgets/server_cache_widgets.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
@@ -45,6 +47,7 @@ import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class MainPage extends StatelessWidget {
   final Animation<double> animation;
@@ -172,27 +175,47 @@ class MainPage extends StatelessWidget {
                         MainPageFABResumeButton._latestShouldPlay = shouldPlay;
                       }
 
+                      final listensNavigationButtons = switch (currentRoute.route) {
+                        RouteType.SUBPAGE_historyTracks => HistoryListensNavigationButtons(
+                          key: const ValueKey(RouteType.SUBPAGE_historyTracks),
+                          navigationRx: NamidaOnTaps.historyListensNavigation,
+                          onListenTap: (listen, listens) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen, listensToNavigate: listens),
+                        ),
+                        RouteType.YOUTUBE_HISTORY_SUBPAGE => HistoryListensNavigationButtons(
+                          key: const ValueKey(RouteType.YOUTUBE_HISTORY_SUBPAGE),
+                          navigationRx: YTUtils.historyListensNavigation,
+                          onListenTap: (listen, listens) => YTUtils.onYoutubeHistoryPlaylistTap(initialListen: listen, listensToNavigate: listens),
+                        ),
+                        _ => null,
+                      };
+
                       return AnimatedPositioned(
                         key: const Key('fab_resume_active'),
                         right: right,
                         bottom: bottom,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.fastEaseInToSlowEaseOut,
-                        child: AnimatedShow(
-                          isHorizontal: true,
-                          show: !shouldHide,
-                          duration: const Duration(milliseconds: 400),
-                          child: MainPageFABResumeButton._latestShouldPlay
-                              ? MainPageFABResumeButton(
-                                  key: const ValueKey('shouldPlay_true'),
-                                  shouldPlay: true,
-                                  getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
-                                )
-                              : MainPageFABResumeButton(
-                                  key: const ValueKey('shouldPlay_false'),
-                                  shouldPlay: false,
-                                  getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
-                                ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ?listensNavigationButtons,
+                            AnimatedShow(
+                              isHorizontal: true,
+                              show: !shouldHide,
+                              duration: const Duration(milliseconds: 400),
+                              child: MainPageFABResumeButton._latestShouldPlay
+                                  ? MainPageFABResumeButton(
+                                      key: const ValueKey('shouldPlay_true'),
+                                      shouldPlay: true,
+                                      getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
+                                    )
+                                  : MainPageFABResumeButton(
+                                      key: const ValueKey('shouldPlay_false'),
+                                      shouldPlay: false,
+                                      getInfo: () => (currentRoute: currentRoute, currentQueueSource: currentQueueSource),
+                                    ),
+                            ),
+                          ],
                         ),
                       );
                     },

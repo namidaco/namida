@@ -6,6 +6,7 @@ import 'package:youtipie/class/search_filters.dart';
 
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/controller/clipboard_controller.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -81,7 +82,7 @@ class ScrollSearchController {
     }
   }
 
-  void animatePageController(LibraryTab tab, {bool jumpToTopIfSamePage = true}) async {
+  void animatePageController(LibraryTab tab, {bool jumpToTopIfSamePage = true, bool restoreScrollPosition = true}) async {
     if (tab == LibraryTab.search) {
       toggleSearch();
       return;
@@ -91,9 +92,10 @@ class ScrollSearchController {
     hideSearchMenu();
 
     if (NamidaNavigator.inst.currentRoute?.isSameRouteAs(w) == true) {
-      if (scrollController.hasClients) {
+      final tabScrollController = tab.scrollController;
+      if (tabScrollController.hasClients) {
         MiniPlayerController.inst.snapToMini();
-        if (jumpToTopIfSamePage) scrollController.animateToEff(0.0, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
+        if (jumpToTopIfSamePage) tabScrollController.animateToEff(0.0, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);
       }
       return;
     }
@@ -110,7 +112,7 @@ class ScrollSearchController {
         ? Transition.rightToLeft
         : Transition.leftToRight;
 
-    _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab);
+    _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab, restoreNewTabPosition: restoreScrollPosition);
     settings.extra.setSelectedLibraryTab(tab);
     NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: isVertical ? 300 : 400);
   }
@@ -155,8 +157,9 @@ class ScrollSearchController {
     return scrollPositionsMap[tab] ??= 0.0;
   }
 
-  void _updateScrollPositions(LibraryTab oldTab, LibraryTab newTab) {
+  void _updateScrollPositions(LibraryTab oldTab, LibraryTab newTab, {bool restoreNewTabPosition = true}) {
     scrollPositionsMap[oldTab] = oldTab.offsetOrZero;
+    if (!restoreNewTabPosition) scrollPositionsMap.remove(newTab);
     _assignScrollController(newTab);
   }
 
@@ -263,11 +266,11 @@ class ScrollSearchController {
 }
 
 extension LibraryTabStuff on LibraryTab {
-  ScrollController get scrollController => ScrollSearchController.inst.scrollController;
+  ScrollController get scrollController => this == LibraryTab.history ? HistoryController.inst.scrollController : ScrollSearchController.inst.scrollController;
   TextEditingController? get textSearchController => ScrollSearchController.inst._textSearchControllers.value[this];
   TextEditingController? get textSearchControllerR => ScrollSearchController.inst._textSearchControllers.valueR[this];
   double get scrollPosition => ScrollSearchController.inst.getScrollPosition(this);
   RxBaseCore<bool> get isBarVisible => ScrollSearchController.inst.getIsBarVisible(this);
-  double get offsetOrZero => (ScrollSearchController.inst.scrollController.hasClients) ? scrollController.positions.lastOrNull?.pixels ?? 0.0 : 0.0;
+  double get offsetOrZero => scrollController.positions.lastOrNull?.pixels ?? 0.0;
   bool get shouldAnimateTiles => offsetOrZero == 0.0;
 }

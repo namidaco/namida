@@ -8,6 +8,7 @@ import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:namida/base/history_days_rebuilder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -36,6 +37,13 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
   HistoryManager<YoutubeID, String> get historyManager => YoutubeHistoryController.inst;
 
   void _onYearTap(int year) => onYearTap(year, Dimensions.youtubeCardItemExtent, kYoutubeHistoryDayHeaderHeightWithPadding, addJumpPadding: false);
+
+  @override
+  void dispose() {
+    final isReplacedByHistoryPage = NamidaNavigator.inst.currentRoute?.route == RouteType.YOUTUBE_HISTORY_SUBPAGE;
+    if (!isReplacedByHistoryPage) YTUtils.historyListensNavigation.value = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

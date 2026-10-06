@@ -23,13 +23,14 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 void showTrackListensDialog(Track track, {List<int> datesOfListen = const [], Color? colorScheme}) {
   final ogYearDate = track.yearAsDateTime()?.dateFormattedOriginal;
   final subtitle = ogYearDate ?? track.year.yearFormatted;
+  final listens = datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? <int>[];
   showListensDialog(
-    datesOfListen: datesOfListen.isNotEmpty ? datesOfListen : HistoryController.inst.topTracksMapListens.value[track] ?? [],
+    datesOfListen: listens,
     subtitle: subtitle,
     colorScheme: colorScheme,
     colorSchemeFunction: () => CurrentColor.inst.getTrackDelightnedColor(track, null),
     colorSchemeFunctionSync: () => CurrentColor.inst.getTrackDelightnedColorSync(track, null),
-    onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen),
+    onListenTap: (listen) => NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: listen, listensToNavigate: listens),
     onTopListensRangeTap: (customRange) {
       NamidaOnTaps.inst.onMostPlayedPlaylistTap(
         mptr: .custom,

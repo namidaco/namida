@@ -30,14 +30,18 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting, settings.mediaItemsTrackSortingReverse];
 
   /// example: main list or map that gets updated
-  RxBaseCore listChangesListenerRx();
+  RxBaseCore? listChangesListenerRx();
 
   /// example: another main list or map that gets updated
   RxBaseCore? listChangesListenerAltRx() {
     return null;
   }
 
+  /// used as is and never disposed, a new one is created otherwise.
+  ScrollController? get providedScrollController => null;
+
   ScrollController get scrollController => _scrollController;
+  TextEditingController get textEditingController => _textEditingController;
   FocusNode? get focusNode => _focusNode;
 
   /// original indices of the matching tracks.
@@ -46,6 +50,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
   List<int>? _searchResults;
   late ScrollController _scrollController;
+  late bool _ownsScrollController;
   late TextEditingController _textEditingController;
   FocusNode? _focusNode;
   // bool _showSearchBox = false;
@@ -53,13 +58,15 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
   @override
   void initState() {
-    _scrollController = NamidaScrollController.create();
+    final providedScrollController = this.providedScrollController;
+    _ownsScrollController = providedScrollController == null;
+    _scrollController = providedScrollController ?? NamidaScrollController.create();
     _textEditingController = TextEditingController();
     _focusNode = FocusNode();
     for (final l in _listChangesListenersInstantRx()) {
       l.addListener(_restartSearchPortIfNecessary);
     }
-    listChangesListenerRx().addListener(_closeSearchPortIfNecessary);
+    listChangesListenerRx()?.addListener(_closeSearchPortIfNecessary);
     listChangesListenerAltRx()?.addListener(_closeSearchPortIfNecessary);
     super.initState();
   }
@@ -69,10 +76,10 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
     for (final l in _listChangesListenersInstantRx()) {
       l.removeListener(_restartSearchPortIfNecessary);
     }
-    listChangesListenerRx().removeListener(_closeSearchPortIfNecessary);
+    listChangesListenerRx()?.removeListener(_closeSearchPortIfNecessary);
     listChangesListenerAltRx()?.removeListener(_closeSearchPortIfNecessary);
     _focusNode?.dispose();
-    _scrollController.dispose();
+    if (_ownsScrollController) _scrollController.dispose();
     _textEditingController.dispose();
     disposePort();
     super.dispose();

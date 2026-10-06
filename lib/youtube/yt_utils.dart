@@ -47,6 +47,7 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
 import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/history_listens_navigation.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -74,6 +75,8 @@ class YTUtils {
   const YTUtils();
 
   static const comments = _YTUtilsCommentActions();
+
+  static final historyListensNavigation = Rxn<HistoryListensNavigation>();
 
   static void expandMiniplayer() {
     final st = MiniPlayerController.inst.ytMiniplayerKey.currentState;
@@ -859,7 +862,8 @@ class YTUtils {
     return infoMap;
   }
 
-  static Future<void> onYoutubeHistoryPlaylistTap({int? initialListen}) async {
+  static Future<void> onYoutubeHistoryPlaylistTap({int? initialListen, List<int>? listensToNavigate}) async {
+    historyListensNavigation.value = HistoryListensNavigation.of(listensToNavigate, initialListen);
     bool shouldNavigate = true;
     if (initialListen != null) {
       shouldNavigate = NamidaOnTaps.jumpToListen(

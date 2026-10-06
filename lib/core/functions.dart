@@ -50,6 +50,7 @@ import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
+import 'package:namida/ui/widgets/history_listens_navigation.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -63,6 +64,8 @@ class NamidaOnTaps {
   static NamidaOnTaps get inst => _instance;
   static final NamidaOnTaps _instance = NamidaOnTaps._internal();
   NamidaOnTaps._internal();
+
+  static final historyListensNavigation = Rxn<HistoryListensNavigation>();
 
   Future<void> onArtistTap(String name, MediaType type, [List<Track>? tracksPre]) async {
     final tracks = tracksPre ?? name.getArtistTracksFor(type);
@@ -130,7 +133,8 @@ class NamidaOnTaps {
     ).navigate();
   }
 
-  Future<void> onHistoryPlaylistTap({int? initialListen}) async {
+  Future<void> onHistoryPlaylistTap({int? initialListen, List<int>? listensToNavigate}) async {
+    historyListensNavigation.value = HistoryListensNavigation.of(listensToNavigate, initialListen);
     bool shouldNavigate = true;
     if (initialListen != null) {
       shouldNavigate = jumpToListen(
@@ -141,7 +145,13 @@ class NamidaOnTaps {
         RouteType.SUBPAGE_historyTracks,
       );
     }
-    if (shouldNavigate) await HistoryTracksPage().navigate();
+    if (!shouldNavigate) return;
+    const historyTab = LibraryTab.history;
+    if (settings.libraryTabs.value.contains(historyTab)) {
+      ScrollSearchController.inst.animatePageController(historyTab, jumpToTopIfSamePage: false, restoreScrollPosition: initialListen == null);
+    } else {
+      await HistoryTracksPage().navigate();
+    }
   }
 
   /// returns wether the page is most likely not rendered and thus should be navigated to.

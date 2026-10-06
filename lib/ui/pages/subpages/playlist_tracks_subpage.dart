@@ -14,7 +14,9 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -33,6 +35,7 @@ import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -45,21 +48,91 @@ class HistoryTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SUBPAGE_historyTracks;
 
-  const HistoryTracksPage({super.key});
+  final bool isLibraryTab;
+
+  const HistoryTracksPage({super.key, this.isLibraryTab = false});
 
   @override
   State<HistoryTracksPage> createState() => _HistoryTracksPageState();
 }
 
-class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysRebuilderMixin<HistoryTracksPage, TrackWithDate, Track> {
+class _HistoryTracksPageState extends State<HistoryTracksPage>
+    with HistoryDaysRebuilderMixin<HistoryTracksPage, TrackWithDate, Track>, PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<HistoryTracksPage> {
   @override
   HistoryManager<TrackWithDate, Track> get historyManager => HistoryController.inst;
+
+  /// searching unique listened tracks, then taking their listens, is much cheaper than going through the whole history.
+  List<Track> _searchableTracks = const [];
+
+  @override
+  Iterable<TrackExtended> getTracksExtended() {
+    _searchableTracks = HistoryController.inst.topTracksMapListens.value.keysSortedByValue.toFixedList();
+    return _searchableTracks.map((e) => e.toTrackExt());
+  }
+
+  /// new listens arrive while playing, the filter stays as typed and [_onHistoryChanged] re-reads the listens.
+  @override
+  RxBaseCore? listChangesListenerRx() => null;
+
+  @override
+  ScrollController? get providedScrollController => HistoryController.inst.scrollController;
+
+  List<int>? _filteredForResults;
+  _FilteredHistory? _filteredHistory;
+
+  _FilteredHistory? _getFilteredHistory() {
+    final searchResults = this.searchResults;
+    if (searchResults == null) return null;
+    if (identical(searchResults, _filteredForResults)) return _filteredHistory;
+    _filteredForResults = searchResults;
+    return _filteredHistory = _FilteredHistory.build(historyDays, _searchableTracks, searchResults);
+  }
+
+  void _onHistoryChanged() {
+    if (!isSearching) return;
+    setState(() => _filteredForResults = null);
+  }
+
+  /// jumping uses the whole history positions, so the filter is cleared first.
+  void _onHighlightedItemChanged() {
+    final scrollInfo = HistoryController.inst.highlightedItem.value;
+    if (scrollInfo == null || !isSearching) return;
+    _toggleSearchBox(false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final offset = scrollInfo.toScrollOffset(Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding);
+      HistoryController.inst.scrollController.positions.lastOrNull?.jumpTo(offset);
+    });
+  }
 
   final _headerContainerKey = GlobalKey();
   double _headerHeight = 0;
   bool _hasScrolledEnough = false;
 
-  void _onYearTap(int year) => onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding, addJumpPadding: true);
+  void _onYearTap(int year) {
+    if (!isSearching) {
+      onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding, addJumpPadding: true);
+      return;
+    }
+    // -- years jump using the whole history positions
+    _toggleSearchBox(false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) onYearTap(year, Dimensions.inst.trackTileItemExtent, kHistoryDayHeaderHeightWithPadding, addJumpPadding: true);
+    });
+  }
+
+  bool _isSearchBoxShown = false;
+
+  void _toggleSearchBox(bool show) {
+    if (show) {
+      setState(() => _isSearchBoxShown = true);
+      WidgetsBinding.instance.addPostFrameCallback((_) => onSearchBoxVisibilityChange(true)); // -- focuses the field once it's built
+    } else {
+      clearSearch();
+      onSearchBoxVisibilityChange(false);
+      setState(() => _isSearchBoxShown = false);
+    }
+  }
 
   void _onScrollListener() {
     if (mounted) {
@@ -76,8 +149,19 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
   @override
   void initState() {
     HistoryController.inst.scrollController.addListener(_onScrollListener);
+    HistoryController.inst.highlightedItem.addListener(_onHighlightedItemChanged);
+    HistoryController.inst.historyMap.addListener(_onHistoryChanged);
     _headerContainerKey.calulateSizeAfterBuild((size) => _headerHeight = size?.height ?? 0);
+    if (widget.isLibraryTab) {
+      final savedOffset = LibraryTab.history.scrollPosition;
+      if (savedOffset > 0) WidgetsBinding.instance.addPostFrameCallback((_) => _restoreScrollOffset(savedOffset));
+    }
     super.initState();
+  }
+
+  void _restoreScrollOffset(double offset) {
+    if (!mounted) return;
+    HistoryController.inst.scrollController.positions.lastOrNull?.jumpTo(offset);
   }
 
   @override
@@ -89,6 +173,10 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
   @override
   void dispose() {
     HistoryController.inst.scrollController.removeListener(_onScrollListener);
+    HistoryController.inst.highlightedItem.removeListener(_onHighlightedItemChanged);
+    HistoryController.inst.historyMap.removeListener(_onHistoryChanged);
+    final isReplacedByHistoryPage = NamidaNavigator.inst.currentRoute?.route == RouteType.SUBPAGE_historyTracks;
+    if (!isReplacedByHistoryPage) NamidaOnTaps.historyListensNavigation.value = null;
     super.dispose();
   }
 
@@ -105,12 +193,24 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
 
     final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(0.4);
 
-    final daysLength = historyDays.length;
+    final filteredHistory = _getFilteredHistory();
+    final isFiltering = filteredHistory != null;
+    final shownDays = filteredHistory?.days ?? historyDays;
+    final shownDaysLength = shownDays.length;
 
     final highlightColor = theme.colorScheme.onSurface.withAlpha(40);
     final smallTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
 
-    final yearsRow = getYearsRowWidget(context, _onYearTap);
+    final isSearchBoxShown = _isSearchBoxShown;
+    final yearsRow = getYearsRowWidget(
+      context,
+      _onYearTap,
+      trailing: NamidaIconButton(
+        icon: isSearchBoxShown ? Broken.close_circle : Broken.filter_search,
+        iconSize: 18.0,
+        onPressed: () => _toggleSearchBox(!isSearchBoxShown),
+      ),
+    );
 
     const yearsRowBottomPadding = 4.0;
     const animationDuration = Duration(milliseconds: 200);
@@ -188,6 +288,18 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                     ),
                   ),
                 ),
+                if (isSearchBoxShown)
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                    sliver: SliverToBoxAdapter(
+                      child: CustomTextField(
+                        focusNode: focusNode,
+                        textFieldController: textEditingController,
+                        textFieldHintText: lang.search,
+                        onTextFieldValueChanged: searchTracks,
+                      ),
+                    ),
+                  ),
                 ObxO(
                   rx: HistoryController.inst.historyMap,
                   builder: (context, history) {
@@ -195,16 +307,18 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                     return ObxO(
                       rx: HistoryController.inst.highlightedItem,
                       builder: (context, highlightedItem) => SliverVariedExtentList.builder(
-                        key: ValueKey(daysLength), // rebuild after adding/removing day
+                        key: ValueKey(filteredHistory ?? shownDaysLength), // rebuild after adding/removing day or filtering
                         itemExtentBuilder: (index, dimensions) {
-                          final day = historyDays[index];
+                          final day = shownDays[index];
+                          if (filteredHistory != null) return filteredHistory.dayExtent(day, trackTileExtent, dayHeaderExtent);
                           return HistoryController.inst.dayToSectionExtent(day, trackTileExtent, dayHeaderExtent);
                         },
-                        itemCount: daysLength,
+                        itemCount: shownDaysLength,
                         itemBuilder: (context, index) {
-                          final day = historyDays[index];
+                          final day = shownDays[index];
                           final dayInMs = super.dayToMillis(day);
-                          final tracks = history[day] ?? [];
+                          final tracks = filteredHistory?.dayItems[day] ?? history[day] ?? [];
+                          final isHighlightedDay = !isFiltering && highlightedItem != null && day == highlightedItem.dayToHighLight;
 
                           return StickyHeader(
                             key: ValueKey(index),
@@ -249,7 +363,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage> with HistoryDaysR
                                   trackOrTwd: tr,
                                   index: i,
                                   tracks: tracks,
-                                  bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                                  bgColor: isHighlightedDay && i == highlightedItem.indexOfSmallList ? highlightColor : null,
                                   thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
                                   topRightWidget: topRightWidget,
                                 );
@@ -744,5 +858,48 @@ class ThreeLineSmallContainers extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _FilteredHistory {
+  final List<int> days;
+  final Map<int, List<TrackWithDate>> dayItems;
+  final int listensCount;
+
+  const _FilteredHistory(this.days, this.dayItems, this.listensCount);
+
+  /// keeps [historyDays] order, only the listens of the matched tracks are taken.
+  factory _FilteredHistory.build(List<int> historyDays, List<Track> searchableTracks, List<int> matchedIndices) {
+    final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
+    final historyMap = HistoryController.inst.historyMap.value;
+    final matchedTracksPerDay = <int, Set<Track>>{};
+    for (final index in matchedIndices) {
+      final track = searchableTracks[index];
+      final listens = topTracksMapListens[track];
+      if (listens == null) continue;
+      for (final listenMS in listens) {
+        final day = listenMS.toDaysSince1970();
+        (matchedTracksPerDay[day] ??= <Track>{}).add(track);
+      }
+    }
+
+    final days = <int>[];
+    final dayItems = <int, List<TrackWithDate>>{};
+    int listensCount = 0;
+    for (final day in historyDays) {
+      final matchedTracks = matchedTracksPerDay[day];
+      if (matchedTracks == null) continue;
+      final items = historyMap[day]?.where((e) => matchedTracks.contains(e.track)).toList();
+      if (items == null || items.isEmpty) continue;
+      days.add(day);
+      dayItems[day] = items;
+      listensCount += items.length;
+    }
+    return _FilteredHistory(days, dayItems, listensCount);
+  }
+
+  double dayExtent(int day, double itemExtent, double dayHeaderExtent) {
+    final itemsCount = dayItems[day]?.length ?? 0;
+    return dayHeaderExtent + (itemsCount * itemExtent);
   }
 }
