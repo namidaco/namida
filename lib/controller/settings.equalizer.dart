@@ -8,6 +8,10 @@ class _EqualizerSettings extends _SettingsKeysWriter {
   late final equalizer = _keyObject<ParametricEqualizer>('parametricEqualizer', ParametricEqualizer.flat, ParametricEqualizer.fromMap, (v) => v.toMap());
   late final loudnessEnhancerEnabled = _key('loudnessEnhancerEnabled', false);
   late final loudnessEnhancer = _key('loudnessEnhancer', 0.0);
+  late final soundEffects = _keySet<SoundEffectType>('soundEffects', const {}, item: SoundEffectType.values.asCodec());
+
+  /// kept for disabled effects too, re-enabling one brings back its last intensity.
+  late final soundEffectIntensities = _keyMap<SoundEffectType, double>('soundEffectIntensities', const {}, key: SoundEffectType.values.asCodec());
 
   late final eqPresets = _keyList('eqPresets_v2', EqualizerPreset.allDefaults, item: _ObjectCodec(EqualizerPreset.fromMap, (v) => v.toMap()));
 

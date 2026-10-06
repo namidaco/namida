@@ -1343,3 +1343,19 @@ enum LyricsIntegration {
   final bool sendsPerLine;
   const LyricsIntegration({this.sendsPerLine = false});
 }
+
+enum SoundEffectType {
+  crossfeed,
+  virtualSurround,
+  echo,
+  chorus,
+  autoPan,
+  compressor,
+  instrumental(defaultIntensity: 0.8),
+  bassEnhancer,
+  tubeWarmth,
+  ;
+
+  final double defaultIntensity;
+  const SoundEffectType({this.defaultIntensity = 0.5});
+}

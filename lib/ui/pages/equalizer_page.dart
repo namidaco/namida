@@ -20,6 +20,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -35,6 +36,7 @@ import 'package:namida/youtube/class/youtube_id.dart';
 
 part 'equalizer_page.parametric.dart';
 part 'equalizer_page.signal_path.dart';
+part 'equalizer_page.sound_effects.dart';
 
 class SoundControlMainSlidersColumn extends StatefulWidget {
   final double verticalInBetweenPadding;
@@ -997,6 +999,11 @@ class SoundControlPageState extends State<SoundControlPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
                             child: const _MonoAudioTile(),
                           ),
+                          if (NamidaFeaturesVisibility.soundEffectsAvailable)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: const _SoundEffectsSection(),
+                            ),
                           verticalInBetweenPadding,
                         ],
                       ),

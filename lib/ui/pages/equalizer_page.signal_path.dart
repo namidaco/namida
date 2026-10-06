@@ -166,6 +166,11 @@ abstract final class _SignalPathSteps {
       final preampText = _EqualizerFormat.gain(preamp);
       steps.add(_SignalPathStep(icon: Broken.chart_3, title: lang.equalizer, detail: '${lang.preamp} $preampText', changesAudio: true));
     }
+    final soundEffects = settings.equalizer.soundEffects.valueR;
+    if (Platform.isAndroid && soundEffects.isNotEmpty) {
+      final effectNames = soundEffects.map((e) => e.toText()).joinText(separator: ', ');
+      steps.add(_SignalPathStep(icon: Broken.magic_star, title: lang.soundEffects, detail: effectNames, changesAudio: true));
+    }
     final isLoudnessEnhancerAudible = Platform.isAndroid && !isUsbDirect && config.loudnessEnhancerEnabled && config.loudnessEnhancer != 0.0;
     if (isLoudnessEnhancerAudible) {
       final gainText = _EqualizerFormat.gain(config.loudnessEnhancer);

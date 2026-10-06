@@ -2871,6 +2871,7 @@ extension AudioOutputForcedOffUtils on AudioOutputForcedOff {
     AudioOutputForcedOff.pitch => lang.pitch,
     AudioOutputForcedOff.skipSilence => lang.skipSilence,
     AudioOutputForcedOff.monoAudio => lang.monoAudio,
+    AudioOutputForcedOff.soundEffects => lang.soundEffects,
     AudioOutputForcedOff.volume => lang.volume,
     AudioOutputForcedOff.fadeOnPlayPause => lang.fadeOnPlayPause,
     AudioOutputForcedOff.crossfade => lang.crossfade,
@@ -2883,8 +2884,35 @@ extension AudioOutputForcedOffUtils on AudioOutputForcedOff {
     AudioOutputForcedOff.equalizer => NamidaFeaturesVisibility.equalizerAvailable,
     AudioOutputForcedOff.loudnessEnhancer => NamidaFeaturesVisibility.loudnessEnhancerAvailable,
     AudioOutputForcedOff.skipSilence => NamidaFeaturesVisibility.skipSilenceAvailable,
+    AudioOutputForcedOff.soundEffects => NamidaFeaturesVisibility.soundEffectsAvailable,
     AudioOutputForcedOff.systemEffects || AudioOutputForcedOff.systemVolume => Platform.isAndroid,
     _ => true,
+  };
+}
+
+extension SoundEffectTypeUtils on SoundEffectType {
+  String toText() => switch (this) {
+    SoundEffectType.crossfeed => lang.crossfeed,
+    SoundEffectType.virtualSurround => lang.virtualSurround,
+    SoundEffectType.echo => lang.echo,
+    SoundEffectType.chorus => lang.chorus,
+    SoundEffectType.autoPan => lang.autoPan,
+    SoundEffectType.compressor => lang.compressor,
+    SoundEffectType.instrumental => lang.instrumental,
+    SoundEffectType.bassEnhancer => lang.bassEnhancer,
+    SoundEffectType.tubeWarmth => lang.tubeWarmth,
+  };
+
+  IconData toIcon() => switch (this) {
+    SoundEffectType.crossfeed => Broken.headphone,
+    SoundEffectType.virtualSurround => Broken.alarm,
+    SoundEffectType.echo => Broken.radar_1,
+    SoundEffectType.chorus => Broken.voice_cricle,
+    SoundEffectType.autoPan => Broken.d_rotate,
+    SoundEffectType.compressor => Broken.pharagraphspacing,
+    SoundEffectType.instrumental => Broken.microphone_slash,
+    SoundEffectType.bassEnhancer => Broken.speaker,
+    SoundEffectType.tubeWarmth => Broken.lamp_on,
   };
 }
 

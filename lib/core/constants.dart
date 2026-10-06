@@ -1377,6 +1377,7 @@ class NamidaFeaturesVisibility {
   static final skipSilenceAvailable = PlayerConfig.isSkipSilenceSupported;
   static final equalizerAvailable = PlayerConfig.isEqualizerSupported;
   static final loudnessEnhancerAvailable = PlayerConfig.isLoudnessEnhancerSupported;
+  static final soundEffectsAvailable = _isAndroid;
 
   static final showDownloadNotifications = _isWindows || _isLinux;
   static final showVideoControlsOnHover = _isWindows || _isLinux;

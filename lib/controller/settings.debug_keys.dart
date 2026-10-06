@@ -9,6 +9,8 @@ extension EqualizerSettingsDebugKeys on _EqualizerSettings {
     equalizer,
     loudnessEnhancerEnabled,
     loudnessEnhancer,
+    soundEffects,
+    soundEffectIntensities,
     eqPresets,
     devicePresets,
     uiTapToUpdate,

@@ -10,6 +10,7 @@ import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 
@@ -34,8 +35,8 @@ class AudioOutputController {
   static List<AudioOutputForcedOff> getForcedOffOptionsOf(AudioOutputForcedOffCause cause) => switch (cause) {
     AudioOutputForcedOffCause.bitPerfect => const [
       AudioOutputForcedOff.equalizer, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.speed, AudioOutputForcedOff.pitch, //
-      AudioOutputForcedOff.skipSilence, AudioOutputForcedOff.monoAudio, AudioOutputForcedOff.volume, AudioOutputForcedOff.systemVolume, //
-      AudioOutputForcedOff.fadeOnPlayPause, AudioOutputForcedOff.crossfade, AudioOutputForcedOff.otherSounds, //
+      AudioOutputForcedOff.skipSilence, AudioOutputForcedOff.monoAudio, AudioOutputForcedOff.soundEffects, AudioOutputForcedOff.volume, //
+      AudioOutputForcedOff.systemVolume, AudioOutputForcedOff.fadeOnPlayPause, AudioOutputForcedOff.crossfade, AudioOutputForcedOff.otherSounds, //
     ],
     AudioOutputForcedOffCause.usbDirect => const [
       AudioOutputForcedOff.crossfade, AudioOutputForcedOff.loudnessEnhancer, AudioOutputForcedOff.systemEffects, AudioOutputForcedOff.otherSounds, //
@@ -89,7 +90,8 @@ class AudioOutputController {
           AudioOutputForcedOff.speed ||
           AudioOutputForcedOff.pitch ||
           AudioOutputForcedOff.skipSilence ||
-          AudioOutputForcedOff.monoAudio => isBitPerfectActive,
+          AudioOutputForcedOff.monoAudio ||
+          AudioOutputForcedOff.soundEffects => isBitPerfectActive,
           AudioOutputForcedOff.volume => isBitPerfectActive && !hasDacVolume,
           AudioOutputForcedOff.systemVolume => isBitPerfectActive && isUsbDirectActive && !hasDacVolume,
           AudioOutputForcedOff.fadeOnPlayPause || AudioOutputForcedOff.crossfade => _isBitPerfectEnabled(reactive: reactive),
@@ -107,6 +109,7 @@ class AudioOutputController {
           AudioOutputForcedOff.pitch ||
           AudioOutputForcedOff.skipSilence ||
           AudioOutputForcedOff.monoAudio ||
+          AudioOutputForcedOff.soundEffects ||
           AudioOutputForcedOff.volume ||
           AudioOutputForcedOff.systemVolume ||
           AudioOutputForcedOff.fadeOnPlayPause => false,
@@ -121,6 +124,7 @@ class AudioOutputController {
           AudioOutputForcedOff.pitch ||
           AudioOutputForcedOff.skipSilence ||
           AudioOutputForcedOff.monoAudio ||
+          AudioOutputForcedOff.soundEffects ||
           AudioOutputForcedOff.volume ||
           AudioOutputForcedOff.systemVolume ||
           AudioOutputForcedOff.fadeOnPlayPause ||
@@ -145,6 +149,7 @@ class AudioOutputController {
       await AndroidAudioOutput.setBitPerfectEnabled(settings.player.bitPerfect.value);
       await AndroidAudioOutput.setUsbDirectEnabled(settings.player.usbDirect.value);
       await AndroidAudioOutput.setMonoAudio(settings.player.monoAudio.value);
+      if (settings.equalizer.soundEffects.value.isNotEmpty) await _applySoundEffects();
       _onAndroidEvent(await AndroidAudioOutput.getState());
     } else {
       CustomMPVPlayer.outputDevices.removeListener(_onMpvDevices);
@@ -185,6 +190,33 @@ class AudioOutputController {
     } else {
       await Player.inst.applyAudioOutput();
     }
+  }
+
+  /// android only.
+  Future<void> setSoundEffectEnabled(SoundEffectType type, bool enabled) {
+    settings.equalizer.soundEffects.update((effects) {
+      if (enabled) {
+        effects.add(type);
+      } else {
+        effects.remove(type);
+      }
+    });
+    return _applySoundEffects();
+  }
+
+  /// android only.
+  Future<void> setSoundEffectIntensity(SoundEffectType type, double intensity) {
+    settings.equalizer.soundEffectIntensities.update((intensities) => intensities[type] = intensity);
+    return _applySoundEffects();
+  }
+
+  Future<void> _applySoundEffects() {
+    final intensities = settings.equalizer.soundEffectIntensities.value;
+    final effects = settings.equalizer.soundEffects.value.map((type) {
+      final intensity = intensities[type] ?? type.defaultIntensity;
+      return SoundEffectMessage(type: type.toMessage(), intensity: intensity);
+    }).toFixedList();
+    return AndroidAudioOutput.setSoundEffects(SoundEffectsMessage(effects: effects));
   }
 
   /// android only, a released dac pauses playback like unplugged headphones.
@@ -417,6 +449,7 @@ enum AudioOutputForcedOff {
   pitch,
   skipSilence,
   monoAudio,
+  soundEffects,
   volume,
   fadeOnPlayPause,
   crossfade,
@@ -440,5 +473,19 @@ enum AudioOutputDeviceType {
     11 || 12 || 22 => usb,
     6 || 9 || 10 || 29 => digital,
     _ => other,
+  };
+}
+
+extension _SoundEffectTypeMessage on SoundEffectType {
+  SoundEffectTypeMessage toMessage() => switch (this) {
+    SoundEffectType.crossfeed => SoundEffectTypeMessage.crossfeed,
+    SoundEffectType.virtualSurround => SoundEffectTypeMessage.virtualSurround,
+    SoundEffectType.echo => SoundEffectTypeMessage.echo,
+    SoundEffectType.chorus => SoundEffectTypeMessage.chorus,
+    SoundEffectType.autoPan => SoundEffectTypeMessage.autoPan,
+    SoundEffectType.compressor => SoundEffectTypeMessage.compressor,
+    SoundEffectType.instrumental => SoundEffectTypeMessage.instrumental,
+    SoundEffectType.bassEnhancer => SoundEffectTypeMessage.bassEnhancer,
+    SoundEffectType.tubeWarmth => SoundEffectTypeMessage.tubeWarmth,
   };
 }
