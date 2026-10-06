@@ -6,6 +6,7 @@ import 'package:history_manager/history_manager.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/audio_cache_detail.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/directory_index.dart';
@@ -14,9 +15,11 @@ import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/lossless_check_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
+import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
@@ -1441,6 +1444,8 @@ class _AdvancedFlagsOptions extends StatelessWidget {
             const _LyricsIntegrationsListTile(),
           ],
           const _WebhookListTile(),
+          if (RhythmController.inst.isSupported) const _RhythmScanListTile(),
+          if (LosslessCheckController.inst.isSupported) const _LosslessCheckListTile(),
         ],
       ),
     );
@@ -1607,6 +1612,127 @@ class _WebhookListTile extends StatelessWidget {
         subtitle: url.isEmpty ? null : url,
         onTap: _openDialog,
       ),
+    );
+  }
+}
+
+class _RhythmScanListTile extends StatelessWidget {
+  const _RhythmScanListTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final rhythm = RhythmController.inst;
+    return Obx(
+      (context) {
+        final isScanning = rhythm.isScanning.valueR;
+        final progress = isScanning ? '${rhythm.scanDone.valueR}/${rhythm.scanTotal.valueR}' : null;
+        return CustomListTile(
+          icon: Broken.activity,
+          title: 'analyze_rhythm'.toUpperCase(),
+          subtitle: progress,
+          onTap: rhythm.toggleLibraryScan,
+          trailing: NamidaIconButton(
+            icon: isScanning ? Broken.stop_circle : Broken.play_circle,
+            onPressed: rhythm.toggleLibraryScan,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LosslessCheckListTile extends StatelessWidget {
+  const _LosslessCheckListTile();
+
+  Future<void> _toggleScan() async {
+    final controller = LosslessCheckController.inst;
+    if (controller.isScanning.value) return controller.stop();
+    final findings = await controller.scan();
+    if (findings != null) _showFindings(findings);
+  }
+
+  void _showFindings(List<LosslessFinding> findings) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _LosslessFindingsDialog(findings: findings),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = LosslessCheckController.inst;
+    return Obx(
+      (context) {
+        final isScanning = controller.isScanning.valueR;
+        final findings = controller.findings.valueR;
+        final progress = isScanning ? '${controller.scanDone.valueR}/${controller.scanTotal.valueR}' : null;
+        final latestResult = findings == null ? null : '${findings.length} found';
+        return CustomListTile(
+          icon: Broken.sound,
+          title: 'detect_fake_lossless_files'.toUpperCase(),
+          subtitle: progress ?? latestResult,
+          onTap: _toggleScan,
+          trailing: isScanning || findings == null
+              ? NamidaIconButton(
+                  icon: isScanning ? Broken.stop_circle : Broken.play_circle,
+                  onPressed: _toggleScan,
+                )
+              : NamidaIconButton(
+                  icon: Broken.document_text,
+                  onPressed: () => _showFindings(findings),
+                ),
+        );
+      },
+    );
+  }
+}
+
+class _LosslessFindingsDialog extends StatelessWidget {
+  final List<LosslessFinding> findings;
+
+  const _LosslessFindingsDialog({required this.findings});
+
+  void _saveAsPlaylist() {
+    LosslessCheckController.inst.saveAsPlaylist(findings);
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final hasFindings = findings.isNotEmpty;
+    final listWidget = ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: context.height * 0.5),
+      child: SuperSmoothListView.builder(
+        shrinkWrap: true,
+        itemCount: findings.length,
+        itemBuilder: (context, index) {
+          final finding = findings[index];
+          return CustomListTile(
+            title: finding.track.title,
+            subtitle: finding.issuesText(),
+            maxSubtitleLines: 3,
+          );
+        },
+      ),
+    );
+    return CustomBlurryDialog(
+      icon: Broken.sound,
+      title: 'likely_not_lossless'.toUpperCase(),
+      normalTitleStyle: true,
+      actions: [
+        if (hasFindings)
+          NamidaButton(
+            text: lang.addAsANewPlaylist,
+            onTap: _saveAsPlaylist,
+          ),
+        const DoneButton(),
+      ],
+      child: hasFindings
+          ? listWidget
+          : Text(
+              lang.noTracksFound,
+              style: textTheme.displayMedium,
+            ),
     );
   }
 }
