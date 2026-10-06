@@ -19,8 +19,10 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -534,6 +536,9 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     ),
                                   ),
                                   const SizedBox(height: 16.0),
+                                  BookmarksSection(
+                                    item: YoutubeID(id: videoId, playlistID: null),
+                                  ),
                                   if (_videoIsMissingOriginalInfo)
                                     Padding(
                                       padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
@@ -637,7 +642,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     height: 1.5,
                                     colorForce: theme.colorScheme.onSurface.withOpacityExt(0.2),
                                   ),
-                                  skipFirst: 3,
+                                  skipFirst: 4,
                                 )
                                 .toFixedList(),
                       ),

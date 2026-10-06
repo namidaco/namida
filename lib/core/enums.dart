@@ -932,6 +932,7 @@ enum NotificationButton {
   seekForward,
   sleepTimer,
   addToPlaylist,
+  bookmark,
   ;
 
   final bool isTransport;
@@ -1087,6 +1088,7 @@ enum TrackExecuteActions {
   playlast,
   playafter,
   addtoplaylist,
+  addBookmark(isPlayingItemOnly: true),
   openinfo,
 
   openArtwork,
@@ -1107,6 +1109,12 @@ enum TrackExecuteActions {
   copyYTLink,
   searchYTSimilar,
   delete,
+  ;
+
+  final bool isPlayingItemOnly;
+  const TrackExecuteActions({this.isPlayingItemOnly = false});
+
+  static final playingItemOnlyActions = values.where((action) => action.isPlayingItemOnly).toFixedList();
 }
 
 enum CacheVideoPriority {

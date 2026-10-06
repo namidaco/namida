@@ -1859,6 +1859,7 @@ class Indexer<T extends Track> {
     String? tagsString,
     String? moodsString,
     int? lastPositionInMs,
+    List<PlayableBookmark>? bookmarks,
   }) async {
     if (ratingString != null || tagsString != null || moodsString != null) {
       TrackTileManager.rebuildTrackInfo(track);
@@ -1875,6 +1876,7 @@ class Indexer<T extends Track> {
     final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
     final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
     lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
+    bookmarks ??= statsRaw?.bookmarks;
     final newStats = TrackStats(
       track: track,
       rating: rating?.clampInt(0, 100) ?? 0,
@@ -1882,6 +1884,7 @@ class Indexer<T extends Track> {
       moods: moods,
       lastPositionInMs: lastPositionInMs,
       audioTrackId: statsRaw?.audioTrackId,
+      bookmarks: bookmarks,
       modifiedDate: currentTimeMS,
     );
     trackStatsMap[track] = newStats;
@@ -1901,6 +1904,7 @@ class Indexer<T extends Track> {
       moods: stats?.moods,
       lastPositionInMs: stats?.lastPositionInMs ?? 0,
       audioTrackId: audioTrackId,
+      bookmarks: stats?.bookmarks,
       modifiedDate: currentTimeMS,
     );
     trackStatsMap[track] = newStats;
@@ -1920,6 +1924,7 @@ class Indexer<T extends Track> {
               moods: incoming.moods,
               lastPositionInMs: incoming.lastPositionInMs,
               audioTrackId: incoming.audioTrackId,
+              bookmarks: incoming.bookmarks,
               modifiedDate: incoming.modifiedDate,
             );
       final track = effective.track;

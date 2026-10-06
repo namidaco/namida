@@ -10,6 +10,7 @@ class YoutubeIDStats extends PlayableItemStats {
     required super.moods,
     required super.lastPositionInMs,
     required super.audioTrackId,
+    required super.bookmarks,
     super.modifiedDate,
   });
 
@@ -26,6 +27,7 @@ class YoutubeIDStats extends PlayableItemStats {
       moods: stats.moods,
       lastPositionInMs: stats.lastPositionInMs,
       audioTrackId: stats.audioTrackId,
+      bookmarks: stats.bookmarks,
       modifiedDate: stats.modifiedDate,
     );
   }

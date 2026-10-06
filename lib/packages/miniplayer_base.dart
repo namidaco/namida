@@ -21,6 +21,7 @@ import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -49,6 +50,7 @@ import 'package:namida/ui/pages/equalizer_page.dart';
 import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
@@ -2212,11 +2214,12 @@ class WaveformMiniplayer extends StatelessWidget {
     MiniPlayerController.inst.seekValue.value = newSeek.toInt();
   }
 
-  void onSeekEnd({bool allowSeek = true}) {
+  void onSeekEnd({bool allowSeek = true, bool allowMagnet = true}) {
     if (allowSeek && _dragUpToCancel < _dragUpToCancelMax) {
       final ms = MiniPlayerController.inst.seekValue.value;
       if (ms != null) {
-        Player.inst.seek(Duration(milliseconds: SeekMagnet.snapMilliseconds(ms, _currentDurationInMS, _magnetThreshold)));
+        final finalMS = allowMagnet ? SeekMagnet.snapMilliseconds(ms, _currentDurationInMS, _magnetThreshold) : ms;
+        Player.inst.seek(Duration(milliseconds: finalMS));
       }
     }
 
@@ -2226,11 +2229,32 @@ class WaveformMiniplayer extends StatelessWidget {
     MiniPlayerController.inst.seekValue.value = null;
   }
 
-  static void _onSeekPointerDown(PointerDownEvent _) {
-    _dragUpToCancel = 0.0;
-    _canDragToSeekLatest = true;
+  bool _snapSeekToBookmark(double maxWidth) {
+    final ms = MiniPlayerController.inst.seekValue.value;
+    if (ms == null) return false;
+    final snappedMS = BookmarksController.inst.snapTapToBookmarkMS(ms, _currentDurationInMS, maxWidth);
+    if (snappedMS == null) return false;
+    MiniPlayerController.inst.seekValue.value = snappedMS;
+    return true;
   }
 
+  static void _onSeekPointerDown(PointerDownEvent event) {
+    _dragUpToCancel = 0.0;
+    _canDragToSeekLatest = true;
+    _longPress.onPointerDown(event);
+  }
+
+  static void _onSeekPointerUp(PointerUpEvent event) {
+    _canDragToSeekLatest = true;
+    _longPress.onPointerUp(event);
+  }
+
+  static void _onSeekPointerCancel(PointerCancelEvent event) {
+    _canDragToSeekLatest = true;
+    _longPress.onPointerCancel(event);
+  }
+
+  static final _longPress = SeekbarLongPress();
   static bool _canDragToSeekLatest = true;
   static double _dragUpToCancel = 0.0;
   static final _dragUpToCancelMax = 5;
@@ -2251,6 +2275,7 @@ class WaveformMiniplayer extends StatelessWidget {
                 behavior: HitTestBehavior.translucent,
                 onPointerDown: _onSeekPointerDown,
                 onPointerMove: (event) {
+                  _longPress.onPointerMove(event);
                   if (MiniPlayerController.inst.seekValue.value == null) return;
                   if (!_canDragToSeekLatest) return;
                   if (_dragUpToCancel > _dragUpToCancelMax) {
@@ -2260,13 +2285,16 @@ class WaveformMiniplayer extends StatelessWidget {
                     _dragUpToCancel -= event.localDelta.dy * 0.1;
                   }
                 },
-                onPointerUp: (_) => _canDragToSeekLatest = true,
-                onPointerCancel: (_) => _canDragToSeekLatest = true,
+                onPointerUp: _onSeekPointerUp,
+                onPointerCancel: _onSeekPointerCancel,
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onTapUp: (details) {
+                    final wasLongPress = _longPress.handleTapUp(details.localPosition.dx, constraints.maxWidth, _currentDurationInMS);
+                    if (wasLongPress) return;
                     onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth);
-                    onSeekEnd();
+                    final didSnapToBookmark = _snapSeekToBookmark(constraints.maxWidth);
+                    onSeekEnd(allowMagnet: !didSnapToBookmark);
                   },
                   onTapCancel: () => onSeekEnd(allowSeek: false),
                   onHorizontalDragUpdate: (details) => onSeekDragUpdate(details.localPosition.dx, constraints.maxWidth),
@@ -2275,6 +2303,12 @@ class WaveformMiniplayer extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     children: [
                       const WaveformComponent(),
+                      const Positioned.fill(
+                        child: BookmarkTicks(
+                          tickWidth: 1.5,
+                          dotRadius: 2.5,
+                        ),
+                      ),
                       ObxO(
                         rx: MiniPlayerController.inst.seekValue,
                         builder: (context, seekMS) {

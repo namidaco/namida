@@ -115,6 +115,12 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => "${lang.favourites}/${lang.like}: ${lang.add}/${lang.remove}",
     ),
     ShortcutKeyActivator(
+      key: LogicalKeyboardKey.keyB,
+      control: true,
+      callback: BookmarksController.inst.addAtCurrentPosition,
+      title: () => lang.addBookmark,
+    ),
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.keyF,
       control: true,
       callback: () {

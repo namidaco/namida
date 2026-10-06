@@ -25,6 +25,7 @@ import 'package:namida/class/video.dart';
 import 'package:namida/controller/artwork_prefetcher.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/audio_output_controller.dart';
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';

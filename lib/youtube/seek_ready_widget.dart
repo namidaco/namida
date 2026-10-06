@@ -7,6 +7,7 @@ import 'package:youtipie/class/streams/stream_segments.dart';
 import 'package:youtipie/class/videos/video_heat_map.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -18,6 +19,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/seek_magnet.dart';
+import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
 import 'package:namida/youtube/controller/sponsorblock_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -65,6 +67,7 @@ class SeekReadyWidget extends StatefulWidget {
 class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProviderStateMixin {
   late final _defaultSeekLeftMagnet = SeekMagnet.threshold(isFullscreen: widget.isFullscreen);
   final _seekPercentage = 0.0.obs;
+  final _longPress = SeekbarLongPress();
 
   late AnimationController _animation;
 
@@ -84,6 +87,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   void dispose() {
     _animation.dispose();
     _seekPercentage.close();
+    _longPress.dispose();
     if (_shouldListenToHeatMap) HeatMapListener.instance.stopListening();
     super.dispose();
   }
@@ -163,6 +167,14 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     _dragToSeek = true;
   }
 
+  bool _snapSeekToBookmark(double maxWidth, int durMS) {
+    final seekMS = (_seekPercentage.value * durMS).round();
+    final snappedMS = BookmarksController.inst.snapTapToBookmarkMS(seekMS, durMS, maxWidth);
+    if (snappedMS == null) return false;
+    _seekPercentage.value = snappedMS / durMS;
+    return true;
+  }
+
   bool _isPointerDown = false;
 
   bool get _isMiniplayerExpanded => MiniPlayerController.inst.animation.value >= 0.95;
@@ -226,11 +238,13 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
             ),
       child: Listener(
         behavior: HitTestBehavior.translucent,
-        onPointerDown: (_) {
+        onPointerDown: (event) {
           _canDragToSeekLatest = _canDragToSeek;
           _dragUpToCancel = 0.0;
+          if (allowTapping) _longPress.onPointerDown(event);
         },
         onPointerMove: (event) {
+          _longPress.onPointerMove(event);
           if (!_canDragToSeekLatest) return;
           if (!_isMiniplayerExpanded) return;
           if (_dragUpToCancel > _dragUpToCancelMax) {
@@ -246,10 +260,12 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
             _dragUpToCancel -= event.delta.dy * 0.1;
           }
         },
-        onPointerUp: (_) {
+        onPointerUp: (event) {
           _dragToSeek = true;
           _canDragToSeekLatest = true;
+          _longPress.onPointerUp(event);
         },
+        onPointerCancel: _longPress.onPointerCancel,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onPanDown: (event) {
@@ -273,8 +289,16 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                 },
           onTapUp: !allowTapping
               ? null
-              : (_) {
-                  if (_tapToSeek) _onDragFinish(allowMagnet: allowMagnet);
+              : (details) {
+                  final durMS = (Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds;
+                  final wasLongPress = _longPress.handleTapUp(details.localPosition.dx, maxWidth, durMS);
+                  if (wasLongPress) {
+                    onHorizontalDragCancel();
+                    return;
+                  }
+                  if (!_tapToSeek) return;
+                  final didSnapToBookmark = _snapSeekToBookmark(maxWidth, durMS);
+                  _onDragFinish(allowMagnet: allowMagnet && !didSnapToBookmark);
                 },
           child: Padding(
             padding: !expandHitTest
@@ -347,6 +371,13 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
           child: child,
         );
       },
+    );
+
+    final bookmarkTicksWidget = Positioned.fill(
+      child: BookmarkTicks(
+        color: theme.colorScheme.onSurface,
+        tickWidth: 2.0,
+      ),
     );
 
     return LayoutWidthProvider(
@@ -613,6 +644,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                               ),
                             ),
                           ),
+                          bookmarkTicksWidget,
                         ],
                       ),
                     );

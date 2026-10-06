@@ -24,6 +24,7 @@ import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -644,6 +645,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     TrackExecuteActions.playlast => lang.playLast,
     TrackExecuteActions.playafter => lang.playAfter,
     TrackExecuteActions.addtoplaylist => lang.addToPlaylist,
+    TrackExecuteActions.addBookmark => lang.addBookmark,
     TrackExecuteActions.openinfo => lang.info,
     TrackExecuteActions.openArtwork => "${lang.artwork} (${lang.open})",
     TrackExecuteActions.editArtwork => lang.editArtwork,
@@ -672,6 +674,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.playlast => Broken.play_cricle,
       TrackExecuteActions.playafter => Broken.hierarchy_square,
       TrackExecuteActions.addtoplaylist => Broken.music_library_2,
+      TrackExecuteActions.addBookmark => Broken.bookmark,
       TrackExecuteActions.openinfo => Broken.info_circle,
       TrackExecuteActions.openArtwork => Broken.gallery,
       TrackExecuteActions.editArtwork => Broken.gallery_edit,
@@ -729,6 +732,8 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
             showAddToPlaylistSheet(ids: [finalItem.id], idsNamesLookup: {finalItem.id: info.videoTitle});
           },
         );
+      case TrackExecuteActions.addBookmark:
+        if (BookmarksController.inst.isCurrent(item)) await BookmarksController.inst.addAtCurrentPosition();
       case TrackExecuteActions.openinfo:
         item.execute(
           selectable: (finalItem) {
@@ -2583,6 +2588,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.seekForward => lang.seekForward,
     NotificationButton.sleepTimer => lang.sleepTimer,
     NotificationButton.addToPlaylist => lang.addToPlaylist,
+    NotificationButton.bookmark => lang.addBookmark,
   };
 
   IconData toIcon() => switch (this) {
@@ -2597,6 +2603,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.seekForward => Broken.forward,
     NotificationButton.sleepTimer => Broken.timer_1,
     NotificationButton.addToPlaylist => Broken.music_library_2,
+    NotificationButton.bookmark => Broken.bookmark,
   };
 }
 

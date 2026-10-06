@@ -14,50 +14,67 @@ class _YoutubeIDStatsManager {
     return YoutubeIDStats.fromJsonWithoutVideoId(item.id, json);
   }
 
+  var _writeLock = Future<void>.value();
+
+  /// serialized since each update rewrites the whole entry.
+  Future<void> _serialized(Future<void> Function() update) {
+    final result = _writeLock.then((_) => update());
+    _writeLock = result.ignoreError();
+    return result;
+  }
+
   Future<void> updateStats(
     YoutubeID item, {
     String? ratingString,
     String? tagsString,
     String? moodsString,
     int? lastPositionInMs,
-  }) async {
-    final stats = await getStats(item);
-    final rating = ratingString != null
-        ? ratingString.isEmpty
-              ? null
-              : int.tryParse(ratingString) ?? stats?.rating
-        : stats?.rating;
-    final tags = tagsString != null ? Indexer.splitByCommaList(tagsString) : stats?.tags;
-    final moods = moodsString != null ? Indexer.splitByCommaList(moodsString) : stats?.moods;
-    lastPositionInMs ??= stats?.lastPositionInMs ?? 0;
-    final newStats = YoutubeIDStats(
-      videoId: item.id,
-      rating: rating?.clampInt(0, 100) ?? 0,
-      tags: tags,
-      moods: moods,
-      lastPositionInMs: lastPositionInMs,
-      audioTrackId: stats?.audioTrackId,
-      modifiedDate: currentTimeMS,
-    );
+    List<PlayableBookmark>? bookmarks,
+  }) {
+    return _serialized(() async {
+      final stats = await getStats(item);
+      final rating = ratingString != null
+          ? ratingString.isEmpty
+                ? null
+                : int.tryParse(ratingString) ?? stats?.rating
+          : stats?.rating;
+      final tags = tagsString != null ? Indexer.splitByCommaList(tagsString) : stats?.tags;
+      final moods = moodsString != null ? Indexer.splitByCommaList(moodsString) : stats?.moods;
+      final lastPositionInMsFinal = lastPositionInMs ?? stats?.lastPositionInMs ?? 0;
+      final bookmarksFinal = bookmarks ?? stats?.bookmarks;
+      final newStats = YoutubeIDStats(
+        videoId: item.id,
+        rating: rating?.clampInt(0, 100) ?? 0,
+        tags: tags,
+        moods: moods,
+        lastPositionInMs: lastPositionInMsFinal,
+        audioTrackId: stats?.audioTrackId,
+        bookmarks: bookmarksFinal,
+        modifiedDate: currentTimeMS,
+      );
 
-    return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
+      return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
+    });
   }
 
   Future<void> updateAudioTrackId(
     YoutubeID item, {
     required String? audioTrackId,
-  }) async {
-    final stats = await getStats(item);
-    final newStats = YoutubeIDStats(
-      videoId: item.id,
-      rating: stats?.rating ?? 0,
-      tags: stats?.tags,
-      moods: stats?.moods,
-      lastPositionInMs: stats?.lastPositionInMs ?? 0,
-      audioTrackId: audioTrackId,
-      modifiedDate: currentTimeMS,
-    );
-    return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
+  }) {
+    return _serialized(() async {
+      final stats = await getStats(item);
+      final newStats = YoutubeIDStats(
+        videoId: item.id,
+        rating: stats?.rating ?? 0,
+        tags: stats?.tags,
+        moods: stats?.moods,
+        lastPositionInMs: stats?.lastPositionInMs ?? 0,
+        audioTrackId: audioTrackId,
+        bookmarks: stats?.bookmarks,
+        modifiedDate: currentTimeMS,
+      );
+      return _statsDBManager.put(item.id, newStats.toJsonWithoutVideoId());
+    });
   }
 
   Future<Uint8List?> buildSyncDbBytes() async {

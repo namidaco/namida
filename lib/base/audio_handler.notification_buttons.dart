@@ -131,6 +131,7 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
       NotificationButton.seekForward => _seekControl(button, 'forward', lang.seekForward),
       NotificationButton.sleepTimer => _sleepTimerControl(),
       NotificationButton.addToPlaylist => _playlistControl(item),
+      NotificationButton.bookmark => _customControl(button, 'drawable/bookmark', lang.addBookmark),
     };
   }
 
@@ -280,6 +281,8 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
         _toggleSleepTimer();
       case NotificationButton.addToPlaylist:
         await _toggleCurrentItemInPlaylist();
+      case NotificationButton.bookmark:
+        await BookmarksController.inst.addAtCurrentPosition();
     }
     return true;
   }

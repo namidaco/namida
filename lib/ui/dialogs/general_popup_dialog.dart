@@ -38,6 +38,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
+import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -966,6 +967,16 @@ Future<void> showGeneralPopupDialog(
                               ),
                             ),
                             const SizedBox(width: 16.0),
+                            if (isSingle)
+                              _BookmarksChip(
+                                track: tracks.first,
+                                color: colorDelightened,
+                                onTap: () {
+                                  cancelSkipTimer();
+                                  NamidaNavigator.inst.closeDialog();
+                                  showBookmarksSheet(tracks.first);
+                                },
+                              ),
                             if (customArtworkManager != null) ...[
                               _ArtworkManager(
                                 customArtworkManager: customArtworkManager,
@@ -1894,5 +1905,57 @@ extension CustomArtworkManagerDialog on CustomArtworkManager {
     } else {
       await onEdit();
     }
+  }
+}
+
+class _BookmarksChip extends StatelessWidget {
+  final Track track;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _BookmarksChip({
+    required this.track,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxOSelect(
+      rx: Indexer.inst.trackStatsMap,
+      selector: (statsMap) => statsMap[track]?.bookmarks?.length ?? 0,
+      builder: (context, count) {
+        if (count == 0) return const SizedBox();
+        final theme = context.theme;
+        final contentColor = Color.alphaBlend(color.withAlpha(30), theme.textTheme.displaySmall!.color!);
+        return Padding(
+          padding: const EdgeInsets.only(right: 10.0),
+          child: NamidaInkWell(
+            borderRadius: 8.0,
+            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+            bgColor: theme.colorScheme.onSurface.withAlpha(12),
+            onTap: onTap,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Broken.bookmark,
+                  size: 16.0,
+                  color: contentColor,
+                ),
+                const SizedBox(width: 4.0),
+                Text(
+                  '$count',
+                  style: theme.textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: contentColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }

@@ -24,6 +24,7 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
+import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
@@ -43,6 +44,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/dialogs/bookmarks_sheet.dart';
 import 'package:namida/ui/dialogs/track_stats_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -362,6 +364,7 @@ class YTUtils {
   }) async {
     final currentItem = Player.inst.currentItem.value;
     NamidaPopupItem? repeatForWidget;
+    NamidaPopupItem? bookmarksItem;
     final defaultItems = await YTUtils.getVideoCardMenuItems(
       queueSource: queueSource,
       downloadIndex: null,
@@ -397,6 +400,14 @@ class YTUtils {
           horizontalPadding: 4.0,
         ),
       );
+      final bookmarksCount = BookmarksController.inst.currentBookmarks.value.length;
+      if (bookmarksCount > 0) {
+        bookmarksItem = NamidaPopupItem(
+          icon: Broken.bookmark,
+          title: '${lang.bookmarks}: $bookmarksCount',
+          onTap: () => showBookmarksSheet(currentItem),
+        );
+      }
     }
     final clearItem = NamidaPopupItem(
       icon: Broken.broom,
@@ -416,6 +427,7 @@ class YTUtils {
     final items = <NamidaPopupItem>[];
     items.addAll(defaultItems);
     if (repeatForWidget != null) items.add(repeatForWidget);
+    if (bookmarksItem != null) items.add(bookmarksItem);
     items.add(clearItem);
     return items;
   }

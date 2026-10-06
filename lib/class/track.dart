@@ -102,6 +102,7 @@ class TrackStats extends PlayableItemStats {
     required super.moods,
     required super.lastPositionInMs,
     required super.audioTrackId,
+    required super.bookmarks,
     super.modifiedDate,
   });
 
@@ -118,6 +119,7 @@ class TrackStats extends PlayableItemStats {
       moods: stats.moods,
       lastPositionInMs: stats.lastPositionInMs,
       audioTrackId: stats.audioTrackId,
+      bookmarks: stats.bookmarks,
       modifiedDate: stats.modifiedDate,
     );
   }
@@ -130,6 +132,7 @@ class TrackStats extends PlayableItemStats {
       moods: track.effectiveMoods,
       lastPositionInMs: track.lastPlayedPositionInMs ?? 0,
       audioTrackId: track.effectiveAudioTrackId,
+      bookmarks: track.statsRaw?.bookmarks,
     );
   }
 
@@ -160,6 +163,9 @@ class PlayableItemStats {
 
   String? audioTrackId;
 
+  /// sorted by position.
+  List<PlayableBookmark>? bookmarks;
+
   int modifiedDate = 0;
 
   PlayableItemStats({
@@ -168,6 +174,7 @@ class PlayableItemStats {
     required this.moods,
     required this.lastPositionInMs,
     required this.audioTrackId,
+    required this.bookmarks,
     this.modifiedDate = 0,
   });
 
@@ -176,6 +183,11 @@ class PlayableItemStats {
       return listJson.cast<String>();
     }
     return null;
+  }
+
+  static List<PlayableBookmark>? _parseBookmarks(dynamic listJson) {
+    if (listJson is! List || listJson.isEmpty) return null;
+    return listJson.map((e) => PlayableBookmark.fromJson((e as Map).cast<String, dynamic>())).toFixedList();
   }
 
   static List<String>? _cleanList(List<String>? current) {
@@ -190,6 +202,7 @@ class PlayableItemStats {
       moods: _parseList(json['moods']) ?? [],
       lastPositionInMs: json['pms'] ?? json['lastPositionInMs'] ?? 0,
       audioTrackId: json['aid'],
+      bookmarks: _parseBookmarks(json['bm']),
       modifiedDate: json['_mt'] ?? 0,
     );
   }
@@ -197,12 +210,15 @@ class PlayableItemStats {
   Map<String, dynamic>? toJson() {
     final tagsFinal = _cleanList(tags);
     final moodsFinal = _cleanList(moods);
+    final bookmarks = this.bookmarks;
+    final bookmarksFinal = bookmarks == null || bookmarks.isEmpty ? null : bookmarks.map((e) => e.toJson()).toFixedList();
     final map = {
       if (rating > 0) 'rating': rating,
       'tags': ?tagsFinal,
       'moods': ?moodsFinal,
       if (lastPositionInMs > 0) 'pms': lastPositionInMs,
       if (audioTrackId != null) 'aid': audioTrackId,
+      'bm': ?bookmarksFinal,
     };
     if (map.isEmpty) return null;
     if (modifiedDate > 0) map['_mt'] = modifiedDate;
@@ -211,8 +227,30 @@ class PlayableItemStats {
 
   @override
   String toString() {
-    return 'PlayableItemStats(rating: $rating, tags: $tags, moods: $moods, pms: $lastPositionInMs, aid: $audioTrackId)';
+    return 'PlayableItemStats(rating: $rating, tags: $tags, moods: $moods, pms: $lastPositionInMs, aid: $audioTrackId, bm: ${bookmarks?.length})';
   }
+}
+
+class PlayableBookmark {
+  final int positionMS;
+  final String? title;
+
+  const PlayableBookmark({
+    required this.positionMS,
+    required this.title,
+  });
+
+  factory PlayableBookmark.fromJson(Map<String, dynamic> json) {
+    return PlayableBookmark(
+      positionMS: json['p'] ?? 0,
+      title: json['t'],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'p': positionMS,
+    't': ?title,
+  };
 }
 
 enum PlayableType {
