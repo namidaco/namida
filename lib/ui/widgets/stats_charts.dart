@@ -173,9 +173,7 @@ TextPainter _textPainter(String text, TextStyle style, {double maxWidth = double
 }
 
 class StatsWatermark extends StatelessWidget {
-  final String? text;
-
-  const StatsWatermark({super.key, this.text});
+  const StatsWatermark({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -193,7 +191,7 @@ class StatsWatermark extends StatelessWidget {
         ),
         const SizedBox(width: 6.0),
         Text(
-          text ?? 'Namida',
+          'Namida',
           style: style?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700, color: color),
         ),
       ],
@@ -1617,7 +1615,7 @@ class _RankBarsPainter extends CustomPainter {
   bool shouldRepaint(covariant _RankBarsPainter oldDelegate) => !identical(oldDelegate.data, data);
 }
 
-// ======================================== cumulative lines ========================================
+// ======================================== listens lines ========================================
 
 class ChartSeries {
   final String label;
@@ -1627,37 +1625,39 @@ class ChartSeries {
   const ChartSeries({required this.label, required this.perDay, this.color});
 }
 
-class CumulativeLineChart extends StatefulWidget {
+class ListensLineChart extends StatefulWidget {
   final List<ChartSeries> series;
   final int firstDay;
+  final bool isCumulative;
   final double height;
 
-  const CumulativeLineChart({
+  const ListensLineChart({
     super.key,
     required this.series,
     required this.firstDay,
+    required this.isCumulative,
     this.height = 170.0,
   });
 
   @override
-  State<CumulativeLineChart> createState() => _CumulativeLineChartState();
+  State<ListensLineChart> createState() => _ListensLineChartState();
 }
 
-class _CumulativeLineChartState extends State<CumulativeLineChart> with SingleTickerProviderStateMixin, _RevealMixin, _ChartTipMixin {
-  late _CumulativeLinePainter _painter;
+class _ListensLineChartState extends State<ListensLineChart> with SingleTickerProviderStateMixin, _RevealMixin, _ChartTipMixin {
+  late _ListensLinePainter _painter;
 
   @override
   void initState() {
     super.initState();
-    _painter = _CumulativeLinePainter(series: widget.series, firstDay: widget.firstDay, repaint: revealCurve);
+    _painter = _ListensLinePainter(series: widget.series, firstDay: widget.firstDay, isCumulative: widget.isCumulative, repaint: revealCurve);
     startReveal();
   }
 
   @override
-  void didUpdateWidget(covariant CumulativeLineChart oldWidget) {
+  void didUpdateWidget(covariant ListensLineChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.series, widget.series) || oldWidget.firstDay != widget.firstDay) {
-      _painter = _CumulativeLinePainter(series: widget.series, firstDay: widget.firstDay, repaint: revealCurve);
+    if (!identical(oldWidget.series, widget.series) || oldWidget.firstDay != widget.firstDay || oldWidget.isCumulative != widget.isCumulative) {
+      _painter = _ListensLinePainter(series: widget.series, firstDay: widget.firstDay, isCumulative: widget.isCumulative, repaint: revealCurve);
       restartReveal();
     }
   }
@@ -1726,9 +1726,10 @@ class _CumulativeLineChartState extends State<CumulativeLineChart> with SingleTi
   }
 }
 
-class _CumulativeLinePainter extends CustomPainter {
+class _ListensLinePainter extends CustomPainter {
   final List<ChartSeries> series;
   final int firstDay;
+  final bool isCumulative;
   final Animation<double> repaint;
 
   List<Color> colors = const [];
@@ -1738,7 +1739,7 @@ class _CumulativeLinePainter extends CustomPainter {
   late final int _days;
   late final int _bucketDays;
   late final int _buckets;
-  late final List<Int32List> _cumulative;
+  late final List<Int32List> _values;
   late final List<int> totals;
   late final int _max;
 
@@ -1754,7 +1755,7 @@ class _CumulativeLinePainter extends CustomPainter {
   static const _padB = 18.0;
   static const _maxBuckets = 90;
 
-  _CumulativeLinePainter({required this.series, required this.firstDay, required this.repaint}) : super(repaint: repaint) {
+  _ListensLinePainter({required this.series, required this.firstDay, required this.isCumulative, required this.repaint}) : super(repaint: repaint) {
     int days = 0;
     for (final s in series) {
       if (s.perDay.length > days) days = s.perDay.length;
@@ -1764,23 +1765,26 @@ class _CumulativeLinePainter extends CustomPainter {
     _buckets = days == 0 ? 0 : (days / _bucketDays).ceil();
     int max = 0;
     totals = List.filled(series.length, 0);
-    _cumulative = List.generate(
+    _values = List.generate(
       series.length,
       (si) {
         final perDay = series[si].perDay;
-        final cum = Int32List(_buckets);
+        final values = Int32List(_buckets);
         int acc = 0;
         for (int b = 0; b < _buckets; b++) {
           final start = b * _bucketDays;
           final end = math.min(perDay.length, start + _bucketDays);
+          int bucketListens = 0;
           for (int d = start; d < end; d++) {
-            acc += perDay[d];
+            bucketListens += perDay[d];
           }
-          cum[b] = acc;
+          acc += bucketListens;
+          final value = isCumulative ? acc : bucketListens;
+          values[b] = value;
+          if (value > max) max = value;
         }
         totals[si] = acc;
-        if (acc > max) max = acc;
-        return cum;
+        return values;
       },
       growable: false,
     );
@@ -1800,11 +1804,11 @@ class _CumulativeLinePainter extends CustomPainter {
     _paths = List.generate(
       series.length,
       (si) {
-        final cum = _cumulative[si];
+        final values = _values[si];
         final p = Path();
         for (int b = 0; b < _buckets; b++) {
           final x = _x(b, innerW);
-          final y = _y(cum[b], innerH);
+          final y = _y(values[b], innerH);
           if (b == 0) {
             p.moveTo(x, y);
           } else {
@@ -1855,13 +1859,21 @@ class _CumulativeLinePainter extends CustomPainter {
     final innerW = _size.width - _padL - _padR;
     final f = ((p.dx - _padL) / innerW).clamp(0.0, 1.0);
     final b = (f * (_buckets - 1)).round();
-    final date = HistoryManager.daysSince1970ToDate(firstDay + math.min(_days - 1, b * _bucketDays + _bucketDays - 1));
-    final buf = StringBuffer(date.dateFormattedOriginal);
+    final startDay = firstDay + b * _bucketDays;
+    final endDayOffset = (b * _bucketDays + _bucketDays - 1).withMaximum(_days - 1);
+    final endDay = firstDay + endDayOffset;
+    final endDate = HistoryManager.daysSince1970ToDate(endDay);
+    final buf = StringBuffer();
+    if (!isCumulative && endDay > startDay) {
+      final startDate = HistoryManager.daysSince1970ToDate(startDay);
+      buf.write('${startDate.dateFormattedOriginal} → ');
+    }
+    buf.write(endDate.dateFormattedOriginal);
     for (int si = 0; si < series.length; si++) {
-      buf.write('\n${series[si].label}: ${_cumulative[si][b].formatDecimal()}');
+      buf.write('\n${series[si].label}: ${_values[si][b].formatDecimal()}');
     }
     final innerH = _size.height - _padT - _padB;
-    return ChartTip(Offset(_x(b, innerW), _y(_cumulative[0][b], innerH)), buf.toString());
+    return ChartTip(Offset(_x(b, innerW), _y(_values[0][b], innerH)), buf.toString());
   }
 
   @override
@@ -1902,7 +1914,7 @@ class _CumulativeLinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _CumulativeLinePainter oldDelegate) => !identical(oldDelegate.series, series);
+  bool shouldRepaint(covariant _ListensLinePainter oldDelegate) => !identical(oldDelegate.series, series) || oldDelegate.isCumulative != isCumulative;
 }
 
 // ======================================== gauge ========================================

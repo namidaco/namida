@@ -5,25 +5,32 @@ import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 
 import 'package:namida/class/history_stats.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/stats_charts.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
+import 'package:namida/youtube/yt_utils.dart';
 
 class StatsFormat {
   StatsFormat._();
@@ -39,6 +46,12 @@ class StatsFormat {
     final oldest = HistoryManager.daysSince1970ToDate(snapshot.firstDay);
     final newest = HistoryManager.daysSince1970ToDate(snapshot.lastDay);
     return '${oldest.dateFormattedOriginalNoYears(newest)} → ${newest.dateFormattedOriginalNoYears(oldest)}';
+  }
+
+  static String rangeTextWithYears(HistoryStatsSnapshot snapshot) {
+    final oldest = HistoryManager.daysSince1970ToDate(snapshot.firstDay);
+    final newest = HistoryManager.daysSince1970ToDate(snapshot.lastDay);
+    return '${oldest.dateFormattedOriginal} → ${newest.dateFormattedOriginal}';
   }
 
   static String durationMS(int ms) => (ms ~/ 1000).secondsFormatted;
@@ -379,6 +392,135 @@ class StatsInfoTile extends StatelessWidget {
       value: value,
     );
   }
+}
+
+class StatsPlaylistMenu extends StatelessWidget {
+  final String playlistName;
+  final HistoryStatsSnapshot snapshot;
+  final StatsPlaylistList list;
+  final double iconSize;
+  final double verticalPadding;
+
+  const StatsPlaylistMenu({
+    super.key,
+    required this.playlistName,
+    required this.snapshot,
+    required this.list,
+    this.iconSize = 18.0,
+    this.verticalPadding = 4.0,
+  });
+
+  static List<YoutubeID> _toVideos(List<String> videoIds) => videoIds.map((e) => YoutubeID(id: e, playlistID: null)).toFixedList();
+
+  void _openFullMenu(BuildContext context) {
+    final snapshot = this.snapshot;
+    if (snapshot is HistoryStatsSnapshot<Track>) {
+      final tracks = list.itemsOf(snapshot);
+      showGeneralPopupDialog(tracks, playlistName, tracks.displayTrackKeyword, QueueSource.mostPlayed);
+    } else if (snapshot is HistoryStatsSnapshot<String>) {
+      final videos = _toVideos(list.itemsOf(snapshot));
+      final videosMenu = NamidaPopupWrapper(
+        childrenDefault: () => YTUtils.getVideosMenuItems(
+          queueSource: QueueSourceYoutubeID.ytMostPlayed,
+          context: context,
+          videos: videos,
+          playlistName: '',
+        ),
+      );
+      videosMenu.showPopupMenu(context);
+    }
+  }
+
+  void _play({required bool shuffle}) {
+    final snapshot = this.snapshot;
+    if (snapshot is HistoryStatsSnapshot<Track>) {
+      final tracks = list.itemsOf(snapshot);
+      Player.inst.playOrPause(0, tracks, QueueSource.mostPlayed, shuffle: shuffle);
+    } else if (snapshot is HistoryStatsSnapshot<String>) {
+      final videos = _toVideos(list.itemsOf(snapshot));
+      Player.inst.playOrPause(0, videos, QueueSourceYoutubeID.ytMostPlayed, shuffle: shuffle);
+    }
+  }
+
+  Future<void> _saveAsPlaylist() async {
+    final snapshot = this.snapshot;
+    if (snapshot is HistoryStatsSnapshot<Track>) {
+      final tracks = list.itemsOf(snapshot);
+      final pl = await PlaylistController.inst.addNewPlaylist(playlistName, tracks: tracks);
+      if (pl == null) return;
+      final plName = pl.name;
+      _onPlaylistSaved(plName, () => NamidaOnTaps.inst.onNormalPlaylistTap(plName));
+    } else if (snapshot is HistoryStatsSnapshot<String>) {
+      final videoIds = list.itemsOf(snapshot);
+      final pl = await YoutubePlaylistController.inst.addNewPlaylist(playlistName, videoIds: videoIds);
+      if (pl == null) return;
+      final plName = pl.name;
+      void openPlaylist() {
+        final queueSource = QueueSourceYoutubeID.ytPlaylist(plName);
+        YTNormalPlaylistSubpage(playlistName: plName, queueSource: queueSource).navigate();
+      }
+
+      _onPlaylistSaved(plName, openPlaylist);
+    }
+  }
+
+  void _onPlaylistSaved(String name, void Function() openPlaylist) => snackyy(
+    icon: Broken.music_library_2,
+    title: lang.playlist,
+    message: name,
+    button: SnackbarButton(
+      text: lang.open,
+      function: openPlaylist,
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: () => [
+        NamidaPopupItem(
+          icon: Broken.play_cricle,
+          title: lang.playAll,
+          onTap: () => _play(shuffle: false),
+        ),
+        NamidaPopupItem(
+          icon: Broken.shuffle,
+          title: lang.shuffle,
+          onTap: () => _play(shuffle: true),
+        ),
+        NamidaPopupItem(
+          icon: Broken.music_library_2,
+          title: lang.addAsANewPlaylist,
+          onTap: _saveAsPlaylist,
+        ),
+        NamidaPopupItem(
+          icon: Broken.more_2,
+          title: lang.more,
+          hasDividerAbove: true,
+          onTap: () => _openFullMenu(context),
+        ),
+      ],
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: verticalPadding),
+        child: MoreIcon(
+          padding: 0.0,
+          iconSize: iconSize,
+          iconColor: context.theme.colorScheme.secondary,
+        ),
+      ),
+    );
+  }
+}
+
+enum StatsPlaylistList {
+  topItems,
+  discoveries,
+  ;
+
+  List<E> itemsOf<E>(HistoryStatsSnapshot<E> snapshot) => switch (this) {
+    StatsPlaylistList.topItems => snapshot.topItems.map((e) => e.key).toFixedList(),
+    StatsPlaylistList.discoveries => snapshot.newItemsTop.map((e) => e.item).toFixedList(),
+  };
 }
 
 class StatsEmptyHint extends StatelessWidget {

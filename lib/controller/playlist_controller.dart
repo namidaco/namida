@@ -50,7 +50,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Track identifyBy(TrackWithDate item) => item.track;
 
-  Future<GeneralPlaylist<TrackWithDate, SortType>> addNewPlaylist(
+  Future<GeneralPlaylist<TrackWithDate, SortType>?> addNewPlaylist(
     String name, {
     List<Track> tracks = const <Track>[],
     int? creationDate,

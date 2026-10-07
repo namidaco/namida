@@ -282,7 +282,7 @@ class HistoryStatsSnapshot<E> {
     int? monthlyTopYear,
   }) {
     final map = history.historyMap.value;
-    final oldestDay = map.keys.lastOrNull;
+    final oldestDay = history.oldestDay;
     if (oldestDay != null && oldestDay > firstDay) firstDay = oldestDay;
     if (lastDay < firstDay) lastDay = firstDay;
 
@@ -537,7 +537,7 @@ class HistoryStatsSnapshot<E> {
       }
     }
     newItemsAll.sort((a, b) => b.count.compareTo(a.count));
-    if (newItemsAll.length > 5) newItemsAll.length = 5;
+    if (newItemsAll.length > topCount) newItemsAll.length = topCount;
 
     // ---- listen time: exact from daily db when covered, else calibrated estimate ----
     int listenSeconds = 0;

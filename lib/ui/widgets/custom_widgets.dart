@@ -1640,7 +1640,7 @@ class CreatePlaylistButton extends StatelessWidget {
                   final m3uPath = exportAsM3uRx.value ? PlaylistController.getUnusedM3uFilePathInStorage(name) : null;
 
                   final pl = await PlaylistController.inst.addNewPlaylist(name, m3uPath: m3uPath);
-                  if (m3uPath != null) {
+                  if (pl != null && m3uPath != null) {
                     await PlaylistController.inst.exportPlaylistToM3UFile(pl, m3uPath);
                     snackyy(
                       message: "${lang.savedIn}: $m3uPath",

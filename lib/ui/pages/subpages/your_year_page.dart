@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -10,6 +11,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -57,7 +59,9 @@ class _YourYearPageState extends State<YourYearPage> {
   bool _loading = true;
   int _requestId = 0;
   int _currentPage = 0;
+  Widget? _lastPlaylistMenu;
   List<_StoryPage> _pages = const [];
+  late _StoryYear _storyYear;
 
   Map<int, GlobalKey>? _exporting;
   double _cardWidth = 0.0;
@@ -90,12 +94,22 @@ class _YourYearPageState extends State<YourYearPage> {
         ? _buildPages(yt, const _YoutubeStoryAdapter(), local, const _TrackStoryAdapter(), prev, await const _YoutubeStoryAdapter().tint(yt.topItems.firstOrNull?.key))
         : _buildPages(local, const _TrackStoryAdapter(), yt, const _YoutubeStoryAdapter(), prev, await const _TrackStoryAdapter().tint(local.topItems.firstOrNull?.key));
     if (id != _requestId || !mounted) return;
+    final months = widget.isYoutube ? yt.months : local.months;
     setState(() {
       _pages = pages;
+      _storyYear = _StoryYear(year: _year, months: months);
       _loading = false;
       _currentPage = 0;
+      _lastPlaylistMenu = pages.firstOrNull?.playlistMenu ?? _lastPlaylistMenu;
     });
     if (_pageController.hasClients) _pageController.jumpToPage(0);
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentPage = index;
+      _lastPlaylistMenu = _pages[index].playlistMenu ?? _lastPlaylistMenu;
+    });
   }
 
   void _selectYear(int year) {
@@ -160,6 +174,13 @@ class _YourYearPageState extends State<YourYearPage> {
         pages.add(
           _StoryPage(
             tint: baseTint,
+            playlistMenu: StatsPlaylistMenu(
+              playlistName: '${lang.top} ${a.itemsLabel} $yearText',
+              snapshot: s,
+              list: StatsPlaylistList.topItems,
+              iconSize: 20.0,
+              verticalPadding: 0.0,
+            ),
             builder: (context, style) => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,9 +309,19 @@ class _YourYearPageState extends State<YourYearPage> {
       // -- discoveries
       if (s.newItems > 0 || s.oldestFavorite != null) {
         final oldest = s.oldestFavorite;
+        final newItemsShown = s.newItemsTop.length > 5 ? s.newItemsTop.sublist(0, 5) : s.newItemsTop;
         pages.add(
           _StoryPage(
             tint: baseTint,
+            playlistMenu: s.newItemsTop.isEmpty
+                ? null
+                : StatsPlaylistMenu(
+                    playlistName: '${lang.discoveries} $yearText',
+                    snapshot: s,
+                    list: StatsPlaylistList.discoveries,
+                    iconSize: 20.0,
+                    verticalPadding: 0.0,
+                  ),
             builder: (context, style) => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,11 +340,11 @@ class _YourYearPageState extends State<YourYearPage> {
                     ),
                   ],
                 ),
-                if (s.newItemsTop.isNotEmpty) ...[
+                if (newItemsShown.isNotEmpty) ...[
                   const SizedBox(height: 12.0),
                   a.list(
-                    s.newItemsTop.map((e) => StatsRankEntry(e.item, e.count)).toList(),
-                    trailingTexts: s.newItemsTop.map((e) => e.firstListenMS.dateFormattedOriginal).toList(),
+                    newItemsShown.map((e) => StatsRankEntry(e.item, e.count)).toList(),
+                    trailingTexts: newItemsShown.map((e) => e.firstListenMS.dateFormattedOriginal).toList(),
                     listensRangeMS: rangeMS,
                   ),
                 ],
@@ -533,6 +564,13 @@ class _YourYearPageState extends State<YourYearPage> {
       pages.add(
         _StoryPage(
           tint: baseTint,
+          playlistMenu: StatsPlaylistMenu(
+            playlistName: lang.yourYear(year: yearText),
+            snapshot: s,
+            list: StatsPlaylistList.topItems,
+            iconSize: 20.0,
+            verticalPadding: 0.0,
+          ),
           builder: (context, style) => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,6 +720,8 @@ class _YourYearPageState extends State<YourYearPage> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
+    final currentPage = _loading ? null : _pages.elementAtOrNull(_currentPage);
+    final hasPlaylistMenu = currentPage?.playlistMenu != null;
     return BackgroundWrapper(
       child: Column(
         children: [
@@ -708,6 +748,11 @@ class _YourYearPageState extends State<YourYearPage> {
                           .toList(),
                     ),
                   ),
+                ),
+                AnimatedShow(
+                  show: hasPlaylistMenu,
+                  isHorizontal: true,
+                  child: _lastPlaylistMenu ?? const SizedBox(),
                 ),
                 NamidaIconButton(
                   icon: Broken.share,
@@ -738,8 +783,8 @@ class _YourYearPageState extends State<YourYearPage> {
                             controller: _pageController,
                             clipBehavior: Clip.none,
                             itemCount: _pages.length,
-                            onPageChanged: (i) => setState(() => _currentPage = i),
-                            itemBuilder: (context, index) => _pages[index].build(context, _year),
+                            onPageChanged: _onPageChanged,
+                            itemBuilder: (context, index) => _pages[index].build(context, _storyYear),
                           ),
                           if (exporting != null)
                             StatsExportOffstage(
@@ -748,7 +793,7 @@ class _YourYearPageState extends State<YourYearPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   for (final e in exporting.entries)
-                                    if (e.key < _pages.length) _pages[e.key].buildForExport(context, _year, _cardWidth, e.value),
+                                    if (e.key < _pages.length) _pages[e.key].buildForExport(context, _storyYear, _cardWidth, e.value),
                                 ],
                               ),
                             ),
@@ -961,6 +1006,196 @@ class _YoutubeStoryAdapter extends _StoryAdapter<String> {
 
 // ======================================== pieces ========================================
 
+class _YearTicket extends StatelessWidget {
+  final _StoryYear storyYear;
+  final Color tint;
+  final Color cardColor;
+
+  const _YearTicket({required this.storyYear, required this.tint, required this.cardColor});
+
+  static const _stubWidth = 42.0;
+  static const _logoSize = 26.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final onSurface = theme.colorScheme.onSurface;
+    final tintedCardColor = Color.alphaBlend(tint.withOpacityExt(0.15), cardColor);
+    final ticketColor = Color.alphaBlend(onSurface.withOpacityExt(0.05), tintedCardColor);
+    final logoColor = Color.alphaBlend(tint.withOpacityExt(0.1), onSurface).withOpacityExt(0.8);
+    final perforationColor = onSurface.withOpacityExt(0.25);
+    final barColor = tint.withOpacityExt(0.35);
+    return CustomPaint(
+      painter: _TicketPainter(
+        color: ticketColor,
+        perforationColor: perforationColor,
+        perforationX: _stubWidth,
+        radius: 8.0.multipliedRadius,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: _stubWidth,
+            child: Center(
+              child: Image.asset(
+                NamidaChannel.defaultLayerIconForPlatform,
+                width: _logoSize,
+                height: _logoSize,
+                cacheWidth: 104,
+                cacheHeight: 104,
+                color: logoColor,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12.0, 8.0, 14.0, 8.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'NAMIDA',
+                      style: textTheme.displaySmall?.copyWith(
+                        fontSize: 9.0,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.6,
+                        color: onSurface.withOpacityExt(0.6),
+                      ),
+                    ),
+                    Text(
+                      storyYear.year.toString(),
+                      style: textTheme.displayLarge?.copyWith(
+                        fontSize: 18.0,
+                        fontWeight: FontWeight.w800,
+                        height: 1.1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8.0),
+                CustomPaint(
+                  size: _MonthBarsPainter.barsSize,
+                  painter: _MonthBarsPainter(
+                    months: storyYear.months,
+                    color: barColor,
+                    peakColor: tint,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TicketPainter extends CustomPainter {
+  final Color color;
+  final Color perforationColor;
+  final double perforationX;
+  final double radius;
+
+  _TicketPainter({
+    required this.color,
+    required this.perforationColor,
+    required this.perforationX,
+    required this.radius,
+  });
+
+  static const _notchRadius = 6.0;
+  static const _dashLength = 3.0;
+  static const _dashGap = 3.0;
+
+  Size _size = Size.zero;
+  Path _ticketPath = Path();
+
+  Path _buildTicketPath(Size size) {
+    final body = Path()..addRRect(RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(radius)));
+    final notches = Path()
+      ..addOval(Rect.fromCircle(center: Offset(perforationX, 0.0), radius: _notchRadius))
+      ..addOval(Rect.fromCircle(center: Offset(perforationX, size.height), radius: _notchRadius));
+    return Path.combine(PathOperation.difference, body, notches);
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (_size != size) {
+      _size = size;
+      _ticketPath = _buildTicketPath(size);
+    }
+    canvas.drawPath(_ticketPath, Paint()..color = color);
+
+    final dashPaint = Paint()
+      ..color = perforationColor
+      ..strokeWidth = 1.5;
+    const dashStart = _notchRadius + 3.0;
+    final dashEnd = size.height - dashStart;
+    for (double y = dashStart; y < dashEnd; y += _dashLength + _dashGap) {
+      final segmentEnd = (y + _dashLength).withMaximum(dashEnd);
+      canvas.drawLine(Offset(perforationX, y), Offset(perforationX, segmentEnd), dashPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _TicketPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.perforationColor != perforationColor || oldDelegate.perforationX != perforationX || oldDelegate.radius != radius;
+}
+
+class _MonthBarsPainter extends CustomPainter {
+  final Int32List months;
+  final Color color;
+  final Color peakColor;
+
+  const _MonthBarsPainter({
+    required this.months,
+    required this.color,
+    required this.peakColor,
+  });
+
+  static const _barWidth = 2.5;
+  static const _barGap = 2.0;
+  static const _minBarHeight = 2.0;
+  static const barsSize = Size(12 * _barWidth + 11 * _barGap, 22.0);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    int max = 0;
+    int peak = 0;
+    for (int i = 0; i < months.length; i++) {
+      if (months[i] > max) {
+        max = months[i];
+        peak = i;
+      }
+    }
+    final paint = Paint();
+    const barRadius = Radius.circular(_barWidth / 2);
+    for (int i = 0; i < months.length; i++) {
+      final fraction = max == 0 ? 0.0 : months[i] / max;
+      final barHeight = (size.height * fraction).withMinimum(_minBarHeight);
+      final left = i * (_barWidth + _barGap);
+      paint.color = max > 0 && i == peak ? peakColor : color;
+      final bar = RRect.fromLTRBR(left, size.height - barHeight, left + _barWidth, size.height, barRadius);
+      canvas.drawRRect(bar, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _MonthBarsPainter oldDelegate) => !identical(oldDelegate.months, months) || oldDelegate.color != color || oldDelegate.peakColor != peakColor;
+}
+
+class _StoryYear {
+  final int year;
+  final Int32List months;
+
+  const _StoryYear({required this.year, required this.months});
+}
+
 class _StoryStyle {
   final TextStyle title;
   final TextStyle subtitle;
@@ -978,12 +1213,13 @@ class _StoryStyle {
 class _StoryPage {
   final Color tint;
   final Widget Function(BuildContext context, _StoryStyle style) builder;
+  final Widget? playlistMenu;
   final GlobalKey key = GlobalKey();
 
-  _StoryPage({required this.tint, required this.builder});
+  _StoryPage({required this.tint, required this.builder, this.playlistMenu});
 
   static const _radius = 24.0;
-  static const _contentPadding = EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 48.0);
+  static const _contentPadding = EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 68.0);
 
   _StoryStyle _style(BuildContext context) {
     final textTheme = context.theme.textTheme;
@@ -995,7 +1231,7 @@ class _StoryPage {
     );
   }
 
-  Widget _card(BuildContext context, int year, {required Widget content, required bool clipContent}) {
+  Widget _card(BuildContext context, _StoryYear storyYear, {required Widget content, required bool clipContent}) {
     final theme = context.theme;
     final bg = Color.alphaBlend(tint.withOpacityExt(theme.brightness == Brightness.dark ? 0.16 : 0.12), theme.scaffoldBackgroundColor);
     return Container(
@@ -1039,15 +1275,12 @@ class _StoryPage {
           ),
           if (clipContent) Positioned.fill(child: content) else content,
           Positioned(
-            bottom: 0.0,
-            right: 0.0,
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(14.0, 8.0, 16.0, 10.0),
-              decoration: BoxDecoration(
-                color: Color.alphaBlend(tint.withOpacityExt(0.2), theme.cardColor),
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(_radius.multipliedRadius)),
-              ),
-              child: StatsWatermark(text: 'Namida • $year'),
+            bottom: 12.0,
+            right: 12.0,
+            child: _YearTicket(
+              storyYear: storyYear,
+              tint: tint,
+              cardColor: bg,
             ),
           ),
         ],
@@ -1055,7 +1288,7 @@ class _StoryPage {
     );
   }
 
-  Widget build(BuildContext context, int year) {
+  Widget build(BuildContext context, _StoryYear storyYear) {
     final style = _style(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0).add(EdgeInsetsGeometry.only(top: 8.0)),
@@ -1066,13 +1299,13 @@ class _StoryPage {
             key: key,
             child: _card(
               context,
-              year,
+              storyYear,
               clipContent: true,
               content: LayoutBuilder(
                 builder: (context, constraints) => SmoothSingleChildScrollView(
                   padding: _contentPadding,
                   child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight - 72.0),
+                    constraints: BoxConstraints(minHeight: constraints.maxHeight - _contentPadding.vertical),
                     child: builder(context, style),
                   ),
                 ),
@@ -1085,7 +1318,7 @@ class _StoryPage {
   }
 
   /// full height, nothing scrolls, so the whole page fits in one image.
-  Widget buildForExport(BuildContext context, int year, double width, GlobalKey exportKey) {
+  Widget buildForExport(BuildContext context, _StoryYear storyYear, double width, GlobalKey exportKey) {
     final style = _style(context);
     return SizedBox(
       width: width,
@@ -1093,7 +1326,7 @@ class _StoryPage {
         key: exportKey,
         child: _card(
           context,
-          year,
+          storyYear,
           clipContent: false,
           content: Padding(
             padding: _contentPadding,

@@ -271,6 +271,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   MostPlayedTimeRange _mptr = MostPlayedTimeRange.allTime;
   DateRange? _custom;
   final _donutType = ValueNotifier(MediaType.genre);
+  final _isListensLineCumulative = ValueNotifier(true);
   bool _isYoutube = false;
   bool _loading = true;
   final _shownCounts = <_ExpandableStatsList, int>{};
@@ -297,6 +298,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     StatsController.inst.unregisterShareAll(_shareAll);
     StatsController.inst.clearCache();
     _donutType.dispose();
+    _isListensLineCumulative.dispose();
     super.dispose();
   }
 
@@ -628,7 +630,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       );
     }
 
-    // -- cumulative line, local vs youtube
+    // -- listens line, local vs youtube
     cards.add(
       (context) {
         final series = <ChartSeries>[];
@@ -637,14 +639,25 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
         if (yt != null && !yt.isEmpty && yt.firstDay < firstDay) firstDay = yt.firstDay;
         if (local != null && !local.isEmpty) series.add(ChartSeries(label: lang.local, perDay: _aligned(local, firstDay, s.lastDay)));
         if (yt != null && !yt.isEmpty) series.add(ChartSeries(label: lang.youtube, perDay: _aligned(yt, firstDay, s.lastDay)));
-        return StatsChartCard(
-          title: lang.totalListens,
-          subtitle: StatsFormat.rangeText(s),
-          icon: Broken.trend_up,
-          copyText: () => series.map((e) => '${e.label}: ${_sum(e.perDay).formatDecimal()}').join('\n'),
-          child: CumulativeLineChart(
-            series: series,
-            firstDay: firstDay,
+        return ValueListenableBuilder(
+          valueListenable: _isListensLineCumulative,
+          builder: (context, isCumulative, _) => StatsChartCard(
+            title: isCumulative ? lang.totalListens : '${lang.totalListens} • ${lang.daily}',
+            subtitle: StatsFormat.rangeText(s),
+            icon: isCumulative ? Broken.trend_up : Broken.activity,
+            copyText: () => series.map((e) => '${e.label}: ${_sum(e.perDay).formatDecimal()}').join('\n'),
+            trailing: NamidaIconButton(
+              icon: isCumulative ? Broken.activity : Broken.trend_up,
+              iconSize: 18.0,
+              horizontalPadding: 8.0,
+              verticalPadding: 4.0,
+              onPressed: () => _isListensLineCumulative.value = !isCumulative,
+            ),
+            child: ListensLineChart(
+              series: series,
+              firstDay: firstDay,
+              isCumulative: isCumulative,
+            ),
           ),
         );
       },
@@ -876,13 +889,23 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     cards.add(
       (context) {
         final oldest = s.oldestFavorite;
+        final newItems = s.newItemsTop;
+        final shownNewItems = _shownItemsOf(_ExpandableStatsList.discoveries, newItems);
         final textTheme = context.theme.textTheme;
         final captionStyle = textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600);
         final rangeMS = (HistoryManager.daysSince1970ToMilliseconds(s.firstDay), HistoryManager.daysSince1970ToMilliseconds(s.lastDay + 1) - 1);
+        final playlistRangeText = StatsFormat.rangeTextWithYears(s);
         return StatsChartCard(
           title: lang.discoveries,
           subtitle: '${lang.firstListen} • ${StatsFormat.rangeText(s)}',
           icon: Broken.discover,
+          trailing: newItems.isEmpty
+              ? null
+              : StatsPlaylistMenu(
+                  playlistName: '${lang.discoveries} • $playlistRangeText',
+                  snapshot: s,
+                  list: StatsPlaylistList.discoveries,
+                ),
           copyText: () => [
             '${lang.tracks}: ${s.newItems}',
             '${lang.artists}: ${s.newArtists}',
@@ -898,15 +921,20 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   StatsMiniTile(icon: isYoutube ? Broken.profile_2user : Broken.microphone, label: artistsLabel, value: s.newArtists.formatDecimal()),
                 ],
               ),
-              if (s.newItemsTop.isNotEmpty) ...[
+              if (newItems.isNotEmpty) ...[
                 const SizedBox(height: 4.0),
                 _buildItemsList(
                   context,
                   s,
-                  s.newItemsTop.map((e) => StatsRankEntry(e.item, e.count)).toList(),
-                  trailingTexts: s.newItemsTop.map((e) => e.firstListenMS.dateFormattedOriginal).toList(),
+                  shownNewItems.map((e) => StatsRankEntry(e.item, e.count)).toList(),
+                  trailingTexts: shownNewItems.map((e) => e.firstListenMS.dateFormattedOriginal).toList(),
                   listensRangeMS: rangeMS,
                 ),
+                if (newItems.length > _ExpandableStatsList.discoveries.initialCount)
+                  _ShowMoreButton(
+                    isFullyShown: shownNewItems.length >= newItems.length,
+                    onTap: () => _onShowMoreTap(_ExpandableStatsList.discoveries, newItems.length),
+                  ),
               ],
               if (s.newArtistsTop.isNotEmpty) ...[
                 const SizedBox(height: 8.0),
@@ -944,11 +972,18 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     // -- top items
     cards.add(
       (context) {
+        final playlistRangeText = StatsFormat.rangeTextWithYears(s);
+        final playlistMenu = StatsPlaylistMenu(
+          playlistName: '${lang.top} $itemsLabel • $playlistRangeText',
+          snapshot: s,
+          list: StatsPlaylistList.topItems,
+        );
         if (isYoutube) {
           final items = (s as HistoryStatsSnapshot<String>).topItems;
           return StatsChartCard(
             title: '${lang.top} $itemsLabel',
             icon: Broken.video_square,
+            trailing: playlistMenu,
             copyText: () => items.map((e) => '${e.key} • ${e.count}').join('\n'),
             child: StatsTopVideosRow(items: items),
           );
@@ -959,6 +994,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
         return StatsChartCard(
           title: '${lang.top} $itemsLabel',
           icon: Broken.music_circle,
+          trailing: playlistMenu,
           copyText: () => items.map((e) => '${e.key.toTrackExt().originalArtist} - ${e.key.toTrackExt().title} • ${e.count}').join('\n'),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1444,6 +1480,7 @@ class _ShowMoreButton extends StatelessWidget {
 
 enum _ExpandableStatsList {
   obsessions(initialCount: 5, step: 5),
+  discoveries(initialCount: 5, step: 10),
   topItems(initialCount: 10, step: 10),
   topArtists(initialCount: 10, step: 10),
   completedAlbums(initialCount: 10, step: 10),

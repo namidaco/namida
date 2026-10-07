@@ -1056,13 +1056,15 @@ class JsonToHistoryParser {
   static YoutubeVideoHistory? _ytTakeoutJsonEntry(dynamic p) {
     final url = p['titleUrl'] as String?;
     if (url == null) return null;
+    final dateMS = YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch;
+    if (dateMS == null) return null;
     final channel = (p['subtitles'] as List?)?.firstOrNull as Map?;
     return _ytTakeoutEntry(
       url: url,
       title: (p['title'] as String).replaceFirst('Watched ', ''),
       channel: channel?['name'] as String? ?? '',
       channelUrl: channel?['url'] as String? ?? '',
-      dateMS: YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch,
+      dateMS: dateMS,
       isYTMusic: p['header'] == 'YouTube Music',
     );
   }
@@ -1072,7 +1074,7 @@ class JsonToHistoryParser {
     required String title,
     required String channel,
     required String channelUrl,
-    required int? dateMS,
+    required int dateMS,
     required bool isYTMusic,
   }) {
     return YoutubeVideoHistory(

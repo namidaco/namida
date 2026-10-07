@@ -412,11 +412,13 @@ Future<void> showGeneralPopupDialog(
       );
       finalPlaylist = plExisting;
     } else {
-      finalPlaylist = await PlaylistController.inst.addNewPlaylist(
+      final newPlaylist = await PlaylistController.inst.addNewPlaylist(
         smplWrapper.value.name,
         tracks: tracks,
         m3uPath: m3uPath,
       );
+      if (newPlaylist == null) return;
+      finalPlaylist = newPlaylist;
     }
 
     if (m3uPath.isNotEmpty) {

@@ -36,16 +36,16 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   @override
   String identifyBy(YoutubeID item) => item.id;
 
-  void addNewPlaylist(
+  Future<YoutubePlaylist?> addNewPlaylist(
     String name, {
     Iterable<String>? videoIds,
     int? creationDate,
     String comment = '',
     List<String> moods = const [],
     PlaylistID? playlistID,
-  }) async {
+  }) {
     final videoIdsList = videoIds?.toList() ?? [];
-    super.addNewPlaylistRaw(
+    return super.addNewPlaylistRaw(
       name,
       tracks: videoIdsList,
       convertItem: (id, dateAdded, playlistID) {
