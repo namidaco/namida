@@ -114,7 +114,7 @@ sealed class BaseMessage {
     // if (typeName == null) throw FormatException('Message type is missing');
 
     final type = MessageType.lookupMap[typeName];
-    if (type == null) throw FormatException('Unknown Message type: $type');
+    if (type == null) throw FormatException('Unknown Message type: $typeName');
 
     final info = BaseMessageInfo.fromMap(params[1] as Map<String, dynamic>);
     final senderDeviceId = info.senderDeviceId;
@@ -362,20 +362,41 @@ class ConnectionRequestMessage extends BaseMessage {
   final int version;
   final String? reason;
 
+  /// random per connection, the client's on `connect` and the server's on `challenge`, see [_Handshake].
+  final List<int>? nonce;
+
+  /// proves the pair secret, the server's on `challenge` and the client's on `proof`.
+  final List<int>? proof;
+
+  /// a new pair secret, only on `accepted` when the server pairs the client anew.
+  final List<int>? secret;
+
   const ConnectionRequestMessage({
     required this.connectionType,
     required this.senderDeviceName,
     required this.version,
     required this.reason,
+    this.nonce,
+    this.proof,
+    this.secret,
     required super.messageInfo,
   }) : super(MessageType.connectionRequest);
 
-  static Future<ConnectionRequestMessage> createForCurrentDevice(ConnectionRequestMessageType connectionType, {String? reason}) async {
+  static Future<ConnectionRequestMessage> createForCurrentDevice(
+    ConnectionRequestMessageType connectionType, {
+    String? reason,
+    List<int>? nonce,
+    List<int>? proof,
+    List<int>? secret,
+  }) async {
     return ConnectionRequestMessage(
       connectionType: connectionType,
       senderDeviceName: await SyncUtils.currentDeviceName,
       version: SyncUtils.kSyncVersion,
       reason: reason,
+      nonce: nonce,
+      proof: proof,
+      secret: secret,
       messageInfo: BaseMessageInfo.connection(await SyncUtils.currentDeviceId),
     );
   }
@@ -386,9 +407,14 @@ class ConnectionRequestMessage extends BaseMessage {
       senderDeviceName: map['sdn'] as String,
       version: map['v'] as int,
       reason: map['reason'] as String?,
+      nonce: SyncUtils._tryDecodeBase64(map['n']),
+      proof: SyncUtils._tryDecodeBase64(map['p']),
+      secret: SyncUtils._tryDecodeBase64(map['s']),
       messageInfo: messageInfo,
     );
   }
+
+  static String? _encodeBase64(List<int>? bytes) => bytes == null ? null : base64Encode(bytes);
 
   @override
   Map<String, dynamic> _encodeToMap() => {
@@ -396,88 +422,18 @@ class ConnectionRequestMessage extends BaseMessage {
     'sdn': senderDeviceName,
     'v': version,
     'reason': reason,
+    'n': ?_encodeBase64(nonce),
+    'p': ?_encodeBase64(proof),
+    's': ?_encodeBase64(secret),
   };
 
+  /// keeps the pair secret out of debug output.
   @override
-  Future<void> executeOnReceived() async {
-    switch (connectionType) {
-      case ConnectionRequestMessageType.connect:
-        final senderDeviceId = messageInfo.senderDeviceId;
-        settings.sync.updateDeviceName(senderDeviceId, senderDeviceName);
-        if (version != SyncUtils.kSyncVersion) {
-          VibratorController.high();
-          final reasonMessage = lang.versionMismatchMakeSureBothAppsAreOnTheSameVersion;
-          await SyncDiscovery.server.rejectConnection(senderDeviceId, reason: reasonMessage);
-          await NamidaNavigator.inst.navigateDialog(
-            dialog: CustomBlurryDialog(
-              isWarning: true,
-              normalTitleStyle: true,
-              title: '${lang.connectionRejected} - $senderDeviceName',
-              bodyText: reasonMessage,
-              actions: [
-                NamidaButton(
-                  text: lang.done.toUpperCase(),
-                  onTap: () {
-                    NamidaNavigator.inst.closeDialog();
-                  },
-                ),
-              ],
-            ),
-          );
-          return;
-        }
-        if (settings.sync.autoReconnect.value && settings.sync.allowedDeviceIds.value.contains(senderDeviceId)) {
-          // -- device was accepted before, silently accept again (blocked devices are ignored in _FrameDispatcher)
-          await SyncDiscovery.server.acceptConnection(senderDeviceId);
-          return;
-        }
-        await NamidaNavigator.inst.navigateDialog(
-          dialog: CustomBlurryDialog(
-            isWarning: true,
-            normalTitleStyle: true,
-            bodyText: lang.acceptConnectionFromName(name: '"$senderDeviceName"'),
-            trailingWidgets: [
-              NamidaIconButton(
-                icon: Broken.shield_slash,
-                tooltip: () => lang.block.toUpperCase(),
-                onPressed: () async {
-                  await SyncDiscovery.server.blockConnection(senderDeviceId);
-                  NamidaNavigator.inst.closeDialog();
-                },
-              ),
-            ],
-            actions: [
-              NamidaButton(
-                text: lang.reject.toUpperCase(),
-                onTap: () async {
-                  await SyncDiscovery.server.rejectConnection(senderDeviceId);
-                  NamidaNavigator.inst.closeDialog();
-                },
-              ),
-              NamidaButton(
-                text: lang.accept.toUpperCase(),
-                onTap: () async {
-                  await SyncDiscovery.server.acceptConnection(senderDeviceId);
-                  NamidaNavigator.inst.closeDialog();
-                },
-              ),
-            ],
-          ),
-        );
-        break;
-      case ConnectionRequestMessageType.disconnect:
-        await SyncDiscovery.server.disconnectConnection(messageInfo.senderDeviceId);
-        break;
-      case ConnectionRequestMessageType.accepted:
-        await SyncDiscovery.client.onConnectionAccepted(this);
-      case ConnectionRequestMessageType.rejected:
-        await SyncDiscovery.client.onConnectionRejected(this);
-      case ConnectionRequestMessageType.blocked:
-        await SyncDiscovery.client.onConnectionBlocked(this);
-      case ConnectionRequestMessageType.unblocked:
-        await SyncDiscovery.client.onConnectionUnBlocked(this);
-    }
-  }
+  String toRawInfo() => 'ConnectionRequest(${connectionType.name}, v$version, $senderDeviceName)';
+
+  /// the handshake belongs to its socket, [_FrameDispatcher] hands these to the socket's [_PairingSession] instead.
+  @override
+  FutureOr<void> executeOnReceived() {}
 }
 
 abstract class PlaylistsManifestResponseMessageUtils {

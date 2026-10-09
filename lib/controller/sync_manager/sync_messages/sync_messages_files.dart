@@ -6,13 +6,19 @@ part of '../sync_manager.dart';
 ///
 /// 1. A -> B: [DirFilesManifestRequestMessage] asking for B's files info.
 /// 2. B -> A: [DirFilesManifestResponseMessage] with `{name: [size, mtime]}` of B's existing files.
-/// 3. A -> B: [DirFileMessage] per required file (missing on B, or differing in size while newer on A).
+/// 3. A -> B: [DirFileMessage] per required file (missing on B, or newer on A, see [DirFileMessage.isIncomingNewer]).
 ///    the file bytes travel in a raw binary frame right after the json frame, see [BinaryPayloadMessage].
 abstract final class _DirFilesSyncUtils {
   /// keeps memory bounded, the whole file is buffered on both sides.
   static const kMaxFileSize = 200 * 1024 * 1024;
 
   static bool isAllowedSubtype(AppPathsBackupEnum subtype) => subtype.isDir && subtype.supportsSync() == true;
+
+  /// caches named after what they hold (video id, thumbnail), each device fetches them on its own at different times.
+  static bool isNamedByContent(AppPathsBackupEnum subtype) => switch (subtype) {
+    AppPathsBackupEnum.VIDEOS_CACHE || AppPathsBackupEnum.AUDIOS_CACHE || AppPathsBackupEnum.YT_THUMBNAILS || AppPathsBackupEnum.YT_THUMBNAILS_CHANNELS => true,
+    _ => false,
+  };
 
   /// prevents path traversal outside the target dir.
   static bool isSafeFileName(String name) => name.isNotEmpty && !name.contains('/') && !name.contains('\\') && !name.contains('..');
@@ -137,6 +143,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
     // -- (the cache map is keyed by id), built lazily when a file actually gets sent.
     final isVideosCache = subtype == AppPathsBackupEnum.VIDEOS_CACHE;
     late final cacheVideosInfo = isVideosCache ? VideoController.inst.buildCacheVideosSyncInfoByFilename() : null;
+    final isNamedByContent = _DirFilesSyncUtils.isNamedByContent(subtype);
 
     final newMessageInfoForSend = await SyncUtils.createMessageInfo(.add);
 
@@ -164,18 +171,25 @@ class DirFilesManifestResponseMessage extends BaseMessage {
         continue;
       }
 
+      final mtimeMS = stat.modified.millisecondsSinceEpoch;
       final other = files[name];
       if (other is List && other.length >= 2) {
         final otherSize = other[0] as int? ?? -1;
-        final otherMtime = other[1] as int? ?? 0;
-        if (otherSize == stat.size) continue; // -- same file
-        if (stat.modified.millisecondsSinceEpoch <= otherMtime) continue; // -- theirs is newer
+        final otherMtimeMS = other[1] as int? ?? 0;
+        final isOursNewer = DirFileMessage.isIncomingNewer(
+          isNamedByContent: isNamedByContent,
+          existingSize: otherSize,
+          existingMtimeMS: otherMtimeMS,
+          incomingSize: stat.size,
+          incomingMtimeMS: mtimeMS,
+        );
+        if (!isOursNewer) continue;
       }
 
       final msg = DirFileMessage(
         subtype: subtype,
         fileName: name,
-        mtime: stat.modified.millisecondsSinceEpoch,
+        mtime: mtimeMS,
         info: cacheVideosInfo?[name],
         bytes: null,
         messageInfo: newMessageInfoForSend,
@@ -529,6 +543,28 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
     binaryPayload = bytes;
   }
 
+  /// filesystems keep mtimes at different precisions (fat: 2s), a copy written with the sender's mtime can read back slightly off.
+  static const _kMtimeToleranceMS = 2000;
+
+  /// the rule both sides use to tell whether the incoming copy replaces the existing one: newer wins,
+  /// same sized copies with mtimes within [_kMtimeToleranceMS] are the same file.
+  /// [isNamedByContent] (see [_DirFilesSyncUtils.isNamedByContent]) makes any same sized copy the same file.
+  @visibleForTesting
+  static bool isIncomingNewer({
+    required bool isNamedByContent,
+    required int existingSize,
+    required int existingMtimeMS,
+    required int incomingSize,
+    required int incomingMtimeMS,
+  }) {
+    final isSameSize = existingSize == incomingSize;
+    if (isSameSize && isNamedByContent) return false;
+    final mtimeDiffMS = incomingMtimeMS - existingMtimeMS;
+    final isSameFile = isSameSize && mtimeDiffMS.abs() <= _kMtimeToleranceMS;
+    if (isSameFile) return false;
+    return mtimeDiffMS > 0;
+  }
+
   factory DirFileMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return DirFileMessage(
       subtype: AppPathsBackupEnum.values.getEnum(map['st'] as String)!,
@@ -568,10 +604,18 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
 
     try {
       final file = FileParts.join(subtype.resolve(), fileName);
-      if (await file.exists()) {
-        final stat = await file.stat();
-        if (stat.size == bytes.length) return; // -- same file
-        if (stat.modified.millisecondsSinceEpoch >= mtime) return; // -- ours is newer
+      final stat = await file.stat();
+      if (stat.type != FileSystemEntityType.notFound) {
+        final existingMtimeMS = stat.modified.millisecondsSinceEpoch;
+        final isNamedByContent = _DirFilesSyncUtils.isNamedByContent(subtype);
+        final isTheirsNewer = isIncomingNewer(
+          isNamedByContent: isNamedByContent,
+          existingSize: stat.size,
+          existingMtimeMS: existingMtimeMS,
+          incomingSize: bytes.length,
+          incomingMtimeMS: mtime,
+        );
+        if (!isTheirsNewer) return;
       }
       await file.create(recursive: true);
       await file.writeAsBytes(bytes);

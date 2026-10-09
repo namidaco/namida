@@ -117,21 +117,17 @@ class _ServerSide extends RxNotifier {
   bool isDeviceAllowed(NetworkDevice device) => settings.sync.allowedDeviceIds.value.contains(device.deviceId);
   bool isDeviceBlocked(NetworkDevice device) => settings.sync.blockedClientIds.value.contains(device.deviceId);
 
+  /// trusted clients only, see [_PairingSession].
   final _clientsSockets = <String, _SocketWrapper>{};
+
+  /// every open client socket, trusted or still in its handshake.
+  final _sessions = <_PairingSession>{};
 
   Future<void> startServer() async {
     await stopServer(andRefresh: false);
 
     final serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, SyncUtils.kDefaultNamidaPort);
-    serverSocket.listen((socket) {
-      final reader = _FrameReader();
-      _SocketWrapper._listen(
-        socket,
-        reader,
-        _FrameDispatcher((msg) => _onClientMessage(msg, socket, reader)),
-        onClosed: () => _removeClientBySocket(socket),
-      );
-    });
+    serverSocket.listen(_onClientSocket);
 
     _serverWrapper = await ServerWrapper.startBroadcast(serverSocket);
     SyncDiscovery.serverRunning.value = true;
@@ -144,24 +140,16 @@ class _ServerSide extends RxNotifier {
     _refresh();
   }
 
-  void _onClientMessage(BaseMessage msg, Socket socket, _FrameReader reader) {
-    final senderDeviceId = msg.messageInfo.senderDeviceId;
-    final existing = _clientsSockets[senderDeviceId];
-    if (existing != null && existing._socket == socket) return;
-    if (existing != null) {
-      // -- device reconnected on a new socket while the old one never closed
-      // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
-      // -- fingerprints tracking & completes stale log entries.
-      SyncSender.inst.onDeviceDisconnected(senderDeviceId);
-      try {
-        existing._socket.destroy();
-      } catch (_) {}
-    }
-    final wrapper = _SocketWrapper.simple(senderDeviceId, socket, reader);
-    _clientsSockets[senderDeviceId] = wrapper;
-    SyncDiscovery._recordSessionDevice(senderDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
-    SyncDiscovery._updateConnectionFlags();
-    _refresh();
+  _PairingSession _onClientSocket(Socket socket) {
+    final session = _PairingSession.server(socket);
+    _sessions.add(session);
+    session.listen(onClosed: () => _onSessionClosed(session));
+    return session;
+  }
+
+  void _onSessionClosed(_PairingSession session) {
+    _sessions.remove(session);
+    _removeClientBySocket(session.socket);
   }
 
   void _removeClientBySocket(Socket socket) {
@@ -191,14 +179,16 @@ class _ServerSide extends RxNotifier {
     if (andRefresh) _refresh();
     await sw?.stopAll();
 
-    final clients = _clientsSockets.entries.toFixedList();
+    final clientIds = _clientsSockets.keys.toFixedList();
+    final sessions = _sessions.toFixedList();
     _clientsSockets.clear();
+    _sessions.clear();
     SyncDiscovery._updateConnectionFlags();
     if (andRefresh) _refresh();
-    for (final e in clients) {
-      SyncSender.inst.onDeviceDisconnected(e.key);
+    clientIds.loop(SyncSender.inst.onDeviceDisconnected);
+    for (final session in sessions) {
       try {
-        final c = e.value._socket;
+        final c = session.socket;
         await c.close();
         c.destroy();
       } catch (_) {}
@@ -224,32 +214,59 @@ class _ServerSide extends RxNotifier {
     }
   }
 
-  /// mark client device id as trusted, [BaseMessage.decodeBytes] will accept it now
-  Future<void> acceptConnection(String senderDeviceId) async {
-    settings.sync.allowedDeviceIds.update((ids) => ids.add(senderDeviceId));
+  /// trusts the client on this socket, its data messages pass [_FrameDispatcher] now.
+  /// [shouldIssueSecret] pairs it anew, the only time a pair secret travels.
+  Future<void> _acceptSession(_PairingSession session, String clientDeviceId, {required bool shouldIssueSecret}) async {
+    final secret = shouldIssueSecret ? _Handshake.newSecret() : null;
+    final msg = await ConnectionRequestMessage.createForCurrentDevice(.accepted, secret: secret);
+    if (session.isClosed || session.isTrusted) return;
+    final encodedSecret = secret == null ? null : base64Encode(secret);
+    settings.sync.transaction(() {
+      settings.sync.allowDevice(clientDeviceId, issuedSecret: encodedSecret);
+      settings.sync.updateDeviceName(clientDeviceId, session.peerName);
+    });
+    final wrapper = session.trust(clientDeviceId);
+    final sending = session.send(msg); // -- queued ahead of anything sent once registered
+    final existing = _clientsSockets[clientDeviceId];
+    _clientsSockets[clientDeviceId] = wrapper;
+    if (existing != null) {
+      // -- device reconnected on a new socket while the old one never closed
+      // -- (ex: abrupt app kill), treat as a fresh connection: clears sent
+      // -- fingerprints tracking & completes stale log entries.
+      SyncSender.inst.onDeviceDisconnected(clientDeviceId);
+      try {
+        existing._socket.destroy();
+      } catch (_) {}
+    }
+    SyncDiscovery._recordSessionDevice(clientDeviceId, remoteAddress: wrapper.remoteAddressSafe, asServer: true);
+    SyncDiscovery._updateConnectionFlags();
     _refresh();
-
-    final msg = await ConnectionRequestMessage.createForCurrentDevice(.accepted);
-    await sendMessageToClient(msg, senderDeviceId);
+    await sending;
   }
 
-  /// remove client device id from trusted, [BaseMessage.decodeBytes] will throw
-  Future<void> rejectConnection(String senderDeviceId, {String? reason}) async {
-    settings.sync.allowedDeviceIds.update((ids) => ids.remove(senderDeviceId));
+  /// forgets the device with its pair secret, it has to be approved again. its sockets are told & closed.
+  Future<void> rejectConnection(String deviceId, {String? reason}) async {
+    settings.sync.forgetDevice(deviceId);
     _refresh();
-
-    final msg = await ConnectionRequestMessage.createForCurrentDevice(.rejected, reason: reason);
-    await sendMessageToClient(msg, senderDeviceId);
+    await _closeSessionsOf(deviceId, .rejected, reason: reason);
   }
 
-  /// add client device id to blocked, [BaseMessage.decodeBytes] will throw
-  Future<void> blockConnection(String senderDeviceId) async {
-    settings.sync.blockedClientIds.update((ids) => ids.add(senderDeviceId));
-    _refresh();
+  /// turns down this socket only, the device stays paired & connected on its other sockets.
+  Future<void> _refuseSession(_PairingSession session) async {
+    final msg = await ConnectionRequestMessage.createForCurrentDevice(.rejected);
+    await session.send(msg);
+    await session.close();
+  }
 
-    final msg = await ConnectionRequestMessage.createForCurrentDevice(.blocked);
-    await sendMessageToClient(msg, senderDeviceId);
-    await disconnectConnection(senderDeviceId);
+  /// blocks & forgets the device, both as a client of ours and as a server we connected to.
+  Future<void> blockConnection(String deviceId) async {
+    settings.sync.transaction(() {
+      settings.sync.blockedClientIds.update((ids) => ids.add(deviceId));
+      settings.sync.forgetDevice(deviceId);
+    });
+    _refresh();
+    await _closeSessionsOf(deviceId, .blocked);
+    await SyncDiscovery.client.disconnectFromServer(deviceId);
   }
 
   /// remove client device id from blocked
@@ -274,6 +291,27 @@ class _ServerSide extends RxNotifier {
       wrapper._socket.destroy();
     } catch (_) {}
   }
+
+  /// the client leaves this socket only, a newer socket of the same device stays.
+  Future<void> _onDisconnectRequest(_PairingSession session, String clientDeviceId) async {
+    final isRegistered = _clientsSockets[clientDeviceId]?._socket == session.socket;
+    if (isRegistered) return disconnectConnection(clientDeviceId);
+    await session.close();
+  }
+
+  /// every socket of [deviceId] gets [connectionType] then closes, the trusted one included.
+  Future<void> _closeSessionsOf(String deviceId, ConnectionRequestMessageType connectionType, {String? reason}) async {
+    final sessions = _sessions.where((e) => e.peerId == deviceId).toFixedList();
+    if (sessions.isEmpty) return;
+    final msg = await ConnectionRequestMessage.createForCurrentDevice(connectionType, reason: reason);
+    for (final session in sessions) {
+      await session.send(msg);
+    }
+    await disconnectConnection(deviceId);
+    for (final session in sessions) {
+      await session.close();
+    }
+  }
 }
 
 class _ClientSide extends RxNotifier {
@@ -292,6 +330,9 @@ class _ClientSide extends RxNotifier {
   bool _allowAutoRetryDiscovery = true;
   Object? _lastDiscoveryError;
   final _connectedServers = <String, _SocketWrapper>{};
+
+  /// servers whose handshake is still running, see [_PairingSession].
+  final _pendingServers = <String, _PairingSession>{};
 
   Timer? _autoDiscoveryTimer;
 
@@ -362,10 +403,7 @@ class _ClientSide extends RxNotifier {
           _refresh();
         }
 
-        settings.sync.updateDeviceName(device.deviceId, device.deviceName);
-        settings.sync.updateManualServerAddress(device.deviceId, device.address);
-
-        // -- keep reconnect info fresh in case the device address changed
+        // -- keep reconnect info fresh in case the device address changed, the saved address follows once trusted
         SyncDiscovery.sessionDevices[device.deviceId]?.networkDevice = device;
 
         _autoReconnectIfKnown(device);
@@ -382,31 +420,24 @@ class _ClientSide extends RxNotifier {
   }
 
   Future<void> connectToAddress(String host) async {
-    await _SocketWrapper.connectToAddress(
-      host,
-      SyncUtils.kDefaultNamidaPort,
-      request: await ConnectionRequestMessage.createForCurrentDevice(.connect),
-      onIdentified: (wrapper, reply) => _onAddressConnectionIdentified(wrapper, reply, host),
-      onClosed: _onSocketClosed,
-    );
+    final session = await _PairingSession.connect(host, SyncUtils.kDefaultNamidaPort, onClosed: _onSessionClosed);
+    await session.sendConnect();
   }
 
-  void _onAddressConnectionIdentified(_SocketWrapper wrapper, BaseMessage reply, String host) {
-    final serverDeviceId = wrapper.deviceId;
-    if (reply is ConnectionRequestMessage) settings.sync.updateDeviceName(serverDeviceId, reply.senderDeviceName);
-
-    // -- the server replaces its side with the newest socket, so the old one is dead anyway
-    final existing = _connectedServers[serverDeviceId];
-    _connectedServers[serverDeviceId] = wrapper;
-    existing?._socket.destroy();
-
-    settings.sync.transaction(() {
-      settings.sync.allowedServerIds.update((ids) => ids.add(serverDeviceId));
-      settings.sync.manualServerAddresses.update((addresses) => addresses[serverDeviceId] = host);
-    });
-    SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: NetworkDevice._fromAddress(host, deviceId: serverDeviceId), asClient: true);
-    SyncDiscovery._updateConnectionFlags();
+  /// the server and its name are saved only once trusted, see [_onServerTrusted]. until then they are just a claim.
+  void _onAddressSessionIdentified(_PairingSession session, ConnectionRequestMessage reply, String host) {
+    final serverDeviceId = reply.messageInfo.senderDeviceId;
+    _setPending(serverDeviceId, session);
+    final networkDevice = NetworkDevice._fromAddress(host, deviceId: serverDeviceId, deviceName: reply.senderDeviceName);
+    SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: networkDevice, asClient: true);
     _refresh();
+  }
+
+  /// a newer attempt replaces an unfinished one.
+  void _setPending(String serverDeviceId, _PairingSession session) {
+    final stale = _pendingServers[serverDeviceId];
+    _pendingServers[serverDeviceId] = session;
+    stale?.close();
   }
 
   Future<void> stopSearch() async {
@@ -422,34 +453,25 @@ class _ClientSide extends RxNotifier {
   void _autoReconnectIfKnown(NetworkDevice device) {
     if (!settings.sync.autoReconnect.value) return;
     final deviceId = device.deviceId;
-    if (_connectedServers.containsKey(deviceId)) return;
+    if (_connectedServers.containsKey(deviceId) || _pendingServers.containsKey(deviceId)) return;
     if (!settings.sync.allowedServerIds.value.contains(deviceId)) return;
     if (!_autoReconnectAttempted.add(deviceId)) return;
-    connectToServer(device).catchError((_) {
+    _connectToServer(device, forceReconnect: false, isAutoReconnect: true).catchError((_) {
       _autoReconnectAttempted.remove(deviceId); // -- can retry on next discovery
     });
   }
 
-  Future<_SocketWrapper> _getOrConnect(NetworkDevice serverDevice) async {
-    final serverDeviceId = serverDevice.deviceId;
-    final existing = _connectedServers[serverDeviceId];
-    if (existing != null) return existing;
-
-    final wrapper = await _SocketWrapper.connect(
-      serverDevice,
-      onClosed: _onSocketClosed,
-    );
-    _connectedServers[serverDeviceId] = wrapper;
-    SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: serverDevice, asClient: true);
-    SyncDiscovery._updateConnectionFlags();
-    _refresh();
-    return wrapper;
-  }
-
   /// socket died without an explicit disconnect (server stopped, network lost, we got kicked..)
-  void _onSocketClosed(_SocketWrapper wrapper) {
-    final serverDeviceId = wrapper.deviceId;
-    if (_connectedServers[serverDeviceId] != wrapper) return; // -- already replaced by a newer socket
+  void _onSessionClosed(_PairingSession session) {
+    final serverDeviceId = session.peerId;
+    if (serverDeviceId == null) return;
+    if (_pendingServers[serverDeviceId] == session) {
+      _pendingServers.remove(serverDeviceId);
+      _autoReconnectAttempted.remove(serverDeviceId); // -- can auto reconnect when discovered again
+      _refresh();
+      return;
+    }
+    if (_connectedServers[serverDeviceId]?._socket != session.socket) return; // -- already replaced by a newer socket
     _autoReconnectAttempted.remove(serverDeviceId); // -- can auto reconnect when discovered again
     _connectedServers.remove(serverDeviceId);
     SyncSender.inst.onDeviceDisconnected(serverDeviceId);
@@ -457,22 +479,30 @@ class _ClientSide extends RxNotifier {
     _refresh();
   }
 
-  Future<void> connectToServer(NetworkDevice serverDevice, {bool forceReconnect = false}) async {
-    final serverDeviceId = serverDevice.deviceId;
-    if (!settings.sync.allowedServerIds.value.contains(serverDeviceId)) {
-      settings.sync.allowedServerIds.update((ids) => ids.add(serverDeviceId));
-    }
+  Future<void> connectToServer(NetworkDevice serverDevice, {bool forceReconnect = false}) {
+    return _connectToServer(serverDevice, forceReconnect: forceReconnect, isAutoReconnect: false);
+  }
 
+  /// the server is saved for auto reconnect only once trusted, see [_onServerTrusted].
+  Future<void> _connectToServer(NetworkDevice serverDevice, {required bool forceReconnect, required bool isAutoReconnect}) async {
+    final serverDeviceId = serverDevice.deviceId;
     if (forceReconnect) {
       await disconnectFromServer(serverDeviceId, removeFromAutoReconnect: false);
+    } else if (_connectedServers.containsKey(serverDeviceId)) {
+      return;
     }
 
-    final socket = await _getOrConnect(serverDevice);
-
-    final msg = await ConnectionRequestMessage.createForCurrentDevice(.connect);
-    await socket.send(msg);
-
+    final session = await _PairingSession.connect(
+      serverDevice.address,
+      serverDevice.port,
+      serverDeviceId: serverDeviceId,
+      isAutoReconnect: isAutoReconnect,
+      onClosed: _onSessionClosed,
+    );
+    _setPending(serverDeviceId, session);
+    SyncDiscovery._recordSessionDevice(serverDeviceId, networkDevice: serverDevice, asClient: true);
     _refresh();
+    await session.sendConnect();
   }
 
   Future<void> disconnectFromServer(String serverDeviceId, {bool removeFromAutoReconnect = true}) async {
@@ -485,6 +515,9 @@ class _ClientSide extends RxNotifier {
     }
 
     SyncDiscovery.clearProgressFor(serverDeviceId);
+
+    final pending = _pendingServers.remove(serverDeviceId);
+    if (pending != null) await pending.close();
 
     final socket = _connectedServers.remove(serverDeviceId);
     if (socket != null) {
@@ -501,7 +534,8 @@ class _ClientSide extends RxNotifier {
   }
 
   Future<void> sendMessageToServer(BaseMessage message, NetworkDevice device) async {
-    final socket = await _getOrConnect(device);
+    final socket = _connectedServers[device.deviceId];
+    if (socket == null) throw DeviceNotConnectedException(device.deviceId);
     await socket.send(message);
   }
 
@@ -511,23 +545,74 @@ class _ClientSide extends RxNotifier {
     }
   }
 
-  Future<void> onConnectionAccepted(ConnectionRequestMessage msg) async {
-    // -- server just welcomed us. trust it so its data messages pass [BaseMessage.decodeBytes]
-    final senderDeviceId = msg.messageInfo.senderDeviceId;
-    if (settings.sync.allowedDeviceIds.value.contains(senderDeviceId)) return; // -- routine reconnect, no need to announce
-    settings.sync.allowedDeviceIds.update((ids) => ids.add(senderDeviceId));
+  /// the server proved its pair secret or the user trusts it, its data messages pass [_FrameDispatcher] now.
+  /// [issuedSecret] is a new pair secret from the server.
+  void _onServerTrusted(_PairingSession session, String serverDeviceId, List<int>? issuedSecret) {
+    if (session.isClosed || session.isTrusted) return;
+    if (_pendingServers[serverDeviceId] == session) _pendingServers.remove(serverDeviceId);
+    final wasAllowed = settings.sync.allowedDeviceIds.value.contains(serverDeviceId);
+    final encodedSecret = issuedSecret == null ? null : base64Encode(issuedSecret);
+    final manualAddress = session._manualAddress;
+    settings.sync.transaction(() {
+      settings.sync.allowDevice(serverDeviceId, receivedSecret: encodedSecret);
+      settings.sync.updateDeviceName(serverDeviceId, session.peerName);
+      if (!settings.sync.allowedServerIds.value.contains(serverDeviceId)) settings.sync.allowedServerIds.update((ids) => ids.add(serverDeviceId));
+      final dialedAddress = session._dialedAddress;
+      if (manualAddress != null) {
+        settings.sync.manualServerAddresses.update((addresses) => addresses[serverDeviceId] = manualAddress);
+      } else if (dialedAddress != null) {
+        settings.sync.updateManualServerAddress(serverDeviceId, dialedAddress);
+      }
+      if (dialedAddress != null) settings.sync.takeOverServerAddress(serverDeviceId, dialedAddress);
+    });
+    final wrapper = session.trust(serverDeviceId);
+    final existing = _connectedServers[serverDeviceId];
+    _connectedServers[serverDeviceId] = wrapper;
+    if (existing != null) {
+      // -- the server replaces its side with the newest socket, so the old one is dead anyway
+      SyncSender.inst.onDeviceDisconnected(serverDeviceId);
+      existing._socket.destroy();
+    }
+    SyncDiscovery._updateConnectionFlags();
+    _refresh();
+    if (wasAllowed) return; // -- routine reconnect, no need to announce
     snackyy(
       icon: Broken.tick_circle,
-      title: '${lang.connectionAccepted} - ${msg.senderDeviceName}',
+      title: '${lang.connectionAccepted} - ${session.peerName}',
       message: lang.youCanNowSendAndReceiveDataWithThisDevice,
       borderColor: Colors.green.withOpacityExt(0.4),
       isError: false,
     );
-    // -- already connected
   }
 
-  Future<void> onConnectionRejected(ConnectionRequestMessage msg) async {
+  /// closes this socket only, the saved server & its trusted socket stay.
+  /// auto reconnect skips the server for this run, else every discovery would connect again.
+  Future<void> _refuseSession(_PairingSession session, String serverDeviceId) async {
+    if (_pendingServers[serverDeviceId] == session) {
+      _pendingServers.remove(serverDeviceId);
+      _autoReconnectAttempted.add(serverDeviceId);
+      _refresh();
+    }
+    await session.close();
+  }
+
+  /// the socket that speaks for [serverDeviceId]: its trusted one, else the pending handshake.
+  bool _isCurrentSession(_PairingSession session, String serverDeviceId) {
+    final connected = _connectedServers[serverDeviceId];
+    if (connected != null) return connected._socket == session.socket;
+    return _pendingServers[serverDeviceId] == session;
+  }
+
+  /// only the trusted socket drops the saved server, an unproven one may be anyone claiming its id, so it only pauses auto reconnect for this run.
+  Future<void> _onTurnedDown(_PairingSession session, String serverDeviceId) {
+    if (session.isTrusted) return disconnectFromServer(serverDeviceId);
+    return _refuseSession(session, serverDeviceId);
+  }
+
+  Future<void> _onConnectionRejected(_PairingSession session, ConnectionRequestMessage msg) async {
     // -- server just kicked us
+    final serverDeviceId = msg.messageInfo.senderDeviceId;
+    if (!_isCurrentSession(session, serverDeviceId)) return session.close();
     final version = msg.version;
 
     String? reasonMessage = msg.reason;
@@ -550,11 +635,13 @@ class _ClientSide extends RxNotifier {
       isError: true,
     );
 
-    await disconnectFromServer(msg.messageInfo.senderDeviceId);
+    await _onTurnedDown(session, serverDeviceId);
   }
 
-  Future<void> onConnectionBlocked(ConnectionRequestMessage msg) async {
+  Future<void> _onConnectionBlocked(_PairingSession session, ConnectionRequestMessage msg) async {
     // -- server just blocked us
+    final serverDeviceId = msg.messageInfo.senderDeviceId;
+    if (!_isCurrentSession(session, serverDeviceId)) return session.close();
 
     if (kDebugMode || isKuru) {
       String? reasonMessage = msg.reason;
@@ -570,7 +657,7 @@ class _ClientSide extends RxNotifier {
       );
     }
 
-    await disconnectFromServer(msg.messageInfo.senderDeviceId);
+    await _onTurnedDown(session, serverDeviceId);
   }
 
   Future<void> onConnectionUnBlocked(ConnectionRequestMessage msg) async {
@@ -591,56 +678,14 @@ class _SocketWrapper {
     this._reader,
   });
 
-  _SocketWrapper.simple(
-    this.deviceId,
-    this._socket, [
-    this._reader,
-  ]) : _writer = _FrameWriter(_socket);
+  String? get remoteAddressSafe => _remoteAddressOf(_socket);
 
-  static const _kConnectTimeout = Duration(seconds: 5);
-
-  String? get remoteAddressSafe {
+  static String? _remoteAddressOf(Socket socket) {
     try {
-      return _socket.remoteAddress.address;
+      return socket.remoteAddress.address;
     } catch (_) {
       return null;
     }
-  }
-
-  static Future<_SocketWrapper> connect(NetworkDevice device, {required void Function(_SocketWrapper wrapper) onClosed}) async {
-    final socket = await Socket.connect(device.address, device.port, timeout: _kConnectTimeout);
-    final reader = _FrameReader();
-    final wrapper = _SocketWrapper.simple(device.deviceId, socket, reader);
-    _listen(socket, reader, _FrameDispatcher(), onClosed: () => onClosed(wrapper));
-    return wrapper;
-  }
-
-  /// the server id is only known from its reply, [onIdentified] registers the socket before that reply executes.
-  static Future<void> connectToAddress(
-    String host,
-    int port, {
-    required BaseMessage request,
-    required void Function(_SocketWrapper wrapper, BaseMessage reply) onIdentified,
-    required void Function(_SocketWrapper wrapper) onClosed,
-  }) async {
-    final socket = await Socket.connect(host, port, timeout: _kConnectTimeout);
-    final reader = _FrameReader();
-    final writer = _FrameWriter(socket);
-    _SocketWrapper? wrapper;
-    _listen(
-      socket,
-      reader,
-      _FrameDispatcher((reply) {
-        if (wrapper != null) return;
-        final identified = wrapper = _SocketWrapper(deviceId: reply.messageInfo.senderDeviceId, socket: socket, writer: writer, reader: reader);
-        onIdentified(identified, reply);
-      }),
-      onClosed: () {
-        final identified = wrapper;
-        if (identified != null) onClosed(identified);
-      },
-    );
-    await writer.sendMessage(request);
   }
 
   static void _listen(Socket socket, _FrameReader reader, _FrameDispatcher dispatcher, {required void Function() onClosed}) {
@@ -679,10 +724,11 @@ class _SocketWrapper {
 
 /// per-connection frame dispatcher: decodes json frames, and attaches raw
 /// binary frames to their preceding [BinaryPayloadMessage] before executing it.
+/// connection messages always go to the socket's [_PairingSession], anything else only once it trusts the sender.
 class _FrameDispatcher {
-  final void Function(BaseMessage msg)? _onDecodedBeforeExecute;
+  final _PairingSession _session;
 
-  _FrameDispatcher([this._onDecodedBeforeExecute]);
+  _FrameDispatcher(this._session);
 
   BinaryPayloadMessage? _pendingBinaryMessage;
 
@@ -695,8 +741,13 @@ class _FrameDispatcher {
 
   void _onJsonFrame(Uint8List data) {
     try {
-      final msg = BaseMessage.decodeBytes(data, settings.sync.allowedDeviceIds.value, settings.sync.blockedClientIds.value);
-      _onDecodedBeforeExecute?.call(msg);
+      final msg = BaseMessage.decodeBytes(data, _session.trustedIds, settings.sync.blockedClientIds.value);
+      if (msg is ConnectionRequestMessage) {
+        _session.onMessage(msg).catchError((e, st) {
+          logger.error('Error handling connection message', e: e, st: st);
+        });
+        return;
+      }
       SyncActionsLog.inst.onMessageActivity(.received, msg, msg.messageInfo.senderDeviceId, _FrameWriter.kFrameHeaderSize + data.length);
       if (msg is BinaryPayloadMessage) {
         // -- execution is deferred until its binary payload frame arrives

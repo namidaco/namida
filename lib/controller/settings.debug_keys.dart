@@ -125,6 +125,8 @@ extension SyncSettingsDebugKeys on _SyncSettings {
     allowedDeviceIds,
     blockedClientIds,
     manualServerAddresses,
+    issuedPairSecrets,
+    receivedPairSecrets,
     autoReconnect,
     serverWasRunning,
     autoSyncIntervalMinutes,

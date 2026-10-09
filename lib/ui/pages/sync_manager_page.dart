@@ -1142,7 +1142,7 @@ class _DeviceCard extends StatelessWidget {
   });
 
   Future<void> _disconnect() async {
-    if (device.connectedAsClient) await SyncDiscovery.client.disconnectFromServer(device.deviceId);
+    if (device.connectedAsClient || device.isConnectingAsClient) await SyncDiscovery.client.disconnectFromServer(device.deviceId);
     if (device.connectedAsServer) await SyncDiscovery.server.disconnectConnection(device.deviceId);
   }
 
@@ -1185,6 +1185,7 @@ class _DeviceCard extends StatelessWidget {
     final networkDevice = device.networkDevice;
     final details = networkDevice != null ? '${networkDevice.address}:${networkDevice.port}' : device.remoteAddress;
     final isBlocked = settings.sync.blockedClientIds.value.contains(deviceId);
+    final canDisconnect = device.isConnected || device.isConnectingAsClient;
     // final statusCocolorSchemelor = device.isConnected ? Color.alphaBlend(Colors.green.withOpacityExt(0.5), context.theme.colorScheme.onSurface) : context.theme.colorScheme.onSurface;
     final colorScheme = context.theme.colorScheme.primary;
     return Padding(
@@ -1230,7 +1231,7 @@ class _DeviceCard extends StatelessWidget {
                   ),
                   _DeviceAction(
                     title: lang.disconnect,
-                    enabled: device.isConnected,
+                    enabled: canDisconnect,
                     onTap: _disconnect,
                   ),
                   isBlocked

@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' show Random;
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 
 import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfig;
+import 'package:crypto/crypto.dart' show Hmac, sha256;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mdns_dart/mdns_dart.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
@@ -61,6 +63,7 @@ part 'sync_messages/sync_messages_listens.dart';
 part 'sync_messages/sync_messages_local.dart';
 part 'sync_messages/sync_messages_yt.dart';
 part 'sync_network_device.dart';
+part 'sync_pairing.dart';
 part 'sync_sender.dart';
 part 'sync_server_wrapper.dart';
 part 'sync_utils.dart';

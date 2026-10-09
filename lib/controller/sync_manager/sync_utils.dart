@@ -6,7 +6,7 @@ class SyncUtils {
   static const kDefaultNamidaPort = 62310; // 2023-10, v1 of namida
 
   /// increment this only when introducing breaking changes
-  static const kSyncVersion = 4;
+  static const kSyncVersion = 5;
 
   /// if enabled, will directly edit library on receiving valid data
   /// if disabled, will only display a snackbar with the received info
@@ -33,6 +33,16 @@ class SyncUtils {
       action: action,
       senderDeviceId: await currentDeviceId,
     );
+  }
+
+  /// peer or stored input, anything unusable counts as missing.
+  static Uint8List? _tryDecodeBase64(Object? value) {
+    if (value is! String) return null;
+    try {
+      return base64Decode(value);
+    } on FormatException {
+      return null;
+    }
   }
 
   static String _createServiceName({required String deviceName}) {
@@ -82,8 +92,8 @@ class SyncUtils {
   }
 
   static Future<String> _fetchDeviceId() async {
+    if (Platform.isAndroid) return _getUniqueIDSync(); // -- AndroidDeviceInfo.id is Build.ID, shared by every device on the same firmware
     final id = await _extractInfoFromDevice<String?>(
-      android: (info) => info.id,
       ios: (info) => info.identifierForVendor,
       linux: (info) => info.machineId,
       macos: (info) => info.systemGUID,

@@ -34,12 +34,14 @@ class NetworkDevice {
     );
   }
 
-  factory NetworkDevice._fromAddress(String address, {required String deviceId}) {
+  /// [deviceName] is what the device at [address] calls itself, the saved name otherwise.
+  factory NetworkDevice._fromAddress(String address, {required String deviceId, String? deviceName}) {
+    final shownDeviceName = deviceName ?? settings.sync.deviceIdNames.value[deviceId] ?? deviceId;
     return NetworkDevice(
       name: address,
       address: address,
       port: SyncUtils.kDefaultNamidaPort,
-      deviceName: settings.sync.deviceIdNames.value[deviceId] ?? deviceId,
+      deviceName: shownDeviceName,
       deviceId: deviceId,
     );
   }
@@ -106,6 +108,9 @@ class SyncDeviceView {
   bool get connectedAsClient => SyncDiscovery.client._connectedServers.containsKey(deviceId);
   bool get connectedAsServer => SyncDiscovery.server._clientsSockets.containsKey(deviceId);
   bool get isConnected => connectedAsClient || connectedAsServer;
+
+  /// waiting for their server to accept us, see [_PairingSession].
+  bool get isConnectingAsClient => SyncDiscovery.client._pendingServers.containsKey(deviceId);
 
   String get displayName => settings.sync.deviceIdNames.value[deviceId] ?? networkDevice?.deviceName ?? deviceId;
 }

@@ -60,6 +60,7 @@ dependencies:
   namida_party_relay:
     path: external/party_relay/dart
   uuid: ^4.5.3
+  crypto: ^3.0.7
   qr_flutter: ^4.1.0
   selectable_autolink_text: ^2.6.0
   share_plus:

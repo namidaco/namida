@@ -83,14 +83,15 @@ class _FrameWriter {
 class _FrameReader {
   /// `(kind, payload)` per frame, see [_FrameWriter.kFrameKindJson] & [_FrameWriter.kFrameKindBinary].
   ///
-  /// json payloads are zero-copy views into the reusable internal buffer,
-  /// they must be consumed (or copied) synchronously by the listener.
+  /// frames are delivered synchronously, inside [addBytes]. json payloads are zero-copy views
+  /// into the reusable internal buffer, the listener must consume (or copy) them before returning
+  /// and must never pause the subscription (buffered events would keep the views).
   /// binary payloads own their bytes (the buffer is detached, see [_process]),
   /// so they are safe to keep around for async work (like file writes).
   Stream<(int, Uint8List)> get frames => _streamController.stream;
   RxBaseCore<(int, int)?> get currentProgress => _currentProgressRx;
 
-  final _streamController = StreamController<(int, Uint8List)>();
+  final _streamController = StreamController<(int, Uint8List)>(sync: true);
   final _currentProgressRx = Rxn<(int, int)>();
 
   static const _initialCapacity = 4096;
@@ -109,7 +110,7 @@ class _FrameReader {
   int get _available => _writePos - _readPos;
 
   void addBytes(Uint8List data) {
-    _ensureCapacity(data.length, canShiftInPlace: true);
+    _ensureCapacity(data.length);
 
     _buf.setRange(_writePos, _writePos + data.length, data);
     _writePos += data.length;
@@ -122,17 +123,12 @@ class _FrameReader {
     }
   }
 
-  /// [canShiftInPlace] allows compacting by shifting unread bytes to the front
-  /// of the current buffer. only safe at the start of [addBytes]: json views
-  /// emitted by the previous socket event are consumed by then (microtasks drain
-  /// between events). inside [_process], views emitted earlier in the same run
-  /// are still queued in the stream controller and point into [_buf], so the
-  /// buffer must be replaced instead of mutated (the old one stays alive for them).
-  void _ensureCapacity(int incoming, {required bool canShiftInPlace}) {
+  /// emitted json views are already consumed (see [frames]), so the buffer can always be compacted in place.
+  void _ensureCapacity(int incoming) {
     final needed = _writePos + incoming;
     if (needed <= _buf.length) return;
 
-    if (canShiftInPlace && _readPos > 0) {
+    if (_readPos > 0) {
       // compact first (shift unread bytes to front)
       _buf.setRange(0, _available, _buf, _readPos);
       _writePos = _available;
@@ -174,7 +170,7 @@ class _FrameReader {
         var toPreallocate = _expectedLength - _available;
         if (toPreallocate > 0) {
           if (toPreallocate > _maxHeaderPreallocation) toPreallocate = _maxHeaderPreallocation;
-          _ensureCapacity(toPreallocate, canShiftInPlace: false);
+          _ensureCapacity(toPreallocate);
         }
       }
 
@@ -232,6 +228,10 @@ class _FrameReader {
     _streamController.close();
   }
 }
+
+@visibleForTesting
+// ignore: library_private_types_in_public_api
+_FrameReader debugCreateFrameReader() => _FrameReader();
 
 // class _FrameReaderSimple {
 //   final _streamController = StreamController<Uint8List>();

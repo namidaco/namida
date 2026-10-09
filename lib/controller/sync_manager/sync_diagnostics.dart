@@ -16,6 +16,18 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
   static bool _isServerStarting = false;
   static List<String>? _serverTrace;
 
+  static const _kMaxPairingFailures = 20;
+  static final _pairingFailures = <String>[];
+
+  /// a known device that could not prove its pair secret, see [_PairingSession].
+  static void _onPairingFailed(_PairingSession session, {required bool isProofMissing}) {
+    if (_pairingFailures.length >= _kMaxPairingFailures) _pairingFailures.removeAt(0);
+    final peerRole = session.isServerSide ? 'client' : 'server';
+    final address = _SocketWrapper._remoteAddressOf(session.socket) ?? '?';
+    final problem = isProofMissing ? 'no' : 'a wrong';
+    _pairingFailures.add('${currentTimeMS.clockFormatted} $peerRole $address sent $problem pair secret proof');
+  }
+
   static void _onServerLog(String message) {
     if (_isServerStarting) _serverStartLog.add(message);
     final trace = _serverTrace;
@@ -30,6 +42,7 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     final preferredInterface = await SyncUtils.getPreferredInterface();
     await _writeInterfaces(report, preferredInterface);
     _writeServer(report);
+    _writePairing(report);
     if (Platform.isWindows) await _writeWindowsNetwork(report);
     if (Platform.isLinux) await _writeLinuxFirewall(report);
     await _writeDiscovery(report, preferredInterface);
@@ -65,6 +78,15 @@ Get-NetFirewallApplicationFilter -Program '{exe}' -ErrorAction SilentlyContinue 
     final advertised = wrapper.info.ips.map((e) => e.address).join(', ');
     report.writeln('tcp ${serverSocket.address.address}:${serverSocket.port} | advertising: $advertised | clients: ${SyncDiscovery.server._clientsSockets.length}');
     _writeLog(report, _serverStartLog);
+  }
+
+  static void _writePairing(StringBuffer report) {
+    report.writeln('\n== pairing ==');
+    if (_pairingFailures.isEmpty) {
+      report.writeln('no failed pair secret proofs');
+      return;
+    }
+    _writeLog(report, _pairingFailures);
   }
 
   static Future<void> _writeWindowsNetwork(StringBuffer report) async {

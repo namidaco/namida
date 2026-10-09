@@ -82,23 +82,18 @@ enum MessageRequestType {
 }
 
 enum ConnectionRequestMessageType {
-  /// client -> server
-  connect,
+  connect(isReply: false),
+  proof(isReply: false),
+  disconnect(isReply: false),
+  challenge(isReply: true),
+  accepted(isReply: true),
+  rejected(isReply: true),
+  blocked(isReply: true),
+  unblocked(isReply: true),
+  ;
 
-  /// client -> server
-  disconnect,
+  /// server -> client when true, client -> server otherwise.
+  final bool isReply;
 
-  // -----------------
-
-  /// server -> client
-  accepted,
-
-  /// server -> client
-  rejected,
-
-  /// server -> client
-  blocked,
-
-  /// server -> client
-  unblocked,
+  const ConnectionRequestMessageType({required this.isReply});
 }
