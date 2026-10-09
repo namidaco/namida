@@ -165,6 +165,8 @@ class _SettingsController extends _SettingsKeysWriter {
     isNonEmpty: true,
   );
   late final albumSortReversed = _key('albumSortReversed', isKuru ? true : false);
+  late final artistAlbumsSort = _key<GroupSortType?>('artistAlbumsSort', null, codec: GroupSortType.values.asCodec());
+  late final artistAlbumsSortReversed = _key('artistAlbumsSortReversed', false);
   late final artistSorts = _keyList(
     'artistSorts',
     isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList],

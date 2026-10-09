@@ -76,34 +76,31 @@ class NamidaOnTaps {
         albumIdsMap[album] ??= album.getAlbumTracks();
       }
     }
-    final albumIdsFinalList = albumIdsMap.entries.toFixedList();
-    SearchSortController.inst.sortAlbumsListRaw(albumIdsFinalList, settings.albumSorts.value, settings.albumSortReversed.value);
 
-    final albumIds = <AlbumIdentifierWrapper>[];
-    final epsIds = <AlbumIdentifierWrapper>[];
-    final singlesIds = <AlbumIdentifierWrapper>[];
-    final extrasIds = <AlbumIdentifierWrapper>[];
-    for (final a in albumIdsFinalList) {
-      final albumArtist = (albumIdsMap[a.key] ?? a.key.getAlbumTracks()).albumArtist;
-      if (albumArtist.contains(name)) {
-        final idsOfType = switch (a.key.getAlbumType()) {
-          AlbumType.single => singlesIds,
-          AlbumType.ep => epsIds,
-          AlbumType.normal => albumIds,
+    final albums = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
+    final eps = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
+    final singles = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
+    final extras = <MapEntry<AlbumIdentifierWrapper, List<Track>>>[];
+    for (final a in albumIdsMap.entries) {
+      if (a.value.albumArtist.contains(name)) {
+        final listOfType = switch (a.key.getAlbumType()) {
+          AlbumType.single => singles,
+          AlbumType.ep => eps,
+          AlbumType.normal => albums,
         };
-        idsOfType.add(a.key);
+        listOfType.add(a);
       } else {
-        extrasIds.add(a.key);
+        extras.add(a);
       }
     }
 
     ArtistTracksPage(
       name: name,
       tracks: tracks,
-      albumIdentifiers: albumIds,
-      epsIdentifiers: epsIds,
-      singlesIdentifiers: singlesIds,
-      extrasIdentifiers: extrasIds,
+      albums: albums,
+      eps: eps,
+      singles: singles,
+      extras: extras,
       type: type,
     ).navigate();
   }

@@ -11,6 +11,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -25,6 +26,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/album_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
 class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
   @override
@@ -40,20 +42,20 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
   final String name;
 
   final List<Track> tracks;
-  final List<AlbumIdentifierWrapper> albumIdentifiers;
-  final List<AlbumIdentifierWrapper> epsIdentifiers;
-  final List<AlbumIdentifierWrapper> singlesIdentifiers;
-  final List<AlbumIdentifierWrapper> extrasIdentifiers;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> albums;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> eps;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singles;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> extras;
   final MediaType type;
 
   const ArtistTracksPage({
     super.key,
     required this.name,
     required this.tracks,
-    required this.albumIdentifiers,
-    required this.epsIdentifiers,
-    required this.singlesIdentifiers,
-    required this.extrasIdentifiers,
+    required this.albums,
+    required this.eps,
+    required this.singles,
+    required this.extras,
     required this.type,
   });
 
@@ -81,10 +83,6 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
         : QueueSource.artist(name);
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
-    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value ?? true;
-    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value ?? false;
-    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value ?? false; // cuz no space
-    final extrasInitiallyExpanded = widget.albumIdentifiers.isEmpty && widget.epsIdentifiers.isEmpty && widget.singlesIdentifiers.isEmpty;
     final heroTag = 'artist_$name';
     return AnimationLimiter(
       child: BackgroundWrapper(
@@ -98,51 +96,11 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
               Indexer.inst.getArtistMapFor(widget.type).valueR;
 
               return NamidaListView(
-                header: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 4.0),
-                    if (widget.albumIdentifiers.isNotEmpty) ...[
-                      _AlbumsRow(
-                        title: lang.albums,
-                        icon: Broken.music_dashboard,
-                        identifiers: widget.albumIdentifiers,
-                        initiallyExpanded: albumsInitiallyExpanded,
-                        onExpansionChanged: (value) => settings.extra.artistAlbumsExpanded.save(value),
-                      ),
-                    ],
-                    if (widget.epsIdentifiers.isNotEmpty) ...[
-                      const SizedBox(height: 6.0),
-                      _AlbumsRow(
-                        title: lang.eps,
-                        icon: Broken.music_playlist,
-                        identifiers: widget.epsIdentifiers,
-                        initiallyExpanded: epsInitiallyExpanded,
-                        onExpansionChanged: (value) => settings.extra.artistEpsExpanded.save(value),
-                      ),
-                    ],
-                    if (widget.singlesIdentifiers.isNotEmpty) ...[
-                      const SizedBox(height: 6.0),
-                      _AlbumsRow(
-                        title: lang.singles,
-                        icon: Broken.music_square,
-                        identifiers: widget.singlesIdentifiers,
-                        initiallyExpanded: singlesInitiallyExpanded,
-                        onExpansionChanged: (value) => settings.extra.artistSinglesExpanded.save(value),
-                      ),
-                    ],
-                    if (widget.extrasIdentifiers.isNotEmpty) ...[
-                      const SizedBox(height: 6.0),
-                      _AlbumsRow(
-                        title: lang.appearsOn,
-                        icon: Broken.format_circle,
-                        identifiers: widget.extrasIdentifiers,
-                        initiallyExpanded: extrasInitiallyExpanded,
-                        onExpansionChanged: (value) {},
-                      ),
-                    ],
-                    const SizedBox(height: 4.0),
-                  ],
+                header: _ArtistAlbumsHeader(
+                  albums: widget.albums,
+                  eps: widget.eps,
+                  singles: widget.singles,
+                  extras: widget.extras,
                 ),
                 stickyHeader: TracksSearchWidgetBox(
                   state: this,
@@ -250,17 +208,122 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
   }
 }
 
+class _ArtistAlbumsHeader extends StatefulWidget {
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> albums;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> eps;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> singles;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> extras;
+
+  const _ArtistAlbumsHeader({
+    required this.albums,
+    required this.eps,
+    required this.singles,
+    required this.extras,
+  });
+
+  @override
+  State<_ArtistAlbumsHeader> createState() => _ArtistAlbumsHeaderState();
+}
+
+class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
+  @override
+  void initState() {
+    _sortAll();
+    settings.artistAlbumsSort.addListener(_onSortingChanged);
+    settings.artistAlbumsSortReversed.addListener(_onSortingChanged);
+    settings.albumSorts.addListener(_onSortingChanged);
+    settings.albumSortReversed.addListener(_onSortingChanged);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    settings.artistAlbumsSort.removeListener(_onSortingChanged);
+    settings.artistAlbumsSortReversed.removeListener(_onSortingChanged);
+    settings.albumSorts.removeListener(_onSortingChanged);
+    settings.albumSortReversed.removeListener(_onSortingChanged);
+    super.dispose();
+  }
+
+  void _sortAll() {
+    final sort = settings.artistAlbumsSort.value;
+    final (sorts, reverse) = sort == null ? _artistAlbumsAutoSorting() : ([sort], settings.artistAlbumsSortReversed.value);
+    for (final list in [widget.albums, widget.eps, widget.singles, widget.extras]) {
+      if (list.length > 1) SearchSortController.inst.sortAlbumsListRaw(list, sorts, reverse);
+    }
+  }
+
+  void _onSortingChanged() {
+    _sortAll();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final albumsInitiallyExpanded = settings.extra.artistAlbumsExpanded.value ?? true;
+    final epsInitiallyExpanded = settings.extra.artistEpsExpanded.value ?? false;
+    final singlesInitiallyExpanded = settings.extra.artistSinglesExpanded.value ?? false; // cuz no space
+    final extrasInitiallyExpanded = widget.albums.isEmpty && widget.eps.isEmpty && widget.singles.isEmpty;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 4.0),
+        if (widget.albums.isNotEmpty) ...[
+          _AlbumsRow(
+            title: lang.albums,
+            icon: Broken.music_dashboard,
+            albums: widget.albums,
+            initiallyExpanded: albumsInitiallyExpanded,
+            onExpansionChanged: (value) => settings.extra.artistAlbumsExpanded.save(value),
+          ),
+        ],
+        if (widget.eps.isNotEmpty) ...[
+          const SizedBox(height: 6.0),
+          _AlbumsRow(
+            title: lang.eps,
+            icon: Broken.music_playlist,
+            albums: widget.eps,
+            initiallyExpanded: epsInitiallyExpanded,
+            onExpansionChanged: (value) => settings.extra.artistEpsExpanded.save(value),
+          ),
+        ],
+        if (widget.singles.isNotEmpty) ...[
+          const SizedBox(height: 6.0),
+          _AlbumsRow(
+            title: lang.singles,
+            icon: Broken.music_square,
+            albums: widget.singles,
+            initiallyExpanded: singlesInitiallyExpanded,
+            onExpansionChanged: (value) => settings.extra.artistSinglesExpanded.save(value),
+          ),
+        ],
+        if (widget.extras.isNotEmpty) ...[
+          const SizedBox(height: 6.0),
+          _AlbumsRow(
+            title: lang.appearsOn,
+            icon: Broken.format_circle,
+            albums: widget.extras,
+            initiallyExpanded: extrasInitiallyExpanded,
+            onExpansionChanged: (value) {},
+          ),
+        ],
+        const SizedBox(height: 4.0),
+      ],
+    );
+  }
+}
+
 class _AlbumsRow extends StatelessWidget {
   final String title;
   final IconData icon;
-  final List<AlbumIdentifierWrapper> identifiers;
+  final List<MapEntry<AlbumIdentifierWrapper, List<Track>>> albums;
   final bool initiallyExpanded;
   final ValueChanged<bool>? onExpansionChanged;
 
   const _AlbumsRow({
     required this.title,
     required this.icon,
-    required this.identifiers,
+    required this.albums,
     required this.initiallyExpanded,
     required this.onExpansionChanged,
   });
@@ -274,11 +337,13 @@ class _AlbumsRow extends StatelessWidget {
         child: NamidaExpansionTile(
           compact: false,
           bgColor: context.theme.cardColor,
-          icon: icon,
+          leading: _AlbumsRowLeading(
+            icon: icon,
+          ),
           borderless: true,
-          titleText: "$title: ${identifiers.length}",
-          initiallyExpanded: identifiers.isNotEmpty && initiallyExpanded,
-          onExpansionChanged: identifiers.isEmpty ? null : onExpansionChanged,
+          titleText: "$title: ${albums.length}",
+          initiallyExpanded: albums.isNotEmpty && initiallyExpanded,
+          onExpansionChanged: albums.isEmpty ? null : onExpansionChanged,
           trailingBuilder: (iconWidget) => Row(
             mainAxisSize: .min,
             children: [
@@ -289,8 +354,9 @@ class _AlbumsRow extends StatelessWidget {
                   iconSize: 18.0,
                   disableColor: true,
                   onPressed: () {
+                    final albumIdentifiers = albums.map((e) => e.key).toFixedList();
                     final page = AlbumCustomResultsPage(
-                      albumIdentifiers: identifiers,
+                      albumIdentifiers: albumIdentifiers,
                     );
                     page.navigate();
                   },
@@ -299,7 +365,7 @@ class _AlbumsRow extends StatelessWidget {
               iconWidget,
             ],
           ),
-          children: identifiers.isEmpty
+          children: albums.isEmpty
               ? const []
               : [
                   SizedBox(
@@ -308,14 +374,14 @@ class _AlbumsRow extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14.0),
                       scrollDirection: Axis.horizontal,
                       itemExtent: 100.0,
-                      itemCount: identifiers.length,
+                      itemCount: albums.length,
                       itemBuilder: (context, i) {
-                        final albumId = identifiers[i];
+                        final album = albums[i];
                         return Padding(
                           padding: const EdgeInsets.only(left: 2.0),
                           child: AlbumCard(
-                            identifier: albumId,
-                            album: albumId.getAlbumTracks(),
+                            identifier: album.key,
+                            album: album.value,
                             staggered: false,
                             compact: true,
                             width: 98.0,
@@ -330,6 +396,96 @@ class _AlbumsRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AlbumsRowLeading extends StatelessWidget {
+  final IconData icon;
+
+  const _AlbumsRowLeading({
+    required this.icon,
+  });
+
+  void _showSortMenu(BuildContext context) {
+    NamidaPopupWrapper(
+      children: () => const [_ArtistAlbumsSortMenu()],
+    ).showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LongPressDetector(
+      behavior: HitTestBehavior.opaque,
+      enableSecondaryTap: true,
+      onLongPress: () => _showSortMenu(context),
+      child: Icon(
+        icon,
+      ),
+    );
+  }
+}
+
+class _ArtistAlbumsSortMenu extends StatelessWidget {
+  const _ArtistAlbumsSortMenu();
+
+  void _pin(GroupSortType sort, bool reversed) {
+    settings.artistAlbumsSortReversed.save(reversed);
+    settings.artistAlbumsSort.save(sort);
+  }
+
+  void _onSortTap(GroupSortType tapped, GroupSortType effectiveSort, bool effectiveReversed) {
+    final reversed = tapped == effectiveSort ? effectiveReversed : settings.artistAlbumsSortReversed.value;
+    _pin(tapped, reversed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final sort = settings.artistAlbumsSort.valueR;
+        final sortReversed = settings.artistAlbumsSortReversed.valueR;
+        final (autoSorts, autoReversed) = _artistAlbumsAutoSorting();
+        final autoSort = autoSorts.first;
+        final effectiveSort = sort ?? autoSort;
+        final effectiveReversed = sort == null ? autoReversed : sortReversed;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SortOptionsCards(
+              isReversed: effectiveReversed,
+              onReverseTap: () => _pin(effectiveSort, !effectiveReversed),
+              withSortKeyOptions: false,
+              prefixFilters: null,
+            ),
+            SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+              title: lang.auto,
+              subtitle: autoSort.toText(),
+              trailingIcon: Broken.medal_star,
+              active: sort == null,
+              onTap: () => settings.artistAlbumsSort.save(null),
+            ),
+            ...GroupSortType.forAlbums().map(
+              (e) => SmallListTile(
+                borderRadius: 12.0,
+                visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+                title: e.toText(),
+                trailingIcon: e.toIcon(),
+                active: sort == e,
+                onTap: () => _onSortTap(e, effectiveSort, effectiveReversed),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+(List<GroupSortType>, bool) _artistAlbumsAutoSorting() {
+  final albumSorts = settings.albumSorts.value;
+  if (albumSorts.first.suitsDiscography()) return (albumSorts, settings.albumSortReversed.value);
+  return (const [GroupSortType.year], true);
 }
 
 extension _TracksYearsRange on List<Track> {
@@ -348,4 +504,33 @@ extension _TracksYearsRange on List<Track> {
     if (oldest == 0) return '';
     return oldest == newest ? '$oldest' : '$oldest – $newest';
   }
+}
+
+extension _GroupSortTypeDiscography on GroupSortType {
+  bool suitsDiscography() => switch (this) {
+    GroupSortType.album || GroupSortType.albumSort || GroupSortType.albumArtist || GroupSortType.albumArtistSort || GroupSortType.artistsList => false,
+    GroupSortType.title ||
+    GroupSortType.year ||
+    GroupSortType.genresList ||
+    GroupSortType.dateAdded ||
+    GroupSortType.dateModified ||
+    GroupSortType.composer ||
+    GroupSortType.label ||
+    GroupSortType.releaseType ||
+    GroupSortType.bpm ||
+    GroupSortType.duration ||
+    GroupSortType.numberOfTracks ||
+    GroupSortType.playCount ||
+    GroupSortType.latestPlayed ||
+    GroupSortType.lastPlayed ||
+    GroupSortType.firstListen ||
+    GroupSortType.albumsCount ||
+    GroupSortType.creationDate ||
+    GroupSortType.modifiedDate ||
+    GroupSortType.artistSort ||
+    GroupSortType.composerSort ||
+    GroupSortType.shuffle ||
+    GroupSortType.shuffleDaily ||
+    GroupSortType.custom => true,
+  };
 }

@@ -242,6 +242,8 @@ extension SettingsControllerDebugKeys on _SettingsController {
     tracksSearchShowLessRelevant,
     albumSorts,
     albumSortReversed,
+    artistAlbumsSort,
+    artistAlbumsSortReversed,
     artistSorts,
     artistSortReversed,
     genreSorts,
