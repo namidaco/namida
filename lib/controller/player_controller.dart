@@ -211,6 +211,14 @@ class Player {
     return config.enableSleepAfterItems && config.sleepAfterItems == itemsCount;
   }
 
+  bool get isStoppingAfterCurrent => isSleepingAfterItems(1);
+
+  bool toggleStopAfterCurrent() {
+    final shouldStop = !isStoppingAfterCurrent;
+    updateSleepTimerValues(enableSleepAfterItems: shouldStop, sleepAfterItems: shouldStop ? 1 : 0);
+    return shouldStop;
+  }
+
   bool get isModifyingQueue => _audioHandler.isModifyingQueue;
 
   void refreshPlatformIcons() => _audioHandler.refreshPlatformIcons();

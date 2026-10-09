@@ -650,6 +650,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     TrackExecuteActions.playafter => lang.playAfter,
     TrackExecuteActions.addtoplaylist => lang.addToPlaylist,
     TrackExecuteActions.addBookmark => lang.addBookmark,
+    TrackExecuteActions.stopAfterCurrent => lang.stopAfterThisTrack,
     TrackExecuteActions.openinfo => lang.info,
     TrackExecuteActions.openArtwork => "${lang.artwork} (${lang.open})",
     TrackExecuteActions.editArtwork => lang.editArtwork,
@@ -680,6 +681,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.playafter => Broken.hierarchy_square,
       TrackExecuteActions.addtoplaylist => Broken.music_library_2,
       TrackExecuteActions.addBookmark => Broken.book_saved,
+      TrackExecuteActions.stopAfterCurrent => Broken.pause_circle,
       TrackExecuteActions.openinfo => Broken.info_circle,
       TrackExecuteActions.openArtwork => Broken.gallery,
       TrackExecuteActions.editArtwork => Broken.gallery_edit,
@@ -741,6 +743,16 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
         );
       case TrackExecuteActions.addBookmark:
         if (Player.inst.isCurrentItem(item)) await BookmarksController.inst.addAtCurrentPosition();
+      case TrackExecuteActions.stopAfterCurrent:
+        if (Player.inst.isCurrentItem(item)) {
+          final isStopping = Player.inst.toggleStopAfterCurrent();
+          snackyy(
+            icon: Broken.pause_circle,
+            message: "${lang.stopAfterThisTrack}: ${isStopping ? '✓' : '✗'}",
+            top: false,
+            type: SnackbarType.playerInfo,
+          );
+        }
       case TrackExecuteActions.openinfo:
         item.execute(
           selectable: (finalItem) {
@@ -2628,6 +2640,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.previousChapter => lang.previousChapter,
     NotificationButton.nextChapter => lang.nextChapter,
     NotificationButton.sleepTimer => lang.sleepTimer,
+    NotificationButton.stopAfterCurrent => lang.stopAfterThisTrack,
     NotificationButton.addToPlaylist => lang.addToPlaylist,
     NotificationButton.bookmark => lang.addBookmark,
   };
@@ -2645,6 +2658,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.previousChapter => Broken.arrow_square_left,
     NotificationButton.nextChapter => Broken.arrow_square_right,
     NotificationButton.sleepTimer => Broken.timer_1,
+    NotificationButton.stopAfterCurrent => Broken.pause_circle,
     NotificationButton.addToPlaylist => Broken.music_library_2,
     NotificationButton.bookmark => Broken.book_saved,
   };

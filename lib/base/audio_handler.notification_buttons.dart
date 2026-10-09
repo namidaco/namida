@@ -75,12 +75,18 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
   }
 
   bool _wasSleepTimerActive = false;
+  bool _wasStoppingAfterCurrent = false;
 
   void _onSleepTimerConfigChanged() {
     final isActive = _isSleepTimerActive();
-    if (isActive == _wasSleepTimerActive) return;
+    final isStoppingAfterCurrent = Player.inst.isStoppingAfterCurrent;
+    final buttons = _notificationButtons;
+    final shouldRefresh =
+        (isActive != _wasSleepTimerActive && buttons.contains(NotificationButton.sleepTimer)) || //
+        (isStoppingAfterCurrent != _wasStoppingAfterCurrent && buttons.contains(NotificationButton.stopAfterCurrent));
     _wasSleepTimerActive = isActive;
-    _refreshNotificationButtonsIfShown(NotificationButton.sleepTimer);
+    _wasStoppingAfterCurrent = isStoppingAfterCurrent;
+    if (shouldRefresh) _refreshNotificationButtons();
   }
 
   bool _isSleepTimerActive() {
@@ -139,6 +145,7 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
       NotificationButton.previousChapter => _chapterControl(button, item, 'drawable/arrow_square_left', lang.previousChapter),
       NotificationButton.nextChapter => _chapterControl(button, item, 'drawable/arrow_square_right', lang.nextChapter),
       NotificationButton.sleepTimer => _sleepTimerControl(),
+      NotificationButton.stopAfterCurrent => _stopAfterCurrentControl(),
       NotificationButton.addToPlaylist => _playlistControl(item),
       NotificationButton.bookmark => _customControl(button, 'drawable/bookmark', lang.addBookmark),
     };
@@ -153,6 +160,11 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     final isActive = _isSleepTimerActive();
     final icon = isActive ? 'drawable/timer_1_bold' : 'drawable/timer_1';
     return _customControl(NotificationButton.sleepTimer, icon, lang.sleepTimer);
+  }
+
+  static MediaControl _stopAfterCurrentControl() {
+    final icon = Player.inst.isStoppingAfterCurrent ? 'drawable/pause_circle_bold' : 'drawable/pause_circle';
+    return _customControl(NotificationButton.stopAfterCurrent, icon, lang.stopAfterThisTrack);
   }
 
   static MediaControl _customControl(NotificationButton button, String androidIcon, String label) {
@@ -297,6 +309,8 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
         await ChaptersController.inst.seekToAdjacent(forward: true);
       case NotificationButton.sleepTimer:
         _toggleSleepTimer();
+      case NotificationButton.stopAfterCurrent:
+        Player.inst.toggleStopAfterCurrent();
       case NotificationButton.addToPlaylist:
         await _toggleCurrentItemInPlaylist();
       case NotificationButton.bookmark:

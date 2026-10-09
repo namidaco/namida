@@ -947,6 +947,7 @@ enum NotificationButton {
   previousChapter,
   nextChapter,
   sleepTimer,
+  stopAfterCurrent,
   addToPlaylist,
   bookmark,
   ;
@@ -1106,6 +1107,7 @@ enum TrackExecuteActions {
   playafter(isPlayerAction: true),
   addtoplaylist,
   addBookmark(isPlayingItemOnly: true),
+  stopAfterCurrent(isPlayingItemOnly: true),
   openinfo,
 
   openArtwork,

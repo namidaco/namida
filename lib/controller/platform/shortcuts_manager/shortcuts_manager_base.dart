@@ -58,6 +58,7 @@ enum HotkeyAction {
   volume_down,
   previous,
   next,
+  stop_after_current,
   ;
 
   void Function() toSimpleCallback() {
@@ -69,6 +70,7 @@ enum HotkeyAction {
       HotkeyAction.volume_down => Player.inst.volumeDown,
       HotkeyAction.previous => Player.inst.previous,
       HotkeyAction.next => Player.inst.next,
+      HotkeyAction.stop_after_current => Player.inst.toggleStopAfterCurrent,
     };
   }
 }

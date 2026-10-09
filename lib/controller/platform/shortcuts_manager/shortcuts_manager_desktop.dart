@@ -64,6 +64,16 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.next,
     ),
     ShortcutKeyActivator(
+      action: HotkeyAction.stop_after_current,
+      key: LogicalKeyboardKey.space,
+      control: true,
+      callback: () {
+        final isStopping = Player.inst.toggleStopAfterCurrent();
+        _showSnack(message: "${lang.stopAfterThisTrack}: ${isStopping ? '✓' : '✗'}");
+      },
+      title: () => lang.stopAfterThisTrack,
+    ),
+    ShortcutKeyActivator(
       key: LogicalKeyboardKey.arrowLeft,
       shift: true,
       callback: () => ChaptersController.inst.seekToAdjacent(forward: false),
