@@ -18,7 +18,8 @@ class VideoFolder extends Folder {
 }
 
 class Folder {
-  bool get isNetwork => folderNameRaw.startsWith('http') || folderNameRaw.contains('namida_t=');
+  bool get isNetwork => path.startsWith('http');
+  bool get isNetworkRoot => isNetwork && !path.contains(_kNetworkFolderSeparator);
 
   final String path;
   final String folderNameRaw;
@@ -27,7 +28,25 @@ class Folder {
   late final parts = splitParts();
   late final folderNameLower = folderNameRaw.toLowerCase();
 
-  Folder.explicit(this.path) : folderNameRaw = path.pathReverseSplitter(_pathSeparator), _key = _computeKey(path);
+  Folder.explicit(this.path) : folderNameRaw = nameOf(path), _key = _computeKey(path);
+
+  static const _kNetworkFolderSeparator = '#';
+
+  static String networkPathOf(String serverKey, String? serverFolder) {
+    return serverFolder == null ? serverKey : '$serverKey$_kNetworkFolderSeparator$serverFolder';
+  }
+
+  static String nameOf(String path) {
+    if (path.startsWith('http')) {
+      final serverFolderStart = path.indexOf(_kNetworkFolderSeparator) + 1;
+      if (serverFolderStart > 0) {
+        final lastSlash = path.lastIndexOf('/');
+        final nameStart = lastSlash >= serverFolderStart ? lastSlash + 1 : serverFolderStart;
+        return path.substring(nameStart);
+      }
+    }
+    return path.pathReverseSplitter(_pathSeparator);
+  }
 
   static final _nameCountsTracks = _FolderNameCounts();
   static final _nameCountsVideos = _FolderNameCounts();
@@ -83,7 +102,9 @@ class Folder {
         break;
       }
       folder = newParent;
-      folderName = '${folder.folderNameRaw}${Platform.pathSeparator}$folderName';
+      final parentName = folder.isNetworkRoot ? folder.formattedPath() : folder.folderNameRaw;
+      final separator = folder.isNetwork ? '/' : Platform.pathSeparator;
+      folderName = '$parentName$separator$folderName';
 
       retries++;
       if (retries >= 3) {
@@ -103,31 +124,47 @@ class Folder {
   }
 
   List<String>? folderNameTryFormatNetworkAsParts() {
-    if (isNetwork) {
+    if (isNetworkRoot) {
       try {
-        final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderNameRaw);
+        final server = DirectoryIndexServer.parseFromEncodedUrlPath(path);
         return [
           server.toSourceInfo(),
-          [
-            server.type.toText(),
-            server.username,
-          ].join(' - '),
+          server.toTypeAndUserInfo(),
         ];
       } catch (_) {}
     }
     return null;
   }
 
+  DirectoryIndexServer? parseNetworkServer() => isNetwork ? _parseNetworkServer() : null;
+
+  DirectoryIndexServer _parseNetworkServer() {
+    final serverFolderSeparatorIndex = path.indexOf(_kNetworkFolderSeparator);
+    final serverKey = serverFolderSeparatorIndex == -1 ? path : path.substring(0, serverFolderSeparatorIndex);
+    return DirectoryIndexServer.parseFromEncodedUrlPath(serverKey);
+  }
+
   String formattedPath() {
-    return path.formatPath();
+    if (!isNetwork) return path.formatPath();
+    final sourceInfo = _parseNetworkServer().toSourceInfo();
+    final serverFolderStart = path.indexOf(_kNetworkFolderSeparator) + 1;
+    if (serverFolderStart == 0) return sourceInfo;
+    final serverFolder = path.substring(serverFolderStart);
+    return '$sourceInfo/$serverFolder';
   }
 
   String formattedParentPath() {
+    if (isNetwork) {
+      if (isNetworkRoot) return '';
+      final parentPath = this.parent.formattedPath();
+      return '$parentPath/';
+    }
     final nameStart = path.lastIndexOf(folderNameRaw);
     return nameStart <= 0 ? '' : path.substring(0, nameStart).formatPath();
   }
 
   String? getExtraInfoOrFetch(void Function() onFetched) {
+    if (isNetwork) return null;
     final cached = _extraInfoCache[this];
     if (cached != null) return cached;
     _fetchExtraInfo().then(
@@ -167,6 +204,14 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
   }
 
   T get parent {
+    if (isNetwork) {
+      final serverFolderStart = path.indexOf(Folder._kNetworkFolderSeparator) + 1;
+      if (serverFolderStart == 0) return this;
+      final lastSlash = path.lastIndexOf('/');
+      final parentEnd = lastSlash >= serverFolderStart ? lastSlash : serverFolderStart - 1;
+      final networkParentPath = path.substring(0, parentEnd);
+      return Folder.fromTypeParameter<T>(this.runtimeType, networkParentPath);
+    }
     final parentPath = FileSystemEntity.parentOf(path);
     return Folder.fromTypeParameter(this.runtimeType, parentPath) as T;
   }
@@ -186,7 +231,20 @@ extension FolderUtils<T extends Folder, E extends Track> on T {
 
   R? performInbetweenFoldersBuild<R>(R? Function(T folder) callback) {
     if (isNetwork) {
-      return callback(Folder.fromType<T>(path));
+      final serverFolderStart = path.indexOf(Folder._kNetworkFolderSeparator) + 1;
+      if (serverFolderStart == 0) return callback(this);
+      final serverKey = path.substring(0, serverFolderStart - 1);
+      final rootRes = callback(Folder.fromType<T>(serverKey));
+      if (rootRes != null) return rootRes;
+      int searchFrom = serverFolderStart;
+      while (true) {
+        final slashIndex = path.indexOf('/', searchFrom);
+        if (slashIndex == -1) return callback(this);
+        final partPath = path.substring(0, slashIndex);
+        final res = callback(Folder.fromType<T>(partPath));
+        if (res != null) return res;
+        searchFrom = slashIndex + 1;
+      }
     }
     final bufferPathSoFar = StringBuffer();
     for (final part in parts) {

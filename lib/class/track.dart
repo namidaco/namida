@@ -411,6 +411,9 @@ class TrackExtended {
   final bool isVideo;
   final String? server;
 
+  /// `/` separated, relative to [server].
+  final String? serverFolder;
+
   List<AlbumIdentifierWrapper> albumsIdentifiersWrappersModifed(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modifyOnly(identifiers)).toList();
 
   // -- cache for image path instead of resolving it each time.
@@ -472,6 +475,7 @@ class TrackExtended {
     required this.albumsIdentifiersWrappers,
     required this.isVideo,
     required this.server,
+    required this.serverFolder,
   });
 
   late final String yearPreferyyyyMMdd = _computeYearPreferyyyyMMdd();
@@ -630,6 +634,7 @@ class TrackExtended {
     required List<MediaChapter>? chapters,
     required bool isVideo,
     required String? server,
+    required String? serverFolder,
   }) {
     final artistsConfig = splitConfig.artistsConfig;
     final genresConfig = splitConfig.genresConfig;
@@ -697,6 +702,7 @@ class TrackExtended {
       ),
       isVideo: isVideo,
       server: server,
+      serverFolder: serverFolder,
     );
   }
 
@@ -763,6 +769,7 @@ class TrackExtended {
       chapters: MediaChapter.listFromJson(json['chapters']),
       isVideo: json['v'] ?? false,
       server: json['server'],
+      serverFolder: json['serverFolder'],
     );
   }
 
@@ -816,6 +823,7 @@ class TrackExtended {
       if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toFixedList(),
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
+      if (serverFolder != null) 'serverFolder': serverFolder,
     };
   }
 
@@ -842,13 +850,22 @@ extension TrackExtUtils on TrackExtended {
   bool get isPhysical => !isNetwork;
   bool get isNetwork => path.startsWith('http');
 
-  Folder get folder => Folder.explicit(folderPath);
+  Folder get folder => isVideo ? VideoFolder.explicit(folderPath) : Folder.explicit(folderPath);
 
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
-  String get folderName => folderPath.splitLast(Platform.pathSeparator);
+  String get folderPath {
+    if (!isNetwork) return path.getDirectoryPath;
+    final serverKey = server ?? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey();
+    return Folder.networkPathOf(serverKey, serverFolder);
+  }
+
+  String get folderName {
+    final folderPath = this.folderPath;
+    return isNetwork ? Folder.nameOf(folderPath) : folderPath.splitLast(Platform.pathSeparator);
+  }
+
   String get pathToImage {
     final stamp = _imageKeyStamp();
     if (stamp == _pathToImageStamp) return _pathToImageCache!;
@@ -1067,6 +1084,7 @@ extension TrackExtUtils on TrackExtended {
       isVideo: isVideo,
       hashKey: newHashKey,
       server: server ?? this.server,
+      serverFolder: serverFolder,
     );
   }
 
@@ -1119,6 +1137,7 @@ extension TrackExtUtils on TrackExtended {
       chapters: chapters,
       isVideo: isVideo,
       server: server,
+      serverFolder: serverFolder,
     );
   }
 
@@ -1178,6 +1197,7 @@ extension TrackExtUtils on TrackExtended {
     bool? isVideo,
     required bool generatePathHash,
     String? server,
+    String? serverFolder,
   }) {
     final newPath = path ?? this.path;
     String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
@@ -1235,6 +1255,7 @@ extension TrackExtUtils on TrackExtended {
       albumsIdentifiersWrappers: albumsIdentifiersWrappers ?? this.albumsIdentifiersWrappers,
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,
+      serverFolder: serverFolder ?? this.serverFolder,
     );
   }
 }
@@ -1327,8 +1348,18 @@ extension TrackUtils on Track {
   String get filename => path.getFilename;
   String get filenameWOExt => path.getFilenameWOExt;
   String get extension => path.getExtension;
-  String get folderPath => isNetwork ? DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey() : path.getDirectoryPath;
-  String get folderName => folderPath.splitLast(Platform.pathSeparator);
+  String get folderPath {
+    if (!isNetwork) return path.getDirectoryPath;
+    final trExt = toTrackExtOrNull();
+    if (trExt != null) return trExt.folderPath;
+    return DirectoryIndexServer.parseFromEncodedUrlPath(path).toDbKey();
+  }
+
+  String get folderName {
+    final folderPath = this.folderPath;
+    return isNetwork ? Folder.nameOf(folderPath) : folderPath.splitLast(Platform.pathSeparator);
+  }
+
   String get pathToImage {
     final trExt = toTrackExtOrNull();
     if (trExt != null && trExt.isVideo == (this is Video)) return trExt.pathToImage; // -- to benefit from cache

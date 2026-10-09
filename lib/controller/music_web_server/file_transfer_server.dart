@@ -79,7 +79,8 @@ abstract class _FileTransferServer extends MusicWebServer {
       minDur: settings.indexMinDurationInSec.value,
       minSize: settings.indexMinFileSizeInB.value,
       extractArtwork: Indexer.inst.isNetworkArtworkCachingEnabled,
-      diffState: forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary),
+      diffState: forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback),
+      baseSegments: _splitRemotePath(_basePath),
     );
     try {
       await for (final trExt in _walk(_basePath, scan, isRoot: true)) {
@@ -159,10 +160,11 @@ abstract class _FileTransferServer extends MusicWebServer {
   Future<TrackExtended?> _processFile(_RemoteEntry entry, _FileTransferScan scan) async {
     final path = entry.path;
     final modifiedMS = entry.modifiedMS;
+    final serverFolder = _serverFolderOf(path, baseSegments: scan.baseSegments);
     final diffState = scan.diffState;
     if (diffState != null) {
       final remoteModified = modifiedMS == null ? null : DateTime.fromMillisecondsSinceEpoch(modifiedMS);
-      final canSkip = diffState.checkCanSkipScanAndMarkExists(path, remoteModified);
+      final canSkip = diffState.checkCanSkipScanAndMarkExists(path, remoteModified, serverFolder: serverFolder);
       if (canSkip) return null;
     }
 
@@ -199,7 +201,7 @@ abstract class _FileTransferServer extends MusicWebServer {
           'd': path,
         },
       );
-      return trExt.copyWith(generatePathHash: true, path: newUri.toString());
+      return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder);
     } catch (_) {
       return null;
     }
@@ -276,6 +278,7 @@ class _FileTransferScan {
   final int minSize;
   final bool extractArtwork;
   final _ServerDiffManager? diffState;
+  final List<String> baseSegments;
 
   const _FileTransferScan({
     required this.server,
@@ -285,5 +288,6 @@ class _FileTransferScan {
     required this.minSize,
     required this.extractArtwork,
     required this.diffState,
+    required this.baseSegments,
   });
 }

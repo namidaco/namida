@@ -42,6 +42,7 @@ class TracksSearchWrapper {
     final addMoods = filters.contains(TrackSearchFilter.moods);
     final addTags = filters.contains(TrackSearchFilter.tags);
     final addLanguages = filters.contains(TrackSearchFilter.language);
+    final addFolder = filters.contains(TrackSearchFilter.folder);
     final maxListensCount = topTracksMapListens.values.firstOrNull?.length;
     final lyricsLocations = addLyrics ? LyricsLocations.fromSettings() : null;
     return (
@@ -62,6 +63,7 @@ class TracksSearchWrapper {
               moods: addMoods ? e.effectiveMoods : null,
               tags: addTags ? e.effectiveTags : null,
               languages: addLanguages ? e.languagesList : null,
+              networkFolderName: addFolder && e.isNetwork ? e.folderName : null,
               path: e.path,
               isVideo: e.isVideo,
               listensCount: topTracksMapListens[e.asTrack()]?.length,
@@ -132,6 +134,7 @@ class TracksSearchWrapper {
       final isVideo = trMap.isVideo;
       final year = trMap.year;
       final track = Track.decide(path, isVideo);
+      final folderName = sfolder ? trMap.networkFolderName ?? track.folderName : null;
 
       final listensCount = trMap.listensCount;
       final listensMultiplier = _listensMultiplierOf(listensCount, maxListensLog);
@@ -142,7 +145,7 @@ class TracksSearchWrapper {
           track: track,
           splitTitle: splitThis(removeFeatArtistsFromTitle ? Indexer.removeFeatArtistsFromTitle(title) : title, stitle, tryCutBeforeBrackets: true),
           splitFilename: splitThis(path.getFilename, sfilename),
-          splitFolder: splitThis(Track.explicit(path).folderName, sfolder),
+          splitFolder: splitThis(folderName, sfolder),
           splitAlbum: salbum
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitAlbum(
@@ -883,6 +886,7 @@ typedef TracksSearchTrackParams = ({
   List<String>? moods,
   List<String>? tags,
   List<String>? languages,
+  String? networkFolderName,
   String path,
   bool isVideo,
   int? listensCount,

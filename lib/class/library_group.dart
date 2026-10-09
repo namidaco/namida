@@ -87,12 +87,13 @@ class LibraryGroup<T extends Track> {
       }
 
       // -- Assigning Folders
+      final folderPath = trExt.folderPath;
       if (tr is Video) {
-        final folder = tr.folder;
+        final folder = VideoFolder.explicit(folderPath);
         _addOnce(mainMapFoldersVideos, folder, tr);
         _addOnce(mainMapFoldersTracksAndVideos, folder, tr);
       } else {
-        final folder = tr.folder;
+        final folder = Folder.explicit(folderPath);
         _addOnce(mainMapFoldersTracks, folder, tr);
         _addOnce(mainMapFoldersTracksAndVideos, folder, tr);
       }
@@ -191,13 +192,15 @@ class LibraryGroup<T extends Track> {
       changes._updateKeys(MediaType.style, mainMapStyles, newtr.stylesList, oldtr?.stylesList, newTrack, oldTrack, isSameTrack);
       changes._updateKeys(MediaType.language, mainMapLanguages, newtr.languagesList, oldtr?.languagesList, newTrack, oldTrack, isSameTrack);
 
-      final newFolder = newTrack.folder;
-      final oldFolder = oldTrack?.folder;
+      final newFolder = newtr.folder;
+      final oldFolder = oldtr?.folder;
       changes._updateKey(MediaType.folder, mainMapFoldersTracksAndVideos, newFolder, oldFolder, newTrack, oldTrack, isSameTrack);
 
       final Video? newVideo = newTrack is Video ? newTrack : null;
       final Video? oldVideo = oldTrack is Video ? oldTrack : null;
-      changes._updateKey(MediaType.folderVideo, mainMapFoldersVideos, newVideo?.folder, oldVideo?.folder, newVideo, oldVideo, isSameTrack);
+      final newVideoFolder = newFolder is VideoFolder ? newFolder : null;
+      final oldVideoFolder = oldFolder is VideoFolder ? oldFolder : null;
+      changes._updateKey(MediaType.folderVideo, mainMapFoldersVideos, newVideoFolder, oldVideoFolder, newVideo, oldVideo, isSameTrack);
 
       final T? newMusic = newVideo == null ? newTrack : null;
       final T? oldMusic = oldVideo == null ? oldTrack : null;

@@ -148,6 +148,27 @@ abstract class MusicWebServer {
   }
 }
 
+final _remotePathSeparatorRegex = RegExp(r'[/\\]');
+
+List<String> _splitRemotePath(String remotePath) => remotePath.split(_remotePathSeparatorRegex).where((s) => s.isNotEmpty).toFixedList();
+
+/// [TrackExtended.serverFolder] of [remoteFilePath], relative to [baseSegments] when it's inside them.
+String? _serverFolderOf(String remoteFilePath, {List<String> baseSegments = const []}) {
+  final segments = _splitRemotePath(remoteFilePath);
+  final dirEnd = segments.length - 1;
+  final dirStart = _startsWithSegments(segments, baseSegments) ? baseSegments.length : 0;
+  if (dirStart >= dirEnd) return null;
+  return segments.getRange(dirStart, dirEnd).join('/');
+}
+
+bool _startsWithSegments(List<String> segments, List<String> prefix) {
+  if (prefix.length > segments.length) return false;
+  for (int i = 0; i < prefix.length; i++) {
+    if (segments[i] != prefix[i]) return false;
+  }
+  return true;
+}
+
 /// a temp copy that goes away once its reader is done.
 Stream<List<int>> _readThenDelete(File file, int start, [int? end]) async* {
   try {
@@ -241,15 +262,17 @@ class HostServerInfo {
 class _ServerDiffManager {
   final Uri serverUriParsed;
   final Map<String, int> existingLibraryMapSoonToBeRemoved;
+  final void Function(TrackExtended trExt) onTrackUpdated;
 
   const _ServerDiffManager(
     this.serverUriParsed,
     this.existingLibraryMapSoonToBeRemoved,
+    this.onTrackUpdated,
   );
 
   static const _millisecondsAllowance = 1000;
 
-  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified) {
+  bool checkCanSkipScanAndMarkExists(String serverPath, DateTime? remoteDateModified, {required String? serverFolder}) {
     final uri = serverUriParsed.replace(
       queryParameters: {
         ...serverUriParsed.queryParameters,
@@ -257,11 +280,24 @@ class _ServerDiffManager {
       },
     );
     final uriString = uri.toString();
-    final canSkip = _checkCanSkipScan(uriString, remoteDateModified);
+    final canSkip = _checkCanSkipScan(uriString, remoteDateModified) && _canSkipForServerFolder(uriString, serverFolder);
 
     existingLibraryMapSoonToBeRemoved.remove(uriString); // mark exist
 
     return canSkip;
+  }
+
+  /// tracks indexed before [TrackExtended.serverFolder] existed get it without a rescan.
+  bool _canSkipForServerFolder(String fullPath, String? serverFolder) {
+    final trExt = Indexer.inst.allTracksMappedByPath[fullPath];
+    if (trExt == null) return true;
+    final storedServerFolder = trExt.serverFolder;
+    if (storedServerFolder == serverFolder) return true;
+    if (storedServerFolder != null || serverFolder == null) return false;
+    // -- same path keeps the artwork hash key
+    final updatedTrExt = trExt.copyWith(path: fullPath, serverFolder: serverFolder, generatePathHash: false);
+    onTrackUpdated(updatedTrExt);
+    return true;
   }
 
   bool _checkCanSkipScan(String fullPath, DateTime? remoteDateModified) {

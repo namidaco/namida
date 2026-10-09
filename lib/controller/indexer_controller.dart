@@ -633,6 +633,7 @@ class Indexer<T extends Track> {
         isVideo: trackPath.isVideo(),
         hashKey: null,
         server: server,
+        serverFolder: null,
       );
 
       final tags = info?.tags ?? _emptyTags;
@@ -2141,6 +2142,7 @@ class Indexer<T extends Track> {
         isVideo: e.data.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
         server: null,
+        serverFolder: null,
       );
       tracks.add(trext);
       _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);

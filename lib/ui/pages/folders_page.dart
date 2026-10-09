@@ -8,6 +8,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
@@ -236,18 +237,29 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
         String title = lang.home;
         String? titleSuffix;
         String? subtitle;
+        Widget? subtitleWidget;
+        IconData icon = isHome ? Broken.home_2 : Broken.folder_2;
         if (!isHome && currentFolder != null) {
-          title = currentFolder.folderNameTryFormatNetwork();
+          final server = currentFolder.parseNetworkServer();
+          title = server != null && currentFolder.isNetworkRoot ? server.toSourceInfo() : currentFolder.folderNameRaw;
           final extraInfo = currentFolder.getExtraInfoOrFetch(refreshState);
           if (extraInfo != null && extraInfo.isNotEmpty) titleSuffix = ' - ($extraInfo)';
           subtitle = currentFolder.formattedParentPath();
+          if (server != null) {
+            icon = server.type.toIcon();
+            subtitleWidget = _ServerFolderSubtitle(
+              server: server,
+              parentPath: subtitle,
+            );
+          }
         }
         return CustomListTile(
           borderR: 16.0,
-          icon: isHome ? Broken.home_2 : Broken.folder_2,
+          icon: icon,
           title: title,
           titleSuffix: titleSuffix,
           subtitle: subtitle,
+          subtitleWidget: subtitleWidget,
           subtitleAbove: true,
           onTap: () => widget.foldersController.stepOut(),
           trailingRaw: Row(
@@ -511,6 +523,43 @@ class _SkipSingleSubfolderIcon extends StatelessWidget {
       iconSize: 20.0,
       iconColor: iconColor,
       onPressed: onTap,
+    );
+  }
+}
+
+class _ServerFolderSubtitle extends StatelessWidget {
+  final DirectoryIndexServer server;
+  final String parentPath;
+
+  const _ServerFolderSubtitle({
+    required this.server,
+    required this.parentPath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final subtitleStyle = theme.textTheme.displaySmall;
+    final parentPathWidget = parentPath.isEmpty
+        ? null
+        : Text(
+            parentPath,
+            style: subtitleStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          server.toTypeAndUserInfo(),
+          style: subtitleStyle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        ?parentPathWidget,
+      ],
     );
   }
 }

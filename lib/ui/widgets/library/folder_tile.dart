@@ -78,18 +78,14 @@ class _FolderTileState extends State<FolderTile> {
     final extraInfo = widget.folder.getExtraInfoOrFetch(refreshState);
 
     String folderTitle = widget.title ?? widget.folder.folderNameRaw;
+    String? subtitle = widget.subtitle;
     Widget? trailingWidget;
     if (widget.isHome) {
       try {
-        if (widget.folder.isNetwork) {
-          final server = DirectoryIndexServer.parseFromEncodedUrlPath(folderTitle);
-          folderTitle = [
-            server.toSourceInfo(),
-            [
-              server.type.toText(),
-              server.username,
-            ].join(' - '),
-          ].join('\n');
+        if (widget.folder.isNetworkRoot) {
+          final server = DirectoryIndexServer.parseFromEncodedUrlPath(widget.folder.path);
+          folderTitle = server.toSourceInfo();
+          subtitle = server.toTypeAndUserInfo();
           final assetImagePath = server.type.toAssetImage();
           trailingWidget = assetImagePath == null
               ? null
@@ -249,9 +245,9 @@ class _FolderTileState extends State<FolderTile> {
                             folderTitle,
                             style: textTheme.displayMedium,
                           ),
-                    if (widget.subtitle != null)
+                    if (subtitle != null)
                       Text(
-                        widget.subtitle!,
+                        subtitle,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: textTheme.displaySmall,

@@ -103,7 +103,7 @@ class _WebDAVServer extends MusicWebServer {
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
 
-    final diffState = _ServerDiffManager(serverUriParsed, serverTracksInLibrary);
+    final diffState = _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback);
 
     try {
       final networkFiles = await api.readDir('/');
@@ -180,7 +180,8 @@ class _WebDAVServer extends MusicWebServer {
           final serverPath = file.path;
           if (serverPath == null) return null;
 
-          final canSkip = diffState.checkCanSkipScanAndMarkExists(serverPath, file.mTime);
+          final serverFolder = _serverFolderOf(serverPath);
+          final canSkip = diffState.checkCanSkipScanAndMarkExists(serverPath, file.mTime, serverFolder: serverFolder);
           if (canSkip) return null;
 
           final res = await _fetchFileAndExtractInfo(serverPath, file.name, api, identifiersSet, artworksToExtractLater);
@@ -220,7 +221,7 @@ class _WebDAVServer extends MusicWebServer {
               },
             );
             final newPath = newUri.toString();
-            final newTrExt = trExt.copyWith(generatePathHash: true, path: newPath);
+            final newTrExt = trExt.copyWith(generatePathHash: true, path: newPath, serverFolder: serverFolder);
 
             final serverPathWOExt = p.basenameWithoutExtension(serverPath);
             lrcFilesInfoToExtractLater[serverPathWOExt] = newTrExt;

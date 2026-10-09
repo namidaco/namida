@@ -1329,6 +1329,7 @@ final kDummyExtendedTrack = TrackExtended(
   albumsIdentifiersWrappers: [],
   isVideo: false,
   server: null,
+  serverFolder: null,
 );
 
 /// Unknown Tag Fields

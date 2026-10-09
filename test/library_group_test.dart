@@ -94,6 +94,7 @@ void main() {
       chapters: null,
       isVideo: path.endsWith('.mp4'),
       server: null,
+      serverFolder: null,
     );
   }
 

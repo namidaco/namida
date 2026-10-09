@@ -67,7 +67,7 @@ class _SAFServer extends MusicWebServer {
     final minDur = settings.indexMinDurationInSec.value;
     final minSize = settings.indexMinFileSizeInB.value;
     final extractArtwork = Indexer.inst.isNetworkArtworkCachingEnabled;
-    final diffState = forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary);
+    final diffState = forceReIndex ? null : _ServerDiffManager(serverUriParsed, serverTracksInLibrary, callback);
 
     final mediaIndices = <int>[];
     final lrcIndices = <int>[];
@@ -86,9 +86,11 @@ class _SAFServer extends MusicWebServer {
     Future<TrackExtended?> processMedia(int index) async {
       final docId = listing.ids[index];
       final modifiedMS = listing.modifiedMS[index];
+      final dirPath = listing.dirPaths[listing.dirIndices[index]];
+      final serverFolder = dirPath.isEmpty ? null : dirPath;
       if (diffState != null) {
         final remoteModified = modifiedMS >= 0 ? DateTime.fromMillisecondsSinceEpoch(modifiedMS) : null;
-        final canSkip = diffState.checkCanSkipScanAndMarkExists(docId, remoteModified);
+        final canSkip = diffState.checkCanSkipScanAndMarkExists(docId, remoteModified, serverFolder: serverFolder);
         if (canSkip) return null;
       }
 
@@ -136,7 +138,7 @@ class _SAFServer extends MusicWebServer {
             'd': docId,
           },
         );
-        return trExt.copyWith(generatePathHash: true, path: newUri.toString());
+        return trExt.copyWith(generatePathHash: true, path: newUri.toString(), serverFolder: serverFolder);
       } catch (_) {
         return null;
       } finally {

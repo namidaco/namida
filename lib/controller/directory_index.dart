@@ -187,6 +187,13 @@ final class DirectoryIndexServer extends DirectoryIndex {
     return source;
   }
 
+  String toTypeAndUserInfo() {
+    return [
+      type.toText(),
+      username,
+    ].join(' - ');
+  }
+
   /// `content://com.app.documents/tree/root%3AMusic` => `com.app.documents/root:Music`
   static String _safSourceInfo(String treeUri) {
     final uri = Uri.parse(treeUri);

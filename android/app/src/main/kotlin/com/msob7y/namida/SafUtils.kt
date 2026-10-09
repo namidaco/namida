@@ -95,7 +95,7 @@ public class SafUtils(private val context: Context) {
     return false
   }
 
-  /** Every file under [treeUri] as parallel lists, `dirIndices` point into `dirs` (parent document ids). */
+  /** Every file under [treeUri] as parallel lists, `dirIndices` point into `dirs` (parent document ids) and `dirPaths` (their `/` separated paths inside the tree). */
   fun listTree(treeUri: Uri): Map<String, Any> {
     val ids = ArrayList<String>()
     val names = ArrayList<String>()
@@ -103,6 +103,7 @@ public class SafUtils(private val context: Context) {
     val modified = ArrayList<Long>()
     val dirIndices = ArrayList<Int>()
     val dirs = ArrayList<String>()
+    val dirPaths = ArrayList<String>()
     val projection =
         arrayOf(
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
@@ -112,10 +113,10 @@ public class SafUtils(private val context: Context) {
             DocumentsContract.Document.COLUMN_LAST_MODIFIED,
         )
     val resolver = context.contentResolver
-    val pending = ArrayDeque<String>()
-    pending.add(DocumentsContract.getTreeDocumentId(treeUri))
+    val pending = ArrayDeque<Pair<String, String>>()
+    pending.add(DocumentsContract.getTreeDocumentId(treeUri) to "")
     while (pending.isNotEmpty()) {
-      val parentId = pending.removeFirst()
+      val (parentId, parentPath) = pending.removeFirst()
       val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
       val cursor =
           try {
@@ -127,16 +128,18 @@ public class SafUtils(private val context: Context) {
       cursor.use {
         while (it.moveToNext()) {
           val id = it.getString(0) ?: continue
+          val name = it.getString(1) ?: ""
           if (it.getString(2) == DocumentsContract.Document.MIME_TYPE_DIR) {
-            pending.add(id)
+            pending.add(id to (if (parentPath.isEmpty()) name else "$parentPath/$name"))
             continue
           }
           if (dirIndex < 0) {
             dirIndex = dirs.size
             dirs.add(parentId)
+            dirPaths.add(parentPath)
           }
           ids.add(id)
-          names.add(it.getString(1) ?: "")
+          names.add(name)
           sizes.add(if (it.isNull(3)) -1L else it.getLong(3))
           modified.add(if (it.isNull(4)) -1L else it.getLong(4))
           dirIndices.add(dirIndex)
@@ -150,6 +153,7 @@ public class SafUtils(private val context: Context) {
         "modified" to modified,
         "dirIndices" to dirIndices,
         "dirs" to dirs,
+        "dirPaths" to dirPaths,
     )
   }
 

@@ -45,7 +45,7 @@ abstract class NamidaStorage {
   Future<String?> safCopyDocument(String documentUri, String destPath) async => 'SAF is not supported on this platform';
 }
 
-/// files under a document tree as parallel lists, [dirIndices] point into [dirs] (parent document ids).
+/// files under a document tree as parallel lists, [dirIndices] point into [dirs] (parent document ids) and [dirPaths] (their `/` separated paths inside the tree).
 class SafTreeListing {
   final List<String> ids;
   final List<String> names;
@@ -53,6 +53,7 @@ class SafTreeListing {
   final List<int> modifiedMS;
   final List<int> dirIndices;
   final List<String> dirs;
+  final List<String> dirPaths;
 
   const SafTreeListing({
     required this.ids,
@@ -61,6 +62,7 @@ class SafTreeListing {
     required this.modifiedMS,
     required this.dirIndices,
     required this.dirs,
+    required this.dirPaths,
   });
 
   factory SafTreeListing.fromMap(Map<String, Object?> map) => SafTreeListing(
@@ -70,6 +72,7 @@ class SafTreeListing {
     modifiedMS: List<int>.from(map['modified'] as List, growable: false),
     dirIndices: List<int>.from(map['dirIndices'] as List, growable: false),
     dirs: List<String>.from(map['dirs'] as List, growable: false),
+    dirPaths: List<String>.from(map['dirPaths'] as List, growable: false),
   );
 
   int get length => ids.length;
