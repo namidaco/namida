@@ -409,6 +409,11 @@ class SearchSortController extends SearchPortsProvider {
       }
     }
 
+    String Function(Track e) sortInfoOrFallback(String? Function(Track e) sortInfoValue, TrackSearchFilter fallbackFilter, String Function(Track e) fallback) {
+      final fallbackKey = encapsulateSortCanIgnorePrefix(fallbackFilter, fallback);
+      return (e) => normalizeOrNull(sortInfoValue(e)) ?? fallbackKey(e);
+    }
+
     return switch (type) {
       SortType.title => encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title)),
       SortType.album => encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join())),
@@ -434,12 +439,11 @@ class SearchSortController extends SearchPortsProvider {
       SortType.mostPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0),
       SortType.latestPlayed => (e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0),
       SortType.firstListen => (e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch,
-      SortType.titleSort => (e) => normalizeOrNull(e.sortInfo?.title) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title))(e),
-      SortType.albumSort => (e) => normalizeOrNull(e.sortInfo?.album) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join()))(e),
-      SortType.albumArtistSort =>
-        (e) => normalizeOrNull(e.sortInfo?.albumArtist) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist))(e),
-      SortType.artistSort => (e) => normalizeOrNull(e.sortInfo?.artist) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join()))(e),
-      SortType.composerSort => (e) => normalizeOrNull(e.sortInfo?.composer) ?? encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer))(e),
+      SortType.titleSort => sortInfoOrFallback((e) => e.sortInfo?.title, TrackSearchFilter.title, (e) => normalize(e.title)),
+      SortType.albumSort => sortInfoOrFallback((e) => e.sortInfo?.album, TrackSearchFilter.album, (e) => normalize(e.albumsList.join())),
+      SortType.albumArtistSort => sortInfoOrFallback((e) => e.sortInfo?.albumArtist, TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist)),
+      SortType.artistSort => sortInfoOrFallback((e) => e.sortInfo?.artist, TrackSearchFilter.artist, (e) => normalize(e.artistsList.join())),
+      SortType.composerSort => sortInfoOrFallback((e) => e.sortInfo?.composer, TrackSearchFilter.composer, (e) => normalize(e.composer)),
       SortType.shuffle => _createShuffleComparable(),
       SortType.shuffleDaily => createDailyShuffleComparable<Track>((e) => e.path),
     };
@@ -1318,162 +1322,55 @@ class SearchSortController extends SearchPortsProvider {
     required List<Track> list,
     required void Function(SortType? sortType, bool isReverse) onDone,
   }) {
-    final ignoreCommonPrefix = settings.ignoreCommonPrefixForTypes.value;
-    final normalize = sortKeyNormalizer;
-
-    void sortThis(Comparable Function(Track e) comparable) => list.sortByPrecomputed(comparable, reverse: reverse);
-    void sortThisAlts(List<Comparable<dynamic> Function(Track tr)> alternatives) => list.sortByAltsPrecomputed(alternatives, reverse: reverse);
-
-    String Function(Track e) encapsulateSortCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
-      if (ignoreCommonPrefix.contains(filter)) {
-        return (e) => comparable(e).ignoreCommonPrefixes();
+    if (sortBy == SortType.shuffle) {
+      list.shuffle();
+    } else if (sortBy != null) {
+      final comparable = getTracksSortingComparables(sortBy);
+      final sameMediaSorters = _getSameMediaTracksSortingComparables(sortBy);
+      if (sameMediaSorters == null) {
+        list.sortByPrecomputed(comparable, reverse: reverse);
       } else {
-        return comparable;
+        list.sortByAltsPrecomputed([comparable, ...sameMediaSorters], reverse: reverse);
       }
-    }
-
-    void sortThisCanIgnorePrefix(TrackSearchFilter filter, String Function(Track e) comparable) {
-      if (ignoreCommonPrefix.contains(filter)) {
-        sortThis((e) => comparable(e).ignoreCommonPrefixes());
-      } else {
-        sortThis(comparable);
-      }
-    }
-
-    switch (sortBy) {
-      case SortType.title:
-        sortThisCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title));
-      case SortType.album:
-        final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.album);
-        sortThisAlts(
-          [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (tr) => normalize(tr.albumsList.join())),
-            ...sameAlbumSorters,
-          ],
-        );
-        break;
-      case SortType.albumArtist:
-        final sameAlbumSorters = getMediaTracksSortingComparables(MediaType.albumArtist);
-        sortThisAlts(
-          [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (tr) => normalize(tr.albumArtist)),
-            ...sameAlbumSorters,
-          ],
-        );
-        break;
-      case SortType.year:
-        sortThis((e) => e.yearPreferyyyyMMdd);
-        break;
-      case SortType.artistsList:
-        final sameArtistSorters = getMediaTracksSortingComparables(MediaType.artist);
-        sortThisAlts(
-          [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (tr) => normalize(tr.artistsList.join())),
-            ...sameArtistSorters,
-          ],
-        );
-        break;
-      case SortType.genresList:
-        final sameGenreSorters = getMediaTracksSortingComparables(MediaType.genre);
-        sortThisAlts(
-          [
-            encapsulateSortCanIgnorePrefix(TrackSearchFilter.genre, (tr) => normalize(tr.genresList.join())),
-            ...sameGenreSorters,
-          ],
-        );
-        break;
-      case SortType.dateAdded:
-        sortThis((e) => e.dateAdded);
-        break;
-      case SortType.dateModified:
-        sortThis((e) => e.dateModified);
-        break;
-      case SortType.bitrate:
-        sortThis((e) => e.bitrate);
-        break;
-      case SortType.composer:
-        sortThisCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer));
-        break;
-      case SortType.trackNo:
-        sortThis((e) => e.trackNo);
-        break;
-      case SortType.discNo:
-        sortThis((e) => e.discNo);
-        break;
-      case SortType.filename:
-        sortThisCanIgnorePrefix(TrackSearchFilter.filename, (e) => normalize(e.filename));
-        break;
-      case SortType.path:
-        sortThis((e) => e.path);
-        break;
-      case SortType.duration:
-        sortThis((e) => e.durationMS);
-        break;
-      case SortType.sampleRate:
-        sortThis((e) => e.sampleRate);
-        break;
-      case SortType.bitDepth:
-        sortThis((e) => e.bits);
-        break;
-      case SortType.bpm:
-        sortThis((e) => e.bpm ?? 0);
-        break;
-      case SortType.size:
-        sortThis((e) => e.size);
-        break;
-      case SortType.rating:
-        sortThis((e) => e.effectiveRating);
-        break;
-      case SortType.favourite:
-        sortThis(_createFavouriteComparable());
-        break;
-      case SortType.shuffle:
-        list.shuffle();
-        break;
-      case SortType.shuffleDaily:
-        sortThis(createDailyShuffleComparable<Track>((e) => e.path));
-        break;
-      case SortType.mostPlayed:
-        sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.length ?? 0));
-      case SortType.latestPlayed:
-        sortThis((e) => -(HistoryController.inst.topTracksMapListens.value[e]?.lastOrNull ?? 0));
-      case SortType.firstListen:
-        sortThis((e) => HistoryController.inst.topTracksMapListens.value[e]?.firstOrNull ?? DateTime(99999).millisecondsSinceEpoch);
-      case SortType.titleSort:
-        sortThisAlts([
-          (e) => normalize(e.sortInfo?.title ?? ''),
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.title, (e) => normalize(e.title)),
-        ]);
-        break;
-      case SortType.albumSort:
-        sortThisAlts([
-          (e) => normalize(e.sortInfo?.album ?? ''),
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.album, (e) => normalize(e.albumsList.join())),
-        ]);
-        break;
-      case SortType.albumArtistSort:
-        sortThisAlts([
-          (e) => normalize(e.sortInfo?.albumArtist ?? ''),
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.albumartist, (e) => normalize(e.albumArtist)),
-        ]);
-        break;
-      case SortType.artistSort:
-        sortThisAlts([
-          (e) => normalize(e.sortInfo?.artist ?? ''),
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.artist, (e) => normalize(e.artistsList.join())),
-        ]);
-        break;
-      case SortType.composerSort:
-        sortThisAlts([
-          (e) => normalize(e.sortInfo?.composer ?? ''),
-          encapsulateSortCanIgnorePrefix(TrackSearchFilter.composer, (e) => normalize(e.composer)),
-        ]);
-        break;
-
-      case null:
-        null;
     }
     onDone(sortBy, reverse);
+  }
+
+  List<Comparable Function(Track tr)>? _getSameMediaTracksSortingComparables(SortType sort) {
+    final media = switch (sort) {
+      SortType.album => MediaType.album,
+      SortType.albumArtist => MediaType.albumArtist,
+      SortType.artistsList => MediaType.artist,
+      SortType.genresList => MediaType.genre,
+      SortType.title ||
+      SortType.year ||
+      SortType.dateAdded ||
+      SortType.dateModified ||
+      SortType.bitrate ||
+      SortType.composer ||
+      SortType.trackNo ||
+      SortType.discNo ||
+      SortType.filename ||
+      SortType.path ||
+      SortType.duration ||
+      SortType.sampleRate ||
+      SortType.bitDepth ||
+      SortType.bpm ||
+      SortType.size ||
+      SortType.rating ||
+      SortType.favourite ||
+      SortType.shuffle ||
+      SortType.shuffleDaily ||
+      SortType.mostPlayed ||
+      SortType.latestPlayed ||
+      SortType.firstListen ||
+      SortType.titleSort ||
+      SortType.albumSort ||
+      SortType.albumArtistSort ||
+      SortType.artistSort ||
+      SortType.composerSort => null,
+    };
+    return media == null ? null : getMediaTracksSortingComparables(media);
   }
 
   /// Sorts Albums and Saves automatically to settings

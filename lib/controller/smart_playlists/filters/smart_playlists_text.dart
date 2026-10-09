@@ -95,6 +95,9 @@ final class SmartPlaylistRuleText
   late final (String, String)? _staticBounds = _sortedBounds(_staticDataOrCleaned, _staticData2OrCleaned);
   late final RegExp? _staticRegex = _tryCompile(_staticData);
 
+  /// cleanup strips the symbols regex may rely on, so regex tries the raw text before the cleaned one.
+  late final _shouldCleanTrackText = enableCleanup && !filter.isRegex();
+
   RegExp? _tryCompile(String? pattern) {
     if (pattern == null) return null;
     try {
@@ -102,6 +105,16 @@ final class SmartPlaylistRuleText
     } catch (_) {
       return null;
     }
+  }
+
+  RegExp? _tryCompileCached(String? pattern, _SmartPlaylistResolveContext context) {
+    if (pattern == null) return null;
+    final regexes = enableCleanup ? context.caseInsensitiveRegexes : context.caseSensitiveRegexes;
+    final cached = regexes[pattern];
+    if (cached != null || regexes.containsKey(pattern)) return cached;
+    final regex = _tryCompile(pattern);
+    regexes[pattern] = regex;
+    return regex;
   }
 
   String? _cleanedIfEnabled(String? text) => enableCleanup ? text?.cleanUpForComparison : text;
@@ -147,12 +160,32 @@ final class SmartPlaylistRuleText
   static bool _isInRange(String text, (String, String) bounds) => text.isNotEmpty && text.compareTo(bounds.$1) >= 0 && _compareCutToBound(text, bounds.$2) <= 0;
   static bool _isOutsideRange(String text, (String, String) bounds) => _isBefore(text, bounds.$1) || _isAfter(text, bounds.$2);
 
+  bool _hasMatchRawOrCleaned(RegExp regex, String text) {
+    if (regex.hasMatch(text)) return true;
+    if (!enableCleanup) return false;
+    final cleanedText = text.cleanUpForComparison;
+    return regex.hasMatch(cleanedText);
+  }
+
+  bool _anyHasMatchRawOrCleaned(RegExp regex, Iterable<String> list) {
+    for (final text in list) {
+      if (regex.hasMatch(text)) return true;
+    }
+    if (!enableCleanup) return false;
+    for (final text in list) {
+      final cleanedText = text.cleanUpForComparison;
+      if (regex.hasMatch(cleanedText)) return true;
+    }
+    return false;
+  }
+
   @override
   bool _matches(Track track, _SmartPlaylistResolveContext context) {
     final isStatic = _staticData != null;
-    final resolved = isStatic ? _staticData : _resolveTokens(data, track, context);
-    final dataOrCleaned = isStatic ? _staticDataOrCleaned : _cleanedIfEnabled(resolved);
-    late final dataAsRegex = resolved != null ? _staticRegex ?? _tryCompile(_resolveTokens(data, track, context, escapeSources: true)) : null;
+    late final resolvedData = _resolveTokens(data, track, context);
+    late final resolvedPattern = _resolveTokens(data, track, context, escapeSources: true);
+    late final dataOrCleaned = isStatic ? _staticDataOrCleaned : _cleanedIfEnabled(resolvedData);
+    late final dataAsRegex = isStatic ? _staticRegex : _tryCompileCached(resolvedPattern, context);
     late final bounds = _resolveBounds(dataOrCleaned, track, context);
 
     bool textFnRaw(String trackText) => switch (filter) {
@@ -162,8 +195,8 @@ final class SmartPlaylistRuleText
       SmartPlaylistRuleFilterText.notContains => dataOrCleaned != null && !trackText.contains(dataOrCleaned),
       SmartPlaylistRuleFilterText.startsWith => dataOrCleaned != null && trackText.startsWith(dataOrCleaned),
       SmartPlaylistRuleFilterText.endsWith => dataOrCleaned != null && trackText.endsWith(dataOrCleaned),
-      SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && dataAsRegex.hasMatch(trackText),
-      SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !dataAsRegex.hasMatch(trackText),
+      SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && _hasMatchRawOrCleaned(dataAsRegex, trackText),
+      SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !_hasMatchRawOrCleaned(dataAsRegex, trackText),
       SmartPlaylistRuleFilterText.isBefore => dataOrCleaned != null && _isBefore(trackText, dataOrCleaned),
       SmartPlaylistRuleFilterText.isAfter => dataOrCleaned != null && _isAfter(trackText, dataOrCleaned),
       SmartPlaylistRuleFilterText.isInBetween => bounds != null && _isInRange(trackText, bounds),
@@ -179,8 +212,8 @@ final class SmartPlaylistRuleText
       SmartPlaylistRuleFilterText.notContains => dataOrCleaned != null && !list.any((e) => e.contains(dataOrCleaned)),
       SmartPlaylistRuleFilterText.startsWith => dataOrCleaned != null && list.any((e) => e.startsWith(dataOrCleaned)),
       SmartPlaylistRuleFilterText.endsWith => dataOrCleaned != null && list.any((e) => e.endsWith(dataOrCleaned)),
-      SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && list.any((e) => dataAsRegex.hasMatch(e)),
-      SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !list.any((e) => dataAsRegex.hasMatch(e)),
+      SmartPlaylistRuleFilterText.regexMatch => dataAsRegex != null && _anyHasMatchRawOrCleaned(dataAsRegex, list),
+      SmartPlaylistRuleFilterText.regexNotMatch => dataAsRegex != null && !_anyHasMatchRawOrCleaned(dataAsRegex, list),
       SmartPlaylistRuleFilterText.isBefore => dataOrCleaned != null && list.any((e) => _isBefore(e, dataOrCleaned)),
       SmartPlaylistRuleFilterText.isAfter => dataOrCleaned != null && list.any((e) => _isAfter(e, dataOrCleaned)),
       SmartPlaylistRuleFilterText.isInBetween => bounds != null && list.any((e) => _isInRange(e, bounds)),
@@ -189,8 +222,8 @@ final class SmartPlaylistRuleText
       SmartPlaylistRuleFilterText.missing => list.isEmpty,
     };
 
-    bool textFn(String t) => enableCleanup ? textFnRaw(t.cleanUpForComparison) : textFnRaw(t);
-    bool textListFn(List<String> list) => enableCleanup ? textListFnRaw(list.map((e) => e.cleanUpForComparison)) : textListFnRaw(list);
+    bool textFn(String t) => _shouldCleanTrackText ? textFnRaw(t.cleanUpForComparison) : textFnRaw(t);
+    bool textListFn(List<String> list) => _shouldCleanTrackText ? textListFnRaw(list.map((e) => e.cleanUpForComparison)) : textListFnRaw(list);
 
     return switch (source) {
       SmartPlaylistRuleFilterTextSource.title => textFn(track.title),

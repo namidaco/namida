@@ -14,8 +14,6 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
   final SmartPlaylistNumberScope scope;
   final SmartPlaylistNumberAggregate aggregate;
 
-  bool Function(int? msse)? siblingDateFilter;
-
   static const _kMonthMS = 30 * Duration.millisecondsPerDay;
 
   @override
@@ -152,7 +150,7 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
 
   num? _trackValueOf(Track track, _SmartPlaylistResolveContext context) => switch (source) {
     SmartPlaylistRuleFilterNumberSource.totalListens => SmartPlaylistRuleBase.topTracksMapListens[track]?.length ?? 0,
-    SmartPlaylistRuleFilterNumberSource.totalListensInRange => _listensInRangeCount(track),
+    SmartPlaylistRuleFilterNumberSource.totalListensInRange => _listensInRangeCount(track, context),
     SmartPlaylistRuleFilterNumberSource.listenRate => _listensPerMonth(track, context.nowMS),
     SmartPlaylistRuleFilterNumberSource.rating => track.effectiveRating,
     SmartPlaylistRuleFilterNumberSource.lastPlayedPositionInMs => (track.lastPlayedPositionInMs ?? 0) / 1000,
@@ -171,10 +169,10 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     SmartPlaylistRuleFilterNumberSource.tracksCount => 1,
   };
 
-  int _listensInRangeCount(Track track) {
+  int _listensInRangeCount(Track track, _SmartPlaylistResolveContext context) {
     final listens = SmartPlaylistRuleBase.topTracksMapListens[track];
     if (listens == null) return 0;
-    final siblingDateFilter = this.siblingDateFilter;
+    final siblingDateFilter = context.siblingDateFilters[this];
     if (siblingDateFilter == null) return listens.length;
     int count = 0;
     for (final msse in listens) {

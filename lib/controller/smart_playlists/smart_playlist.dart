@@ -66,8 +66,8 @@ class SmartPlaylist {
   }
 
   Iterable<Track> resolveIterableUnSorted(Iterable<Track> allTracks) sync* {
-    final effectiveGroups = _setupGroupsBeforeResolving();
     final context = _SmartPlaylistResolveContext();
+    final effectiveGroups = _setupGroupsBeforeResolving(context);
 
     for (final track in allTracks) {
       final isMatch = _isMatch(effectiveGroups, track, context);
@@ -76,8 +76,8 @@ class SmartPlaylist {
   }
 
   Iterable<int> resolveIterableUnSortedAsIndices(Iterable<Track> allTracks) sync* {
-    final effectiveGroups = _setupGroupsBeforeResolving();
     final context = _SmartPlaylistResolveContext();
+    final effectiveGroups = _setupGroupsBeforeResolving(context);
 
     int index = 0;
     for (final track in allTracks) {
@@ -88,13 +88,21 @@ class SmartPlaylist {
   }
 
   bool _isMatch(List<SmartPlaylistRuleGroup> effectiveGroups, Track track, _SmartPlaylistResolveContext context) {
-    return switch (joiner) {
-      SmartJoiner.and => effectiveGroups.every((group) => group._matches(track, context)),
-      SmartJoiner.or => effectiveGroups.any((group) => group._matches(track, context)),
-    };
+    switch (joiner) {
+      case SmartJoiner.and:
+        for (int i = 0; i < effectiveGroups.length; i++) {
+          if (!effectiveGroups[i]._matches(track, context)) return false;
+        }
+        return true;
+      case SmartJoiner.or:
+        for (int i = 0; i < effectiveGroups.length; i++) {
+          if (effectiveGroups[i]._matches(track, context)) return true;
+        }
+        return false;
+    }
   }
 
-  List<SmartPlaylistRuleGroup> _setupGroupsBeforeResolving() {
+  List<SmartPlaylistRuleGroup> _setupGroupsBeforeResolving(_SmartPlaylistResolveContext context) {
     final effectiveGroups = ruleGroups.where((group) => group.rules.isNotEmpty).toFixedList();
     if (effectiveGroups.isEmpty) return effectiveGroups;
 
@@ -103,14 +111,14 @@ class SmartPlaylist {
       final numberRulesNeedingDate = g.rules.whereType<SmartPlaylistRuleNumber>().where((r) => r.source == SmartPlaylistRuleFilterNumberSource.totalListensInRange);
       if (numberRulesNeedingDate.isEmpty) continue;
 
-      final dateRules = g.rules.whereType<SmartPlaylistRuleDateTime>().where((r) => r.source == SmartPlaylistRuleFilterDateTimeSource.rangeOnly);
+      final dateRules = g.rules.whereType<SmartPlaylistRuleDateTime>().where((r) => r.source == SmartPlaylistRuleFilterDateTimeSource.rangeOnly).toFixedList();
       if (dateRules.isNotEmpty) {
         final bool Function(int? msse) combinedFilter = switch (g.joiner) {
-          SmartJoiner.and => (msse) => dateRules.every((dr) => dr.matchesTimestamp(msse)),
-          SmartJoiner.or => (msse) => dateRules.any((dr) => dr.matchesTimestamp(msse)),
+          SmartJoiner.and => (msse) => dateRules.every((dr) => dr._matchesTimestamp(msse, context)),
+          SmartJoiner.or => (msse) => dateRules.any((dr) => dr._matchesTimestamp(msse, context)),
         };
         for (final rule in numberRulesNeedingDate) {
-          rule.siblingDateFilter = combinedFilter;
+          context.siblingDateFilters[rule] = combinedFilter;
         }
       }
     }
@@ -134,7 +142,7 @@ class SmartPlaylist {
 
   static List<SortType> _parseSorts(Map<String, dynamic> map) {
     final sortsRaw = map['sorts'];
-    if (sortsRaw != null) return SortType.sortListFromJsonList(sortsRaw) ?? const [];
+    if (sortsRaw != null) return SortType.sortListFromJsonList(sortsRaw);
     final legacySort = SortType.values.getEnum(map['sort']);
     return legacySort == null ? const [] : [legacySort];
   }
@@ -198,11 +206,21 @@ class SmartPlaylistRuleGroup {
   );
 
   bool _matches(Track track, _SmartPlaylistResolveContext context) {
-    final effectiveRules = rules.where((r) => r.source != SmartPlaylistRuleFilterDateTimeSource.rangeOnly);
-    return switch (joiner) {
-      SmartJoiner.and => effectiveRules.every((element) => element._matches(track, context)),
-      SmartJoiner.or => effectiveRules.any((element) => element._matches(track, context)),
-    };
+    final rules = this.rules;
+    switch (joiner) {
+      case SmartJoiner.and:
+        for (int i = 0; i < rules.length; i++) {
+          final rule = rules[i];
+          if (rule.source != SmartPlaylistRuleFilterDateTimeSource.rangeOnly && !rule._matches(track, context)) return false;
+        }
+        return true;
+      case SmartJoiner.or:
+        for (int i = 0; i < rules.length; i++) {
+          final rule = rules[i];
+          if (rule.source != SmartPlaylistRuleFilterDateTimeSource.rangeOnly && rule._matches(track, context)) return true;
+        }
+        return false;
+    }
   }
 
   SmartPlaylistRuleGroup copyWith({
@@ -234,10 +252,35 @@ class SmartPlaylistRuleGroup {
 /// by claude
 class _SmartPlaylistResolveContext {
   final nowMS = currentTimeMS;
+  late final now = DateTime.fromMillisecondsSinceEpoch(nowMS);
+  int get nowMicros => nowMS * Duration.microsecondsPerMillisecond;
 
   Map<Track, List<String>>? _trackPlaylists;
   Map<Track, List<String>>? _trackPlaylistsTags;
   final _scopeValuesPerRule = Map<SmartPlaylistRuleNumber, Map<Object?, num?>>.identity();
+  final caseSensitiveRegexes = <String, RegExp?>{};
+  final caseInsensitiveRegexes = <String, RegExp?>{};
+  final _relativeBoundariesMicros = Map<SmartPlaylistRelativeDuration, int>.identity();
+  final _yearDates = <int, DateTime?>{};
+  final siblingDateFilters = Map<SmartPlaylistRuleNumber, bool Function(int? msse)>.identity();
+
+  int relativeBoundaryMicrosOf(SmartPlaylistRelativeDuration duration) {
+    final cached = _relativeBoundariesMicros[duration];
+    if (cached != null) return cached;
+    final boundary = duration.getBoundary(now);
+    final boundaryMicros = boundary.microsecondsSinceEpoch;
+    _relativeBoundariesMicros[duration] = boundaryMicros;
+    return boundaryMicros;
+  }
+
+  DateTime? yearDateOf(Track track) {
+    final year = track.year;
+    final cached = _yearDates[year];
+    if (cached != null || _yearDates.containsKey(year)) return cached;
+    final yearDate = track.yearAsDateTime();
+    _yearDates[year] = yearDate;
+    return yearDate;
+  }
 
   List<String>? playlistsOf(Track track) {
     final trackPlaylists = _trackPlaylists ??= _buildTrackPlaylists();
@@ -573,7 +616,7 @@ class SmartPlaylistLimit {
       return SmartPlaylistLimit(
         amount: map['amount'] as int,
         unit: SmartPlaylistLimitUnit.values.getEnum(map['unit']) ?? SmartPlaylistLimitUnit.tracks,
-        sorts: SortType.sortListFromJsonList(map['sorts']) ?? const [],
+        sorts: SortType.sortListFromJsonList(map['sorts']),
         sortReverse: map['sortReverse'] == true,
       );
     } catch (_) {}

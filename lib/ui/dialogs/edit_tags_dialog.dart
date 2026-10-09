@@ -1547,7 +1547,7 @@ class _FindReplaceRule {
       SmartPlaylistRuleFilterText.contains ||
       SmartPlaylistRuleFilterText.startsWith ||
       SmartPlaylistRuleFilterText.endsWith => regex == null ? value : value.replaceAll(regex, replaceWith),
-      SmartPlaylistRuleFilterText.regexMatch => regex == null ? value : value.replaceAllMapped(regex, _expandGroupReferences),
+      SmartPlaylistRuleFilterText.regexMatch => regex == null ? value : _replaceRegexMatches(value, regex),
       SmartPlaylistRuleFilterText.isNotSame ||
       SmartPlaylistRuleFilterText.notContains ||
       SmartPlaylistRuleFilterText.regexNotMatch => regex == null || regex.hasMatch(value) ? value : replaceWith,
@@ -1555,6 +1555,24 @@ class _FindReplaceRule {
       SmartPlaylistRuleFilterText.missing => value.isEmpty ? replaceWith : value,
       SmartPlaylistRuleFilterText.isBefore || SmartPlaylistRuleFilterText.isAfter || SmartPlaylistRuleFilterText.isInBetween || SmartPlaylistRuleFilterText.isOutside => value,
     };
+  }
+
+  /// skips the empty match right after a match, [String.replaceAllMapped] applies `(.*)` twice.
+  String _replaceRegexMatches(String value, RegExp regex) {
+    final buffer = StringBuffer();
+    int copiedUntil = 0;
+    int lastMatchEnd = -1;
+    for (final match in regex.allMatches(value)) {
+      final start = match.start;
+      final end = match.end;
+      if (start == end && start == lastMatchEnd) continue;
+      buffer.write(value.substring(copiedUntil, start));
+      buffer.write(_expandGroupReferences(match));
+      copiedUntil = end;
+      lastMatchEnd = end;
+    }
+    buffer.write(value.substring(copiedUntil));
+    return buffer.toString();
   }
 
   String _expandGroupReferences(Match match) => replaceWith.replaceAllMapped(
@@ -1566,6 +1584,12 @@ class _FindReplaceRule {
   );
 
   String get description => filter.requiresDataField ? '${filter.toText()} "$find" → "$replaceWith"' : '${filter.toText()} → "$replaceWith"';
+}
+
+@visibleForTesting
+String debugApplyFindReplace(String value, {required SmartPlaylistRuleFilterText filter, required String find, required String replaceWith, required bool matchCase}) {
+  final rule = _FindReplaceRule(filter: filter, find: find, replaceWith: replaceWith, matchCase: matchCase);
+  return rule.apply(value);
 }
 
 class _MultiTracksEditSummaryEntry {

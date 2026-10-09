@@ -58,10 +58,10 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
     final data2 = this.data2;
     if (filter.isRelativeDate && (relativeDuration == null || relativeDuration!.amount <= 0)) return lang.emptyValue;
 
-    if (filter.requiresDataField && (data == null || data.isAtSameMomentAs(DateTime(0)))) return lang.emptyValue;
-    if (!filter.requiresDataField && (data != null && !data.isAtSameMomentAs(DateTime(0)))) return lang.nameContainsBadCharacter;
-    if (filter.requiresData2Field && (data2 == null || data2.isAtSameMomentAs(DateTime(0)))) return lang.emptyValue;
-    if (!filter.requiresData2Field && (data2 != null && !data2.isAtSameMomentAs(DateTime(0)))) return lang.nameContainsBadCharacter;
+    if (filter.requiresDataField && data == null) return lang.emptyValue;
+    if (!filter.requiresDataField && data != null) return lang.nameContainsBadCharacter;
+    if (filter.requiresData2Field && data2 == null) return lang.emptyValue;
+    if (!filter.requiresData2Field && data2 != null) return lang.nameContainsBadCharacter;
     return null;
   }
 
@@ -119,66 +119,130 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   @override
   String? toHintText() => clockOnly ? 'HH:mm:ss' : 'YYYY-MM-DD HH:mm:ss';
 
-  bool matchesTimestamp(int? msse) => _dateFn(msse);
+  bool _matchesTimestamp(int? msse, _SmartPlaylistResolveContext context) => _dateFn(msse, context);
 
-  static DateTime _timeOnly(DateTime dt) => DateTime(0, 1, 1, dt.hour, dt.minute, dt.second);
-  DateTime? _normalize(DateTime? dt) => dt == null ? null : (clockOnly ? _timeOnly(dt) : dt);
+  late final _comparesClockOnly = clockOnly && !filter.isRelativeDate;
 
-  late final _normalizedData = _normalize(data);
-  late final _normalizedData2 = _normalize(data2);
-
-  late final (DateTime?, DateTime?) _sortedDates = _normalizedData == null || _normalizedData2 == null
-      ? (_normalizedData, _normalizedData2)
-      : _normalizedData.isBefore(_normalizedData2)
-      ? (_normalizedData, _normalizedData2)
-      : (_normalizedData2, _normalizedData);
-
-  late final _startDate = _sortedDates.$1;
-  late final _endDate = _sortedDates.$2;
-
-  late final _crossesMidnight = clockOnly && _normalizedData != null && _normalizedData2 != null && _normalizedData2.isBefore(_normalizedData);
-
-  late final bool Function(DateTime? trackDate) _dateFnRaw = switch (filter) {
-    SmartPlaylistRuleFilterDateTime.isSame => (trackDate) => _normalizedData != null && trackDate?.isAtSameMomentAs(_normalizedData) == true,
-    SmartPlaylistRuleFilterDateTime.isNotSame => (trackDate) => _normalizedData != null && trackDate?.isAtSameMomentAs(_normalizedData) == false,
-    SmartPlaylistRuleFilterDateTime.isBefore => (trackDate) => _normalizedData != null && trackDate?.isBeforeOrEqual(_normalizedData) == true,
-    SmartPlaylistRuleFilterDateTime.isAfter => (trackDate) => _normalizedData != null && trackDate?.isAfterOrEqual(_normalizedData) == true,
-    SmartPlaylistRuleFilterDateTime.isInBetween => (trackDate) {
-      if (trackDate == null) return false;
-      if (_crossesMidnight) {
-        return trackDate.isAfterOrEqual(_normalizedData!) || trackDate.isBeforeOrEqual(_normalizedData2!);
-      }
-      return (_startDate != null && trackDate.isAfterOrEqual(_startDate)) && trackDate.isBeforeOrEqual(_endDate ?? DateTime.now());
-    },
-    SmartPlaylistRuleFilterDateTime.isOutside => (trackDate) {
-      if (trackDate == null) return false;
-      if (_crossesMidnight) {
-        return trackDate.isBefore(_normalizedData!) && trackDate.isAfter(_normalizedData2!);
-      }
-      return (_startDate != null && trackDate.isBefore(_startDate)) || trackDate.isAfter(_endDate ?? DateTime.now());
-    },
-    SmartPlaylistRuleFilterDateTime.isWithinLast => (trackDate) {
-      if (trackDate == null) return false; // -- never listened, definetly not here
-      final boundary = relativeDuration?.getBoundary();
-      return boundary != null && trackDate.isAfter(boundary) == true;
-    },
-    SmartPlaylistRuleFilterDateTime.isNotWithinLast => (trackDate) {
-      if (trackDate == null) return true; // -- never listened, ofc not within any range
-      final boundary = relativeDuration?.getBoundary();
-      return boundary != null && trackDate.isBefore(boundary) == true;
-    },
-    SmartPlaylistRuleFilterDateTime.exists => (trackDate) => trackDate != null,
-    SmartPlaylistRuleFilterDateTime.missing => (trackDate) => trackDate == null,
-  };
-
-  bool _dateFnDateTime(DateTime? trackDate) {
-    final normalized = _normalize(trackDate);
-    return normalized == null || normalized.isAtSameMomentAs(DateTime(0)) ? _dateFnRaw(null) : _dateFnRaw(normalized);
+  /// seconds of the local day for clock only comparisons, microseconds since epoch otherwise, ints since each local date costs a timezone lookup.
+  int? _valueOf(DateTime? date) {
+    if (date == null) return null;
+    if (_comparesClockOnly) return _secondsOfDay(date);
+    return date.microsecondsSinceEpoch;
   }
 
-  bool _dateFn(int? trackDateMSSE) {
-    if (trackDateMSSE == null || trackDateMSSE == 0) return _dateFnRaw(null);
-    return _dateFnRaw(_normalize(DateTime.fromMillisecondsSinceEpoch(trackDateMSSE)));
+  int _valueOfTimestamp(int msse) {
+    if (!_comparesClockOnly) return msse * Duration.microsecondsPerMillisecond;
+    final date = DateTime.fromMillisecondsSinceEpoch(msse);
+    return _secondsOfDay(date);
+  }
+
+  static int _secondsOfDay(DateTime date) => date.hour * Duration.secondsPerHour + date.minute * Duration.secondsPerMinute + date.second;
+
+  static const _kClockNoEnd = Duration.secondsPerDay;
+
+  late final _dataValue = _valueOf(data);
+  late final _data2Value = _valueOf(data2);
+
+  late final (int?, int?) _sortedValues = _dataValue == null || _data2Value == null
+      ? (_dataValue, _data2Value)
+      : _dataValue < _data2Value
+      ? (_dataValue, _data2Value)
+      : (_data2Value, _dataValue);
+
+  late final _startValue = _sortedValues.$1;
+  late final _endValue = _sortedValues.$2;
+
+  late final _crossesMidnight = _comparesClockOnly && _dataValue != null && _data2Value != null && _data2Value < _dataValue;
+
+  /// in dates world, one usually means an inclusive date.
+  /// ex: in between 2015-2016, so both exact dates should be included as well.
+  /// usually useful for types like: `isBefore`, `isAfter`, `isInBetween`.
+  /// but not for types like: `isOutside`.
+  late final bool Function(int? value, _SmartPlaylistResolveContext context) _valueFnRaw = switch (filter) {
+    SmartPlaylistRuleFilterDateTime.isSame => (value, _) => value != null && value == _dataValue,
+    SmartPlaylistRuleFilterDateTime.isNotSame => (value, _) => value != null && _dataValue != null && value != _dataValue,
+    SmartPlaylistRuleFilterDateTime.isBefore => (value, _) => value != null && _dataValue != null && value <= _dataValue,
+    SmartPlaylistRuleFilterDateTime.isAfter => (value, _) => value != null && _dataValue != null && value >= _dataValue,
+    SmartPlaylistRuleFilterDateTime.isInBetween => (value, context) {
+      if (value == null) return false;
+      if (_crossesMidnight) return value >= _dataValue! || value <= _data2Value!;
+      return _startValue != null && value >= _startValue && value <= _endValueOf(context);
+    },
+    SmartPlaylistRuleFilterDateTime.isOutside => (value, context) {
+      if (value == null) return false;
+      if (_crossesMidnight) return value < _dataValue! && value > _data2Value!;
+      return (_startValue != null && value < _startValue) || value > _endValueOf(context);
+    },
+    SmartPlaylistRuleFilterDateTime.isWithinLast => (value, context) {
+      if (value == null) return false; // -- never listened, definetly not here
+      final boundary = _relativeBoundaryOf(context);
+      return boundary != null && value > boundary;
+    },
+    SmartPlaylistRuleFilterDateTime.isNotWithinLast => (value, context) {
+      if (value == null) return true; // -- never listened, ofc not within any range
+      final boundary = _relativeBoundaryOf(context);
+      return boundary != null && value < boundary;
+    },
+    SmartPlaylistRuleFilterDateTime.exists => (value, _) => value != null,
+    SmartPlaylistRuleFilterDateTime.missing => (value, _) => value == null,
+  };
+
+  int _endValueOf(_SmartPlaylistResolveContext context) {
+    final endValue = _endValue;
+    if (endValue != null) return endValue;
+    return _comparesClockOnly ? _kClockNoEnd : context.nowMicros;
+  }
+
+  int? _relativeBoundaryOf(_SmartPlaylistResolveContext context) {
+    final relativeDuration = this.relativeDuration;
+    if (relativeDuration == null) return null;
+    return context.relativeBoundaryMicrosOf(relativeDuration);
+  }
+
+  static final _unknownDate = DateTime(0);
+  late final _unknownDateValue = _valueOf(_unknownDate);
+
+  bool _yearFn(Track track, _SmartPlaylistResolveContext context) {
+    final yearDate = context.yearDateOf(track);
+    final value = _valueOf(yearDate);
+    final knownValue = value == _unknownDateValue ? null : value;
+    return _valueFnRaw(knownValue, context);
+  }
+
+  bool _dateFn(int? trackDateMSSE, _SmartPlaylistResolveContext context) {
+    if (trackDateMSSE == null || trackDateMSSE == 0) return _valueFnRaw(null, context);
+    final value = _valueOfTimestamp(trackDateMSSE);
+    return _valueFnRaw(value, context);
+  }
+
+  /// later dates only ever match more (rising) or less (falling), so sorted listens can be decided by their oldest or newest one.
+  late final _DateTrend? _listensTrend = switch (filter) {
+    SmartPlaylistRuleFilterDateTime.isAfter => _comparesClockOnly ? null : _DateTrend.rising,
+    SmartPlaylistRuleFilterDateTime.isBefore => _comparesClockOnly ? null : _DateTrend.falling,
+    SmartPlaylistRuleFilterDateTime.isWithinLast => _DateTrend.rising,
+    SmartPlaylistRuleFilterDateTime.isNotWithinLast => _DateTrend.falling,
+    SmartPlaylistRuleFilterDateTime.isSame ||
+    SmartPlaylistRuleFilterDateTime.isNotSame ||
+    SmartPlaylistRuleFilterDateTime.isInBetween ||
+    SmartPlaylistRuleFilterDateTime.isOutside ||
+    SmartPlaylistRuleFilterDateTime.exists ||
+    SmartPlaylistRuleFilterDateTime.missing => null,
+  };
+
+  bool _listensFn(Track track, _SmartPlaylistResolveContext context, {required bool every}) {
+    final listens = SmartPlaylistRuleBase.topTracksMapListens[track];
+    if (listens == null) return _dateFn(null, context);
+    final trend = _listensTrend;
+    // -- sorted, an oldest listen after 1970 means none of them is unknown (0)
+    if (trend != null && listens.first > 0) {
+      final decidingListen = switch (trend) {
+        _DateTrend.rising => every ? listens.first : listens.last,
+        _DateTrend.falling => every ? listens.last : listens.first,
+      };
+      return _dateFn(decidingListen, context);
+    }
+    if (every) return listens.every((msse) => _dateFn(msse, context));
+    return listens.any((msse) => _dateFn(msse, context));
   }
 
   int? _getFavouriteDate(Track track) {
@@ -195,14 +259,14 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   @override
   bool _matches(Track track, _SmartPlaylistResolveContext context) {
     return switch (source) {
-      SmartPlaylistRuleFilterDateTimeSource.dateAdded => _dateFn(track.dateAdded),
-      SmartPlaylistRuleFilterDateTimeSource.dateModified => _dateFn(track.dateModified),
-      SmartPlaylistRuleFilterDateTimeSource.year => _dateFnDateTime(track.yearAsDateTime()),
-      SmartPlaylistRuleFilterDateTimeSource.anyListen => SmartPlaylistRuleBase.topTracksMapListens[track]?.any((listenMSSE) => _dateFn(listenMSSE)) ?? _dateFn(null),
-      SmartPlaylistRuleFilterDateTimeSource.allListens => SmartPlaylistRuleBase.topTracksMapListens[track]?.every((listenMSSE) => _dateFn(listenMSSE)) ?? _dateFn(null),
-      SmartPlaylistRuleFilterDateTimeSource.firstListen => _dateFn(SmartPlaylistRuleBase.topTracksMapListens[track]?.firstOrNull),
-      SmartPlaylistRuleFilterDateTimeSource.lastListen => _dateFn(SmartPlaylistRuleBase.topTracksMapListens[track]?.lastOrNull),
-      SmartPlaylistRuleFilterDateTimeSource.favouriteDate => _dateFn(_getFavouriteDate(track)),
+      SmartPlaylistRuleFilterDateTimeSource.dateAdded => _dateFn(track.dateAdded, context),
+      SmartPlaylistRuleFilterDateTimeSource.dateModified => _dateFn(track.dateModified, context),
+      SmartPlaylistRuleFilterDateTimeSource.year => _yearFn(track, context),
+      SmartPlaylistRuleFilterDateTimeSource.anyListen => _listensFn(track, context, every: false),
+      SmartPlaylistRuleFilterDateTimeSource.allListens => _listensFn(track, context, every: true),
+      SmartPlaylistRuleFilterDateTimeSource.firstListen => _dateFn(SmartPlaylistRuleBase.topTracksMapListens[track]?.firstOrNull, context),
+      SmartPlaylistRuleFilterDateTimeSource.lastListen => _dateFn(SmartPlaylistRuleBase.topTracksMapListens[track]?.lastOrNull, context),
+      SmartPlaylistRuleFilterDateTimeSource.favouriteDate => _dateFn(_getFavouriteDate(track), context),
       SmartPlaylistRuleFilterDateTimeSource.rangeOnly => true,
     };
   }
@@ -401,17 +465,25 @@ class SmartPlaylistRelativeDuration {
     this.unit = SmartPlaylistRelativeUnit.days,
   });
 
-  DateTime getBoundary() {
-    final now = DateTime.now();
+  DateTime getBoundary(DateTime now) {
     return switch (unit) {
       SmartPlaylistRelativeUnit.seconds => now.subtract(Duration(seconds: amount)),
       SmartPlaylistRelativeUnit.minutes => now.subtract(Duration(minutes: amount)),
       SmartPlaylistRelativeUnit.hours => now.subtract(Duration(hours: amount)),
       SmartPlaylistRelativeUnit.days => now.subtract(Duration(days: amount)),
       SmartPlaylistRelativeUnit.weeks => now.subtract(Duration(days: amount * 7)),
-      SmartPlaylistRelativeUnit.months => DateTime(now.year, now.month - amount, now.day),
-      SmartPlaylistRelativeUnit.years => DateTime(now.year - amount, now.month, now.day),
+      SmartPlaylistRelativeUnit.months => _monthsBefore(now, amount),
+      SmartPlaylistRelativeUnit.years => _monthsBefore(now, amount * 12),
     };
+  }
+
+  static DateTime _monthsBefore(DateTime now, int months) {
+    final targetMonthIndex = now.year * 12 + now.month - 1 - months;
+    final year = targetMonthIndex ~/ 12;
+    final month = targetMonthIndex % 12 + 1;
+    final daysInMonth = DateUtils.getDaysInMonth(year, month);
+    final day = now.day.withMaximum(daysInMonth);
+    return DateTime(year, month, day);
   }
 
   Map<String, dynamic> toMap() => {
@@ -436,11 +508,7 @@ class SmartPlaylistRelativeDuration {
   int get hashCode => amount.hashCode ^ unit.hashCode;
 }
 
-/// in dates world, one usually means an inclusive date.
-/// ex: in between 2015-2016, so both exact dates should be included as well.
-/// usually useful for types like: `isBefore`, `isAfter`, `isInBetween`.
-/// but not for types like: `isOutside`.
-extension on DateTime {
-  bool isBeforeOrEqual(DateTime other) => isBefore(other) || isAtSameMomentAs(other);
-  bool isAfterOrEqual(DateTime other) => isAfter(other) || isAtSameMomentAs(other);
+enum _DateTrend {
+  rising,
+  falling,
 }
