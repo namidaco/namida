@@ -10,6 +10,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 
 const _kLyrics = '[00:01.00]line one\n[00:02.00]line two';
+const _kJsonLyrics = '[{"text":[{"text":"line","part":false,"timestamp":1000,"endtime":2000}],"background":false,"timestamp":1000,"endtime":2000}]';
 
 void main() {
   late Directory root;
@@ -348,6 +349,21 @@ void main() {
       expect(cachedLRC.existsSync(), false);
       expect(cachedTxt.existsSync(), false);
       expect(ofOtherTrack.existsSync(), true);
+    });
+
+    test('a json named like the track is neither found as lyrics nor deleted with it, even in a lyrics json format', () async {
+      final json = write(p.join(library, 'Artist', 'Album', 'song.json'), _kJsonLyrics);
+      final jsonWithExtension = write(p.join(library, 'Artist', 'Album', 'song.flac.json'), _kJsonLyrics);
+      expect(utils().firstDeviceFilesSync().lrc, isNull);
+      final found = await utils().firstDeviceFiles();
+      expect(found.lrc, isNull);
+      expect(found.txt, isNull);
+      expect(await utils().allDeviceLyricsFiles(), isEmpty);
+
+      await delete([trackPath()], []);
+
+      expect(json.existsSync(), true);
+      expect(jsonWithExtension.existsSync(), true);
     });
 
     test('only in the chosen locations', () async {

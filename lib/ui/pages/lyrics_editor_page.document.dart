@@ -13,8 +13,10 @@ class _LyricsDocument {
   var lines = <_EditorLine>[];
   var tags = const _LyricsTags();
 
-  var _sortedStartsMS = Int32List(0);
-  var _sortedLineIndices = Int32List(0);
+  /// the `[length:]` the lines are timed against while the item duration is unknown, see [stretchToDuration].
+  String? _unstretchedLength;
+
+  var _lineResolver = LrcLineResolver.empty;
   var flags = Uint8List(0);
   int untimedCount = 0;
 
@@ -34,6 +36,7 @@ class _LyricsDocument {
     final lrc = source.isValidLRC() ? source.parseLRC() : null;
     if (lrc == null) {
       tags = const _LyricsTags();
+      _unstretchedLength = null;
       lines = _linesFromPlainText(source);
       return;
     }
@@ -42,7 +45,26 @@ class _LyricsDocument {
 
   void loadLrc(Lrc lrc, {required int durationMS}) {
     tags = _LyricsTags.fromLrc(lrc);
-    lines = _linesFromLrc(lrc, durationMS: durationMS);
+    _unstretchedLength = durationMS > 0 ? null : lrc.length;
+    final stretchMultiplier = _stretchMultiplierOf(lrc.length, durationMS);
+    lines = _linesFromLrc(lrc, stretchMultiplier: stretchMultiplier);
+  }
+
+  /// lines loaded while the item duration was unknown get the stretch [loadLrc] gives them with it, returns the multiplier applied.
+  double? stretchToDuration(int durationMS) {
+    final length = _unstretchedLength;
+    if (length == null || durationMS <= 0) return null;
+    _unstretchedLength = null;
+    final stretchMultiplier = _stretchMultiplierOf(length, durationMS);
+    if (stretchMultiplier != null) scaleAll(stretchMultiplier);
+    return stretchMultiplier;
+  }
+
+  /// null when lyrics of [lengthText] play unstretched at [durationMS].
+  static double? _stretchMultiplierOf(String? lengthText, int durationMS) {
+    final stretchMultiplier = Lyrics.getStretchMultiplierFor(lengthText, durationMS);
+    final isStretched = stretchMultiplier != 0 && stretchMultiplier != 1;
+    return isStretched ? stretchMultiplier : null;
   }
 
   static List<_EditorLine> _linesFromPlainText(String source) {
@@ -56,14 +78,12 @@ class _LyricsDocument {
     return lines;
   }
 
-  /// [Lrc.offset] and the duration stretching are applied, so the editor works with what is heard.
-  static List<_EditorLine> _linesFromLrc(Lrc lrc, {required int durationMS}) {
+  /// [Lrc.offset] and the [stretchMultiplier] are applied, so the editor works with what is heard.
+  static List<_EditorLine> _linesFromLrc(Lrc lrc, {required double? stretchMultiplier}) {
     final offsetMS = lrc.offset ?? 0;
-    final stretchMultiplier = Lyrics.getStretchMultiplierFor(lrc, durationMS);
-    final isStretched = stretchMultiplier != 0 && stretchMultiplier != 1;
     int toEditorMS(Duration timestamp) {
       var ms = timestamp.inMilliseconds - offsetMS;
-      if (isStretched) ms = (ms * stretchMultiplier).round();
+      if (stretchMultiplier != null) ms = (ms * stretchMultiplier).round();
       return ms.withMinimum(0);
     }
 
@@ -158,8 +178,7 @@ class _LyricsDocument {
       startsMS[i] = e.startMS;
       indices[i] = e.index;
     }
-    _sortedStartsMS = startsMS;
-    _sortedLineIndices = indices;
+    _lineResolver = LrcLineResolver(startsMS, indices);
     flags = newFlags;
     untimedCount = untimed;
   }
@@ -170,38 +189,22 @@ class _LyricsDocument {
     return a.index.compareTo(b.index);
   }
 
-  int _upperBound(int positionMS) {
-    final starts = _sortedStartsMS;
-    var low = 0;
-    var high = starts.length;
-    while (low < high) {
-      final mid = (low + high) >> 1;
-      if (starts[mid] <= positionMS) {
-        low = mid + 1;
-      } else {
-        high = mid;
-      }
-    }
-    return low;
-  }
-
   /// the line playing at [positionMS], -1 before the first one.
-  int lineIndexAt(int positionMS) {
-    final count = _upperBound(positionMS);
-    if (count == 0) return -1;
-    return _sortedLineIndices[count - 1];
-  }
+  int lineIndexAt(int positionMS) => _lineResolver.indexAt(positionMS);
 
   int? nextStartAfter(int positionMS) {
-    final index = _upperBound(positionMS);
-    if (index >= _sortedStartsMS.length) return null;
-    return _sortedStartsMS[index];
+    final lineResolver = _lineResolver;
+    final index = lineResolver.upperBound(positionMS);
+    final starts = lineResolver.startsMS;
+    if (index >= starts.length) return null;
+    return starts[index];
   }
 
   void forEachTimedInRange(int fromMS, int toMS, void Function(int lineIndex, int startMS) onLine) {
-    final starts = _sortedStartsMS;
-    final indices = _sortedLineIndices;
-    var i = _upperBound(fromMS - 1);
+    final lineResolver = _lineResolver;
+    final starts = lineResolver.startsMS;
+    final indices = lineResolver.lineIndices;
+    var i = lineResolver.upperBound(fromMS - 1);
     for (; i < starts.length; i++) {
       final startMS = starts[i];
       if (startMS > toMS) break;
@@ -367,7 +370,7 @@ class _LyricsDocument {
       final person = isBackground ? 0 : (line.isBackground ? null : line.person);
       final isEnhanced = parts != null;
       if (isEnhanced) hasEnhanced = true;
-      final lineStart = parts?.first.startTimestamp ?? Duration(milliseconds: entry.startMS);
+      final lineStart = Duration(milliseconds: entry.startMS);
       lrcLines.add(
         LrcLine(
           timestamp: lineStart,
@@ -397,6 +400,8 @@ class _LyricsDocument {
     }
 
     final tags = this.tags;
+    var length = _unstretchedLength;
+    if (length == null && durationMS > 0) length = Lyrics.formatLengthTag(durationMS);
     final lrc = Lrc(
       type: hasEnhanced ? LrcTypes.enhanced : LrcTypes.simple,
       lyrics: lrcLines,
@@ -408,7 +413,7 @@ class _LyricsDocument {
       program: tags.program,
       version: tags.version,
       language: tags.language,
-      length: durationMS > 0 ? Lyrics.formatLengthTag(durationMS) : null,
+      length: length,
     );
     return lrc.format();
   }
@@ -418,14 +423,17 @@ class _LyricsDocument {
   Map<String, dynamic> toJson() => {
     'tags': tags.toJson(),
     'lines': [for (final l in lines) l.toJson()],
+    'length': ?_unstretchedLength,
   };
 
-  void loadJson(Map<String, dynamic> json) {
+  void loadJson(Map<String, dynamic> json, {required int durationMS}) {
     final tagsJson = json['tags'];
     final linesJson = json['lines'] as List? ?? const [];
     final newTags = tagsJson is Map ? _LyricsTags.fromJson(tagsJson.cast<String, dynamic>()) : const _LyricsTags();
     tags = newTags;
     lines = [for (final l in linesJson) _EditorLine.fromJson((l as Map).cast<String, dynamic>())];
+    _unstretchedLength = json['length'] as String?;
+    stretchToDuration(durationMS);
   }
 }
 
@@ -803,3 +811,7 @@ Int32List _pairByDiff(List<String> a, List<String> b) {
   pairChangedStretch();
   return pairs;
 }
+
+@visibleForTesting
+// ignore: library_private_types_in_public_api
+_LyricsDocument debugCreateLyricsDocument() => _LyricsDocument();

@@ -102,16 +102,13 @@ class Lyrics {
     }
   }
 
-  static final _lengthSplitRegex = RegExp(r'[:.]');
-
   /// timestamps multiplier for spedup/slowed/nightcore versions, 0 means no stretching.
-  double getStretchMultiplier(Lrc lrc) => getStretchMultiplierFor(lrc, _getCurrentItemDurationMS());
+  double getStretchMultiplier(Lrc lrc) => getStretchMultiplierFor(lrc.length, _getCurrentItemDurationMS());
 
-  static double getStretchMultiplierFor(Lrc lrc, int itemDurationMS) {
-    final lengthText = lrc.length;
+  static double getStretchMultiplierFor(String? lengthText, int itemDurationMS) {
     if (lengthText == null || lengthText.isEmpty) return 0.0;
     if (!settings.stretchLyricsDuration.value) return 0.0;
-    final lyricsDurationMicro = _parseLengthMicro(lengthText);
+    final lyricsDurationMicro = LrcParser.parseTimestamp(lengthText)?.inMicroseconds;
     if (lyricsDurationMicro == null || lyricsDurationMicro <= 0) return 0.0;
     return itemDurationMS * 1000 / lyricsDurationMicro;
   }
@@ -126,21 +123,6 @@ class Lyrics {
   }
 
   static String _pad2(int n) => n.toString().padLeft(2, '0');
-
-  static int? _parseLengthMicro(String lengthText) {
-    final parts = lengthText.split(_lengthSplitRegex);
-    if (parts.length < 2) return null;
-    final minutes = int.tryParse(parts[0]);
-    final seconds = int.tryParse(parts[1]);
-    if (minutes == null || seconds == null) return null;
-    int fractionMicro = 0;
-    if (parts.length >= 3) {
-      final fractionText = parts[2].padRight(6, '0');
-      fractionMicro = int.tryParse(fractionText) ?? 0;
-    }
-    final lyricsDuration = Duration(minutes: minutes, seconds: seconds, microseconds: fractionMicro);
-    return lyricsDuration.inMicroseconds;
-  }
 
   int _getCurrentItemDurationMS() {
     final playerDurationMS = Player.inst.currentItemDuration.value?.inMilliseconds ?? 0;

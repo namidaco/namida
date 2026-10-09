@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:lrc/lrc.dart';
+
 import 'package:namida/core/enums.dart';
 
 class LyricsModel {
@@ -42,37 +44,7 @@ class LyricsModel {
     if (match == null) return null;
     String? length = match.group(1);
     if (length == null) return null;
-    return _convertToMilliseconds(length);
-  }
-
-  int _convertToMilliseconds(String length) {
-    final parts = length.split(':');
-    final minutes = int.parse(parts[0]);
-    final secondsParts = parts[1].split('.');
-    final seconds = int.parse(secondsParts[0]);
-
-    // Handle fractional seconds properly
-    int fractionalMs = 0;
-    if (secondsParts.length > 1) {
-      String fractional = secondsParts[1];
-
-      // "213" (3 digits) = 213ms
-      // "21" (2 digits/centiseconds) = 210ms
-      // "2130" (4 digits) = 213ms
-      // "213000" (6 digits/microseconds) = 213ms
-      if (fractional.length <= 3) {
-        fractional = fractional.padRight(3, '0');
-        fractionalMs = int.parse(fractional);
-      } else {
-        fractionalMs = int.parse(fractional.substring(0, 3));
-        // -- round up if 4th digit >= 5
-        if (fractional.length > 3 && int.parse(fractional[3]) >= 5) {
-          fractionalMs++;
-        }
-      }
-    }
-
-    return minutes * 60000 + seconds * 1000 + fractionalMs;
+    return LrcParser.parseTimestamp(length)?.inMilliseconds;
   }
 
   @override

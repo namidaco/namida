@@ -452,8 +452,8 @@ class LyricsLocations {
 class _LrcSidecarFinder {
   static const syncedExtensions = ['lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass'];
   static const plainExtensions = ['txt'];
-  static const allExtensions = ['lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', 'txt'];
-  static const _allExtensionsSet = {'lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', 'txt'};
+  static const allExtensions = [...syncedExtensions, ...plainExtensions];
+  static const _allExtensionsSet = {...allExtensions};
 
   static final _listings = <String, _LrcDirectoryListing>{};
 

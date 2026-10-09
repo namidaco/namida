@@ -97,9 +97,7 @@ hello there
   });
 
   test('a real youtube caption file', () {
-    final file = File('files/W10RXr9c44Y_.en.vtt');
-    if (!file.existsSync()) return;
-
+    final file = File('test/files/W10RXr9c44Y_.en.vtt');
     final cues = SubtitleCues.parseVTT(file.readAsStringSync())!;
     expect(cues.hasStyling, true);
 

@@ -12,6 +12,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 
 /// pushes the playing lyrics to the system surfaces the user enabled. `lyricInfo` rides the media metadata once per track,
 /// SuperLyric & the flyme ticker get one call per line. an instance only exists while at least one is on.
@@ -60,6 +61,7 @@ class LyricsIntegrations {
     }
     _lineSinks.clear();
     _lines = const [];
+    _lineResolver = LrcLineResolver.empty;
     _refreshPositionListening();
     _refreshLyricInfo(null);
   }
@@ -71,9 +73,10 @@ class LyricsIntegrations {
   String? _lyricInfoMediaId;
   _LyricInfoLanes? _lyricInfoLanes;
 
+  /// one line per [_lineResolver] slot, background vocals and same-timestamp translations are dropped.
   List<LrcLine> _lines = const [];
-  int _scanIndex = -1;
-  int? _sentIndex;
+  LrcLineResolver _lineResolver = LrcLineResolver.empty;
+  int? _sentSlot;
   bool _isShowingLine = false;
 
   MediaItem _attachLyricInfo(MediaItem media) {
@@ -130,9 +133,13 @@ class LyricsIntegrations {
 
   void _onLyricsChanged() {
     final lrc = Lyrics.inst.currentLyricsLRC.value;
-    _lines = lrc == null ? const [] : _primaryLinesOf(lrc);
-    _scanIndex = -1;
-    _sentIndex = null;
+    if (lrc == null) {
+      _lines = const [];
+      _lineResolver = LrcLineResolver.empty;
+    } else {
+      _loadPrimaryLines(lrc);
+    }
+    _sentSlot = null;
 
     final lyricInfoLanes = _lyricInfoEnabled && _lines.isNotEmpty ? _LyricInfoLanes.fromLines(_lines) : null;
     _refreshLyricInfo(lyricInfoLanes);
@@ -161,22 +168,14 @@ class LyricsIntegrations {
     Player.inst.republishMediaItem(updatedMedia);
   }
 
-  /// one line per timestamp, background vocals and same-timestamp translations are dropped.
-  static List<LrcLine> _primaryLinesOf(Lrc lrc) {
+  void _loadPrimaryLines(Lrc lrc) {
     final stretchMultiplier = Lyrics.inst.getStretchMultiplier(lrc);
     final visualDelay = Duration(milliseconds: settings.visualDelayMS.value);
     final info = lrc.forUiDisplay(stretchMultiplier, extraOffsetDuration: visualDelay);
     final uiLines = info.uiLyricsLines;
-    final lines = <LrcLine>[];
-    for (final indices in info.highlightTimestampsMap.values) {
-      for (final index in indices) {
-        final line = uiLines[index];
-        if (line.isBGLyrics) continue;
-        lines.add(line);
-        break;
-      }
-    }
-    return lines;
+    final lineResolver = info.lineResolver;
+    _lines = lineResolver.lineIndices.map((index) => uiLines[index]).toFixedList();
+    _lineResolver = lineResolver;
   }
 
   void _refreshPositionListening() {
@@ -196,37 +195,29 @@ class LyricsIntegrations {
     if (Player.inst.playWhenReady.value) {
       _onPosition();
     } else {
-      _sentIndex = null;
+      _sentSlot = null;
       _showLine(null, 0, 0);
     }
   }
 
   void _onPosition() {
     if (!Player.inst.playWhenReady.value) return;
-    final lines = _lines;
-    final position = Duration(milliseconds: Player.inst.nowPlayingPosition.value);
-
-    int index = _scanIndex;
-    if (index >= lines.length) index = -1;
-    if (index >= 0 && lines[index].timestamp > position) index = -1;
-    while (index + 1 < lines.length && lines[index + 1].timestamp <= position) {
-      index++;
-    }
-    _scanIndex = index;
-
-    if (index == _sentIndex) return;
-    _sentIndex = index;
-    if (index < 0) {
+    final positionMS = Player.inst.nowPlayingPosition.value;
+    final slot = _lineResolver.slotAt(positionMS);
+    if (slot == _sentSlot) return;
+    _sentSlot = slot;
+    if (slot < 0) {
       _showLine(null, 0, 0);
       return;
     }
 
-    final line = lines[index];
+    final lines = _lines;
+    final line = lines[slot];
     final text = line.readableText;
     final startMS = line.timestamp.inMilliseconds;
-    final nextIndex = index + 1;
+    final nextSlot = slot + 1;
     final durationMS = Player.inst.currentItemDuration.value?.inMilliseconds ?? startMS;
-    final endMS = nextIndex < lines.length ? lines[nextIndex].timestamp.inMilliseconds : durationMS;
+    final endMS = nextSlot < lines.length ? lines[nextSlot].timestamp.inMilliseconds : durationMS;
     _showLine(text.isEmpty ? null : text, startMS, endMS);
   }
 

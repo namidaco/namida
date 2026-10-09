@@ -74,9 +74,6 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
   static const _kSeekStepMS = 2000;
   static const _kNudgeStepMS = 50;
   static const _kPlayLineFallbackMS = 5000;
-
-  /// a seek to a line start can land a ms before it, the lyrics view uses the same.
-  static const _kLineMatchToleranceMS = 5;
   static const _kFollowAfterUserScrollMS = 3000;
   static const _kMaxHistory = 200;
   static const _kDraftSaveDelay = Duration(seconds: 1);
@@ -142,6 +139,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     super.initState();
     _onCurrentItemChanged();
     Player.inst.currentItem.addListener(_onCurrentItemChanged);
+    Player.inst.currentItemDuration.addListener(_onPlayerDurationChanged);
     Player.inst.isPlaying.addListener(_onPlayingChanged);
     Player.inst.nowPlayingPosition.addListener(_onPlayerPositionChanged);
     FocusManager.instance.addListener(_onPrimaryFocusChanged);
@@ -151,6 +149,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
   @override
   void dispose() {
     Player.inst.currentItem.removeListener(_onCurrentItemChanged);
+    Player.inst.currentItemDuration.removeListener(_onPlayerDurationChanged);
     Player.inst.isPlaying.removeListener(_onPlayingChanged);
     Player.inst.nowPlayingPosition.removeListener(_onPlayerPositionChanged);
     FocusManager.instance.removeListener(_onPrimaryFocusChanged);
@@ -181,7 +180,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     final draftJson = await _draftFile.readAsJson();
     if (!mounted) return;
     if (draftJson is Map) {
-      _doc.loadJson(draftJson.cast<String, dynamic>());
+      _doc.loadJson(draftJson.cast<String, dynamic>(), durationMS: _durationMS);
       _hasDraft.value = true;
     } else {
       _doc.loadSource(widget.sourceLyrics, durationMS: _durationMS);
@@ -189,6 +188,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     _isWordMode.value = _doc.hasTimedWords();
     _refreshDerived();
     _isLoading.value = false;
+    _onPlayerDurationChanged();
     if (_doc.lines.isEmpty) _showTextDialog();
   }
 
@@ -199,6 +199,27 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
       if (playerDurationMS > 0) return playerDurationMS;
     }
     return widget.lrcUtils.getItemDurationMS();
+  }
+
+  void _onPlayerDurationChanged() {
+    if (_durationMS > 0 || _isLoading.value || !_isCurrentItem.value) return;
+    final durationMS = Player.inst.currentItemDuration.value?.inMilliseconds ?? 0;
+    if (durationMS > 0) _updateDurationMS(durationMS);
+  }
+
+  /// lines loaded before the duration was known get stretched to it once, history included, so the doc stays in heard time.
+  void _updateDurationMS(int durationMS) {
+    _durationMS = durationMS;
+    final stretchMultiplier = _doc.stretchToDuration(durationMS);
+    if (stretchMultiplier != null) {
+      for (final snapshot in _undoStack.followedBy(_redoStack)) {
+        for (final line in snapshot) {
+          line.scaleBy(stretchMultiplier);
+        }
+      }
+    }
+    _refreshDerived();
+    _revision.value++;
   }
 
   // ==================== playback ====================
@@ -246,7 +267,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
   void _updatePosition(int playerPositionMS) {
     final heardPositionMS = _toHeardPositionMS(playerPositionMS);
     _positionMS.value = heardPositionMS;
-    final playingIndex = _doc.lineIndexAt(heardPositionMS + _kLineMatchToleranceMS);
+    final playingIndex = _doc.lineIndexAt(heardPositionMS);
     if (playingIndex != _playingIndex.value) {
       _playingIndex.value = playingIndex;
       if (playingIndex >= 0 && _isPlayingItem()) _followPlayingLine(playingIndex);
@@ -310,7 +331,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
 
   void _refreshDerived() {
     _doc.refreshDerived(durationMS: _durationMS);
-    _playingIndex.value = _doc.lineIndexAt(_positionMS.value + _kLineMatchToleranceMS);
+    _playingIndex.value = _doc.lineIndexAt(_positionMS.value);
     final maxIndex = (_doc.lines.length - 1).withMinimum(0);
     if (_selectedIndex.value > maxIndex) _selectedIndex.value = maxIndex;
   }
@@ -570,7 +591,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
   /// the same duration [_resolveDurationMS] picks, re-read since the player might not have had it before.
   Future<int> _lengthTagDurationMS() async {
     final durationMS = await _resolveDurationMS();
-    if (durationMS > 0) _durationMS = durationMS;
+    if (durationMS > 0 && durationMS != _durationMS) _updateDurationMS(durationMS);
     return _durationMS;
   }
 

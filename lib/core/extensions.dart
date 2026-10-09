@@ -25,7 +25,6 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
-import 'package:namida/packages/lyrics_parser/parser_smart.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -850,59 +849,9 @@ extension TitleAndArtistUtils on String {
 }
 
 extension LRCParsingUtils on String {
-  Lrc? parseLRC() {
-    try {
-      final lrc = LrcParser.parse(this);
-      if (lrc.lyrics.isNotEmpty) return lrc;
-    } catch (_) {}
-    try {
-      final ttmlAsLrc = TtmlParser.parse(this);
-      if (ttmlAsLrc.lyrics.isNotEmpty) return ttmlAsLrc;
-    } catch (_) {}
-    try {
-      final subtitleAsLrc = SubtitleParser.parse(this);
-      if (subtitleAsLrc.lyrics.isNotEmpty) return subtitleAsLrc;
-    } catch (_) {}
-    try {
-      final res = LRCParserSmart(this).parseLines();
-      if (res.isNotEmpty) {
-        final lines = <LrcLine>[];
-        for (final e in res) {
-          lines.add(
-            LrcLine(
-              timestamp: e.timeStamp ?? Duration.zero,
-              lyrics: e.mainText ?? '',
-              originalIndex: res.length,
-              readableText: e.mainText ?? '',
-              person: null,
-              parts: null,
-              type: LrcTypes.simple,
-              isRTL: LrcParser.isLrcLineRTL(e.mainText ?? ''),
-            ),
-          );
-        }
+  Lrc? parseLRC() => LyricsParser.parse(this);
 
-        return Lrc(
-          lyrics: lines,
-        );
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  bool isValidLRC() {
-    bool valid = false;
-    try {
-      valid = LrcParser.isValid(this) || TtmlParser.isValid(this) || SubtitleParser.isValid(this);
-    } catch (_) {}
-    if (!valid) {
-      try {
-        final res = LRCParserSmart(this).parseLines();
-        valid = res.isNotEmpty;
-      } catch (_) {}
-    }
-    return valid;
-  }
+  bool isValidLRC() => LyricsParser.isValid(this);
 }
 
 extension TagFieldsUtils on TagField {

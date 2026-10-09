@@ -104,7 +104,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   final _currentLine = Rxn<LrcLine>();
   var _lines = <LrcLine>[];
   var _highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
-  int _lastScanIndex = -1;
+  var _lineResolver = LrcLineResolver.empty;
 
   late final Rxn<Lrc> _source = widget.customSourceRx ?? Lyrics.inst.currentLyricsLRC;
 
@@ -179,7 +179,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     if (lrc == null) {
       _lines = [];
       _highlightTimestampsMap = {};
-      _lastScanIndex = -1;
+      _lineResolver = LrcLineResolver.empty;
       _currentLine.value = null;
       return;
     }
@@ -193,7 +193,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     );
     _lines = uiInfo.uiLyricsLines;
     _highlightTimestampsMap = uiInfo.highlightTimestampsMap;
-    _lastScanIndex = -1;
+    _lineResolver = uiInfo.lineResolver;
     _updateLine();
   }
 
@@ -207,30 +207,12 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     final lines = _lines;
     if (lines.isEmpty) return;
 
-    final position = Duration(milliseconds: Player.inst.nowPlayingPosition.value + 5);
-
-    // -- incremental scan, index only advances by few steps normally
-    int idx = _lastScanIndex;
-    if (idx >= lines.length) idx = -1;
-    if (idx >= 0 && lines[idx].timestamp > position) idx = -1; // -- seeked backwards
-    while (idx + 1 < lines.length && lines[idx + 1].timestamp <= position) {
-      idx++;
-    }
-    _lastScanIndex = idx;
-
-    // -- resolve to a primary displayable line
-    var lineIndex = idx;
-    while (lineIndex >= 0 && lines[lineIndex].isBGLyrics) {
-      lineIndex--;
-    }
-    if (lineIndex >= 0) {
-      lineIndex = _highlightTimestampsMap[lines[lineIndex].timestamp]?.firstOrNull ?? lineIndex;
-    }
-
+    final positionMS = Player.inst.nowPlayingPosition.value;
+    final lineIndex = _lineResolver.indexAt(positionMS);
     var newLine = lineIndex < 0 ? null : lines[lineIndex];
     if (newLine != null && widget.respectEndTimestamps) {
       final end = _lineEndTimestamp(newLine);
-      if (end != null && end <= position) newLine = null;
+      if (end != null && end.inMilliseconds <= positionMS + LrcLineResolver.kToleranceMS) newLine = null;
     }
     if (!identical(_currentLine.value, newLine)) _currentLine.value = newLine;
   }

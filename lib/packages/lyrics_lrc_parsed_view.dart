@@ -187,6 +187,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     _pendingCardSettleAction = null;
     highlightTimestampsMap = {};
     lyrics = [];
+    _lineResolver = LrcLineResolver.empty;
     _lineEndsMS = Int32List(0);
     _overlapEndMS = _kNoOverlapEndMS;
     if (hide) _updateIsCurrentLineEmpty(true);
@@ -199,6 +200,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     if (lrc == null) {
       highlightTimestampsMap = {};
       lyrics = [];
+      _lineResolver = LrcLineResolver.empty;
       _lineEndsMS = Int32List(0);
       _overlapEndMS = _kNoOverlapEndMS;
       final isTextEmpty = txt == null ? true : _checkIfTextEmpty(txt.text);
@@ -218,6 +220,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
     lyrics = uiInfo.uiLyricsLines;
     highlightTimestampsMap = uiInfo.highlightTimestampsMap;
+    _lineResolver = uiInfo.lineResolver;
     _lineEndsMS = _computeLineEndsMS(lyrics);
     _overlapEndMS = _kNoOverlapEndMS;
 
@@ -263,35 +266,26 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   }
 
   void _updateHighlightedLine(int durMS, {bool force = false, bool forceAnimate = false, bool jump = false}) {
-    final lrcDur = lyrics.lastWhereEff((e) => e.timestamp <= Duration(milliseconds: durMS + 5) && !e.isBGLyrics) /* ?? lyrics.firstOrNull */;
-    final newLineDuration = lrcDur?.timestamp;
+    final newIndex = _lineResolver.indexAt(durMS);
+    if (newIndex < 0) return;
+    final newLineDuration = lyrics[newIndex].timestamp;
 
     // -- prefer index checks, cuz duration is used in ui directly to highlight
     // -- and index can be used to force reset (to force scroll to current line) etc
     // if (!force && _latestUpdatedLineInfo.value?.$1 == newLineDuration) return;
 
-    if (newLineDuration == null) return;
-    int? newIndexPre = highlightTimestampsMap[newLineDuration]?.firstOrNull;
-    if (newIndexPre == null) return;
-
-    if (newIndexPre + 1 == lyrics.length) {
-      final alreadyHighlightingLastLine = _currentIndex == newIndexPre;
-      if (alreadyHighlightingLastLine) {
-        return; // overscrolling
-      } else {
-        newIndexPre = lyrics.length - 1; // go to last line
-      }
+    if (newIndex + 1 == lyrics.length) {
+      final alreadyHighlightingLastLine = _currentIndex == newIndex;
+      if (alreadyHighlightingLastLine) return; // overscrolling
     }
-    if (newIndexPre < 0) newIndexPre = 0;
 
     final didOverlapEnd = durMS >= _overlapEndMS;
-    if (!force && !didOverlapEnd && _currentIndex == newIndexPre) return;
+    if (!force && !didOverlapEnd && _currentIndex == newIndex) return;
 
     // -- stable per highlight state, so repeated ticks don't refresh the list
     final positionMS = didOverlapEnd ? _overlapEndMS : newLineDuration.inMilliseconds;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      int newIndex = newIndexPre!;
       _overlapEndMS = _nextOverlapEndMS(newIndex, positionMS);
       _latestUpdatedLineInfo.value = (newLineDuration, newIndex, positionMS);
 
@@ -357,6 +351,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   var lyrics = <LrcLine>[];
   var highlightTimestampsMap = <Duration, List<int>>{}; // timestamp: [index]
+  var _lineResolver = LrcLineResolver.empty;
   var _lineEndsMS = Int32List(0);
 
   static const _kNoOverlapEndMS = 1 << 62;
