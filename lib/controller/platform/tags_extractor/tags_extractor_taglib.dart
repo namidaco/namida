@@ -325,6 +325,37 @@ class _TagsExtractorTagLib extends TagsExtractor {
     if (didUpdate) return null;
     return error;
   }
+
+  @override
+  Future<WriteIfMissingResult> writeTagsIfMissing({required String path, required FTags newTags}) async {
+    bool didWrite = false;
+    final error = await TagsExtractor.executeWriteWithSafFallback(
+      path: path,
+      operation: (effectivePath) async {
+        final res = await _writeTagsIfMissingInternal(path: effectivePath, newTags: newTags);
+        didWrite = res.didWrite;
+        return res.error;
+      },
+    );
+    return (didWrite: didWrite, error: error);
+  }
+
+  Future<WriteIfMissingResult> _writeTagsIfMissingInternal({required String path, required FTags newTags}) async {
+    try {
+      await initializeForWrite();
+      final res = await _isolateWriteExecuter!.writeIfMissing(
+        _TagLibIsolateRequestWriteTagsIfMissing(
+          path: path,
+          newTags: newTags,
+        ),
+      );
+      return res ?? (didWrite: false, error: 'Unknown Error');
+    } catch (e) {
+      return (didWrite: false, error: e.toString());
+    } finally {
+      await disposeForWrite();
+    }
+  }
 }
 
 class _TagLibIsolateManager with PortsProvider<SendPort> {
@@ -337,6 +368,10 @@ class _TagLibIsolateManager with PortsProvider<SendPort> {
 
   Future<String?> write(_TagLibIsolateRequestWriteTags request) async {
     return await _executeIsolate(request) as String?;
+  }
+
+  Future<WriteIfMissingResult?> writeIfMissing(_TagLibIsolateRequestWriteTagsIfMissing request) async {
+    return await _executeIsolate(request) as WriteIfMissingResult?;
   }
 
   Future<dynamic> _executeIsolate(_TagLibIsolateRequestBase request) async {
@@ -409,6 +444,19 @@ class _TagLibIsolateRequestWriteTags extends _TagLibIsolateRequestBase<String?> 
       newPropertiesMap: newTags.toTagLibMap(),
       artwork: newTags.artwork,
       chapters: newTags.chapters,
+    );
+  }
+}
+
+class _TagLibIsolateRequestWriteTagsIfMissing extends _TagLibIsolateRequestBase<WriteIfMissingResult> {
+  final FTags newTags;
+  const _TagLibIsolateRequestWriteTagsIfMissing({required super.path, required this.newTags});
+
+  @override
+  WriteIfMissingResult execute() {
+    return TagLibRes.writeIfMissingSync(
+      path,
+      newPropertiesMap: newTags.toTagLibMap(),
     );
   }
 }

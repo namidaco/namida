@@ -377,6 +377,7 @@ class FTags {
       TagLibField.label: ?_createList(label),
       TagLibField.releaseType: ?_createList(releaseType),
       TagLibField.tempo: ?_createList(tempo),
+      TagLibField.bpm: ?_createList(bpm?.toString()),
       TagLibField.mixer: ?_createList(mixer),
       TagLibField.djmixer: ?_createList(djmixer),
       TagLibField.titleSort: ?_createList(sortInfo?.title),

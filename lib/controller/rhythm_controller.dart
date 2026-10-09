@@ -7,16 +7,22 @@ import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:namida_waveform/namida_rhythm.dart';
 
+import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/tagger_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 // by claude
@@ -62,8 +68,11 @@ class RhythmController {
   Timer? _analysisTimer;
 
   final isScanning = false.obs;
-  final scanDone = 0.obs;
-  final scanTotal = 0.obs;
+  final isWritingTags = false.obs;
+  final progressDone = 0.obs;
+  final progressTotal = 0.obs;
+
+  static const _tagsWriteBatchSize = 50;
 
   static int? _readNativeVersion() {
     try {
@@ -96,7 +105,7 @@ class RhythmController {
   /// null when [item] has no steady beat grid to match.
   BeatGrid? gridOf(Playable item) {
     final rhythm = _rhythms[item.key];
-    if (rhythm == null || rhythm.bpm <= 0 || rhythm.beatConfidence < _minBeatConfidence) return null;
+    if (rhythm == null || !rhythm.hasSteadyBeat) return null;
     return BeatGrid(
       bpm: rhythm.bpm,
       beatOffsetMS: rhythm.beatOffsetMS,
@@ -159,7 +168,7 @@ class RhythmController {
   }
 
   Future<void> startLibraryScan() async {
-    if (isScanning.value || _version == null) return;
+    if (isScanning.value || isWritingTags.value || _version == null) return;
     await ensureLoaded();
     int total = 0;
     for (final track in Indexer.inst.tracksInfoList.value) {
@@ -167,8 +176,8 @@ class RhythmController {
       _jobs[track.path] ??= _RhythmJob(track, isScan: true);
       total++;
     }
-    scanDone.value = 0;
-    scanTotal.value = total;
+    progressDone.value = 0;
+    progressTotal.value = total;
     isScanning.value = total > 0;
     _analyzeQueued();
   }
@@ -179,6 +188,76 @@ class RhythmController {
   }
 
   bool _isUpToDate(String key) => _rhythms[key]?.version == _version;
+
+  /// tracks whose tags hold no bpm yet, analyzed with a steady beat.
+  Future<RhythmTagsWritePlan> planBpmTagsWrite() async {
+    await ensureLoaded();
+    final tagsPerTrack = <Track, FTags>{};
+    final artwork = FArtwork();
+    int notAnalyzedCount = 0;
+    for (final track in Indexer.inst.tracksInfoList.value) {
+      if (!track.isPhysical) continue;
+      final tagBpm = track.bpm ?? 0;
+      if (tagBpm > 0) continue;
+      final rhythm = _rhythms[track.path];
+      if (rhythm == null) {
+        notAnalyzedCount++;
+        continue;
+      }
+      if (!rhythm.hasSteadyBeat) continue;
+      final bpm = rhythm.bpm.round();
+      tagsPerTrack[track] = FTags.edit(path: track.path, artwork: artwork, bpm: bpm);
+    }
+    return (tagsPerTrack: tagsPerTrack, notAnalyzedCount: notAnalyzedCount);
+  }
+
+  Future<void> writeBpmTags(Map<Track, FTags> tagsPerTrack) async {
+    if (isScanning.value || isWritingTags.value || tagsPerTrack.isEmpty) return;
+    final hasPermission = await requestManageStoragePermission();
+    if (!hasPermission) return;
+
+    progressDone.value = 0;
+    progressTotal.value = tagsPerTrack.length;
+    isWritingTags.value = true;
+
+    int writtenCount = 0;
+    int failedCount = 0;
+    String? lastError;
+    void onTrack(Track track, WriteIfMissingResult res) {
+      progressDone.value++;
+      final error = res.error;
+      if (error != null) {
+        failedCount++;
+        lastError = error;
+      } else if (res.didWrite) {
+        writtenCount++;
+      }
+    }
+
+    final batch = <Track, FTags>{};
+    for (final e in tagsPerTrack.entries) {
+      if (!isWritingTags.value) break;
+      batch[e.key] = e.value;
+      if (batch.length < _tagsWriteBatchSize) continue;
+      await NamidaTaggerController.inst.writeTagsIfMissing(tagsPerTrack: batch, onTrack: onTrack);
+      batch.clear();
+    }
+    if (batch.isNotEmpty && isWritingTags.value) {
+      await NamidaTaggerController.inst.writeTagsIfMissing(tagsPerTrack: batch, onTrack: onTrack);
+    }
+    isWritingTags.value = false;
+
+    final skippedCount = progressDone.value - writtenCount - failedCount;
+    String message = 'Written: $writtenCount, already tagged: $skippedCount';
+    if (failedCount > 0) message += ', ${lang.failed}: $failedCount\n$lastError';
+    snackyy(
+      title: 'BPM',
+      message: message,
+      isError: failedCount > 0,
+    );
+  }
+
+  void stopWritingTags() => isWritingTags.value = false;
 
   void _enqueue(Playable item, {required bool urgent}) {
     final key = item.key;
@@ -213,8 +292,8 @@ class RhythmController {
 
   void _onScanJobDone() {
     if (!isScanning.value) return;
-    scanDone.value++;
-    if (scanDone.value >= scanTotal.value) isScanning.value = false;
+    progressDone.value++;
+    if (progressDone.value >= progressTotal.value) isScanning.value = false;
   }
 
   Future<void> _analyze(_RhythmJob job) async {
@@ -516,6 +595,8 @@ class _Rhythm {
     );
   }
 
+  bool get hasSteadyBeat => bpm > 0 && beatConfidence >= RhythmController._minBeatConfidence;
+
   Map<String, dynamic> toMap() => {
     'b': bpm,
     'o': beatOffsetMS,
@@ -537,3 +618,5 @@ class _RhythmJob {
 }
 
 typedef _Flow = ({double bpm, int key});
+
+typedef RhythmTagsWritePlan = ({Map<Track, FTags> tagsPerTrack, int notAnalyzedCount});

@@ -54,6 +54,12 @@ abstract class TagsExtractor {
     Map<String, String>? httpHeaders,
   });
 
+  /// writes [newTags] only when [path] holds none of its fields yet, without the ffmpeg fallback.
+  Future<WriteIfMissingResult> writeTagsIfMissing({
+    required String path,
+    required FTags newTags,
+  });
+
   Future<String?> writeTags({
     required String path,
     required FTags newTags,

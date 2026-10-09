@@ -1619,24 +1619,103 @@ class _WebhookListTile extends StatelessWidget {
 class _RhythmScanListTile extends StatelessWidget {
   const _RhythmScanListTile();
 
+  Future<void> _openTagsWriteDialog() async {
+    final plan = await RhythmController.inst.planBpmTagsWrite();
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _RhythmTagsWriteDialog(plan: plan),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rhythm = RhythmController.inst;
     return Obx(
       (context) {
         final isScanning = rhythm.isScanning.valueR;
-        final progress = isScanning ? '${rhythm.scanDone.valueR}/${rhythm.scanTotal.valueR}' : null;
+        final isWritingTags = rhythm.isWritingTags.valueR;
+        final isBusy = isScanning || isWritingTags;
+        final progress = isBusy ? '${rhythm.progressDone.valueR}/${rhythm.progressTotal.valueR}' : null;
+        final subtitle = isWritingTags ? 'Writing BPM to tags $progress' : progress;
+        final VoidCallback onMainAction = isWritingTags ? rhythm.stopWritingTags : rhythm.toggleLibraryScan;
         return CustomListTile(
           icon: Broken.buy_crypto,
           title: 'analyze_rhythm'.toUpperCase(),
-          subtitle: progress,
-          onTap: rhythm.toggleLibraryScan,
-          trailing: NamidaIconButton(
-            icon: isScanning ? Broken.stop_circle : Broken.play_circle,
-            onPressed: rhythm.toggleLibraryScan,
+          subtitle: subtitle,
+          onTap: onMainAction,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!isBusy)
+                NamidaIconButton(
+                  tooltip: () => 'Write analyzed BPM to tags',
+                  icon: Broken.tag_2,
+                  onPressed: _openTagsWriteDialog,
+                ),
+              NamidaIconButton(
+                icon: isBusy ? Broken.stop_circle : Broken.play_circle,
+                onPressed: onMainAction,
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+}
+
+class _RhythmTagsWriteDialog extends StatelessWidget {
+  final RhythmTagsWritePlan plan;
+
+  const _RhythmTagsWriteDialog({required this.plan});
+
+  void _onConfirm() {
+    NamidaNavigator.inst.closeDialog();
+    RhythmController.inst.writeBpmTags(plan.tagsPerTrack);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final tracksCount = plan.tagsPerTrack.length;
+    final notAnalyzedCount = plan.notAnalyzedCount;
+    return CustomBlurryDialog(
+      isWarning: true,
+      normalTitleStyle: true,
+      title: lang.warning,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          colorScheme: Colors.red,
+          enabled: tracksCount > 0,
+          text: lang.confirm,
+          onTap: _onConfirm,
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Analyzed BPM will be written into $tracksCount files. Tracks that already have a BPM tag or no steady beat are skipped.',
+              style: textTheme.displayMedium,
+            ),
+            if (notAnalyzedCount > 0) ...[
+              const SizedBox(height: 8.0),
+              Text(
+                '$notAnalyzedCount tracks are not analyzed yet, analyze first to include them.',
+                style: textTheme.displaySmall,
+              ),
+            ],
+            const SizedBox(height: 12.0),
+            Text(
+              'This edits files across your whole library, back up your music files first.',
+              style: textTheme.displayMedium?.copyWith(color: Colors.red),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

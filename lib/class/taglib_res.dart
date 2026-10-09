@@ -133,9 +133,36 @@ class TagLibRes {
     return allProperties;
   }
 
+  /// writes [newPropertiesMap] only when [trackPath] holds none of its fields yet.
+  static WriteIfMissingResult writeIfMissingSync(String trackPath, {required Map<String, List<String>> newPropertiesMap}) {
+    TagLibFile? tagFile;
+    try {
+      tagFile = TagLibFile.open(trackPath);
+      if (tagFile == null) return (didWrite: false, error: 'Unsupported file');
+
+      final allProperties = tagFile.properties;
+      final hasAnyField = newPropertiesMap.keys.any((field) => _getProperty(allProperties, field) != null);
+      if (hasAnyField) return (didWrite: false, error: null);
+
+      allProperties.addAll(newPropertiesMap);
+      tagFile.setProperties(allProperties);
+      final didSave = tagFile.save();
+      if (!didSave) {
+        final error = TagLibFile.lastError ?? 'Failed to save';
+        return (didWrite: false, error: error);
+      }
+      return (didWrite: true, error: null);
+    } catch (e) {
+      return (didWrite: false, error: e.toString());
+    } finally {
+      tagFile?.close();
+    }
+  }
+
   FAudioModel toFAudioModel({required FArtwork? artwork}) {
     final info = this.properties;
-    int? parsy(String? v) => v == null ? null : int.tryParse(v);
+    final bpmText = info.bpm?.trim();
+    final bpm = bpmText == null ? null : num.tryParse(bpmText)?.round();
     final audioInfo = info.audioInfo;
     final channels = audioInfo.channels;
     return FAudioModel(
@@ -168,7 +195,7 @@ class TagLibRes {
         country: info.country,
         recordLabel: info.recordLabel,
         releaseType: info.releaseType,
-        bpm: parsy(info.bpm),
+        bpm: bpm,
         musicalKey: info.musicalKey,
         mbAlbumId: info.MUSICBRAINZ_ALBUMID,
         mbAlbumArtistId: info.MUSICBRAINZ_ALBUMARTISTID,
@@ -507,3 +534,5 @@ class TagLibField {
   static const ACOUSTID_FINGERPRINT = 'ACOUSTID_FINGERPRINT';
   static const MUSICIP_PUID = 'MUSICIP_PUID';
 }
+
+typedef WriteIfMissingResult = ({bool didWrite, String? error});

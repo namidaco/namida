@@ -360,4 +360,9 @@ class _TagsExtractorAndroid extends TagsExtractor {
       },
     );
   }
+
+  @override
+  Future<WriteIfMissingResult> writeTagsIfMissing({required String path, required FTags newTags}) async {
+    return (didWrite: false, error: 'Not supported');
+  }
 }

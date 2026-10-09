@@ -177,4 +177,9 @@ class _TagsExtractorDesktop extends TagsExtractor {
     if (didUpdate) return null;
     return 'Unknown Error';
   }
+
+  @override
+  Future<WriteIfMissingResult> writeTagsIfMissing({required String path, required FTags newTags}) async {
+    return (didWrite: false, error: 'Not supported');
+  }
 }

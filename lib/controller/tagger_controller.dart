@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/split_config.dart';
+import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -237,6 +238,41 @@ class NamidaTaggerController {
       await Indexer.inst.updateTrackMetadata(
         tracksMap: tracksMap,
         artworkWasEdited: imageFile != null,
+      );
+    }
+  }
+
+  /// writes each [FTags] only into a file holding none of its fields yet, file dates are kept.
+  Future<void> writeTagsIfMissing({
+    required Map<Track, FTags> tagsPerTrack,
+    required void Function(Track track, WriteIfMissingResult result) onTrack,
+  }) async {
+    await _extractor.initializeForWrite();
+    final splittersConfigs = SplitArtistGenreConfigsWrapper.settings();
+    final tracksMap = <Track, TrackExtended>{};
+    for (final e in tagsPerTrack.entries) {
+      final track = e.key;
+      final newTags = e.value;
+      final file = File(track.path);
+      final res = await file.executeAndKeepStats(
+        () => _extractor.writeTagsIfMissing(path: track.path, newTags: newTags),
+        keepStats: true,
+      );
+      onTrack(track, res);
+      if (!res.didWrite || res.error != null) continue;
+
+      final newStat = await file.stat();
+      final newDateModified = newStat.modified.millisecondsSinceEpoch;
+      final trExt = track.toTrackExt();
+      final newTrExt = trExt.copyWithTag(tag: newTags, splittersConfigs: splittersConfigs, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+      tracksMap[track] = newTrExt.copyWith(size: newStat.size, dateModified: newDateModified, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
+    }
+    await _extractor.disposeForWrite();
+
+    if (tracksMap.isNotEmpty) {
+      await Indexer.inst.updateTrackMetadata(
+        tracksMap: tracksMap,
+        artworkWasEdited: false,
       );
     }
   }
