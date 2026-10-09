@@ -785,65 +785,28 @@ class VideoController {
     return isSessionCurrent() ? downloadedVideo : null;
   }
 
-  List<String> _getPossibleVideosPathsFromAudioFile(String path) {
+  Set<String> _getPossibleVideosPathsFromAudioFile(String path) {
     final trExt = Track.explicit(path).toTrackExt();
 
     final valInSett = settings.localVideoMatchingType.value;
     final shouldCheckSameDir = settings.localVideoMatchingCheckSameDir.value;
 
-    final pathDirectoryPath = path.getDirectoryPath;
+    final onlyInDirectory = shouldCheckSameDir ? path.getDirectoryPath : null;
     final filenameWOExt = path.getFilenameWOExt;
-    final filenameCleaned = filenameWOExt.cleanUpForComparison;
-    final titleCleaned = trExt.title.cleanUpForComparison;
-    final artistCleaned = trExt.artistsList.firstOrNull?.cleanUpForComparison;
-    final genreCleaned = trExt.genresList.firstOrNull?.cleanUpForComparison;
-    final ytID = trExt.youtubeID;
-    final goodId = ytID.isNotEmpty && ytID.length == 11;
+    final firstArtist = trExt.artistsList.firstOrNull;
+    final firstGenre = trExt.genresList.firstOrNull;
 
     final videoSearchMatcher = _videoFilesSearchMatcher ??= FilePathMatcher.init(_allVideoPaths);
 
-    final matched = <String>{};
-
-    void matchFilename() => matched.addAll(videoSearchMatcher.matchText(filenameCleaned));
-
-    void matchTitleAndArtist() {
-      if (titleCleaned.isEmpty) return;
-      final titleMatches = videoSearchMatcher.matchText(titleCleaned);
-      if (titleMatches.isEmpty) return;
-      if (artistCleaned != null && artistCleaned.isNotEmpty) {
-        matched.addAll(titleMatches.intersection(videoSearchMatcher.matchText(artistCleaned)));
-      }
-      // useful for [Nightcore - title]
-      // track must contain Nightcore as the first Genre
-      if (genreCleaned != null && genreCleaned.isNotEmpty) {
-        matched.addAll(titleMatches.intersection(videoSearchMatcher.matchText(genreCleaned)));
-      }
-    }
-
-    void matchYTID() {
-      if (!goodId) return;
-      final videosByYTID = videoSearchMatcher.videosGroupedByYTID[ytID];
-      if (videosByYTID != null) matched.addAll(videosByYTID);
-    }
-
-    switch (valInSett) {
-      case LocalVideoMatchingType.auto:
-        matchFilename();
-        matchTitleAndArtist();
-        matchYTID();
-      case LocalVideoMatchingType.filename:
-        matchFilename();
-      case LocalVideoMatchingType.titleAndArtist:
-        matchTitleAndArtist();
-      case LocalVideoMatchingType.youtubeID:
-        matchYTID();
-    }
-
-    if (matched.isNotEmpty && shouldCheckSameDir) {
-      return matched.where((vp) => vp.getDirectoryPath == pathDirectoryPath).toList();
-    } else {
-      return matched.toList();
-    }
+    return videoSearchMatcher.matchTrackVideos(
+      filenameWOExt: filenameWOExt,
+      title: trExt.title,
+      artist: firstArtist,
+      genre: firstGenre,
+      ytID: trExt.youtubeID,
+      matchingType: valInSett,
+      onlyInDirectory: onlyInDirectory,
+    );
   }
 
   Future<List<NamidaVideo>> _getPossibleVideosFromTrack(Track track) async {

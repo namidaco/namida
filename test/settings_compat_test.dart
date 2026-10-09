@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:nampack/nampack.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
@@ -32,6 +33,9 @@ const _resolvedNullables = <String, Set<String>>{
   'namida_settings.json': {'extensionsBlacklist', 'backupItemslist_v2'},
   'namida_settings_youtube.json': {'downloadParallelCount_v2', 'downloadThreadsCount', 'personalizedRelatedVideos'},
 };
+
+/// old custom ranges load covering their local days whole, expected holds the old value since those days depend on the timezone.
+const _wholeDayRanges = {'mostPlayedCustomDateRange_v2', 'ytMostPlayedCustomDateRange_v2'};
 
 /// keys whose runtime value is derived from another key after load.
 const _dependents = <String, Set<String>>{
@@ -111,7 +115,8 @@ void main() {
           for (final e in expected.entries) {
             expect(full.containsKey(e.key), true, reason: 'key ${e.key} is gone');
             if (e.value == null && resolvedNullables.contains(e.key)) continue;
-            expect(full[e.key], equals(e.value), reason: e.key);
+            final expectedValue = _wholeDayRanges.contains(e.key) ? _coveringWholeDays(e.value) : e.value;
+            expect(full[e.key], equals(expectedValue), reason: e.key);
           }
           expect(writer.buildJson()['_legacy'], null, reason: 'every legacy key should be consumed after all keys loaded');
         });
@@ -148,4 +153,12 @@ void main() {
       }
     });
   }
+}
+
+/// the default stays as is.
+Map<String, dynamic> _coveringWholeDays(Map<String, dynamic> json) {
+  final range = DateRange.fromJson(json);
+  if (range == DateRange.dummy()) return json;
+  final wholeDaysRange = DateRange.wholeDays(oldest: range.oldest, newest: range.newest);
+  return wholeDaysRange.toJson();
 }

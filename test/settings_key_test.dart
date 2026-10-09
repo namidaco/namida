@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:history_manager/history_manager.dart';
 import 'package:nampack/nampack.dart';
 
 import 'package:namida/base/settings_file_writer.dart';
@@ -359,6 +360,24 @@ void main() {
     await loadFile(settings, {'_v': 2, 'displayStopButtonInNotification': true});
     expect(settings.notificationButtons.value, [...transport, NotificationButton.stop]);
     expect(settings.buildJson().containsKey('notificationButtons'), false);
+  });
+
+  test('old custom most played ranges cover their first and last days whole, once', () async {
+    final picked = DateRange(oldest: DateTime(2024, 1, 10), newest: DateTime(2024, 1, 14));
+    final singleDay = DateRange(oldest: DateTime(2024, 1, 20), newest: DateTime(2024, 1, 20));
+    await loadFile(settings, {'_v': 2, 'mostPlayedCustomDateRange': picked.toJson(), 'ytMostPlayedCustomDateRange': singleDay.toJson()});
+    expect(settings.mostPlayedCustomDateRange.value, DateRange(oldest: DateTime(2024, 1, 10), newest: DateTime(2024, 1, 14, 23, 59, 59, 999)));
+    expect(settings.ytMostPlayedCustomDateRange.value, DateRange(oldest: DateTime(2024, 1, 20), newest: DateTime(2024, 1, 20, 23, 59, 59, 999)));
+    expect(settings.buildJson().containsKey('mostPlayedCustomDateRange'), false);
+    expect(settings.buildJson().containsKey('ytMostPlayedCustomDateRange'), false);
+
+    final exact = DateRange(oldest: DateTime(2024, 1, 10, 12), newest: DateTime(2024, 1, 12, 12));
+    settings.mostPlayedCustomDateRange.save(exact);
+    await loadFile(settings, settings.buildJson());
+    expect(settings.mostPlayedCustomDateRange.value, exact);
+
+    await loadFile(settings, {'_v': 2, 'ytMostPlayedCustomDateRange': DateRange.dummy().toJson()});
+    expect(settings.ytMostPlayedCustomDateRange.userValue, null);
   });
 
   group('keys', () {

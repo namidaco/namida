@@ -82,25 +82,14 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   }
 
   Future<void> replaceTheseTracksInHistoryBulk(Map<Track, Track> oldNewTrack) async {
-    final daysToSave = <int>{};
-    for (final entry in this.historyMap.value.entries) {
-      final day = entry.key;
-      final trs = entry.value;
-      for (final oldNewTrack in oldNewTrack.entries) {
-        trs.replaceWhere(
-          (e) => e.track == oldNewTrack.key,
-          (old) => TrackWithDate(
-            dateAdded: old.dateAdded,
-            track: oldNewTrack.value,
-            source: old.source,
-          ),
-          onMatch: () => daysToSave.add(day),
-        );
-      }
-    }
-    historyMap.refresh();
-    updateMostPlayedPlaylist();
-    await saveHistoryToStorage(daysToSave.toList());
+    await replaceTheseTracksInHistory(
+      (e) => oldNewTrack.containsKey(e.track),
+      (old) => TrackWithDate(
+        dateAdded: old.dateAdded,
+        track: oldNewTrack[old.track]!,
+        source: old.source,
+      ),
+    );
   }
 
   @override
@@ -128,13 +117,18 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
           final responseList = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
           final listTracks = <TrackWithDate>[];
+          TrackWithDate? previous;
+          bool isNewestFirst = true;
           if (responseList != null) {
             for (final map in responseList) {
               var twd = TrackWithDate.fromJson(map);
+              if (previous != null && twd.dateAdded > previous.dateAdded) isNewestFirst = false;
+              previous = twd;
               listTracks.add(twd);
               tempMapTopItems.addForce(twd.track, twd.dateAdded);
             }
           }
+          if (!isNewestFirst) listTracks.sortByReverse((e) => e.dateAdded);
 
           map[dayOfTrack] = listTracks;
           totalCount += listTracks.length;
@@ -144,7 +138,6 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
     final topItems = ListensSortedMap<Track>();
     topItems.assignAll(tempMapTopItems);
-    topItems.sortAllInternalLists();
 
     return HistoryPrepareInfo(
       historyMap: map,

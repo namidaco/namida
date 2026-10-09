@@ -492,6 +492,7 @@ class JsonToHistoryParser {
             allMissingEntriesSorted = res.missingEntriesSorted;
             datesAdded.addAll(res.historyDays);
             datesAddedYoutube.addAll(res.ytHistoryDays);
+            if (res.hasUnreadableHtml) snackyy(title: lang.error, message: lang.historyImportHtmlUnreadable, isError: true);
           }
           break;
 
@@ -572,6 +573,11 @@ class JsonToHistoryParser {
     } finally {
       tempZipMainDestination?.delete(recursive: true);
     }
+  }
+
+  @visibleForTesting
+  static Future<List<File>> debugFilterFiles(List<FileSystemEntity> contents, TrackSource source) {
+    return inst._filterFilesFromPossibleZips(contents, source, () => Directory.systemTemp.createTemp('namida_parser_'), (progress, total) {});
   }
 
   Future<List<File>> _filterFilesFromPossibleZips(
@@ -660,6 +666,7 @@ class JsonToHistoryParser {
                 if (NamidaFileExtensionsWrapper.json.isPathValid(file.path)) {
                   final name = file.path.getFilename;
                   final nameLC = name.toLowerCase();
+                  if (nameLC.contains('podcast')) return;
                   if (nameLC.contains('streaming') || nameLC.contains('history') || name.startsWith('endsong')) {
                     files.add(file);
                   }
@@ -693,7 +700,7 @@ class JsonToHistoryParser {
     return files;
   }
 
-  Future<({List<int> historyDays, List<int> ytHistoryDays, Map<_MissingListenEntry, List<int>> missingEntriesSorted})?> _parseYTHistoryJsonAndAdd({
+  Future<({List<int> historyDays, List<int> ytHistoryDays, Map<_MissingListenEntry, List<int>> missingEntriesSorted, bool hasUnreadableHtml})?> _parseYTHistoryJsonAndAdd({
     required List<File> files,
     required bool isMatchingTypeLink,
     required bool isMatchingTypeTitleAndArtist,
@@ -789,6 +796,7 @@ class JsonToHistoryParser {
         historyDays: res.daysToSaveLocal,
         ytHistoryDays: res.daysToSaveYT,
         missingEntriesSorted: res.missingEntriesSorted,
+        hasUnreadableHtml: res.hasUnreadableHtml,
       );
     } finally {
       portProgressParsed.close();
@@ -849,20 +857,12 @@ class JsonToHistoryParser {
     return (totalCount, 0);
   }
 
+  @visibleForTesting
+  // ignore: library_private_types_in_public_api
+  static Future<_YTTakeoutParserResult?> debugParseYTHistory(_YTTakeoutParserParams params) => _parseYTHistoryJsonAndAddIsolate(params);
+
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
-  static Future<
-    ({
-      Map<String, YoutubeVideoHistory>? affectedIds,
-      List<int> daysToSaveLocal,
-      List<int> daysToSaveYT,
-      int addedLocalHistoryCount,
-      int addedYTHistoryCount,
-      SplayTreeMap<int, List<TrackWithDate>> localHistory,
-      SplayTreeMap<int, List<YoutubeID>> ytHistory,
-      Map<_MissingListenEntry, List<int>> missingEntriesSorted,
-    })?
-  >
-  _parseYTHistoryJsonAndAddIsolate(_YTTakeoutParserParams params) async {
+  static Future<_YTTakeoutParserResult?> _parseYTHistoryJsonAndAddIsolate(_YTTakeoutParserParams params) async {
     final allTracks = params.tracks;
     final files = params.files;
     final isMatchingTypeLink = params.isMatchingTypeLink;
@@ -889,31 +889,33 @@ class JsonToHistoryParser {
       tracksIdsMap = <String, List<Track>>{};
       for (var trMap in allTracks) {
         String? videoId = NamidaLinkUtils.extractYoutubeId(trMap.comment);
-        videoId ??= NamidaLinkUtils.extractYoutubeId(trMap.path.getFilename);
-        if (videoId != null && videoId.isNotEmpty) {
+        if (videoId == null) {
+          final filename = trMap.path.getFilename;
+          videoId = NamidaLinkRegex.youtubeIdInFilenameRegex.firstMatch(filename)?.group(1);
+          videoId ??= NamidaLinkUtils.extractYoutubeIdInTrailingBrackets(filename);
+        }
+        if (videoId != null) {
           tracksIdsMap.addForce(videoId, Track.decide(trMap.path, trMap.isVideo));
         }
       }
     }
 
-    final reverseTitleMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
-    final reverseArtistMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
-    final reverseAlbumMatcher = ReverseSearchMatcher<_YTHistoryParserTrackParams>();
+    final reverseTitleMatcher = ReverseSearchMatcher<_YTHistoryMatchEntry>();
     if (isMatchingTypeTitleAndArtist) {
       for (var trMap in allTracks) {
         final title = trMap.title;
-        final album = trMap.album;
         final originalArtist = trMap.artist;
         final artistsList = Indexer.splitArtist(
           title: title,
           originalArtist: originalArtist,
           config: artistsSplitConfig,
         );
-        reverseTitleMatcher.addItemWithTokens(trMap, title);
-        reverseAlbumMatcher.addItemWithTokens(trMap, album);
-        if (artistsList.isNotEmpty) {
-          reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
-        }
+        final firstArtist = artistsList.firstWhereEff((e) => e != UnknownTags.ARTIST);
+        final artistTokens = firstArtist == null ? const <String>{} : SearchMatcher.tokenize(firstArtist);
+        final album = trMap.album;
+        final albumTokens = album == UnknownTags.ALBUM ? const <String>{} : SearchMatcher.tokenize(album);
+        final canMatchByTitleOnly = artistTokens.isEmpty && albumTokens.isEmpty;
+        reverseTitleMatcher.addItem((track: trMap, artistTokens: artistTokens, albumTokens: albumTokens, canMatchByTitleOnly: canMatchByTitleOnly), title);
       }
     }
 
@@ -960,11 +962,7 @@ class JsonToHistoryParser {
             missingEntries.addForce(e, e.dateMSSE);
           }
         },
-        allTracks: allTracks,
-        artistsSplitConfig: artistsSplitConfig,
         reverseTitleMatcher: reverseTitleMatcher,
-        reverseArtistMatcher: reverseArtistMatcher,
-        reverseAlbumMatcher: reverseAlbumMatcher,
       );
       totalAdded += tracks.length;
       for (var item in tracks) {
@@ -1006,12 +1004,18 @@ class JsonToHistoryParser {
       }
     }
 
-    void addItems<E>(Iterable<E> items, YoutubeVideoHistory? Function(E item) toEntry) {
+    ({int count, int readCount}) addItems<E>(Iterable<E> items, YoutubeVideoHistory? Function(E item) toEntry) {
+      int count = 0;
+      int readCount = 0;
       for (final item in items) {
+        count++;
         totalParsed++;
         try {
           final entry = toEntry(item);
-          if (entry != null) addEntry(entry);
+          if (entry != null) {
+            readCount++;
+            addEntry(entry);
+          }
         } catch (e) {
           printo(e, isError: true);
         }
@@ -1024,11 +1028,15 @@ class JsonToHistoryParser {
           totalAdded = 0;
         }
       }
+      return (count: count, readCount: readCount);
     }
 
+    bool hasUnreadableHtml = false;
     for (final file in files) {
       if (_isHtmlFile(file)) {
-        addItems(_YTTakeoutHtmlParser.splitEntries(file.readAsBytesSync()), _YTTakeoutHtmlParser.parseEntry);
+        final entries = _YTTakeoutHtmlParser.splitEntries(file.readAsBytesSync());
+        final added = addItems(entries, _YTTakeoutHtmlParser.parseEntry);
+        if (added.count > 0 && added.readCount == 0) hasUnreadableHtml = true;
       } else {
         addItems(jsonDecodeUtf8(file.readAsBytesSync()) as List? ?? const [], _ytTakeoutJsonEntry);
       }
@@ -1048,16 +1056,24 @@ class JsonToHistoryParser {
       localHistory: localHistory,
       ytHistory: ytHistory,
       missingEntriesSorted: missingEntries,
+      hasUnreadableHtml: hasUnreadableHtml,
     );
   }
 
   static bool _isHtmlFile(File file) => NamidaFileExtensionsWrapper.html.isPathValid(file.path);
 
+  static const _kTakeoutAdDetails = 'From Google Ads';
+
+  /// removed videos have no link, older imports stored them under this id.
+  static const _kRemovedVideoId = 'null';
+
   static YoutubeVideoHistory? _ytTakeoutJsonEntry(dynamic p) {
-    final url = p['titleUrl'] as String?;
-    if (url == null) return null;
+    final details = p['details'] as List?;
+    final isAd = details != null && details.any((e) => e is Map && e['name'] == _kTakeoutAdDetails);
+    if (isAd) return null;
     final dateMS = YoutubeImportController.parseDate(p['time'] ?? '')?.millisecondsSinceEpoch;
     if (dateMS == null) return null;
+    final url = p['titleUrl'] as String?;
     final channel = (p['subtitles'] as List?)?.firstOrNull as Map?;
     return _ytTakeoutEntry(
       url: url,
@@ -1070,15 +1086,21 @@ class JsonToHistoryParser {
   }
 
   static YoutubeVideoHistory _ytTakeoutEntry({
-    required String url,
+    required String? url,
     required String title,
     required String channel,
     required String channelUrl,
     required int dateMS,
     required bool isYTMusic,
   }) {
+    final String id;
+    if (url == null) {
+      id = _kRemovedVideoId;
+    } else {
+      id = url.length >= 11 ? url.substring(url.length - 11) : url;
+    }
     return YoutubeVideoHistory(
-      id: url.length >= 11 ? url.substring(url.length - 11) : url,
+      id: id,
       title: title,
       channel: channel,
       channelUrl: channelUrl,
@@ -1125,12 +1147,10 @@ class JsonToHistoryParser {
     required Map<String, List<Track>>? tracksIdsMap,
     required bool matchByTitleAndArtistIfNotFoundInMap,
     required void Function(Iterable<_MissingListenEntry> missingEntries) onMissingEntries,
-    required ArtistsSplitConfig artistsSplitConfig,
-    required List<_YTHistoryParserTrackParams> allTracks,
-    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseTitleMatcher,
-    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseArtistMatcher,
-    required ReverseSearchMatcher<_YTHistoryParserTrackParams> reverseAlbumMatcher,
+    required ReverseSearchMatcher<_YTHistoryMatchEntry> reverseTitleMatcher,
   }) {
+    if (vh.id == _kRemovedVideoId) return const [];
+
     Iterable<Track> tracks = <Track>[];
 
     if (tracksIdsMap != null) {
@@ -1141,28 +1161,29 @@ class JsonToHistoryParser {
     }
 
     if (tracks.isEmpty && matchByTitleAndArtistIfNotFoundInMap) {
-      final titleCleaned = vh.title.cleanUpForComparison;
-      final channelCleaned = vh.channel.cleanUpForComparison;
+      final titleTokens = SearchMatcher.tokenizeHaystack(vh.title);
+      late final channelTokens = SearchMatcher.tokenizeHaystack(vh.channel);
 
-      final titleMatches = reverseTitleMatcher.matchContainedIn(titleCleaned);
-      if (titleMatches.isNotEmpty) {
-        /// matching has to meet 2 conditons:
-        /// 1. [json title] contains [track.title]
-        /// 2. - [json title] contains [track.artistsList.first]
-        ///     or
-        ///    - [json channel] contains [track.album]
-        ///    (useful for nightcore channels, album has to be the channel name)
-        ///     or
-        ///    - [json channel] contains [track.artistsList.first]
-        final artistInTitle = reverseArtistMatcher.matchContainedIn(titleCleaned);
-        final albumInChannel = reverseAlbumMatcher.matchContainedIn(channelCleaned);
-        final artistInChannel = reverseArtistMatcher.matchContainedIn(channelCleaned);
+      /// matching has to meet 2 conditons:
+      /// 1. [json title] contains [track.title]
+      /// 2. - [json title] contains [track.artistsList.first]
+      ///     or
+      ///    - [json channel] contains [track.album]
+      ///    (useful for nightcore channels, album has to be the channel name)
+      ///     or
+      ///    - [json channel] contains [track.artistsList.first]
+      bool isMatching(_YTHistoryMatchEntry e) =>
+          e.canMatchByTitleOnly || //
+          SearchMatcher.isContainedIn(e.artistTokens, titleTokens) ||
+          SearchMatcher.isContainedIn(e.albumTokens, channelTokens) ||
+          SearchMatcher.isContainedIn(e.artistTokens, channelTokens);
 
-        final secondCondition = artistInTitle.union(albumInChannel).union(artistInChannel);
-        final matched = secondCondition.isEmpty ? titleMatches : titleMatches.intersection(secondCondition);
-
-        final result = matchAll ? matched : (matched.isEmpty ? <_YTHistoryParserTrackParams>{} : {matched.first});
-        tracks = result.map((e) => Track.decide(e.path, e.isVideo));
+      if (matchAll) {
+        final matched = reverseTitleMatcher.matchContainedIn(titleTokens).where(isMatching);
+        tracks = matched.map((e) => Track.decide(e.track.path, e.track.isVideo)).toFixedList();
+      } else {
+        final mostSpecific = reverseTitleMatcher.matchMostSpecific(titleTokens, isMatching)?.track;
+        if (mostSpecific != null) tracks = [Track.decide(mostSpecific.path, mostSpecific.isVideo)];
       }
     }
 
@@ -1323,6 +1344,10 @@ class JsonToHistoryParser {
     }
   }
 
+  @visibleForTesting
+  // ignore: library_private_types_in_public_api
+  static Future<_GeneralSourceResult?> debugAddLastFmSource(_GeneralSourceParserParams params) => _addLastFmSourceIsolate(params);
+
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static Future<_GeneralSourceResult?> _addLastFmSourceIsolate(_GeneralSourceParserParams params) async {
     // used for cases where date couldnt be parsed, so it uses this one as a reference
@@ -1335,18 +1360,18 @@ class JsonToHistoryParser {
       loadingProgressCounterFn: JsonToHistoryParser._countLinesInFile,
       fileToItemsFn: (file) => file.readAsLinesSync(),
       itemToInfoFn: (line) {
-        final pieces = line.split(',');
+        final pieces = _splitCsvLine(line);
 
         // success means: date == trueDate && lastDate is updated.
-        // failure means: date == lastDate - 30 seconds || date == 0
+        // failure means: date == lastDate - 30 seconds, or skipped if no date was parsed yet
         // this is used for cases where date couldn't be parsed, so it'll add the track with (date == lastDate - 30 seconds)
-        int date = 0;
+        int date;
         try {
           date = dateFormat.parseLoose(pieces.last, true).millisecondsSinceEpoch;
         } catch (e) {
-          if (lastDate != null) {
-            date = lastDate! - 30000;
-          }
+          final previousDate = lastDate;
+          if (previousDate == null) return null;
+          date = previousDate - 30000;
         }
         lastDate = date;
 
@@ -1359,6 +1384,42 @@ class JsonToHistoryParser {
     );
   }
 
+  static List<String> _splitCsvLine(String line) {
+    if (!line.contains('"')) return line.split(',');
+
+    const quote = 0x22;
+    const comma = 0x2C;
+    final fields = <String>[];
+    final field = StringBuffer();
+    bool isQuoted = false;
+    for (int i = 0; i < line.length; i++) {
+      final codeUnit = line.codeUnitAt(i);
+      if (isQuoted) {
+        if (codeUnit != quote) {
+          field.writeCharCode(codeUnit);
+        } else if (i + 1 < line.length && line.codeUnitAt(i + 1) == quote) {
+          field.writeCharCode(quote);
+          i++;
+        } else {
+          isQuoted = false;
+        }
+      } else if (codeUnit == comma) {
+        fields.add(field.toString());
+        field.clear();
+      } else if (codeUnit == quote && field.isEmpty) {
+        isQuoted = true;
+      } else {
+        field.writeCharCode(codeUnit);
+      }
+    }
+    fields.add(field.toString());
+    return fields;
+  }
+
+  @visibleForTesting
+  // ignore: library_private_types_in_public_api
+  static Future<_GeneralSourceResult?> debugAddSpotifySource(_GeneralSourceParserParams params) => _addSpotifySourceIsolate(params);
+
   /// Returns [daysToSave] to be used by [sortHistoryTracks] && [saveHistoryToStorage].
   static Future<_GeneralSourceResult?> _addSpotifySourceIsolate(_GeneralSourceParserParams params) async {
     return _addGeneralSourceIsolate(
@@ -1367,6 +1428,9 @@ class JsonToHistoryParser {
       loadingProgressCounterFn: JsonToHistoryParser._countJsonObjectsInList,
       fileToItemsFn: (file) => jsonDecodeUtf8(file.readAsBytesSync()) as List? ?? [],
       itemToInfoFn: (map) {
+        final basicEndTime = map['endTime'] as String?;
+        if (basicEndTime != null) return _spotifyBasicItemInfo(map, basicEndTime);
+
         final mapMsPlayed = map['ms_played'] as int?;
         if (mapMsPlayed != null && mapMsPlayed == 0) {
           // -- wasn't really played, skip... (or should we?)
@@ -1386,6 +1450,21 @@ class JsonToHistoryParser {
           dateMSSE: dateMSSE,
         );
       },
+    );
+  }
+
+  /// account data export entry: `{endTime: 'yyyy-MM-dd HH:mm' (utc), artistName, trackName, msPlayed}`.
+  static _GeneralSourceItemInfo? _spotifyBasicItemInfo(Map map, String endTime) {
+    final msPlayed = map['msPlayed'] as int?;
+    if (msPlayed == 0) return null;
+    final title = map['trackName'] as String?;
+    final artist = map['artistName'] as String?;
+    if (title == null || artist == null) return null;
+    final endTimeUtc = DateTime.parse('${endTime}Z');
+    return _GeneralSourceItemInfo(
+      itemArtist: artist,
+      itemTitle: title,
+      dateMSSE: endTimeUtc.millisecondsSinceEpoch,
     );
   }
 
@@ -1451,13 +1530,11 @@ class JsonToHistoryParser {
     final tracksLookupTitlesMap = <String, List<_HistoryParserTrackParams>>{};
     final tracksLookupArtistsMap = <String, List<_HistoryParserTrackParams>>{};
 
-    final reverseTitleMatcher = ReverseSearchMatcher<_HistoryParserTrackParams>();
-    final reverseArtistMatcher = ReverseSearchMatcher<_HistoryParserTrackParams>();
+    final reverseTitleMatcher = ReverseSearchMatcher<_GeneralSourceMatchEntry>();
 
     for (final trMap in allTracks) {
       final title = trMap.title;
       tracksLookupTitlesMap.addForce(title.cleanUpForComparison, trMap);
-      reverseTitleMatcher.addItemWithTokens(trMap, title.splitFirst('(').splitFirst('['));
 
       final originalArtist = trMap.artist;
       final artistsList = Indexer.splitArtist(
@@ -1469,7 +1546,9 @@ class JsonToHistoryParser {
         tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
       }
       if (artistsList.isNotEmpty) {
-        reverseArtistMatcher.addItemWithTokens(trMap, artistsList.first);
+        final artistTokens = SearchMatcher.tokenize(artistsList.first);
+        final titleWithoutExtras = title.splitFirst('(').splitFirst('[');
+        reverseTitleMatcher.addItem((track: trMap, artistTokens: artistTokens), titleWithoutExtras);
       }
     }
 
@@ -1516,13 +1595,15 @@ class JsonToHistoryParser {
             /// matching has to meet 2 conditons:
             /// [item artist] contains [track.artistsList.first]
             /// [item title] contains [track.title], anything after ( or [ is ignored.
-            final titleMatches = reverseTitleMatcher.matchContainedIn(itemTitleCleaned);
-            final artistMatches = reverseArtistMatcher.matchContainedIn(itemArtistCleaned);
-            final matched = titleMatches.intersection(artistMatches);
+            final itemTitleTokens = SearchMatcher.tokenizeHaystack(info.itemTitle);
+            late final itemArtistTokens = SearchMatcher.tokenizeHaystack(info.itemArtist);
+            bool isMatching(_GeneralSourceMatchEntry e) => SearchMatcher.isContainedIn(e.artistTokens, itemArtistTokens);
             if (matchAll) {
-              tracks.addAll(matched);
-            } else if (matched.isNotEmpty) {
-              tracks.add(matched.first);
+              final matchedTracks = reverseTitleMatcher.matchContainedIn(itemTitleTokens).where(isMatching).map((e) => e.track);
+              tracks.addAll(matchedTracks);
+            } else {
+              final mostSpecific = reverseTitleMatcher.matchMostSpecific(itemTitleTokens, isMatching);
+              if (mostSpecific != null) tracks.add(mostSpecific.track);
             }
           }
 
@@ -1594,6 +1675,10 @@ class JsonToHistoryParser {
     progressPort.close();
   }
 
+  @visibleForTesting
+  static void debugUpdateYoutubeStatsDirectory(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort progressPort}) params) =>
+      _updateYoutubeStatsDirectoryIsolate(params);
+
   static void _updateYoutubeStatsDirectoryIsolate(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort progressPort}) params) {
     final affectedIds = params.affectedIds;
     final progressPort = params.progressPort;
@@ -1621,7 +1706,13 @@ class JsonToHistoryParser {
       final videos = entry.value; // {id: YoutubeVideoHistory}
 
       final file = FileParts.join(dirPath, '$filename.json');
-      final res = file.readAsJsonSync();
+      bool didFailReading = false;
+      final res = file.readAsJsonSync(onError: () => didFailReading = true);
+      if (didFailReading) {
+        // -- rewriting it would keep only the affected videos
+        progressPort.send(videos.length);
+        continue;
+      }
       final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
       final videosMapInStorage = <String, YoutubeVideoHistory>{};
       for (final videoStor in videosInStorage) {
@@ -1643,7 +1734,16 @@ class JsonToHistoryParser {
         }
         updatedIds.add(id);
       }
-      file.writeAsJsonSync(videosMapInStorage.values.toFixedList());
+      final bucketVideos = videosMapInStorage.values.toFixedList();
+      final tempFile = File('${file.path}.tmp');
+      final writtenFile = tempFile.writeAsJsonSync(bucketVideos);
+      try {
+        writtenFile?.renameSync(file.path);
+      } catch (_) {
+        // -- windows: rename fails while the bucket is locked
+        file.writeAsJsonSync(bucketVideos);
+        tempFile.deleteIfExistsSync();
+      }
       progressPort.send(updatedIds.length);
     }
   }
@@ -1768,10 +1868,13 @@ class _YTTakeoutHtmlParser {
   static final _bodyStart = ascii.encode('mdl-typography--body-1">');
   static final _bodyEnd = ascii.encode('</div>');
   static final _ytMusicHeader = ascii.encode('YouTube Music<');
+  static final _adDetails = ascii.encode(JsonToHistoryParser._kTakeoutAdDetails);
 
   static final _dateSeparators = RegExp(r'[\s,]+');
   static final _gmtOffset = RegExp(r'^(?:GMT|UTC)([+-])(\d{1,2})(?::?(\d{2}))?$');
   static final _entities = RegExp(r'&(#x[0-9a-fA-F]+|#[0-9]+|amp|lt|gt|quot|apos|nbsp);');
+  static final _tags = RegExp(r'<[^>]*>');
+  static final _watchedPrefixRegex = RegExp('^Watched[ \u00A0]');
 
   static const _months = {
     'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, //
@@ -1810,34 +1913,46 @@ class _YTTakeoutHtmlParser {
   }
 
   static Iterable<_YTTakeoutHtmlEntry> splitEntries(Uint8List bytes) sync* {
-    int start = 0;
-    while (true) {
-      final entryStart = _indexOf(bytes, _entryStart, start);
-      if (entryStart == -1) return;
+    int entryStart = _indexOf(bytes, _entryStart, 0);
+    while (entryStart != -1) {
       final bodyTagStart = _indexOf(bytes, _bodyStart, entryStart);
       if (bodyTagStart == -1) return;
       final bodyStart = bodyTagStart + _bodyStart.length;
       final bodyEnd = _indexOf(bytes, _bodyEnd, bodyStart);
       if (bodyEnd == -1) return;
+      final nextEntryStart = _indexOf(bytes, _entryStart, bodyEnd);
+      final detailsEnd = nextEntryStart == -1 ? bytes.length : nextEntryStart;
+      final adDetailsIndex = _indexOf(bytes, _adDetails, bodyEnd, detailsEnd);
       yield (
         isYTMusic: _startsWith(bytes, _ytMusicHeader, entryStart + _entryStart.length),
+        isAd: adDetailsIndex != -1,
         body: utf8.decode(Uint8List.sublistView(bytes, bodyStart, bodyEnd), allowMalformed: true),
       );
-      start = bodyEnd;
+      entryStart = nextEntryStart;
     }
   }
 
   static YoutubeVideoHistory? parseEntry(_YTTakeoutHtmlEntry entry) {
+    if (entry.isAd) return null;
     final lines = entry.body.split('<br>');
-    if (lines.length < 2) return null;
-    final video = _parseLink(lines.first);
-    if (video == null) return null;
-    final dateMS = _parseDateMS(lines.last);
+    int dateLineIndex = lines.length - 1;
+    String dateText = '';
+    while (dateLineIndex > 0) {
+      final lineText = _stripTags(lines[dateLineIndex]);
+      dateText = _unescape(lineText);
+      if (dateText.trim().isNotEmpty) break;
+      dateLineIndex--;
+    }
+    if (dateLineIndex == 0) return null;
+    final firstLine = lines.first;
+    final video = _parseLink(firstLine);
+    final dateMS = _parseDateMS(dateText);
     if (dateMS == null) return null;
-    final channel = lines.length > 2 ? _parseLink(lines[1]) : null;
+    final title = video?.text ?? _parseLinklessTitle(firstLine);
+    final channel = dateLineIndex > 1 ? _parseLink(lines[1]) : null;
     return JsonToHistoryParser._ytTakeoutEntry(
-      url: video.url,
-      title: video.text,
+      url: video?.url,
+      title: title,
       channel: channel?.text ?? '',
       channelUrl: channel?.url ?? '',
       dateMS: dateMS,
@@ -1858,6 +1973,12 @@ class _YTTakeoutHtmlParser {
       url: _unescape(line.substring(urlStart, urlEnd)),
       text: _unescape(line.substring(urlEnd + 2, textEnd)),
     );
+  }
+
+  static String _parseLinklessTitle(String line) {
+    final lineText = _stripTags(line);
+    final text = _unescape(lineText).trim();
+    return text.replaceFirst(_watchedPrefixRegex, '');
   }
 
   /// supports `MMM d, yyyy, h:mm:ss a z` & `d MMM yyyy, HH:mm:ss z`.
@@ -1891,6 +2012,11 @@ class _YTTakeoutHtmlParser {
     return match[1] == '-' ? -minutes : minutes;
   }
 
+  static String _stripTags(String text) {
+    if (!text.contains('<')) return text;
+    return text.replaceAll(_tags, '');
+  }
+
   static String _unescape(String text) {
     if (!text.contains('&')) return text;
     return text.replaceAllMapped(_entities, (m) {
@@ -1901,15 +2027,16 @@ class _YTTakeoutHtmlParser {
         'gt' => '>',
         'quot' => '"',
         'apos' => "'",
-        'nbsp' => ' ',
+        'nbsp' => '\u00A0',
         _ => String.fromCharCode(entity[1] == 'x' ? int.parse(entity.substring(2), radix: 16) : int.parse(entity.substring(1))),
       };
     });
   }
 
-  static int _indexOf(Uint8List bytes, Uint8List pattern, int start) {
+  static int _indexOf(Uint8List bytes, Uint8List pattern, int start, [int? end]) {
     final first = pattern[0];
-    final last = bytes.length - pattern.length;
+    final searchEnd = end ?? bytes.length;
+    final last = searchEnd - pattern.length;
     outer:
     for (int i = start; i <= last; i++) {
       if (bytes[i] != first) continue;
@@ -1930,7 +2057,7 @@ class _YTTakeoutHtmlParser {
   }
 }
 
-typedef _YTTakeoutHtmlEntry = ({bool isYTMusic, String body});
+typedef _YTTakeoutHtmlEntry = ({bool isYTMusic, bool isAd, String body});
 
 class _GeneralSourceItemInfo {
   final String itemArtist;
@@ -1965,6 +2092,8 @@ typedef _HistoryParserTrackParams = ({
   bool isVideo,
 });
 
+typedef _GeneralSourceMatchEntry = ({_HistoryParserTrackParams track, Set<String> artistTokens});
+
 typedef _YTHistoryParserTrackParams = ({
   String title,
   String artist,
@@ -1973,6 +2102,8 @@ typedef _YTHistoryParserTrackParams = ({
   String comment,
   bool isVideo,
 });
+
+typedef _YTHistoryMatchEntry = ({_YTHistoryParserTrackParams track, Set<String> artistTokens, Set<String> albumTokens, bool canMatchByTitleOnly});
 
 typedef _YTTakeoutParserParams = ({
   List<_YTHistoryParserTrackParams> tracks,
@@ -1990,6 +2121,18 @@ typedef _YTTakeoutParserParams = ({
   SendPort portLoadingProgress,
   SplayTreeMap<int, List<TrackWithDate>> localHistory,
   SplayTreeMap<int, List<YoutubeID>> ytHistory,
+});
+
+typedef _YTTakeoutParserResult = ({
+  Map<String, YoutubeVideoHistory>? affectedIds,
+  List<int> daysToSaveLocal,
+  List<int> daysToSaveYT,
+  int addedLocalHistoryCount,
+  int addedYTHistoryCount,
+  SplayTreeMap<int, List<TrackWithDate>> localHistory,
+  SplayTreeMap<int, List<YoutubeID>> ytHistory,
+  Map<_MissingListenEntry, List<int>> missingEntriesSorted,
+  bool hasUnreadableHtml,
 });
 
 typedef _GeneralSourceParserParams = ({

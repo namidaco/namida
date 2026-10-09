@@ -348,7 +348,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       final sameTimeAyearAgo = historyManager
           .getMostListensInTimeRange(
             mptr: MostPlayedTimeRange.custom,
-            customDate: DateRange(
+            customDate: DateRange.wholeDays(
               oldest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day - 9),
               newest: DateTime(timeNow.year - 1, timeNow.month, timeNow.day + 9),
             ),
@@ -407,7 +407,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   }
 
   void _updateSameTimeNYearsAgo(DateTime timeNow, int year) {
-    final dateRange = DateRange(
+    final dateRange = DateRange.wholeDays(
       oldest: DateTime(year, timeNow.month, timeNow.day - 5),
       newest: DateTime(year, timeNow.month, timeNow.day + 5),
     );

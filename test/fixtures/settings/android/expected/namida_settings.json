@@ -282,13 +282,13 @@
   "floatingActionButton": "search",
   "vibrationType": "vibration",
   "mostPlayedTimeRange": "custom",
-  "mostPlayedCustomDateRange": {
+  "mostPlayedCustomDateRange_v2": {
     "oldest": 1640988000000000,
     "newest": 1651269600000000
   },
   "mostPlayedCustomisStartOfDay": true,
   "ytMostPlayedTimeRange": "week",
-  "ytMostPlayedCustomDateRange": {
+  "ytMostPlayedCustomDateRange_v2": {
     "oldest": -62167226400000000,
     "newest": -62167226400000000
   },
@@ -479,6 +479,19 @@
       "year",
       "title"
     ],
+    "language": [
+      "year",
+      "title"
+    ],
+    "mood": [
+      "title"
+    ],
+    "tag": [
+      "title"
+    ],
+    "rating": [
+      "title"
+    ],
     "folder": [
       "firstListen",
       "filename",
@@ -497,6 +510,10 @@
     "artist": false,
     "genre": false,
     "style": false,
+    "language": false,
+    "mood": false,
+    "tag": false,
+    "rating": false,
     "folder": false,
     "folderMusic": false,
     "folderVideo": false

@@ -279,7 +279,7 @@ class NamidaOnTaps {
         whatDoYouWant: () async {
           final daysToSave = HistoryController.inst.addTracksToHistoryOnly(tempList, preventDuplicate: true);
           HistoryController.inst.updateMostPlayedPlaylist(tempList);
-          HistoryController.inst.sortHistoryTracks(tempList.map((e) => e.dateAdded.toDaysSince1970()));
+          HistoryController.inst.historyMap.refresh();
           await HistoryController.inst.saveHistoryToStorage(daysToSave);
         },
       );
@@ -1434,7 +1434,8 @@ class TracksAddOnTap {
                 buttonText: lang.generate,
                 useHistoryDates: true,
                 onGenerate: (dates) {
-                  final tracks = NamidaGenerator.inst.generateItemsFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                  final range = DateRange.wholeDays(oldest: dates.first, newest: dates.last);
+                  final tracks = NamidaGenerator.inst.generateItemsFromHistoryDates(range.oldest, range.newest);
                   Player.inst
                       .addToQueue(
                         tracks,
@@ -1902,7 +1903,8 @@ class TracksAddOnTap {
                 useHistoryDates: true,
                 historyController: YoutubeHistoryController.inst,
                 onGenerate: (dates) {
-                  final videos = NamidaYTGenerator.inst.generateItemsFromHistoryDates(dates.firstOrNull, dates.lastOrNull);
+                  final range = DateRange.wholeDays(oldest: dates.first, newest: dates.last);
+                  final videos = NamidaYTGenerator.inst.generateItemsFromHistoryDates(range.oldest, range.newest);
                   Player.inst
                       .addToQueue(
                         videos,

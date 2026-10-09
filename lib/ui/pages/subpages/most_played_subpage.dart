@@ -43,6 +43,9 @@ class MostPlayedItemsPage<T extends ItemWithDate, E> extends StatefulWidget {
 
   @override
   State<MostPlayedItemsPage<T, E>> createState() => _MostPlayedItemsPageState<T, E>();
+
+  @visibleForTesting
+  static DateRange debugRangeCenteredOnDay(DateTime day, int daysRadius) => _MostPlayedItemsPageState._rangeCenteredOnDay(day, daysRadius);
 }
 
 class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPlayedItemsPage<T, E>> {
@@ -98,7 +101,6 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
     NamidaNavigator.inst.closeDialog();
   }
 
-  static const _kDayMS = Duration.millisecondsPerDay;
   static const _kNewHeaderOrder = true;
   static const _kReversedSlider = true;
 
@@ -161,13 +163,10 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
     );
   }
 
-  DateRange _rangeCenteredOnDay(DateTime day, int daysRadius) {
-    final centerMS = DateTime(day.year, day.month, day.day).millisecondsSinceEpoch + _kDayMS ~/ 2;
-    final radiusMS = daysRadius * _kDayMS;
-    return DateRange(
-      oldest: DateTime.fromMillisecondsSinceEpoch(centerMS - radiusMS),
-      newest: DateTime.fromMillisecondsSinceEpoch(centerMS + radiusMS),
-    );
+  static DateRange _rangeCenteredOnDay(DateTime day, int daysRadius) {
+    final oldestDay = DateTime(day.year, day.month, day.day - daysRadius);
+    final newestDay = DateTime(day.year, day.month, day.day + daysRadius);
+    return DateRange.wholeDays(oldest: oldestDay, newest: newestDay);
   }
 
   void _showDaysRadiusPicker({required DateRange currentRange, required int daysRadius, required int maxDaysRadius}) {
@@ -228,7 +227,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
       useHistoryDates: true,
       historyController: widget.historyController,
       onGenerate: (dates) => _onSelectingTimeRange(
-        dateCustom: DateRange(oldest: dates.first, newest: dates.last),
+        dateCustom: DateRange.wholeDays(oldest: dates.first, newest: dates.last),
         mptr: MostPlayedTimeRange.custom,
       ),
     );
@@ -346,7 +345,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                 style: dateTextStyle,
                 lastDate: displayRange.newest,
                 onPick: (newDate) => _onSelectingTimeRange(
-                  dateCustom: DateRange(oldest: newDate, newest: displayRange.newest),
+                  dateCustom: DateRange.wholeDays(oldest: newDate, newest: displayRange.newest),
                   mptr: MostPlayedTimeRange.custom,
                 ),
               );
@@ -356,7 +355,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                 style: dateTextStyle,
                 firstDate: displayRange.oldest,
                 onPick: (newDate) => _onSelectingTimeRange(
-                  dateCustom: DateRange(oldest: displayRange.oldest, newest: newDate),
+                  dateCustom: DateRange.wholeDays(oldest: displayRange.oldest, newest: newDate),
                   mptr: MostPlayedTimeRange.custom,
                 ),
               );
@@ -370,10 +369,10 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
               if (oldestMS != null && newestMS != null) {
                 final oldestDay = oldestMS.toDaysSince1970();
                 final newestDay = newestMS.toDaysSince1970();
-                final totalDaysInBetween = newestDay - oldestDay;
+                final totalDays = newestDay - oldestDay + 1;
 
                 final effectiveRangePrefferedInterval = switch (mptr) {
-                  MostPlayedTimeRange.custom => customRange.toDurationSafe(),
+                  MostPlayedTimeRange.custom => Duration(days: customRange.toDaysSafe()),
                   MostPlayedTimeRange.day => const Duration(days: 1),
                   MostPlayedTimeRange.day3 => const Duration(days: 3),
                   MostPlayedTimeRange.week => const Duration(days: 7),
@@ -381,11 +380,11 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                   MostPlayedTimeRange.month3 => const Duration(days: 30 * 3),
                   MostPlayedTimeRange.month6 => const Duration(days: 30 * 6),
                   MostPlayedTimeRange.year => const Duration(days: 365),
-                  MostPlayedTimeRange.allTime => Duration(days: (totalDaysInBetween / 2).ceil()),
+                  MostPlayedTimeRange.allTime => Duration(days: (totalDays / 2).ceil()),
                 };
 
                 final effectiveRangePrefferedIntervalDays = effectiveRangePrefferedInterval.inDays;
-                final rangesCount = totalDaysInBetween <= 0 || effectiveRangePrefferedIntervalDays <= 0 ? 1 : (totalDaysInBetween / effectiveRangePrefferedIntervalDays).ceil();
+                final rangesCount = totalDays <= 0 || effectiveRangePrefferedIntervalDays <= 0 ? 1 : (totalDays / effectiveRangePrefferedIntervalDays).ceil();
 
                 int rangesCurrentIndex() {
                   final intervalMS = effectiveRangePrefferedInterval.inMilliseconds;
@@ -395,12 +394,11 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                 }
 
                 DateRange rangeForIndex(int index) {
-                  final intervalMS = effectiveRangePrefferedInterval.inMilliseconds;
-                  final rangeStartMS = oldestMS + index * intervalMS;
-                  return DateRange(
-                    oldest: DateTime.fromMillisecondsSinceEpoch(rangeStartMS),
-                    newest: DateTime.fromMillisecondsSinceEpoch(rangeStartMS + intervalMS),
-                  );
+                  final firstDay = oldestDay + index * effectiveRangePrefferedIntervalDays;
+                  final lastDay = firstDay + effectiveRangePrefferedIntervalDays - 1;
+                  final firstDate = HistoryManager.daysSince1970ToDate(firstDay);
+                  final lastDate = HistoryManager.daysSince1970ToDate(lastDay);
+                  return DateRange.wholeDays(oldest: firstDate, newest: lastDate);
                 }
 
                 void selectRangeIndex(int index) {
@@ -418,9 +416,9 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                 // -- put to the end if different
                 if (isSliderDifferentFromSelected) currentIndex = rangesCount;
 
-                final rangeDays = effectiveRange.toDurationSafe().inDays;
+                final rangeDays = effectiveRange.toDaysSafe();
                 final daysRadius = rangeDays < 2 ? 1 : rangeDays ~/ 2;
-                final maxDaysRadius = totalDaysInBetween.clampInt(2, 365);
+                final maxDaysRadius = totalDays.clampInt(2, 365);
 
                 daysPill = ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 86.0),
@@ -436,7 +434,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                     child: FittedBox(
                       fit: .scaleDown,
                       child: Text(
-                        (rangeDays < 1 ? 1 : rangeDays).displayDayKeyword,
+                        rangeDays.displayDayKeyword,
                         style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
                         softWrap: false,
                         maxLines: 1,

@@ -68,6 +68,8 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
 
           final listVideos = <YoutubeID>[];
           bool didRepairDates = false;
+          YoutubeID? previous;
+          bool isNewestFirst = true;
           if (response != null) {
             for (final item in response) {
               var vid = YoutubeID.fromJson(item);
@@ -75,12 +77,15 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
                 vid = _withDayDate(vid, dayOfVideo);
                 didRepairDates = true;
               }
+              final dateMS = vid.dateAddedMS;
+              if (previous != null && dateMS > previous.dateAddedMS) isNewestFirst = false;
+              previous = vid;
               listVideos.add(vid);
-              tempMapTopItems.addForce(vid.id, vid.dateAddedMS);
+              tempMapTopItems.addForce(vid.id, dateMS);
             }
           }
+          if (!isNewestFirst) listVideos.sortByReverse((e) => e.dateAddedMS);
           if (didRepairDates) {
-            listVideos.sortByReverse((e) => e.dateAddedMS);
             final listVideosJson = listVideos.map((e) => e.toJson()).toFixedList();
             f.writeAsJsonSync(listVideosJson);
           }
@@ -93,7 +98,6 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
 
     final topItems = ListensSortedMap<String>();
     topItems.assignAll(tempMapTopItems);
-    topItems.sortAllInternalLists();
 
     return HistoryPrepareInfo(
       historyMap: map,

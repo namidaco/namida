@@ -323,11 +323,11 @@ class _SettingsController extends _SettingsKeysWriter {
   late final shuffleExcludeSortReverse = _key('shuffleExcludeSortReverse', false);
 
   late final mostPlayedTimeRange = _keyEnum('mostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
-  late final mostPlayedCustomDateRange = _keyObject('mostPlayedCustomDateRange', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
+  late final mostPlayedCustomDateRange = _keyObject('mostPlayedCustomDateRange_v2', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
   late final mostPlayedCustomisStartOfDay = _key('mostPlayedCustomisStartOfDay', true);
 
   late final ytMostPlayedTimeRange = _keyEnum('ytMostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
-  late final ytMostPlayedCustomDateRange = _keyObject('ytMostPlayedCustomDateRange', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
+  late final ytMostPlayedCustomDateRange = _keyObject('ytMostPlayedCustomDateRange_v2', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
   late final ytMostPlayedCustomisStartOfDay = _key('ytMostPlayedCustomisStartOfDay', true);
 
   late final onTrackSwipeLeft = _keyEnum('onTrackSwipeLeft', TrackExecuteActions.playafter, TrackExecuteActions.values);
@@ -561,6 +561,17 @@ class _SettingsController extends _SettingsKeysWriter {
 
     // -- `true` was the old default, only an explicit `false` is kept
     _migrateKey('prioritizeEmbeddedLyrics', 'embeddedLyricsPriority', (json) => json == false && _raw['embeddedLyricsPriority'] == null ? EmbeddedLyricsPriority.off.name : null);
+
+    // -- custom ranges used to cover their first and last days whole
+    final dateRangeCodec = _ObjectCodec<DateRange>(DateRange.fromJson, (v) => v.toJson());
+    for (final name in const ['mostPlayedCustomDateRange', 'ytMostPlayedCustomDateRange']) {
+      _migrateKey(name, '${name}_v2', (json) {
+        final range = dateRangeCodec.decode(json);
+        if (range == null || range == DateRange.dummy()) return null;
+        final wholeDaysRange = DateRange.wholeDays(oldest: range.oldest, newest: range.newest);
+        return wholeDaysRange.toJson();
+      });
+    }
   }
 
   void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {

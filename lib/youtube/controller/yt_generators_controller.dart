@@ -260,6 +260,7 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
     final files = Directory(statsDir).listSyncSafe();
     for (var f in files) {
       if (f is File) {
+        if (f.path.endsWith('.tmp')) continue;
         try {
           final response = f.readAsJsonSync(ensureExists: false);
           if (response is List) {
