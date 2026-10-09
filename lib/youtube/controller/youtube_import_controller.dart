@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
@@ -132,7 +131,6 @@ class YoutubeImportController {
     final completer = Completer<void>();
     res.loopAdv((playlist, index) {
       final details = playlist.$1.details;
-      final plID = details != null ? PlaylistID(id: details.playlistID) : null;
       final newTracks = <String>[];
       final newTracksDates = <String, int?>{};
       for (var e in playlist.$2) {
@@ -144,7 +142,6 @@ class YoutubeImportController {
             playlist.$1.name,
             creationDate: details?.timeCreated?.millisecondsSinceEpoch,
             modifiedDate: details?.timeUpdated?.millisecondsSinceEpoch,
-            playlistID: plID,
             comment: details?.description ?? '',
             tracks: newTracks,
             convertItem: (id, dateAddedFallback, playlistID) => YoutubeID(

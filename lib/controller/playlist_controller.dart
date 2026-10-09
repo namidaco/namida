@@ -2,8 +2,8 @@
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // ignore: depend_on_referenced_packages
@@ -155,10 +155,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   Future<int> exportPlaylistsToM3UFiles(List<String> playlistsNames, String directoryPath) async {
     int exportedCount = 0;
+    final exportedPaths = <String>{};
     for (final name in playlistsNames) {
       final pl = playlistsMap.value[name];
       if (pl == null) continue;
-      final filePath = FileParts.joinPath(directoryPath, '$name.m3u');
+      final filePath = getUniqueM3UFilePath(name, directoryPath, p.context, shouldReplaceReservedChars: _shouldReplaceReservedChars, isTaken: exportedPaths.contains);
+      exportedPaths.add(filePath);
       try {
         await exportPlaylistToM3UFile(pl, filePath);
         exportedCount++;
@@ -330,21 +332,49 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     unawaited(Indexer.inst.refreshServerPlaylists());
   }
 
-  static String getUnusedM3uFilePathInStorage(String name) {
-    var savePath = FileParts.joinPath(AppDirs.M3UPlaylists, '$name.m3u');
-    // -- can cause mismatch on next refresh
-    // var counter = 1;
-    // while (File(savePath).existsSync()) {
-    //   savePath = FileParts.joinPath(AppDirs.M3UPlaylists, '$name ($counter).m3u');
-    //   counter++;
-    // }
-    return savePath;
+  /// the m3u file of [name] when it's already in [AppDirs.M3UPlaylists], otherwise a new one there that no other playlist or file uses.
+  static String getUnusedM3uFilePathInStorage(String name) => _instance._getUnusedM3uFilePathInStorage(name, const {});
+
+  /// [reservedPaths] are taken by playlists that aren't saved yet.
+  String _getUnusedM3uFilePathInStorage(String name, Set<String> reservedPaths) {
+    final ownPath = playlistsMap.value[name]?.m3uPath;
+    if (ownPath != null && p.isWithin(AppDirs.M3UPlaylists, ownPath)) return ownPath;
+    bool isTaken(String path) => reservedPaths.contains(path) || _m3uProperties.isPathSavedByAnother(path, name) || File(path).existsSync();
+    return getUniqueM3UFilePath(name, AppDirs.M3UPlaylists, p.context, shouldReplaceReservedChars: _shouldReplaceReservedChars, isTaken: isTaken);
+  }
+
+  @visibleForTesting
+  static String getUniqueM3UFilePath(
+    String playlistName,
+    String directory,
+    p.Context context, {
+    required bool shouldReplaceReservedChars,
+    required bool Function(String path) isTaken,
+  }) {
+    final filename = _toSafeFilename(playlistName, shouldReplaceReservedChars);
+    var path = context.join(directory, '$filename.m3u');
+    int i = 2;
+    while (isTaken(path)) {
+      path = context.join(directory, '$filename ($i).m3u');
+      i++;
+    }
+    return path;
+  }
+
+  static final _shouldReplaceReservedChars = Platform.isWindows || Platform.isAndroid; // -- android shared storage rejects them too
+  static final _reservedFilenameCharsRegex = RegExp(r'[<>:"/\\|?*\x00-\x1F\x7F]');
+  static final _posixUnsafeFilenameCharsRegex = RegExp(r'[/\x00]');
+
+  static String _toSafeFilename(String playlistName, bool shouldReplaceReservedChars) {
+    final unsafeCharsRegex = shouldReplaceReservedChars ? _reservedFilenameCharsRegex : _posixUnsafeFilenameCharsRegex;
+    return playlistName.replaceAll(unsafeCharsRegex, '_');
   }
 
   Future<List<Track>> readM3UFiles(Set<String> filesPaths) async {
     if (filesPaths.isEmpty) return [];
     final params = _ParseM3UPlaylistFilesParams(
       allm3uPaths: filesPaths,
+      boundNamesByPath: _getM3UPlaylistsNamesByPath(),
       tracksDbInfo: AppPaths.TRACKS_DB_INFO,
       backupDirPath: AppDirs.M3UBackup,
     );
@@ -390,8 +420,17 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
       _ParseM3UPlaylistFilesResult? resBoth;
       if (allm3uPaths.isNotEmpty) {
+        final Map<String, String> boundNamesByPath;
+        if (forPaths.isEmpty) {
+          boundNamesByPath = _m3uProperties.getNamesByPath(allm3uPaths);
+        } else if (addAsM3U) {
+          boundNamesByPath = _getM3UPlaylistsNamesByPath();
+        } else {
+          boundNamesByPath = const {};
+        }
         final params = _ParseM3UPlaylistFilesParams(
           allm3uPaths: allm3uPaths,
+          boundNamesByPath: boundNamesByPath,
           tracksDbInfo: AppPaths.TRACKS_DB_INFO,
           backupDirPath: AppDirs.M3UBackup,
         );
@@ -474,6 +513,26 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return null;
   }
 
+  Map<String, String> _getM3UPlaylistsNamesByPath() {
+    final namesByPath = <String, String>{};
+    for (final pl in playlistsMap.value.values) {
+      final m3uPath = pl.m3uPath;
+      if (m3uPath != null && m3uPath.isNotEmpty) namesByPath[m3uPath] = pl.name;
+    }
+    return namesByPath;
+  }
+
+  /// {m3uPath: playlistName} of [m3uPaths] in [m3uProperties], a path saved under several names keeps the last one.
+  @visibleForTesting
+  static Map<String, String> getSavedM3UNamesByPath(Map<String, Map<String, dynamic>> m3uProperties, Set<String> m3uPaths) {
+    final namesByPath = <String, String>{};
+    for (final e in m3uProperties.entries) {
+      final m3uPath = e.value['m3uPath'];
+      if (m3uPaths.contains(m3uPath)) namesByPath[m3uPath] = e.key;
+    }
+    return namesByPath;
+  }
+
   /// returns [tags] itself when there is nothing new.
   static List<String> _combineTags(List<String> tags, List<String>? tagsToAdd) {
     if (tagsToAdd == null) return tags;
@@ -510,17 +569,18 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   /// [playlists] tracks must be already resolved for this device, their m3uPath is only checked for existence.
   Future<void> importSyncedPlaylists(Iterable<LocalPlaylist> playlists) async {
-    final preparing = playlists.map(_prepareSyncedPlaylist);
+    final newM3UPaths = <String>{};
+    final preparing = playlists.map((pl) => _prepareSyncedPlaylist(pl, newM3UPaths));
     final prepared = await Future.wait(preparing);
     final toImport = prepared.nonNulls;
     if (toImport.isNotEmpty) await importPlaylistsIfNewer(toImport);
   }
 
-  Future<LocalPlaylist?> _prepareSyncedPlaylist(LocalPlaylist incoming) async {
+  Future<LocalPlaylist?> _prepareSyncedPlaylist(LocalPlaylist incoming, Set<String> newM3UPaths) async {
     final existing = playlistsMap.value[incoming.name];
     if (existing != null && existing.modifiedDate > incoming.modifiedDate) return null;
 
-    final m3uPath = await _resolveSyncedM3UPath(incoming, existing);
+    final m3uPath = _resolveSyncedM3UPath(incoming, existing, newM3UPaths);
     if (m3uPath == null) return null;
     if (m3uPath.isEmpty) return incoming.copyWith(m3uPath: '');
 
@@ -531,7 +591,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   /// null when it can't be stored, empty for a json playlist.
-  Future<String?> _resolveSyncedM3UPath(LocalPlaylist incoming, LocalPlaylist? existing) async {
+  String? _resolveSyncedM3UPath(LocalPlaylist incoming, LocalPlaylist? existing, Set<String> newM3UPaths) {
     if (existing != null) {
       final existingM3UPath = existing.m3uPath;
       if (existingM3UPath == null || existingM3UPath.isEmpty) return '';
@@ -539,9 +599,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       return canOverwrite ? existingM3UPath : null;
     }
     if (incoming.m3uPath?.isNotEmpty != true) return '';
-    final m3uPath = getUnusedM3uFilePathInStorage(incoming.name);
-    final isTakenByAnotherPlaylist = await File(m3uPath).exists();
-    return isTakenByAnotherPlaylist ? '' : m3uPath;
+    final m3uPath = _getUnusedM3uFilePathInStorage(incoming.name, newM3UPaths);
+    newM3UPaths.add(m3uPath);
+    return m3uPath;
   }
 
   Future<bool> _writeSyncedM3UFile(LocalPlaylist playlist, String m3uPath) async {
@@ -809,10 +869,12 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     final backupDirPath = params.backupDirPath;
 
-    DBWrapperSync? tracksDBManager;
     final libraryTracksPaths = <String>[];
 
+    bool didLoadTracksDb = false;
     Future<void> loadTracksDb() async {
+      didLoadTracksDb = true;
+      DBWrapperSync? tracksDBManager;
       try {
         tracksDBManager = await DBWrapper.openFromInfoSyncTry(
           fileInfo: params.tracksDbInfo,
@@ -858,20 +920,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       return index;
     }();
 
-    final pathSep = Platform.pathSeparator;
+    final context = p.context;
     late final albumartUrlRegex = RegExp(r'(?<=#EXTALBUMARTURL:\s*).+');
-    final pathSepRegex = RegExp(r'[\\/]');
 
+    final namesByPath = allocateM3UPlaylistNames(allm3uPaths, params.boundNamesByPath, context);
     final all = <String, _M3UPlaylistTempInfo>{};
     final infoMap = <String, String?>{};
     for (final path in allm3uPaths) {
       final file = File(path);
-      final filename = file.path.getFilenameWOExt;
       final fileParentDirectory = file.path.getDirectoryPath;
       final fullTracks = <Track>[];
       String? latestInfo;
       String? artUrl;
-      for (String line in file.readAsLinesSync()) {
+      for (final line in file.readAsLinesSync()) {
         if (line.startsWith("#")) {
           if (artUrl == null && line.startsWith('#EXTALBUMARTURL')) {
             artUrl = albumartUrlRegex.firstMatch(line)?[0];
@@ -879,62 +940,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
           latestInfo = line; // could be a comment, would get overriden by the next #EXTINF anyways
         } else if (line.isNotEmpty) {
-          if (line.startsWith('primary/')) {
-            line = line.replaceFirst('primary/', '');
-          }
-          line = line.replaceAll(pathSepRegex, pathSep);
-
-          String fullPath = line; // maybe is absolute path
-          bool fileExists = false;
-
-          if (pathExists(fullPath)) fileExists = true;
-
-          if (!fileExists) {
-            fullPath = p.normalize(p.join(fileParentDirectory, fullPath));
-            if (pathExists(fullPath)) fileExists = true;
-          }
-
-          if (!fileExists) {
+          final entry = resolveM3UEntryLine(line, fileParentDirectory, context, pathExists);
+          var fullPath = entry.path;
+          if (!entry.isResolved) {
             // no idea, trying to get from library
-            if (tracksDBManager == null) await loadTracksDb();
-            final normalizedLowerPath = p.normalize(line).toLowerCase();
-            final candidates = libraryPathsByLowerFilename[normalizedLowerPath.getFilename];
-            if (candidates != null) {
-              fullPath = closestPathBySuffix(candidates, normalizedLowerPath);
-              // if (pathExists(fullPath)) fileExists = true; // no further checks
-            }
-          }
-          if (Platform.isWindows) {
-            if (fullPath.startsWith(pathSep)) {
-              fullPath = fullPath.substring(1);
-            }
-          } else {
-            if (!fullPath.startsWith(pathSep)) {
-              fullPath = '$pathSep$fullPath';
-            }
+            if (!didLoadTracksDb) await loadTracksDb();
+            final lowerPath = fullPath.toLowerCase();
+            final candidates = libraryPathsByLowerFilename[lowerPath.getFilename];
+            if (candidates != null) fullPath = closestPathBySuffix(candidates, lowerPath);
           }
           fullTracks.add(Track.orVideo(fullPath));
           infoMap[fullPath] = latestInfo;
           latestInfo = null; // resetting info between each line loop
         }
       }
-      if (all[filename] == null) {
-        all[filename] = _M3UPlaylistTempInfo(path: path, artUrl: artUrl, tracks: fullTracks);
-      } else {
-        final oldEntry = all.remove(filename)!;
-        final oldParent = oldEntry.path.getDirectoryPath.getFilename;
-        all[_uniqueName(all, oldParent, filename)] = oldEntry;
-
-        final parent = file.path.getDirectoryPath.getFilename;
-        all[_uniqueName(all, parent, filename)] = _M3UPlaylistTempInfo(path: path, artUrl: artUrl, tracks: fullTracks);
-      }
+      final name = namesByPath[path]!;
+      all[name] = _M3UPlaylistTempInfo(path: path, artUrl: artUrl, tracks: fullTracks);
 
       latestInfo = null; // resetting info between each file looping
     }
 
     // -- copying newly found m3u files as a backup
     for (final m3u in all.entries) {
-      final backupFile = FileParts.join(backupDirPath, "${m3u.key}.m3u");
+      final backupFilename = _toSafeFilename(m3u.key, _shouldReplaceReservedChars);
+      final backupFile = FileParts.join(backupDirPath, "$backupFilename.m3u");
       if (!backupFile.existsSync()) {
         File(m3u.value.path).copySync(backupFile.path);
       }
@@ -946,14 +975,81 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     );
   }
 
-  static String _uniqueName(Map<String, _M3UPlaylistTempInfo> all, String parent, String filename) {
-    var name = '$parent - $filename';
-    var i = 2;
-    while (all[name] != null) {
-      name = '$parent - $filename ($i)';
-      i++;
+  static final _urlRegex = RegExp(r'^[a-zA-Z][a-zA-Z0-9+.\-]+://');
+  static final _pathSeparatorsRegex = RegExp(r'[\\/]');
+
+  /// [line] resolved against [m3uDirectory], or against the root for posix lines that lost their leading slash.
+  /// unresolved ones should be looked up in the library.
+  @visibleForTesting
+  static ({String path, bool isResolved}) resolveM3UEntryLine(String line, String m3uDirectory, p.Context context, bool Function(String path) exists) {
+    final localPath = _m3uLineToLocalPath(line, context);
+    if (localPath == null) return (path: line, isResolved: true);
+    final joinedPath = context.join(m3uDirectory, localPath);
+    final path = context.normalize(joinedPath);
+    if (exists(path)) return (path: path, isResolved: true);
+    final canBeRooted = context.style == p.Style.posix && context.isRelative(localPath);
+    if (canBeRooted) {
+      final rootedPath = context.normalize('/$localPath');
+      if (exists(rootedPath)) return (path: rootedPath, isResolved: true);
     }
-    return name;
+    return (path: path, isResolved: false);
+  }
+
+  /// null for urls other than file ones, they are kept as they are.
+  static String? _m3uLineToLocalPath(String line, p.Context context) {
+    if (!_urlRegex.hasMatch(line)) {
+      final unprefixedLine = line.startsWith('primary/') ? line.replaceFirst('primary/', '') : line;
+      return unprefixedLine.replaceAll(_pathSeparatorsRegex, context.separator);
+    }
+    if (!line.startsWith('file:')) return null;
+    try {
+      final fileUri = Uri.parse(line);
+      return context.fromUri(fileUri);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// same-named files get their folder name as a prefix, files in [boundNamesByPath] keep their names.
+  @visibleForTesting
+  static Map<String, String> allocateM3UPlaylistNames(Set<String> m3uPaths, Map<String, String> boundNamesByPath, p.Context context) {
+    final filenamesCounts = <String, int>{};
+    void countFilename(String path) {
+      final filename = context.basenameWithoutExtension(path);
+      filenamesCounts.update(filename, (count) => count + 1, ifAbsent: () => 1);
+    }
+
+    for (final path in m3uPaths) {
+      countFilename(path);
+    }
+    for (final path in boundNamesByPath.keys) {
+      if (!m3uPaths.contains(path)) countFilename(path);
+    }
+
+    final takenNames = boundNamesByPath.values.toSet();
+    final namesByPath = <String, String>{};
+    for (final path in m3uPaths) {
+      final boundName = boundNamesByPath[path];
+      if (boundName != null) {
+        namesByPath[path] = boundName;
+        continue;
+      }
+      final filename = context.basenameWithoutExtension(path);
+      var name = filename;
+      if (filenamesCounts[filename]! > 1 || takenNames.contains(name)) {
+        final parentDirectory = context.dirname(path);
+        final parent = context.basename(parentDirectory);
+        name = '$parent - $filename';
+        var i = 2;
+        while (takenNames.contains(name)) {
+          name = '$parent - $filename ($i)';
+          i++;
+        }
+      }
+      takenNames.add(name);
+      namesByPath[path] = name;
+    }
+    return namesByPath;
   }
 
   static Future<void> _saveM3UPlaylistToFile(
@@ -988,6 +1084,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
     final commonParent = relative ? p.dirname(mainPath) : '';
     final commonParentIsGood = commonParent.trim().isNotEmpty;
+    final context = p.context;
 
     final file = File(mainPath);
 
@@ -1007,13 +1104,20 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     }
     for (final entry in entries) {
       final path = entry.path;
-      final pathLine = commonParentIsGood ? p.relative(path, from: commonParent) : path;
+      final pathLine = commonParentIsGood ? m3uEntryLine(path, commonParent, context) : path;
       sink.writeln(entry.info);
       sink.writeln(pathLine);
     }
 
     await sink.flush();
     await sink.close();
+  }
+
+  /// relative to [m3uDirectory] when possible, urls and paths on other roots stay as they are.
+  @visibleForTesting
+  static String m3uEntryLine(String path, String m3uDirectory, p.Context context) {
+    if (_urlRegex.hasMatch(path)) return path;
+    return context.relative(path, from: m3uDirectory);
   }
 
   Future<bool> _requestM3USyncPermission() async {
@@ -1299,6 +1403,15 @@ class _M3UPlaylistsProperties {
     }
   }
 
+  bool isPathSavedByAnother(String m3uPath, String playlistName) {
+    for (final e in _entries.entries) {
+      if (e.key != playlistName && e.value['m3uPath'] == m3uPath) return true;
+    }
+    return false;
+  }
+
+  Map<String, String> getNamesByPath(Set<String> m3uPaths) => PlaylistController.getSavedM3UNamesByPath(_entries, m3uPaths);
+
   Future<void> load() async {
     final json = await _file.readAsJson();
     if (json is! Map) return;
@@ -1341,11 +1454,13 @@ class _M3UPlaylistsProperties {
 
 class _ParseM3UPlaylistFilesParams {
   final Set<String> allm3uPaths;
+  final Map<String, String> boundNamesByPath;
   final DbWrapperFileInfo tracksDbInfo; // used as a fallback lookup
   final String backupDirPath; // used as a backup for newly found m3u files.
 
   const _ParseM3UPlaylistFilesParams({
     required this.allm3uPaths,
+    required this.boundNamesByPath,
     required this.tracksDbInfo,
     required this.backupDirPath,
   });

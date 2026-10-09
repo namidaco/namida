@@ -526,6 +526,14 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
     super.dispose();
   }
 
+  void _toggleTrackToAdd(Track tr) {
+    if (tracksToAddMap.containsKey(tr)) {
+      tracksToAddMap.remove(tr);
+    } else {
+      tracksToAddMap[tr] = true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -597,8 +605,8 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                             trackOrTwd: tr,
                             index: i,
                             tracks: randomTracks,
-                            onTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
-                            onRightAreaTap: () => tracksToAddMap[tr] = !(tracksToAddMap[tr] ?? false),
+                            onTap: () => _toggleTrackToAdd(tr),
+                            onRightAreaTap: () => _toggleTrackToAdd(tr),
                             trailingWidget: Obx(
                               (context) => NamidaCheckMark(
                                 size: 22.0,
@@ -622,7 +630,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                   height: 42.0,
                   child: Obx(
                     (context) {
-                      final trl = tracksToAddMap.entries.where((element) => element.value).length;
+                      final trl = tracksToAddMap.length;
                       return NamidaButton(
                         enabled: trl > 0,
                         icon: Broken.add,

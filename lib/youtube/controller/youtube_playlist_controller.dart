@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/video.dart';
@@ -42,7 +41,6 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     int? creationDate,
     String comment = '',
     List<String> moods = const [],
-    PlaylistID? playlistID,
   }) {
     final videoIdsList = videoIds?.toList() ?? [];
     return super.addNewPlaylistRaw(
@@ -58,7 +56,6 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
       creationDate: creationDate,
       comment: comment,
       moods: moods,
-      playlistID: playlistID,
       actionIfAlreadyExists: () => NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd),
     );
   }
