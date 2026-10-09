@@ -202,6 +202,11 @@ class PartyHost {
       case PartyMsgType.move:
         return _move(member, data['id'] as int, data['a'] as int);
 
+      case PartyMsgType.moveMany:
+        final ids = (data['ids'] as List).cast<int>();
+        final afterId = data['a'] as int;
+        return _moveMany(member, ids, afterId);
+
       case PartyMsgType.setQueue:
         return _setQueue(member, data);
 
@@ -430,6 +435,37 @@ class PartyHost {
     }
     if (to != from) _emit(PartyMsg.moved(id, to));
     return null;
+  }
+
+  PartyDenyReason? _moveMany(PartyMember member, List<int> ids, int afterId) {
+    final anchorIndex = afterId == 0 ? -1 : state.indexOfId(afterId);
+    if (ids.isEmpty || (afterId != 0 && anchorIndex < 0)) return .invalid;
+    final allowed = <int>{};
+    var isAnyDenied = false;
+    for (final id in ids) {
+      if (id == afterId) return .invalid;
+      final entry = state.entryById(id);
+      if (entry == null) continue;
+      if (state.canEditEntry(member, entry)) {
+        allowed.add(id);
+      } else {
+        isAnyDenied = true;
+      }
+    }
+    if (allowed.isEmpty) return isAnyDenied ? .permission : .invalid;
+    if (_isInPlace(allowed, anchorIndex + 1)) return null;
+    _emit(PartyMsg.movedMany(allowed.toList(growable: false), afterId));
+    return null;
+  }
+
+  bool _isInPlace(Iterable<int> ids, int start) {
+    final entries = state.entries;
+    if (start + ids.length > entries.length) return false;
+    var index = start;
+    for (final id in ids) {
+      if (entries[index++].id != id) return false;
+    }
+    return true;
   }
 
   PartyDenyReason? _setQueue(PartyMember member, Map<String, dynamic> data) {

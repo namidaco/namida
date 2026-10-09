@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -24,14 +26,15 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
   String? fatal;
   final relayMembers = <int, String>{};
   final denied = <PartyMsg>[];
+  final relayErrors = <String>[];
   final welcomed = Completer<void>();
 
   bool get isHost => myN != 0 && myN == hostN;
 
-  Future<void> connect(int port, String code, {String? token}) {
+  Future<void> connect(int port, String code, {String? token, int partyVersion = kPartyVersion}) {
     connection = PartyConnection(
       roomUri: Uri.parse('ws://127.0.0.1:$port/v1/room/$code'),
-      partyVersion: kPartyVersion,
+      partyVersion: partyVersion,
       name: name,
       deviceId: 'did-$name',
       listener: this,
@@ -117,7 +120,7 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
   @override
   void onBans(List<PartyBan> bans) {}
   @override
-  void onRelayError(String code) {}
+  void onRelayError(String code) => relayErrors.add(code);
 
   @override
   int nowMS() => connection.nowMS();
@@ -143,6 +146,21 @@ Future<void> _until(FutureOr<bool> Function() test, {String? reason}) async {
   while (!await test()) {
     if (DateTime.now().isAfter(deadline)) fail('timed out: ${reason ?? ''}');
     await Future<void>.delayed(const Duration(milliseconds: 20));
+  }
+}
+
+/// codes of the listing as the relay serves it, before the client filters it.
+Future<List<String>> _relayListedCodes(Uri server) async {
+  final client = HttpClient();
+  try {
+    final request = await client.getUrl(server.resolve('/v1/rooms'));
+    final response = await request.close();
+    final body = await response.transform(utf8.decoder).join();
+    final map = jsonDecode(body) as Map<String, dynamic>;
+    final rooms = map['rooms'] as List;
+    return rooms.map((e) => (e as Map)['code'] as String).toList();
+  } finally {
+    client.close();
   }
 }
 
@@ -212,6 +230,36 @@ void main() {
     hiddenHost.host?.dispose();
   });
 
+  test('public rooms on another party version are not listed', () async {
+    final server = Uri(scheme: 'http', host: '127.0.0.1', port: relay.port);
+    const olderPartyVersion = kPartyVersion - 1;
+    final olderRoom = relay.createRoom(name: 'older host', did: 'did-older-host', pv: olderPartyVersion, public: true);
+    final olderHost = _Peer('older host');
+    await olderHost.connect(relay.port, olderRoom.code, token: olderRoom.token, partyVersion: olderPartyVersion);
+    olderHost.connection.sendSummary(name: 'older room', title: 'a song', artist: 'an artist');
+
+    final room = relay.createRoom(name: 'host', did: 'did-host', pv: kPartyVersion, public: true);
+    final host = _Peer('host');
+    await host.connect(relay.port, room.code, token: room.token);
+    host.connection.sendSummary(name: 'my room', title: 'a song', artist: 'an artist');
+
+    await _until(
+      () async {
+        final codes = await _relayListedCodes(server);
+        return codes.contains(olderRoom.code) && codes.contains(room.code);
+      },
+      reason: 'the relay lists both rooms',
+    );
+
+    final page = (await PartyController.listRooms(server: server))!;
+    expect(page.rooms.map((e) => e.code), [room.code]);
+
+    host.connection.dispose();
+    host.host?.dispose();
+    olderHost.connection.dispose();
+    olderHost.host?.dispose();
+  });
+
   test('join, sync, commands, permissions, kick & host takeover over a real relay', () async {
     final room = relay.createRoom(name: 'host', did: 'did-host', pv: kPartyVersion);
     final host = _Peer('host');
@@ -266,5 +314,48 @@ void main() {
     guest.host!.dispose();
     guest.connection.dispose();
     late.connection.dispose();
+  });
+
+  test('a batched move of the largest guest frame passes the relay in one frame', () async {
+    final room = relay.createRoom(name: 'host', did: 'did-host', pv: kPartyVersion);
+    final host = _Peer('host');
+    await host.connect(relay.port, room.code, token: room.token);
+    host.send(PartyMsg.add(List.generate(2000, (i) => _yt('v$i'))));
+    host.send(PartyMsg.perms(const PartyPermissions(edit: true)));
+
+    final guest = _Peer('guest');
+    await guest.connect(relay.port, room.code);
+    await _until(() => guest.synced && !guest.state.isLoading && guest.state.entries.length == 2000, reason: 'guest synced');
+    final revBefore = host.state.rev;
+    final ids = List.generate(1500, (i) => 2000 - i);
+    guest.send(PartyMsg.moveMany(ids, 1));
+
+    await _until(() => guest.state.rev == revBefore + 1, reason: 'one moved event');
+    final expected = [1, ...ids, for (var id = 2; id <= 500; id++) id];
+    expect(host.state.entries.map((e) => e.id), expected);
+    expect(guest.state.entries.map((e) => e.id), expected);
+    expect(guest.relayErrors, isEmpty);
+    expect(host.relayErrors, isEmpty);
+
+    host.host!.dispose();
+    host.connection.dispose();
+    guest.connection.dispose();
+  });
+
+  test('the relay refuses peers on another party version', () async {
+    final oldRoom = relay.createRoom(name: 'old host', did: 'did-old-host', pv: kPartyVersion - 1);
+    final newPeer = _Peer('new');
+    unawaited(newPeer.connect(relay.port, oldRoom.code));
+    await _until(() => newPeer.fatal != null, reason: 'joining an older room');
+    expect(newPeer.fatal, 'version_mismatch');
+
+    final newRoom = relay.createRoom(name: 'new host', did: 'did-new-host', pv: kPartyVersion);
+    final oldPeer = _Peer('old');
+    unawaited(oldPeer.connect(relay.port, newRoom.code, partyVersion: kPartyVersion - 1));
+    await _until(() => oldPeer.fatal != null, reason: 'joining from an older build');
+    expect(oldPeer.fatal, 'version_mismatch');
+
+    newPeer.connection.dispose();
+    oldPeer.connection.dispose();
   });
 }

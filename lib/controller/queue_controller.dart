@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/class/file_parts.dart';
@@ -23,6 +25,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/youtube/class/download_task_base.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
@@ -246,6 +249,7 @@ class QueueController {
     Iterable<String>? forThesePathsOnly,
     bool ensureNewFileExists = false,
   }) async {
+    await loadAllQueues();
     final queuesToSave = <Queue>{};
     final pathsOnlySet = forThesePathsOnly?.toSet();
     final existenceCache = <String, bool>{};
@@ -282,15 +286,19 @@ class QueueController {
   }
 
   Future<void> replaceTrackInAllQueues(Map<Track, Track> oldNewTrack) async {
-    final queuesToSave = <Queue>{};
+    await loadAllQueues();
+    final queuesToSave = <Queue>[];
     for (final q in queuesMap.value.values) {
-      for (final e in oldNewTrack.entries) {
-        q.tracks.replaceItems(
-          e.key,
-          e.value,
-          onMatch: () => queuesToSave.add(q),
-        );
+      final tracks = q.tracks;
+      final length = tracks.length;
+      bool didReplace = false;
+      for (int i = 0; i < length; i++) {
+        final newTrack = oldNewTrack[tracks[i]];
+        if (newTrack == null) continue;
+        tracks[i] = newTrack;
+        didReplace = true;
       }
+      if (didReplace) queuesToSave.add(q);
     }
     for (final q in queuesToSave) {
       _updateMap(q);
@@ -319,6 +327,12 @@ class QueueController {
     final dates = _unloadedQueuesDates;
     if (dates.isEmpty) return;
     final map = await _readQueuesForDatesCompute.thready((AppDirs.QUEUES, dates));
+    final remainingDates = _unloadedQueuesDates;
+    final didRemoveWhileReading = !identical(remainingDates, dates);
+    if (didRemoveWhileReading) {
+      final remainingDatesSet = remainingDates.toSet();
+      map.removeWhere((date, _) => !remainingDatesSet.contains(date));
+    }
     _unloadedQueuesDates = const [];
     queuesMap.value.addAll(map);
     queuesMap.refresh();
@@ -478,6 +492,9 @@ class QueueController {
     return (const [], null);
   }
 
+  @visibleForTesting
+  static (List<Playable>, List<int>?) debugReadLatestQueueFile(String filePath) => _prepareLatestQueueSync(filePath);
+
   Future<void> _saveQueueToStorage(Queue queue) async {
     final bytes = _QueueSerializer.encode(queue.tracks, meta: queue.metaToJson());
     await _writeAtomic(FileParts.joinPath(AppDirs.QUEUES, '${queue.date}.json'), bytes);
@@ -615,7 +632,7 @@ class _LatestPlayedForSourceManager {
         _mapRx.value[source] ??= item;
         final mt = map['_mt'] as int? ?? 0;
         if (mt > 0) _modifiedTimesMap[source] ??= mt;
-        if (source is QueueSource && source.s == QueueSourceEnum.album && source.albumIdentifier == null) {
+        if (source is QueueSource && source.s == QueueSourceEnum.album && _canBeLegacyAlbumSource(source)) {
           _legacyAlbumSources.add((source: source, dbKey: entry.key));
         }
       }
@@ -626,12 +643,24 @@ class _LatestPlayedForSourceManager {
     _sortDirty();
   }
 
-  // -- saved before the identifier joined the key, the saved track tells which album once the library is loaded.
+  // -- saved before the identifier joined the key or against a cleaned up (`AC_DC`) or untrimmed (`Foo `) album name, the saved track tells which album once the library is loaded.
   final _legacyAlbumSources = <_LegacyAlbumSource>[];
+
+  static bool _canBeLegacyAlbumSource(QueueSource source) {
+    final identifier = source.albumIdentifier;
+    if (identifier == null) return true;
+    return _canBeLegacyText(identifier.album) || _canBeLegacyText(identifier.albumArtist) || _canBeLegacyText(identifier.year);
+  }
+
+  static bool _canBeLegacyText(String text) => text.contains('_') || _untrimmedWhitespaceRegex.hasMatch(text);
+
+  /// matches when `trimAll()` would change the text, `trim()` also strips U+0085.
+  static final _untrimmedWhitespaceRegex = RegExp(r'^[\s\u0085]|[\s\u0085]$|\s\s|[^\S ]');
 
   void migrateLegacyAlbumSources() async {
     if (_legacyAlbumSources.isEmpty) return;
 
+    final albumsMap = Indexer.inst.mainMapAlbums.value;
     final unresolved = <_LegacyAlbumSource>[];
     final legacyKeys = <String>[];
     final migratedEntries = <MapEntry<String, Map<String, dynamic>>>[];
@@ -639,6 +668,8 @@ class _LatestPlayedForSourceManager {
       final source = legacy.source;
       final item = _mapRx.value[source];
       if (item == null) continue;
+      final identifier = source.albumIdentifier;
+      if (identifier != null && albumsMap.containsKey(identifier)) continue;
       final newSource = _resolveLegacyAlbumSource(source, item);
       if (newSource == null) {
         unresolved.add(legacy);
@@ -674,11 +705,36 @@ class _LatestPlayedForSourceManager {
     final trackExt = item.track.toTrackExtOrNull();
     if (trackExt == null) return null;
     final identifiers = trackExt.albumsIdentifiersModified;
-    final title = source.title;
-    final sameTitleIdentifier = identifiers.firstWhereEff((e) => e.displayAlbumName == title);
-    final identifier = sameTitleIdentifier ?? identifiers.firstOrNull;
+    final legacyIdentifier = source.albumIdentifier;
+    final AlbumIdentifierWrapper? identifier;
+    if (legacyIdentifier == null) {
+      final title = source.title;
+      final sameTitleIdentifier = identifiers.firstWhereEff((e) => e.displayAlbumName == title);
+      identifier = sameTitleIdentifier ?? identifiers.firstOrNull;
+    } else {
+      identifier = identifiers.firstWhereEff((e) => _isLegacyOf(legacyIdentifier, e));
+    }
     if (identifier == null) return null;
     return QueueSource.album(identifier, null);
+  }
+
+  static bool _isLegacyOf(AlbumIdentifierWrapper legacy, AlbumIdentifierWrapper identifier) {
+    return _isLegacyTextOf(legacy.album, identifier.album) &&
+        _isLegacyTextOf(legacy.albumArtist, identifier.albumArtist) &&
+        _isLegacyTextOf(legacy.year, identifier.year) &&
+        legacy.mbAlbumId == identifier.mbAlbumId &&
+        legacy.mbAlbumArtistId == identifier.mbAlbumArtistId;
+  }
+
+  static bool _isLegacyTextOf(String legacyText, String text) {
+    if (legacyText == text) return true;
+    final trimmedLegacyText = legacyText.trimAll();
+    if (trimmedLegacyText == text) return true;
+    final cleanedText = text.replaceAll(DownloadTaskFilename.cleanupFilenameRegex, '_');
+    if (trimmedLegacyText == cleanedText) return true;
+    // -- older versions replaced only `/`
+    final slashesCleanedText = text.replaceAll('/', '_');
+    return trimmedLegacyText == slashesCleanedText;
   }
 
   void update(QueueSourceBase source, Playable item) async {

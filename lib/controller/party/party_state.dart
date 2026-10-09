@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:typed_data';
 
 import 'package:namida/controller/party/party_protocol.dart';
 
@@ -9,6 +10,7 @@ abstract class PartyStateListener {
 
   void onEntriesRemoved(List<int> ids);
   void onEntryMoved(int fromIndex, int toIndex);
+  void onEntriesMoved(int index, List<PartyEntry> entries);
   void onEntryMetaChanged(PartyEntry entry, {required bool fallbackChanged});
   void onAnchorChanged();
   void onRepeatChanged();
@@ -199,6 +201,11 @@ class PartyState {
         _indexDirty = true;
         l?.onEntryMoved(from, to);
 
+      case PartyMsgType.movedMany:
+        final ids = (data['ids'] as List).cast<int>();
+        final afterId = data['a'] as int;
+        _applyMovedMany(ids, afterId);
+
       case PartyMsgType.queueSet:
         final entries = _parseEntries(data['e']);
         anchor = PartyAnchor.fromList(data['a'] as List);
@@ -253,5 +260,31 @@ class PartyState {
       default:
         throw FormatException('not a state event: ${event.type}');
     }
+  }
+
+  void _applyMovedMany(List<int> ids, int afterId) {
+    final anchorIndex = afterId == 0 ? -1 : indexOfId(afterId);
+    if (afterId != 0 && anchorIndex < 0) throw const FormatException('unknown move anchor');
+    final length = _entries.length;
+    final isMoved = Uint8List(length);
+    final moved = <PartyEntry>[];
+    var movedBeforeAnchor = 0;
+    for (final id in ids) {
+      final index = indexOfId(id);
+      if (index < 0 || index == anchorIndex || isMoved[index] == 1) continue;
+      isMoved[index] = 1;
+      moved.add(_entries[index]);
+      if (index < anchorIndex) movedBeforeAnchor++;
+    }
+    if (moved.isEmpty) return;
+    var keptCount = 0;
+    for (var i = 0; i < length; i++) {
+      if (isMoved[i] == 0) _entries[keptCount++] = _entries[i];
+    }
+    _entries.length = keptCount;
+    final toIndex = anchorIndex + 1 - movedBeforeAnchor;
+    _entries.insertAll(toIndex, moved);
+    _indexDirty = true;
+    if (!_loading) listener?.onEntriesMoved(toIndex, moved);
   }
 }

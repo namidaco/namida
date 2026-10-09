@@ -628,33 +628,73 @@ class Player {
   }
 
   Future<bool> moveToNext(int index, {bool vibrate = true}) async {
-    final done = await _audioHandler.moveToNext(index);
+    final isIntercepted = _audioHandler.partyGate?.interceptReorder(index, currentIndex.value + 1) == true;
+    final done = isIntercepted || await _audioHandler.moveToNext(index);
     if (done && vibrate) VibratorController.light();
     return done;
   }
 
   Future<bool> moveToAfterLatestInserted(int index, {bool vibrate = true}) async {
-    final done = await _audioHandler.moveToAfterLatestInserted(index);
+    final gate = _audioHandler.partyGate;
+    bool isIntercepted = false;
+    if (gate != null) {
+      final latestIndex = latestInsertedIndex.withMinimum(0);
+      isIntercepted = gate.interceptReorder(index, latestIndex + 1);
+    }
+    final done = isIntercepted || await _audioHandler.moveToAfterLatestInserted(index);
     if (done && vibrate) VibratorController.light();
     return done;
   }
 
   Future<bool> moveToLast(int index, {bool vibrate = true}) async {
-    final done = await _audioHandler.moveToLast(index);
+    final isIntercepted = _audioHandler.partyGate?.interceptReorder(index, currentQueue.value.length) == true;
+    final done = isIntercepted || await _audioHandler.moveToLast(index);
     if (done && vibrate) VibratorController.light();
     return done;
   }
 
   Future<bool> moveItemsToNext(List<int> indices, {bool vibrate = true}) async {
-    final done = await _audioHandler.moveItemsToNext(indices);
+    final gate = _audioHandler.partyGate;
+    final isIntercepted = gate != null && _interceptMoveItems(gate, indices, toLast: false);
+    final done = isIntercepted || await _audioHandler.moveItemsToNext(indices);
     if (done && vibrate) VibratorController.light();
     return done;
   }
 
   Future<bool> moveItemsToLast(List<int> indices, {bool vibrate = true}) async {
-    final done = await _audioHandler.moveItemsToLast(indices);
+    final gate = _audioHandler.partyGate;
+    final isIntercepted = gate != null && _interceptMoveItems(gate, indices, toLast: true);
+    final done = isIntercepted || await _audioHandler.moveItemsToLast(indices);
     if (done && vibrate) VibratorController.light();
     return done;
+  }
+
+  bool _interceptMoveItems(PartyPlayerGate gate, List<int> indices, {required bool toLast}) {
+    final move = partyMoveOf(indices, queueLength: currentQueue.value.length, currentIndex: currentIndex.value, toLast: toLast);
+    return gate.interceptMoveItems(move.sortedIndices, afterIndex: move.afterIndex);
+  }
+
+  /// same result as the local [moveItemsToNext] & [moveItemsToLast], items already in place are left out.
+  @visibleForTesting
+  static ({List<int> sortedIndices, int afterIndex}) partyMoveOf(List<int> indices, {required int queueLength, required int currentIndex, required bool toLast}) {
+    final sortedIndices = indices.where((i) => i >= 0 && i < queueLength && i != currentIndex).toSet().toList();
+    sortedIndices.sort();
+    if (toLast) {
+      var afterIndex = queueLength - 1;
+      while (sortedIndices.isNotEmpty && sortedIndices.last == afterIndex) {
+        sortedIndices.removeLast();
+        afterIndex--;
+      }
+      return (sortedIndices: sortedIndices, afterIndex: afterIndex);
+    }
+    var afterIndex = currentIndex;
+    var inPlaceCount = 0;
+    while (inPlaceCount < sortedIndices.length && sortedIndices[inPlaceCount] == afterIndex + 1) {
+      inPlaceCount++;
+      afterIndex++;
+    }
+    sortedIndices.removeRange(0, inPlaceCount);
+    return (sortedIndices: sortedIndices, afterIndex: afterIndex);
   }
 
   /// every queue index holding one of [tracks], duplicates included.

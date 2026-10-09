@@ -509,7 +509,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       final parsed = <PartyPublicRoom>[];
       for (final raw in rooms) {
         final room = PartyPublicRoom.fromMap(raw);
-        if (room != null && !hidden.contains(room.ownerId)) parsed.add(room);
+        if (room != null && room.partyVersion == kPartyVersion && !hidden.contains(room.ownerId)) parsed.add(room);
       }
       return PartyRoomsPage(parsed, map!['next'] as String?);
     } catch (e, st) {
@@ -1014,6 +1014,12 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   void onEntryMoved(int fromIndex, int toIndex) {
     queueTick.value++;
     _binder?.onEntryMoved(fromIndex, toIndex);
+  }
+
+  @override
+  void onEntriesMoved(int index, List<PartyEntry> entries) {
+    queueTick.value++;
+    _binder?.onEntriesMoved(index, entries);
   }
 
   @override

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 
 import 'package:namida/class/track.dart';
@@ -31,8 +33,12 @@ abstract class PartyBinderDelegate {
 class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   final PartyState state;
   final PartyBinderDelegate _delegate;
+  final Player _player;
 
-  PartyPlayerBinder(this.state, this._delegate);
+  PartyPlayerBinder(this.state, this._delegate) : _player = Player.inst;
+
+  @visibleForTesting
+  PartyPlayerBinder.withPlayer(this.state, this._delegate, this._player);
 
   static const _driftWhilePlayingMS = 1200;
   static const _driftWhilePausedMS = 300;
@@ -42,7 +48,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   static const _entriesPerFrame = 30;
   static const _maxEntriesForNonHostRewrite = 900;
   static const _maxIdsPerFrame = 1500;
-  static const _maxRemovalsBeforeReassign = 16;
+  static const _maxItemEditsBeforeReassign = 16;
 
   final _playables = <Playable>[];
 
@@ -99,18 +105,17 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     if (!_binding) return;
     _binding = false;
     _bound = true;
-    final player = Player.inst;
     // -- joining a party is not a play command, a paused player stays paused until the user says otherwise
-    _locallyPaused = inheritLocalPause && !player.isPlaying.value;
+    _locallyPaused = inheritLocalPause && !_player.isPlaying.value;
     _stash = _StashedPlayer(
-      queue: player.currentQueue.value.toList(),
-      index: player.currentIndex.value,
-      positionMS: player.nowPlayingPosition.value,
-      numberOfRepeats: player.numberOfRepeats.value,
+      queue: _player.currentQueue.value.toList(),
+      index: _player.currentIndex.value,
+      positionMS: _player.nowPlayingPosition.value,
+      numberOfRepeats: _player.numberOfRepeats.value,
     );
-    player.partyGate = this;
+    _player.partyGate = this;
     _applyRepeat();
-    player.currentItemDuration.addListener(_onLocalDurationChanged);
+    _player.currentItemDuration.addListener(_onLocalDurationChanged);
     _delegate.onForcesMixedQueueChanged(true);
     _reconcileTimer = Timer.periodic(_reconcileInterval, (_) => reconcile());
     onQueueSet();
@@ -122,24 +127,23 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _bound = false;
     _reconcileTimer?.cancel();
     _deviationTimer?.cancel();
-    final player = Player.inst;
-    player.currentItemDuration.removeListener(_onLocalDurationChanged);
+    _player.currentItemDuration.removeListener(_onLocalDurationChanged);
     await _chain;
     final stash = _stash;
     _stash = null;
-    if (stash != null) player.updateNumberOfRepeats(stash.numberOfRepeats);
-    player.partyGate = null;
+    if (stash != null) _player.updateNumberOfRepeats(stash.numberOfRepeats);
+    _player.partyGate = null;
     _clearQueueMirror();
     _delegate.onForcesMixedQueueChanged(false);
     _publishSyncState(.idle);
 
     if (!restoreQueue || stash == null) return;
     if (stash.queue.isEmpty) {
-      await player.partyClearQueue();
+      await _player.partyClearQueue();
       return;
     }
-    await player.partyRestoreQueue(stash.queue, stash.index);
-    if (stash.positionMS > 0) await player.partySeek(Duration(milliseconds: stash.positionMS));
+    await _player.partyRestoreQueue(stash.queue, stash.index);
+    if (stash.positionMS > 0) await _player.partySeek(Duration(milliseconds: stash.positionMS));
   }
 
   void _clearQueueMirror() {
@@ -150,12 +154,20 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _indexDirty = false;
   }
 
-  bool _matchesPlayerQueue() {
-    final current = Player.inst.currentQueue.value;
-    final length = _playables.length;
+  @visibleForTesting
+  void debugMirrorIds(List<int> ids) {
+    _playableIds
+      ..clear()
+      ..addAll(ids);
+    _indexDirty = true;
+  }
+
+  bool _matchesPlayerQueue(List<Playable> playables) {
+    final current = _player.currentQueue.value;
+    final length = playables.length;
     if (current.length != length) return false;
     for (var i = 0; i < length; i++) {
-      if (current[i].key != _playables[i].key) return false;
+      if (current[i].key != playables[i].key) return false;
     }
     return true;
   }
@@ -258,17 +270,18 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _indexDirty = true;
     _reportMissing(entries);
 
+    // -- snapshot, edits queued while this waits would be applied twice otherwise
+    final playables = _playables.toFixedList();
+    final anchorIndex = _playerIndexOf(state.anchor.entryId);
     _run(() async {
-      final player = Player.inst;
-      if (_playables.isEmpty) {
-        await player.partyClearQueue();
+      if (playables.isEmpty) {
+        await _player.partyClearQueue();
         return;
       }
       // -- the player may already hold this exact queue (we seeded the room with it), reassigning would restart playback
-      if (!_matchesPlayerQueue()) {
-        final index = _playerIndexOf(state.anchor.entryId);
-        final startPlaying = state.anchor.playing && !_locallyPaused && index >= 0;
-        await player.partyAssignQueue(_playables.toList(), index < 0 ? 0 : index, startPlaying: startPlaying, roomName: state.roomName);
+      if (!_matchesPlayerQueue(playables)) {
+        final startPlaying = state.anchor.playing && !_locallyPaused && anchorIndex >= 0;
+        await _player.partyAssignQueue(playables, anchorIndex < 0 ? 0 : anchorIndex, startPlaying: startPlaying, roomName: state.roomName);
       }
       await _reconcileNow();
     });
@@ -292,7 +305,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _playables.insertAll(insertAt, items);
     _playableIds.insertAll(insertAt, ids);
     _indexDirty = true;
-    _run(() async => Player.inst.partyInsert(items, insertAt));
+    _run(() async => _player.partyInsert(items, insertAt));
   }
 
   @override
@@ -306,7 +319,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     }
     if (playerIndices.isEmpty) return;
     // -- the player refreshes everything per removal, a single reassign is cheaper for bulk ones
-    if (playerIndices.length > _maxRemovalsBeforeReassign || playerIndices.length >= _playables.length) return onQueueSet();
+    if (playerIndices.length > _maxItemEditsBeforeReassign || playerIndices.length >= _playables.length) return onQueueSet();
     playerIndices.sort((a, b) => b.compareTo(a));
     for (final index in playerIndices) {
       _playables.removeAt(index);
@@ -315,7 +328,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _indexDirty = true;
     _run(() async {
       for (final index in playerIndices) {
-        await Player.inst.partyRemoveAt(index);
+        await _player.partyRemoveAt(index);
       }
     });
   }
@@ -331,7 +344,41 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _playables.insert(to, _playables.removeAt(from));
     _playableIds.insert(to, _playableIds.removeAt(from));
     _indexDirty = true;
-    _run(() async => Player.inst.partyMove(from, to));
+    _run(() async => _player.partyMove(from, to));
+  }
+
+  @override
+  void onEntriesMoved(int index, List<PartyEntry> entries) {
+    if (!_bound) return;
+    if (entries.length > _maxItemEditsBeforeReassign) return onQueueSet();
+    final moves = <(int, int)>[];
+    var afterIndex = _playerIndexBefore(index);
+    for (final entry in entries) {
+      final from = _playableIds.indexOf(entry.id);
+      if (from < 0) continue;
+      final to = afterIndex < from ? afterIndex + 1 : afterIndex;
+      afterIndex = to;
+      if (from == to) continue;
+      _playables.insert(to, _playables.removeAt(from));
+      _playableIds.insert(to, _playableIds.removeAt(from));
+      moves.add((from, to));
+    }
+    if (moves.isEmpty) return;
+    _indexDirty = true;
+    _run(() async {
+      for (final (from, to) in moves) {
+        await _player.partyMove(from, to);
+      }
+    });
+  }
+
+  int _playerIndexBefore(int partyIndex) {
+    final entries = state.entries;
+    for (var i = partyIndex - 1; i >= 0; i--) {
+      final id = entries[i].id;
+      if (!_unavailableIds.contains(id)) return _playableIds.indexOf(id);
+    }
+    return -1;
   }
 
   @override
@@ -345,7 +392,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     _playableIds.insert(insertAt, entry.id);
     _indexDirty = true;
     _run(() async {
-      await Player.inst.partyInsert([playable], insertAt);
+      await _player.partyInsert([playable], insertAt);
       if (entry.id == state.anchor.entryId) await _reconcileNow();
     });
   }
@@ -361,7 +408,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
 
   void _applyRepeat() {
     final repeat = state.repeat;
-    Player.inst.partySetRepeat(repeat.mode, repeat.times);
+    _player.partySetRepeat(repeat.mode, repeat.times);
   }
 
   @override
@@ -397,16 +444,15 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
   }
 
   Future<void> _reconcileNow() async {
-    final player = Player.inst;
-    if (player.currentQueue.value.length != _playables.length) {
+    if (_player.currentQueue.value.length != _playables.length) {
       // -- something edited the queue behind our back
       onQueueSet();
       return;
     }
     if (!_listening) {
-      if (player.playWhenReady.value) await player.partyPause();
+      if (_player.playWhenReady.value) await _player.partyPause();
       final remoteIndex = _playerIndexOf(state.anchor.entryId);
-      if (remoteIndex >= 0 && player.currentIndex.value != remoteIndex) await player.partySkipTo(remoteIndex, startPlaying: false);
+      if (remoteIndex >= 0 && _player.currentIndex.value != remoteIndex) await _player.partySkipTo(remoteIndex, startPlaying: false);
       _publishSyncState(.idle);
       return;
     }
@@ -415,7 +461,7 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     if (index < 0) {
       // -- nothing playable for this device at the party's position
       _publishSyncState(state.currentEntry == null ? .idle : .unavailable);
-      if (player.playWhenReady.value) await player.partyPause();
+      if (_player.playWhenReady.value) await _player.partyPause();
       return;
     }
 
@@ -427,41 +473,41 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     }
     final expected = anchor.positionAt(_delegate.nowMS());
 
-    final localIndex = player.currentIndex.value;
+    final localIndex = _player.currentIndex.value;
     if (localIndex != index) {
       // -- gapless/crossfade start the next item before the party timeline gets there
       final durationMS = state.currentEntry?.durationMS ?? 0;
       final isNaturalAdvance = localIndex == (index + 1) % _playables.length && durationMS > 0 && expected >= durationMS - _naturalAdvanceWindowMS;
       if (isNaturalAdvance && shouldPlay) return;
-      await player.partySkipTo(index, startPlaying: shouldPlay);
-      if (expected > _driftWhilePlayingMS) await player.partySeek(Duration(milliseconds: expected));
+      await _player.partySkipTo(index, startPlaying: shouldPlay);
+      if (expected > _driftWhilePlayingMS) await _player.partySeek(Duration(milliseconds: expected));
       return;
     }
 
     final isLocalSeekSettling = DateTime.now().millisecondsSinceEpoch - _lastLocalSeekMS < _localSeekSettleMS;
-    final isWaitingOnPlayer = player.isLoadingR || player.isBufferingR;
+    final isWaitingOnPlayer = _player.isLoadingR || _player.isBufferingR;
     if (!isLocalSeekSettling && !isWaitingOnPlayer) {
-      final duration = player.currentItemDuration.value?.inMilliseconds ?? 0;
+      final duration = _player.currentItemDuration.value?.inMilliseconds ?? 0;
       final nearEnd = duration > 0 && expected >= duration - 500;
       if (!nearEnd) {
-        final drift = (player.nowPlayingPosition.value - expected).abs();
+        final drift = (_player.nowPlayingPosition.value - expected).abs();
         if (drift > (shouldPlay ? _driftWhilePlayingMS : _driftWhilePausedMS)) {
-          await player.partySeek(Duration(milliseconds: expected));
+          await _player.partySeek(Duration(milliseconds: expected));
         }
       }
     }
     if (shouldPlay) _publishSyncState(isWaitingOnPlayer ? .catchingUp : .inSync);
 
-    if (shouldPlay != player.playWhenReady.value) {
-      shouldPlay ? await player.partyPlay() : await player.partyPause();
+    if (shouldPlay != _player.playWhenReady.value) {
+      shouldPlay ? await _player.partyPlay() : await _player.partyPause();
     }
   }
 
-  bool _isPlayingAnchorItem() => Player.inst.currentIndex.value == _playerIndexOf(state.anchor.entryId);
+  bool _isPlayingAnchorItem() => _player.currentIndex.value == _playerIndexOf(state.anchor.entryId);
 
   void _onLocalDurationChanged() {
     if (!_listening) return;
-    final duration = Player.inst.currentItemDuration.value?.inMilliseconds ?? 0;
+    final duration = _player.currentItemDuration.value?.inMilliseconds ?? 0;
     if (duration <= 0 || !_isPlayingAnchorItem()) return;
     final entry = state.currentEntry;
     if (entry == null || entry.durationMS > 0) return;
@@ -604,6 +650,35 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
       afterId = _playableIds[before < oldIndex ? before : before + 1];
     }
     _delegate.sendCommand(PartyMsg.move(entry.id, afterId));
+    return true;
+  }
+
+  @override
+  bool interceptMoveItems(List<int> sortedIndices, {required int afterIndex}) {
+    final me = _delegate.me;
+    final length = _playableIds.length;
+    if (me == null || sortedIndices.isEmpty || sortedIndices.last >= length || afterIndex >= length) return true;
+    final ids = <int>[];
+    for (final index in sortedIndices) {
+      final entry = state.entryById(_playableIds[index]);
+      if (entry != null && state.canEditEntry(me, entry)) ids.add(entry.id);
+    }
+    if (ids.isEmpty) {
+      _delegate.notifyDenied(.permission);
+      return true;
+    }
+    final afterId = afterIndex < 0 ? 0 : _playableIds[afterIndex];
+    if (_delegate.isHost || ids.length <= _maxIdsPerFrame) {
+      _delegate.sendCommand(PartyMsg.moveMany(ids, afterId));
+      return true;
+    }
+    // -- relay frame size limit
+    var chunkAfterId = afterId;
+    for (var start = 0; start < ids.length; start += _maxIdsPerFrame) {
+      final end = (start + _maxIdsPerFrame).withMaximum(ids.length);
+      _delegate.sendCommand(PartyMsg.moveMany(ids.sublist(start, end), chunkAfterId));
+      chunkAfterId = ids[end - 1];
+    }
     return true;
   }
 

@@ -38,6 +38,10 @@ abstract class PartyPlayerGate {
 
   /// indices follow the reorderable list convention, [newIndex] counts the dragged item.
   bool interceptReorder(int oldIndex, int newIndex);
+
+  /// [sortedIndices] ascending & unique, they end up in order right after [afterIndex], -1 for the top.
+  bool interceptMoveItems(List<int> sortedIndices, {required int afterIndex});
+
   bool interceptNewQueue(Iterable<Playable> queue, int index, {required bool startPlaying, required bool shuffle, required bool isPlayerQueue});
   bool interceptQueueRewrite(PartyQueueRewrite rewrite);
 

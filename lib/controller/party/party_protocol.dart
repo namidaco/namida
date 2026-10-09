@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 
 /// bump on breaking changes of the data payloads, the relay rejects joins with a different version.
-const kPartyVersion = 2;
+const kPartyVersion = 3;
 
 abstract final class PartyLimits {
   static const maxEntries = 3000;
@@ -276,6 +276,7 @@ enum PartyMsgType {
   add,
   remove,
   move,
+  moveMany,
   setQueue,
   chat,
   ended,
@@ -295,6 +296,7 @@ enum PartyMsgType {
   added,
   removed,
   moved,
+  movedMany,
   queueSet,
   member,
   memberGone,
@@ -357,6 +359,9 @@ class PartyMsg {
 
   /// [afterId]: 0 moves to the start.
   factory PartyMsg.move(int id, int afterId) => PartyMsg(.move, {'id': id, 'a': afterId});
+
+  /// [ids] end up in this order right after [afterId], 0 moves them to the start.
+  factory PartyMsg.moveMany(List<int> ids, int afterId) => PartyMsg(.moveMany, {'ids': ids, 'a': afterId});
   factory PartyMsg.setQueue(List<PartyEntry> entries, {required int index, required int positionMS, required bool playing}) {
     return PartyMsg(.setQueue, {'e': _entriesToList(entries), 'i': index, 'p': positionMS, 'pl': playing});
   }
@@ -402,6 +407,7 @@ class PartyMsg {
   factory PartyMsg.added(List<PartyEntry> entries, int index) => PartyMsg(.added, {'e': _entriesToList(entries), 'i': index});
   factory PartyMsg.removed(List<int> ids, PartyAnchor? anchor) => PartyMsg(.removed, {'ids': ids, 'a': ?anchor?.toList()});
   factory PartyMsg.moved(int id, int toIndex) => PartyMsg(.moved, {'id': id, 'i': toIndex});
+  factory PartyMsg.movedMany(List<int> ids, int afterId) => PartyMsg(.movedMany, {'ids': ids, 'a': afterId});
   factory PartyMsg.queueSet(List<PartyEntry> entries, PartyAnchor anchor, {required bool more}) {
     return PartyMsg(.queueSet, {'e': _entriesToList(entries), 'a': anchor.toList(), 'm': more});
   }
