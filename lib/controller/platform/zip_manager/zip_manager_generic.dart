@@ -8,13 +8,15 @@ class _ZipManagerGeneric extends ZipManager {
     required File zipFile,
     bool includeBaseDirectory = false,
   }) async {
+    final entriesRootPath = includeBaseDirectory ? sourceDir.parent.path : sourceDir.path;
     return Isolate.run(
       () {
         final encoder = ZipFileEncoder();
         try {
           encoder.create(zipFile.path);
           for (var file in files) {
-            encoder.addFileSync(file);
+            final entryName = path.relative(file.path, from: entriesRootPath);
+            encoder.addFileSync(file, entryName);
           }
         } finally {
           encoder.closeSync();

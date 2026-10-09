@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
@@ -114,6 +116,7 @@ class BackupController {
         AppPaths.SETTINGS_YOUTUBE,
         AppPaths.SETTINGS_EXTRA,
         AppPaths.SETTINGS_SYNC,
+        AppPaths.SETTINGS_PARTY,
         AppPaths.SETTINGS_TUTORIAL,
         AppPaths.SETTINGS_SHORTCUTS,
         AppPaths.LATEST_QUEUE,
@@ -160,6 +163,8 @@ class BackupController {
     final backupFile = File(backupFilePath);
     final partialBackupFile = await File('$backupFilePath$_kPartialBackupSuffix').create();
     final sourceDir = Directory(AppDirs.USER_DATA);
+    final stagingDirPath = FileParts.joinPath(AppDirs.USER_DATA, _kStagingDirName);
+    final stagingDir = await Directory(stagingDirPath).create();
 
     // prepares files
 
@@ -167,6 +172,8 @@ class BackupController {
     final List<File> youtubeFilesOnly = [];
     final List<File> compressedDirectories = [];
     final List<Directory> dirsOnly = [];
+    final syncSettingsPath = settings.sync.filePath;
+    File? stagedSyncSettings;
     File? tempAllLocal;
     File? tempAllYoutube;
     var succeeded = false;
@@ -176,6 +183,14 @@ class BackupController {
       final p = backupItemsPaths[i];
       final type = backupItemsTypes[i];
       if (type == FileSystemEntityType.file) {
+        if (p == syncSettingsPath) {
+          // -- without this device's sync identity, as a main zip entry that restore extracts in place
+          final stagedSyncSettingsPath = FileParts.joinPath(stagingDirPath, p.getFilename);
+          final syncBackupJson = settings.sync.buildBackupJson();
+          stagedSyncSettings = await File(stagedSyncSettingsPath).writeAsJson(syncBackupJson);
+          continue;
+        }
+
         final file = File(p);
         if (p.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY)) {
           youtubeFilesOnly.add(file);
@@ -194,7 +209,7 @@ class BackupController {
     try {
       for (final d in dirsOnly) {
         final prefix = d.path.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? 'YOUTUBE_' : '';
-        final dirZipFile = FileParts.join(AppDirs.USER_DATA, "${prefix}TEMPDIR_${d.path.getFilename}.zip");
+        final dirZipFile = FileParts.join(stagingDirPath, "${prefix}TEMPDIR_${d.path.getFilename}.zip");
         try {
           await _zipManager.createZipFromDirectory(sourceDir: d, zipFile: dirZipFile);
           compressedDirectories.add(dirZipFile);
@@ -204,12 +219,12 @@ class BackupController {
       }
 
       if (localFilesOnly.isNotEmpty) {
-        tempAllLocal = await FileParts.join(AppDirs.USER_DATA, "LOCAL_FILES.zip").create();
+        tempAllLocal = await FileParts.join(stagingDirPath, "LOCAL_FILES.zip").create();
         await _zipManager.createZip(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
       }
 
       if (youtubeFilesOnly.isNotEmpty) {
-        tempAllYoutube = await FileParts.join(AppDirs.USER_DATA, "YOUTUBE_FILES.zip").create();
+        tempAllYoutube = await FileParts.join(stagingDirPath, "YOUTUBE_FILES.zip").create();
         await _zipManager.createZip(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
@@ -217,8 +232,9 @@ class BackupController {
         ?tempAllLocal,
         ?tempAllYoutube,
         ...compressedDirectories,
+        ?stagedSyncSettings,
       ];
-      await _zipManager.createZip(sourceDir: sourceDir, files: allFiles, zipFile: partialBackupFile);
+      await _zipManager.createZip(sourceDir: stagingDir, files: allFiles, zipFile: partialBackupFile);
       await partialBackupFile.rename(backupFilePath);
 
       succeeded = true;
@@ -230,11 +246,7 @@ class BackupController {
 
     // Cleaning up
     if (!succeeded) partialBackupFile.tryDeleting();
-    tempAllLocal?.tryDeleting();
-    tempAllYoutube?.tryDeleting();
-    for (final d in compressedDirectories) {
-      d.tryDeleting();
-    }
+    await stagingDir.delete(recursive: true).ignoreError();
 
     isCreatingBackup.value = false;
     return succeeded ? backupFile : null;
@@ -253,6 +265,7 @@ class BackupController {
 
   static const _kBackupFilenamePrefix = 'Namida Backup - ';
   static const _kPartialBackupSuffix = '.part';
+  static const _kStagingDirName = 'TEMP_BACKUP';
 
   static bool _isBackupFilename(String filename) => filename.startsWith(_kBackupFilenamePrefix) && filename.endsWith('.zip');
 
@@ -363,7 +376,7 @@ class BackupController {
 
       isRestoringBackup.value = true;
 
-      await _extractBackup(backupzip);
+      await extractBackup(backupzip);
 
       Indexer.inst.calculateAllImageSizesInStorage();
       // Indexer.inst.updateColorPalettesSizeInStorage();
@@ -376,7 +389,8 @@ class BackupController {
     }
   }
 
-  Future<void> _extractBackup(File backupzip) {
+  @visibleForTesting
+  Future<void> extractBackup(File backupzip) {
     return NamicoDBWrapper.suspend(() async {
       // -- leftover wal files would otherwise be applied onto the restored dbs
       await _checkpointDbFilesInDirsSync.thready([
@@ -387,34 +401,70 @@ class BackupController {
       ]);
 
       await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
-
-      // after finishing, extracts zip files inside the main zip
-      await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
-        if (backupItem is! File) continue;
-
-        final filename = backupItem.path.getFilename;
-        final Directory destinationDir;
-        if (filename == 'LOCAL_FILES.zip') {
-          destinationDir = Directory(AppDirs.USER_DATA);
-        } else if (filename == 'YOUTUBE_FILES.zip') {
-          destinationDir = Directory(AppDirs.USER_DATA); // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
-        } else if (filename.startsWith('YOUTUBE_TEMPDIR_')) {
-          final dirName = filename.replaceFirst('YOUTUBE_TEMPDIR_', '').replaceFirst('.zip', '');
-          destinationDir = Directory(FileParts.joinPath(AppDirs.YOUTUBE_MAIN_DIRECTORY, dirName));
-        } else if (filename.startsWith('TEMPDIR_')) {
-          final dirName = filename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '');
-          destinationDir = Directory(FileParts.joinPath(AppDirs.USER_DATA, dirName));
-        } else {
-          continue;
-        }
-
-        final size = await backupItem.fileSize();
-        final isEmptyLeftover = size == null || size == 0;
-        if (!isEmptyLeftover) await _zipManager.extractZip(zipFile: backupItem, destinationDir: destinationDir);
-        await backupItem.tryDeleting();
-      }
+      await extractBackupInnerZips();
+      await _keepSyncIdentity();
     });
   }
+
+  Future<void> _keepSyncIdentity() async {
+    final syncSettingsFile = File(settings.sync.filePath);
+    final restored = await syncSettingsFile.readAsJson();
+    if (restored is! Map<String, dynamic>) return;
+    settings.sync.keepIdentityIn(restored);
+    await syncSettingsFile.writeAsJson(restored);
+  }
+
+  /// extracts the zips that the main backup zip placed in [AppDirs.USER_DATA].
+  @visibleForTesting
+  Future<void> extractBackupInnerZips() async {
+    // -- leftovers of older restores would be moved over this backup's youtube files
+    for (final path in _flatYoutubeFilesPaths) {
+      final flatFile = FileParts.join(AppDirs.USER_DATA, path.getFilename);
+      try {
+        await flatFile.delete();
+      } catch (_) {}
+    }
+
+    await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
+      if (backupItem is! File) continue;
+
+      final filename = backupItem.path.getFilename;
+      final Directory destinationDir;
+      if (filename == 'LOCAL_FILES.zip') {
+        destinationDir = Directory(AppDirs.USER_DATA);
+      } else if (filename == 'YOUTUBE_FILES.zip') {
+        destinationDir = Directory(AppDirs.USER_DATA); // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
+      } else if (filename.startsWith('YOUTUBE_TEMPDIR_')) {
+        final dirName = filename.replaceFirst('YOUTUBE_TEMPDIR_', '').replaceFirst('.zip', '');
+        destinationDir = Directory(FileParts.joinPath(AppDirs.YOUTUBE_MAIN_DIRECTORY, dirName));
+      } else if (filename.startsWith('TEMPDIR_')) {
+        final dirName = filename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '');
+        destinationDir = Directory(FileParts.joinPath(AppDirs.USER_DATA, dirName));
+      } else {
+        continue;
+      }
+
+      final size = await backupItem.fileSize();
+      final isEmptyLeftover = size == null || size == 0;
+      if (!isEmptyLeftover) await _zipManager.extractZip(zipFile: backupItem, destinationDir: destinationDir);
+      await backupItem.tryDeleting();
+    }
+
+    for (final path in _flatYoutubeFilesPaths) {
+      final flatFile = FileParts.join(AppDirs.USER_DATA, path.getFilename);
+      try {
+        await flatFile.rename(path);
+      } catch (_) {} // -- not a flat youtube files zip
+    }
+  }
+
+  /// windows/linux backups made before zip entries kept their relative paths hold these without their youtube folder.
+  static final _flatYoutubeFilesPaths = [
+    AppPaths.YT_LIKES_PLAYLIST,
+    AppPaths.YT_SUBSCRIPTIONS,
+    AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL,
+    AppPaths.VIDEO_ID_STATS_DB_INFO.file.path,
+  ];
 
   static void _checkpointDbFilesInDirsSync(List<String> dirsPaths) {
     for (final dirPath in dirsPaths) {
@@ -430,10 +480,7 @@ class BackupController {
   }
 
   Future<void> _readNewFiles() async {
-    settings.equalizer.prepareSettingsFile();
-    settings.player.prepareSettingsFile();
-    settings.youtube.prepareSettingsFile();
-    settings.prepareSettingsFile();
+    settings.prepareAllSettings();
 
     Indexer.inst.prepareTracksFile();
 
