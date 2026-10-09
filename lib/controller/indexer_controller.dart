@@ -69,6 +69,12 @@ class Indexer<T extends Track> {
       createIfNotExist: true,
     ),
   );
+  late final _externalTracksDBManager = DBWrapper.openFromInfo(
+    fileInfo: AppPaths.TRACKS_EXTERNAL_DB_INFO,
+    config: const DBConfig(
+      createIfNotExist: true,
+    ),
+  );
   late final _trackStatsDBManager = DBWrapper.openFromInfo(
     fileInfo: AppPaths.TRACKS_STATS_DB_INFO,
     config: const DBConfig(
@@ -129,6 +135,7 @@ class Indexer<T extends Track> {
 
   /// tracks map used for lookup
   var allTracksMappedByPath = <String, TrackExtended>{};
+  var externalTracksMappedByPath = <String, TrackExtended>{};
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
   var allFolderCovers = <Folder, String>{}; // {directoryPath, imagePath}
@@ -258,6 +265,7 @@ class Indexer<T extends Track> {
   Future<void> _rederiveAllTracks() async {
     final splitConfig = _createSplitConfig();
     allTracksMappedByPath.updateAll((_, trExt) => trExt.rederive(splitConfig));
+    externalTracksMappedByPath.updateAll((_, trExt) => trExt.rederive(splitConfig));
     await _afterIndexing();
     tracksInfoList.refresh();
   }
@@ -694,6 +702,8 @@ class Indexer<T extends Track> {
       SearchSortController.inst.onTrackIndexed(tr);
       allTracksMappedByYTID.addForce(trackExt.youtubeID, tr);
       _scheduleTracksListsRefresh();
+      final wasExternal = externalTracksMappedByPath.remove(tr.path) != null;
+      if (wasExternal) unawaited(_externalTracksDBManager.delete(tr.path));
     } else {
       final list = allTracksMappedByYTID[trackExt.youtubeID] ??= [];
       if (!list.contains(tr)) {
@@ -701,6 +711,18 @@ class Indexer<T extends Track> {
       }
     }
 
+    _countCachedArtwork(artwork);
+  }
+
+  void _addExternalTrack(TrackExtended trackExt, FArtwork? artwork) {
+    final path = trackExt.path;
+    if (allTracksMappedByPath.containsKey(path)) return;
+    externalTracksMappedByPath[path] = trackExt;
+    unawaited(_externalTracksDBManager.put(path, trackExt.toJsonWithoutPath()));
+    _countCachedArtwork(artwork);
+  }
+
+  void _countCachedArtwork(FArtwork? artwork) {
     if (artwork != null && artwork.file != null) {
       artworksInStorage.value++;
       if (artwork.size != null) artworksSizeInStorage.value += artwork.size!;
@@ -856,12 +878,16 @@ class Indexer<T extends Track> {
 
     for (final e in tracksMap.entries) {
       final ot = e.key;
-      finalNewOldTracks[e.value] = ot.toTrackExtOrNull();
       final nt = e.value.asTrack() as T;
       newTracks.add(nt);
-      allTracksMappedByPath[ot.path] = e.value;
-      unawaited(_tracksDBManager.put(ot.path, e.value.toJsonWithoutPath()));
-      allTracksMappedByYTID.addForce(e.value.youtubeID, ot);
+      if (externalTracksMappedByPath.containsKey(ot.path)) {
+        _addExternalTrack(e.value, null);
+      } else {
+        finalNewOldTracks[e.value] = ot.toTrackExtOrNull();
+        allTracksMappedByPath[ot.path] = e.value;
+        unawaited(_tracksDBManager.put(ot.path, e.value.toJsonWithoutPath()));
+        allTracksMappedByYTID.addForce(e.value.youtubeID, ot);
+      }
       // _currentFileNamesMap.remove(ot.filename); // same path alr
       // _currentFileNamesMap[nt.filename] = true; // --^
       TrackTileManager.rebuildTrackInfo(ot);
@@ -918,9 +944,30 @@ class Indexer<T extends Track> {
   }
 
   Future<List<T>> convertPathsToTracksAndAddToLists(Iterable<String> tracksPathPre) async {
+    final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
+    final finalTracks = await _convertPathsToTracks(
+      tracksPathPre,
+      (trext, artwork) {
+        finalNewOldTracks[trext] = allTracksMappedByPath[trext.path];
+        _addTrackToLists(trext, artwork);
+      },
+    );
+
+    _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
+    _sortAndRefreshTracks();
+
+    SearchSortController.inst.refreshPortsIfNecessary();
+
+    return finalTracks;
+  }
+
+  Future<List<T>> convertPathsToExternalTracks(Iterable<String> tracksPathPre) {
+    return _convertPathsToTracks(tracksPathPre, _addExternalTrack);
+  }
+
+  Future<List<T>> _convertPathsToTracks(Iterable<String> tracksPathPre, void Function(TrackExtended trext, FArtwork? artwork) onExtracted) async {
     final finalTracks = <T>[];
     final tracksToExtract = <String>[];
-    final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
 
     final orderLookup = <String, int>{};
     void onPath(String path) {
@@ -979,17 +1026,11 @@ class Indexer<T extends Track> {
       }
       // -- after the last await, so a path added meanwhile by another call or the library load updates as an edit
       for (final (trext, artwork) in extracted) {
-        finalNewOldTracks[trext] = allTracksMappedByPath[trext.path];
-        _addTrackToLists(trext, artwork);
+        onExtracted(trext, artwork);
       }
     }
 
-    _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
-    _sortAndRefreshTracks();
-
     finalTracks.sortBy((e) => orderLookup[e.path] ?? 0);
-
-    SearchSortController.inst.refreshPortsIfNecessary();
 
     return finalTracks;
   }
@@ -1758,12 +1799,14 @@ class Indexer<T extends Track> {
       _IndexerIsolateExecuter._readTracksDataSync
           .thready((
             dbInfo: AppPaths.TRACKS_DB_INFO,
+            externalDbInfo: AppPaths.TRACKS_EXTERNAL_DB_INFO,
             oldJsonFilePath: AppPaths.TRACKS_OLD,
             splitConfig: _createSplitConfig(),
           ))
           .then(
             (value) async {
               allTracksMappedByPath = value.allTracksMappedByPath;
+              externalTracksMappedByPath = value.externalTracksMappedByPath;
               allTracksMappedByYTID = value.allTracksMappedByYTID as Map<String, List<T>>;
               tracksInfoList.value = value.tracksInfoList as List<T>;
               networkTracksCount.value = value.networkTracksCount;
@@ -2298,8 +2341,11 @@ class _IndexerIsolateExecuter {
   }
 
   /// Reading actual tracks db.
-  static Future<_TracksLoadResult> _readTracksDataSync(({DbWrapperFileInfo dbInfo, String oldJsonFilePath, SplitArtistGenreConfigsWrapper splitConfig}) params) async {
+  static Future<_TracksLoadResult> _readTracksDataSync(
+    ({DbWrapperFileInfo dbInfo, DbWrapperFileInfo externalDbInfo, String oldJsonFilePath, SplitArtistGenreConfigsWrapper splitConfig}) params,
+  ) async {
     final tracksDbInfo = params.dbInfo;
+    final externalDbInfo = params.externalDbInfo;
     final oldJsonFilePath = params.oldJsonFilePath;
     final splitconfig = params.splitConfig;
     // --------- enable only if sorting will be done here ---------
@@ -2375,9 +2421,12 @@ class _IndexerIsolateExecuter {
 
     tracksDBManager?.close();
 
+    final externalTracksMappedByPath = await _readExternalTracksDataSync(externalDbInfo, splitconfig);
+
     return _TracksLoadResult(
       tracksInfoList: tracksInfoList,
       allTracksMappedByPath: allTracksMappedByPath,
+      externalTracksMappedByPath: externalTracksMappedByPath,
       allTracksMappedByYTID: allTracksMappedByYTID,
       networkTracksCount: networkTracksCount,
     );
@@ -2418,17 +2467,47 @@ class _IndexerIsolateExecuter {
     // return libraryGroup;
     // ------------------
   }
+
+  static Future<Map<String, TrackExtended>> _readExternalTracksDataSync(DbWrapperFileInfo dbInfo, SplitArtistGenreConfigsWrapper splitConfig) async {
+    final externalTracksMappedByPath = <String, TrackExtended>{};
+    if (!dbInfo.file.existsSync()) return externalTracksMappedByPath;
+
+    final dbManager = await DBWrapper.openFromInfoSyncTry(
+      fileInfo: dbInfo,
+      config: const DBConfig(
+        autoDisposeTimerDuration: null,
+      ),
+    );
+    try {
+      dbManager?.loadEverythingKeyed(
+        (path, item) {
+          try {
+            externalTracksMappedByPath[path] = TrackExtended.fromJson(
+              path,
+              item,
+              splitConfig: splitConfig,
+            );
+          } catch (_) {}
+        },
+      );
+    } catch (_) {}
+    dbManager?.close();
+
+    return externalTracksMappedByPath;
+  }
 }
 
 class _TracksLoadResult {
   final List<Track> tracksInfoList;
   final Map<String, TrackExtended> allTracksMappedByPath;
+  final Map<String, TrackExtended> externalTracksMappedByPath;
   final Map<String, List<Track>> allTracksMappedByYTID;
   final int networkTracksCount;
 
   const _TracksLoadResult({
     required this.tracksInfoList,
     required this.allTracksMappedByPath,
+    required this.externalTracksMappedByPath,
     required this.allTracksMappedByYTID,
     required this.networkTracksCount,
   });

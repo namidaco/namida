@@ -1261,10 +1261,10 @@ extension TrackExtUtils on TrackExtended {
 }
 
 extension TrackUtils on Track {
-  bool hasInfoInLibrary() => toTrackExtOrNull() != null;
+  bool hasInfoInLibrary() => Indexer.inst.allTracksMappedByPath.containsKey(path);
   TrackExtended toTrackExt() =>
       toTrackExtOrNull() ?? kDummyExtendedTrack.copyWith(title: path.getFilenameWOExt, path: path, generatePathHash: TagsExtractor.defaultUniqueArtworkHash);
-  TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path];
+  TrackExtended? toTrackExtOrNull() => Indexer.inst.allTracksMappedByPath[path] ?? Indexer.inst.externalTracksMappedByPath[path];
   PhysicalMedia? asPhysical() => isPhysical ? PhysicalMedia.fromTrack(this) : null;
   PhysicalMedia? asPhysicalOrError() {
     final p = asPhysical();

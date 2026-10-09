@@ -734,6 +734,7 @@ class AppPaths {
   static final TRACKS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks');
   static final TRACKS_STATS_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_stats');
   static final TRACKS_RHYTHM_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_rhythm');
+  static final TRACKS_EXTERNAL_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'tracks_external');
   static final LATEST_PLAYED_FOR_SOURCE = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'latest_played');
   static final AUDIO_CONFIGS = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'audio_configs');
   static final SMART_PLAYLISTS = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'smart_playlists');

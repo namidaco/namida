@@ -98,7 +98,7 @@ Future<void> showGeneralPopupDialog(
     }
   } else {
     for (var t in tracks) {
-      if (t.hasInfoInLibrary()) tracksExisting.add(t);
+      if (t.toTrackExtOrNull() != null) tracksExisting.add(t);
     }
   }
 

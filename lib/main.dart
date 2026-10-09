@@ -24,6 +24,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/chapters_controller.dart';
@@ -66,6 +67,7 @@ import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/arb/app_localizations.dart';
@@ -75,8 +77,11 @@ import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/pages/onboarding.dart';
 import 'package:namida/ui/pages/party_page.dart';
+import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
@@ -609,6 +614,7 @@ class _NamidaState extends State<Namida> {
                           child: mainChild,
                         ),
                         isMiniLyricsMode ? const MiniLyricsWindow() : effectsOverlay,
+                        if (NamidaFeaturesVisibility.recieveDragAndDrop) const _NamidaDropZonesOverlay(),
                       ],
                     ),
                   ),
@@ -903,6 +909,10 @@ class ScrollBehaviorModified extends ScrollBehavior {
 
 class NamidaReceiveIntentManager {
   static void executeReceivedItems<T>(List<T> files, String? Function(T f) valueCallback, String? Function(T f) realPathCallback) {
+    _executeReceivedItems(files, valueCallback, realPathCallback, null);
+  }
+
+  static void _executeReceivedItems<T>(List<T> files, String? Function(T f) valueCallback, String? Function(T f) realPathCallback, _DropZone? dropZone) {
     // -- deep links
     if (files.length == 1) {
       final linkRaw = valueCallback(files.first);
@@ -954,7 +964,7 @@ class NamidaReceiveIntentManager {
 
         if (m3uPaths.isNotEmpty) {
           final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
-          final err = await _extractAndPlayExternalFiles(allTracks.map((e) => e.path));
+          final err = await _extractAndPlayExternalFiles(allTracks.map((e) => e.path), dropZone);
           if (err != null) showErrorPlayingFileSnackbar(error: err);
         } else if (paths.isNotEmpty) {
           final youtubeIds = paths.map((e) {
@@ -966,7 +976,8 @@ class NamidaReceiveIntentManager {
             return matchPlId;
           }).whereType<String>();
           if (youtubeIds.isNotEmpty) {
-            settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
+            final youtubeAction = dropZone?.toYoutubeAction() ?? settings.youtube.onYoutubeLinkOpen.value;
+            youtubeAction.execute(youtubeIds);
           } else if (ytPlaylistsIds.isNotEmpty) {
             for (final plid in ytPlaylistsIds) {
               YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
@@ -985,7 +996,7 @@ class NamidaReceiveIntentManager {
             if (existing.isEmpty) {
               showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
             } else {
-              final err = await _extractAndPlayExternalFiles(existing);
+              final err = await _extractAndPlayExternalFiles(existing, dropZone);
               if (err != null) showErrorPlayingFileSnackbar(error: err);
             }
           }
@@ -1005,11 +1016,18 @@ class NamidaReceiveIntentManager {
     return buffer.toString();
   }
 
-  static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths) async {
+  static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths, _DropZone? dropZone) async {
     try {
-      final trs = await Indexer.inst.convertPathsToTracksAndAddToLists(paths);
+      final trs = await Indexer.inst.convertPathsToExternalTracks(paths);
       if (trs.isNotEmpty) {
-        await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
+        switch (dropZone) {
+          case null || _DropZone.play:
+            await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
+          case _DropZone.playLast:
+            await Player.inst.addToQueue(trs);
+          case _DropZone.more:
+            _showExternalTracksDialog(trs);
+        }
         return null;
       } else {
         return 'Empty List (original ${paths.length} | extracted: ${trs.length})';
@@ -1018,6 +1036,22 @@ class NamidaReceiveIntentManager {
       logger.error('Error playing file', e: e, st: st);
       return e.toString();
     }
+  }
+
+  static void _showExternalTracksDialog(List<Track> tracks) {
+    if (tracks.length == 1) {
+      NamidaDialogs.inst.showTrackDialog(tracks.first, source: QueueSource.externalFile);
+      return;
+    }
+    final subtitle = [tracks.displayTrackKeyword, tracks.totalDurationFormatted].join(' - ');
+    showGeneralPopupDialog(
+      tracks,
+      lang.externalFiles,
+      subtitle,
+      QueueSource.externalFile,
+      extractColor: false,
+      forceSquared: true,
+    );
   }
 
   static void showErrorPlayingFileSnackbar({String? error}) {
@@ -1032,23 +1066,40 @@ class _NamidaDropRegion extends StatelessWidget {
   final Widget child;
   const _NamidaDropRegion({required this.child});
 
+  static final _hoveredZone = RxnO<_DropZone>();
+
+  static DropOperation _getDropOperation(DropSession session) {
+    final item = session.items.first;
+    if (item.canProvide(Formats.plainText)) {
+      return DropOperation.link;
+    }
+    if (item.canProvide(Formats.fileUri) || session.allowedOperations.contains(DropOperation.copy)) {
+      return DropOperation.copy;
+    }
+
+    return DropOperation.none;
+  }
+
   @override
   Widget build(BuildContext context) {
     return DropRegion(
       formats: Formats.standardFormats,
       hitTestBehavior: HitTestBehavior.opaque,
       onDropOver: (event) {
-        final item = event.session.items.first;
-        if (item.canProvide(Formats.plainText)) {
-          return DropOperation.link;
+        final operation = _getDropOperation(event.session);
+        final regionSize = context.size;
+        if (operation == DropOperation.none || regionSize == null) {
+          _hoveredZone.value = null;
+        } else {
+          _hoveredZone.value = _DropZone.fromOffset(event.position.local.dy, regionSize.height);
         }
-        if (item.canProvide(Formats.fileUri) || event.session.allowedOperations.contains(DropOperation.copy)) {
-          return DropOperation.copy;
-        }
-
-        return DropOperation.none;
+        return operation;
       },
+      onDropLeave: (_) => _hoveredZone.value = null,
+      onDropEnded: (_) => _hoveredZone.value = null,
       onPerformDrop: (event) async {
+        final dropZone = _hoveredZone.value;
+        _hoveredZone.value = null;
         final finalData = <String>[];
         for (final item in event.session.items) {
           final reader = item.dataReader;
@@ -1066,9 +1117,178 @@ class _NamidaDropRegion extends StatelessWidget {
             if (value != null) finalData.add(value.toFilePath());
           }
         }
-        NamidaReceiveIntentManager.executeReceivedItems(finalData, (f) => f, (f) => f);
+        NamidaReceiveIntentManager._executeReceivedItems(finalData, (f) => f, (f) => f, dropZone);
       },
       child: child,
     );
   }
+}
+
+class _NamidaDropZonesOverlay extends StatelessWidget {
+  const _NamidaDropZonesOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: ObxO(
+        rx: _NamidaDropRegion._hoveredZone,
+        builder: (context, hoveredZone) {
+          final content = hoveredZone == null ? const SizedBox() : _DropZonesContent(hoveredZone: hoveredZone);
+          return AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            child: content,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DropZonesContent extends StatelessWidget {
+  final _DropZone hoveredZone;
+  const _DropZonesContent({required this.hoveredZone});
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: ColoredBox(
+        color: Colors.black38,
+        child: Padding(
+          padding: _DropZone.getOverlayMargin(),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.96, end: 1.0),
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic,
+            builder: (context, scale, child) => Transform.scale(
+              scale: scale,
+              child: child,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: _DropZone.values
+                  .map(
+                    (e) => Expanded(
+                      flex: e.flex,
+                      child: _DropZoneBox(
+                        zone: e,
+                        isHovered: e == hoveredZone,
+                      ),
+                    ),
+                  )
+                  .toFixedList(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DropZoneBox extends StatelessWidget {
+  final _DropZone zone;
+  final bool isHovered;
+  const _DropZoneBox({required this.zone, required this.isHovered});
+
+  static const _animationDuration = Duration(milliseconds: 200);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final backgroundColor = theme.cardColor.withOpacityExt(isHovered ? 0.95 : 0.85);
+    final borderColor = theme.colorScheme.onSurface.withOpacityExt(isHovered ? 0.2 : 0.06);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: AnimatedDecoration(
+        duration: _animationDuration,
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+        ),
+        child: AnimatedOpacity(
+          opacity: isHovered ? 1.0 : 0.5,
+          duration: _animationDuration,
+          curve: Curves.easeOut,
+          child: AnimatedScale(
+            scale: isHovered ? 1.0 : 0.94,
+            duration: _animationDuration,
+            curve: Curves.easeOutBack,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  zone.toIcon(),
+                  size: 28.0,
+                ),
+                const SizedBox(width: 12.0),
+                Text(
+                  zone.toText(),
+                  style: textTheme.displayLarge?.copyWith(fontSize: 20.0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _DropZone {
+  play(flex: 5),
+  playLast(flex: 2),
+  more(flex: 1),
+  ;
+
+  final int flex;
+  const _DropZone({required this.flex});
+
+  static const _overlayHorizontalMargin = 12.0;
+  static const _overlayVerticalMargin = 8.0;
+  static final _totalFlex = values.fold<int>(0, (total, e) => total + e.flex);
+
+  static EdgeInsets getOverlayMargin() {
+    final titleBarHeight = WindowController.instance?.windowTitleBarHeightIfActive ?? 0.0;
+    return EdgeInsets.fromLTRB(
+      _overlayHorizontalMargin,
+      _overlayVerticalMargin + titleBarHeight,
+      _overlayHorizontalMargin,
+      _overlayVerticalMargin,
+    );
+  }
+
+  static _DropZone fromOffset(double dy, double height) {
+    final margin = getOverlayMargin();
+    final zonesY = dy - margin.top;
+    final zonesHeight = height - margin.vertical;
+    final position = zonesY / zonesHeight * _totalFlex;
+    var zoneEnd = 0;
+    for (final zone in values) {
+      zoneEnd += zone.flex;
+      if (position < zoneEnd) return zone;
+    }
+    return values.last;
+  }
+
+  String toText() => switch (this) {
+    _DropZone.play => lang.play,
+    _DropZone.playLast => lang.playLast,
+    _DropZone.more => lang.more,
+  };
+
+  IconData toIcon() => switch (this) {
+    _DropZone.play => Broken.play,
+    _DropZone.playLast => Broken.play_cricle,
+    _DropZone.more => Broken.more,
+  };
+
+  OnYoutubeLinkOpenAction toYoutubeAction() => switch (this) {
+    _DropZone.play => OnYoutubeLinkOpenAction.play,
+    _DropZone.playLast => OnYoutubeLinkOpenAction.playLast,
+    _DropZone.more => OnYoutubeLinkOpenAction.alwaysAsk,
+  };
 }

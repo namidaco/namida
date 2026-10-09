@@ -736,7 +736,7 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
   @override
   void removeInvalidMixesItems(List<MapEntry<String, List<Track>>> mixes) {
     for (final m in mixes) {
-      m.value.removeWhere((tr) => tr.toTrackExtOrNull() == null);
+      m.value.removeWhere((tr) => !tr.hasInfoInLibrary());
     }
   }
 
