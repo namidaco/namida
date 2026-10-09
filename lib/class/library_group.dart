@@ -53,52 +53,62 @@ class LibraryGroup<T extends Track> {
       // -- Assigning Albums
       final identifiers = trExt.getAlbumsIdentifiersModified(albumIdentifier);
       for (var item in identifiers) {
-        mainMapAlbums.addForce(item, tr);
+        _addOnce(mainMapAlbums, item, tr);
       }
 
       // -- Assigning Artists
       for (var artist in trExt.artistsList) {
-        mainMapArtists.addForce(artist, tr);
+        _addOnce(mainMapArtists, artist, tr);
       }
 
       // -- Assigning Album Artist
       for (var albumArtist in trExt.albumArtistsList) {
-        mainMapAlbumArtists.addForce(albumArtist, tr);
+        _addOnce(mainMapAlbumArtists, albumArtist, tr);
       }
 
       // -- Assigning Composers
       for (var composer in trExt.composersList) {
-        mainMapComposer.addForce(composer, tr);
+        _addOnce(mainMapComposer, composer, tr);
       }
 
       // -- Assigning Genres
       for (var genre in trExt.genresList) {
-        mainMapGenres.addForce(genre, tr);
+        _addOnce(mainMapGenres, genre, tr);
       }
 
       // -- Assigning Styles
       for (var style in trExt.stylesList) {
-        mainMapStyles.addForce(style, tr);
+        _addOnce(mainMapStyles, style, tr);
       }
 
       // -- Assigning Languages
       for (var language in trExt.languagesList) {
-        mainMapLanguages.addForce(language, tr);
+        _addOnce(mainMapLanguages, language, tr);
       }
 
       // -- Assigning Folders
       if (tr is Video) {
         final folder = tr.folder;
-        mainMapFoldersVideos.addForce(folder, tr);
-        mainMapFoldersTracksAndVideos.addForce(folder, tr);
+        _addOnce(mainMapFoldersVideos, folder, tr);
+        _addOnce(mainMapFoldersTracksAndVideos, folder, tr);
       } else {
         final folder = tr.folder;
-        mainMapFoldersTracks.addForce(folder, tr);
-        mainMapFoldersTracksAndVideos.addForce(folder, tr);
+        _addOnce(mainMapFoldersTracks, folder, tr);
+        _addOnce(mainMapFoldersTracksAndVideos, folder, tr);
       }
     }
 
     didFill = true;
+  }
+
+  /// [track] was just added when it's the last item, keys can collapse into one list (case insensitive maps, album identifiers without the name).
+  static void _addOnce<K, E>(Map<K, List<E>> map, K key, E track) {
+    final list = map[key];
+    if (list == null) {
+      map[key] = <E>[track];
+    } else if (!identical(list.last, track)) {
+      list.add(track);
+    }
   }
 
   void refreshAll() {
@@ -144,39 +154,129 @@ class LibraryGroup<T extends Track> {
       final lists = _mediaTypeToLists(type, allTracks);
       if (lists == null) continue;
 
-      final precomputedKeys = List.generate(
-        sorters.length,
-        (sorterIndex) => List.generate(
-          allTracksLength,
-          (trackIndex) => sorters[sorterIndex](allTracks[trackIndex]),
-          growable: false,
-        ),
-        growable: false,
-      );
-
+      final precomputedKeys = _precomputeSortKeys(sorters, allTracks);
       for (final list in lists) {
-        if (reverse) {
-          list.sort((a, b) {
-            final aIndex = trackIndex[a]!;
-            final bIndex = trackIndex[b]!;
-            for (final key in precomputedKeys) {
-              final cmp = key[bIndex].compareTo(key[aIndex]);
-              if (cmp != 0) return cmp;
-            }
-            return 0;
-          });
-        } else {
-          list.sort((a, b) {
-            final aIndex = trackIndex[a]!;
-            final bIndex = trackIndex[b]!;
-            for (final key in precomputedKeys) {
-              final cmp = key[aIndex].compareTo(key[bIndex]);
-              if (cmp != 0) return cmp;
-            }
-            return 0;
-          });
+        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, reverse);
+      }
+    }
+  }
+
+  LibraryGroupChanges updateTracksSync(Map<TrackExtended, TrackExtended?> newOldTracks, List<AlbumIdentifier> albumIdentifier) {
+    final changes = LibraryGroupChanges._();
+    final mainMapAlbums = this.mainMapAlbums.value;
+    final mainMapArtists = this.mainMapArtists.value;
+    final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
+    final mainMapComposer = this.mainMapComposer.value;
+    final mainMapGenres = this.mainMapGenres.value;
+    final mainMapStyles = this.mainMapStyles.value;
+    final mainMapLanguages = this.mainMapLanguages.value;
+    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
+    final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
+    final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
+
+    for (final e in newOldTracks.entries) {
+      final newtr = e.key;
+      final oldtr = e.value;
+      final newTrack = newtr.asTrack() as T;
+      final oldTrack = oldtr?.asTrack() as T?;
+      final isSameTrack = newTrack == oldTrack;
+
+      final newAlbums = newtr.getAlbumsIdentifiersModified(albumIdentifier);
+      final oldAlbums = oldtr?.getAlbumsIdentifiersModified(albumIdentifier);
+      changes._updateKeys(MediaType.album, mainMapAlbums, newAlbums, oldAlbums, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.artist, mainMapArtists, newtr.artistsList, oldtr?.artistsList, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.albumArtist, mainMapAlbumArtists, newtr.albumArtistsList, oldtr?.albumArtistsList, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.composer, mainMapComposer, newtr.composersList, oldtr?.composersList, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.genre, mainMapGenres, newtr.genresList, oldtr?.genresList, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.style, mainMapStyles, newtr.stylesList, oldtr?.stylesList, newTrack, oldTrack, isSameTrack);
+      changes._updateKeys(MediaType.language, mainMapLanguages, newtr.languagesList, oldtr?.languagesList, newTrack, oldTrack, isSameTrack);
+
+      final newFolder = newTrack.folder;
+      final oldFolder = oldTrack?.folder;
+      changes._updateKey(MediaType.folder, mainMapFoldersTracksAndVideos, newFolder, oldFolder, newTrack, oldTrack, isSameTrack);
+
+      final Video? newVideo = newTrack is Video ? newTrack : null;
+      final Video? oldVideo = oldTrack is Video ? oldTrack : null;
+      changes._updateKey(MediaType.folderVideo, mainMapFoldersVideos, newVideo?.folder, oldVideo?.folder, newVideo, oldVideo, isSameTrack);
+
+      final T? newMusic = newVideo == null ? newTrack : null;
+      final T? oldMusic = oldVideo == null ? oldTrack : null;
+      final newMusicFolder = newMusic == null ? null : newFolder;
+      final oldMusicFolder = oldMusic == null ? null : oldFolder;
+      changes._updateKey(MediaType.folderMusic, mainMapFoldersTracks, newMusicFolder, oldMusicFolder, newMusic, oldMusic, isSameTrack);
+    }
+
+    changes._longListsSets.clear();
+    return changes;
+  }
+
+  void sortChangedSync(
+    LibraryGroupChanges changes,
+    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
+    Map<MediaType, bool> mediaItemsTrackSortingReverse,
+  ) {
+    for (final entry in changes._modifiedKeys.entries) {
+      final type = entry.key;
+      final sorters = mediasWithSorts[type];
+      final map = _mediaTypeToMap(type);
+      if (sorters == null || map == null) continue;
+      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
+
+      final lists = <List<Track>>[];
+      final affectedTracks = <Track>[];
+      final trackIndex = <Track, int>{};
+      for (final key in entry.value) {
+        final list = map[key];
+        if (list == null) continue;
+        lists.add(list);
+        for (final track in list) {
+          if (trackIndex.containsKey(track)) continue;
+          trackIndex[track] = affectedTracks.length;
+          affectedTracks.add(track);
         }
       }
+
+      final precomputedKeys = _precomputeSortKeys(sorters, affectedTracks);
+      for (final list in lists) {
+        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, reverse);
+      }
+    }
+  }
+
+  static List<List<Comparable<dynamic>>> _precomputeSortKeys(List<Comparable<dynamic> Function(Track)> sorters, List<Track> tracks) {
+    final tracksLength = tracks.length;
+    return List.generate(
+      sorters.length,
+      (sorterIndex) => List.generate(
+        tracksLength,
+        (trackIndex) => sorters[sorterIndex](tracks[trackIndex]),
+        growable: false,
+      ),
+      growable: false,
+    );
+  }
+
+  static void _sortByPrecomputedKeys<E extends Track>(List<E> list, Map<Track, int> trackIndex, List<List<Comparable<dynamic>>> precomputedKeys, bool reverse) {
+    if (reverse) {
+      list.sort((a, b) {
+        final aIndex = trackIndex[a]!;
+        final bIndex = trackIndex[b]!;
+        for (final key in precomputedKeys) {
+          final cmp = key[bIndex].compareTo(key[aIndex]);
+          if (cmp != 0) return cmp;
+        }
+        return 0;
+      });
+    } else {
+      list.sort((a, b) {
+        final aIndex = trackIndex[a]!;
+        final bIndex = trackIndex[b]!;
+        for (final key in precomputedKeys) {
+          final cmp = key[aIndex].compareTo(key[bIndex]);
+          if (cmp != 0) return cmp;
+        }
+        return 0;
+      });
     }
   }
 
@@ -308,6 +408,22 @@ class LibraryGroup<T extends Track> {
     };
   }
 
+  Map<Object?, List<Track>>? _mediaTypeToMap(MediaType e) {
+    return switch (e) {
+      MediaType.album => mainMapAlbums.value,
+      MediaType.artist => mainMapArtists.value,
+      MediaType.albumArtist => mainMapAlbumArtists.value,
+      MediaType.composer => mainMapComposer.value,
+      MediaType.genre => mainMapGenres.value,
+      MediaType.style => mainMapStyles.value,
+      MediaType.language => mainMapLanguages.value,
+      MediaType.folder => mainMapFoldersTracksAndVideos.value,
+      MediaType.folderMusic => mainMapFoldersTracks.value,
+      MediaType.folderVideo => mainMapFoldersVideos.value,
+      MediaType.track || MediaType.mood || MediaType.tag || MediaType.rating || MediaType.playlist => null,
+    };
+  }
+
   Iterable<List<T>>? _mediaTypeToLists(MediaType e, List<T> allTracks) {
     return switch (e) {
       MediaType.track => [allTracks],
@@ -326,5 +442,98 @@ class LibraryGroup<T extends Track> {
       MediaType.rating => null,
       MediaType.playlist => null,
     };
+  }
+}
+
+class LibraryGroupChanges {
+  final _modifiedKeys = <MediaType, Set<Object?>>{};
+  final _mediasWithNewKeys = <MediaType>{};
+
+  /// a batch edit can move many tracks into one long list, its set is built once instead of a scan per track.
+  static const _kLongListMinLength = 32;
+  final _longListsSets = Map<List<Object?>, Set<Object?>>.identity();
+
+  LibraryGroupChanges._();
+
+  Iterable<MediaType> get changedMedias => _modifiedKeys.keys;
+
+  bool hasNewKeys(MediaType media) => _mediasWithNewKeys.contains(media);
+
+  /// removals go first, so a case only rename isn't skipped by the case insensitive maps.
+  void _updateKeys<K, E>(MediaType type, Map<K, List<E>> map, List<K> newKeys, List<K>? oldKeys, E newTrack, E? oldTrack, bool isSameTrack) {
+    if (oldKeys == null || oldTrack == null) {
+      for (final key in newKeys) {
+        _addNew(type, map, key, newTrack);
+      }
+      return;
+    }
+    final keptKeys = isSameTrack ? oldKeys : null;
+    for (final key in oldKeys) {
+      if (keptKeys != null && newKeys.contains(key)) continue;
+      _remove(type, map, key, oldTrack);
+    }
+    for (final key in newKeys) {
+      if (keptKeys != null && keptKeys.contains(key)) continue;
+      _add(type, map, key, newTrack);
+    }
+  }
+
+  void _updateKey<K, E>(MediaType type, Map<K, List<E>> map, K? newKey, K? oldKey, E? newTrack, E? oldTrack, bool isSameTrack) {
+    if (isSameTrack && newKey == oldKey) return;
+    if (oldKey != null && oldTrack != null) _remove(type, map, oldKey, oldTrack);
+    if (newKey == null || newTrack == null) return;
+    if (oldTrack == null) {
+      _addNew(type, map, newKey, newTrack);
+    } else {
+      _add(type, map, newKey, newTrack);
+    }
+  }
+
+  void _remove<K, E>(MediaType type, Map<K, List<E>> map, K key, E track) {
+    final list = map[key];
+    if (list == null || !list.remove(track)) return;
+    _longListsSets[list]?.remove(track);
+    if (list.isEmpty) {
+      map.remove(key);
+      (_modifiedKeys[type] ??= <Object?>{}).add(key);
+    }
+  }
+
+  void _add<K, E>(MediaType type, Map<K, List<E>> map, K key, E track) {
+    final list = map[key];
+    if (list == null) {
+      map[key] = <E>[track];
+      _mediasWithNewKeys.add(type);
+    } else {
+      final listTracks = _longListsSets[list] ?? _createLongListSet(list);
+      if (listTracks == null) {
+        if (list.contains(track)) return;
+      } else if (!listTracks.add(track)) {
+        return;
+      }
+      list.add(track);
+    }
+    (_modifiedKeys[type] ??= <Object?>{}).add(key);
+  }
+
+  /// a list that shrinks back under the limit keeps its set, so every later add still goes through it.
+  Set<Object?>? _createLongListSet(List<Object?> list) {
+    if (list.length < _kLongListMinLength) return null;
+    final listTracks = Set<Object?>.of(list);
+    _longListsSets[list] = listTracks;
+    return listTracks;
+  }
+
+  /// a new track is in no list yet, it can only meet itself when its keys collapse into one list.
+  void _addNew<K, E>(MediaType type, Map<K, List<E>> map, K key, E track) {
+    final list = map[key];
+    if (list == null) {
+      map[key] = <E>[track];
+      _mediasWithNewKeys.add(type);
+    } else {
+      if (identical(list.last, track)) return;
+      list.add(track);
+    }
+    (_modifiedKeys[type] ??= <Object?>{}).add(key);
   }
 }

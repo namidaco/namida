@@ -104,13 +104,12 @@ extension TracksWithDatesUtils on List<Selectable> {
   }
 
   int? getDateAddedEffective() {
-    if (isEmpty) return null;
-    int best = first.track.dateAdded;
+    int? best;
 
     for (final e in this) {
       final track = e.track;
       final dateAdded = track.dateAdded;
-      if (dateAdded < best && dateAdded > _minimumFileDateMilli) best = dateAdded;
+      if (dateAdded > _minimumFileDateMilli && (best == null || dateAdded < best)) best = dateAdded;
     }
 
     return best;

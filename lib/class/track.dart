@@ -5,6 +5,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/replay_gain_data.dart';
@@ -221,8 +222,8 @@ class PlayableItemStats {
       if (audioTrackId != null) 'aid': audioTrackId,
       'bm': ?bookmarksFinal,
     };
-    if (map.isEmpty) return null;
     if (modifiedDate > 0) map['_mt'] = modifiedDate;
+    if (map.isEmpty) return null;
     return map;
   }
 
@@ -499,7 +500,7 @@ class TrackExtended {
         }
       }
     }
-    if (dateParts.isEmpty) return null;
+    if (dateParts.isEmpty || dateParts[0] == 0) return null;
 
     try {
       final buffer = StringBuffer();
@@ -582,80 +583,155 @@ class TrackExtended {
     return newPath.toFastHashKey();
   }
 
+  factory TrackExtended.derive({
+    required SplitArtistGenreConfigsWrapper splitConfig,
+    required String mbAlbumId,
+    required String mbAlbumArtistId,
+    required String title,
+    required String originalArtist,
+    required String originalAlbum,
+    required String albumArtist,
+    required String originalGenre,
+    required String originalStyle,
+    required String originalMood,
+    required String composer,
+    required int trackNo,
+    required int trackTo,
+    required int durationMS,
+    required int year,
+    required String yearText,
+    required int size,
+    required int dateAdded,
+    required int dateModified,
+    required String path,
+    required String comment,
+    required String description,
+    required String synopsis,
+    required int bitrate,
+    required int sampleRate,
+    required int bits,
+    required bool? isLossless,
+    required String format,
+    required String channels,
+    required int discNo,
+    required int discTo,
+    required String language,
+    required String lyrics,
+    required String label,
+    required String releaseType,
+    required int? bpm,
+    required String musicalKey,
+    required double rating,
+    required String? originalTags,
+    required ReplayGainData? gainData,
+    required FTagsSortInfo? sortInfo,
+    required String? hashKey,
+    required Map<String, String>? extraTags,
+    required List<MediaChapter>? chapters,
+    required bool isVideo,
+    required String? server,
+  }) {
+    final artistsConfig = splitConfig.artistsConfig;
+    final genresConfig = splitConfig.genresConfig;
+    final generalConfig = splitConfig.generalConfig;
+    final albumsList = Indexer.splitAlbum(originalAlbum, config: splitConfig.albumConfig);
+    // -- rows indexed before `yearText` existed only have the number
+    final albumYear = yearText.isEmpty && year > 0 ? year.toString() : yearText;
+    return TrackExtended(
+      title: title,
+      originalArtist: originalArtist,
+      artistsList: Indexer.splitArtist(title: title, originalArtist: originalArtist, config: artistsConfig),
+      originalAlbum: originalAlbum,
+      albumsList: albumsList,
+      albumArtist: albumArtist,
+      albumArtistsList: Indexer.splitAlbumArtist(albumArtist, config: artistsConfig),
+      originalGenre: originalGenre,
+      genresList: Indexer.splitGenre(originalGenre, config: genresConfig),
+      originalStyle: originalStyle,
+      stylesList: Indexer.splitStyle(originalStyle, config: genresConfig),
+      originalMood: originalMood,
+      moodList: Indexer.splitGeneral(originalMood, config: generalConfig),
+      composer: composer,
+      composersList: Indexer.splitComposer(composer, config: artistsConfig),
+      trackNo: trackNo,
+      trackTo: trackTo,
+      durationMS: durationMS,
+      year: year,
+      yearText: yearText,
+      size: size,
+      dateAdded: dateAdded,
+      dateModified: dateModified,
+      path: path,
+      comment: comment,
+      description: description,
+      synopsis: synopsis,
+      bitrate: bitrate,
+      sampleRate: sampleRate,
+      bits: bits,
+      isLossless: isLossless,
+      format: format,
+      channels: channels,
+      discNo: discNo,
+      discTo: discTo,
+      language: language,
+      languagesList: Iso639.splitToLabels(language),
+      lyrics: lyrics,
+      label: label,
+      releaseType: releaseType,
+      bpm: bpm,
+      musicalKey: musicalKey,
+      rating: rating,
+      originalTags: originalTags,
+      tagsList: Indexer.splitGeneral(originalTags, config: generalConfig),
+      gainData: gainData,
+      sortInfo: sortInfo,
+      hashKey: hashKey,
+      extraTags: extraTags,
+      chapters: chapters,
+      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
+        albums: albumsList,
+        albumArtist: albumArtist,
+        year: albumYear,
+        mbAlbumId: mbAlbumId,
+        mbAlbumArtistId: mbAlbumArtistId,
+      ),
+      isVideo: isVideo,
+      server: server,
+    );
+  }
+
+  /// normalized [sentValue], [placeholder] when it was sent empty, null when it wasn't sent.
+  static String? _sentOriginal(String? sentValue, SplitterConfig config, String placeholder) {
+    if (sentValue == null) return null;
+    final normalized = config.normalize(sentValue);
+    return normalized.isEmpty ? placeholder : normalized;
+  }
+
   factory TrackExtended.fromJson(
     String path,
     Map<String, dynamic> json, {
     required SplitArtistGenreConfigsWrapper splitConfig,
   }) {
-    final String originalAlbum = json['originalAlbum'] ?? json['album'] ?? '';
-    final String albumArtist = json['albumArtist'] ?? '';
-    final albumsList = Indexer.splitAlbum(
-      originalAlbum,
-      config: splitConfig.albumConfig,
-    );
-    final int? year = json['year'];
-    final albumsIdentifiersWrappersJson = json['albumsIdentifiersWrappers'] ?? json['albumIdentifierWrapper'];
-    final albumsIdentifiersWrappers = <AlbumIdentifierWrapper>[];
-    if (albumsIdentifiersWrappersJson is List) {
-      for (final m in albumsIdentifiersWrappersJson) {
-        albumsIdentifiersWrappers.add(AlbumIdentifierWrapper.fromMap(m));
-      }
-    } else if (albumsIdentifiersWrappersJson is Map) {
-      albumsIdentifiersWrappers.add(AlbumIdentifierWrapper.fromMap(albumsIdentifiersWrappersJson.cast()));
-    }
-    // -- if wrappers don't have any with the album name
-    for (final a in albumsList) {
-      if (!albumsIdentifiersWrappers.any((w) => w.album == a)) {
-        albumsIdentifiersWrappers.add(
-          AlbumIdentifierWrapper(
-            album: originalAlbum,
-            albumArtist: albumArtist,
-            year: year?.toString() ?? '',
-            mbAlbumId: '',
-            mbAlbumArtistId: '',
-          ),
-        );
-      }
-    }
-    return TrackExtended(
+    // -- legacy wrappers have cleaned up album names, only their musicbrainz ids are read
+    final wrappersJson = json['albumsIdentifiersWrappers'] ?? json['albumIdentifierWrapper'];
+    final firstWrapperJson = wrappersJson is List ? wrappersJson.firstOrNull : wrappersJson;
+    final mbIdsJson = firstWrapperJson is Map ? firstWrapperJson : null;
+    return TrackExtended.derive(
+      splitConfig: splitConfig,
+      mbAlbumId: mbIdsJson?['mbAlbumId'] as String? ?? '',
+      mbAlbumArtistId: mbIdsJson?['mbAlbumArtistId'] as String? ?? '',
       title: json['title'] ?? '',
       originalArtist: json['originalArtist'] ?? '',
-      artistsList: Indexer.splitArtist(
-        title: json['title'],
-        originalArtist: json['originalArtist'],
-        config: splitConfig.artistsConfig,
-      ),
-      originalAlbum: originalAlbum,
-      albumsList: albumsList,
-      albumArtist: albumArtist,
-      albumArtistsList: Indexer.splitAlbumArtist(
-        albumArtist,
-        config: splitConfig.artistsConfig,
-      ),
+      originalAlbum: json['originalAlbum'] ?? json['album'] ?? '',
+      albumArtist: json['albumArtist'] ?? '',
       originalGenre: json['originalGenre'] ?? '',
-      genresList: Indexer.splitGenre(
-        json['originalGenre'],
-        config: splitConfig.genresConfig,
-      ),
       originalStyle: json['originalStyle'] ?? '',
-      stylesList: Indexer.splitStyle(
-        json['originalStyle'],
-        config: splitConfig.genresConfig,
-      ),
       originalMood: json['originalMood'] ?? '',
-      moodList: Indexer.splitGeneral(
-        json['originalMood'],
-        config: splitConfig.generalConfig,
-      ),
       composer: json['composer'] ?? '',
-      composersList: Indexer.splitComposer(
-        json['composer'],
-        config: splitConfig.artistsConfig,
-      ),
       trackNo: json['trackNo'] ?? 0,
       trackTo: json['trackTo'] ?? 0,
       durationMS: json['durationMS'] ?? (json['duration'] is int ? json['duration'] * 1000 : 0),
-      year: year ?? 0,
+      year: json['year'] ?? 0,
       yearText: json['yearText'] ?? '',
       size: json['size'] ?? 0,
       dateAdded: json['dateAdded'] ?? 0,
@@ -673,7 +749,6 @@ class TrackExtended {
       discNo: json['discNo'] ?? 0,
       discTo: json['discTo'] ?? 0,
       language: json['language'] ?? '',
-      languagesList: Iso639.splitToLabels(json['language']),
       lyrics: json['lyrics'] ?? '',
       label: json['label'] ?? '',
       releaseType: json['releaseType'] ?? '',
@@ -681,16 +756,11 @@ class TrackExtended {
       musicalKey: json['musicalKey'] ?? '',
       rating: json['rating'] ?? 0.0,
       originalTags: json['originalTags'],
-      tagsList: Indexer.splitGeneral(
-        json['originalTags'],
-        config: splitConfig.generalConfig,
-      ),
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
       hashKey: json['hashKey'],
       extraTags: _extraTagsFromJson(json['extraTags']),
       chapters: MediaChapter.listFromJson(json['chapters']),
-      albumsIdentifiersWrappers: albumsIdentifiersWrappers,
       isVideo: json['v'] ?? false,
       server: json['server'],
     );
@@ -830,6 +900,7 @@ extension TrackExtUtils on TrackExtended {
     var filename = this.filename;
     if (filename.isNotEmpty) {
       var id = NamidaLinkRegex.youtubeIdInFilenameRegex.firstMatch(filename)?.group(1);
+      id ??= NamidaLinkUtils.extractYoutubeIdInTrailingBrackets(filename);
       if (id != null) return 'youtu.be/$id';
     }
     return '';
@@ -902,6 +973,7 @@ extension TrackExtUtils on TrackExtended {
     );
   }
 
+  /// applies only the fields [tag] has, an empty one clears it.
   TrackExtended copyWithTag({
     required FTags tag,
     required SplitArtistGenreConfigsWrapper splittersConfigs,
@@ -910,94 +982,66 @@ extension TrackExtUtils on TrackExtended {
     required bool generatePathHash,
     String? server,
   }) {
-    final finaltitle = tag.title ?? title;
-    final originalAlbum = tag.album ?? this.originalAlbum;
-    final finalalbums = tag.album != null
-        ? Indexer.splitAlbum(
-            originalAlbum,
-            config: splittersConfigs.albumConfig,
-          )
-        : albumsList;
-    final finalartists = tag.artist != null
-        ? Indexer.splitArtist(
-            title: finaltitle,
-            originalArtist: tag.artist!,
-            config: splittersConfigs.artistsConfig,
-          )
-        : artistsList;
-    final finalcomposers = tag.composer != null
-        ? Indexer.splitComposer(
-            tag.composer,
-            config: splittersConfigs.artistsConfig,
-          )
-        : composersList;
-    final finalgenres = tag.genre != null
-        ? Indexer.splitGenre(
-            tag.genre,
-            config: splittersConfigs.genresConfig,
-          )
-        : genresList;
-    final finalstyles = tag.style != null
-        ? Indexer.splitStyle(
-            tag.style,
-            config: splittersConfigs.genresConfig,
-          )
-        : stylesList;
-    final finalmoods = tag.mood != null
-        ? Indexer.splitGeneral(
-            tag.mood,
-            config: splittersConfigs.generalConfig,
-          )
-        : moodList;
-    final finaltagsEmbedded = tag.tags != null
-        ? Indexer.splitGeneral(
-            tag.tags,
-            config: splittersConfigs.generalConfig,
-          )
-        : tagsList;
-    final albumArtist = tag.albumArtist ?? this.albumArtist;
-    final finalalbumartists = tag.albumArtist != null
-        ? Indexer.splitAlbumArtist(
-            tag.albumArtist,
-            config: splittersConfigs.artistsConfig,
-          )
-        : albumArtistsList;
-    final yearText = tag.year ?? this.year.toString();
-    final year = TrackExtended.enforceYearFormat(tag.year) ?? this.year;
-
+    final artistsConfig = splittersConfigs.artistsConfig;
+    final genresConfig = splittersConfigs.genresConfig;
     final newPath = path ?? this.path;
-    String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
-    final trackNoParsed = TrackExtended.parseTrackNumber(tag.trackNumber);
-    final discNoParsed = TrackExtended.parseTrackNumber(tag.discNumber);
-    return TrackExtended(
-      title: finaltitle,
-      originalArtist: tag.artist ?? originalArtist,
-      artistsList: finalartists,
+    final newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
+
+    var title = TrackExtended._sentOriginal(tag.title, artistsConfig, UnknownTags.TITLE) ?? this.title;
+    var originalArtist = TrackExtended._sentOriginal(tag.artist, artistsConfig, UnknownTags.ARTIST) ?? this.originalArtist;
+    final isTitleUnknown = title == UnknownTags.TITLE;
+    final isArtistUnknown = originalArtist == UnknownTags.ARTIST;
+    if (isTitleUnknown || isArtistUnknown) {
+      final fromFilename = FileMatcher.getTitleAndArtistFromFilename(newPath.getFilenameWOExt);
+      if (isTitleUnknown) title = fromFilename.$1;
+      if (isArtistUnknown) originalArtist = fromFilename.$2;
+    }
+    final originalAlbum = TrackExtended._sentOriginal(tag.album, splittersConfigs.albumConfig, UnknownTags.ALBUM) ?? this.originalAlbum;
+    final albumArtist = TrackExtended._sentOriginal(tag.albumArtist, artistsConfig, UnknownTags.ALBUMARTIST) ?? this.albumArtist;
+    final originalGenre = TrackExtended._sentOriginal(tag.genre, genresConfig, UnknownTags.GENRE) ?? this.originalGenre;
+    final originalStyle = TrackExtended._sentOriginal(tag.style, genresConfig, UnknownTags.STYLE) ?? this.originalStyle;
+    final originalMood = TrackExtended._sentOriginal(tag.mood, splittersConfigs.generalConfig, UnknownTags.MOOD) ?? this.originalMood;
+    final composer = TrackExtended._sentOriginal(tag.composer, artistsConfig, UnknownTags.COMPOSER) ?? this.composer;
+
+    final trackNumber = tag.trackNumber;
+    final trackTotal = tag.trackTotal;
+    final discNumber = tag.discNumber;
+    final discTotal = tag.discTotal;
+    final trackNoParsed = trackNumber == null ? null : TrackExtended.parseTrackNumber(trackNumber);
+    final discNoParsed = discNumber == null ? null : TrackExtended.parseTrackNumber(discNumber);
+    final trackNo = trackNoParsed == null ? this.trackNo : trackNoParsed.$1 ?? 0;
+    final discNo = discNoParsed == null ? this.discNo : discNoParsed.$1 ?? 0;
+    final trackToFromTotal = trackTotal == null ? trackTo : TrackExtended.parseTrackNumber(trackTotal)?.$1 ?? 0;
+    final discToFromTotal = discTotal == null ? discTo : TrackExtended.parseTrackNumber(discTotal)?.$1 ?? 0;
+
+    final yearText = tag.year;
+    final year = yearText == null ? this.year : TrackExtended.enforceYearFormat(yearText) ?? 0;
+    final firstWrapper = albumsIdentifiersWrappers.firstOrNull;
+
+    return TrackExtended.derive(
+      splitConfig: splittersConfigs,
+      mbAlbumId: tag.mbAlbumId ?? firstWrapper?.mbAlbumId ?? '',
+      mbAlbumArtistId: tag.mbAlbumArtistId ?? firstWrapper?.mbAlbumArtistId ?? '',
+      title: title,
+      originalArtist: originalArtist,
       originalAlbum: originalAlbum,
-      albumsList: finalalbums,
       albumArtist: albumArtist,
-      albumArtistsList: finalalbumartists,
-      originalGenre: tag.genre ?? originalGenre,
-      genresList: finalgenres,
-      originalStyle: tag.style ?? originalStyle,
-      stylesList: finalstyles,
-      originalMood: tag.mood ?? originalMood,
-      moodList: finalmoods,
-      composer: tag.composer ?? composer,
-      composersList: finalcomposers,
-      trackNo: trackNoParsed?.$1 ?? trackNo,
-      trackTo: trackNoParsed?.$2 ?? TrackExtended.parseTrackNumber(tag.trackTotal)?.$1 ?? trackTo,
+      originalGenre: originalGenre,
+      originalStyle: originalStyle,
+      originalMood: originalMood,
+      composer: composer,
+      trackNo: trackNo,
+      trackTo: trackNoParsed?.$2 ?? trackToFromTotal,
       year: year,
-      yearText: yearText,
+      yearText: yearText ?? this.yearText,
       dateModified: dateModified ?? this.dateModified,
       path: newPath,
       comment: tag.comment ?? comment,
       description: tag.description ?? description,
       synopsis: tag.synopsis ?? synopsis,
-      discNo: discNoParsed?.$1 ?? discNo,
-      discTo: discNoParsed?.$2 ?? discTo,
+      discNo: discNo,
+      discTo: discNoParsed?.$2 ?? discToFromTotal,
       language: tag.language ?? language,
-      languagesList: tag.language != null ? Iso639.splitToLabels(tag.language) : languagesList,
       lyrics: tag.lyrics ?? lyrics,
       label: tag.recordLabel ?? label,
       releaseType: tag.releaseType ?? releaseType,
@@ -1005,31 +1049,75 @@ extension TrackExtUtils on TrackExtended {
       musicalKey: tag.musicalKey ?? musicalKey,
       rating: tag.ratingPercentage ?? rating,
       originalTags: tag.tags ?? originalTags,
-      tagsList: finaltagsEmbedded,
       gainData: tag.gainData ?? gainData,
       sortInfo: tag.sortInfo ?? sortInfo,
       extraTags: tag.extraTags ?? extraTags,
+      chapters: tag.chapters ?? chapters,
 
       // -- uneditable fields
       bitrate: bitrate,
       channels: channels,
       dateAdded: dateAdded,
       durationMS: durationMS,
-      chapters: chapters,
       format: format,
       sampleRate: sampleRate,
       bits: bits,
       isLossless: isLossless,
       size: size,
-      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
-        albums: finalalbums,
-        albumArtist: albumArtist,
-        year: yearText,
-        mbAlbumId: tag.mbAlbumId ?? albumsIdentifiersWrappers.firstOrNull?.mbAlbumId ?? '',
-        mbAlbumArtistId: tag.mbAlbumArtistId ?? albumsIdentifiersWrappers.firstOrNull?.mbAlbumArtistId ?? '',
-      ),
       isVideo: isVideo,
       hashKey: newHashKey,
+      server: server ?? this.server,
+    );
+  }
+
+  TrackExtended rederive(SplitArtistGenreConfigsWrapper splitConfig) {
+    final firstWrapper = albumsIdentifiersWrappers.firstOrNull;
+    return TrackExtended.derive(
+      splitConfig: splitConfig,
+      mbAlbumId: firstWrapper?.mbAlbumId ?? '',
+      mbAlbumArtistId: firstWrapper?.mbAlbumArtistId ?? '',
+      title: title,
+      originalArtist: originalArtist,
+      originalAlbum: originalAlbum,
+      albumArtist: albumArtist,
+      originalGenre: originalGenre,
+      originalStyle: originalStyle,
+      originalMood: originalMood,
+      composer: composer,
+      trackNo: trackNo,
+      trackTo: trackTo,
+      durationMS: durationMS,
+      year: year,
+      yearText: yearText,
+      size: size,
+      dateAdded: dateAdded,
+      dateModified: dateModified,
+      path: path,
+      comment: comment,
+      description: description,
+      synopsis: synopsis,
+      bitrate: bitrate,
+      sampleRate: sampleRate,
+      bits: bits,
+      isLossless: isLossless,
+      format: format,
+      channels: channels,
+      discNo: discNo,
+      discTo: discTo,
+      language: language,
+      lyrics: lyrics,
+      label: label,
+      releaseType: releaseType,
+      bpm: bpm,
+      musicalKey: musicalKey,
+      rating: rating,
+      originalTags: originalTags,
+      gainData: gainData,
+      sortInfo: sortInfo,
+      hashKey: hashKey,
+      extraTags: extraTags,
+      chapters: chapters,
+      isVideo: isVideo,
       server: server,
     );
   }

@@ -10,7 +10,6 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 import 'package:namida/class/faudiomodel.dart';
-import 'package:namida/class/file_matcher.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_group.dart';
 import 'package:namida/class/library_item_map.dart';
@@ -39,7 +38,6 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/iso639.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
@@ -253,63 +251,13 @@ class Indexer<T extends Track> {
     }
   }
 
-  void rebuildTracksAfterSplitConfigChanges() async {
-    final splitConfig = _createSplitConfig();
-    final keysList = allTracksMappedByPath.keys.toFixedList();
-    for (final trPath in keysList) {
-      final oldtr = allTracksMappedByPath[trPath]!;
-      allTracksMappedByPath[trPath] = oldtr.copyWith(
-        artistsList: Indexer.splitArtist(
-          title: oldtr.title,
-          originalArtist: oldtr.originalArtist,
-          config: splitConfig.artistsConfig,
-        ),
-        composersList: Indexer.splitComposer(
-          oldtr.composer,
-          config: splitConfig.artistsConfig,
-        ),
-        albumArtistsList: Indexer.splitAlbumArtist(
-          oldtr.albumArtist,
-          config: splitConfig.artistsConfig,
-        ),
-        genresList: Indexer.splitGenre(
-          oldtr.originalGenre,
-          config: splitConfig.genresConfig,
-        ),
-        stylesList: Indexer.splitStyle(
-          oldtr.originalStyle,
-          config: splitConfig.genresConfig,
-        ),
-        languagesList: Iso639.splitToLabels(oldtr.language),
-        moodList: Indexer.splitGeneral(
-          oldtr.originalMood,
-          config: splitConfig.generalConfig,
-        ),
-        tagsList: Indexer.splitGeneral(
-          oldtr.originalTags,
-          config: splitConfig.generalConfig,
-        ),
-        generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
-      );
-    }
-    await _afterIndexing();
-    tracksInfoList.refresh();
-  }
+  void rebuildTracksAfterSplitConfigChanges() => _rederiveAllTracks();
 
-  void rebuildTracksAfterExtractFeatArtistChanges() async {
-    final artistsSplitConfig = ArtistsSplitConfig.settings();
-    final keysList = allTracksMappedByPath.keys.toFixedList();
-    for (final trPath in keysList) {
-      final oldtr = allTracksMappedByPath[trPath]!;
-      allTracksMappedByPath[trPath] = oldtr.copyWith(
-        artistsList: Indexer.splitArtist(
-          title: oldtr.title,
-          originalArtist: oldtr.originalArtist,
-          config: artistsSplitConfig,
-        ),
-        generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
-      );
-    }
+  void rebuildTracksAfterExtractFeatArtistChanges() => _rederiveAllTracks();
+
+  Future<void> _rederiveAllTracks() async {
+    final splitConfig = _createSplitConfig();
+    allTracksMappedByPath.updateAll((_, trExt) => trExt.rederive(splitConfig));
     await _afterIndexing();
     tracksInfoList.refresh();
   }
@@ -558,213 +506,17 @@ class Indexer<T extends Track> {
   }
 
   void _addTheseTracksToAlbumGenreArtistEtc(Map<TrackExtended, TrackExtended?> tracksMap) {
-    final mainMapAlbums = this.mainMapAlbums.value;
-    final mainMapArtists = this.mainMapArtists.value;
-    final mainMapAlbumArtists = this.mainMapAlbumArtists.value;
-    final mainMapComposer = this.mainMapComposer.value;
-    final mainMapGenres = this.mainMapGenres.value;
-    final mainMapStyles = this.mainMapStyles.value;
-    final mainMapLanguages = this.mainMapLanguages.value;
-    final mainMapFoldersTracksAndVideos = this.mainMapFoldersTracksAndVideos.value;
-    final mainMapFoldersTracks = this.mainMapFoldersTracks.value;
-    final mainMapFoldersVideos = this.mainMapFoldersVideos.value;
-
-    final addedItemsLists = <MediaType, ({Map<dynamic, List<dynamic>> map, List<dynamic> newKeys, Set<dynamic> modifiedKeys})>{
-      MediaType.album: (map: mainMapAlbums, newKeys: [], modifiedKeys: {}),
-      MediaType.artist: (map: mainMapArtists, newKeys: [], modifiedKeys: {}),
-      MediaType.albumArtist: (map: mainMapAlbumArtists, newKeys: [], modifiedKeys: {}),
-      MediaType.composer: (map: mainMapComposer, newKeys: [], modifiedKeys: {}),
-      MediaType.genre: (map: mainMapGenres, newKeys: [], modifiedKeys: {}),
-      MediaType.style: (map: mainMapStyles, newKeys: [], modifiedKeys: {}),
-      MediaType.language: (map: mainMapLanguages, newKeys: [], modifiedKeys: {}),
-      MediaType.folder: (map: mainMapFoldersTracksAndVideos, newKeys: [], modifiedKeys: {}),
-      MediaType.folderMusic: (map: mainMapFoldersTracks, newKeys: [], modifiedKeys: {}),
-      MediaType.folderVideo: (map: mainMapFoldersVideos, newKeys: [], modifiedKeys: {}),
-    };
-
-    void removeCustom<K, E>(MediaType type, Map<K, List<E>> map, K key, E item) {
-      final list = map[key];
-      if (list != null) {
-        list.remove(item);
-        if (list.isEmpty) {
-          map.remove(key);
-          addedItemsLists[type]!.modifiedKeys.add(key);
-        }
-      }
+    final changes = mainMapsGroup.updateTracksSync(tracksMap, settings.albumIdentifiers.value);
+    final changedMedias = changes.changedMedias;
+    final mediaSorters = {for (final e in changedMedias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
+    mainMapsGroup.sortChangedSync(changes, mediaSorters, settings.mediaItemsTrackSortingReverse.value);
+    for (final e in changedMedias) {
+      SearchSortController.inst.sortMedia(e); // main list sorting
     }
 
-    // -- this gurantees that [newlyAddedList] will not contain duplicates.
-    void addCustom<K, E>(MediaType type, Map<K, List<E>> map, K? oldKey, K newKey, E item) {
-      if (oldKey == newKey) return;
-      if (oldKey != null) removeCustom(type, map, oldKey, item);
-      final list = map[newKey];
-      if (list == null) {
-        map[newKey] = [item];
-        addedItemsLists[type]!.newKeys.add(newKey);
-        addedItemsLists[type]!.modifiedKeys.add(newKey);
-      } else {
-        if (!list.contains(item)) {
-          list.add(item);
-          addedItemsLists[type]!.modifiedKeys.add(newKey);
-        }
-      }
-    }
-
-    (List<D> newOnes, List<D> oldOnes) differenceLists<D>(List<D> newOnes, List<D> oldOnes) {
-      final oldOnesCopy = List<D>.from(oldOnes);
-      final newOnesFinal = <D>[];
-      for (var element in newOnes) {
-        final alreadyExistedInOld = oldOnesCopy.remove(element);
-        if (!alreadyExistedInOld) newOnesFinal.add(element);
-      }
-      return (newOnesFinal, oldOnesCopy);
-    }
-
-    for (final e in tracksMap.entries) {
-      final newtr = e.key;
-      final oldtr = e.value;
-      final oldTrack = oldtr?.asTrack();
-      final newTrack = newtr.asTrack();
-
-      // -- Assigning Albums
-      final newOldAlbums = oldtr == null ? (newtr.albumsIdentifiersModified, const []) : differenceLists(newtr.albumsIdentifiersModified, oldtr.albumsIdentifiersModified);
-      for (final alNew in newOldAlbums.$1) {
-        addCustom(MediaType.album, mainMapAlbums, null, alNew, newTrack);
-      }
-      for (final alOld in newOldAlbums.$2) {
-        removeCustom(MediaType.album, mainMapAlbums, null, alOld);
-      }
-
-      // -- Assigning Artists
-      final newOldArtists = oldtr == null ? (newtr.artistsList, const []) : differenceLists(newtr.artistsList, oldtr.artistsList);
-
-      for (final arNew in newOldArtists.$1) {
-        addCustom(MediaType.artist, mainMapArtists, null, arNew, newTrack);
-      }
-      for (final arOld in newOldArtists.$2) {
-        removeCustom(MediaType.artist, mainMapArtists, arOld, oldTrack);
-      }
-
-      // -- Assigning Album Artists
-      final newOldAlbumArtists = oldtr == null ? (newtr.albumArtistsList, const []) : differenceLists(newtr.albumArtistsList, oldtr.albumArtistsList);
-      for (final aaNew in newOldAlbumArtists.$1) {
-        addCustom(MediaType.albumArtist, mainMapAlbumArtists, null, aaNew, newTrack);
-      }
-      for (final aaOld in newOldAlbumArtists.$2) {
-        removeCustom(MediaType.albumArtist, mainMapAlbumArtists, aaOld, oldTrack);
-      }
-
-      // -- Assigning Composers
-      final newOldComposers = oldtr == null ? (newtr.composersList, const []) : differenceLists(newtr.composersList, oldtr.composersList);
-      for (final coNew in newOldComposers.$1) {
-        addCustom(MediaType.composer, mainMapComposer, null, coNew, newTrack);
-      }
-      for (final coOld in newOldComposers.$2) {
-        removeCustom(MediaType.composer, mainMapComposer, coOld, oldTrack);
-      }
-
-      // -- Assigning Genres
-      final newOldGenres = oldtr == null ? (newtr.genresList, const []) : differenceLists(newtr.genresList, oldtr.genresList);
-      for (final genNew in newOldGenres.$1) {
-        addCustom(MediaType.genre, mainMapGenres, null, genNew, newTrack);
-      }
-      for (final genOld in newOldGenres.$2) {
-        removeCustom(MediaType.genre, mainMapGenres, genOld, oldTrack);
-      }
-
-      // -- Assigning Styles
-      final newOldStyles = oldtr == null ? (newtr.stylesList, const []) : differenceLists(newtr.stylesList, oldtr.stylesList);
-      for (final styNew in newOldStyles.$1) {
-        addCustom(MediaType.style, mainMapStyles, null, styNew, newTrack);
-      }
-      for (final styOld in newOldStyles.$2) {
-        removeCustom(MediaType.style, mainMapStyles, styOld, oldTrack);
-      }
-
-      // -- Assigning Languages
-      final newOldLanguages = oldtr == null ? (newtr.languagesList, const []) : differenceLists(newtr.languagesList, oldtr.languagesList);
-      for (final lanNew in newOldLanguages.$1) {
-        addCustom(MediaType.language, mainMapLanguages, null, lanNew, newTrack);
-      }
-      for (final lanOld in newOldLanguages.$2) {
-        removeCustom(MediaType.language, mainMapLanguages, lanOld, oldTrack);
-      }
-
-      // -- Assigning Folders
-      newTrack is Video
-          ? addCustom(MediaType.folderVideo, mainMapFoldersVideos, oldTrack?.folder, newTrack.folder, newTrack)
-          : addCustom(MediaType.folderMusic, mainMapFoldersTracks, oldTrack?.folder, newTrack.folder, newTrack);
-
-      addCustom(MediaType.folder, mainMapFoldersTracksAndVideos, oldTrack?.folder, newTrack.folder, newTrack);
-    }
-
-    for (final sec in addedItemsLists.entries) {
-      final type = sec.key;
-      final modifiedKeys = sec.value.modifiedKeys;
-
-      if (modifiedKeys.isNotEmpty) SearchSortController.inst.sortMedia(type); // main list sorting
-      if (modifiedKeys.isNotEmpty) {
-        final map = sec.value.map as Map<dynamic, List<T>>;
-        final sorters = type == MediaType.albumArtist || type == MediaType.composer
-            ? SearchSortController.inst.getMediaTracksSortingComparables(MediaType.artist)
-            : SearchSortController.inst.getMediaTracksSortingComparables(type);
-        final reverse = settings.mediaItemsTrackSortingReverse.value[type] ?? false;
-
-        // -- similar approach to [LibraryGroup.sortAllSync], complicated but much better performance
-        final affectedTracks = <T>[];
-        final trackIndex = <T, int>{};
-        for (final k in modifiedKeys) {
-          final list = map[k];
-          if (list == null) continue;
-          for (final track in list) {
-            if (!trackIndex.containsKey(track)) {
-              trackIndex[track] = affectedTracks.length;
-              affectedTracks.add(track);
-            }
-          }
-        }
-
-        final precomputedKeys = List.generate(
-          sorters.length,
-          (sorterIndex) => List.generate(
-            affectedTracks.length,
-            (i) => sorters[sorterIndex](affectedTracks[i]),
-            growable: false,
-          ),
-          growable: false,
-        );
-
-        for (final k in modifiedKeys) {
-          final list = map[k];
-          if (list == null) continue;
-          if (reverse) {
-            list.sort((a, b) {
-              final aIndex = trackIndex[a]!;
-              final bIndex = trackIndex[b]!;
-              for (final key in precomputedKeys) {
-                final cmp = key[bIndex].compareTo(key[aIndex]);
-                if (cmp != 0) return cmp;
-              }
-              return 0;
-            });
-          } else {
-            list.sort((a, b) {
-              final aIndex = trackIndex[a]!;
-              final bIndex = trackIndex[b]!;
-              for (final key in precomputedKeys) {
-                final cmp = key[aIndex].compareTo(key[bIndex]);
-                if (cmp != 0) return cmp;
-              }
-              return 0;
-            });
-          }
-        }
-      }
-    }
-
-    if (addedItemsLists[MediaType.folder]?.newKeys.isNotEmpty == true) FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos);
-    if (addedItemsLists[MediaType.folderMusic]?.newKeys.isNotEmpty == true) FoldersController.tracks.onMapChanged(mainMapFoldersTracks);
-    if (addedItemsLists[MediaType.folderVideo]?.newKeys.isNotEmpty == true) FoldersController.videos.onMapChanged(mainMapFoldersVideos);
+    if (changes.hasNewKeys(MediaType.folder)) FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
+    if (changes.hasNewKeys(MediaType.folderMusic)) FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
+    if (changes.hasNewKeys(MediaType.folderVideo)) FoldersController.videos.onMapChanged(mainMapFoldersVideos.value);
   }
 
   static Future<TrackExtended?> convertServerTagToTrack({
@@ -819,29 +571,33 @@ class Indexer<T extends Track> {
         }
       } catch (_) {}
 
-      late TrackExtended finalTrackExtended;
-
       if (trackInfo.hasError && !tryExtractingFromFilename) return null;
+
+      final info = trackInfo.hasError ? null : trackInfo;
+      final durationInMS = info?.durationMS ?? 0;
+      if (minDur != 0 && durationInMS != 0 && durationInMS < minDur * 1000) {
+        return onMinDurTrigger();
+      }
 
       final initialTrack = TrackExtended(
         title: UnknownTags.TITLE,
         originalArtist: UnknownTags.ARTIST,
-        artistsList: [UnknownTags.ARTIST],
+        artistsList: const [],
         originalAlbum: UnknownTags.ALBUM,
-        albumsList: [UnknownTags.ALBUM],
+        albumsList: const [],
         albumArtist: UnknownTags.ALBUMARTIST,
-        albumArtistsList: const [UnknownTags.ALBUMARTIST],
+        albumArtistsList: const [],
         originalGenre: UnknownTags.GENRE,
-        genresList: [UnknownTags.GENRE],
+        genresList: const [],
         originalStyle: UnknownTags.STYLE,
-        stylesList: [UnknownTags.STYLE],
+        stylesList: const [],
         composer: UnknownTags.COMPOSER,
-        composersList: const [UnknownTags.COMPOSER],
+        composersList: const [],
         originalMood: UnknownTags.MOOD,
-        moodList: [UnknownTags.MOOD],
+        moodList: const [],
         trackNo: 0,
         trackTo: 0,
-        durationMS: 0,
+        durationMS: durationInMS,
         chapters: null,
         year: 0,
         yearText: '',
@@ -852,12 +608,12 @@ class Indexer<T extends Track> {
         comment: '',
         description: '',
         synopsis: '',
-        bitrate: 0,
-        sampleRate: 0,
-        bits: 0,
-        isLossless: null,
-        format: '',
-        channels: '',
+        bitrate: info?.bitRate ?? 0,
+        sampleRate: info?.sampleRate ?? 0,
+        bits: info?.bits ?? 0,
+        isLossless: info?.isLossless,
+        format: info?.format ?? '',
+        channels: info?.channels ?? '',
         discNo: 0,
         discTo: 0,
         language: '',
@@ -869,173 +625,29 @@ class Indexer<T extends Track> {
         musicalKey: '',
         rating: 0.0,
         originalTags: null,
-        tagsList: [],
+        tagsList: const [],
         gainData: null,
         sortInfo: null,
         extraTags: null,
-        albumsIdentifiersWrappers: [],
+        albumsIdentifiersWrappers: const [],
         isVideo: trackPath.isVideo(),
-        hashKey: TrackExtended.generateHashKeyIfEnabled(null, trackPath, null),
+        hashKey: null,
         server: server,
       );
-      if (!trackInfo.hasError) {
-        int durationInMS = trackInfo.durationMS ?? 0;
-        if (minDur != 0 && durationInMS != 0 && durationInMS < minDur * 1000) {
-          return onMinDurTrigger();
-        }
 
-        final tags = trackInfo.tags;
-
-        splittersConfigs ??= _createSplitConfig();
-
-        final album = tags.album;
-        final albumArtist = tags.albumArtist;
-        final yearText = tags.year;
-
-        // -- Split Albums
-        final albums = splitAlbum(
-          album,
-          config: splittersConfigs.albumConfig,
-        );
-
-        // -- Split Artists
-        final artists = splitArtist(
-          title: tags.title,
-          originalArtist: tags.artist,
-          config: splittersConfigs.artistsConfig,
-        );
-
-        // -- Split Composers
-        final composers = splitComposer(
-          tags.composer,
-          config: splittersConfigs.artistsConfig,
-        );
-
-        // -- Split Album Artists
-        final albumArtists = splitAlbumArtist(
-          albumArtist,
-          config: splittersConfigs.artistsConfig,
-        );
-
-        // -- Split Genres
-        final genres = splitGenre(
-          tags.genre,
-          config: splittersConfigs.genresConfig,
-        );
-
-        // -- Split Styles
-        final styles = splitStyle(
-          tags.style,
-          config: splittersConfigs.genresConfig,
-        );
-
-        // -- Split Moods
-        final moods = splitGeneral(
-          tags.mood,
-          config: splittersConfigs.generalConfig,
-        );
-
-        // -- Split Tags
-        final tagsEmbedded = splitGeneral(
-          tags.tags,
-          config: splittersConfigs.generalConfig,
-        );
-
-        final trackNoParsed = TrackExtended.parseTrackNumber(trackInfo.tags.trackNumber);
-        final discNoParsed = TrackExtended.parseTrackNumber(trackInfo.tags.discNumber);
-
-        String? trimOrNull(String? value) => value == null ? value : value.trimAll();
-        String? nullifyEmpty(String? value) => value == '' ? null : value;
-        String? doMagic(String? value) => nullifyEmpty(trimOrNull(value));
-
-        finalTrackExtended = initialTrack.copyWith(
-          title: doMagic(tags.title),
-          originalArtist: doMagic(tags.artist),
-          artistsList: artists,
-          originalAlbum: doMagic(tags.album),
-          albumsList: albums,
-          albumArtist: doMagic(tags.albumArtist),
-          albumArtistsList: albumArtists,
-          originalGenre: doMagic(tags.genre),
-          genresList: genres,
-          originalStyle: doMagic(tags.style),
-          stylesList: styles,
-          originalMood: doMagic(tags.mood),
-          moodList: moods,
-          composer: doMagic(tags.composer),
-          composersList: composers,
-          trackNo: trackNoParsed?.$1,
-          trackTo: trackNoParsed?.$2 ?? TrackExtended.parseTrackNumber(trackInfo.tags.trackTotal)?.$1,
-          durationMS: durationInMS,
-          year: TrackExtended.enforceYearFormat(yearText),
-          yearText: yearText,
-          comment: tags.comment,
-          description: tags.description,
-          synopsis: tags.synopsis,
-          bitrate: trackInfo.bitRate,
-          sampleRate: trackInfo.sampleRate,
-          bits: trackInfo.bits,
-          isLossless: trackInfo.isLossless,
-          format: trackInfo.format,
-          channels: trackInfo.channels,
-          discNo: discNoParsed?.$1,
-          discTo: discNoParsed?.$2,
-          language: tags.language,
-          languagesList: Iso639.splitToLabels(tags.language),
-          lyrics: tags.lyrics,
-          label: tags.recordLabel,
-          releaseType: tags.releaseType,
-          bpm: tags.bpm,
-          musicalKey: tags.musicalKey ?? '',
-          rating: tags.ratingPercentage,
-          originalTags: tags.tags,
-          tagsList: tagsEmbedded,
-          albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
-            albums: albums,
-            albumArtist: albumArtist ?? '',
-            year: yearText ?? '',
-            mbAlbumId: tags.mbAlbumId ?? '',
-            mbAlbumArtistId: tags.mbAlbumArtistId ?? '',
-          ),
-          gainData: tags.gainData,
-          sortInfo: tags.sortInfo,
-          extraTags: tags.extraTags,
-          chapters: tags.chapters,
-          generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
-        );
-
-        // ----- if the title || artist weren't found in the tag fields
-        final isTitleEmpty = finalTrackExtended.title == UnknownTags.TITLE;
-        final isArtistEmpty = finalTrackExtended.originalArtist == UnknownTags.ARTIST;
-        if (isTitleEmpty || isArtistEmpty) {
-          final extractedName = FileMatcher.getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-          final newTitle = isTitleEmpty ? extractedName.$1 : null;
-          final newArtists = isArtistEmpty ? [extractedName.$2] : null;
-          finalTrackExtended = finalTrackExtended.copyWith(
-            title: newTitle,
-            originalArtist: newArtists?.first,
-            artistsList: newArtists,
-            generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
-          );
-        }
-      } else {
-        // --- Adding dummy track with info extracted from filename.
-        final titleAndArtist = FileMatcher.getTitleAndArtistFromFilename(trackPath.getFilenameWOExt);
-        final title = titleAndArtist.$1;
-        final artist = titleAndArtist.$2;
-        finalTrackExtended = initialTrack.copyWith(
-          title: title,
-          originalArtist: artist,
-          artistsList: [artist],
-          generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
-        );
-      }
-
-      return finalTrackExtended;
+      final tags = info?.tags ?? _emptyTags;
+      final splitConfig = splittersConfigs ?? _createSplitConfig();
+      return initialTrack.copyWithTag(
+        tag: tags,
+        splittersConfigs: splitConfig,
+        generatePathHash: TagsExtractor.defaultUniqueArtworkHash,
+      );
     } catch (e) {
       return onError(e.toString());
     }
   }
+
+  static final _emptyTags = FTags.edit(path: '', artwork: FArtwork.dummy());
 
   Future<TrackExtended?> getTrackInfo({
     required String trackPath,
@@ -1194,10 +806,14 @@ class Indexer<T extends Track> {
       isNetwork: false,
     );
     final splitConfigs = _createSplitConfig();
+    final extracted = <(TrackExtended, FArtwork)>[];
     await for (final item in stream) {
-      final path = item.tags.path;
+      if (item.hasError) {
+        onProgress(false);
+        continue;
+      }
       final trext = await convertTagToTrack(
-        trackPath: path,
+        trackPath: item.tags.path,
         trackInfo: item,
         tryExtractingFromFilename: tryExtractingFromFilename,
         onMinDurTrigger: () => null,
@@ -1205,20 +821,16 @@ class Indexer<T extends Track> {
         onError: (_) => null,
         splittersConfigs: splitConfigs,
       );
-      if (item.hasError) {
-        onProgress(false);
-      } else {
-        final tr = Track.orVideo(path);
-        final oldTr = tr.toTrackExtOrNull();
-        allTracksMappedByYTID.remove(tr.youtubeID);
-        _currentFileNamesMap.remove(path.getFilename);
-        // _removeThisTrackFromAlbumGenreArtistEtc(tr);
-        if (trext != null) {
-          finalNewOldTracks[trext] = oldTr;
-          _addTrackToLists(trext, item.tags.artwork);
-        }
-        onProgress(true);
-      }
+      if (trext != null) extracted.add((trext, item.tags.artwork));
+      onProgress(true);
+    }
+    // -- after the last await, so a track listed meanwhile by a library refresh updates as an edit
+    for (final (trext, artwork) in extracted) {
+      final oldTr = allTracksMappedByPath[trext.path];
+      if (oldTr != null) allTracksMappedByYTID.remove(oldTr.youtubeID);
+      // _removeThisTrackFromAlbumGenreArtistEtc(tr);
+      finalNewOldTracks[trext] = oldTr;
+      _addTrackToLists(trext, artwork);
     }
 
     _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
@@ -1293,8 +905,9 @@ class Indexer<T extends Track> {
     );
     final trext = await extractFunction(model);
     if (trext != null) {
+      final addedMeanwhile = allTracksMappedByPath[trext.path];
       _addTrackToLists(trext, model.tags.artwork);
-      _addTheseTracksToAlbumGenreArtistEtc({trext: null});
+      _addTheseTracksToAlbumGenreArtistEtc({trext: addedMeanwhile});
       // _sortAndRefreshTracks();
       SearchSortController.inst.refreshPortsIfNecessary();
       return trext.asTrack() as T;
@@ -1309,16 +922,15 @@ class Indexer<T extends Track> {
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
 
     final orderLookup = <String, int>{};
-    int index = 0;
     void onPath(String path) {
+      if (orderLookup.containsKey(path)) return;
+      orderLookup[path] = orderLookup.length;
       final infoInLib = allTracksMappedByPath[path];
       if (infoInLib != null) {
         finalTracks.add(infoInLib.asTrack() as T);
       } else {
         tracksToExtract.add(path);
       }
-      orderLookup[path] = index;
-      index++;
     }
 
     final resolvedPaths = await tracksPathPre.mapConcurrent(
@@ -1356,15 +968,18 @@ class Indexer<T extends Track> {
         keyWrapper: keyWrapper,
         isNetwork: false,
       );
+      final extracted = <(TrackExtended, FArtwork)>[];
       await for (final item in stream) {
         final p = item.tags.path;
         final obj = Track.orVideo(p);
         finalTracks.add(obj as T);
         final trext = await extractFunction(item);
-        if (trext != null) {
-          _addTrackToLists(trext, item.tags.artwork);
-          finalNewOldTracks[trext] = null;
-        }
+        if (trext != null) extracted.add((trext, item.tags.artwork));
+      }
+      // -- after the last await, so a path added meanwhile by another call or the library load updates as an edit
+      for (final (trext, artwork) in extracted) {
+        finalNewOldTracks[trext] = allTracksMappedByPath[trext.path];
+        _addTrackToLists(trext, artwork);
       }
     }
 
@@ -1841,13 +1456,12 @@ class Indexer<T extends Track> {
     final moodsFinalLookup = <String, bool>{};
     final moodsFinal = <String>[];
     final moodsPre = listText.split(',');
-    for (var m in moodsPre) {
-      if (m.isNotEmpty && m != ' ') {
-        final cleaned = m.trimAll();
-        if (moodsFinalLookup[cleaned] == null) {
-          moodsFinalLookup[cleaned] = true;
-          moodsFinal.add(cleaned);
-        }
+    for (final m in moodsPre) {
+      final cleaned = m.trimAll();
+      if (cleaned.isEmpty) continue;
+      if (moodsFinalLookup[cleaned] == null) {
+        moodsFinalLookup[cleaned] = true;
+        moodsFinal.add(cleaned);
       }
     }
     return moodsFinal;
@@ -1868,14 +1482,14 @@ class Indexer<T extends Track> {
 
     final statsRaw = track.statsRaw;
 
-    // fallback rating should not access tags rating (effectiveRating), otherwise it would stick and reindexing won't solve it
+    // fallbacks should not access tags rating/moods/tags (effectiveRating etc), otherwise they would stick and reindexing won't solve it
     final rating = ratingString != null
         ? ratingString.isEmpty
               ? null
               : int.tryParse(ratingString) ?? statsRaw?.rating
         : statsRaw?.rating;
-    final tags = tagsString != null ? splitByCommaList(tagsString) : track.effectiveTags;
-    final moods = moodsString != null ? splitByCommaList(moodsString) : track.effectiveMoods;
+    final tags = tagsString != null ? splitByCommaList(tagsString) : statsRaw?.tags;
+    final moods = moodsString != null ? splitByCommaList(moodsString) : statsRaw?.moods;
     lastPositionInMs ??= track.lastPlayedPositionInMs ?? 0;
     bookmarks ??= statsRaw?.bookmarks;
     final newStats = TrackStats(
@@ -2270,20 +1884,23 @@ class Indexer<T extends Track> {
     required String? originalArtist,
     required ArtistsSplitConfig config,
   }) {
-    final allArtists = <String>{};
-
-    final artistsOrg = config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
-    allArtists.addAll(artistsOrg);
-
-    if (config.addFeatArtist) {
-      final List<String>? moreArtists = title?.split(_featArtistRegex);
-      if (moreArtists != null && moreArtists.length > 1) {
-        final extractedFeatArtists = moreArtists[1].split(_closingBracketRegex).first;
-        final artists = config.splitText(extractedFeatArtists, fallback: null);
-        allArtists.addAll(artists);
-      }
+    final artists = originalArtist == UnknownTags.ARTIST ? [UnknownTags.ARTIST] : config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
+    if (title != null && config.addFeatArtist) {
+      final featArtists = _extractFeatArtists(title);
+      if (featArtists != null) config.addSplitTextTo(artists, featArtists);
     }
-    return allArtists.toList();
+    return artists;
+  }
+
+  static String? _extractFeatArtists(String title) {
+    final match = _featArtistRegex.firstMatch(title);
+    if (match == null) return null;
+    final start = match.end;
+    final closingIndex = title.indexOf(_closingBracketRegex, start);
+    final nextFeatIndex = title.indexOf(_featArtistRegex, start);
+    final isNextFeatFirst = nextFeatIndex != -1 && (closingIndex == -1 || nextFeatIndex < closingIndex);
+    final end = isNextFeatFirst ? nextFeatIndex : closingIndex;
+    return end == -1 ? title.substring(start) : title.substring(start, end);
   }
 
   static String removeFeatArtistsFromTitle(String title) {
@@ -2304,6 +1921,7 @@ class Indexer<T extends Track> {
     String? originalComposer, {
     required ArtistsSplitConfig config,
   }) {
+    if (originalComposer == UnknownTags.COMPOSER) return [UnknownTags.COMPOSER];
     return config.splitText(
       originalComposer,
       fallback: UnknownTags.COMPOSER,
@@ -2324,6 +1942,7 @@ class Indexer<T extends Track> {
     String? originalGenre, {
     required GenresSplitConfig config,
   }) {
+    if (originalGenre == UnknownTags.GENRE) return [UnknownTags.GENRE];
     return config.splitText(
       originalGenre,
       fallback: UnknownTags.GENRE,
@@ -2354,6 +1973,7 @@ class Indexer<T extends Track> {
     String? originalText, {
     required SimpleSplitConfig config,
   }) {
+    if (originalText == UnknownTags.ALBUM) return [UnknownTags.ALBUM];
     return config.splitText(
       originalText,
       fallback: null,
@@ -2465,71 +2085,27 @@ class Indexer<T extends Track> {
 
     for (final e in allMusic) {
       final map = e.getMap;
-      final album = e.album;
-      final albums = album == null
-          ? <String>[]
-          : Indexer.splitAlbum(
-              album,
-              config: splitConfig.albumConfig,
-            );
       final albumArtist = map['album_artist'] as String?;
-      final artist = e.artist;
-      final artists = artist == null
-          ? <String>[]
-          : Indexer.splitArtist(
-              title: e.title,
-              originalArtist: artist,
-              config: splitConfig.artistsConfig,
-            );
-      final genre = e.genre;
-      final genres = genre == null
-          ? <String>[]
-          : Indexer.splitGenre(
-              genre,
-              config: splitConfig.genresConfig,
-            );
       final mood = map['mood'];
-      final moods = mood == null
-          ? <String>[]
-          : Indexer.splitGeneral(
-              mood,
-              config: splitConfig.generalConfig,
-            );
       final tag = map['tag'] ?? map['tags'];
-      final tags = tag == null
-          ? <String>[]
-          : Indexer.splitGeneral(
-              tag,
-              config: splitConfig.generalConfig,
-            );
       final bitrate = map['bitrate'] as int?;
       final disc = map['disc_number'] as int?;
       final discTo = map['disc_total'] as int?;
       final trackTo = map['track_total'] as int?;
       final yearString = map['year'] as String?;
       final path = e.data;
-      final trext = TrackExtended(
+      final trext = TrackExtended.derive(
+        splitConfig: splitConfig,
+        mbAlbumId: '',
+        mbAlbumArtistId: '',
         title: e.title,
         originalArtist: e.artist ?? UnknownTags.ARTIST,
-        artistsList: artists,
-        originalAlbum: album ?? UnknownTags.ALBUM,
-        albumsList: albums,
+        originalAlbum: e.album ?? UnknownTags.ALBUM,
         albumArtist: albumArtist ?? UnknownTags.ALBUMARTIST,
-        albumArtistsList: Indexer.splitAlbumArtist(
-          albumArtist,
-          config: splitConfig.artistsConfig,
-        ),
         originalGenre: e.genre ?? UnknownTags.GENRE,
-        genresList: genres,
         originalStyle: UnknownTags.STYLE,
-        stylesList: const [],
         originalMood: mood ?? '',
-        moodList: moods,
         composer: e.composer ?? '',
-        composersList: Indexer.splitComposer(
-          e.composer,
-          config: splitConfig.artistsConfig,
-        ),
         trackNo: e.track ?? 0,
         trackTo: trackTo ?? 0,
         durationMS: e.duration ?? 0, // `e.duration` => milliseconds
@@ -2552,7 +2128,6 @@ class Indexer<T extends Track> {
         discNo: disc ?? 0,
         discTo: discTo ?? 0,
         language: '',
-        languagesList: const [],
         lyrics: '',
         label: '',
         releaseType: '',
@@ -2560,17 +2135,9 @@ class Indexer<T extends Track> {
         musicalKey: '',
         rating: 0.0,
         originalTags: tag,
-        tagsList: tags,
         gainData: null,
         sortInfo: null,
         extraTags: null,
-        albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
-          albums: albums,
-          albumArtist: albumArtist ?? '',
-          year: yearString ?? '',
-          mbAlbumId: '',
-          mbAlbumArtistId: '',
-        ),
         isVideo: e.data.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
         server: null,
@@ -2756,16 +2323,18 @@ class _IndexerIsolateExecuter {
     try {
       tracksDBManager!.loadEverythingKeyed(
         (path, item) {
-          final trExt = TrackExtended.fromJson(
-            path,
-            item,
-            splitConfig: splitconfig,
-          );
-          final track = trExt.asTrack();
-          allTracksMappedByPath[track.path] = trExt;
-          tracksInfoList.add(track);
-          if (track.isNetwork) networkTracksCount++;
-          allTracksMappedByYTID.addForce(trExt.youtubeID, track);
+          try {
+            final trExt = TrackExtended.fromJson(
+              path,
+              item,
+              splitConfig: splitconfig,
+            );
+            final track = trExt.asTrack();
+            allTracksMappedByPath[track.path] = trExt;
+            tracksInfoList.add(track);
+            if (track.isNetwork) networkTracksCount++;
+            allTracksMappedByYTID.addForce(trExt.youtubeID, track);
+          } catch (_) {}
         },
       );
 
