@@ -140,9 +140,8 @@ class NamidaFFMPEG {
     for (final e in tagsMap.entries.followedBy(oldTagsToApply.entries)) {
       final val = e.value;
       if (val != null) {
-        final valueCleaned = val.replaceAll('"', r'\"');
         params.add('-metadata');
-        params.add('${e.key}=$valueCleaned');
+        params.add('${e.key}=$val');
       }
     }
 

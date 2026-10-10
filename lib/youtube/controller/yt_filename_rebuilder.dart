@@ -8,6 +8,7 @@ class _YtFilenameRebuilder {
   static final _nightcoreRegex = RegExp('Nightcore\\W*', caseSensitive: false);
   static final _artistLineRegex = RegExp('artist:(.*)', caseSensitive: false);
   static final _titleLineRegex = RegExp('title:(.*)', caseSensitive: false);
+  static final _songInfoLineRegex = RegExp('^\\W*(song|info|details)(.*)', caseSensitive: false);
 
   bool get fallbackExtractInfoFromDescription => settings.youtube.fallbackExtractInfoDescription.value;
 
@@ -48,7 +49,7 @@ class _YtFilenameRebuilder {
           } on _NonMatched catch (_) {
             // confusing param, ex: `%(blabla)s`
             // ain't changing it to 'NA' or etc.
-            return match.input;
+            return match.group(0)!;
           }
         }
 
@@ -226,7 +227,8 @@ class _YtFilenameRebuilder {
       final description = _getDescription(streamInfo, pageResult, videoItem);
       if (description != null) {
         final title = info?.$2?.splitFirst('(').splitFirst('[');
-        final regex = title == null ? RegExp('^\\W*(song|info|details)(.*)', caseSensitive: false) : RegExp('^\\W*(song|info|details)?(.*$title.*)', caseSensitive: false);
+        final titlePattern = title == null ? null : RegExp.escape(title);
+        final regex = titlePattern == null ? _songInfoLineRegex : RegExp('^\\W*(song|info|details)?(.*$titlePattern.*)', caseSensitive: false);
         for (String line in description.split('\n')) {
           line = line.replaceFirst(_nightcoreRegex, '');
           final m = regex.firstMatch(line);

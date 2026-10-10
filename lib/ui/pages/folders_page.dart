@@ -369,7 +369,6 @@ class _AllFoldersSliver extends StatelessWidget {
                     const isTracksRecursive = false;
                     final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
                     if (tracks.isEmpty) return const SizedBox();
-                    final dirInsideCount = foldersController.currentNodeFoldersCount(folder) ?? 0;
                     return FolderTile(
                       folder: folder,
                       highlightedFolder: highlightedFolder,
@@ -377,7 +376,7 @@ class _AllFoldersSliver extends StatelessWidget {
                       title: folder.folderNameAvoidingConflicts(),
                       tracks: tracks,
                       isTracksRecursive: isTracksRecursive,
-                      dirInsideCount: dirInsideCount,
+                      dirInsideCount: 0,
                       isHome: true,
                     );
                   },

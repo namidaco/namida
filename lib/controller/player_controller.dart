@@ -173,7 +173,6 @@ class Player {
   RxBaseCore<SleepTimerConfig> get sleepTimerConfig => _audioHandler.sleepTimerConfig;
 
   bool get canJumpToNext => _audioHandler.isShuffleEnabled || !_audioHandler.isLastItem || settings.player.infiniyQueueOnNextPrevious.value;
-  bool get canJumpToPrevious => currentIndex.value != 0 || settings.player.infiniyQueueOnNextPrevious.value || _audioHandler.shufflePeekPreviousIndex() != null;
 
   /// wraps around on both ends.
   int refineIndex(int index) {
@@ -220,7 +219,7 @@ class Player {
 
   bool toggleStopAfterCurrent() {
     final shouldStop = !isStoppingAfterCurrent;
-    updateSleepTimerValues(enableSleepAfterItems: shouldStop, sleepAfterItems: shouldStop ? 1 : 0);
+    updateSleepTimerValues(enableSleepAfterItems: shouldStop, sleepAfterItems: shouldStop ? 1 : 0, isAnchoredToItem: shouldStop);
     return shouldStop;
   }
 
@@ -497,12 +496,14 @@ class Player {
     bool? enableSleepAfterMins,
     int? sleepAfterMin,
     int? sleepAfterItems,
+    bool? isAnchoredToItem,
   }) {
     _audioHandler.updateSleepTimerValues(
       enableSleepAfterItems: enableSleepAfterItems,
       enableSleepAfterMins: enableSleepAfterMins,
       sleepAfterMin: sleepAfterMin,
       sleepAfterItems: sleepAfterItems,
+      isAnchoredToItem: isAnchoredToItem,
     );
   }
 
@@ -904,7 +905,7 @@ class Player {
     await _audioHandler.userSkipToPrevious(jumpChapters: jumpChapters);
   }
 
-  /// previous replaying the item or skips jumping between chapters, the ui shouldn't animate towards another item.
+  /// previous replaying the item, skips jumping between chapters or a single item queue, the ui shouldn't animate towards another item.
   bool skipWillStayInItem({required bool forward, required bool jumpChapters}) => _audioHandler.skipWillStayInItem(forward: forward, jumpChapters: jumpChapters);
 
   Future<void> skipToQueueItem(int index) async {

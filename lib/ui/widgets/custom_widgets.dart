@@ -8224,24 +8224,8 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
         },
         onHotKeyRecorded: (data) {
           if (data != null) {
-            // -- its not likely for already registered system hotkeys to be caught again here, but anyways
-            for (final userKey in settings.shortcuts.shortcuts.value.values) {
-              final keyAlrExists = userKey != null && data.isSimilarTo(userKey);
-              if (keyAlrExists) {
-                return '(${userKey.buildKeyLabel()})';
-              }
-            }
-
-            final defaultKeys = ShortcutsController.instance?.bindings.keys;
-            if (defaultKeys != null) {
-              for (final defaultKey in defaultKeys) {
-                final keyData = ShortcutKeyData.fromShortcutKeyActivator(defaultKey);
-                final keyAlrExists = data.isSimilarTo(keyData);
-                if (keyAlrExists) {
-                  return '(${keyData.buildKeyLabel()}) => ${defaultKey.title}';
-                }
-              }
-            }
+            final conflictTitle = _findConflictingShortcutTitle(data, action);
+            if (conflictTitle != null) return '${lang.alreadyExists}: $conflictTitle';
           }
 
           ShortcutsController.instance?.setUserShortcut(action: action, data: data);
@@ -8249,6 +8233,26 @@ class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
         },
       ),
     );
+  }
+
+  String? _findConflictingShortcutTitle(ShortcutKeyData data, HotkeyAction action) {
+    final defaultKeys = widget.manager.bindings.keys;
+
+    // -- its not likely for already registered system hotkeys to be caught again here, but anyways
+    for (final MapEntry(key: userAction, value: userKey) in settings.shortcuts.shortcuts.value.entries) {
+      if (userAction == action || userKey == null) continue;
+      if (data.isSimilarTo(userKey)) {
+        final userActionDefaultKey = defaultKeys.firstWhereEff((k) => k.action == userAction);
+        return userActionDefaultKey?.title() ?? userAction.name;
+      }
+    }
+
+    for (final defaultKey in defaultKeys) {
+      final defaultKeyData = ShortcutKeyData.fromShortcutKeyActivator(defaultKey);
+      if (data.isSimilarTo(defaultKeyData)) return defaultKey.title();
+    }
+
+    return null;
   }
 
   @override

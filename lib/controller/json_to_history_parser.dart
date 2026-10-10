@@ -141,7 +141,7 @@ class JsonToHistoryParser {
                     ]
                     .addSeparators(
                       separator: const SizedBox(
-                        height: 14.0,
+                        height: 18.0,
                       ),
                     )
                     .toFixedList(),
@@ -2183,6 +2183,9 @@ class _ImportDoneCheckMark extends StatelessWidget {
 }
 
 class _ImportStepTile extends StatelessWidget {
+  static const _kCheckMarkSize = 16.0;
+  static const _kCheckMarkGap = 12.0;
+
   final _HistoryImportStep step;
   final String title;
   final Widget? trailing;
@@ -2208,47 +2211,34 @@ class _ImportStepTile extends StatelessWidget {
         return AnimatedOpacity(
           duration: const Duration(milliseconds: 250),
           opacity: isReached ? 1.0 : 0.4,
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: SizedBox.square(
-                  dimension: 16.0,
-                  child: isActive
-                      ? const CircularProgressIndicator(
-                          strokeWidth: 2.0,
-                        )
-                      : Icon(
-                          isDone ? Broken.tick_circle : Broken.record,
-                          size: 16.0,
-                          color: isDone ? theme.colorScheme.secondary : null,
-                        ),
-                ),
-              ),
-              const SizedBox(
-                width: 12.0,
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: theme.textTheme.displayMedium,
-                          ),
-                        ),
-                        ?trailing,
-                      ],
+              Row(
+                children: [
+                  NamidaCheckMark(
+                    size: _kCheckMarkSize,
+                    active: isDone,
+                    loading: isActive,
+                  ),
+                  const SizedBox(
+                    width: _kCheckMarkGap,
+                  ),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.displayMedium,
                     ),
-                    if (isReached) ?details,
-                  ],
-                ),
+                  ),
+                  ?trailing,
+                ],
               ),
+              if (isReached && details != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: _kCheckMarkSize + _kCheckMarkGap),
+                  child: details,
+                ),
             ],
           ),
         );

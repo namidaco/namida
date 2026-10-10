@@ -102,6 +102,16 @@ abstract class LrcSearchUtils {
   static const kIgnoreMarker = 'IGNORE';
   static bool isIgnoreMarker(String lyrics) => lyrics.startsWith(kIgnoreMarker);
 
+  bool isInstrumental();
+
+  static final _instrumentalTitleRegex = RegExp(
+    r'[(\[【「][^)\]】」]*\b(?:instrumental|off[ -]?vocal|inst)\b|(?:^|\s)[-–—~～]\s*(?:instrumental|off[ -]?vocal|inst\.?)(?:\s+ver(?:sion|\.)?)?\s*(?:[-–—~～]|$)',
+    caseSensitive: false,
+  );
+
+  /// `Song (Instrumental)`, `Song [Off Vocal Ver.]`, `Song -Inst.-`, `Song - Instrumental`, but not `Artist - Instrumental Dreams`.
+  static bool isInstrumentalTitle(String title) => _instrumentalTitleRegex.hasMatch(title);
+
   /// the cached lrc is looked up before the cached txt, so the marker also shadows a txt saved later.
   Future<void> ignoreLyrics() async {
     await cachedTxtFile.tryDeleting();

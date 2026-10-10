@@ -856,6 +856,14 @@ extension TrackExtUtils on TrackExtended {
   bool get isPhysical => !isNetwork;
   bool get isNetwork => path.startsWith('http');
 
+  String displayArtist() {
+    final separator = settings.trackArtistsDisplaySeparator.value;
+    if (separator.isEmpty) return originalArtist;
+    final artists = artistsList;
+    if (artists.length == 1) return artists[0];
+    return artists.join(separator);
+  }
+
   Folder get folder => isVideo ? VideoFolder.explicit(folderPath) : Folder.explicit(folderPath);
 
   String get filename => path.getFilename;
@@ -985,6 +993,15 @@ extension TrackExtUtils on TrackExtended {
       trExt.bitrate,
       trExt.sampleRate,
     );
+  }
+
+  String audioQualityText() {
+    final isHiRes = bits >= 24;
+    final isLossless = this.isLossless == true;
+    if (isHiRes && isLossless) return 'Hi-Res Lossless';
+    if (isHiRes) return 'Hi-Res';
+    if (isLossless) return 'Lossless';
+    return '';
   }
 
   String get audioInfoFormattedAlt {
@@ -1287,6 +1304,7 @@ extension TrackUtils on Track {
 
   String get title => toTrackExt().title;
   String get originalArtist => toTrackExt().originalArtist;
+  String displayArtist() => toTrackExt().displayArtist();
   List<String> get artistsList => toTrackExt().artistsList;
   String get originalAlbum => toTrackExt().originalAlbum;
   List<String> get albumsList => toTrackExt().albumsList;

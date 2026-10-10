@@ -491,21 +491,25 @@ class StatsPlaylistMenu extends StatelessWidget {
         NamidaPopupItem(
           icon: Broken.music_library_2,
           title: lang.addAsANewPlaylist,
+          subtitle: playlistName,
+          oneLinedSub: true,
           onTap: _saveAsPlaylist,
         ),
         NamidaPopupItem(
-          icon: Broken.more_2,
+          icon: Broken.more_square,
+          iconQuarterTurns: 1,
           title: lang.more,
           hasDividerAbove: true,
+          trailing: const Icon(Broken.arrow_right_3, size: 18.0),
           onTap: () => _openFullMenu(context),
         ),
       ],
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: verticalPadding),
-        child: MoreIcon(
-          padding: 0.0,
-          iconSize: iconSize,
-          iconColor: context.theme.colorScheme.secondary,
+        child: Icon(
+          Broken.more_2,
+          size: iconSize,
+          color: context.theme.colorScheme.secondary,
         ),
       ),
     );

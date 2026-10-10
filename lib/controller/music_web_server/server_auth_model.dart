@@ -40,7 +40,7 @@ sealed class ServerAuthModel {
 
   static String _hexEncode(String input) {
     final buffer = StringBuffer();
-    for (final c in input.codeUnits) {
+    for (final c in utf8.encode(input)) {
       buffer.write(c.toRadixString(16).padLeft(2, '0'));
     }
     return buffer.toString();

@@ -35,7 +35,7 @@ class VersionWrapper {
     if (!prettyVersionRaw.startsWith('v')) prettyVersionRaw = "v${prettyVersionRaw.splitFirst('+')}";
     if (name.startsWith('v')) name = name.substring(1);
     buildNumber ??= parts.last;
-    final prettyVersion = prettyVersionRaw.endsWith(betaSuffix) ? prettyVersionRaw : '$prettyVersionRaw$betaSuffix';
+    final prettyVersion = isBeta ? '$prettyVersionRaw$betaSuffix' : prettyVersionRaw;
     return VersionWrapper._(
       name: name,
       prettyVersionRaw: prettyVersionRaw,
@@ -63,6 +63,8 @@ class VersionWrapper {
     return null;
   }
 
+  static const _kPatchIndex = 2;
+
   bool? isAfter(VersionWrapper other) {
     final buildThis = buildNumber;
     final buildOther = other.buildNumber;
@@ -72,9 +74,15 @@ class VersionWrapper {
         final vPartsOther = other.name.split('.');
         final length = vPartsThis.length.withMaximum(vPartsOther.length);
         for (int i = 0; i < length; i++) {
-          // -- pad right to ensure 5.1.7 > 5.1.68 (not following rules ik heh)
-          final v = int.parse((vPartsThis[i].padRight(2, '0')));
-          final vOther = int.parse(vPartsOther[i].padRight(2, '0'));
+          var partThis = vPartsThis[i];
+          var partOther = vPartsOther[i];
+          if (i == _kPatchIndex) {
+            // -- pad right to ensure 5.1.7 > 5.1.68 (not following rules ik heh)
+            partThis = partThis.padRight(2, '0');
+            partOther = partOther.padRight(2, '0');
+          }
+          final v = int.parse(partThis);
+          final vOther = int.parse(partOther);
           if (v > vOther) {
             return true;
           } else if (v < vOther) {

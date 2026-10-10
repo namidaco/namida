@@ -132,11 +132,14 @@ class YoutubeItemDownloadConfig {
       streamInfoItem = StreamInfoItem.fromMap(map['streamInfoItem']);
     } catch (_) {}
 
+    final fileDateMS = map['fileDate'] as int?;
+    final fileDate = fileDateMS == null || fileDateMS == 0 ? null : DateTime.fromMillisecondsSinceEpoch(fileDateMS); // -- 0: unknown dates used to be saved as 1970
+
     return YoutubeItemDownloadConfig(
       id: DownloadTaskVideoId(videoId: map['id'] ?? ''),
       filename: DownloadTaskFilename.fromMap(map['filename']),
       groupName: DownloadTaskGroupName(groupName: map['groupName'] ?? ''),
-      fileDate: DateTime.fromMillisecondsSinceEpoch(map['fileDate'] ?? 0),
+      fileDate: fileDate,
       ffmpegTags: (map['ffmpegTags'] as Map<String, dynamic>?)?.cast() ?? {},
       videoStream: vids,
       audioStream: auds,

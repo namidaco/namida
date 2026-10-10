@@ -68,13 +68,13 @@ abstract class TagsExtractor {
     required bool displayFFmpegFallbackWarning,
   });
 
-  static Future<String?> _canWriteDirectlyOrError(String path) async {
+  static Future<bool> _canOpen(String path, FileMode mode) async {
     try {
-      final raf = await File(path).open(mode: FileMode.append);
+      final raf = await File(path).open(mode: mode);
       await raf.close();
-      return null;
-    } catch (e) {
-      return e.toString();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -89,7 +89,7 @@ abstract class TagsExtractor {
     error = await operation(path);
     if (error == null) return null;
 
-    if (!Platform.isAndroid) return 'Unknown Error'; // -- below is for saf, which is android only
+    if (!Platform.isAndroid) return error; // -- below is for saf, which is android only
 
     // -- but even if for heavenly reasons we bypassed permission, let's just give it a try with saf
     // -- (uncomment to enfore permission)
@@ -98,9 +98,11 @@ abstract class TagsExtractor {
     final originalFile = File(path);
     if (!await originalFile.exists()) return 'File does not exist';
 
-    // -- write failed for a reason other than permission, saf won't help
-    error = await _canWriteDirectlyOrError(path);
-    if (error != null) return error;
+    // -- saf only helps a file that can be read but not written, ex: sdcard on android <= 10
+    final canWrite = await _canOpen(path, FileMode.append);
+    if (canWrite) return error;
+    final canRead = await _canOpen(path, FileMode.read);
+    if (!canRead) return error;
 
     final storage = NamidaStorage.inst;
     bool hasAccess = await storage.safHasAccess(path);

@@ -166,14 +166,7 @@ class _JellyfinServer extends MusicWebServer {
     return false;
   }
 
-  Iterable<String> _splitAll(List<String>? original, List<String> Function(String part) splitter) sync* {
-    for (final item in original ?? <String>[]) {
-      final parts = splitter(item);
-      yield* parts;
-    }
-  }
-
-  TrackExtended _baseItemDtoToTrackExtended(
+  static TrackExtended _baseItemDtoToTrackExtended(
     _JellyfinItem item, {
     required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
@@ -537,6 +530,11 @@ class _JellyfinClientWrapper {
     } on DioException catch (_) {
       return null;
     }
+  }
+
+  Future<void> reportPlayback(String endpoint, Map<String, Object> info) async {
+    if (!await ensureAuthenticated()) return;
+    await _api.dio.post<void>(endpoint, data: info);
   }
 
   Future<Set<ServerShareWrapper>> getLibraries() async {

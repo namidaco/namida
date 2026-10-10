@@ -24,6 +24,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -422,8 +423,10 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     final sub = membership.userSupabaseSub.value ?? await NamicoSubscriptionManager.supabase.getUserSubInCache();
     final id = sub?.uuid;
     final email = sub?.email;
-    if (id != null && email != null) return {'kind': 'supabase', 'id': id, 'email': email};
-    return null;
+    if (id == null || email == null) return null;
+    final deviceId = await NamidaDeviceInfo.fetchDeviceId();
+    if (deviceId == null) return null;
+    return {'kind': 'supabase', 'id': id, 'email': email, 'deviceId': deviceId, 'os': Platform.operatingSystem};
   }
 
   static Future<Map<String, dynamic>?> _getJson(Uri uri) async {

@@ -63,7 +63,7 @@ class _SMTCManagerLinux extends NamidaSMTCManager {
       trackTitle: mediaItem.title,
       trackArtist: [?mediaItem.artist],
       albumName: mediaItem.album,
-      albumArtist: null,
+      albumArtist: [?mediaItem.albumArtist],
       trackLength: mediaItem.duration,
       artUrl: mediaItem.artUri?.toString(),
     );

@@ -60,6 +60,13 @@ class LrcSearchUtilsYoutubeID extends LrcSearchUtils {
   }
 
   @override
+  bool isInstrumental() {
+    final videoTitle = this.videoTitle;
+    if (videoTitle == null) return false;
+    return LrcSearchUtils.isInstrumentalTitle(videoTitle);
+  }
+
+  @override
   List<String> searchQueriesGoogle() {
     if (videoTitle == null) return [];
     return <String>[

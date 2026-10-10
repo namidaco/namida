@@ -1329,17 +1329,17 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                   rx: settings.artworkGestureDoubleTapLRC,
                                   builder: (context, artworkGestureDoubleTapLRC) {
                                     if (artworkGestureDoubleTapLRC) {
-                                      return ObxO(
-                                        rx: Lyrics.inst.currentLyricsLRC,
-                                        builder: (context, currentLyricsLRC) {
+                                      return Obx(
+                                        (context) {
                                           // -- only when lrc view is not visible, to prevent other gestures delaying.
+                                          final isLRCViewVisible = settings.enableLyrics.valueR && Lyrics.inst.currentLyricsLRC.valueR != null;
                                           return DoubleTapDetector(
-                                            onDoubleTap: currentLyricsLRC == null
-                                                ? () {
+                                            onDoubleTap: isLRCViewVisible
+                                                ? null
+                                                : () {
                                                     settings.enableLyrics.save(!settings.enableLyrics.value);
                                                     Lyrics.inst.updateLyrics(currentItem);
-                                                  }
-                                                : null,
+                                                  },
                                             child: currentImage,
                                           );
                                         },

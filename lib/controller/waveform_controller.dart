@@ -5,7 +5,6 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/spectrum_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/controller/waveform_extractor.dart';
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida_waveform/namida_waveform.dart';
@@ -114,7 +113,6 @@ class WaveformController {
   }
 
   static const _positionDividor = 50;
-  static const _positionDividorWithOffset = isKuru ? _positionDividor - 3.58 : 50;
 
   double getCurrentAnimatingScale(int positionInMs) {
     return _getCurrentAnimatingScaleGeneral(positionInMs, settings.animatingThumbnailIntensity.value);
@@ -129,14 +127,14 @@ class WaveformController {
   }
 
   double getCurrentLevel(double positionInMs) {
-    final posInMap = positionInMs ~/ _positionDividorWithOffset;
+    final posInMap = positionInMs ~/ _positionDividor;
     if (posInMap < 0 || posInMap > _currentScaleMaxIndex) return 0.0;
     return (_currentScaleLookup[posInMap] / 64.0).clampDouble(0.0, 1.0);
   }
 
   double _getCurrentAnimatingScaleGeneral(int positionInMs, int intensity) {
     if (intensity > 0) {
-      final posInMap = positionInMs ~/ _positionDividorWithOffset;
+      final posInMap = positionInMs ~/ _positionDividor;
       final dynamicScale = posInMap < 0 || posInMap > _currentScaleMaxIndex ? _defaultMinimumScale : _currentScaleLookup[posInMap];
       final finalScale = dynamicScale * intensity * 0.00005;
       if (finalScale.isNaN || finalScale > 0.35) return _defaultMinimumScale;

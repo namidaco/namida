@@ -264,13 +264,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             final trExt = (currentItem as Selectable).track.toTrackExt();
             var text = " • ${trExt.audioInfoFormattedCompact}";
             final bits = trExt.bits;
-            final isLossless = trExt.isLossless;
-
-            final bitsTextParts = [
-              if (bits >= 24) 'Hi-Res',
-              if (isLossless == true) 'Lossless',
-            ];
-            final bitsText = bitsTextParts.join(' ');
+            final bitsText = trExt.audioQualityText();
             final isBitPerfect = AudioOutputController.inst.isBitPerfectActiveR();
             final badgeIcon = isBitPerfect ? Broken.flash : Broken.wind_2;
 
@@ -375,10 +369,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                         ),
                                         const SizedBox(width: 2.0),
                                         Text(
-                                          [
-                                            '$bits-bit',
-                                            ...bitsTextParts,
-                                          ].join(' '),
+                                          bitsText.isEmpty ? '$bits-bit' : '$bits-bit $bitsText',
                                           style: TextStyle(
                                             color: theme.colorScheme.primary,
                                             fontSize: 11.0,

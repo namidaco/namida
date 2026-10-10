@@ -4,15 +4,22 @@ class VideosPriorityManager {
   VideosPriorityManager();
 
   static const _priorityKey = 'priority';
+  static const _dbCustomTypes = [
+    DBColumnType(
+      type: DBColumnTypeEnum.int,
+      name: _priorityKey,
+      nullable: true,
+    ),
+  ];
   static const _dbConfig = DBConfig(
     createIfNotExist: true,
-    customTypes: [
-      DBColumnType(
-        type: DBColumnTypeEnum.int,
-        name: _priorityKey,
-        nullable: true,
-      ),
-    ],
+    customTypes: _dbCustomTypes,
+  );
+  // -- `copyWith` can't set null
+  static const _dbConfigNoAutoDispose = DBConfig(
+    createIfNotExist: true,
+    customTypes: _dbCustomTypes,
+    autoDisposeTimerDuration: null,
   );
 
   static DBWrapperAsync openDb(DbWrapperFileInfo fileInfo) {
@@ -32,7 +39,7 @@ class VideosPriorityManager {
     final values = CacheVideoPriority.values;
     final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: fileInfo,
-      config: _dbConfig.copyWith(autoDisposeTimerDuration: null),
+      config: _dbConfigNoAutoDispose,
     );
 
     var videosPriorityMap = <String, CacheVideoPriority>{};

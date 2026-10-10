@@ -49,7 +49,8 @@ class VersionController {
     _allReleaseslastFetchedTime = DateTime.now();
     final releases = await _fetchReleasesAfterOnly(currentVersion: current);
     _releasesAfterCurrent.value = releases;
-    if (releases != null && releases.first.version != _latestVersion.value) {
+    final newestRelease = releases?.firstOrNull;
+    if (newestRelease != null && newestRelease.version != _latestVersion.value) {
       _fetchLatestVersion();
     }
     return releases;
@@ -139,12 +140,9 @@ class _IsolateExecuter {
         allReleasesAfterCurrent.addAll(releasesAfterCurrent);
 
         page++;
-      } on RhttpStatusCodeException catch (e) {
-        if (e.statusCode == 422) {
-          // -- exceeded pages
-        } else {
-          return []; // error happened, all above are useless
-        }
+      } catch (e) {
+        if (e is RhttpStatusCodeException && e.statusCode == 422) break; // -- exceeded pages
+        return []; // error happened, all above are useless
       }
     }
     return allReleasesAfterCurrent;

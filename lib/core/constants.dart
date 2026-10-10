@@ -13,11 +13,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:namico_subscription_manager/class/supabase_sub.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart' as pp;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:youtipie/class/youtipie_feed/user_channel_info.dart';
+import 'package:youtipie/youtipie.dart' show YoutiPie;
 
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/file_parts.dart';
@@ -25,6 +28,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/clipboard_controller.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -36,6 +40,8 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/youtube/controller/youtube_account_controller.dart';
+import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 
 final isDesktop = Platform.isWindows || Platform.isLinux || Platform.isMacOS;
@@ -788,6 +794,16 @@ class AppPaths {
         existingPaths.add(permissionsInfoFile);
       } catch (_) {}
     }
+    final membershipInfoFile = FileParts.join(tmpDirPath, 'membership.txt');
+    try {
+      await membershipInfoFile.writeAsString(_getMembershipInfo());
+      existingPaths.add(membershipInfoFile);
+    } catch (_) {}
+    final youtubeInfoFile = FileParts.join(tmpDirPath, 'youtube.txt');
+    try {
+      await youtubeInfoFile.writeAsString(_getYoutubeInfo());
+      existingPaths.add(youtubeInfoFile);
+    } catch (_) {}
     final redactor = _LogsRedactor();
     for (final p in [
       AppPaths.LOGS,
@@ -887,6 +903,98 @@ class AppPaths {
     };
     return encoder.convert(infoMap);
   }
+
+  static String _getMembershipInfo() {
+    const encoder = JsonEncoder.withIndent("  ");
+
+    final membership = YoutubeAccountController.membership;
+    final patreon = membership.userPatreonTier.value;
+    final coupon = membership.userSupabaseSub.value;
+
+    Map<String, dynamic> couponInfo(SupabaseSub sub) {
+      final availableTill = sub.availableTill;
+      final isPermanent = availableTill != null && availableTill.isAfter(DateTime(9000));
+      final availableTillText = isPermanent ? null : _formatLogsDate(availableTill);
+      final claimedAt = availableTill == null || isPermanent ? null : availableTill.subtract(Duration(days: sub.days));
+      final remaining = availableTill?.difference(DateTime.now());
+      final remainingText = switch (remaining) {
+        null => null,
+        Duration() when isPermanent => 'permanent',
+        Duration(isNegative: true) => 'expired',
+        Duration(:final inDays, :final inHours) => '${inDays}d ${inHours % Duration.hoursPerDay}h',
+      };
+      return {
+        'type': sub.toMembershipType().name,
+        'claimed': sub.claimed,
+        'claimed_at': _formatLogsDate(claimedAt),
+        'days': sub.days,
+        'available_till': availableTillText,
+        'remaining': remainingText,
+        'last_checked': _formatLogsDate(sub.lastChecked),
+      };
+    }
+
+    final infoMap = {
+      'membership': membership.userMembershipTypeGlobal.value?.name,
+      if (patreon != null)
+        'patreon': {
+          'type': patreon.toMembershipType().name,
+          'since': _formatLogsDate(patreon.createdAt),
+          'declined_since': _formatLogsDate(patreon.declinedSince),
+          'last_checked': _formatLogsDate(patreon.lastChecked),
+        },
+      if (coupon != null) 'coupon': couponInfo(coupon),
+    };
+    return encoder.convert(infoMap);
+  }
+
+  static String _getYoutubeInfo() {
+    const encoder = JsonEncoder.withIndent("  ");
+    final cipher = YoutiPie.cipher;
+    final potoken = YoutiPie.potoken;
+    final cookies = YoutiPie.cookies;
+    final accounts = YoutiPie.signedInAccounts.value;
+    final activeAccount = YoutiPie.activeAccountDetails.value;
+    final expiredAccountsCount = accounts.where(cookies.isSessionExpired).length;
+
+    Map<String, dynamic> accountInfo(UserChannelInfo account) {
+      final identity = account.identity;
+      return {
+        'is_brand': !identity.isOwner,
+        'auth_user': identity.authUser,
+        'needs_migration': identity.needsMigration,
+        'session_expired': cookies.isSessionExpired(account),
+      };
+    }
+
+    final infoMap = {
+      'did_init': YoutubeInfoController.didInit,
+      'has_connection': ConnectivityController.inst.hasConnection,
+      'language': YoutiPie.languageCode,
+      'country': YoutiPie.countryCode,
+      'js_player': {
+        'version': cipher.jsPlayerVersion,
+        'signature_timestamp': cipher.signatureTimestamp,
+        'is_prepared': cipher.isPrepared,
+        'failed_extraction': cipher.didFailedToExtractJsCode,
+      },
+      'po_token': {
+        'has_token': potoken.hasPoToken,
+        'last_refreshed': _formatLogsDate(potoken.lastRefreshed),
+      },
+      'accounts': {
+        'signed_in': accounts.length,
+        'expired': expiredAccountsCount,
+        'can_authorize_requests': cookies.canAuthorizeRequests,
+        if (activeAccount != null) 'active': accountInfo(activeAccount),
+      },
+    };
+    return encoder.convert(infoMap);
+  }
+
+  static final _logsDateFormat = DateFormat('yyyy-MM-dd HH:mm');
+
+  static String? _formatLogsDate(DateTime? date) => date == null ? null : _logsDateFormat.format(date);
 
   static Future<String> _getDeviceInfo() async {
     final device = await NamidaDeviceInfo.deviceInfoCompleter.future;

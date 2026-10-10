@@ -69,6 +69,17 @@ class NamidaPopupWrapper extends StatelessWidget {
     return childrenDefault.map(
       (e) {
         final titleStyle = textTheme.displayMedium?.copyWith(color: e.enabled ? null : textTheme.displayMedium?.color?.withOpacityExt(0.4));
+        final plainIcon = Icon(
+          e.icon,
+          size: 20.0,
+          shadows: [
+            Shadow(
+              blurRadius: 2.0,
+              color: Color(0x10202020),
+            ),
+          ],
+          color: theme.iconTheme.color?.withOpacityExt(0.8),
+        );
         Widget popupItem = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6.0),
           child: Row(
@@ -82,16 +93,11 @@ class NamidaPopupWrapper extends StatelessWidget {
                       secondaryIconColor: theme.iconTheme.color?.withOpacityExt(0.8),
                       secondaryIconSize: 11.0,
                     )
-                  : Icon(
-                      e.icon,
-                      size: 20.0,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 2.0,
-                          color: Color(0x10202020),
-                        ),
-                      ],
-                      color: theme.iconTheme.color?.withOpacityExt(0.8),
+                  : e.iconQuarterTurns == 0
+                  ? plainIcon
+                  : RotatedBox(
+                      quarterTurns: e.iconQuarterTurns,
+                      child: plainIcon,
                     ),
               const SizedBox(width: 6.0),
               Expanded(
@@ -245,6 +251,7 @@ class NamidaPopupWrapper extends StatelessWidget {
 
 class NamidaPopupItem {
   final IconData icon;
+  final int iconQuarterTurns;
   final IconData? secondaryIcon;
   final String title;
   final Widget Function(TextStyle? style)? titleBuilder;
@@ -259,6 +266,7 @@ class NamidaPopupItem {
 
   const NamidaPopupItem({
     required this.icon,
+    this.iconQuarterTurns = 0,
     this.secondaryIcon,
     required this.title,
     this.titleBuilder,

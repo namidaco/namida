@@ -244,14 +244,51 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     if (_willPlayWhenReady) onPlayRaw();
   }
 
+  static const _kTotalListenTimeTempSuffix = '.tmp';
+  bool _canWriteTotalListenTime = true;
+
   @override
   Future<Map<String, int>> prepareTotalListenTime() async {
+    final file = File(AppPaths.TOTAL_LISTEN_TIME);
+    final tempFile = File('${file.path}$_kTotalListenTimeTempSuffix');
+    final fromFile = await _readTotalListenTime(tempFile) ?? await _readTotalListenTime(file);
+    if (fromFile == null) await _keepCorruptedTotalListenTimeAside(file);
+    final totals = fromFile ?? <String, int>{};
+    await _healTotalListenTimeFromDaily(totals);
+    return totals;
+  }
+
+  Future<void> _keepCorruptedTotalListenTimeAside(File file) async {
+    final hasData = await file.existsAndValid();
+    if (!hasData) return;
+    final nowMS = DateTime.now().millisecondsSinceEpoch;
     try {
-      final file = await File(AppPaths.TOTAL_LISTEN_TIME).create();
-      final map = await file.readAsJson();
-      return (map as Map<String, dynamic>).cast();
+      await file.rename('${file.path}.corrupted_$nowMS');
     } catch (_) {
-      return {};
+      _canWriteTotalListenTime = false;
+    }
+  }
+
+  Future<Map<String, int>?> _readTotalListenTime(File file) async {
+    final map = await file.readAsJson();
+    if (map is! Map<String, dynamic>) return null;
+    return map.cast();
+  }
+
+  Future<void> _healTotalListenTimeFromDaily(Map<String, int> totals) async {
+    final daily = await ListenTimeController.inst.loadAll();
+    final dailySums = <String, int>{};
+    for (final dayTotals in daily.values) {
+      for (final e in dayTotals.entries) {
+        final key = e.key;
+        dailySums[key] = (dailySums[key] ?? 0) + e.value;
+      }
+    }
+    for (final e in dailySums.entries) {
+      final key = e.key;
+      final dailySum = e.value;
+      final current = totals[key] ?? 0;
+      if (dailySum > current) totals[key] = dailySum;
     }
   }
 
@@ -2331,9 +2368,16 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
     // saves the file each 20 seconds.
     if (newSeconds % 20 == 0) {
-      _totalListenTimeWriteLock = _totalListenTimeWriteLock.then((_) => File(AppPaths.TOTAL_LISTEN_TIME).writeAsJson(totalTimeInSeconds)).ignoreError();
+      _totalListenTimeWriteLock = _totalListenTimeWriteLock.then((_) => _writeTotalListenTime(totalTimeInSeconds)).ignoreError();
       ListenTimeController.inst.flush();
     }
+  }
+
+  Future<void> _writeTotalListenTime(Map<String, int> totalTimeInSeconds) async {
+    if (!_canWriteTotalListenTime) return;
+    final path = AppPaths.TOTAL_LISTEN_TIME;
+    final tempFile = await File('$path$_kTotalListenTimeTempSuffix').writeAsJson(totalTimeInSeconds, flush: true);
+    await tempFile?.rename(path);
   }
 
   @override
@@ -2487,6 +2531,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   int get listenCounterMarkPlayedSeconds => settings.isTrackPlayedSecondsCount.value;
 
   @override
+  int getListenRestartPositionThresholdMS() => _getSeekDurationSeconds() * 1000;
+
+  @override
   int get maximumSleepTimerMins => kMaximumSleepTimerMins;
 
   @override
@@ -2509,20 +2556,23 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   bool get previousButtonReplays => settings.previousButtonReplays.value;
 
+  int _getSeekDurationSeconds() {
+    if (settings.player.isSeekDurationPercentage.value) {
+      final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
+      return sFromP.toInt();
+    }
+    return settings.player.seekDurationInSeconds.value;
+  }
+
   /// wether previous would only restart the current item, the ui shouldn't animate towards another one.
   bool get previousButtonWillReplay {
     if (!previousButtonReplays) return false;
 
-    final int secondsToReplay;
-    if (settings.player.isSeekDurationPercentage.value) {
-      final sFromP = (currentItemDuration.value?.inSeconds ?? 0) * (settings.player.seekDurationInPercentage.value / 100);
-      secondsToReplay = sFromP.toInt();
-    } else {
-      secondsToReplay = settings.player.seekDurationInSeconds.value;
-    }
-
+    final secondsToReplay = _getSeekDurationSeconds();
     return secondsToReplay > 0 && currentPositionMS.value > secondsToReplay * 1000;
   }
+
+  bool _hasPreviousItem() => currentIndex.value != 0 || playerInfiniyQueueOnNextPrevious || shufflePeekPreviousIndex() != null;
 
   /// null when the skip should leave the current item.
   int? _skipChapterTargetMS({required bool forward}) {
@@ -2531,8 +2581,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   }
 
   bool skipWillStayInItem({required bool forward, required bool jumpChapters}) {
+    if (currentQueue.value.length == 1) return true;
     if (jumpChapters && _skipChapterTargetMS(forward: forward) != null) return true;
-    return !forward && previousButtonWillReplay;
+    if (forward) return false;
+    return previousButtonWillReplay || !_hasPreviousItem();
   }
 
   // ------------------------------------------------------------
@@ -2703,7 +2755,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       return;
     }
 
-    await super.skipToPrevious();
+    await super.skipToPrevious(isManualSkip: isManualSkip);
   }
 
   @override
@@ -3013,6 +3065,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
       displaySubtitle: tr.hasUnknownAlbum ? artist : "$artist - ${tr.originalAlbum}",
       displayDescription: "${currentIndex + 1}/$queueLength",
       artist: artist,
+      albumArtist: tr.hasUnknownAlbumArtist ? null : tr.albumArtist,
       album: tr.hasUnknownAlbum ? '' : tr.originalAlbum,
       genre: tr.originalGenre,
       duration: duration ?? Duration(milliseconds: tr.durationMS),

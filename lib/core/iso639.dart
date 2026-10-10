@@ -17,6 +17,8 @@ abstract final class Iso639 {
   static Map<String, String>? _codesByLowercasedName;
   static Map<String, String>? _part1ByCode;
 
+  static final instrumentalLabel = labelOf('zxx');
+
   static int get count => _kNames.length;
 
   static Iterable<MapEntry<String, String>> get entries => _kNames.entries;

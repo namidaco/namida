@@ -11,6 +11,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/iso639.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
 import 'lrc_search_utils_base.dart';
@@ -248,6 +249,13 @@ class LrcSearchUtilsSelectable extends LrcSearchUtils {
 
   @override
   Future<int> getItemDurationMS() async => trackExt.durationMS;
+
+  @override
+  bool isInstrumental() {
+    final isInstrumentalLanguage = trackExt.languagesList.contains(Iso639.instrumentalLabel);
+    if (isInstrumentalLanguage) return true;
+    return LrcSearchUtils.isInstrumentalTitle(trackExt.title);
+  }
 
   @override
   Future<bool> hasLyrics() async {

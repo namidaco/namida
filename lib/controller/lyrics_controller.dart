@@ -210,6 +210,7 @@ class Lyrics {
     final lookupKey = _onlineLookupKey(item);
     final canSearchOnline = source != LyricsSource.local && !_wasNotFoundOnlineRecently(lookupKey);
     if (!canSearchOnline) return _unavailableLyrics;
+    if (lrcUtils.isInstrumental()) return _unavailableLyrics;
 
     // -- nothing local, hide now instead of holding an empty overlay for the whole network request.
     if (checkInterrupted()) return null;
@@ -220,6 +221,11 @@ class Lyrics {
     final lrcLyrics = await _fetchLRCBasedLyrics(lrcUtils, source);
 
     if (checkInterrupted()) return null;
+
+    if (lrcLyrics.isInstrumental) {
+      _notFoundOnlineMS[lookupKey] = DateTime.now().millisecondsSinceEpoch;
+      return _unavailableLyrics;
+    }
 
     final lrc = lrcLyrics.lrc;
     if (lrc != null) return (lrc: lrc, txt: null, canBeAvailable: true);
@@ -371,18 +377,23 @@ class Lyrics {
 
   Future<_LRCFetchResult> _fetchLRCBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source) async {
     final res = await _searchLRCLyricsFromInternet(lrcUtils: lrcUtils);
+    if (res.isInstrumental) {
+      // -- the internet source never reads the marker
+      if (source != LyricsSource.internet) await lrcUtils.ignoreLyrics();
+      return (lrc: null, txt: null, didSearchFail: false, isInstrumental: true);
+    }
     final lyricsModelToUse = res.lyrics.firstOrNull;
     if (lyricsModelToUse != null && lyricsModelToUse.lyrics.isNotEmpty == true) {
       final parsedLrc = lyricsModelToUse.synced ? lyricsModelToUse.lyrics.parseLRC() : null;
       final isSynced = parsedLrc != null;
       await _saveFetchedLyrics(lrcUtils, lyricsModelToUse.lyrics, isSynced, source);
       if (parsedLrc != null) {
-        return (lrc: parsedLrc, txt: null, didSearchFail: false);
+        return (lrc: parsedLrc, txt: null, didSearchFail: false, isInstrumental: false);
       } else {
-        return (lrc: null, txt: lyricsModelToUse.lyrics, didSearchFail: false);
+        return (lrc: null, txt: lyricsModelToUse.lyrics, didSearchFail: false, isInstrumental: false);
       }
     }
-    return (lrc: null, txt: null, didSearchFail: res.hadFailure);
+    return (lrc: null, txt: null, didSearchFail: res.hadFailure, isInstrumental: false);
   }
 
   Future<_TextFetchResult> _fetchTextBasedLyrics(LrcSearchUtils lrcUtils, LyricsSource source) async {
@@ -482,15 +493,19 @@ class _LRCSearchResult {
   /// a request has failed, empty [lyrics] don't mean there are none.
   final bool hadFailure;
 
+  /// the best match has no lyrics to look for, only set without `allProviders`.
+  final bool isInstrumental;
+
   const _LRCSearchResult({
     required this.token,
     required this.lyrics,
     required this.done,
     required this.hadFailure,
+    required this.isInstrumental,
   });
 
-  static const empty = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: false);
-  static const interrupted = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: true);
+  static const empty = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: false, isInstrumental: false);
+  static const interrupted = _LRCSearchResult(token: -1, lyrics: [], done: true, hadFailure: true, isInstrumental: false);
 }
 
 class _LRCSearchManager with PortsProvider<SendPort> {
@@ -582,7 +597,7 @@ class _LRCSearchManager with PortsProvider<SendPort> {
 
         void send(List<LyricsModel> lyrics, bool done) {
           if (session.cancelled) return;
-          sendPort.send(_LRCSearchResult(token: p.token, lyrics: lyrics, done: done, hadFailure: session.hadFailure));
+          sendPort.send(_LRCSearchResult(token: p.token, lyrics: lyrics, done: done, hadFailure: session.hadFailure, isInstrumental: session.isInstrumental));
         }
 
         final lyrics = await searcher.search(session, onPartial: (lyrics) => send(lyrics, false));
@@ -602,14 +617,17 @@ class _LRCSearchSession {
   bool _cancelled = false;
   bool _requestIssued = false;
   bool _hadFailure = false;
+  bool _isInstrumental = false;
 
   bool get cancelled => _cancelled;
   bool get hadFailure => _hadFailure;
+  bool get isInstrumental => _isInstrumental;
 
   _LRCSearchSession(this.request);
 
   void markRequestIssued() => _requestIssued = true;
   void markFailure() => _hadFailure = true;
+  void markInstrumental() => _isInstrumental = true;
 
   void cancel() {
     if (_cancelled) return;
@@ -641,6 +659,7 @@ class _LRCProvidersSearcher {
         if (session.cancelled) break;
         final fetched = await _fetch(session, provider, details: details, customQuery: '', kugouLimit: kugouLimit);
         if (fetched.isNotEmpty) return fetched;
+        if (session.isInstrumental) break;
       }
       return [];
     }
@@ -665,6 +684,7 @@ class _LRCProvidersSearcher {
       if (session.cancelled) break;
       final fetched = await searchProvider(provider);
       if (fetched.isNotEmpty) return fetched;
+      if (session.isInstrumental) break;
     }
     return [];
   }
@@ -776,14 +796,24 @@ class _LRCProvidersSearcher {
     if (jsonLists.isEmpty) return [];
 
     final targetMS = _targetDurationMS(details);
+    final scorer = details == null ? null : _LyricsMatchScorer(details);
     _rankCandidates(
       jsonLists,
-      scorer: details == null ? null : _LyricsMatchScorer(details),
+      scorer: scorer,
       targetMS: targetMS,
       title: (r) => r['trackName'] as String?,
       artist: (r) => r['artistName'] as String?,
       durationMS: (r) => r['duration'] is num ? ((r['duration'] as num) * 1000).round() : null,
     );
+
+    final isAutoSearch = !session.request.allProviders;
+    if (scorer != null && isAutoSearch) {
+      final isInstrumental = _isBestLRCLIBMatchInstrumental(jsonLists, scorer);
+      if (isInstrumental) {
+        session.markInstrumental();
+        return [];
+      }
+    }
 
     final fetched = <LyricsModel>[];
     for (var jsonRes in jsonLists) {
@@ -805,6 +835,19 @@ class _LRCProvidersSearcher {
     }
     LyricsModel.removeDuplicateLyrics(fetched);
     return fetched;
+  }
+
+  static bool _isBestLRCLIBMatchInstrumental(List<dynamic> ranked, _LyricsMatchScorer scorer) {
+    for (final r in ranked) {
+      final title = r['trackName'] as String? ?? '';
+      final isSeparateVersion = LrcSearchUtils.isInstrumentalTitle(title);
+      if (isSeparateVersion) continue;
+      if (r['instrumental'] != true) return false;
+      final artist = r['artistName'] as String?;
+      final score = scorer.score(title, artist);
+      return score >= _LyricsMatchScorer.sureThreshold;
+    }
+    return false;
   }
 
   // ==================== KuGou ====================
@@ -880,6 +923,9 @@ class _LRCProvidersSearcher {
 // by claude
 class _LyricsMatchScorer {
   static const acceptThreshold = 0.7;
+
+  /// title and artist both match, a same-titled song by someone else stays below.
+  static const sureThreshold = 0.9;
 
   final List<_MatchToken> _titleTokens;
   final List<_MatchToken> _artistTokens;
@@ -1021,5 +1067,5 @@ class LrcText {
 typedef LocalLyricsPick = ({File? file, bool isEmbedded, bool isEmbeddedPrioritized, Lrc? embeddedLrc});
 
 typedef _LyricsResolveResult = ({Lrc? lrc, LrcText? txt, bool canBeAvailable});
-typedef _LRCFetchResult = ({Lrc? lrc, String? txt, bool didSearchFail});
+typedef _LRCFetchResult = ({Lrc? lrc, String? txt, bool didSearchFail, bool isInstrumental});
 typedef _TextFetchResult = ({String txt, bool didSearchFail});

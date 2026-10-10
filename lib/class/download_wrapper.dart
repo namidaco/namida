@@ -100,6 +100,7 @@ abstract class DownloadWrapper {
   /// appends bytes `[targetBaseOffset + target size, end)` to [target], [end] null means till the resource end.
   /// with an [end], any reply not matching the requested range throws [DownloadChunkingNotSupportedException],
   /// without it a non 206 reply to a resumed request rewrites [target] from scratch.
+  /// a reply ending before [end] (or [totalBytes]) is retried from where it stopped.
   Future<void> _downloadRange({
     required File target,
     required int targetBaseOffset,
@@ -145,7 +146,8 @@ abstract class DownloadWrapper {
         await sink.close();
         sink = null;
         requestFinished = true;
-        if (expectedBytes != null && writtenBytes < expectedBytes) throw const _IncompleteRangeException();
+        final expectedEnd = end ?? totalBytes;
+        if (targetBaseOffset + targetSize < expectedEnd) throw const _IncompleteRangeException();
         return;
       } on RhttpCancelException {
         throw const DownloadCanceledException();
@@ -157,7 +159,7 @@ abstract class DownloadWrapper {
           if (start > 0 && contentRange != null && _contentRangeTotal(contentRange) == start) return; // -- was already complete, its size wasnt known
         }
         if (attempt >= _kMaxRetries || !_isRetryable(e)) {
-          if (e is _IncompleteRangeException) throw const DownloadChunkingNotSupportedException();
+          if (e is _IncompleteRangeException && end != null) throw const DownloadChunkingNotSupportedException();
           rethrow;
         }
       } finally {
@@ -253,6 +255,12 @@ class MultiThreadedDownloadWrapper extends DownloadWrapper {
     try {
       Directory(_partsDirectoryPath(filePath)).deleteSync(recursive: true);
     } catch (_) {}
+  }
+
+  /// for downloads that finished on one connection, an earlier chunked attempt can leave its parts behind.
+  static void deleteLeftoverPartsSync(String filePath) {
+    final partsDir = Directory(_partsDirectoryPath(filePath));
+    if (partsDir.existsSync()) deletePartsSync(filePath);
   }
 
   static int? _parsePartIndex(File part) {
@@ -430,4 +438,7 @@ class DownloadChunkingNotSupportedException implements Exception {
 
 class _IncompleteRangeException implements Exception {
   const _IncompleteRangeException();
+
+  @override
+  String toString() => 'Download ended before reaching the expected size';
 }

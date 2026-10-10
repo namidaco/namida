@@ -82,7 +82,8 @@ class TagLibRes {
         final tagLibChapters = chapters.map((e) => TagLibChapter(start: Duration(milliseconds: e.startMS), title: e.title)).toFixedList();
         tagFile.setChapters(tagLibChapters);
       }
-      tagFile.save();
+      final didSave = tagFile.save();
+      if (!didSave) return TagLibFile.lastError ?? 'Failed to save';
       return null;
     } catch (e) {
       return e.toString();

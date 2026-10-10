@@ -410,7 +410,7 @@ Future<void> showGeneralPopupDialog(
         m3uPath: m3uPath,
         tracksFromNewSource: true,
       );
-      finalPlaylist = plExisting;
+      finalPlaylist = PlaylistController.inst.getPlaylist(smplWrapper.value.name) ?? plExisting; // -- the update replaced it
     } else {
       final newPlaylist = await PlaylistController.inst.addNewPlaylist(
         smplWrapper.value.name,
@@ -1560,7 +1560,7 @@ Future<void> showGeneralPopupDialog(
                                                     ? null
                                                     : () {
                                                         NamidaNavigator.inst.closeDialog();
-                                                        Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems);
+                                                        Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems, isAnchoredToItem: true);
                                                       },
                                               );
                                             }()

@@ -307,6 +307,7 @@ enum TrackTileItem {
   bitrate,
   sampleRate,
   bitDepth,
+  lossless,
   bpm,
   format,
   channels,
@@ -756,9 +757,9 @@ enum RouteType {
   PAGE_rating,
   PAGE_stats,
   PAGE_yourYear,
-  PAGE_about,
-  PAGE_Sync,
-  PAGE_party,
+  PAGE_about(isOpenableFromSettings: true),
+  PAGE_Sync(isOpenableFromSettings: true),
+  PAGE_party(isOpenableFromSettings: true),
 
   // ----- Subpages -----
   SUBPAGE_recentlyAddedTracks,
@@ -778,11 +779,11 @@ enum RouteType {
   SUBPAGE_historyTracks,
   SUBPAGE_mostPlayedTracks,
   SUBPAGE_queueTracks,
-  SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS,
+  SUBPAGE_INDEXER_UPDATE_MISSING_TRACKS(isOpenableFromSettings: true),
 
   // ----- Subpages -----
-  SETTINGS_page,
-  SETTINGS_subpage,
+  SETTINGS_page(isOpenableFromSettings: true),
+  SETTINGS_subpage(isOpenableFromSettings: true),
 
   // ----- Search Results -----
   SEARCH_albumResults,
@@ -803,8 +804,8 @@ enum RouteType {
   YOUTUBE_HASHTAG_SUBPAGE,
   YOUTUBE_USER_CHANNELS_PAGE_HOSTED,
 
-  YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE,
-  YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE,
+  YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE(isOpenableFromSettings: true),
+  YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE(isOpenableFromSettings: true),
 
   YOUTUBE_HISTORY_HOSTED_SUBPAGE,
   YOUTUBE_NOTIFICATION_COMMENTS_SUBPAGE,
@@ -815,7 +816,8 @@ enum RouteType {
   ;
 
   final bool isDrawerEdgeSwipeOnly;
-  const RouteType({this.isDrawerEdgeSwipeOnly = false});
+  final bool isOpenableFromSettings;
+  const RouteType({this.isDrawerEdgeSwipeOnly = false, this.isOpenableFromSettings = false});
 }
 
 /// Used for search and sort.

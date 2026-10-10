@@ -677,7 +677,7 @@ class MiniPlayerController {
       _snapToCurrent();
       return skip();
     }
-    if (!(forward ? Player.inst.canJumpToNext : Player.inst.canJumpToPrevious)) {
+    if (forward && !Player.inst.canJumpToNext) {
       _snapToCurrent(); // -- snap back if was dragged, settling on whatever is still in flight
       return;
     }

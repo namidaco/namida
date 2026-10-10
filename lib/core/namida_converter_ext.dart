@@ -1527,14 +1527,12 @@ extension RouteUtils on NamidaRoute {
         route == RouteType.SUBPAGE_historyTracks ||
         route == RouteType.SUBPAGE_mostPlayedTracks;
 
-    final shouldShowInitialActions =
+    final shouldShowSettingsIcon =
+        !showMainMenu && //
+        !showPlaylistMenu &&
+        !route.isOpenableFromSettings &&
         route != RouteType.PAGE_stats &&
-        route != RouteType.PAGE_yourYear &&
-        route != RouteType.SETTINGS_page &&
-        route != RouteType.SETTINGS_subpage &&
-        route != RouteType.YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE &&
-        route != RouteType.YOUTUBE_USER_MANAGE_SUBSCRIPTION_SUBPAGE;
-    final shouldShowSettingsIcon = !showMainMenu && !showPlaylistMenu && shouldShowInitialActions;
+        route != RouteType.PAGE_yourYear;
 
     final docsLink = this.getDocsLink();
 
@@ -2283,6 +2281,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.path => lang.path,
     TrackTileItem.sampleRate => lang.sampleRate,
     TrackTileItem.bitDepth => lang.bitDepth,
+    TrackTileItem.lossless => lang.lossless,
     TrackTileItem.bpm => 'BPM',
     TrackTileItem.size => lang.size,
     TrackTileItem.rating => lang.rating,
@@ -2322,6 +2321,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.path => Broken.location,
     TrackTileItem.sampleRate => Broken.voice_cricle,
     TrackTileItem.bitDepth => Broken.voice_cricle,
+    TrackTileItem.lossless => Broken.voice_cricle,
     TrackTileItem.bpm => Broken.alarm,
     TrackTileItem.size => Broken.size,
     TrackTileItem.rating => Broken.grammerly,

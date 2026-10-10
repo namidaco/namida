@@ -366,10 +366,13 @@ class _LineRow extends StatelessWidget {
         ),
         NamidaReordererableListener(
           index: index,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0),
-            child: ThreeLineSmallContainers(
-              enabled: true,
+          child: const ColoredBox(
+            color: Colors.transparent,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 12.0),
+              child: ThreeLineSmallContainers(
+                enabled: true,
+              ),
             ),
           ),
         ),

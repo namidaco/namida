@@ -215,11 +215,13 @@ class NamidaDrawer extends StatelessWidget {
                   text: hasInitialValues ? lang.update : lang.start,
                   onTap: () {
                     if (minutesRx.value > 0 || tracksRx.value > 0) {
+                      final didChangeTracks = currentConfig.sleepAfterItems != tracksRx.value;
                       Player.inst.updateSleepTimerValues(
                         enableSleepAfterMins: minutesRx.value > 0,
                         enableSleepAfterItems: tracksRx.value > 0,
                         sleepAfterMin: minutesRx.value,
                         sleepAfterItems: tracksRx.value,
+                        isAnchoredToItem: didChangeTracks ? false : null,
                       );
                     }
                     NamidaNavigator.inst.closeDialog();

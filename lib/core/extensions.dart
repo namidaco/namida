@@ -683,13 +683,13 @@ extension DateTimeFormatters on DateTime {
 
   String dateFormattedOriginalNoYears(DateTime diffDate) {
     final valInSettingMain = settings.dateTimeFormat.value;
-    String valInSettingNew = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
+    final pattern = valInSettingMain.contains('d') ? valInSettingMain : 'dd MMM yyyy';
 
     final thisDate = this;
     if (thisDate.year == diffDate.year && thisDate.year == DateTime.now().year) {
-      valInSettingNew = valInSettingNew.replaceAll('y', '').replaceAll('Y', '');
+      return getDateFormatted(_DatePatternYearStripper.strip(pattern));
     }
-    return getDateFormatted(valInSettingNew);
+    return getDateFormatted(pattern);
   }
 
   String get clockFormatted => getClockFormatted(settings.hourFormat12.value);
@@ -706,6 +706,107 @@ extension DateTimeFormatters on DateTime {
   }
 
   String get dateAndClockFormatted => [dateFormatted, clockFormatted].join(' - ');
+}
+
+/// Removes year fields from an intl date pattern along with the separators that belonged to them,
+/// ex: `[dd.MM.yyyy] EEE` -> `[dd.MM] EEE`, `yyyy年M月d日` -> `M月d日`, `MMMM dd, yyyy` -> `MMMM dd`.
+///
+/// by claude
+class _DatePatternYearStripper {
+  static const _fieldChars = 'GyMkSEahKHcLQdDmsvzZ';
+  static final _tokenRegex = RegExp("'(?:[^']|'')*'|([$_fieldChars])\\1*|[^'$_fieldChars]+|'");
+  static final _nonBracketRegex = RegExp(r'[^()\[\]{}]');
+  static final _emptyBracketsRegex = RegExp(r'\(\)|\[\]|\{\}');
+
+  static String _lastPattern = '';
+  static String _lastStripped = '';
+
+  static String strip(String pattern) {
+    if (pattern == _lastPattern) return _lastStripped;
+    final stripped = _strip(pattern);
+    _lastPattern = pattern;
+    _lastStripped = stripped;
+    return stripped;
+  }
+
+  static String _strip(String pattern) {
+    final tokens = _tokenRegex.allMatches(pattern).map((m) => m[0]!).toFixedList();
+    final count = tokens.length;
+
+    for (int i = 0; i < count; i++) {
+      if (!tokens[i].startsWith('y')) continue;
+      tokens[i] = '';
+
+      int prev = i - 1;
+      while (prev >= 0 && !_isNonYearField(tokens[prev])) {
+        prev--;
+      }
+      int next = i + 1;
+      while (next < count && !_isNonYearField(tokens[next])) {
+        next++;
+      }
+
+      final hasPrev = prev >= 0;
+      final hasNext = next < count;
+      final betweenFields = hasPrev && hasNext;
+      // -- between two fields only one separator goes, the one towards the day/month.
+      final stripBefore = !betweenFields || _isDayOrMonth(tokens[prev]) || !_isDayOrMonth(tokens[next]);
+      final stripAfter = !betweenFields || !stripBefore;
+      if (stripBefore) _stripLiterals(tokens, prev + 1, i);
+      if (stripAfter) _stripLiterals(tokens, i + 1, next);
+    }
+
+    final result = StringBuffer();
+    final literalRun = StringBuffer();
+    bool literalRunTouched = false;
+
+    void flushLiteralRun() {
+      if (literalRun.isNotEmpty) {
+        final text = literalRun.toString();
+        final finalText = literalRunTouched ? _collapseEmptyBrackets(text) : text;
+        result.write(finalText);
+        literalRun.clear();
+      }
+      literalRunTouched = false;
+    }
+
+    for (final token in tokens) {
+      if (token.isEmpty) {
+        literalRunTouched = true;
+      } else if (!_isField(token) && !token.startsWith("'")) {
+        literalRun.write(token);
+      } else {
+        flushLiteralRun();
+        result.write(token);
+      }
+    }
+    flushLiteralRun();
+
+    return result.toString();
+  }
+
+  /// brackets usually wrap more than the year, empty pairs are collapsed later.
+  static void _stripLiterals(List<String> tokens, int start, int end) {
+    for (int j = start; j < end; j++) {
+      final token = tokens[j];
+      tokens[j] = token.startsWith("'") ? '' : token.replaceAll(_nonBracketRegex, '');
+    }
+  }
+
+  static String _collapseEmptyBrackets(String text) {
+    String previous;
+    do {
+      previous = text;
+      text = text.replaceAll(_emptyBracketsRegex, '');
+    } while (text.length != previous.length);
+    return text;
+  }
+
+  static bool _isField(String token) => token.isNotEmpty && _fieldChars.contains(token[0]);
+
+  static bool _isNonYearField(String token) => _isField(token) && !token.startsWith('y');
+
+  static bool _isDayOrMonth(String token) => 'dDML'.contains(token[0]);
 }
 
 extension BorderRadiusSetting on double {

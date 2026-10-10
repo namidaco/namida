@@ -97,7 +97,7 @@ class _SMTCManagerWindows extends NamidaSMTCManager {
       title: mediaItem.title,
       artist: mediaItem.artist,
       album: mediaItem.album,
-      albumArtist: null,
+      albumArtist: mediaItem.albumArtist,
       thumbnail: mediaItem.artUri?.toFilePathWindows_(),
     );
     smtc?.updateMetadata(metadata);

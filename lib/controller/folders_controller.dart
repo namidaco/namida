@@ -70,6 +70,11 @@ class FoldersController<T extends Folder, E extends Track> {
   late var _pathsTreeMapRoot = _FolderNode<T, E>(null, null, folderToTracks);
   _FolderNode<T, E>? _pathsTreeMapCurrent;
 
+  _FolderNode<T, E> get _homeNode {
+    final rootChildren = _pathsTreeMapRoot.children;
+    return rootChildren.length == 1 ? rootChildren.values.first : _pathsTreeMapRoot;
+  }
+
   /// Even with this logic, root paths are invincible.
   final isHome = true.obs;
 
@@ -114,10 +119,7 @@ class FoldersController<T extends Folder, E extends Track> {
     if (nextNode == null) {
       isHome.value = true;
       isInitialNodeNested = true;
-      nextNode = _pathsTreeMapRoot;
-      if (nextNode.children.keys.length == 1) {
-        nextNode = nextNode.children.values.first;
-      }
+      nextNode = _homeNode;
     }
 
     if (!isInitialNodeNested && !isFromStepOut) {
@@ -130,7 +132,7 @@ class FoldersController<T extends Folder, E extends Track> {
     _pathsTreeMapCurrent = nextNode;
 
     if (!isFromStepOut && _config.skipSingleSubfolder.value) {
-      if (upcomingFolders.length == 1 && folderToTracks(folder)?.isEmpty == true) {
+      if (!isInitialNodeNested && nextNode.isSkippable) {
         stepIn(upcomingFolders.first);
         return;
       }
@@ -168,19 +170,17 @@ class FoldersController<T extends Folder, E extends Track> {
     }
 
     T? folderToStepIn;
-    if (_config.enableFoldersHierarchy.value && _config.skipSingleSubfolder.value) {
-      do {
-        folderToStepIn = _pathsTreeMapCurrent?.parent;
-        _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
-      } while (_pathsTreeMapCurrent != null && _pathsTreeMapCurrent?.children.keys.length == 1 && (folderToTracks(folderToStepIn?.parent)?.isEmpty != false));
-    }
-
-    folderToStepIn = _pathsTreeMapCurrent?.parent;
-    _pathsTreeMapCurrent = _pathsTreeMapCurrent?.parentNode;
-
-    if (folderToStepIn == currentFolder.value || _pathsTreeMapCurrent == _pathsTreeMapRoot) {
-      folderToStepIn = null;
-      _pathsTreeMapCurrent = null;
+    if (_config.enableFoldersHierarchy.value) {
+      var node = _pathsTreeMapCurrent?.parentNode;
+      if (_config.skipSingleSubfolder.value) {
+        while (node != null && node.isSkippable) {
+          node = node.parentNode;
+        }
+      }
+      if (node != null && !identical(node, _homeNode)) {
+        folderToStepIn = node.parent;
+        _pathsTreeMapCurrent = node.parentNode;
+      }
     }
 
     indexToScrollTo.value = null;
@@ -460,30 +460,28 @@ class _FolderNode<T extends Folder, E extends Track> {
 
   late final foldersList = children.keys.toList();
 
-  /// Efficient lookup for a folder. this operation is O(n) where n is the folder path splits count.
-  _FolderNode<T, E>? lookup(T folder) {
-    _FolderNode<T, E> current = this;
-    final mainInMap = children[folder];
-    if (mainInMap != null) return current;
+  bool get isSkippable => children.length == 1 && folderToTracks(parent)?.isEmpty == true;
 
-    final res =
-        folder.performInbetweenFoldersBuild(
-          (f) {
-            final newNode = current.children[f];
-            if (newNode == null) return current;
-            current = newNode;
-            return null; // continue recursive
-          },
-        ) ??
-        current;
-    // -- vip, we use current as a dummy node once the initial check is done
-    return (identical(this, current) ? null : res);
+  /// Efficient lookup for a folder's own node. this operation is O(n) where n is the folder path splits count.
+  _FolderNode<T, E>? lookup(T folder) {
+    final direct = children[folder];
+    if (direct != null) return direct;
+
+    var current = this;
+    final isMissing = folder.performInbetweenFoldersBuild<bool>(
+      (f) {
+        final next = current.children[f];
+        if (next == null) return true;
+        current = next;
+        return null;
+      },
+    );
+    if (isMissing == true || identical(current, this)) return null;
+    return current;
   }
 
   int? getFoldersCountInsideFolder(T folder, {bool recursive = false}) {
-    final parentNode = lookup(folder);
-
-    final node = parentNode?.children[folder];
+    final node = lookup(folder);
 
     if (node != null) {
       if (recursive) {
@@ -503,9 +501,7 @@ class _FolderNode<T extends Folder, E extends Track> {
   List<E> getTracksCountInsideFolder(T folder, {bool recursive = false}) {
     if (!recursive) return folderToTracks(folder) ?? [];
 
-    final parentNode = lookup(folder);
-
-    final node = parentNode?.children[folder];
+    final node = lookup(folder);
 
     if (node == null) return [];
 

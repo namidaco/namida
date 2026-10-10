@@ -932,6 +932,7 @@ class TrackTileManager {
     TrackTileItem.format: (track, _) => track.format.toUpperCase(),
     TrackTileItem.sampleRate: (track, _) => '${track.sampleRate}Hz',
     TrackTileItem.bitDepth: (track, _) => '${track.bits} bit',
+    TrackTileItem.lossless: (track, _) => track.audioQualityText(),
     TrackTileItem.bpm: (track, _) => '${track.bpm ?? 0} BPM',
     TrackTileItem.size: (track, _) => track.size.fileSizeFormatted,
     TrackTileItem.bitrate: (track, _) => "${(track.bitrate)} kb/s",

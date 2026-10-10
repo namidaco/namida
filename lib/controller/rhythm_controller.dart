@@ -38,6 +38,12 @@ class RhythmController {
   static const _minBeatConfidence = 0.5;
   static const _minKeyConfidence = 0.5;
 
+  /// a tempo out of this range is a broken tag or analysis.
+  static const _minBpm = 20.0;
+  static const _maxBpm = 1000.0;
+
+  static bool _isValidBpm(double bpm) => bpm >= _minBpm && bpm <= _maxBpm;
+
   /// skipping through the queue costs nothing, and the waveform goes first.
   static const _analysisDelay = Duration(seconds: 3);
 
@@ -302,7 +308,8 @@ class RhythmController {
     if (_isUpToDate(key)) return;
     final source = await _sourceOf(item);
     if (source == null) return;
-    final bpmHint = item is Selectable ? (item.track.bpm ?? 0).toDouble() : 0.0;
+    final tagBpm = item is Selectable ? (item.track.bpm ?? 0).toDouble() : 0.0;
+    final bpmHint = _isValidBpm(tagBpm) ? tagBpm : 0.0;
     final data = await _analyzer.analyze(source, bpmHint);
     // -- a file that can't be opened might be back later, anything else is final for this version
     if (data == null || data.error == WaveformError.openInput) return;
@@ -332,7 +339,9 @@ class _RhythmFlowShuffler<Q extends Playable> extends QueueShuffler<Q> {
   static const _picksPerItem = 6;
   static const _tempoCostStep = 0.06;
   static const _maxTempoCost = 3.0;
-  static const _unknownCost = 1.0;
+  // -- average cost against a random tempo/key, so an unknown is neither favoured nor buried
+  static const _unknownTempoCost = 2.2;
+  static const _unknownKeyCost = 1.9;
   static const _jitter = 0.3;
 
   static final _random = math.Random();
@@ -392,8 +401,8 @@ class _RhythmFlowShuffler<Q extends Playable> extends QueueShuffler<Q> {
   }
 
   static double _costBetween(_Flow previous, double bpm, int key) {
-    final tempoCost = previous.bpm <= 0 || bpm <= 0 ? _unknownCost : _tempoCostBetween(previous.bpm, bpm);
-    final keyCost = previous.key < 0 || key < 0 ? _unknownCost : _MusicalKey.costBetween(previous.key, key);
+    final tempoCost = previous.bpm <= 0 || bpm <= 0 ? _unknownTempoCost : _tempoCostBetween(previous.bpm, bpm);
+    final keyCost = previous.key < 0 || key < 0 ? _unknownKeyCost : _MusicalKey.costBetween(previous.key, key);
     return tempoCost + keyCost;
   }
 
@@ -482,6 +491,7 @@ class _MusicalKey {
     return switch (distance) {
       1 => 0.5,
       2 => 1.5,
+      3 => 2.0,
       _ => 2.5,
     };
   }
@@ -555,17 +565,20 @@ class _Rhythm {
   final int fadeOutStartMS;
   final int version;
 
-  const _Rhythm({
-    required this.bpm,
-    required this.beatOffsetMS,
-    required this.beatConfidence,
+  _Rhythm({
+    required double bpm,
+    required double beatOffsetMS,
+    required double beatConfidence,
     required this.key,
-    required this.keyConfidence,
+    required double keyConfidence,
     required this.audibleStartMS,
     required this.audibleEndMS,
     required this.fadeOutStartMS,
     required this.version,
-  });
+  }) : bpm = RhythmController._isValidBpm(bpm) ? bpm : 0.0,
+       beatOffsetMS = beatOffsetMS.isFinite ? beatOffsetMS : 0.0,
+       beatConfidence = beatOffsetMS.isFinite && beatConfidence.isFinite ? beatConfidence : 0.0,
+       keyConfidence = keyConfidence.isFinite ? keyConfidence : 0.0;
 
   factory _Rhythm.fromData(RhythmData data, int version) {
     return _Rhythm(

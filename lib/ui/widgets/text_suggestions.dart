@@ -128,7 +128,8 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
       excludeLowercased: parsed.excludeLowercased,
     );
     _results.value = results;
-    results.isEmpty ? _hide() : _show();
+    final isOnlyTypedValue = results.length == 1 && values.values[results[0]] == parsed.query;
+    results.isEmpty || isOnlyTypedValue ? _hide() : _show();
   }
 
   void _onSelect(String value) {
@@ -137,6 +138,7 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
       suggestion: value,
       separatorsRegex: _separatorsRegex,
     );
+    _hide();
     widget.onChanged?.call(widget.controller.text);
   }
 

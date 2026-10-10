@@ -662,7 +662,7 @@ class YTUtils {
               title: lang.stopAfterThisVideo,
               enabled: !Player.inst.isSleepingAfterItems(stopAfterItems),
               onTap: () {
-                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems);
+                Player.inst.updateSleepTimerValues(enableSleepAfterItems: true, sleepAfterItems: stopAfterItems, isAnchoredToItem: true);
               },
             )
           : NamidaPopupItem(
@@ -762,9 +762,6 @@ class YTUtils {
         FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
       if (autoExtract) FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
       if (autoExtract) FFMPEGTagField.genre: YoutubeController.filenameBuilder.buildParamForFilename('genre'),
-      FFMPEGTagField.title: YoutubeController.filenameBuilder.buildParamForFilename('title'),
-      FFMPEGTagField.artist: YoutubeController.filenameBuilder.buildParamForFilename('artist'),
-      FFMPEGTagField.album: YoutubeController.filenameBuilder.buildParamForFilename('channel'),
       FFMPEGTagField.comment: YoutubeController.filenameBuilder.buildParamForFilename('video_url'),
       FFMPEGTagField.year: YoutubeController.filenameBuilder.buildParamForFilename('upload_date'),
       FFMPEGTagField.trackNumber: YoutubeController.filenameBuilder.buildParamForFilename('playlist_autonumber'),

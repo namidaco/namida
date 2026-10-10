@@ -483,7 +483,13 @@ Project is licensed under [EULA](https://github.com/namidaco/namida/blob/main/LI
 
 <a href="https://trendshift.io/repositories/9581" target="_blank"><img src="https://trendshift.io/api/badge/repositories/9581" alt="namidaco%2Fnamida | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-<img src="some stuff/star_history.svg"></img>
+<a href="https://www.star-history.com/?repos=namidaco%2Fnamida&amp;type=date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=namidaco/namida&amp;type=date&amp;theme=dark&amp;legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=namidaco/namida&amp;type=date" />
+    <img alt="Namida GitHub star history" src="https://api.star-history.com/chart?repos=namidaco/namida&amp;type=date" />
+  </picture>
+</a>
 
 > Made by human, **not** vibe coded. AI usage is minimal and very selective.
 > Every design choice comes after thoughtful decisions and series of refining, down to every pixel.

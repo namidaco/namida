@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 7.8.0-beta+260930207
+version: 8.0.0-beta+261010141
 
 environment:
   sdk: ">=3.12.2 <4.0.0"
@@ -321,6 +321,7 @@ inno_bundle:
   publisher: MSOB7Y
   installer_icon: windows/runner/resources/app_icon.ico
   updates_url: https://github.com/namidaco/namida/releases
+  admin: auto
   firewall_rule: true # sync discovery (mdns udp 5353) & server (tcp 62310)
   file_extensions_associations:
     # audio extensions

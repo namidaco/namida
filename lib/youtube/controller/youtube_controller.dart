@@ -219,8 +219,16 @@ class YoutubeController {
     final targetLangCode = targetTrack?.langCode;
 
     if (targetTrackId == null && targetLangCode == null) {
-      // -- single track video, itag is enough
-      return targetItag == null ? null : streams.firstWhereEff((e) => e.itag == targetItag);
+      // -- single track target, the video may have got dubs since, sharing its itag
+      if (targetItag == null) return null;
+      AudioStream? sameItagAny;
+      for (final e in streams) {
+        if (e.itag != targetItag) continue;
+        final track = e.audioTrack;
+        if (track == null || track.isDefault == true) return e;
+        sameItagAny ??= e;
+      }
+      return sameItagAny;
     }
 
     final targetContainer = target?.codecInfo.container;
@@ -1175,7 +1183,7 @@ class YoutubeController {
 
       if (downloadFilesWriteUploadDate && outputFiles != null) {
         final d = config.fileDate;
-        if (d != null && d != DateTime(0)) {
+        if (d != null) {
           for (final file in outputFiles) {
             try {
               await file.setLastAccessed(d);

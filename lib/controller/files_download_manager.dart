@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:rhttp/rhttp.dart';
 
@@ -247,9 +249,7 @@ class FilesDownloadManager with PortsProvider<SendPort> {
     flushProgress();
     if (downloadException != null) return downloadException;
 
-    if (threads > 1 && totalBytes > _kChunkSize && active.wrapper is SingleThreadedDownloadWrapper) {
-      MultiThreadedDownloadWrapper.deletePartsSync(filePath); // -- leftovers of an earlier chunked attempt
-    }
+    if (totalBytes > _kChunkSize && active.wrapper is SingleThreadedDownloadWrapper) MultiThreadedDownloadWrapper.deleteLeftoverPartsSync(filePath);
 
     Object? movedException;
     if (moveTo != null && moveToRequiredBytes != null) {
@@ -264,6 +264,8 @@ class FilesDownloadManager with PortsProvider<SendPort> {
           if (movedFile == null) {
             movedException = FileSystemException("Error moving $file to $moveTo");
           }
+        } else {
+          movedException = _DownloadErrorMessage('Downloaded file is smaller than expected ($fileSize < $moveToRequiredBytes): $filePath');
         }
       } catch (e) {
         movedException = e;
@@ -271,6 +273,9 @@ class FilesDownloadManager with PortsProvider<SendPort> {
     }
     return movedException;
   }
+
+  @visibleForTesting
+  static Future<Object?> debugRunDownload(HttpClientWrapper requester, Map p) => _runDownload(requester, {}, p);
 
   @override
   void onResult(dynamic result) {
