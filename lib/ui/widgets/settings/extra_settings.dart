@@ -1473,6 +1473,16 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 ),
               ),
               ObxO(
+                rx: settings.askBeforeReplacingQueue,
+                builder: (context, askBeforeReplacingQueue) => CustomSwitchListTile(
+                  icon: Broken.row_vertical,
+                  value: askBeforeReplacingQueue,
+                  onChanged: (isTrue) => settings.askBeforeReplacingQueue.save(!isTrue),
+                  title: 'ask_before_replacing_queue'.toUpperCase(),
+                  subtitle: 'when playing something else while manually queued items are still pending',
+                ),
+              ),
+              ObxO(
                 rx: settings.timeCapsuleYears,
                 builder: (context, timeCapsuleYears) {
                   timeCapsuleYears ??= 0;

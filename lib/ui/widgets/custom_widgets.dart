@@ -7808,11 +7808,15 @@ class SwipeQueueAddTileInfo {
   final QueueSourceBase queueSource;
   final String? heroTag;
   final String? videoTitle;
+  final Iterable<Playable>? queue;
+  final int index;
 
   const SwipeQueueAddTileInfo({
     required this.queueSource,
     required this.heroTag,
     this.videoTitle,
+    this.queue,
+    this.index = 0,
   });
 
   Color? get getCurrentColor =>

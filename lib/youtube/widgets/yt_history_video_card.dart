@@ -373,12 +373,20 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     networkFetchDelay: widget.deferNetworkFetch ? Duration(milliseconds: 500) : Duration.zero,
   );
 
+  Iterable<YoutubeID>? _getPlayOptionsQueue() {
+    if (widget.playSingle || widget.properties.comingFromQueue) return null;
+    final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;
+    return finalList.map(itemToYTIDPlay);
+  }
+
   void _executeThumbnailAction(TrackExecuteActions action) => action.execute(
     itemToYTIDPlay(item),
     info: SwipeQueueAddTileInfo(
       queueSource: widget.properties.configs.queueSource,
       heroTag: null,
       videoTitle: _infoFetcher.videoTitle,
+      queue: _getPlayOptionsQueue(),
+      index: widget.index,
     ),
   );
 
@@ -750,6 +758,8 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
         infoCallback: () => SwipeQueueAddTileInfo(
           queueSource: configs.queueSource,
           heroTag: null,
+          queue: _getPlayOptionsQueue(),
+          index: widget.index,
         ),
         dismissibleKey: plItem,
         allowSwipeLeft: properties.allowSwipeLeft,

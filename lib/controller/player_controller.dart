@@ -38,10 +38,15 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/common_dialogs.dart';
+import 'package:namida/ui/dialogs/general_popup_dialog.dart';
+import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
+
+part 'player_controller.queue_replace.dart';
 
 class Player {
   static final inst = Player._();
@@ -971,6 +976,18 @@ class Player {
     return newSeconds;
   }
 
+  /// asks how to play [queue] regardless of [settings.askBeforeReplacingQueue].
+  Future<void> playWithOptions(int index, Iterable<Playable> queue, QueueSourceBase source) async {
+    final queueList = queue is List<Playable> ? queue : queue.toFixedList();
+    if (queueList.isEmpty) return;
+    if (_audioHandler.partyGate != null || currentQueue.value.isEmpty) {
+      await playOrPause(index, queueList, source);
+      return;
+    }
+    final shouldReplace = await _askBeforeReplacingQueue(queueList, index, source, shuffle: false, startPlaying: true, startPosition: null);
+    if (shouldReplace) await playOrPause(index, queueList, source, canAskBeforeReplacing: false);
+  }
+
   Future<void> playOrPause(
     int index,
     Iterable<Playable> queue,
@@ -988,6 +1005,9 @@ class Player {
 
     /// the item at [index] starts from here instead of its restored position.
     Duration? startPosition,
+
+    /// false when the play options were already picked, see [playWithOptions].
+    bool canAskBeforeReplacing = true,
   }) async {
     if (gentlePlay) {
       if (index == 0 && queue.hasSingleItem()) {
@@ -1045,6 +1065,16 @@ class Player {
                 as Playable,
       );
     }
+
+    if (canAskBeforeReplacing && settings.askBeforeReplacingQueue.value && source != QueueSource.playerQueue && _audioHandler.partyGate == null && currentQueue.value.isNotEmpty) {
+      final queueList = queue is List<Playable> ? queue : queue.toFixedList();
+      queue = queueList;
+      if (queueList.isNotEmpty && !_audioHandler.isSameAsOriginalQueue(queueList)) {
+        final shouldReplace = await _askBeforeReplacingQueue(queueList, index, source, shuffle: shuffle, startPlaying: startPlaying, startPosition: startPosition);
+        if (!shouldReplace) return;
+      }
+    }
+
     _audioHandler.latestQueueSource = source;
     if (startPosition != null) _audioHandler.requestStartPosition(queue.elementAt(index), startPosition);
     await _audioHandler.assignNewQueue(

@@ -1102,6 +1102,7 @@ enum YTVisibleMixesPlaces {
 enum TrackExecuteActions {
   none,
   play(isPlayerAction: true),
+  playOptions(isPlayerAction: true),
   playnext(isPlayerAction: true),
   playlast(isPlayerAction: true),
   playafter(isPlayerAction: true),

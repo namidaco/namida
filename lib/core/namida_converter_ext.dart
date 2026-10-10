@@ -645,6 +645,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
   String toText() => switch (this) {
     TrackExecuteActions.none => lang.none,
     TrackExecuteActions.play => "${lang.play} (${lang.single})",
+    TrackExecuteActions.playOptions => "${lang.play} (${lang.choose})",
     TrackExecuteActions.playnext => lang.playNext,
     TrackExecuteActions.playlast => lang.playLast,
     TrackExecuteActions.playafter => lang.playAfter,
@@ -676,6 +677,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     return switch (this) {
       TrackExecuteActions.none => Broken.minus_cirlce,
       TrackExecuteActions.play => Broken.play,
+      TrackExecuteActions.playOptions => Broken.play_add,
       TrackExecuteActions.playnext => Broken.next,
       TrackExecuteActions.playlast => Broken.play_cricle,
       TrackExecuteActions.playafter => Broken.hierarchy_square,
@@ -726,6 +728,9 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
         return;
       case TrackExecuteActions.play:
         Player.inst.playOrPause(0, [item], info.queueSource);
+      case TrackExecuteActions.playOptions:
+        final queue = info.queue ?? [item];
+        Player.inst.playWithOptions(info.index, queue, info.queueSource);
       case TrackExecuteActions.playnext:
         Player.inst.addToQueue([item], insertNext: true);
       case TrackExecuteActions.playlast:

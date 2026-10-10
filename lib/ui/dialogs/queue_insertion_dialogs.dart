@@ -47,8 +47,8 @@ void showAdvancedPlayDialog(Iterable<Selectable> Function() tracksFn, QueueSourc
             icon: Broken.play,
             title: lang.play,
             onTap: () {
-              Player.inst.playOrPause(0, buildTracks(), source);
               NamidaNavigator.inst.closeDialog();
+              Player.inst.playOrPause(0, buildTracks(), source);
             },
           ),
           CustomListTile(
@@ -121,8 +121,8 @@ void showAdvancedShuffleDialog(Iterable<Selectable> Function() tracksFn, QueueSo
             icon: Broken.shuffle,
             title: lang.shuffle,
             onTap: () {
-              Player.inst.playOrPause(0, buildTracks(), source);
               NamidaNavigator.inst.closeDialog();
+              Player.inst.playOrPause(0, buildTracks(), source);
             },
           ),
           CustomListTile(

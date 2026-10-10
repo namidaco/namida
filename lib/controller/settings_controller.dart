@@ -294,6 +294,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final refreshOnStartup = _key('refreshOnStartup', false, sync: false);
   late final alwaysExpandedSearchbar = _key('alwaysExpandedSearchbar', isKuru ? true : false);
   late final mixedQueue = _key('mixedQueue', false);
+  late final askBeforeReplacingQueue = _key('askBeforeReplacingQueue', false);
   late final bypassRefreshPrompt = _key('bypassRefreshPrompt_v2', false);
   late final desktopTitlebar = _key('desktopTitlebar', true, sync: false);
   late final desktopTitlebarType = _keyEnum('desktopTitlebarType', DesktopTitlebarIconsType.auto, DesktopTitlebarIconsType.values, sync: false);

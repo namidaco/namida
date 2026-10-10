@@ -352,6 +352,8 @@ class TrackTile extends StatelessWidget {
     info: SwipeQueueAddTileInfo(
       queueSource: properties.configs.queueSource,
       heroTag: _heroTag,
+      queue: tracks,
+      index: index,
     ),
   );
 
@@ -799,6 +801,8 @@ class TrackTile extends StatelessWidget {
         infoCallback: () => SwipeQueueAddTileInfo(
           queueSource: queueSource,
           heroTag: heroTag,
+          queue: tracks,
+          index: index,
         ),
         dismissibleKey: heroTag,
         allowSwipeLeft: properties.allowSwipeLeft,
