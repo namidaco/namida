@@ -3200,12 +3200,13 @@ class _DropShadowWrapper extends StatelessWidget {
           duration: Duration(milliseconds: 800),
           reverseDuration: Duration(milliseconds: 500),
           child: enabled
-              ? DropShadow(
-                  blurRadius: 40,
-                  offset: const Offset(0, 0.0),
-                  bgSizePercentage: 1.1,
-                  sizePercentage: 1.0,
-                  child: child,
+              ? Transform.scale(
+                  scale: 1.1,
+                  child: NamidaBlur(
+                    blur: 40.0,
+                    fixArtifacts: true,
+                    child: child,
+                  ),
                 )
               : const SizedBox(
                   key: ValueKey('video_bg_blur_disabled'),

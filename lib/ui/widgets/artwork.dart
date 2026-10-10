@@ -24,6 +24,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/image_advanced.dart';
+import 'package:namida/ui/widgets/baked_blur.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/stats_charts.dart';
@@ -197,6 +198,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
   static final _latestInvalidImagePath = <String?, bool>{};
   static final _staggeredAspectRatios = <Object, double>{};
   static const _kStaticMapsMaxEntries = 4000;
+  static const _kGlowOffset = Offset(0.0, 1.25);
 
   static void _markInvalidImagePath(String? path) {
     if (_latestInvalidImagePath.length >= _kStaticMapsMaxEntries) _latestInvalidImagePath.clear();
@@ -412,6 +414,10 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final dropShadowEnabled = settings.enableGlowEffect.value && widget.blur != 0.0;
     final sizePercentage = widget.disableBlurBgSizeShrink || !dropShadowEnabled ? 1.0 : DropShadow.defaultSizePercentage;
+    final isBlurEnabled = settings.enableBlurEffect.value;
+    final outerBlurSources = isBlurEnabled ? ArtworkBlurScope.maybeOf(context) : null;
+    final createsBlurScope = isBlurEnabled && outerBlurSources == null && widget.onTopWidgets?.isNotEmpty == true;
+    final isBlurSourceNeeded = createsBlurScope || outerBlurSources != null;
 
     // -- dont display stock widget if image can be obtained.
     if (_isWaitingForImage) {
@@ -429,12 +435,16 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                 ...?widget.onTopWidgets,
               ],
             );
-      return sizePercentage == 1.0
+      final waitingChild = sizePercentage == 1.0
           ? child
           : Transform.scale(
               scale: sizePercentage,
               child: child,
             );
+      if (!createsBlurScope) return waitingChild;
+      return ArtworkBlurScope(
+        child: waitingChild,
+      );
     }
 
     final realWidthAndHeight = widget.forceSquared ? double.infinity : null;
@@ -461,110 +471,134 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
     final theme = context.theme;
+    final isStock = !canDisplayImage || widget.forceDummyArtwork;
+    final stockColor = widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor);
+    final artworkBox = isStock
+        ? _getStockWidget(
+            key: key,
+            boxWidth: boxWidth,
+            boxHeight: boxHeight,
+            borderRadius: borderR,
+            shape: shape,
+            stackWithOnTopWidgets: true,
+            bgc: stockColor,
+          )
+        : Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: borderR,
+              shape: shape,
+              boxShadow: widget.boxShadow,
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (image != null)
+                  ImageAdvanced(
+                    image: image,
+                    gaplessPlayback: true,
+                    fit: widget.fit,
+                    alignment: widget.alignment,
+                    // -- low and high, both cause pixelated image lmao
+                    // -- but medium also causes delayed rendering especially while animating
+                    filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
+                    width: (info) {
+                      if (widget.staggered) return boxWidth;
+                      if (info == null) return realWidthAndHeight;
+                      final aspectRatio = info.image.width / info.image.height;
+                      ArtworkWidget._cacheAspectRatio(_staggeredCacheKey, aspectRatio);
+                      if (widget.forceSquared) return realWidthAndHeight;
+                      final fittedWidth = (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
+                      return fittedWidth;
+                    },
+                    height: (info) => widget.staggered ? _staggeredHeight(info, boxWidth, boxHeight) : realWidthAndHeight,
+                    frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
+                      if (wasSynchronouslyLoaded || frame == null) return child;
+                      if (_displayedImageBefore) return child;
+                      _displayedImageBefore = true;
+                      if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
+                      if (widget.fadeMilliSeconds == 0) return child;
+                      if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
+                      if (goodImagePath && bytes != null && bytes.isNotEmpty) return child;
+
+                      return TweenAnimationBuilder(
+                        tween: Tween<double>(begin: 1.0, end: 0.0),
+                        duration: Duration(milliseconds: widget.fadeMilliSeconds),
+                        child: child,
+                        builder: (context, value, child) {
+                          return Stack(
+                            textDirection: TextDirection.ltr,
+                            children: [
+                              child!,
+                              Positioned.fill(
+                                child: IgnorePointer(
+                                  child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }),
+                    errorBuilder: (context, error, stackTrace) {
+                      if (!_triedDeleting) {
+                        _triedDeleting = true;
+                        if (error.toString().contains('Invalid image data')) {
+                          final fp = widget.path;
+                          if (fp != null && widget.fallbackToFolderCover && (fp.startsWith(AppDirs.APP_CACHE) || fp.startsWith(AppDirs.USER_DATA))) {
+                            // -- fallbackToFolderCover should be always true for app cached images.
+                            // -- we are allowed to delete only if specified image is app-generated.
+                            File(fp).tryDeleting();
+                            ArtworkWidget.evictImageFile(File(fp));
+                          }
+                        }
+                      }
+                      return _getStockWidget(
+                        key: key,
+                        boxWidth: boxWidth,
+                        boxHeight: boxHeight,
+                        borderRadius: borderR,
+                        shape: shape,
+                        stackWithOnTopWidgets: false,
+                      );
+                    },
+                  ),
+                ...?widget.onTopWidgets,
+              ],
+            ),
+          );
+
+    Widget bakedArtworkBox = artworkBox;
+    final isBackdropSource = isBlurSourceNeeded && !isStock;
+    if (dropShadowEnabled || isBackdropSource) {
+      final glowScale = DropShadow.defaultBgSizePercentage / sizePercentage;
+      bakedArtworkBox = BakedBlurArtwork(
+        image: image,
+        stockGlowColor: isStock ? stockColor : null,
+        glowBlur: dropShadowEnabled ? widget.blur : 0.0,
+        glowScale: glowScale,
+        glowOffset: _kGlowOffset,
+        isBackdropSource: isBackdropSource,
+        fit: widget.fit,
+        alignment: widget.alignment,
+        isCircle: widget.isCircle,
+        borderRadius: borderR,
+        child: artworkBox,
+      );
+    }
+    if (sizePercentage != 1.0) {
+      bakedArtworkBox = Transform.scale(
+        scale: sizePercentage,
+        child: bakedArtworkBox,
+      );
+    }
+
     Widget artwork = SizedBox(
       key: key,
       width: widget.staggered ? null : boxWidth,
       height: widget.staggered ? null : boxHeight,
       child: Align(
-        child: _DropShadowWrapper(
-          enabled: dropShadowEnabled,
-          blur: widget.blur,
-          sizePercentage: sizePercentage,
-          child: !canDisplayImage || widget.forceDummyArtwork
-              ? _getStockWidget(
-                  key: key,
-                  boxWidth: boxWidth,
-                  boxHeight: boxHeight,
-                  borderRadius: borderR,
-                  shape: shape,
-                  stackWithOnTopWidgets: true,
-                  bgc: widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor),
-                )
-              : Container(
-                  clipBehavior: Clip.antiAlias,
-                  decoration: BoxDecoration(
-                    borderRadius: borderR,
-                    shape: shape,
-                    boxShadow: widget.boxShadow,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      if (image != null)
-                        ImageAdvanced(
-                          image: image,
-                          gaplessPlayback: true,
-                          fit: widget.fit,
-                          alignment: widget.alignment,
-                          // -- low and high, both cause pixelated image lmao
-                          // -- but medium also causes delayed rendering especially while animating
-                          filterQuality: widget.compressed ? FilterQuality.low : FilterQuality.high,
-                          width: (info) {
-                            if (widget.staggered) return boxWidth;
-                            if (info == null) return realWidthAndHeight;
-                            final aspectRatio = info.image.width / info.image.height;
-                            ArtworkWidget._cacheAspectRatio(_staggeredCacheKey, aspectRatio);
-                            if (widget.forceSquared) return realWidthAndHeight;
-                            final fittedWidth = (boxHeight * aspectRatio).clampDouble(0.0, boxWidth);
-                            return fittedWidth;
-                          },
-                          height: (info) => widget.staggered ? _staggeredHeight(info, boxWidth, boxHeight) : realWidthAndHeight,
-                          frameBuilder: ((context, child, frame, wasSynchronouslyLoaded) {
-                            if (wasSynchronouslyLoaded || frame == null) return child;
-                            if (_displayedImageBefore) return child;
-                            _displayedImageBefore = true;
-                            if (ArtworkWidget.isResizingAppWindow || ArtworkWidget.isMovingDrawer) return child;
-                            if (widget.fadeMilliSeconds == 0) return child;
-                            if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) return child;
-                            if (goodImagePath && bytes != null && bytes.isNotEmpty) return child;
-
-                            return TweenAnimationBuilder(
-                              tween: Tween<double>(begin: 1.0, end: 0.0),
-                              duration: Duration(milliseconds: widget.fadeMilliSeconds),
-                              child: child,
-                              builder: (context, value, child) {
-                                return Stack(
-                                  textDirection: TextDirection.ltr,
-                                  children: [
-                                    child!,
-                                    Positioned.fill(
-                                      child: IgnorePointer(
-                                        child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          }),
-                          errorBuilder: (context, error, stackTrace) {
-                            if (!_triedDeleting) {
-                              _triedDeleting = true;
-                              if (error.toString().contains('Invalid image data')) {
-                                final fp = widget.path;
-                                if (fp != null && widget.fallbackToFolderCover && (fp.startsWith(AppDirs.APP_CACHE) || fp.startsWith(AppDirs.USER_DATA))) {
-                                  // -- fallbackToFolderCover should be always true for app cached images.
-                                  // -- we are allowed to delete only if specified image is app-generated.
-                                  File(fp).tryDeleting();
-                                  ArtworkWidget.evictImageFile(File(fp));
-                                }
-                              }
-                            }
-                            return _getStockWidget(
-                              key: key,
-                              boxWidth: boxWidth,
-                              boxHeight: boxHeight,
-                              borderRadius: borderR,
-                              shape: shape,
-                              stackWithOnTopWidgets: false,
-                            );
-                          },
-                        ),
-                      ...?widget.onTopWidgets,
-                    ],
-                  ),
-                ),
-        ),
+        child: bakedArtworkBox,
       ),
     );
 
@@ -577,6 +611,12 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
           );
         }
       }
+    }
+
+    if (createsBlurScope) {
+      artwork = ArtworkBlurScope(
+        child: artwork,
+      );
     }
 
     return artwork;
@@ -635,34 +675,6 @@ class _EncapsulateWithFloatingTilt extends StatelessWidget {
       ),
       child: const SizedBox(),
     );
-  }
-}
-
-class _DropShadowWrapper extends StatelessWidget {
-  final bool enabled;
-  final Widget child;
-  final double blur;
-  final double sizePercentage;
-  final Offset offset;
-
-  const _DropShadowWrapper({
-    required this.enabled,
-    required this.child,
-    this.offset = const Offset(0.0, 1.25),
-    this.sizePercentage = DropShadow.defaultSizePercentage,
-    required this.blur,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return enabled
-        ? DropShadow(
-            blurRadius: blur,
-            offset: offset,
-            sizePercentage: sizePercentage,
-            child: child,
-          )
-        : child;
   }
 }
 

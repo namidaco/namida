@@ -2636,6 +2636,11 @@ class _TrackCard extends StatefulWidget {
 }
 
 class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
+  static const _kBgBlurSigma = 20.0;
+
+  /// inverse of [BoxShadow.convertRadiusToSigma].
+  static const _kBgBlurShadowRadius = (_kBgBlurSigma - 0.5) / 0.57735;
+
   Color? _cardColor;
 
   void _extractColor(Track track) async {
@@ -2667,6 +2672,19 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     final textTheme = theme.textTheme;
     final track = widget.track;
     final color = Color.alphaBlend((_cardColor ?? theme.scaffoldBackgroundColor).withAlpha(50), theme.cardColor);
+    // -- a blurred solid box drawn as a shadow, no offscreen layer
+    final bgDecoration = settings.enableBlurEffect.value
+        ? BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: color,
+                blurRadius: _kBgBlurShadowRadius,
+              ),
+            ],
+          )
+        : BoxDecoration(
+            color: color,
+          );
     final dummyContainer = track == null;
     if (dummyContainer) {
       return NamidaInkWell(
@@ -2709,16 +2727,9 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
           Positioned.fill(
             child: BorderRadiusClip(
               borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-              child: NamidaBlur(
-                blur: 20.0,
-                enabled: settings.enableBlurEffect.value,
-                fixArtifacts: true,
-                child: AnimatedDecoration(
-                  duration: Duration(milliseconds: 400),
-                  decoration: BoxDecoration(
-                    color: color,
-                  ),
-                ),
+              child: AnimatedDecoration(
+                duration: Duration(milliseconds: 400),
+                decoration: bgDecoration,
               ),
             ),
           ),
