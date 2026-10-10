@@ -25,7 +25,7 @@ void main() {
     final runner = BenchRunner('indexing');
     final artistsConfig = ArtistsSplitConfig(addFeatArtist: true, separators: kBenchArtistSeparators, separatorsBlacklist: const []);
     final genresConfig = GenresSplitConfig(separators: kBenchGenreSeparators, separatorsBlacklist: const []);
-    final albumConfig = SimpleSplitConfig();
+    final albumConfig = AlbumsSplitConfig(separators: const ['\u00A0'], separatorsBlacklist: const []);
     final splitConfig = SplitArtistGenreConfigsWrapper(
       dbPath: '',
       artistsConfig: artistsConfig,

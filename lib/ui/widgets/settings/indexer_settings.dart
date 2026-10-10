@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
@@ -30,7 +31,6 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
@@ -45,12 +45,11 @@ enum _IndexerSettingsKeys with SettingKeysBase {
   preventDuplicatedTracks,
   respectNoMedia,
   extractFtArtist,
+  separators,
   artworksCache,
   groupArtworksByAlbum,
   uniqueArtworkHash,
   albumIdentifiers,
-  artistSeparators,
-  genreSeparators,
   extensionsBlacklist,
   minimumFileSize,
   minimumTrackDur,
@@ -84,12 +83,11 @@ class IndexerSettings extends SettingSubpageProvider {
     _IndexerSettingsKeys.preventDuplicatedTracks: [lang.preventDuplicatedTracks, lang.preventDuplicatedTracksSubtitle],
     _IndexerSettingsKeys.respectNoMedia: [lang.respectNoMedia, lang.respectNoMediaSubtitle],
     _IndexerSettingsKeys.extractFtArtist: [lang.extractFeatArtist, lang.extractFeatArtistSubtitle],
+    _IndexerSettingsKeys.separators: [lang.separators, lang.trackArtistsSeparator, lang.trackGenresSeparator],
     _IndexerSettingsKeys.artworksCache: [lang.enableArtworkCache, lang.enableArtworkCacheSubtitle],
     _IndexerSettingsKeys.groupArtworksByAlbum: [lang.groupArtworksByAlbum],
     _IndexerSettingsKeys.uniqueArtworkHash: [lang.uniqueArtworkHash],
     _IndexerSettingsKeys.albumIdentifiers: [lang.albumIdentifiers],
-    _IndexerSettingsKeys.artistSeparators: [lang.trackArtistsSeparator],
-    _IndexerSettingsKeys.genreSeparators: [lang.trackGenresSeparator],
     _IndexerSettingsKeys.extensionsBlacklist: ['${lang.extension} (${lang.blacklist})'],
     _IndexerSettingsKeys.minimumFileSize: [lang.minFileSize],
     _IndexerSettingsKeys.minimumTrackDur: [lang.minFileDuration],
@@ -1229,6 +1227,17 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
           getArtworkCacheWidget(context),
           getItemWrapper(
+            key: _IndexerSettingsKeys.separators,
+            child: CustomListTile(
+              bgColor: getBgColor(_IndexerSettingsKeys.separators),
+              icon: Broken.scissor,
+              title: lang.separators,
+              subtitle: '${lang.artists}, ${lang.genres}, ${lang.albums} • ${lang.instantlyApplies}',
+              trailing: const Icon(Broken.arrow_right_3),
+              onTap: _showSeparatorsDialog,
+            ),
+          ),
+          getItemWrapper(
             key: _IndexerSettingsKeys.albumIdentifiers,
             child: Obx(
               (context) => CustomListTile(
@@ -1292,44 +1301,6 @@ class IndexerSettings extends SettingSubpageProvider {
                         ],
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.artistSeparators,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.artistSeparators),
-                icon: Broken.profile_2user,
-                title: lang.trackArtistsSeparator,
-                subtitle: lang.instantlyApplies,
-                trailingText: "${settings.trackArtistsSeparators.valueR.length}",
-                onTap: () async {
-                  await _showSeparatorSymbolsDialog(
-                    lang.trackArtistsSeparator,
-                    settings.trackArtistsSeparators,
-                    trackArtistsSeparators: true,
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.genreSeparators,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.genreSeparators),
-                icon: Broken.smileys,
-                title: lang.trackGenresSeparator,
-                subtitle: lang.instantlyApplies,
-                trailingText: "${settings.trackGenresSeparators.valueR.length}",
-                onTap: () async {
-                  await _showSeparatorSymbolsDialog(
-                    lang.trackGenresSeparator,
-                    settings.trackGenresSeparators,
-                    trackGenresSeparators: true,
                   );
                 },
               ),
@@ -1510,105 +1481,43 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  /// Automatically refreshes library after changing.
-  /// no re-index required.
-  Future<void> _showSeparatorSymbolsDialog(
-    String title,
-    RxBaseCore<List<String>> itemsList, {
-    bool trackArtistsSeparators = false,
-    bool trackGenresSeparators = false,
-    bool trackArtistsSeparatorsBlacklist = false,
-    bool trackGenresSeparatorsBlacklist = false,
-  }) async {
-    final TextEditingController separatorsController = TextEditingController();
-    final isBlackListDialog = trackArtistsSeparatorsBlacklist || trackGenresSeparatorsBlacklist;
+  void _showSeparatorsDialog() {
+    final lists = _SeparatorsType.values.expand((e) => [e.getList(isBlacklist: false).rx, e.getList(isBlacklist: true).rx]).toFixedList();
+    final originals = lists.map((e) => List<String>.from(e.value)).toFixedList();
 
-    final updatingLibrary = false.obs;
-
-    final original = List<String>.from(itemsList.value);
+    bool didChange() {
+      for (int i = 0; i < lists.length; i++) {
+        if (lists[i].value.didChangeFrom(originals[i])) return true;
+      }
+      return false;
+    }
 
     NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
-        updatingLibrary.close();
-        separatorsController.dispose();
+        if (didChange()) Indexer.inst.rebuildTracksAfterSplitConfigChanges();
       },
-      onDismissing: isBlackListDialog
-          ? null
-          : () async {
-              final didChange = itemsList.value.didChangeFrom(original);
-              if (didChange) {
-                updatingLibrary.value = true;
-                Indexer.inst.rebuildTracksAfterSplitConfigChanges();
-              }
-            },
-      durationInMs: 200,
-      dialog: _ChipsEditorDialog(
-        title: title,
-        controller: separatorsController,
-        displayDone: isBlackListDialog,
-        itemsList: itemsList,
-        instructions: isBlackListDialog ? lang.separatorsBlacklistSubtitle : lang.separatorsMessage,
-        isLoadingRx: updatingLibrary,
-        onAdd: (value) {
-          if (value.isNotEmpty) {
-            if (trackArtistsSeparators) {
-              settings.trackArtistsSeparators.update((list) => list.addNoDuplicates(value));
-            }
-            if (trackGenresSeparators) {
-              settings.trackGenresSeparators.update((list) => list.addNoDuplicates(value));
-            }
-            if (trackArtistsSeparatorsBlacklist) {
-              settings.trackArtistsSeparatorsBlacklist.update((list) => list.addNoDuplicates(value));
-            }
-            if (trackGenresSeparatorsBlacklist) {
-              settings.trackGenresSeparatorsBlacklist.update((list) => list.addNoDuplicates(value));
-            }
-            separatorsController.clear();
-          } else {
-            snackyy(title: lang.emptyValue, message: lang.enterSymbol);
-          }
-        },
-        onRemove: (e) {
-          if (trackArtistsSeparators) {
-            settings.trackArtistsSeparators.update((list) => list.remove(e));
-          }
-          if (trackGenresSeparators) {
-            settings.trackGenresSeparators.update((list) => list.remove(e));
-          }
-          if (trackArtistsSeparatorsBlacklist) {
-            settings.trackArtistsSeparatorsBlacklist.update((list) => list.remove(e));
-          }
-          if (trackGenresSeparatorsBlacklist) {
-            settings.trackGenresSeparatorsBlacklist.update((list) => list.remove(e));
-          }
-        },
-        leftAction: isBlackListDialog
-            ? null
-            : Obx(
-                (context) {
-                  final blLength = trackArtistsSeparators ? settings.trackArtistsSeparatorsBlacklist.valueR.length : settings.trackGenresSeparatorsBlacklist.valueR.length;
-                  final t = blLength == 0 ? '' : ' ($blLength)';
-                  return NamidaButton(
-                    text: '${lang.blacklist}$t',
-                    onTap: () {
-                      if (trackArtistsSeparators) {
-                        _showSeparatorSymbolsDialog(
-                          lang.blacklist,
-                          settings.trackArtistsSeparatorsBlacklist,
-                          trackArtistsSeparatorsBlacklist: true,
-                        );
-                      }
-                      if (trackGenresSeparators) {
-                        _showSeparatorSymbolsDialog(
-                          lang.blacklist,
-                          settings.trackGenresSeparatorsBlacklist,
-                          trackGenresSeparatorsBlacklist: true,
-                        );
-                      }
-                    },
-                  );
-                },
+      dialog: CustomBlurryDialog(
+        title: lang.separators,
+        normalTitleStyle: true,
+        icon: Broken.scissor,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ..._SeparatorsType.values.map(
+              (e) => _SeparatorsTypeTile(
+                type: e,
+                onTap: () => NamidaNavigator.inst.navigateDialog(
+                  dialog: _SeparatorsDialog(
+                    type: e,
+                  ),
+                ),
               ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1631,10 +1540,7 @@ class IndexerSettings extends SettingSubpageProvider {
       dialogBuilder: (theme) => _ChipsEditorDialog(
         title: title,
         controller: blacklistController,
-        displayDone: true,
         itemsList: blacklistItems,
-        instructions: null,
-        isLoadingRx: null,
         onAdd: (value) {
           if (blacklistController.text.isNotEmpty) {
             String extensionToBlacklist = blacklistController.text;
@@ -1688,25 +1594,17 @@ class IndexerSettings extends SettingSubpageProvider {
 
 class _ChipsEditorDialog extends StatelessWidget {
   final String title;
-  final String? instructions;
-  final Widget? leftAction;
   final Widget? bottomWidget;
-  final bool displayDone;
   final TextEditingController controller;
-  final RxBaseCore<List<String>>? itemsList;
-  final Rx<bool>? isLoadingRx;
+  final RxBaseCore<List<String>> itemsList;
   final void Function(String value) onAdd;
   final void Function(String value) onRemove;
 
   const _ChipsEditorDialog({
     required this.title,
-    required this.instructions,
-    this.leftAction,
     this.bottomWidget,
-    this.displayDone = false,
     required this.controller,
     required this.itemsList,
-    required this.isLoadingRx,
     required this.onAdd,
     required this.onRemove,
   });
@@ -1716,75 +1614,28 @@ class _ChipsEditorDialog extends StatelessWidget {
     return CustomBlurryDialog(
       title: title,
       actions: [
-        if (leftAction != null) ...[
-          Padding(
-            padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0),
-            child: leftAction!,
+        Padding(
+          padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0),
+          child: NamidaTextButton(
+            onTap: NamidaNavigator.inst.closeDialog,
+            text: lang.done,
           ),
-        ],
-        if (displayDone) ...[
-          Padding(
-            padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0),
-            child: NamidaTextButton(
-              onTap: NamidaNavigator.inst.closeDialog,
-              text: lang.done,
-            ),
-          ),
-        ],
-        if (isLoadingRx != null)
-          Obx(
-            (context) => isLoadingRx!.valueR
-                ? const LoadingIndicator()
-                : NamidaButton(
-                    text: lang.add,
-                    onTap: () => onAdd(controller.text),
-                  ),
-          )
-        else
-          NamidaButton(
-            text: lang.add,
-            onTap: () => onAdd(controller.text),
-          ),
+        ),
+        NamidaButton(
+          text: lang.add,
+          onTap: () => onAdd(controller.text),
+        ),
       ],
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (instructions != null && instructions!.isNotEmpty) ...[
-            Text(
-              instructions!,
-              style: namida.textTheme.displaySmall,
-            ),
-            const SizedBox(
-              height: 12.0,
-            ),
-          ],
           Obx(
             (context) => Wrap(
               children: [
-                ...?itemsList?.valueR.map(
-                  (e) => Container(
-                    margin: const EdgeInsets.all(4.0),
-                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                    decoration: BoxDecoration(
-                      color: namida.theme.cardTheme.color,
-                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                    ),
-                    child: InkWell(
-                      onTap: () => onRemove(e),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(e),
-                          const SizedBox(
-                            width: 6.0,
-                          ),
-                          const Icon(
-                            Broken.close_circle,
-                            size: 18.0,
-                          ),
-                        ],
-                      ),
-                    ),
+                ...itemsList.valueR.map(
+                  (e) => _TextChip(
+                    text: e,
+                    onRemove: () => onRemove(e),
                   ),
                 ),
               ],
@@ -2218,3 +2069,353 @@ class _LocalFilesSmallChip extends StatelessWidget {
     );
   }
 }
+
+class _SeparatorsTypeTile extends StatelessWidget {
+  final _SeparatorsType type;
+  final void Function() onTap;
+
+  const _SeparatorsTypeTile({
+    required this.type,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final separatorsRx = type.getList(isBlacklist: false).rx;
+    final blacklistRx = type.getList(isBlacklist: true).rx;
+    final extraFields = type.toExtraFieldsText();
+    final titleSuffix = extraFields == null ? null : '  ($extraFields)';
+    return Obx(
+      (context) {
+        final separators = separatorsRx.valueR;
+        final blacklistCount = blacklistRx.valueR.length;
+        final separatorsText = separators.map((e) => _SeparatorsType.toDisplayText(e).trim()).join('  ');
+        final blacklistCountWidget = blacklistCount == 0
+            ? null
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Broken.slash,
+                    size: 16.0,
+                  ),
+                  const SizedBox(
+                    width: 4.0,
+                  ),
+                  Text(
+                    '$blacklistCount',
+                    style: textTheme.displaySmall,
+                  ),
+                ],
+              );
+        return CustomListTile(
+          icon: type.toIcon(),
+          title: type.toText(),
+          titleSuffix: titleSuffix,
+          subtitle: separatorsText,
+          trailing: blacklistCountWidget,
+          onTap: onTap,
+        );
+      },
+    );
+  }
+}
+
+class _SeparatorsDialog extends StatefulWidget {
+  final _SeparatorsType type;
+
+  const _SeparatorsDialog({
+    required this.type,
+  });
+
+  @override
+  State<_SeparatorsDialog> createState() => _SeparatorsDialogState();
+}
+
+class _SeparatorsDialogState extends State<_SeparatorsDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _add({required bool isBlacklist}) {
+    final text = _controller.text;
+    if (text.isEmpty) {
+      snackyy(title: lang.emptyValue, message: isBlacklist ? lang.pleaseEnterAName : lang.enterSymbol);
+      return;
+    }
+    final value = isBlacklist ? text : _SeparatorsType.fromInputText(text);
+    final items = widget.type.getList(isBlacklist: isBlacklist);
+    items.update((list) => list.addNoDuplicates(value));
+    _controller.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    final type = widget.type;
+    final separators = type.getList(isBlacklist: false);
+    final blacklist = type.getList(isBlacklist: true);
+    return CustomBlurryDialog(
+      title: type.toText(),
+      normalTitleStyle: true,
+      icon: type.toIcon(),
+      actions: [
+        NamidaButton(
+          text: lang.blacklist,
+          onTap: () => _add(isBlacklist: true),
+        ),
+        NamidaButton(
+          text: lang.add,
+          onTap: () => _add(isBlacklist: false),
+        ),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            lang.separatorsMessage,
+            style: textTheme.displaySmall,
+          ),
+          const SizedBox(
+            height: 16.0,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  lang.separators,
+                  style: textTheme.displayMedium,
+                ),
+              ),
+              NamidaIconButton(
+                icon: Broken.refresh,
+                iconSize: 20.0,
+                tooltip: () => lang.restoreDefaults,
+                onPressed: separators.reset,
+              ),
+            ],
+          ),
+          const SizedBox(
+            height: 8.0,
+          ),
+          _SeparatorsChips(
+            list: separators,
+          ),
+          const SizedBox(
+            height: 16.0,
+          ),
+          Text(
+            lang.blacklist,
+            style: textTheme.displayMedium,
+          ),
+          Text(
+            lang.separatorsBlacklistSubtitle,
+            style: textTheme.displaySmall,
+          ),
+          const SizedBox(
+            height: 4.0,
+          ),
+          _SeparatorsChips(
+            list: blacklist,
+          ),
+          const SizedBox(
+            height: 16.0,
+          ),
+          CustomTagTextField(
+            controller: _controller,
+            hintText: lang.value,
+            labelText: '',
+          ),
+          const SizedBox(
+            height: 4.0,
+          ),
+          _SeparatorsPreview(
+            type: type,
+            controller: _controller,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SeparatorsChips extends StatelessWidget {
+  final _SeparatorsList list;
+
+  const _SeparatorsChips({
+    required this.list,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) => Wrap(
+        children: [
+          ...list.rx.valueR.map(
+            (e) => _TextChip(
+              text: _SeparatorsType.toDisplayText(e),
+              onRemove: () => list.update((items) => items.remove(e)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SeparatorsPreview extends StatelessWidget {
+  final _SeparatorsType type;
+  final TextEditingController controller;
+
+  const _SeparatorsPreview({
+    required this.type,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final labelStyle = context.textTheme.displaySmall;
+    final emptyLabelColor = labelStyle?.color?.withOpacityExt(0.5);
+    final emptyLabelStyle = labelStyle?.copyWith(color: emptyLabelColor);
+    final separatorsRx = type.getList(isBlacklist: false).rx;
+    final blacklistRx = type.getList(isBlacklist: true).rx;
+    return SizedBox(
+      height: 40.0,
+      child: Obx(
+        (context) {
+          final blacklist = blacklistRx.valueR;
+          final config = SplitterConfig(
+            separators: separatorsRx.valueR,
+            separatorsBlacklist: blacklist,
+          );
+          final blacklistLower = blacklist.map((e) => config.normalize(e).toLowerCase()).toSet();
+          return ValueListenableBuilder(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              final text = value.text;
+              final parts = text.isEmpty ? const <String>[] : config.splitText(text);
+              return Row(
+                children: [
+                  Text(
+                    '${lang.preview}:',
+                    style: parts.isEmpty ? emptyLabelStyle : labelStyle,
+                  ),
+                  Expanded(
+                    child: SmoothSingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          ...parts.map(
+                            (e) => _TextChip(
+                              text: e,
+                              isHighlighted: blacklistLower.contains(e.toLowerCase()),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TextChip extends StatelessWidget {
+  final String text;
+  final bool isHighlighted;
+  final void Function()? onRemove;
+
+  const _TextChip({
+    required this.text,
+    this.isHighlighted = false,
+    this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final borderColor = isHighlighted ? theme.colorScheme.secondary : Colors.transparent;
+    return NamidaInkWell(
+      onTap: onRemove,
+      margin: const EdgeInsets.all(4.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+      bgColor: theme.cardTheme.color,
+      borderRadius: 16.0,
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: borderColor,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(text),
+          if (onRemove != null) ...[
+            const SizedBox(
+              width: 6.0,
+            ),
+            const Icon(
+              Broken.close_circle,
+              size: 18.0,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+enum _SeparatorsType {
+  artists,
+  genres,
+  albums,
+  ;
+
+  static const _kNbsp = '\u00A0';
+  static const _kNbspLabel = 'NBSP';
+
+  static String toDisplayText(String separator) => separator == _kNbsp ? _kNbspLabel : separator;
+
+  static String fromInputText(String text) => text.toUpperCase() == _kNbspLabel ? _kNbsp : text;
+
+  String toText() => switch (this) {
+    _SeparatorsType.artists => lang.artists,
+    _SeparatorsType.genres => lang.genres,
+    _SeparatorsType.albums => lang.albums,
+  };
+
+  String? toExtraFieldsText() => switch (this) {
+    _SeparatorsType.artists => '${lang.albumArtist}, ${lang.composer}',
+    _SeparatorsType.genres => lang.style,
+    _SeparatorsType.albums => null,
+  };
+
+  IconData toIcon() => switch (this) {
+    _SeparatorsType.artists => Broken.profile_2user,
+    _SeparatorsType.genres => Broken.smileys,
+    _SeparatorsType.albums => Broken.music_dashboard,
+  };
+
+  _SeparatorsList getList({required bool isBlacklist}) {
+    final key = switch (this) {
+      _SeparatorsType.artists => isBlacklist ? settings.trackArtistsSeparatorsBlacklist : settings.trackArtistsSeparators,
+      _SeparatorsType.genres => isBlacklist ? settings.trackGenresSeparatorsBlacklist : settings.trackGenresSeparators,
+      _SeparatorsType.albums => isBlacklist ? settings.trackAlbumsSeparatorsBlacklist : settings.trackAlbumsSeparators,
+    };
+    return (rx: key, update: key.update, reset: key.reset);
+  }
+}
+
+typedef _SeparatorsList = ({RxBaseCore<List<String>> rx, void Function(void Function(List<String> list) fn) update, void Function() reset});

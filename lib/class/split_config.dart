@@ -1,12 +1,11 @@
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
-import 'package:namida/core/extensions.dart';
 
 class SplitArtistGenreConfigsWrapper {
   final String dbPath;
   final ArtistsSplitConfig artistsConfig;
   final GenresSplitConfig genresConfig;
-  final SimpleSplitConfig albumConfig;
+  final AlbumsSplitConfig albumConfig;
   final GeneralSplitConfig generalConfig;
 
   const SplitArtistGenreConfigsWrapper({
@@ -22,7 +21,7 @@ class SplitArtistGenreConfigsWrapper {
       dbPath: AppPaths.TRACKS_DB_INFO.file.path,
       artistsConfig: ArtistsSplitConfig.settings(),
       genresConfig: GenresSplitConfig.settings(),
-      albumConfig: SimpleSplitConfig(),
+      albumConfig: AlbumsSplitConfig.settings(),
       generalConfig: GeneralSplitConfig(),
     );
   }
@@ -97,19 +96,16 @@ class GenresSplitConfig extends SplitterConfig {
   }
 }
 
-class SimpleSplitConfig extends SplitterConfig {
-  SimpleSplitConfig._({
+class AlbumsSplitConfig extends SplitterConfig {
+  AlbumsSplitConfig({
     required super.separators,
     required super.separatorsBlacklist,
   });
 
-  factory SimpleSplitConfig() {
-    // `/` are pretty common for album names
-    // `\` could exist too
-    final finalSplitters = {';', r'\\', '\u00A0'};
-    return SimpleSplitConfig._(
-      separators: finalSplitters.toList(),
-      separatorsBlacklist: [],
+  factory AlbumsSplitConfig.settings() {
+    return AlbumsSplitConfig(
+      separators: settings.trackAlbumsSeparators.value,
+      separatorsBlacklist: settings.trackAlbumsSeparatorsBlacklist.value,
     );
   }
 }
@@ -172,10 +168,23 @@ class SplitDelimiter {
   }
 
   /// `trimAll()` that keeps the separators' own whitespace.
-  String _normalize(String text) {
+  String _normalize(String text) => _normalizeWith(text, _extraWhitespaceRegex);
+
+  static String _normalizeWith(String text, RegExp extraWhitespaceRegex) {
     if (!_mayHaveExtraWhitespace(text)) return text.trim();
-    final collapsed = text.replaceAll(_extraWhitespaceRegex, ' ');
+    final collapsed = text.replaceAll(extraWhitespaceRegex, ' ');
     return collapsed.trim();
+  }
+
+  /// values kept whole, without empties and case duplicates.
+  static List<String> normalizeValues(List<String> values) {
+    final normalized = <String>[];
+    for (final v in values) {
+      final value = _normalizeWith(v, _defaultExtraWhitespaceRegex);
+      if (value.isEmpty || _containsIgnoreCase(normalized, normalized.length, value)) continue;
+      normalized.add(value);
+    }
+    return normalized;
   }
 
   /// false only when [_extraWhitespaceRegex] can't match: no double space and no whitespace other than a space.
@@ -210,29 +219,33 @@ class SplitDelimiter {
         c == 0xFEFF;
   }
 
-  List<String> multiSplit(String text, List<String> blacklist) {
+  /// blacklisted names match ignoring case, kept as written in [text].
+  List<String> multiSplit(String text, RegExp? blacklistRegex) {
     final normalized = _normalize(text);
     final regex = _regex;
     if (regex == null) return normalized.isEmpty ? <String>[] : <String>[normalized];
-    if (blacklist.isEmpty) return _splitParts(normalized, regex);
-    if (blacklist.contains(normalized)) return [normalized]; // 3 times faster if true, otherwise no difference.
+    if (blacklistRegex == null) return _splitParts(normalized, regex);
 
-    final listToAddLater = <String>[];
-    String filteredString = normalized;
-    for (final b in blacklist) {
-      final withoutBL = filteredString.split(b);
-      if (withoutBL.length > 1) {
-        filteredString = withoutBL.join();
-        listToAddLater.add(b);
-      }
+    List<String>? parts;
+    int start = 0;
+    for (final m in blacklistRegex.allMatches(normalized)) {
+      parts ??= <String>[];
+      if (m.start > start) parts.addAll(_splitParts(normalized.substring(start, m.start), regex));
+      parts.add(m[0]!);
+      start = m.end;
     }
+    if (parts == null) return _splitParts(normalized, regex);
+    if (start < normalized.length) parts.addAll(_splitParts(normalized.substring(start), regex));
+    _removeCaseDuplicates(parts);
+    return parts;
+  }
 
-    final splitted = _splitParts(filteredString, regex);
-    if (listToAddLater.isEmpty) return splitted;
-    splitted.addAll(listToAddLater);
-    splitted.sort((a, b) => normalized.indexOf(a).compareTo(normalized.indexOf(b)));
-    _removeCaseDuplicates(splitted);
-    return splitted;
+  /// longest names first, so a name containing another blacklisted name wins.
+  static RegExp? _buildBlacklistRegex(List<String> blacklist) {
+    if (blacklist.isEmpty) return null;
+    blacklist.sort((a, b) => b.length.compareTo(a.length));
+    final regexString = blacklist.map(RegExp.escape).join('|');
+    return RegExp(regexString, caseSensitive: false);
   }
 
   /// drops case duplicates, the library maps ignore case.
@@ -272,7 +285,7 @@ interface class SplitterConfig {
   final List<String> separators;
   final List<String> separatorsBlacklist;
   late final SplitDelimiter delimiter;
-  late final List<String> _blacklistNormalized;
+  late final RegExp? _blacklistRegex;
 
   SplitterConfig({
     required this.separators,
@@ -280,14 +293,15 @@ interface class SplitterConfig {
   }) {
     final delimiter = SplitDelimiter.fromList(separators);
     this.delimiter = delimiter;
-    _blacklistNormalized = separatorsBlacklist.map(delimiter._normalize).where((e) => e.isNotEmpty).toFixedList();
+    final blacklistNormalized = separatorsBlacklist.map(delimiter._normalize).where((e) => e.isNotEmpty).toList();
+    _blacklistRegex = SplitDelimiter._buildBlacklistRegex(blacklistNormalized);
   }
 
   String normalize(String text) => delimiter._normalize(text);
 
   List<String> splitText(String? string, {String? fallback}) {
     if (string == null) return fallback == null ? [] : [fallback];
-    final splitted = delimiter.multiSplit(string, _blacklistNormalized);
+    final splitted = delimiter.multiSplit(string, _blacklistRegex);
     if (splitted.isEmpty) return fallback == null ? [] : [fallback];
     return splitted;
   }

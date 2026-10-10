@@ -345,6 +345,7 @@ Future<void> showTrackInfoDialog(
                                       Indexer.splitArtist(
                                             title: trackExt.title,
                                             originalArtist: trackExt.originalArtist,
+                                            tagged: trackExt.multiValues?.artists,
                                             config: ArtistsSplitConfig.settings(addFeatArtist: false),
                                           ).length ==
                                           1
@@ -356,14 +357,7 @@ Future<void> showTrackInfoDialog(
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbum))
                                 TrackInfoListTile(
-                                  title:
-                                      Indexer.splitAlbum(
-                                            trackExt.originalAlbum,
-                                            config: SimpleSplitConfig(),
-                                          ).length ==
-                                          1
-                                      ? lang.album
-                                      : lang.albums,
+                                  title: trackExt.albumsList.length == 1 ? lang.album : lang.albums,
                                   value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.originalAlbum,
                                   icon: Broken.music_dashboard,
                                 ),

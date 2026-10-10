@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/replay_gain_data.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/taglib_res.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -103,6 +104,7 @@ class FTags {
   final double? ratingPercentage;
   final ReplayGainData? gainData;
   final FTagsSortInfo? sortInfo;
+  final FTagsMultiValues? multiValues;
 
   /// identifiers worth keeping, keyed by their picard tag name. see [pickExtraTags].
   final Map<String, String>? extraTags;
@@ -149,6 +151,7 @@ class FTags {
     required this.ratingPercentage,
     required this.gainData,
     required this.sortInfo,
+    this.multiValues,
     this.extraTags,
   });
 
@@ -191,6 +194,7 @@ class FTags {
     this.ratingPercentage,
     this.gainData,
     this.sortInfo,
+    this.multiValues,
     this.extraTags,
   });
 
@@ -485,6 +489,116 @@ class FTagsSortInfo {
       'albumArtist': ?albumArtist,
       'artist': ?artist,
       'composer': ?composer,
+    };
+  }
+}
+
+// by claude
+/// fields the file holds several values of, used as they are instead of splitting their joined text.
+class FTagsMultiValues {
+  static const kJoiner = '; ';
+
+  final List<String>? artists, albums, albumArtists, composers, genres, styles, moods, tags;
+
+  const FTagsMultiValues._({
+    required this.artists,
+    required this.albums,
+    required this.albumArtists,
+    required this.composers,
+    required this.genres,
+    required this.styles,
+    required this.moods,
+    required this.tags,
+  });
+
+  static FTagsMultiValues? orNull({
+    List<String>? artists,
+    List<String>? albums,
+    List<String>? albumArtists,
+    List<String>? composers,
+    List<String>? genres,
+    List<String>? styles,
+    List<String>? moods,
+    List<String>? tags,
+  }) {
+    if (artists == null && albums == null && albumArtists == null && composers == null && genres == null && styles == null && moods == null && tags == null) {
+      return null;
+    }
+    return FTagsMultiValues._(
+      artists: artists,
+      albums: albums,
+      albumArtists: albumArtists,
+      composers: composers,
+      genres: genres,
+      styles: styles,
+      moods: moods,
+      tags: tags,
+    );
+  }
+
+  static List<String>? valuesOrNull(List<String> values) {
+    if (values.length < 2) return null;
+    final normalized = SplitDelimiter.normalizeValues(values);
+    return normalized.length < 2 ? null : normalized;
+  }
+
+  /// [text] joined by [kJoiner], spaces around `;` are optional.
+  static List<String>? splitJoined(String text) {
+    final values = text.split(';');
+    return valuesOrNull(values);
+  }
+
+  /// fields [tag] lacks keep [current]'s, an edited one (text without values) stays multi valued if it was.
+  static FTagsMultiValues? merge(FTags tag, FTagsMultiValues? current) {
+    final sent = tag.multiValues;
+    if (sent == null && current == null) return null;
+    return FTagsMultiValues.orNull(
+      artists: _mergeField(tag.artist, sent?.artists, current?.artists),
+      albums: _mergeField(tag.album, sent?.albums, current?.albums),
+      albumArtists: _mergeField(tag.albumArtist, sent?.albumArtists, current?.albumArtists),
+      composers: _mergeField(tag.composer, sent?.composers, current?.composers),
+      genres: _mergeField(tag.genre, sent?.genres, current?.genres),
+      styles: _mergeField(tag.style, sent?.styles, current?.styles),
+      moods: _mergeField(tag.mood, sent?.moods, current?.moods),
+      tags: _mergeField(tag.tags, sent?.tags, current?.tags),
+    );
+  }
+
+  static List<String>? _mergeField(String? text, List<String>? values, List<String>? currentValues) {
+    if (text == null) return currentValues;
+    if (values != null || currentValues == null) return values;
+    return splitJoined(text);
+  }
+
+  static FTagsMultiValues? fromMap(dynamic map) {
+    if (map is! Map) return null;
+    return FTagsMultiValues.orNull(
+      artists: _listFromMap(map['artists']),
+      albums: _listFromMap(map['albums']),
+      albumArtists: _listFromMap(map['albumArtists']),
+      composers: _listFromMap(map['composers']),
+      genres: _listFromMap(map['genres']),
+      styles: _listFromMap(map['styles']),
+      moods: _listFromMap(map['moods']),
+      tags: _listFromMap(map['tags']),
+    );
+  }
+
+  static List<String>? _listFromMap(dynamic list) {
+    if (list is! List) return null;
+    return List<String>.from(list, growable: false);
+  }
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'artists': ?artists,
+      'albums': ?albums,
+      'albumArtists': ?albumArtists,
+      'composers': ?composers,
+      'genres': ?genres,
+      'styles': ?styles,
+      'moods': ?moods,
+      'tags': ?tags,
     };
   }
 }

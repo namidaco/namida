@@ -148,8 +148,10 @@ class _SettingsController extends _SettingsKeysWriter {
   late final dateTimeFormat = _key('dateTimeFormat', isKuru ? '[dd.MM.yyyy] EEE' : 'MMM yyyy');
   late final trackArtistsSeparators = _keyList<String>('trackArtistsSeparators', const ['&', ',', ';', '//', ' ft. ', ' x ']);
   late final trackGenresSeparators = _keyList<String>('trackGenresSeparators', const ['&', ',', ';', '//', ' x ']);
+  late final trackAlbumsSeparators = _keyList<String>('trackAlbumsSeparators', const ['\u00A0']);
   late final trackArtistsSeparatorsBlacklist = _keyList<String>('trackArtistsSeparatorsBlacklist', isKuru ? const ['T & Sugah', 'Miles & Miles'] : const []);
   late final trackGenresSeparatorsBlacklist = _keyList<String>('trackGenresSeparatorsBlacklist', const []);
+  late final trackAlbumsSeparatorsBlacklist = _keyList<String>('trackAlbumsSeparatorsBlacklist', const []);
   late final extensionsBlacklist = _keyList<String>('extensionsBlacklist', const [], sync: false);
   late final fileBrowserSort = _keyEnum('fileBrowserSort', FileBrowserSortType.name, FileBrowserSortType.values);
   late final fileBrowserSortReversed = _key('fileBrowserSortReversed', false);

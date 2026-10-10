@@ -11,6 +11,10 @@ void main() {
     return ArtistsSplitConfig(addFeatArtist: addFeatArtist, separators: separators, separatorsBlacklist: blacklist);
   }
 
+  AlbumsSplitConfig albumsConfig({List<String> separators = const ['\u00A0'], List<String> blacklist = const []}) {
+    return AlbumsSplitConfig(separators: separators, separatorsBlacklist: blacklist);
+  }
+
   List<String> splitArtist(String? title, String? artist, {ArtistsSplitConfig? config}) {
     return Indexer.splitArtist(title: title, originalArtist: artist, config: config ?? artistsConfig());
   }
@@ -34,13 +38,14 @@ void main() {
     });
 
     test('a non-breaking space separator splits', () {
-      expect(SimpleSplitConfig().splitText('A\u00A0B'), ['A', 'B']);
-      expect(SimpleSplitConfig().splitText(' A \u00A0 B '), ['A', 'B']);
+      expect(albumsConfig().splitText('A\u00A0B'), ['A', 'B']);
+      expect(albumsConfig().splitText(' A \u00A0 B '), ['A', 'B']);
     });
 
-    test('albums do not split on slashes', () {
-      expect(SimpleSplitConfig().splitText('A // B'), ['A // B']);
-      expect(SimpleSplitConfig().splitText('A; B'), ['A', 'B']);
+    test('albums split only on their separators', () {
+      expect(albumsConfig().splitText('A // B'), ['A // B']);
+      expect(albumsConfig().splitText('A; B'), ['A; B']);
+      expect(albumsConfig(separators: [';']).splitText('A; B'), ['A', 'B']);
     });
 
     test('parts differing only in case are kept once, the first one wins', () {
@@ -49,11 +54,10 @@ void main() {
     });
 
     test('null or blank text gives the fallback', () {
-      final config = SimpleSplitConfig();
+      final config = albumsConfig();
       expect(config.splitText(null, fallback: 'U'), ['U']);
       expect(config.splitText('   ', fallback: 'U'), ['U']);
       expect(config.splitText('\u00A0', fallback: 'U'), ['U']);
-      expect(config.splitText(';', fallback: 'U'), ['U']);
       expect(config.splitText(null), isEmpty);
     });
 
@@ -64,7 +68,7 @@ void main() {
     });
 
     test('normalizing keeps what splitting needs', () {
-      final albumConfig = SimpleSplitConfig();
+      final albumConfig = albumsConfig();
       final normalized = albumConfig.normalize('  One\u00A0Two  ');
       expect(normalized, 'One\u00A0Two');
       expect(albumConfig.splitText(normalized), albumConfig.splitText('  One\u00A0Two  '));
@@ -100,6 +104,26 @@ void main() {
     test('blank blacklist entries are ignored', () {
       final config = artistsConfig(blacklist: ['', '  ']);
       expect(config.splitText('A & B'), ['A', 'B']);
+    });
+
+    test('blacklisted names match ignoring case and keep the text casing', () {
+      final config = artistsConfig(blacklist: ['T & Sugah']);
+      expect(config.splitText('T & sugah'), ['T & sugah']);
+      expect(config.splitText('Queen, t & SUGAH & Muse'), ['Queen', 't & SUGAH', 'Muse']);
+    });
+
+    test('the longest blacklisted name wins', () {
+      final config = artistsConfig(blacklist: ['Simon', 'Simon & Garfunkel']);
+      expect(config.splitText('Simon & Garfunkel & Queen'), ['Simon & Garfunkel', 'Queen']);
+    });
+
+    test('blacklisted albums stay whole', () {
+      const petroDragonic = 'PetroDragonic Apocalypse; or, Dawn of Eternal Night';
+      final config = albumsConfig(separators: [';', r'\\'], blacklist: [petroDragonic, r'C:\\Windows']);
+      expect(config.splitText(petroDragonic), [petroDragonic]);
+      expect(config.splitText('$petroDragonic; Best Of'), [petroDragonic, 'Best Of']);
+      expect(config.splitText(r'C:\\Windows'), [r'C:\\Windows']);
+      expect(config.splitText(r'A\\B'), ['A', 'B']);
     });
   });
 

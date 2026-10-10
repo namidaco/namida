@@ -1292,6 +1292,7 @@ class JsonToHistoryParser {
             (e) => (
               title: e.title,
               artist: e.originalArtist,
+              taggedArtists: e.multiValues?.artists,
               path: e.path,
               isVideo: e.isVideo,
             ),
@@ -1544,6 +1545,13 @@ class JsonToHistoryParser {
       );
       for (final ar in artistsList) {
         tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
+      }
+      // -- whole tagged values on top of the split ones, old matches stay
+      final taggedArtists = trMap.taggedArtists;
+      if (taggedArtists != null) {
+        for (final ar in taggedArtists) {
+          tracksLookupArtistsMap.addForce(ar.cleanUpForComparison, trMap);
+        }
       }
       if (artistsList.isNotEmpty) {
         final artistTokens = SearchMatcher.tokenize(artistsList.first);
@@ -2088,6 +2096,7 @@ class _GeneralSourceResult {
 typedef _HistoryParserTrackParams = ({
   String title,
   String artist,
+  List<String>? taggedArtists,
   String path,
   bool isVideo,
 });

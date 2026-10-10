@@ -7,6 +7,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:lrc/lrc.dart';
 import 'package:nampack/extensions/extensions.dart';
 
+import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
@@ -56,6 +57,7 @@ class TracksSearchWrapper {
               genre: e.originalGenre,
               style: e.originalStyle,
               composer: e.composer,
+              multiValues: e.multiValues,
               year: e.year,
               comment: e.comment,
               description: addDescription ? e.description : null,
@@ -150,6 +152,7 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitAlbum(
                     trMap.album,
+                    tagged: trMap.multiValues?.albums,
                     config: splitConfig.albumConfig,
                   ),
                   textCleanedForSearch,
@@ -162,6 +165,7 @@ class TracksSearchWrapper {
                   Indexer.splitArtist(
                     title: title,
                     originalArtist: trMap.artist,
+                    tagged: trMap.multiValues?.artists,
                     config: splitConfig.artistsConfig,
                   ),
                   textCleanedForSearch,
@@ -172,6 +176,7 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitGenre(
                     trMap.genre,
+                    tagged: trMap.multiValues?.genres,
                     config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
@@ -182,6 +187,7 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitStyle(
                     trMap.style,
+                    tagged: trMap.multiValues?.styles,
                     config: splitConfig.genresConfig,
                   ),
                   textCleanedForSearch,
@@ -192,6 +198,7 @@ class TracksSearchWrapper {
               ? _mapListCleanedAndCleanedMinor(
                   Indexer.splitComposer(
                     trMap.composer,
+                    tagged: trMap.multiValues?.composers,
                     config: splitConfig.artistsConfig,
                   ),
                   textCleanedForSearch,
@@ -879,6 +886,7 @@ typedef TracksSearchTrackParams = ({
   String genre,
   String style,
   String composer,
+  FTagsMultiValues? multiValues,
   int? year,
   String? comment,
   String? description,

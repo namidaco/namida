@@ -29,7 +29,7 @@ void main() {
     dbPath: '',
     artistsConfig: splitConfig,
     genresConfig: GenresSplitConfig(separators: const ['&', ',', ';', '//', ' x '], separatorsBlacklist: const []),
-    albumConfig: SimpleSplitConfig(),
+    albumConfig: AlbumsSplitConfig(separators: const ['\u00A0'], separatorsBlacklist: const []),
     generalConfig: GeneralSplitConfig(),
   );
 
@@ -490,7 +490,13 @@ void main() {
     expect(listenedPaths, {tracks[0].path, tracks[1].path, tracks[2].path});
   });
 
-  _Track track(String title, String artist) => (title: title, artist: artist, path: trackPath('$artist - $title.mp3'), isVideo: false);
+  _Track track(String title, String artist, {List<String>? taggedArtists}) => (
+    title: title,
+    artist: artist,
+    taggedArtists: taggedArtists,
+    path: trackPath('$artist - $title.mp3'),
+    isVideo: false,
+  );
 
   group('lastfm csv', () {
     addLastFm(List<String> lines, List<_Track> tracks, {SplayTreeMap<int, List<TrackWithDate>>? localHistory}) {
@@ -580,6 +586,12 @@ void main() {
         final res = await addLastFm(lines, tracks);
         expect(res!.localHistory.values.single.single.track.path, loveStory.path);
       }
+    });
+
+    test('each value of a multi valued artist tag matches whole', () async {
+      final tr = track('Song', 'Metrik; Camo & Crooked', taggedArtists: ['Metrik', 'Camo & Crooked']);
+      final res = await addLastFm(['Camo & Crooked,Album,Song,05 Oct 2026 12:34'], [tr]);
+      expect(res!.localHistory.values.single.single.track.path, tr.path);
     });
   });
 
@@ -734,4 +746,4 @@ void main() {
 
 typedef _YTTrack = ({String title, String artist, String album, String path, String comment, bool isVideo});
 
-typedef _Track = ({String title, String artist, String path, bool isVideo});
+typedef _Track = ({String title, String artist, List<String>? taggedArtists, String path, bool isVideo});

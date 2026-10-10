@@ -25,7 +25,7 @@ void main() {
       dbPath: '',
       artistsConfig: ArtistsSplitConfig(addFeatArtist: true, separators: const ['&', ',', ';', '//', ' ft. ', ' x '], separatorsBlacklist: const []),
       genresConfig: GenresSplitConfig(separators: const ['&', ',', ';', '//', ' x '], separatorsBlacklist: const []),
-      albumConfig: SimpleSplitConfig(),
+      albumConfig: AlbumsSplitConfig(separators: const [';'], separatorsBlacklist: const []),
       generalConfig: GeneralSplitConfig(),
     );
   });
@@ -89,6 +89,7 @@ void main() {
       originalTags: null,
       gainData: null,
       sortInfo: null,
+      multiValues: null,
       hashKey: null,
       extraTags: null,
       chapters: null,

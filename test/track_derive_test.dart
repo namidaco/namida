@@ -24,7 +24,7 @@ void main() {
       dbPath: '',
       artistsConfig: ArtistsSplitConfig(addFeatArtist: true, separators: const ['&', ',', ';', '//', ' ft. ', ' x '], separatorsBlacklist: const []),
       genresConfig: GenresSplitConfig(separators: const ['&', ',', ';', '//', ' x '], separatorsBlacklist: const []),
-      albumConfig: SimpleSplitConfig(),
+      albumConfig: AlbumsSplitConfig(separators: const [';', '\u00A0'], separatorsBlacklist: const []),
       generalConfig: GeneralSplitConfig(),
     );
   });
@@ -77,7 +77,7 @@ void main() {
     ratingPercentage: ratingPercentage,
   );
 
-  FTags fullTags({String title = 'Song (feat. C)', String artist = 'A & B', String album = 'First; Second'}) => FTags(
+  FTags fullTags({String title = 'Song (feat. C)', String artist = 'A & B', String album = 'First; Second', FTagsMultiValues? multiValues}) => FTags(
     path: '',
     artwork: FArtwork(),
     title: title,
@@ -115,6 +115,7 @@ void main() {
     ratingPercentage: 0.8,
     gainData: ReplayGainData.fromMap({'tg': -6.5, 'tp': 0.98}),
     sortInfo: FTagsSortInfo.orNull(title: 'Song', artist: 'A'),
+    multiValues: multiValues,
     extraTags: const {'ISRC': 'USX9P0000001'},
     chapters: const [
       MediaChapter(startMS: 0, title: 'Intro'),
@@ -309,6 +310,75 @@ void main() {
       final fresh = await index(pathOf('disc.mp3'), editTags(title: 'T', artist: 'Ar', discNumber: '1', discTotal: '2'));
       expect(fresh.discNo, 1);
       expect(fresh.discTo, 2);
+    });
+  });
+
+  group('multi valued tags', () {
+    const csny = 'Crosby, Stills, Nash & Young';
+    const camo = 'Camo & Crooked';
+    final multiTags = fullTags(
+      title: 'Song',
+      artist: '$csny; $camo',
+      multiValues: FTagsMultiValues.orNull(artists: [csny, camo]),
+    );
+
+    test('values are kept whole while single valued fields still split', () async {
+      final fresh = await index(pathOf('multi.flac'), multiTags);
+      expect(fresh.originalArtist, '$csny; $camo');
+      expect(fresh.artistsList, [csny, camo]);
+      expect(fresh.composersList, ['Comp One', 'Comp Two']);
+      expect(everythingOf(reload(fresh)), everythingOf(fresh));
+      expect(everythingOf(fresh.rederive(splitConfig)), everythingOf(fresh));
+    });
+
+    test('feat artists from the title are still added', () async {
+      final fresh = await index(
+        pathOf('feat.flac'),
+        fullTags(
+          title: 'Song (feat. C & D)',
+          artist: '$csny; $camo',
+          multiValues: FTagsMultiValues.orNull(artists: [csny, camo]),
+        ),
+      );
+      expect(fresh.artistsList, [csny, camo, 'C', 'D']);
+      expect(derivedOf(reload(fresh)), derivedOf(fresh));
+    });
+
+    test('albums are kept whole even when they hold an album separator', () async {
+      const petroDragonic = 'PetroDragonic Apocalypse; or, Dawn of Eternal Night';
+      final fresh = await index(
+        pathOf('albums.flac'),
+        fullTags(
+          title: 'Song',
+          album: '$petroDragonic; Best Of',
+          multiValues: FTagsMultiValues.orNull(albums: [petroDragonic, 'Best Of']),
+        ),
+      );
+      expect(fresh.albumsList, [petroDragonic, 'Best Of']);
+      expect(derivedOf(reload(fresh)), derivedOf(fresh));
+    });
+
+    test('an edited multi valued field stays multi valued', () async {
+      final fresh = await index(pathOf('edit.flac'), multiTags);
+      expect(editedFrom(fresh, editTags(artist: '$csny;$camo ;  Metrik')).artistsList, [csny, camo, 'Metrik']);
+      expect(editedFrom(fresh, editTags(lyrics: 'la')).artistsList, [csny, camo]);
+
+      final single = editedFrom(fresh, editTags(artist: 'Metrik'));
+      expect(single.artistsList, ['Metrik']);
+      expect(single.multiValues, isNull);
+    });
+
+    test('a single valued field edited with the joiner splits like before', () async {
+      final fresh = await index(pathOf('single.mp3'), fullTags(title: 'Song'));
+      final edited = editedFrom(fresh, editTags(artist: 'A & B; C'));
+      expect(edited.artistsList, ['A', 'B', 'C']);
+      expect(edited.multiValues, isNull);
+    });
+
+    test('values are trimmed without empties or case duplicates', () {
+      expect(FTagsMultiValues.valuesOrNull([' A ', '', 'a', 'B  C']), ['A', 'B C']);
+      expect(FTagsMultiValues.valuesOrNull(['A', ' a ', '']), isNull);
+      expect(FTagsMultiValues.splitJoined('A;B ;  C'), ['A', 'B', 'C']);
     });
   });
 

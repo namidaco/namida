@@ -23,7 +23,7 @@ void main() {
       dbPath: '',
       artistsConfig: ArtistsSplitConfig(addFeatArtist: true, separators: const ['&'], separatorsBlacklist: const []),
       genresConfig: GenresSplitConfig(separators: const ['&'], separatorsBlacklist: const []),
-      albumConfig: SimpleSplitConfig(),
+      albumConfig: AlbumsSplitConfig(separators: const ['\u00A0'], separatorsBlacklist: const []),
       generalConfig: GeneralSplitConfig(),
     );
   });

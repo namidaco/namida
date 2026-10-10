@@ -636,6 +636,7 @@ class Indexer<T extends Track> {
         tagsList: const [],
         gainData: null,
         sortInfo: null,
+        multiValues: null,
         extraTags: null,
         albumsIdentifiersWrappers: const [],
         isVideo: trackPath.isVideo(),
@@ -1926,13 +1927,18 @@ class Indexer<T extends Track> {
   static List<String> splitArtist({
     required String? title,
     required String? originalArtist,
+    List<String>? tagged,
     required ArtistsSplitConfig config,
   }) {
-    final artists = originalArtist == UnknownTags.ARTIST ? [UnknownTags.ARTIST] : config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
-    if (title != null && config.addFeatArtist) {
-      final featArtists = _extractFeatArtists(title);
-      if (featArtists != null) config.addSplitTextTo(artists, featArtists);
+    final featArtists = title != null && config.addFeatArtist ? _extractFeatArtists(title) : null;
+    if (tagged != null) {
+      if (featArtists == null) return tagged;
+      final artists = [...tagged];
+      config.addSplitTextTo(artists, featArtists);
+      return artists;
     }
+    final artists = originalArtist == UnknownTags.ARTIST ? [UnknownTags.ARTIST] : config.splitText(originalArtist, fallback: UnknownTags.ARTIST);
+    if (featArtists != null) config.addSplitTextTo(artists, featArtists);
     return artists;
   }
 
@@ -1963,8 +1969,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitComposer(
     String? originalComposer, {
+    List<String>? tagged,
     required ArtistsSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     if (originalComposer == UnknownTags.COMPOSER) return [UnknownTags.COMPOSER];
     return config.splitText(
       originalComposer,
@@ -1974,8 +1982,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitAlbumArtist(
     String? originalAlbumArtist, {
+    List<String>? tagged,
     required ArtistsSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     return config.splitText(
       originalAlbumArtist,
       fallback: UnknownTags.ALBUMARTIST,
@@ -1984,8 +1994,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitGenre(
     String? originalGenre, {
+    List<String>? tagged,
     required GenresSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     if (originalGenre == UnknownTags.GENRE) return [UnknownTags.GENRE];
     return config.splitText(
       originalGenre,
@@ -1995,8 +2007,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitStyle(
     String? originalStyle, {
+    List<String>? tagged,
     required GenresSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     return config.splitText(
       originalStyle,
       fallback: UnknownTags.STYLE,
@@ -2005,8 +2019,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitGeneral(
     String? originalText, {
+    List<String>? tagged,
     required GeneralSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     return config.splitText(
       originalText,
       fallback: null,
@@ -2015,8 +2031,10 @@ class Indexer<T extends Track> {
 
   static List<String> splitAlbum(
     String? originalText, {
-    required SimpleSplitConfig config,
+    List<String>? tagged,
+    required AlbumsSplitConfig config,
   }) {
+    if (tagged != null) return tagged;
     if (originalText == UnknownTags.ALBUM) return [UnknownTags.ALBUM];
     return config.splitText(
       originalText,
@@ -2181,6 +2199,7 @@ class Indexer<T extends Track> {
         originalTags: tag,
         gainData: null,
         sortInfo: null,
+        multiValues: null,
         extraTags: null,
         isVideo: e.data.isVideo(),
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),

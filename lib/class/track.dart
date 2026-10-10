@@ -399,6 +399,7 @@ class TrackExtended {
   final List<String> tagsList;
   final ReplayGainData? gainData;
   final FTagsSortInfo? sortInfo;
+  final FTagsMultiValues? multiValues;
   final String? hashKey;
 
   /// identifiers keyed by their picard tag name (`MUSICBRAINZ_TRACKID`, `ISRC`, ...), see [FTags.pickExtraTags].
@@ -469,6 +470,7 @@ class TrackExtended {
     required this.tagsList,
     required this.gainData,
     required this.sortInfo,
+    required this.multiValues,
     required this.hashKey,
     required this.extraTags,
     required this.chapters,
@@ -629,6 +631,7 @@ class TrackExtended {
     required String? originalTags,
     required ReplayGainData? gainData,
     required FTagsSortInfo? sortInfo,
+    required FTagsMultiValues? multiValues,
     required String? hashKey,
     required Map<String, String>? extraTags,
     required List<MediaChapter>? chapters,
@@ -639,25 +642,25 @@ class TrackExtended {
     final artistsConfig = splitConfig.artistsConfig;
     final genresConfig = splitConfig.genresConfig;
     final generalConfig = splitConfig.generalConfig;
-    final albumsList = Indexer.splitAlbum(originalAlbum, config: splitConfig.albumConfig);
+    final albumsList = Indexer.splitAlbum(originalAlbum, tagged: multiValues?.albums, config: splitConfig.albumConfig);
     // -- rows indexed before `yearText` existed only have the number
     final albumYear = yearText.isEmpty && year > 0 ? year.toString() : yearText;
     return TrackExtended(
       title: title,
       originalArtist: originalArtist,
-      artistsList: Indexer.splitArtist(title: title, originalArtist: originalArtist, config: artistsConfig),
+      artistsList: Indexer.splitArtist(title: title, originalArtist: originalArtist, tagged: multiValues?.artists, config: artistsConfig),
       originalAlbum: originalAlbum,
       albumsList: albumsList,
       albumArtist: albumArtist,
-      albumArtistsList: Indexer.splitAlbumArtist(albumArtist, config: artistsConfig),
+      albumArtistsList: Indexer.splitAlbumArtist(albumArtist, tagged: multiValues?.albumArtists, config: artistsConfig),
       originalGenre: originalGenre,
-      genresList: Indexer.splitGenre(originalGenre, config: genresConfig),
+      genresList: Indexer.splitGenre(originalGenre, tagged: multiValues?.genres, config: genresConfig),
       originalStyle: originalStyle,
-      stylesList: Indexer.splitStyle(originalStyle, config: genresConfig),
+      stylesList: Indexer.splitStyle(originalStyle, tagged: multiValues?.styles, config: genresConfig),
       originalMood: originalMood,
-      moodList: Indexer.splitGeneral(originalMood, config: generalConfig),
+      moodList: Indexer.splitGeneral(originalMood, tagged: multiValues?.moods, config: generalConfig),
       composer: composer,
-      composersList: Indexer.splitComposer(composer, config: artistsConfig),
+      composersList: Indexer.splitComposer(composer, tagged: multiValues?.composers, config: artistsConfig),
       trackNo: trackNo,
       trackTo: trackTo,
       durationMS: durationMS,
@@ -687,9 +690,10 @@ class TrackExtended {
       musicalKey: musicalKey,
       rating: rating,
       originalTags: originalTags,
-      tagsList: Indexer.splitGeneral(originalTags, config: generalConfig),
+      tagsList: Indexer.splitGeneral(originalTags, tagged: multiValues?.tags, config: generalConfig),
       gainData: gainData,
       sortInfo: sortInfo,
+      multiValues: multiValues,
       hashKey: hashKey,
       extraTags: extraTags,
       chapters: chapters,
@@ -764,6 +768,7 @@ class TrackExtended {
       originalTags: json['originalTags'],
       gainData: json['gainData'] == null ? null : ReplayGainData.fromMap(json['gainData']),
       sortInfo: json['sortInfo'] == null ? null : FTagsSortInfo.fromMap(json['sortInfo']),
+      multiValues: FTagsMultiValues.fromMap(json['multiValues']),
       hashKey: json['hashKey'],
       extraTags: _extraTagsFromJson(json['extraTags']),
       chapters: MediaChapter.listFromJson(json['chapters']),
@@ -818,6 +823,7 @@ class TrackExtended {
       if (originalTags?.isNotEmpty == true) 'originalTags': originalTags,
       if (gainData != null) 'gainData': ?gainData?.toMap(),
       if (sortInfo != null) 'sortInfo': ?sortInfo?.toMap(),
+      'multiValues': ?multiValues?.toMap(),
       if (hashKey != null) 'hashKey': hashKey,
       if (extraTags != null) 'extraTags': extraTags,
       if (albumsIdentifiersWrappers.isNotEmpty) 'albumsIdentifiersWrappers': albumsIdentifiersWrappers.map((e) => e.toMap()).toFixedList(),
@@ -1019,6 +1025,7 @@ extension TrackExtUtils on TrackExtended {
     final originalStyle = TrackExtended._sentOriginal(tag.style, genresConfig, UnknownTags.STYLE) ?? this.originalStyle;
     final originalMood = TrackExtended._sentOriginal(tag.mood, splittersConfigs.generalConfig, UnknownTags.MOOD) ?? this.originalMood;
     final composer = TrackExtended._sentOriginal(tag.composer, artistsConfig, UnknownTags.COMPOSER) ?? this.composer;
+    final multiValues = FTagsMultiValues.merge(tag, this.multiValues);
 
     final trackNumber = tag.trackNumber;
     final trackTotal = tag.trackTotal;
@@ -1068,6 +1075,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: tag.tags ?? originalTags,
       gainData: tag.gainData ?? gainData,
       sortInfo: tag.sortInfo ?? sortInfo,
+      multiValues: multiValues,
       extraTags: tag.extraTags ?? extraTags,
       chapters: tag.chapters ?? chapters,
 
@@ -1132,6 +1140,7 @@ extension TrackExtUtils on TrackExtended {
       originalTags: originalTags,
       gainData: gainData,
       sortInfo: sortInfo,
+      multiValues: multiValues,
       hashKey: hashKey,
       extraTags: extraTags,
       chapters: chapters,
@@ -1249,6 +1258,7 @@ extension TrackExtUtils on TrackExtended {
       tagsList: tagsList ?? this.tagsList,
       gainData: gainData ?? this.gainData,
       sortInfo: sortInfo ?? this.sortInfo,
+      multiValues: multiValues,
       hashKey: newHashKey,
       extraTags: extraTags ?? this.extraTags,
       chapters: chapters ?? this.chapters,
