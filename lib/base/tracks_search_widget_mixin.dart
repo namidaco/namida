@@ -312,32 +312,28 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
   @override
   Widget build(BuildContext context) {
     final type = widget.type;
-    return ObxO(
-      rx: settings.mediaItemsTrackSortingReverse,
-      builder: (context, sortingModesReverse) {
-        final sortIsReverse = sortingModesReverse[type] == true;
-        return ObxO(
-          rx: settings.mediaItemsTrackSorting,
-          builder: (context, sortingModes) {
-            final sorts = sortingModes[type] ?? const <SortType>[];
-            return TracksSearchWidgetBoxBase(
-              state: widget.state,
-              leftText: widget.leftText,
-              sort: sorts.firstOrNull,
-              sortReverse: sortIsReverse,
-              disableSort: widget.disableSort,
-              onFilterIconLongPress: () => _onFilterIconLongPress(
-                type: type,
-                sorts: sorts,
-                sortReverse: sortIsReverse,
-                pageTitle: widget.pageTitle,
-              ),
-              onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
-              onReverseIconTap: (newSortReverse) {
-                settings.mediaItemsTrackSortingReverse.update((reverse) => reverse[type] = newSortReverse);
-                Indexer.inst.sortMediaTracksSubLists([type]);
-              },
-            );
+    return Obx(
+      (context) {
+        final sortIsReverse = settings.mediaItemsTrackSortingReverse.valueR[type] == true;
+        final sorts = settings.mediaItemsTrackSorting.valueR[type] ?? const <SortType>[];
+        final presetName = settings.mediaItemsTrackSortingPresets.valueR[type]?.activePreset?.name;
+        return TracksSearchWidgetBoxBase(
+          state: widget.state,
+          leftText: widget.leftText,
+          sort: sorts.firstOrNull,
+          presetName: presetName,
+          sortReverse: sortIsReverse,
+          disableSort: widget.disableSort,
+          onFilterIconLongPress: () => _onFilterIconLongPress(
+            type: type,
+            sorts: sorts,
+            sortReverse: sortIsReverse,
+            pageTitle: widget.pageTitle,
+          ),
+          onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
+          onReverseIconTap: (newSortReverse) {
+            settings.updateMediaItemsTrackSortingAll(type, null, newSortReverse);
+            Indexer.inst.sortMediaTracksSubLists([type]);
           },
         );
       },
@@ -349,6 +345,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
   final TracksSearchWidgetMixin state;
   final String leftText;
   final SortType? sort;
+  final String? presetName;
   final bool sortReverse;
   final bool disableSort;
   final void Function() onSortTap;
@@ -360,6 +357,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
     required this.state,
     required this.leftText,
     required this.sort,
+    this.presetName,
     required this.sortReverse,
     this.disableSort = false,
     required this.onSortTap,
@@ -386,7 +384,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
           const SizedBox(width: 10.0),
         ],
         sortByMenuWidget: SortByMenu(
-          title: sort?.toText() ?? lang.custom,
+          title: presetName ?? sort?.toText() ?? lang.custom,
           popupMenuChild: null,
           onSortTap: onSortTap,
           isCurrentlyReversed: sortReverse,

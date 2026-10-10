@@ -122,6 +122,8 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
               final totalTracksLength = _totalTracksLengthR();
               String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${totalTracksLength.displayTrackKeyword}' : finalTracksLength.displayTrackKeyword;
               final isIndexingR = Indexer.inst.isIndexing.valueR;
+              final presetName = settings.mediaItemsTrackSortingPresets.valueR[MediaType.track]?.activePreset?.name;
+              final sortTitle = presetName ?? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '';
               return ExpandableBox(
                 enableHero: false,
                 isBarVisible: libraryTab.isBarVisible.valueR,
@@ -152,7 +154,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                   ScrollSearchController.inst.clearSearchTextField(libraryTab);
                 },
                 sortByMenuWidget: SortByMenu(
-                  title: settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '',
+                  title: sortTitle,
                   popupMenuChild: const SortByMenuTracks(),
                   isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
                   onReverseIconTap: () {

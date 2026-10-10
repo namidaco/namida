@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:math' show Random;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:basic_audio_handler/basic_audio_handler.dart';
@@ -14,6 +15,7 @@ import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
+import 'package:namida/class/track_sort_presets.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
@@ -441,7 +443,8 @@ class _SettingsController extends _SettingsKeysWriter {
 
   static const _kDefaultTracksSorting = isKuru ? [SortType.firstListen, SortType.title] : [SortType.title, SortType.year, SortType.album];
 
-  late final mediaItemsTrackSorting = _keyMap<MediaType, List<SortType>>(
+  /// used while no preset is active, sorting reads [mediaItemsTrackSorting].
+  late final mediaItemsTrackSortingDefault = _keyMap<MediaType, List<SortType>>(
     'mediaItemsTrackSorting',
     const {
       MediaType.track: _kDefaultTracksSorting,
@@ -463,7 +466,7 @@ class _SettingsController extends _SettingsKeysWriter {
     value: _PlainListCodec(SortType.values.asCodec()),
   );
 
-  late final mediaItemsTrackSortingReverse = _keyMap<MediaType, bool>(
+  late final mediaItemsTrackSortingReverseDefault = _keyMap<MediaType, bool>(
     'mediaItemsTrackSortingReverse',
     const {
       MediaType.track: false,
@@ -481,6 +484,19 @@ class _SettingsController extends _SettingsKeysWriter {
     },
     key: MediaType.values.asCodec(),
   );
+
+  late final mediaItemsTrackSortingPresets = _keyMap<MediaType, TrackSortPresets>(
+    'mediaItemsTrackSortingPresets',
+    const {},
+    key: MediaType.values.asCodec(),
+    value: _ObjectCodec(TrackSortPresets.fromJson, (v) => v.toJson()),
+  );
+
+  /// [mediaItemsTrackSortingDefault] with each type's active preset applied.
+  RxBaseCore<Map<MediaType, List<SortType>>> get mediaItemsTrackSorting => _activeTrackSorting.sorts;
+  RxBaseCore<Map<MediaType, bool>> get mediaItemsTrackSortingReverse => _activeTrackSorting.reverse;
+
+  late final _activeTrackSorting = _ActiveTrackSorting(mediaItemsTrackSortingDefault, mediaItemsTrackSortingReverseDefault, mediaItemsTrackSortingPresets);
 
   late final imageSourceAlbum = _keyList('imageSourceAlbum', const [LibraryImageSource.lastfm, LibraryImageSource.local], item: LibraryImageSource.values.asCodec());
   late final imageSourceArtist = _keyList('imageSourceArtist', const [LibraryImageSource.lastfm, LibraryImageSource.local], item: LibraryImageSource.values.asCodec());
@@ -579,15 +595,66 @@ class _SettingsController extends _SettingsKeysWriter {
     }
   }
 
-  void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse) {
+  /// writes to the active preset, [toDefault] writes to the default chain and deselects the preset.
+  void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse, {bool toDefault = false}) {
     if (allsorts == null && isReverse == null) return;
-    final didChangeSorts = allsorts.didChangeFrom(mediaItemsTrackSorting.value[media], ordered: true);
-    final didChangeReverse = isReverse != mediaItemsTrackSortingReverse.value[media];
-    if (!didChangeSorts && !didChangeReverse) return;
+    final presets = mediaItemsTrackSortingPresets.value[media];
+    final hasActivePreset = presets?.activeIndex != null;
+    if (presets != null && hasActivePreset && !toDefault) {
+      final newPresets = presets.withActiveChain(sorts: allsorts, reverse: isReverse);
+      mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
+      return;
+    }
 
+    final didChangeSorts = allsorts.didChangeFrom(mediaItemsTrackSortingDefault.value[media], ordered: true);
+    final didChangeReverse = isReverse != mediaItemsTrackSortingReverseDefault.value[media];
+    final deselectedPresets = hasActivePreset ? presets?.withActive(null) : null;
+    if (!didChangeSorts && !didChangeReverse && deselectedPresets == null) return;
+
+    // -- default first, it doesn't change the active sorting while a preset is still selected
     transaction(() {
-      if (allsorts != null) mediaItemsTrackSorting.update((sorting) => sorting[media] = allsorts);
-      if (isReverse != null) mediaItemsTrackSortingReverse.update((reverse) => reverse[media] = isReverse);
+      if (allsorts != null) mediaItemsTrackSortingDefault.update((sorting) => sorting[media] = allsorts);
+      if (isReverse != null) mediaItemsTrackSortingReverseDefault.update((reverse) => reverse[media] = isReverse);
+      if (deselectedPresets != null) mediaItemsTrackSortingPresets.update((map) => map[media] = deselectedPresets);
+    });
+  }
+
+  void selectTrackSortPreset(MediaType media, int? index) {
+    final presets = mediaItemsTrackSortingPresets.value[media];
+    if (presets == null || presets.activeIndex == index) return;
+    final newPresets = presets.withActive(index);
+    mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
+  }
+
+  /// saves the active sorting of [media] as a new preset and selects it.
+  void addTrackSortPreset(MediaType media, String name) {
+    final presets = mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
+    if (!presets.canAdd) return;
+    final sorts = mediaItemsTrackSorting.value[media] ?? const <SortType>[];
+    final reverse = mediaItemsTrackSortingReverse.value[media] ?? false;
+    final preset = TrackSortPreset(name: name, sorts: sorts, reverse: reverse);
+    final newPresets = presets.withAdded(preset);
+    mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
+  }
+
+  void renameTrackSortPreset(MediaType media, int index, String name) {
+    final presets = mediaItemsTrackSortingPresets.value[media];
+    if (presets == null) return;
+    final newPreset = presets.presets[index].copyWith(name: name);
+    final newPresets = presets.withReplaced(index, newPreset);
+    mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
+  }
+
+  void removeTrackSortPreset(MediaType media, int index) {
+    final presets = mediaItemsTrackSortingPresets.value[media];
+    if (presets == null) return;
+    final newPresets = presets.withRemoved(index);
+    mediaItemsTrackSortingPresets.update((map) {
+      if (newPresets.presets.isEmpty) {
+        map.remove(media);
+      } else {
+        map[media] = newPresets;
+      }
     });
   }
 
@@ -679,6 +746,49 @@ class _DirectoryIndexCodec extends _SettingsCodec<DirectoryIndex> {
 
   @override
   Object? encode(DirectoryIndex value) => value.toMap();
+}
+
+// by claude
+class _ActiveTrackSorting {
+  final _SettingsMapKey<MediaType, List<SortType>> _defaultSorts;
+  final _SettingsMapKey<MediaType, bool> _defaultReverse;
+  final _SettingsMapKey<MediaType, TrackSortPresets> _presets;
+
+  final sorts = Rx<Map<MediaType, List<SortType>>>(const {});
+  final reverse = Rx<Map<MediaType, bool>>(const {});
+
+  _ActiveTrackSorting(this._defaultSorts, this._defaultReverse, this._presets) {
+    _rebuild();
+    _defaultSorts.addListener(_rebuild);
+    _defaultReverse.addListener(_rebuild);
+    _presets.addListener(_rebuild);
+  }
+
+  /// both are set before either notifies, so a listener of one reads the other up to date.
+  void _rebuild() {
+    final newSorts = <MediaType, List<SortType>>{..._defaultSorts.value};
+    final newReverse = <MediaType, bool>{..._defaultReverse.value};
+    for (final e in _presets.value.entries) {
+      final preset = e.value.activePreset;
+      if (preset == null) continue;
+      newSorts[e.key] = preset.sorts;
+      newReverse[e.key] = preset.reverse;
+    }
+    final didChangeSorts = !_sortsEqual(newSorts, sorts.value);
+    final didChangeReverse = !mapEquals(newReverse, reverse.value);
+    if (didChangeSorts) sorts.set(_ProtectedMap(newSorts));
+    if (didChangeReverse) reverse.set(_ProtectedMap(newReverse));
+    if (didChangeSorts) sorts.refresh();
+    if (didChangeReverse) reverse.refresh();
+  }
+
+  static bool _sortsEqual(Map<MediaType, List<SortType>> a, Map<MediaType, List<SortType>> b) {
+    if (a.length != b.length) return false;
+    for (final e in a.entries) {
+      if (!listEquals(e.value, b[e.key])) return false;
+    }
+    return true;
+  }
 }
 
 extension CountPerRowMapUtils on Map<LibraryTab, CountPerRow?> {

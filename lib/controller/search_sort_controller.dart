@@ -1259,7 +1259,7 @@ class SearchSortController extends SearchPortsProvider {
     reverse ??= settings.mediaItemsTrackSortingReverse.value[MediaType.track];
 
     if (forceSingleSorting) {
-      settings.updateMediaItemsTrackSortingAll(MediaType.track, sortBy == null ? null : [sortBy], reverse);
+      settings.updateMediaItemsTrackSortingAll(MediaType.track, sortBy == null ? null : [sortBy], reverse, toDefault: true);
 
       _sortTracksRaw(
         sortBy: sortBy,

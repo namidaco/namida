@@ -18,6 +18,7 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/class/track_sort_presets.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/eggs_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -332,14 +333,19 @@ class NamidaOnTaps {
       withSortKeyOptions: true,
       prefixFiltersOf: SortOptionsCards.prefixFiltersOfTracks,
       onSortChange: (activeSorters) {
-        settings.mediaItemsTrackSorting.update((sorting) => sorting[media] = activeSorters);
+        settings.updateMediaItemsTrackSortingAll(media, activeSorters, null);
       },
       onSortReverseChange: (reverse) {
-        settings.mediaItemsTrackSortingReverse.update((reverseMap) => reverseMap[media] = reverse);
+        settings.updateMediaItemsTrackSortingAll(media, null, reverse);
       },
       onDone: () {
         Indexer.inst.sortMediaTracksSubLists([media]);
       },
+      leftActionBuilder: (onBeforeChange, onChanged) => _TrackSortPresetsButton(
+        media: media,
+        onBeforeChange: onBeforeChange,
+        onChanged: onChanged,
+      ),
     );
   }
 
@@ -492,6 +498,7 @@ class NamidaOnTaps {
     required void Function(List<S> activeSorters) onSortChange,
     required void Function(bool reverse) onSortReverseChange,
     required void Function() onDone,
+    Widget Function(VoidCallback onBeforeChange, void Function(List<S> sorts, bool reverse) onChanged)? leftActionBuilder,
   }) {
     final sorters = List<S>.from(currentSorts).obs;
     final isReverse = currentReverse.obs;
@@ -505,11 +512,23 @@ class NamidaOnTaps {
 
     resortVisualItems();
 
-    void resortMedia() {
+    void saveSorts() {
       final activeSorts = sorters.value.toList();
       onSortChange(activeSorts);
+    }
+
+    void resortMedia() {
+      saveSorts();
       onDone();
     }
+
+    void loadSorts(List<S> sorts, bool reverse) {
+      sorters.value = sorts.toList();
+      isReverse.value = reverse;
+      resortVisualItems();
+    }
+
+    final leftAction = leftActionBuilder?.call(saveSorts, loadSorts);
 
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
@@ -520,6 +539,7 @@ class NamidaOnTaps {
       onDismissing: resortMedia,
       dialog: CustomBlurryDialog(
         title: "${lang.sortBy} (${lang.reorderable})",
+        leftAction: leftAction,
         actions: [
           IconButton(
             icon: const Icon(Broken.refresh),
@@ -2256,4 +2276,189 @@ bool replaceFunctionForUpdatedPaths(
   }
 
   return true;
+}
+
+// by claude
+class _TrackSortPresetsButton extends StatelessWidget {
+  final MediaType media;
+  final VoidCallback onBeforeChange;
+  final void Function(List<SortType> sorts, bool reverse) onChanged;
+
+  const _TrackSortPresetsButton({
+    required this.media,
+    required this.onBeforeChange,
+    required this.onChanged,
+  });
+
+  void _reloadSorts() {
+    final sorts = settings.mediaItemsTrackSorting.value[media] ?? const <SortType>[];
+    final reverse = settings.mediaItemsTrackSortingReverse.value[media] ?? false;
+    onChanged(sorts, reverse);
+  }
+
+  void _select(int? index) {
+    final activeIndex = settings.mediaItemsTrackSortingPresets.value[media]?.activeIndex;
+    if (index == activeIndex) return;
+    onBeforeChange();
+    settings.selectTrackSortPreset(media, index);
+    _reloadSorts();
+  }
+
+  void _add() {
+    onBeforeChange();
+    final sorts = settings.mediaItemsTrackSorting.value[media] ?? const <SortType>[];
+    final initialName = sorts.map((e) => e.toText()).joinText(separator: ', ');
+    _TrackSortPresetNameDialog.show(
+      title: lang.saveAsPreset,
+      initialName: initialName,
+      onName: (name) => settings.addTrackSortPreset(media, name),
+    );
+  }
+
+  void _edit(int index, TrackSortPreset preset) {
+    NamidaNavigator.inst.popMenu();
+    _TrackSortPresetNameDialog.show(
+      title: lang.rename,
+      initialName: preset.name,
+      onName: (name) => settings.renameTrackSortPreset(media, index, name),
+      onDelete: () {
+        onBeforeChange();
+        settings.removeTrackSortPreset(media, index);
+        _reloadSorts();
+      },
+    );
+  }
+
+  List<NamidaPopupItem> _menuItems() {
+    final presets = settings.mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
+    final activeIndex = presets.activeIndex;
+    return [
+      NamidaPopupItem(
+        icon: Broken.sort,
+        title: lang.defaultLabel,
+        selected: activeIndex == null,
+        onTap: () => _select(null),
+      ),
+      ...presets.presets.mapIndexed(
+        (preset, i) => NamidaPopupItem(
+          icon: Broken.layer,
+          title: preset.name,
+          selected: activeIndex == i,
+          onTap: () => _select(i),
+          trailing: NamidaIconButton(
+            horizontalPadding: 0.0,
+            icon: Broken.edit_2,
+            iconSize: 18.0,
+            disableColor: true,
+            onPressed: () => _edit(i, preset),
+          ),
+        ),
+      ),
+      if (presets.canAdd)
+        NamidaPopupItem(
+          icon: Broken.add,
+          title: lang.add,
+          onTap: _add,
+        ),
+    ];
+  }
+
+  void _showMenu(BuildContext context) {
+    final popup = NamidaPopupWrapper(childrenDefault: _menuItems);
+    popup.showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final bgColor = theme.colorScheme.secondary.withOpacityExt(0.15);
+    return ObxO(
+      rx: settings.mediaItemsTrackSortingPresets,
+      builder: (context, presetsMap) {
+        final activePreset = presetsMap[media]?.activePreset;
+        final title = activePreset?.name ?? lang.defaultLabel;
+        return NamidaInkWell(
+          borderRadius: 6.0,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          bgColor: bgColor,
+          onTap: () => _showMenu(context),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Broken.layer,
+                size: 16.0,
+              ),
+              const SizedBox(width: 4.0),
+              Flexible(
+                child: Text(
+                  title,
+                  style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+abstract final class _TrackSortPresetNameDialog {
+  static void show({
+    required String title,
+    required String initialName,
+    required void Function(String name) onName,
+    VoidCallback? onDelete,
+  }) {
+    final controller = TextEditingController(text: initialName);
+    final formKey = GlobalKey<FormState>();
+    final deleteButton = onDelete == null
+        ? null
+        : NamidaIconButton(
+            icon: Broken.trash,
+            tooltip: () => lang.delete,
+            onPressed: () {
+              NamidaNavigator.inst.closeDialog();
+              onDelete();
+            },
+          );
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: controller.dispose,
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: title,
+          normalTitleStyle: true,
+          trailingWidgets: [
+            ?deleteButton,
+          ],
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.save,
+              onTap: () {
+                if (formKey.currentState?.validate() != true) return;
+                NamidaNavigator.inst.closeDialog();
+                final name = controller.text.trim();
+                onName(name);
+              },
+            ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: CustomTagTextField(
+              controller: controller,
+              hintText: initialName,
+              labelText: lang.name,
+              validator: (text) => text == null || text.trim().isEmpty ? lang.emptyValue : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
