@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -969,9 +970,6 @@ class _QueueConfigureOptions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ytSettings = YoutubeSettings();
-    final playbackSettings = PlaybackSettings();
-
     return SizedBox(
       width: context.width,
       child: ConstrainedBox(
@@ -982,15 +980,25 @@ class _QueueConfigureOptions extends StatelessWidget {
           children: [
             const SizedBox(height: 8.0),
             if (!isLocal) ...[
-              ytSettings.getAutoStartRadioWidget(),
+              SettingEntryTile(
+                entry: YoutubeSettings.autoStartRadio,
+              ),
               NamidaContainerDivider(
                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               ),
             ],
-            playbackSettings.getAutoPlayOnNextPrevWidget(),
-            playbackSettings.getInfinityQueueOnNextPrevWidget(),
-            playbackSettings.getJumpToFirstTrackAfterFinishingWidget(),
-            playbackSettings.getPreviousButtonReplaysWidget(),
+            SettingEntryTile(
+              entry: PlaybackSettings.autoPlayOnNextPrev,
+            ),
+            SettingEntryTile(
+              entry: PlaybackSettings.infinityQueueOnNextPrev,
+            ),
+            SettingEntryTile(
+              entry: PlaybackSettings.jumpToFirstTrackAfterFinishing,
+            ),
+            SettingEntryTile(
+              entry: PlaybackSettings.previousButtonReplays,
+            ),
           ],
         ),
       ),

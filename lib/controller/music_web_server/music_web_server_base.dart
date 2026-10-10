@@ -641,7 +641,7 @@ class _MusicWebServerAuthManager {
               SettingsSearchController.inst
                   .onResultTap(
                     settingPage: SettingSubpageEnum.indexer,
-                    key: IndexerSettingsKeysGlobal.foldersToScan,
+                    key: IndexerSettings.foldersToScan,
                     context: namida.context!,
                   )
                   .ignoreError();

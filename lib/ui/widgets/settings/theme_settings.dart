@@ -9,7 +9,6 @@ import 'package:namida/class/lang.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -26,23 +25,6 @@ import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 
-enum _ThemeSettingsKeys with SettingKeysBase {
-  themeMode,
-  autoColoring,
-  wallpaperColors(NamidaFeaturesAvailablity.android12and_plus),
-  forceMiniplayerColors,
-  jellysInvasion,
-  pitchBlack,
-  defaultColor,
-  defaultColorDark,
-  language,
-  ;
-
-  @override
-  final NamidaFeaturesAvailablityBase? availability;
-  const _ThemeSettingsKeys([this.availability]);
-}
-
 class ThemeSetting extends SettingSubpageProvider {
   const ThemeSetting({super.key, super.initialItem});
 
@@ -50,386 +32,128 @@ class ThemeSetting extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.theme;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _ThemeSettingsKeys.themeMode: [lang.themeMode],
-    _ThemeSettingsKeys.autoColoring: [lang.autoColoring, lang.autoColoringSubtitle],
-    _ThemeSettingsKeys.wallpaperColors: [lang.pickColorsFromDeviceWallpaper],
-    _ThemeSettingsKeys.forceMiniplayerColors: [lang.forceMiniplayerFollowTrackColors],
-    _ThemeSettingsKeys.jellysInvasion: ['jellys_invasion'.toUpperCase(), 'jellys_color_palette'.toUpperCase()],
-    _ThemeSettingsKeys.pitchBlack: [lang.usePitchBlack, lang.usePitchBlackSubtitle],
-    _ThemeSettingsKeys.defaultColor: [lang.defaultColor, lang.defaultColorSubtitle],
-    _ThemeSettingsKeys.defaultColorDark: ["${lang.defaultColor} (${lang.themeModeDark})", lang.defaultColorSubtitle],
-    _ThemeSettingsKeys.language: [lang.language],
-  };
+  List<List<SettingEntry>> get sections => _sections;
 
-  Widget getThemeTile({double? maxWidth}) {
-    return getItemWrapper(
-      key: _ThemeSettingsKeys.themeMode,
-      child: CustomListTile(
-        bgColor: getBgColor(_ThemeSettingsKeys.themeMode),
-        icon: Broken.brush_4,
-        title: lang.themeMode,
-        trailingRaw: ToggleThemeModeContainer(
-          maxWidth: ((maxWidth ?? Dimensions.inst.availableAppContentWidth) * 0.4).withMaximum(248.0),
+  @override
+  List<SettingEntry> get headerEntries => _headerEntries;
+
+  static final themeMode = SettingCustom(
+    title: () => lang.themeMode,
+    keys: [settings.themeMode],
+    onReset: () => ToggleThemeModeContainer.onThemeChangeTap(settings.themeMode.value),
+    tile: (args) => _ThemeModeTile(
+      bgColor: args.bgColor,
+    ),
+  );
+
+  static final autoColoring = SettingCustom(
+    title: () => lang.autoColoring,
+    aliases: () => [lang.autoColoringSubtitle],
+    keys: [settings.autoColor],
+    onReset: () => _AutoColoringTile._applyAutoColor(settings.autoColor.value),
+    tile: (args) => _AutoColoringTile(
+      bgColor: args.bgColor,
+    ),
+  );
+
+  static final language = SettingCustom(
+    title: () => lang.language,
+    tile: (args) => _LanguageTile(
+      bgColor: args.bgColor,
+    ),
+  );
+
+  static final _headerEntries = <SettingEntry>[_jellysInvasion];
+
+  static final _jellysInvasion = SettingCustom(
+    visibleWhen: () => kAllowJellysInvasion,
+    title: () => 'jellys_invasion'.toUpperCase(),
+    aliases: () => ['jellys_color_palette'.toUpperCase()],
+    keys: [settings.extra.jellysInvasion, settings.extra.jellysPalette],
+    tile: (args) => const _JellysInvasionButton(),
+  );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      themeMode,
+    ],
+    [
+      autoColoring,
+      SettingToggle(
+        settings.pickColorsFromDeviceWallpaper,
+        availability: NamidaFeaturesAvailablity.android12and_plus,
+        icon: Broken.gallery_import,
+        title: () => lang.pickColorsFromDeviceWallpaper,
+        enabledWhen: _isAutoColorEnabled,
+        onChanged: _refreshColors,
+      ),
+      SettingToggle(
+        settings.forceMiniplayerTrackColor,
+        icon: Broken.slider_horizontal,
+        title: () => lang.forceMiniplayerFollowTrackColors,
+        subtitle: () => '${lang.ignores}: ${lang.autoColoring}, ${lang.pickColorsFromDeviceWallpaper} & ${lang.defaultColor}',
+        onChanged: _refreshColors,
+      ),
+    ],
+    [
+      SettingToggle(
+        settings.pitchBlack,
+        icon: Broken.mirror,
+        title: () => lang.usePitchBlack,
+        subtitle: () => lang.usePitchBlackSubtitle,
+        onChanged: _onPitchBlackChanged,
+      ),
+      SettingCustom(
+        title: () => lang.defaultColor,
+        aliases: () => [lang.defaultColorSubtitle],
+        keys: [settings.staticColor],
+        onReset: () => _DefaultColorTile._applyStoredColor(isDark: false),
+        tile: (args) => _DefaultColorTile(
+          bgColor: args.bgColor,
+          isDark: false,
         ),
       ),
-    );
-  }
-
-  Widget getAutoColoringTile() {
-    return getItemWrapper(
-      key: _ThemeSettingsKeys.autoColoring,
-      child: ObxO(
-        rx: settings.autoColor,
-        builder: (context, autoColor) => CustomSwitchListTile(
-          bgColor: getBgColor(_ThemeSettingsKeys.autoColoring),
-          icon: Broken.colorfilter,
-          title: lang.autoColoring,
-          subtitle: "${lang.autoColoringSubtitle}. ${lang.performanceNote}",
-          value: autoColor,
-          onChanged: (isTrue) {
-            settings.transaction(() {
-              settings.autoColor.save(!isTrue);
-              settings.performanceMode.save(PerformanceMode.custom);
-            });
-            if (isTrue) {
-              CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
-              CurrentColor.inst.updateCurrentColorSchemeOfSubPages(playerStaticColor);
-            } else {
-              CurrentColor.inst.refreshColorsOfCurrentItem();
-            }
-          },
+      SettingCustom(
+        title: () => "${lang.defaultColor} (${lang.themeModeDark})",
+        aliases: () => [lang.defaultColorSubtitle],
+        keys: [settings.staticColorDark],
+        onReset: () => _DefaultColorTile._applyStoredColor(isDark: true),
+        tile: (args) => _DefaultColorTile(
+          bgColor: args.bgColor,
+          isDark: true,
         ),
       ),
-    );
-  }
+    ],
+    [
+      language,
+    ],
+  ];
 
-  Widget getLanguageTile(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return getItemWrapper(
-      key: _ThemeSettingsKeys.language,
-      child: ObxO(
-        rx: Language.inst.currentLanguageRx,
-        builder: (context, currentLanguage) => CustomListTile(
-          bgColor: getBgColor(_ThemeSettingsKeys.language),
-          icon: Broken.language_square,
-          title: lang.language,
-          subtitle: currentLanguage!.name,
-          onTap: () {
-            final allLocalesPre = AppLocalizations.supportedLocales;
-            final allLanguages = allLocalesPre.map(NamidaLanguage.fromLocale).toFixedList();
-            allLanguages.sortBy((e) => e.name);
+  static bool _isAutoColorEnabled() => settings.autoColor.valueR;
 
-            final selectedLangRx = Language.inst.getCurrentLanguageOrDevice().obs;
+  static void _refreshColors(bool _) => CurrentColor.inst.refreshColorsOfCurrentItem();
 
-            NamidaNavigator.inst.navigateDialog(
-              onDisposing: () {
-                selectedLangRx.close();
-              },
-              dialog: CustomBlurryDialog(
-                title: lang.language,
-                normalTitleStyle: true,
-                actions: [
-                  // NamidaButton(
-                  //   onTap: () async {
-                  //     final files = await NamidaFileBrowser.pickFile(note: lang.addLanguage, allowedExtensions: NamidaFileExtensionsWrapper.json);
-                  //     final path = files?.path;
-                  //     if (path != null) {
-                  //       try {
-                  //         final st = await File(path).readAsString();
-                  //         final map = jsonDecode(st);
-                  //         final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
-                  //         if (didUpdate) {
-                  //           NamidaNavigator.inst.closeDialog();
-                  //         } else {
-                  //           snackyy(title: lang.error, message: 'Unknown Error', isError: true);
-                  //         }
-                  //       } catch (e) {
-                  //         snackyy(title: lang.error, message: e.toString(), isError: true);
-                  //       }
-                  //     }
-                  //   },
-                  //   text: lang.local,
-                  // ),
-                  const CancelButton(),
-                  NamidaButton(
-                    onTap: () => Language.inst.update(language: selectedLangRx.value).closeDialog(),
-                    text: lang.confirm,
-                  ),
-                ],
-                child: SizedBox(
-                  height: namida.height * 0.5,
-                  width: namida.width,
-                  child: SmoothSingleChildScrollView(
-                    child: Column(
-                      children: [
-                        ...allLanguages.map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: ObxO(
-                              rx: selectedLangRx,
-                              builder: (context, selectedLang) => ListTileWithCheckMark(
-                                leading: Container(
-                                  padding: const EdgeInsets.all(4.0),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      width: 1.5,
-                                      color: theme.colorScheme.onSurface.withAlpha(100),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    e.name[0],
-                                    style: const TextStyle(fontSize: 13.0),
-                                  ),
-                                ),
-                                titleWidget: Text.rich(
-                                  TextSpan(
-                                    text: e.name,
-                                    style: textTheme.displayMedium,
-                                    children: e.country.isEmpty
-                                        ? null
-                                        : [
-                                            TextSpan(
-                                              text: " (${e.country})",
-                                              style: textTheme.displaySmall,
-                                            ),
-                                          ],
-                                  ),
-                                ),
-                                active: e == selectedLang,
-                                onTap: () => selectedLangRx.value = e,
-                              ),
-                            ),
-                          ),
-                        ),
-                        CustomListTile(
-                          icon: Broken.add_circle,
-                          title: lang.addLanguage,
-                          subtitle: lang.addLanguageSubtitle,
-                          onTap: () {
-                            NamidaLinkUtils.openLink(AppSocial.TRANSLATION_REPO);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
+  static void _onPitchBlackChanged(bool _) {
+    if (namida.isDarkMode) CurrentColor.inst.updateColorAfterThemeModeChange();
   }
 
   @override
   Widget build(BuildContext context) {
+    final jellysButton = kAllowJellysInvasion
+        ? SettingEntryTile(
+            entry: _jellysInvasion,
+            page: this,
+          )
+        : null;
     return SettingsCard(
       title: lang.themeSettings,
       subtitle: lang.themeSettingsSubtitle,
       icon: Broken.brush_2,
-      trailing: kAllowJellysInvasion
-          ? getItemWrapper(
-              key: _ThemeSettingsKeys.jellysInvasion,
-              child: const _JellysInvasionButton(),
-            )
-          : null,
+      trailing: jellysButton,
       child: SizedBox(
         width: context.width,
-        child: Column(
-          children: [
-            getThemeTile(),
-            getAutoColoringTile(),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.wallpaperColors,
-              child: Obx(
-                (context) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.wallpaperColors),
-                  enabled: settings.autoColor.valueR,
-                  icon: Broken.gallery_import,
-                  title: lang.pickColorsFromDeviceWallpaper,
-                  value: settings.pickColorsFromDeviceWallpaper.valueR,
-                  onChanged: (isTrue) {
-                    settings.pickColorsFromDeviceWallpaper.save(!isTrue);
-                    CurrentColor.inst.refreshColorsOfCurrentItem();
-                  },
-                ),
-              ),
-            ),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.forceMiniplayerColors,
-              child: Obx(
-                (context) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.forceMiniplayerColors),
-                  icon: Broken.slider_horizontal,
-                  title: lang.forceMiniplayerFollowTrackColors,
-                  subtitle: '${lang.ignores}: ${lang.autoColoring}, ${lang.pickColorsFromDeviceWallpaper} & ${lang.defaultColor}',
-                  value: settings.forceMiniplayerTrackColor.valueR,
-                  onChanged: (isTrue) {
-                    settings.forceMiniplayerTrackColor.save(!isTrue);
-                    CurrentColor.inst.refreshColorsOfCurrentItem();
-                  },
-                ),
-              ),
-            ),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.pitchBlack,
-              child: ObxO(
-                rx: settings.pitchBlack,
-                builder: (context, pitchBlack) => CustomSwitchListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.pitchBlack),
-                  icon: Broken.mirror,
-                  title: lang.usePitchBlack,
-                  subtitle: lang.usePitchBlackSubtitle,
-                  value: pitchBlack,
-                  onChanged: (isTrue) {
-                    settings.pitchBlack.save(!isTrue);
-                    if (context.isDarkMode) CurrentColor.inst.updateColorAfterThemeModeChange();
-                  },
-                ),
-              ),
-            ),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.defaultColor,
-              child: ObxO(
-                rx: settings.autoColor,
-                builder: (context, autoColor) => CustomListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.defaultColor),
-                  enabled: !autoColor,
-                  icon: Broken.bucket,
-                  title: lang.defaultColor,
-                  subtitle: lang.defaultColorSubtitle,
-                  trailingRaw: FittedBox(
-                    child: Obx(
-                      (context) => CircleAvatar(
-                        minRadius: 12,
-                        backgroundColor: playerStaticColorLightR,
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    NamidaNavigator.inst.navigateDialog(
-                      dialog: NamidaColorPickerDialog(
-                        initialColor: playerStaticColorLight,
-                        doneText: lang.done,
-                        onColorChanged: (value) => _updateColorLight(value),
-                        colorChangedDebouncer: true,
-                        themeFollowsColor: true,
-                        onDonePressed: (color) {
-                          _updateColorLight(color);
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                        onRefreshButtonPressed: () {
-                          _updateColorLight(kMainColorLight);
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                        cancelButton: false,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            getItemWrapper(
-              key: _ThemeSettingsKeys.defaultColorDark,
-              child: ObxO(
-                rx: settings.autoColor,
-                builder: (context, autoColor) => CustomListTile(
-                  bgColor: getBgColor(_ThemeSettingsKeys.defaultColorDark),
-                  enabled: !autoColor,
-                  leading: const StackedIcon(
-                    baseIcon: Broken.bucket,
-                    secondaryIcon: Broken.moon,
-                  ),
-                  title: "${lang.defaultColor} (${lang.themeModeDark})",
-                  subtitle: lang.defaultColorSubtitle,
-                  trailingRaw: FittedBox(
-                    child: Obx(
-                      (context) => CircleAvatar(
-                        minRadius: 12,
-                        backgroundColor: playerStaticColorDarkR,
-                      ),
-                    ),
-                  ),
-                  onTap: () {
-                    NamidaNavigator.inst.navigateDialog(
-                      dialog: NamidaColorPickerDialog(
-                        initialColor: playerStaticColorDark,
-                        doneText: lang.done,
-                        onColorChanged: (value) => _updateColorDark(value),
-                        colorChangedDebouncer: true,
-                        themeFollowsColor: true,
-                        onDonePressed: (color) {
-                          _updateColorDark(color);
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                        onRefreshButtonPressed: () {
-                          _updateColorDark(kMainColorDark);
-                          NamidaNavigator.inst.closeDialog();
-                        },
-                        cancelButton: false,
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            getLanguageTile(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _updateColorLight(Color color) {
-    settings.staticColor.save(color.intValue);
-    if (!namida.isDarkMode) {
-      CurrentColor.inst.updatePlayerColorFromColor(color, false);
-    }
-  }
-
-  void _updateColorDark(Color color) {
-    settings.staticColorDark.save(color.intValue);
-    if (namida.isDarkMode) {
-      CurrentColor.inst.updatePlayerColorFromColor(color, false);
-    }
-  }
-}
-
-/// The flag lives in the extra settings, offered here too because this is where colors are looked for.
-class _JellysInvasionButton extends StatelessWidget {
-  const _JellysInvasionButton();
-
-  static void _openOptionsDialog() {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: const CustomBlurryDialog(
-        title: 'Jellys Invasion',
-        normalTitleStyle: true,
-        actions: [
-          DoneButton(),
-        ],
-        child: JellysFlagsTiles(),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return NamidaTooltip(
-      message: () => 'Jellys Invasion',
-      child: ObxO(
-        rx: NamidaJellys.enabledRx,
-        builder: (context, enabled) => NamidaInkWell(
-          borderRadius: 8.0,
-          padding: const EdgeInsets.all(4.0),
-          onTap: () => NamidaJellys.setInvasion(!enabled),
-          onLongPress: _openOptionsDialog,
-          child: JellyMascot(
-            height: 38.0,
-            opacity: enabled ? 0.9 : 0.35,
-          ),
+        child: SettingSectionsColumn(
+          page: this,
         ),
       ),
     );
@@ -676,5 +400,307 @@ class _NamidaColorPickerDialogState extends State<NamidaColorPickerDialog> {
     }
 
     return pickerWidget;
+  }
+}
+
+class _ThemeModeTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _ThemeModeTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final maxWidth = (Dimensions.inst.availableAppContentWidth * 0.4).withMaximum(248.0);
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.brush_4,
+      title: lang.themeMode,
+      trailingRaw: ToggleThemeModeContainer(
+        maxWidth: maxWidth,
+      ),
+    );
+  }
+}
+
+class _AutoColoringTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _AutoColoringTile({required this.bgColor});
+
+  static void _applyAutoColor(bool isEnabled) {
+    if (isEnabled) {
+      CurrentColor.inst.refreshColorsOfCurrentItem();
+    } else {
+      CurrentColor.inst.updatePlayerColorFromColor(playerStaticColor);
+      CurrentColor.inst.updateCurrentColorSchemeOfSubPages(playerStaticColor);
+    }
+  }
+
+  void _onChanged(bool wasEnabled) {
+    final isEnabled = !wasEnabled;
+    settings.transaction(() {
+      settings.autoColor.save(isEnabled);
+      settings.performanceMode.save(PerformanceMode.custom);
+    });
+    _applyAutoColor(isEnabled);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.autoColor,
+      builder: (context, autoColor) => CustomSwitchListTile(
+        bgColor: bgColor,
+        icon: Broken.colorfilter,
+        title: lang.autoColoring,
+        subtitle: "${lang.autoColoringSubtitle}. ${lang.performanceNote}",
+        value: autoColor,
+        onChanged: _onChanged,
+      ),
+    );
+  }
+}
+
+class _DefaultColorTile extends StatelessWidget {
+  final Color? bgColor;
+  final bool isDark;
+
+  const _DefaultColorTile({required this.bgColor, required this.isDark});
+
+  static void _applyStoredColor({required bool isDark}) {
+    if (namida.isDarkMode != isDark) return;
+    final color = isDark ? playerStaticColorDark : playerStaticColorLight;
+    CurrentColor.inst.updatePlayerColorFromColor(color, false);
+  }
+
+  void _updateColor(Color color) {
+    final setting = isDark ? settings.staticColorDark : settings.staticColor;
+    setting.save(color.intValue);
+    if (namida.isDarkMode == isDark) {
+      CurrentColor.inst.updatePlayerColorFromColor(color, false);
+    }
+  }
+
+  void _onDone(Color color) {
+    _updateColor(color);
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  void _onRestoreDefault() {
+    final defaultColor = isDark ? kMainColorDark : kMainColorLight;
+    _onDone(defaultColor);
+  }
+
+  void _showPicker() {
+    final initialColor = isDark ? playerStaticColorDark : playerStaticColorLight;
+    NamidaNavigator.inst.navigateDialog(
+      dialog: NamidaColorPickerDialog(
+        initialColor: initialColor,
+        doneText: lang.done,
+        onColorChanged: _updateColor,
+        colorChangedDebouncer: true,
+        themeFollowsColor: true,
+        onDonePressed: _onDone,
+        onRefreshButtonPressed: _onRestoreDefault,
+        cancelButton: false,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = isDark ? "${lang.defaultColor} (${lang.themeModeDark})" : lang.defaultColor;
+    final leading = isDark
+        ? const StackedIcon(
+            baseIcon: Broken.bucket,
+            secondaryIcon: Broken.moon,
+          )
+        : null;
+    final colorCircle = FittedBox(
+      child: Obx(
+        (context) {
+          final color = isDark ? playerStaticColorDarkR : playerStaticColorLightR;
+          return CircleAvatar(
+            minRadius: 12.0,
+            backgroundColor: color,
+          );
+        },
+      ),
+    );
+    return ObxO(
+      rx: settings.autoColor,
+      builder: (context, autoColor) => CustomListTile(
+        bgColor: bgColor,
+        enabled: !autoColor,
+        icon: isDark ? null : Broken.bucket,
+        leading: leading,
+        title: title,
+        subtitle: lang.defaultColorSubtitle,
+        trailingRaw: colorCircle,
+        onTap: _showPicker,
+      ),
+    );
+  }
+}
+
+class _LanguageTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _LanguageTile({required this.bgColor});
+
+  void _showDialog(ThemeData theme) {
+    final textTheme = theme.textTheme;
+    final allLocalesPre = AppLocalizations.supportedLocales;
+    final allLanguages = allLocalesPre.map(NamidaLanguage.fromLocale).toFixedList();
+    allLanguages.sortBy((e) => e.name);
+
+    final selectedLangRx = Language.inst.getCurrentLanguageOrDevice().obs;
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: selectedLangRx.close,
+      dialog: CustomBlurryDialog(
+        title: lang.language,
+        normalTitleStyle: true,
+        actions: [
+          // NamidaButton(
+          //   onTap: () async {
+          //     final files = await NamidaFileBrowser.pickFile(note: lang.addLanguage, allowedExtensions: NamidaFileExtensionsWrapper.json);
+          //     final path = files?.path;
+          //     if (path != null) {
+          //       try {
+          //         final st = await File(path).readAsString();
+          //         final map = jsonDecode(st);
+          //         final didUpdate = await Language.inst.loadLanguage(path.getFilenameWOExt, map);
+          //         if (didUpdate) {
+          //           NamidaNavigator.inst.closeDialog();
+          //         } else {
+          //           snackyy(title: lang.error, message: 'Unknown Error', isError: true);
+          //         }
+          //       } catch (e) {
+          //         snackyy(title: lang.error, message: e.toString(), isError: true);
+          //       }
+          //     }
+          //   },
+          //   text: lang.local,
+          // ),
+          const CancelButton(),
+          NamidaButton(
+            onTap: () => Language.inst.update(language: selectedLangRx.value).closeDialog(),
+            text: lang.confirm,
+          ),
+        ],
+        child: SizedBox(
+          height: namida.height * 0.5,
+          width: namida.width,
+          child: SmoothSingleChildScrollView(
+            child: Column(
+              children: [
+                ...allLanguages.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: ObxO(
+                      rx: selectedLangRx,
+                      builder: (context, selectedLang) => ListTileWithCheckMark(
+                        leading: Container(
+                          padding: const EdgeInsets.all(4.0),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              width: 1.5,
+                              color: theme.colorScheme.onSurface.withAlpha(100),
+                            ),
+                          ),
+                          child: Text(
+                            e.name[0],
+                            style: const TextStyle(fontSize: 13.0),
+                          ),
+                        ),
+                        titleWidget: Text.rich(
+                          TextSpan(
+                            text: e.name,
+                            style: textTheme.displayMedium,
+                            children: e.country.isEmpty
+                                ? null
+                                : [
+                                    TextSpan(
+                                      text: " (${e.country})",
+                                      style: textTheme.displaySmall,
+                                    ),
+                                  ],
+                          ),
+                        ),
+                        active: e == selectedLang,
+                        onTap: () => selectedLangRx.value = e,
+                      ),
+                    ),
+                  ),
+                ),
+                CustomListTile(
+                  icon: Broken.add_circle,
+                  title: lang.addLanguage,
+                  subtitle: lang.addLanguageSubtitle,
+                  onTap: () {
+                    NamidaLinkUtils.openLink(AppSocial.TRANSLATION_REPO);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return ObxO(
+      rx: Language.inst.currentLanguageRx,
+      builder: (context, currentLanguage) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.language_square,
+        title: lang.language,
+        subtitle: currentLanguage!.name,
+        onTap: () => _showDialog(theme),
+      ),
+    );
+  }
+}
+
+/// The flag lives in the extra settings, offered here too because this is where colors are looked for.
+class _JellysInvasionButton extends StatelessWidget {
+  const _JellysInvasionButton();
+
+  static void _openOptionsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: const CustomBlurryDialog(
+        title: 'Jellys Invasion',
+        normalTitleStyle: true,
+        actions: [
+          DoneButton(),
+        ],
+        child: JellysFlagsTiles(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaTooltip(
+      message: () => 'Jellys Invasion',
+      child: ObxO(
+        rx: NamidaJellys.enabledRx,
+        builder: (context, enabled) => NamidaInkWell(
+          borderRadius: 8.0,
+          padding: const EdgeInsets.all(4.0),
+          onTap: () => NamidaJellys.setInvasion(!enabled),
+          onLongPress: _openOptionsDialog,
+          child: JellyMascot(
+            height: 38.0,
+            opacity: enabled ? 0.9 : 0.35,
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -18,12 +19,8 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 
-mixin SettingKeysBase {
-  NamidaFeaturesAvailablityBase? get availability => null;
-}
-
 extension _SettSearcherUtils on SettingSubpageEnum {
-  CustomCollapsedListTile? toSettingSubPageDetails({Enum? initialItem}) {
+  CustomCollapsedListTile? toSettingSubPageDetails({SettingEntry? initialItem}) {
     switch (this) {
       case SettingSubpageEnum.theme:
         return CustomCollapsedListTile(
@@ -91,15 +88,22 @@ extension _SettSearcherUtils on SettingSubpageEnum {
 
 class SettingSearchResultItem {
   final SettingSubpageEnum? page;
-  final Enum key;
+  final SettingEntry key;
   final List<String> titles;
   final int matchedTitleIndex;
+
+  final List<String> parentTitles;
+
+  /// its own, or the nearest parent's.
+  final NamidaFeaturesAvailablityBase? availability;
 
   const SettingSearchResultItem({
     required this.page,
     required this.key,
     required this.titles,
     required this.matchedTitleIndex,
+    required this.parentTitles,
+    required this.availability,
   });
 }
 
@@ -107,29 +111,32 @@ class SettingsSearchController {
   static final SettingsSearchController inst = SettingsSearchController._internal();
   SettingsSearchController._internal();
 
-  final _map = <SettingSubpageEnum, Map<int, GlobalKey>>{};
+  final _targetKeys = <SettingEntry, GlobalKey>{};
 
-  final _searchIndex = <({SettingSubpageEnum page, Enum key, List<String> titles, List<String> titlesCleaned})>[];
+  GlobalKey getTargetKey(SettingEntry key) => _targetKeys[key] ??= GlobalKey();
+
+  final _searchIndex = <_SettingSearchIndexItem>[];
   final searchResults = <SettingSubpageEnum, List<SettingSearchResultItem>>{}.obs;
   final subpagesDetails = <SettingSubpageEnum, CustomCollapsedListTile?>{};
 
   RxBaseCore<bool> get canShowSearch => _canShowSearch;
   final _canShowSearch = false.obs;
 
+  RxBaseCore<bool> get isModifiedOnly => _isModifiedOnly;
+  final _isModifiedOnly = false.obs;
+
+  RxBaseCore<int> get modifiedCount => _modifiedCount;
+  final _modifiedCount = 0.obs;
+
+  String _query = '';
+
   void closeSearch() {
     _searchIndex.clear();
     subpagesDetails.clear();
     searchResults.clear();
+    _query = '';
+    _isModifiedOnly.value = false;
     _canShowSearch.value = false;
-  }
-
-  GlobalKey getSettingWidgetGlobalKey(SettingSubpageEnum settingPage, Enum key) {
-    final keyIndex = key.index;
-    final c = SettingsSearchController.inst;
-    final r = settingPage;
-    c._map[r] ??= {};
-    c._map[r]![keyIndex] ??= GlobalKey();
-    return c._map[r]![keyIndex]!;
   }
 
   void onSearchTap({required bool isOpen}) {
@@ -148,26 +155,79 @@ class SettingsSearchController {
       for (final p in settingsWidgets) {
         subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();
         final page = p.settingPage;
-        for (final e in p.buildLookupMap().entries) {
-          final titles = e.value;
-          _searchIndex.add((
-            page: page,
-            key: e.key as Enum,
-            titles: titles,
-            titlesCleaned: titles.map((title) => title.cleanUpForComparison).toFixedList(),
-          ));
+        _addEntriesToIndex(page, p.headerEntries, const [], null);
+        for (final section in p.sections) {
+          _addEntriesToIndex(page, section, const [], null);
         }
       }
+      _refreshModifiedCount();
       _canShowSearch.value = true;
     } else {
       closeSearch();
     }
   }
 
+  void _addToIndex(SettingSubpageEnum page, SettingEntry key, List<String> titles, List<String> parentTitles, NamidaFeaturesAvailablityBase? availability) {
+    _searchIndex.add((
+      page: page,
+      key: key,
+      titles: titles,
+      titlesCleaned: titles.map((title) => title.cleanUpForComparison).toFixedList(),
+      parentTitles: parentTitles,
+      availability: availability,
+    ));
+  }
+
+  void _addEntriesToIndex(SettingSubpageEnum page, List<SettingEntry> entries, List<String> parentTitles, NamidaFeaturesAvailablityBase? parentAvailability) {
+    for (final entry in entries) {
+      final isVisible = entry.visibleWhen?.call();
+      if (isVisible == false) continue;
+      final titles = entry.getSearchTitles();
+      final availability = entry.availability ?? parentAvailability;
+      _addToIndex(page, entry, titles, parentTitles, availability);
+      final children = entry.children;
+      if (children.isEmpty) continue;
+      final childrenParentTitles = [...parentTitles, titles.first];
+      _addEntriesToIndex(page, children, childrenParentTitles, availability);
+    }
+  }
+
   void onSearchChanged(String val) {
-    final valCleaned = val.cleanUpForComparison;
+    _query = val;
+    _refreshResults();
+  }
+
+  void toggleModifiedOnly() {
+    _isModifiedOnly.value = !_isModifiedOnly.value;
+    _refreshResults();
+  }
+
+  void toggle(SettingToggle entry) {
+    entry.toggle();
+    _refreshModifiedCount();
+  }
+
+  void resetToDefault(SettingEntry entry) {
+    entry.resetToDefault();
+    _refreshModifiedCount();
+    _refreshResults();
+  }
+
+  void _refreshModifiedCount() {
+    _modifiedCount.value = _searchIndex.where((item) => item.key.isModified()).length;
+  }
+
+  void _refreshResults() {
+    final isModifiedOnly = _isModifiedOnly.value;
+    final query = _query;
     final res = <SettingSubpageEnum, List<SettingSearchResultItem>>{};
+    if (query.isEmpty && !isModifiedOnly) {
+      searchResults.value = res;
+      return;
+    }
+    final valCleaned = query.cleanUpForComparison;
     for (final entry in _searchIndex) {
+      if (isModifiedOnly && !entry.key.isModified()) continue;
       final titlesCleaned = entry.titlesCleaned;
       for (int i = 0; i < titlesCleaned.length; i++) {
         if (titlesCleaned[i].contains(valCleaned)) {
@@ -178,6 +238,8 @@ class SettingsSearchController {
               key: entry.key,
               titles: entry.titles,
               matchedTitleIndex: i,
+              parentTitles: entry.parentTitles,
+              availability: entry.availability,
             ),
           );
           break;
@@ -189,7 +251,7 @@ class SettingsSearchController {
 
   Future<void> onResultTap({
     required SettingSubpageEnum? settingPage,
-    required Enum key,
+    required SettingEntry key,
     required BuildContext context,
   }) async {
     onSearchTap(isOpen: false);
@@ -209,8 +271,17 @@ class SettingsSearchController {
       ).navigate();
     }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      final c = _map[settingPage]?[key.index]?.currentContext;
+      final c = _targetKeys[key]?.currentContext;
       if (c != null) Scrollable.ensureVisible(c, alignment: 0.3);
     });
   }
 }
+
+typedef _SettingSearchIndexItem = ({
+  SettingSubpageEnum page,
+  SettingEntry key,
+  List<String> titles,
+  List<String> titlesCleaned,
+  List<String> parentTitles,
+  NamidaFeaturesAvailablityBase? availability,
+});

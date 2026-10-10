@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -67,7 +68,6 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   void _onRestoreBackupIconTap() async {
     await _requestPermission();
     if (!didGrantStoragePermission) return;
-    const backupAndRestore = BackupAndRestore();
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         icon: Broken.refresh_circle,
@@ -78,8 +78,12 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
         ],
         child: Column(
           children: [
-            backupAndRestore.getRestoreBackupWidget(),
-            backupAndRestore.getDefaultBackupLocationWidget(),
+            SettingEntryTile(
+              entry: BackupAndRestore.restoreBackup,
+            ),
+            SettingEntryTile(
+              entry: BackupAndRestore.defaultBackupLocation,
+            ),
           ],
         ),
       ),
@@ -94,23 +98,43 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
 
     Dimensions.inst.availableAppContentWidth = maxWidth;
 
-    const indexer = IndexerSettings(isInFirstConfigScreen: true);
+    const firstConfigIndexer = IndexerSettings(isInFirstConfigScreen: true);
     // final useMediaStore = indexer.getMediaStoreWidget();
-    final includeVideosWidget = indexer.getIncludeVideosWidget();
-    final addFolderWidget = indexer.getAddFolderWidget();
-    final foldersToScan = indexer.getFoldersToScanWidget(context: context, initiallyExpanded: false);
-    final foldersToExclude = indexer.getFoldersToExcludeWidget(context: context, initiallyExpanded: false);
-    final artworkCacheWidget = indexer.getArtworkCacheWidget(context);
+    final includeVideosWidget = SettingEntryTile(
+      entry: IndexerSettings.includeVideos,
+      page: firstConfigIndexer,
+    );
+    final addFolderWidget = SettingEntryTile(
+      entry: IndexerSettings.addFolder,
+      page: firstConfigIndexer,
+    );
+    final foldersToScan = SettingEntryTile(
+      entry: IndexerSettings.foldersToScan,
+      page: firstConfigIndexer,
+    );
+    final foldersToExclude = SettingEntryTile(
+      entry: IndexerSettings.foldersToExclude,
+      page: firstConfigIndexer,
+    );
+    final artworkCacheWidget = SettingEntryTile(
+      entry: IndexerSettings.artworkCache,
+      page: firstConfigIndexer,
+    );
 
-    const themeSettings = ThemeSetting();
-    final themeTile = themeSettings.getThemeTile(maxWidth: maxWidth);
-    final languageTile = themeSettings.getLanguageTile(context);
+    final themeTile = SettingEntryTile(
+      entry: ThemeSetting.themeMode,
+    );
+    final languageTile = SettingEntryTile(
+      entry: ThemeSetting.language,
+    );
 
-    const extras = ExtrasSettings();
-    final libraryTabsTile = extras.getLibraryTabsTile(context);
+    final libraryTabsTile = SettingEntryTile(
+      entry: ExtrasSettings.libraryTabs,
+    );
 
-    const advanced = AdvancedSettings();
-    final performanceTile = advanced.getPerformanceTile(context);
+    final performanceTile = SettingEntryTile(
+      entry: AdvancedSettings.performanceMode,
+    );
 
     return BackgroundWrapper(
       child: Stack(

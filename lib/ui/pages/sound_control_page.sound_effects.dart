@@ -20,7 +20,7 @@ class _SoundEffectsSection extends StatelessWidget {
             titleText: lang.soundEffects,
             subtitleText: enabledNames.nullifyEmpty(),
             initiallyExpanded: enabledEffects.isNotEmpty,
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+            childrenPadding: const EdgeInsetsDirectional.only(end: 12.0, top: 6.0),
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {

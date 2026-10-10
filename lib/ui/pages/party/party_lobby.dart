@@ -437,8 +437,6 @@ class _CreateCardState extends State<_CreateCard> {
               icon: Broken.driver_2,
               titleText: lang.partyCustomServer,
               subtitleText: lang.partyServerPasswordSubtitle,
-              borderless: true,
-              iconColor: context.defaultIconColor(),
               children: [
                 _FieldPadding(
                   child: CustomTagTextField(

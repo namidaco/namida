@@ -16,7 +16,6 @@ import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -31,41 +30,9 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/indexer_missing_tracks_subpage.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
-
-class IndexerSettingsKeysGlobal {
-  const IndexerSettingsKeysGlobal._();
-
-  static const foldersToScan = _IndexerSettingsKeys.foldersToScan;
-  static const addFolder = _IndexerSettingsKeys.addFolder;
-}
-
-enum _IndexerSettingsKeys with SettingKeysBase {
-  preventDuplicatedTracks,
-  respectNoMedia,
-  extractFtArtist,
-  separators,
-  artworksCache,
-  groupArtworksByAlbum,
-  uniqueArtworkHash,
-  albumIdentifiers,
-  extensionsBlacklist,
-  minimumFileSize,
-  minimumTrackDur,
-  // useMediaStore(NamidaFeaturesAvailablity.android),
-  includeVideos,
-  refreshOnStartup,
-  missingTracks,
-  reindex,
-  refreshLibrary,
-  addFolder,
-  foldersToScan,
-  foldersToExclude,
-  ;
-
-  const _IndexerSettingsKeys();
-}
 
 class IndexerSettings extends SettingSubpageProvider {
   final bool isInFirstConfigScreen;
@@ -79,30 +46,208 @@ class IndexerSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.indexer;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _IndexerSettingsKeys.preventDuplicatedTracks: [lang.preventDuplicatedTracks, lang.preventDuplicatedTracksSubtitle],
-    _IndexerSettingsKeys.respectNoMedia: [lang.respectNoMedia, lang.respectNoMediaSubtitle],
-    _IndexerSettingsKeys.extractFtArtist: [lang.extractFeatArtist, lang.extractFeatArtistSubtitle],
-    _IndexerSettingsKeys.separators: [lang.separators, lang.trackArtistsSeparator, lang.trackGenresSeparator],
-    _IndexerSettingsKeys.artworksCache: [lang.enableArtworkCache, lang.enableArtworkCacheSubtitle],
-    _IndexerSettingsKeys.groupArtworksByAlbum: [lang.groupArtworksByAlbum],
-    _IndexerSettingsKeys.uniqueArtworkHash: [lang.uniqueArtworkHash],
-    _IndexerSettingsKeys.albumIdentifiers: [lang.albumIdentifiers],
-    _IndexerSettingsKeys.extensionsBlacklist: ['${lang.extension} (${lang.blacklist})'],
-    _IndexerSettingsKeys.minimumFileSize: [lang.minFileSize],
-    _IndexerSettingsKeys.minimumTrackDur: [lang.minFileDuration],
-    // _IndexerSettingsKeys.useMediaStore: [lang.useMediaStore, lang.useMediaStoreSubtitle],
-    _IndexerSettingsKeys.includeVideos: [lang.includeVideos],
-    _IndexerSettingsKeys.refreshOnStartup: [lang.refreshOnStartup],
-    _IndexerSettingsKeys.missingTracks: [lang.missingTracks],
-    _IndexerSettingsKeys.reindex: [lang.reIndex, lang.reIndexSubtitle],
-    _IndexerSettingsKeys.refreshLibrary: [lang.refreshLibrary, lang.refreshLibrarySubtitle],
-    _IndexerSettingsKeys.addFolder: [lang.addFolder, ...getAddFolderSubtitleKeys(includeAllInfo: true)],
-    _IndexerSettingsKeys.foldersToScan: [lang.listOfFolders, ...getAddFolderSubtitleKeys(includeAllInfo: true)],
-    _IndexerSettingsKeys.foldersToExclude: [lang.excludedFodlers],
-  };
+  List<List<SettingEntry>> get sections => _sections;
 
-  Iterable<String> getAddFolderSubtitleKeys({required bool includeAllInfo}) sync* {
+  static final artworkCache = SettingToggleGroup(
+    settings.cacheArtworks,
+    leading: const StackedIcon(
+      baseIcon: Broken.gallery,
+      secondaryIcon: Broken.cpu_charge,
+    ),
+    title: () => lang.enableArtworkCache,
+    subtitle: () => lang.enableArtworkCacheSubtitle,
+    onChanged: _onArtworkCacheToggle,
+    children: [
+      SettingCustom(
+        title: () => lang.groupArtworksByAlbum,
+        keys: [settings.groupArtworksByAlbum],
+        onReset: () => _showReindexingPrompt(title: lang.groupArtworksByAlbum, body: lang.requiresClearingImageCacheAndReIndexing),
+        tile: (args) => _ExclusiveArtworkToggleTile(
+          bgColor: args.bgColor,
+          setting: settings.groupArtworksByAlbum,
+          exclusiveSetting: settings.uniqueArtworkHash,
+          icon: Broken.backward_item,
+          title: lang.groupArtworksByAlbum,
+          subtitle: lang.requiresClearingImageCacheAndReIndexing,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.uniqueArtworkHash,
+        keys: [settings.uniqueArtworkHash],
+        onReset: () => _showReindexingPrompt(title: lang.uniqueArtworkHash, body: lang.requiresClearingImageCacheAndReIndexing),
+        tile: (args) => _ExclusiveArtworkToggleTile(
+          bgColor: args.bgColor,
+          setting: settings.uniqueArtworkHash,
+          exclusiveSetting: settings.groupArtworksByAlbum,
+          leading: const StackedIcon(
+            baseIcon: Broken.gallery,
+            secondaryIcon: Broken.cpu,
+            secondaryIconSize: 13.0,
+          ),
+          title: lang.uniqueArtworkHash,
+          subtitle: "${lang.performanceNote}. ${lang.requiresClearingImageCacheAndReIndexing}",
+        ),
+      ),
+    ],
+  );
+
+  static final includeVideos = SettingCustom(
+    title: () => lang.includeVideos,
+    keys: [settings.includeVideos],
+    onReset: () => showRefreshPromptDialog(false),
+    tile: (args) => _IncludeVideosTile(
+      args: args,
+    ),
+  );
+
+  static final addFolder = SettingCustom(
+    title: () => lang.addFolder,
+    aliases: _getAddFolderAliases,
+    tile: (args) => _AddFolderTile(
+      args: args,
+    ),
+  );
+
+  static final foldersToScan = SettingCustom(
+    title: () => lang.listOfFolders,
+    aliases: _getAddFolderAliases,
+    tile: (args) => _FoldersToScanTile(
+      args: args,
+    ),
+  );
+
+  static final foldersToExclude = SettingCustom(
+    title: () => lang.excludedFodlers,
+    keys: [settings.directoriesToExclude],
+    onReset: () => showRefreshPromptDialog(true),
+    tile: (args) => _FoldersToExcludeTile(
+      args: args,
+    ),
+  );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      addFolder,
+      SettingCustom(
+        title: () => lang.refreshLibrary,
+        aliases: () => [lang.refreshLibrarySubtitle],
+        tile: (args) => _RefreshLibraryTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.reIndex,
+        aliases: () => [lang.reIndexSubtitle],
+        tile: (args) => _ReIndexTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingToggle(
+        settings.refreshOnStartup,
+        icon: Broken.d_rotate,
+        title: () => lang.refreshOnStartup,
+      ),
+      SettingCustom(
+        title: () => lang.missingTracks,
+        tile: (args) => _MissingTracksTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      SettingToggle(
+        settings.extractFeatArtistFromTitle,
+        icon: Broken.microphone,
+        title: () => lang.extractFeatArtist,
+        subtitle: () => "${lang.extractFeatArtistSubtitle} ${lang.instantlyApplies}.",
+        onChanged: (_) => Indexer.inst.rebuildTracksAfterExtractFeatArtistChanges(),
+      ),
+      SettingCustom(
+        title: () => lang.separators,
+        aliases: () => [lang.trackArtistsSeparator, lang.trackGenresSeparator],
+        keys: [
+          settings.trackArtistsSeparators, settings.trackArtistsSeparatorsBlacklist, //
+          settings.trackGenresSeparators, settings.trackGenresSeparatorsBlacklist, //
+          settings.trackAlbumsSeparators, settings.trackAlbumsSeparatorsBlacklist, //
+        ],
+        onReset: () => Indexer.inst.rebuildTracksAfterSplitConfigChanges(),
+        tile: (args) => _SeparatorsTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.albumIdentifiers,
+        keys: [settings.albumIdentifiers],
+        onReset: () => _showReindexingPrompt(title: lang.albumIdentifiers, body: lang.requiresClearingImageCacheAndReIndexing),
+        tile: (args) => _AlbumIdentifiersTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      includeVideos,
+      SettingCustom(
+        title: () => lang.respectNoMedia,
+        aliases: () => [lang.respectNoMediaSubtitle],
+        keys: [settings.respectNoMedia],
+        tile: (args) => _RespectNoMediaTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.minFileDuration,
+        keys: [settings.indexMinDurationInSec],
+        tile: (args) => _MinFileDurationTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.minFileSize,
+        keys: [settings.indexMinFileSizeInB],
+        tile: (args) => _MinFileSizeTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => '${lang.extension} (${lang.blacklist})',
+        keys: [settings.extensionsBlacklist],
+        onReset: () => showRefreshPromptDialog(false),
+        tile: (args) => _ExtensionsBlacklistTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingToggle(
+        settings.preventDuplicatedTracks,
+        icon: Broken.copy,
+        title: () => lang.preventDuplicatedTracks,
+        subtitle: () => "${lang.preventDuplicatedTracksSubtitle}. ${lang.indexRefreshRequired}",
+      ),
+    ],
+    [
+      artworkCache,
+    ],
+    [
+      foldersToScan,
+      foldersToExclude,
+    ],
+  ];
+
+  static IndexerSettings _forTile(SettingTileArgs args) {
+    final page = args.page;
+    return page is IndexerSettings ? page : const IndexerSettings();
+  }
+
+  static List<String> _getAddFolderAliases() => getAddFolderSubtitleKeys(includeAllInfo: true).toFixedList();
+
+  static void _onArtworkCacheToggle(bool isEnabled) {
+    if (isEnabled) {
+      _showReindexingPrompt(title: lang.enableArtworkCache, body: lang.requiresClearingImageCacheAndReIndexing);
+    } else {
+      _promptClearArtworkCache();
+    }
+  }
+
+  static Iterable<String> getAddFolderSubtitleKeys({required bool includeAllInfo}) sync* {
     for (final d in DirectoryIndexType.values) {
       if (d == DirectoryIndexType.unknown) continue;
       yield d.toText();
@@ -701,6 +846,12 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
+  void _promptAddExcludedFolder() {
+    _pickLocalFolder((dirsPath) {
+      settings.directoriesToExclude.update((list) => list.addAllNoDuplicates(dirsPath));
+    });
+  }
+
   // Widget getMediaStoreWidget() {
   //   return getItemWrapper(
   //     key: _IndexerSettingsKeys.useMediaStore,
@@ -720,30 +871,7 @@ class IndexerSettings extends SettingSubpageProvider {
   //   );
   // }
 
-  Widget getIncludeVideosWidget() {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.includeVideos,
-      child: ObxO(
-        rx: settings.includeVideos,
-        builder: (context, includeVideos) => CustomSwitchListTile(
-          bgColor: getBgColor(_IndexerSettingsKeys.includeVideos),
-          leading: StackedIcon(
-            baseIcon: Broken.video_play,
-            secondaryIcon: Broken.tick_circle,
-            secondaryIconSize: 12.0,
-          ),
-          title: lang.includeVideos,
-          value: includeVideos,
-          onChanged: (isTrue) {
-            settings.includeVideos.save(!isTrue);
-            _maybeShowRefreshPromptDialog(false);
-          },
-        ),
-      ),
-    );
-  }
-
-  void _promptClearArtworkCache(BuildContext context) async {
+  static void _promptClearArtworkCache() async {
     Indexer.inst.calculateAllImageSizesInStorage();
     await NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
@@ -777,303 +905,7 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget getArtworkCacheWidget(BuildContext context) {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.artworksCache,
-      child: NamidaExpansionTile(
-        bgColor: getBgColor(_IndexerSettingsKeys.artworksCache),
-        bigahh: true,
-        normalRightPadding: true,
-        borderless: true,
-        initiallyExpanded: settings.cacheArtworks.value || initialItem == _IndexerSettingsKeys.artworksCache,
-        leading: const StackedIcon(
-          baseIcon: Broken.gallery,
-          secondaryIcon: Broken.cpu_charge,
-        ),
-        childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-        iconColor: context.defaultIconColor(),
-        titleText: lang.enableArtworkCache,
-        subtitleText: lang.enableArtworkCacheSubtitle,
-        onExpansionChanged: (wasCollapsed) {
-          if (wasCollapsed) {
-            settings.cacheArtworks.save(true);
-            _showReindexingPrompt(title: lang.enableArtworkCache, body: lang.requiresClearingImageCacheAndReIndexing);
-          } else {
-            settings.cacheArtworks.save(false);
-            _promptClearArtworkCache(context);
-          }
-        },
-        trailingBuilder: (_) => Obx((context) {
-          return CustomSwitch(active: settings.cacheArtworks.valueR);
-        }),
-        children: [
-          _getGroupArtworksByAlbumWidget(),
-          _getUniqueArtworkHashWidget(),
-        ],
-      ),
-    );
-  }
-
-  Widget _getGroupArtworksByAlbumWidget() {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.groupArtworksByAlbum,
-      child: Obx(
-        (context) => AnimatedEnabled(
-          enabled: !settings.uniqueArtworkHash.valueR,
-          child: CustomSwitchListTile(
-            bgColor: getBgColor(_IndexerSettingsKeys.groupArtworksByAlbum),
-            icon: Broken.backward_item,
-            title: lang.groupArtworksByAlbum,
-            subtitle: lang.requiresClearingImageCacheAndReIndexing,
-            value: settings.groupArtworksByAlbum.valueR,
-            onChanged: (isTrue) {
-              settings.groupArtworksByAlbum.save(!isTrue);
-              _showReindexingPrompt(title: lang.groupArtworksByAlbum, body: lang.requiresClearingImageCacheAndReIndexing);
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _getUniqueArtworkHashWidget() {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.uniqueArtworkHash,
-      child: Obx(
-        (context) => AnimatedEnabled(
-          enabled: !settings.groupArtworksByAlbum.valueR,
-          child: CustomSwitchListTile(
-            bgColor: getBgColor(_IndexerSettingsKeys.uniqueArtworkHash),
-            leading: StackedIcon(
-              baseIcon: Broken.gallery,
-              secondaryIcon: Broken.cpu,
-              secondaryIconSize: 13.0,
-            ),
-            title: lang.uniqueArtworkHash,
-            subtitle: "${lang.performanceNote}. ${lang.requiresClearingImageCacheAndReIndexing}",
-            value: settings.uniqueArtworkHash.valueR,
-            onChanged: (isTrue) {
-              settings.uniqueArtworkHash.save(!isTrue);
-              _showReindexingPrompt(title: lang.uniqueArtworkHash, body: lang.requiresClearingImageCacheAndReIndexing);
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget getAddFolderWidget() {
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.addFolder,
-      child: CustomListTile(
-        bgColor: getBgColor(_IndexerSettingsKeys.addFolder),
-        icon: Broken.folder_add,
-        title: lang.addFolder,
-        subtitle: getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
-        onTap: promptAddFolderType,
-      ),
-    );
-  }
-
-  Widget getFoldersToScanWidget({
-    required BuildContext context,
-    bool initiallyExpanded = false,
-  }) {
-    final textTheme = context.textTheme;
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.foldersToScan,
-      child: Obx(
-        (context) {
-          final mediaStoreEnabled = settings.useMediaStore.valueR;
-          return NamidaExpansionTile(
-            bgColor: getBgColor(_IndexerSettingsKeys.foldersToScan),
-            bigahh: false,
-            compact: false,
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-            initiallyExpanded: initiallyExpanded || initialItem == _IndexerSettingsKeys.foldersToScan,
-            icon: Broken.folder,
-            titleText: lang.listOfFolders,
-            textColor: textTheme.displayLarge!.color,
-            trailingBuilder: (iconWidget) => Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NamidaButton(
-                  icon: Broken.folder_add,
-                  text: lang.add,
-                  opaqueBG: true,
-                  onTap: promptAddFolderType,
-                ),
-                iconWidget,
-              ],
-            ),
-            children: [
-              ...settings.directoriesToScan.valueR.map(
-                (e) {
-                  final assetImagePath = e.type.toAssetImage();
-                  final assetWidget = assetImagePath == null
-                      ? null
-                      : Image.asset(
-                          assetImagePath,
-                          height: 20.0,
-                        );
-                  final isServer = e is DirectoryIndexServer;
-                  return CustomListTile(
-                    extraDense: true,
-                    leading:
-                        assetWidget ??
-                        Icon(
-                          e.type.toIcon(),
-                          size: 20.0,
-                        ),
-                    title: e.toSourceInfo(),
-                    subtitle: isServer
-                        ? [
-                            e.type.toText(),
-                            e.username,
-                          ].joinText(separator: ' - ')
-                        : mediaStoreEnabled
-                        ? lang.mediaStoreIsEnabledThisWillHaveNoEffect
-                        : null,
-                    trailingRaw: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isServer)
-                          IconButton(
-                            onPressed: () => _reAuthDirIndex(e),
-                            icon: Obx(
-                              (context) {
-                                final hasAuth = MusicWebServerAuthDetails.manager.dirHasAuthInfoR(e);
-                                return hasAuth
-                                    ? const Icon(
-                                        Broken.lock,
-                                        size: 20.0,
-                                      )
-                                    : const StackedIcon(
-                                        baseIcon: Broken.lock,
-                                        iconSize: 20.0,
-                                        secondaryIcon: Broken.danger,
-                                        secondaryIconSize: 13.0,
-                                      );
-                              },
-                            ),
-                          ),
-                        NamidaTextButton(
-                          minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
-                          onTap: () {
-                            if (settings.directoriesToScan.value.length == 1) {
-                              snackyy(
-                                title: lang.minimumOneItem,
-                                message: lang.minimumOneFolderSubtitle,
-                                displayDuration: SnackDisplayDuration.veryLong,
-                              );
-                            } else {
-                              String bodyText = "${lang.remove} \"${e.toSourceInfo()}\"?";
-                              if (e.isServer) {
-                                final title = [e.type.toText(), e.username ?? '?'].joinText(separator: ' - ');
-                                bodyText += "\n$title";
-                              }
-                              NamidaNavigator.inst.navigateDialog(
-                                dialog: CustomBlurryDialog(
-                                  normalTitleStyle: true,
-                                  isWarning: true,
-                                  actions: [
-                                    const CancelButton(),
-                                    NamidaButton(
-                                      text: lang.remove,
-                                      onTap: () {
-                                        settings.directoriesToScan.update((list) => list.remove(e));
-                                        if (isServer) MusicWebServerAuthDetails.manager.deleteFromDb(e);
-                                        NamidaNavigator.inst.closeDialog();
-                                        _maybeShowRefreshPromptDialog(true);
-                                      },
-                                    ),
-                                  ],
-                                  bodyText: bodyText,
-                                ),
-                              );
-                            }
-                          },
-                          text: lang.remove.toUpperCase(),
-                          fontSizeMultiplier: 0.92,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget getFoldersToExcludeWidget({
-    required BuildContext context,
-    bool initiallyExpanded = false,
-  }) {
-    final textTheme = context.textTheme;
-    return getItemWrapper(
-      key: _IndexerSettingsKeys.foldersToExclude,
-      child: ObxO(
-        rx: settings.directoriesToExclude,
-        builder: (context, directoriesToExclude) => NamidaExpansionTile(
-          bgColor: getBgColor(_IndexerSettingsKeys.foldersToExclude),
-          bigahh: false,
-          compact: false,
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          initiallyExpanded: initiallyExpanded || initialItem == _IndexerSettingsKeys.foldersToExclude,
-          icon: Broken.folder_minus,
-          titleText: lang.excludedFodlers,
-          textColor: textTheme.displayLarge!.color,
-          trailingBuilder: (iconWidget) => Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NamidaButton(
-                icon: Broken.folder_add,
-                text: lang.add,
-                opaqueBG: true,
-                onTap: () {
-                  _pickLocalFolder((dirsPath) {
-                    settings.directoriesToExclude.update((list) => list.addAllNoDuplicates(dirsPath));
-                  });
-                },
-              ),
-              iconWidget,
-            ],
-          ),
-          children: directoriesToExclude.isEmpty
-              ? [
-                  ListTile(
-                    title: Text(
-                      lang.noExcludedFolders,
-                      style: textTheme.displayMedium,
-                    ),
-                  ),
-                ]
-              : [
-                  ...directoriesToExclude.map(
-                    (e) => CustomListTile(
-                      title: e.toSourceInfo(),
-                      subtitle: e.username,
-                      trailingRaw: NamidaTextButton(
-                        minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
-                        onTap: () {
-                          settings.directoriesToExclude.update((list) => list.remove(e));
-                          _maybeShowRefreshPromptDialog(true);
-                        },
-                        text: lang.remove.toUpperCase(),
-                        fontSizeMultiplier: 0.92,
-                      ),
-                    ),
-                  ),
-                ],
-        ),
-      ),
-    );
-  }
-
-  void _showReindexingPrompt({
+  static void _showReindexingPrompt({
     required String title,
     required String body,
   }) {
@@ -1099,11 +931,8 @@ class IndexerSettings extends SettingSubpageProvider {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
-    const refreshIconKey1 = 'kurukuru';
-    const refreshIconKey2 = 'kururin';
+    const refreshIconKey = 'kururin';
 
-    // final useMediaStoreWidget = getMediaStoreWidget();
-    final includeVideosWidget = getIncludeVideosWidget();
     return SettingsCard(
       title: lang.indexer,
       subtitle: lang.indexerSubtitle,
@@ -1115,7 +944,9 @@ class IndexerSettings extends SettingSubpageProvider {
             icon: Broken.refresh_2,
             tooltip: () => lang.refreshLibrary,
             onPressed: () => showRefreshPromptDialog(false, allowBypassing: true),
-            child: const RefreshLibraryIcon(widgetKey: refreshIconKey2),
+            child: const RefreshLibraryIcon(
+              widgetKey: refreshIconKey,
+            ),
           ),
           const SizedBox(
             height: 48.0,
@@ -1144,8 +975,8 @@ class IndexerSettings extends SettingSubpageProvider {
                         final filesCount = allAudioFiles.length + networkTracksCount;
                         final filesCountText = filesCount == 0 ? null : filesCount.formatDecimal();
                         return StatsContainer(
-                          icon: Broken.info_circle,
-                          title: '${lang.tracksInfo}:',
+                          icon: Broken.music_circle,
+                          title: '${lang.tracks}:',
                           value: tracksCount.formatDecimal(),
                           total: filesCountText,
                         );
@@ -1182,306 +1013,91 @@ class IndexerSettings extends SettingSubpageProvider {
             ),
           ),
           // const _ExtractingPathsWidget(itemPadding: EdgeInsets.symmetric(horizontal: 18.0, vertical: 4.0)),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.preventDuplicatedTracks,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.preventDuplicatedTracks),
-                icon: Broken.copy,
-                title: lang.preventDuplicatedTracks,
-                subtitle: "${lang.preventDuplicatedTracksSubtitle}. ${lang.indexRefreshRequired}",
-                onChanged: (isTrue) => settings.preventDuplicatedTracks.save(!isTrue),
-                value: settings.preventDuplicatedTracks.valueR,
-              ),
-            ),
+          SettingSectionsColumn(
+            page: this,
           ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.respectNoMedia,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.respectNoMedia),
-                enabled: !settings.useMediaStore.valueR,
-                icon: Broken.cd,
-                title: lang.respectNoMedia,
-                subtitle: "${lang.respectNoMediaSubtitle}. ${lang.indexRefreshRequired}",
-                onChanged: (isTrue) => settings.respectNoMedia.save(!isTrue),
-                value: settings.useMediaStore.valueR ? false : settings.respectNoMedia.valueR,
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.extractFtArtist,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.extractFtArtist),
-                icon: Broken.microphone,
-                title: lang.extractFeatArtist,
-                subtitle: "${lang.extractFeatArtistSubtitle} ${lang.instantlyApplies}.",
-                onChanged: (isTrue) async {
-                  settings.extractFeatArtistFromTitle.save(!isTrue);
-                  Indexer.inst.rebuildTracksAfterExtractFeatArtistChanges();
-                },
-                value: settings.extractFeatArtistFromTitle.valueR,
-              ),
-            ),
-          ),
-          getArtworkCacheWidget(context),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.separators,
-            child: CustomListTile(
-              bgColor: getBgColor(_IndexerSettingsKeys.separators),
-              icon: Broken.scissor,
-              title: lang.separators,
-              subtitle: '${lang.artists}, ${lang.genres}, ${lang.albums} • ${lang.instantlyApplies}',
-              trailing: const Icon(Broken.arrow_right_3),
-              onTap: _showSeparatorsDialog,
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.albumIdentifiers,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.albumIdentifiers),
-                icon: Broken.arrow_square,
-                title: lang.albumIdentifiers,
-                trailingText: settings.albumIdentifiers.valueR.length.toString(),
-                onTap: () {
-                  final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers.value).obs;
-                  NamidaNavigator.inst.navigateDialog(
-                    onDisposing: () {
-                      tempList.close();
-                    },
-                    dialog: CustomBlurryDialog(
-                      title: lang.albumIdentifiers,
-                      actions: [
-                        const CancelButton(),
-                        Obx(
-                          (context) {
-                            final albumIdentifiers = settings.albumIdentifiers.valueR;
-                            final tempIdentifiers = tempList.valueR;
-                            final hasChanges =
-                                albumIdentifiers.any((element) => !tempIdentifiers.contains(element)) ||
-                                tempIdentifiers.any((element) => !albumIdentifiers.contains(element)); // isEqualTo wont work cuz order shouldnt matter
-                            return NamidaButton(
-                              enabled: hasChanges,
-                              text: lang.save,
-                              onTap: () async {
-                                NamidaNavigator.inst.closeDialog();
-                                final identifiers = tempList.value.toList();
-                                settings.albumIdentifiers.replace(identifiers);
-                                _showReindexingPrompt(title: lang.albumIdentifiers, body: lang.requiresClearingImageCacheAndReIndexing);
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                      child: Column(
-                        children: [
-                          ...AlbumIdentifier.values.map(
-                            (e) {
-                              final isForcelyEnabled = e == AlbumIdentifier.albumName;
-                              return NamidaOpacity(
-                                opacity: isForcelyEnabled ? 0.7 : 1.0,
-                                child: Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Obx(
-                                    (context) => ListTileWithCheckMark(
-                                      title: e.toText(),
-                                      active: tempList.contains(e),
-                                      onTap: () {
-                                        if (isForcelyEnabled) return;
-                                        tempList.addOrRemove(e);
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.extensionsBlacklist,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.extensionsBlacklist),
-                icon: Broken.location_slash,
-                title: '${lang.extension} (${lang.blacklist})',
-                subtitle: lang.indexRefreshRequired,
-                trailingText: "${settings.extensionsBlacklist.valueR.length}",
-                onTap: () {
-                  _showExtensionsBlacklistDialog(
-                    '${lang.extension} (${lang.blacklist})',
-                    settings.extensionsBlacklist,
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.minimumFileSize,
-            child: ObxO(
-              rx: settings.indexMinFileSizeInB,
-              builder: (context, indexMinFileSizeInB) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.minimumFileSize),
-                icon: Broken.unlimited,
-                title: lang.minFileSize,
-                subtitle: lang.indexRefreshRequired,
-                trailing: NamidaWheelSlider(
-                  width: 100.0,
-                  max: 1024,
-                  multiplier: (1024 * 10),
-                  initValue: indexMinFileSizeInB,
-                  onValueChanged: (val) => settings.indexMinFileSizeInB.save(val),
-                  text: indexMinFileSizeInB.fileSizeFormatted,
-                ),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.minimumTrackDur,
-            child: ObxO(
-              rx: settings.indexMinDurationInSec,
-              builder: (context, indexMinDurationInSec) => CustomListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.minimumTrackDur),
-                icon: Broken.timer_1,
-                title: lang.minFileDuration,
-                subtitle: lang.indexRefreshRequired,
-                trailing: NamidaWheelSlider(
-                  width: 100.0,
-                  max: 180,
-                  initValue: indexMinDurationInSec,
-                  onValueChanged: (val) => settings.indexMinDurationInSec.save(val),
-                  text: "$indexMinDurationInSec s",
-                ),
-              ),
-            ),
-          ),
-          // useMediaStoreWidget,
-          includeVideosWidget,
-          getItemWrapper(
-            key: _IndexerSettingsKeys.refreshOnStartup,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_IndexerSettingsKeys.refreshOnStartup),
-                icon: Broken.d_rotate,
-                title: lang.refreshOnStartup,
-                value: settings.refreshOnStartup.valueR,
-                onChanged: (isTrue) => settings.refreshOnStartup.save(!isTrue),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.missingTracks,
-            child: CustomListTile(
-              bgColor: getBgColor(_IndexerSettingsKeys.missingTracks),
-              icon: Broken.location_cross,
-              title: lang.missingTracks,
-              trailing: const Icon(Broken.arrow_right_3),
-              onTap: () async {
-                if (Indexer.inst.isIndexing.value ||
-                    BackupController.inst.isCreatingBackup.value ||
-                    BackupController.inst.isRestoringBackup.value ||
-                    HistoryController.inst.isLoadingHistory ||
-                    YoutubeHistoryController.inst.isLoadingHistory ||
-                    JsonToHistoryParser.inst.isParsing.value) {
-                  snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
-                  return;
-                }
-                if (!await requestManageStoragePermission()) return;
-                const IndexerMissingTracksSubpage().navigate();
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.reindex,
-            child: CustomListTile(
-              bgColor: getBgColor(_IndexerSettingsKeys.reindex),
-              icon: Broken.refresh,
-              title: lang.reIndex,
-              subtitle: lang.reIndexSubtitle,
-              onTap: () async {
-                Indexer.inst.calculateAllImageSizesInStorage();
-
-                final clearArtworks = false.obs;
-                await NamidaNavigator.inst.navigateDialog(
-                  onDisposing: () {
-                    clearArtworks.close();
-                  },
-                  dialog: CustomBlurryDialog(
-                    normalTitleStyle: true,
-                    isWarning: true,
-                    actions: [
-                      const CancelButton(),
-                      NamidaButton(
-                        text: lang.reIndex,
-                        onTap: () async {
-                          NamidaNavigator.inst.closeDialog();
-                          Future.delayed(const Duration(milliseconds: 500), () async {
-                            if (clearArtworks.value) {
-                              await Indexer.inst.clearImageCache();
-                            }
-                            Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
-                          });
-                        },
-                      ),
-                    ],
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        children: [
-                          Text(
-                            lang.reIndexWarning,
-                            style: textTheme.displayMedium,
-                          ),
-                          const SizedBox(height: 16.0),
-                          ObxO(
-                            rx: Indexer.inst.artworksSizeInStorage,
-                            builder: (context, artworksSizeInStorage) => ObxO(
-                              rx: clearArtworks,
-                              builder: (context, active) => ListTileWithCheckMark(
-                                dense: true,
-                                icon: Broken.broom,
-                                title: lang.clearImageCache,
-                                subtitle: artworksSizeInStorage == 0 ? '?' : artworksSizeInStorage.fileSizeFormatted,
-                                active: active,
-                                onTap: clearArtworks.toggle,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _IndexerSettingsKeys.refreshLibrary,
-            child: CustomListTile(
-              bgColor: getBgColor(_IndexerSettingsKeys.refreshLibrary),
-              leading: const RefreshLibraryIcon(widgetKey: refreshIconKey1),
-              title: lang.refreshLibrary,
-              subtitle: lang.refreshLibrarySubtitle,
-              onTap: () => showRefreshPromptDialog(false, allowBypassing: true),
-            ),
-          ),
-          getAddFolderWidget(),
-          getFoldersToScanWidget(context: context),
-          getFoldersToExcludeWidget(context: context),
         ],
       ),
     );
   }
+}
 
-  void _showSeparatorsDialog() {
+class _RespectNoMediaTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _RespectNoMediaTile({required this.bgColor});
+
+  void _onChanged(bool isTrue) => settings.respectNoMedia.save(!isTrue);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final isMediaStoreEnabled = settings.useMediaStore.valueR;
+        final value = !isMediaStoreEnabled && settings.respectNoMedia.valueR;
+        return CustomSwitchListTile(
+          bgColor: bgColor,
+          enabled: !isMediaStoreEnabled,
+          icon: Broken.cd,
+          title: lang.respectNoMedia,
+          subtitle: "${lang.respectNoMediaSubtitle}. ${lang.indexRefreshRequired}",
+          onChanged: _onChanged,
+          value: value,
+        );
+      },
+    );
+  }
+}
+
+class _ExclusiveArtworkToggleTile extends StatelessWidget {
+  final Color? bgColor;
+  final SettingsKey<bool> setting;
+  final SettingsKey<bool> exclusiveSetting;
+  final IconData? icon;
+  final Widget? leading;
+  final String title;
+  final String subtitle;
+
+  const _ExclusiveArtworkToggleTile({
+    required this.bgColor,
+    required this.setting,
+    required this.exclusiveSetting,
+    this.icon,
+    this.leading,
+    required this.title,
+    required this.subtitle,
+  });
+
+  void _onChanged(bool isTrue) {
+    setting.save(!isTrue);
+    IndexerSettings._showReindexingPrompt(title: title, body: lang.requiresClearingImageCacheAndReIndexing);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) => AnimatedEnabled(
+        enabled: !exclusiveSetting.valueR,
+        child: CustomSwitchListTile(
+          bgColor: bgColor,
+          icon: icon,
+          leading: leading,
+          title: title,
+          subtitle: subtitle,
+          value: setting.valueR,
+          onChanged: _onChanged,
+        ),
+      ),
+    );
+  }
+}
+
+class _SeparatorsTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _SeparatorsTile({required this.bgColor});
+
+  void _showDialog() {
     final lists = _SeparatorsType.values.expand((e) => [e.getList(isBlacklist: false).rx, e.getList(isBlacklist: true).rx]).toFixedList();
     final originals = lists.map((e) => List<String>.from(e.value)).toFixedList();
 
@@ -1522,7 +1138,107 @@ class IndexerSettings extends SettingSubpageProvider {
     );
   }
 
-  Future<void> _showExtensionsBlacklistDialog(String title, RxBaseCore<List<String>> blacklistItems) async {
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = '${lang.artists}, ${lang.genres}, ${lang.albums} • ${lang.instantlyApplies}';
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.scissor,
+      title: lang.separators,
+      subtitle: subtitle,
+      trailing: const Icon(
+        Broken.arrow_right_3,
+      ),
+      onTap: _showDialog,
+    );
+  }
+}
+
+class _AlbumIdentifiersTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _AlbumIdentifiersTile({required this.bgColor});
+
+  void _showDialog() {
+    final tempList = List<AlbumIdentifier>.from(settings.albumIdentifiers.value).obs;
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        tempList.close();
+      },
+      dialog: CustomBlurryDialog(
+        title: lang.albumIdentifiers,
+        actions: [
+          const CancelButton(),
+          Obx(
+            (context) {
+              final albumIdentifiers = settings.albumIdentifiers.valueR;
+              final tempIdentifiers = tempList.valueR;
+              final hasChanges =
+                  albumIdentifiers.any((element) => !tempIdentifiers.contains(element)) ||
+                  tempIdentifiers.any((element) => !albumIdentifiers.contains(element)); // isEqualTo wont work cuz order shouldnt matter
+              return NamidaButton(
+                enabled: hasChanges,
+                text: lang.save,
+                onTap: () async {
+                  NamidaNavigator.inst.closeDialog();
+                  final identifiers = tempList.value.toList();
+                  settings.albumIdentifiers.replace(identifiers);
+                  IndexerSettings._showReindexingPrompt(title: lang.albumIdentifiers, body: lang.requiresClearingImageCacheAndReIndexing);
+                },
+              );
+            },
+          ),
+        ],
+        child: Column(
+          children: [
+            ...AlbumIdentifier.values.map(
+              (e) {
+                final isForcelyEnabled = e == AlbumIdentifier.albumName;
+                return NamidaOpacity(
+                  opacity: isForcelyEnabled ? 0.7 : 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Obx(
+                      (context) => ListTileWithCheckMark(
+                        title: e.toText(),
+                        active: tempList.contains(e),
+                        onTap: () {
+                          if (isForcelyEnabled) return;
+                          tempList.addOrRemove(e);
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.albumIdentifiers,
+      builder: (context, albumIdentifiers) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.arrow_square,
+        title: lang.albumIdentifiers,
+        trailingText: albumIdentifiers.length.toString(),
+        onTap: _showDialog,
+      ),
+    );
+  }
+}
+
+class _ExtensionsBlacklistTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _ExtensionsBlacklistTile({required this.bgColor});
+
+  Future<void> _showDialog(String title, RxBaseCore<List<String>> blacklistItems) async {
     final blacklistController = TextEditingController();
 
     final original = List<String>.from(blacklistItems.value);
@@ -1588,6 +1304,544 @@ class IndexerSettings extends SettingSubpageProvider {
           ),
         ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final title = '${lang.extension} (${lang.blacklist})';
+    return ObxO(
+      rx: settings.extensionsBlacklist,
+      builder: (context, extensionsBlacklist) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.location_slash,
+        title: title,
+        subtitle: lang.indexRefreshRequired,
+        trailingText: "${extensionsBlacklist.length}",
+        onTap: () => _showDialog(title, settings.extensionsBlacklist),
+      ),
+    );
+  }
+}
+
+class _MinFileSizeTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _MinFileSizeTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.indexMinFileSizeInB,
+      builder: (context, indexMinFileSizeInB) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.unlimited,
+        title: lang.minFileSize,
+        subtitle: lang.indexRefreshRequired,
+        trailing: NamidaWheelSlider(
+          width: 100.0,
+          max: 1024,
+          multiplier: (1024 * 10),
+          initValue: indexMinFileSizeInB,
+          onValueChanged: settings.indexMinFileSizeInB.save,
+          text: indexMinFileSizeInB.fileSizeFormatted,
+        ),
+      ),
+    );
+  }
+}
+
+class _MinFileDurationTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _MinFileDurationTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.indexMinDurationInSec,
+      builder: (context, indexMinDurationInSec) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.timer_1,
+        title: lang.minFileDuration,
+        subtitle: lang.indexRefreshRequired,
+        trailing: NamidaWheelSlider(
+          width: 100.0,
+          max: 180,
+          initValue: indexMinDurationInSec,
+          onValueChanged: settings.indexMinDurationInSec.save,
+          text: "$indexMinDurationInSec s",
+        ),
+      ),
+    );
+  }
+}
+
+class _IncludeVideosTile extends StatelessWidget {
+  final SettingTileArgs args;
+
+  const _IncludeVideosTile({required this.args});
+
+  void _onChanged(bool isTrue) {
+    settings.includeVideos.save(!isTrue);
+    final host = IndexerSettings._forTile(args);
+    host._maybeShowRefreshPromptDialog(false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final videosCountText = VideoController.inst.getLocalVideosCountTextR();
+        return CustomSwitchListTile(
+          bgColor: args.bgColor,
+          leading: const StackedIcon(
+            baseIcon: Broken.video_play,
+            secondaryIcon: Broken.tick_circle,
+            secondaryIconSize: 12.0,
+          ),
+          title: lang.includeVideos,
+          subtitle: '${lang.videos}: $videosCountText',
+          trailingBeforeSwitch: const LocalVideosRescanButton(
+            padding: EdgeInsetsDirectional.only(start: 8.0),
+          ),
+          value: settings.includeVideos.valueR,
+          onChanged: _onChanged,
+        );
+      },
+    );
+  }
+}
+
+class _MissingTracksTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _MissingTracksTile({required this.bgColor});
+
+  Future<void> _onTap() async {
+    if (Indexer.inst.isIndexing.value ||
+        BackupController.inst.isCreatingBackup.value ||
+        BackupController.inst.isRestoringBackup.value ||
+        HistoryController.inst.isLoadingHistory ||
+        YoutubeHistoryController.inst.isLoadingHistory ||
+        JsonToHistoryParser.inst.isParsing.value) {
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
+      return;
+    }
+    if (!await requestManageStoragePermission()) return;
+    const IndexerMissingTracksSubpage().navigate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.location_cross,
+      title: lang.missingTracks,
+      trailing: const Icon(
+        Broken.arrow_right_3,
+      ),
+      onTap: _onTap,
+    );
+  }
+}
+
+class _ReIndexTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _ReIndexTile({required this.bgColor});
+
+  Future<void> _showDialog(TextTheme textTheme) async {
+    Indexer.inst.calculateAllImageSizesInStorage();
+
+    final clearArtworks = false.obs;
+    await NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        clearArtworks.close();
+      },
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        isWarning: true,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.reIndex,
+            onTap: () async {
+              NamidaNavigator.inst.closeDialog();
+              Future.delayed(const Duration(milliseconds: 500), () async {
+                if (clearArtworks.value) {
+                  await Indexer.inst.clearImageCache();
+                }
+                Indexer.inst.refreshLibraryAndCheckForDiff(forceReIndex: true);
+              });
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            children: [
+              Text(
+                lang.reIndexWarning,
+                style: textTheme.displayMedium,
+              ),
+              const SizedBox(
+                height: 16.0,
+              ),
+              ObxO(
+                rx: Indexer.inst.artworksSizeInStorage,
+                builder: (context, artworksSizeInStorage) => ObxO(
+                  rx: clearArtworks,
+                  builder: (context, active) => ListTileWithCheckMark(
+                    dense: true,
+                    icon: Broken.broom,
+                    title: lang.clearImageCache,
+                    subtitle: artworksSizeInStorage == 0 ? '?' : artworksSizeInStorage.fileSizeFormatted,
+                    active: active,
+                    onTap: clearArtworks.toggle,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.refresh,
+      title: lang.reIndex,
+      subtitle: lang.reIndexSubtitle,
+      onTap: () => _showDialog(textTheme),
+    );
+  }
+}
+
+class _RefreshLibraryTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _RefreshLibraryTile({required this.bgColor});
+
+  static const _kRefreshIconKey = 'kurukuru';
+
+  void _onTap() => showRefreshPromptDialog(false, allowBypassing: true);
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      leading: const RefreshLibraryIcon(
+        widgetKey: _kRefreshIconKey,
+      ),
+      title: lang.refreshLibrary,
+      subtitle: lang.refreshLibrarySubtitle,
+      onTap: _onTap,
+    );
+  }
+}
+
+class _AddFolderTile extends StatelessWidget {
+  final SettingTileArgs args;
+
+  const _AddFolderTile({required this.args});
+
+  @override
+  Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final subtitle = IndexerSettings.getAddFolderSubtitleKeys(includeAllInfo: false).join(', ');
+    return CustomListTile(
+      bgColor: args.bgColor,
+      icon: Broken.folder_add,
+      title: lang.addFolder,
+      subtitle: subtitle,
+      onTap: host.promptAddFolderType,
+    );
+  }
+}
+
+class _FoldersToScanTile extends StatelessWidget {
+  final SettingTileArgs args;
+
+  const _FoldersToScanTile({required this.args});
+
+  @override
+  Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final isTargetWithin = args.page?.isTargetWithin(args.entry) == true;
+    return NamidaExpansionTile(
+      bgColor: args.bgColor,
+      initiallyExpanded: isTargetWithin,
+      icon: Broken.folder,
+      titleText: lang.listOfFolders,
+      trailingBuilder: (arrow) => _AddFolderTrailing(
+        arrow: arrow,
+        onAdd: host.promptAddFolderType,
+      ),
+      children: [
+        _ScanFoldersList(
+          host: host,
+        ),
+      ],
+    );
+  }
+}
+
+class _ScanFoldersList extends StatelessWidget {
+  final IndexerSettings host;
+
+  const _ScanFoldersList({required this.host});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final isMediaStoreEnabled = settings.useMediaStore.valueR;
+        final tiles = settings.directoriesToScan.valueR
+            .map(
+              (e) => _ScanFolderTile(
+                dir: e,
+                isMediaStoreEnabled: isMediaStoreEnabled,
+                host: host,
+              ),
+            )
+            .toFixedList();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: tiles,
+        );
+      },
+    );
+  }
+}
+
+class _ScanFolderTile extends StatelessWidget {
+  final DirectoryIndex dir;
+  final bool isMediaStoreEnabled;
+  final IndexerSettings host;
+
+  const _ScanFolderTile({
+    required this.dir,
+    required this.isMediaStoreEnabled,
+    required this.host,
+  });
+
+  void _onRemoveTap() {
+    if (settings.directoriesToScan.value.length == 1) {
+      snackyy(
+        title: lang.minimumOneItem,
+        message: lang.minimumOneFolderSubtitle,
+        displayDuration: SnackDisplayDuration.veryLong,
+      );
+      return;
+    }
+    final dir = this.dir;
+    String bodyText = "${lang.remove} \"${dir.toSourceInfo()}\"?";
+    if (dir.isServer) {
+      final title = [dir.type.toText(), dir.username ?? '?'].joinText(separator: ' - ');
+      bodyText += "\n$title";
+    }
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        isWarning: true,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.remove,
+            onTap: () {
+              settings.directoriesToScan.update((list) => list.remove(dir));
+              if (dir is DirectoryIndexServer) MusicWebServerAuthDetails.manager.deleteFromDb(dir);
+              NamidaNavigator.inst.closeDialog();
+              host._maybeShowRefreshPromptDialog(true);
+            },
+          ),
+        ],
+        bodyText: bodyText,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dir = this.dir;
+    final type = dir.type;
+    final assetImagePath = type.toAssetImage();
+    final leading = assetImagePath == null
+        ? Icon(
+            type.toIcon(),
+            size: 20.0,
+          )
+        : Image.asset(
+            assetImagePath,
+            height: 20.0,
+          );
+    final isServer = dir is DirectoryIndexServer;
+    final subtitle = isServer
+        ? [
+            type.toText(),
+            dir.username,
+          ].joinText(separator: ' - ')
+        : isMediaStoreEnabled
+        ? lang.mediaStoreIsEnabledThisWillHaveNoEffect
+        : null;
+    return CustomListTile(
+      extraDense: true,
+      leading: leading,
+      title: dir.toSourceInfo(),
+      subtitle: subtitle,
+      trailingRaw: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isServer)
+            IconButton(
+              onPressed: () => host._reAuthDirIndex(dir),
+              icon: Obx(
+                (context) {
+                  final hasAuth = MusicWebServerAuthDetails.manager.dirHasAuthInfoR(dir);
+                  return hasAuth
+                      ? const Icon(
+                          Broken.lock,
+                          size: 20.0,
+                        )
+                      : const StackedIcon(
+                          baseIcon: Broken.lock,
+                          iconSize: 20.0,
+                          secondaryIcon: Broken.danger,
+                          secondaryIconSize: 13.0,
+                        );
+                },
+              ),
+            ),
+          NamidaTextButton(
+            minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
+            onTap: _onRemoveTap,
+            text: lang.remove.toUpperCase(),
+            fontSizeMultiplier: 0.92,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FoldersToExcludeTile extends StatelessWidget {
+  final SettingTileArgs args;
+
+  const _FoldersToExcludeTile({required this.args});
+
+  @override
+  Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final isTargetWithin = args.page?.isTargetWithin(args.entry) == true;
+    return NamidaExpansionTile(
+      bgColor: args.bgColor,
+      initiallyExpanded: isTargetWithin,
+      icon: Broken.folder_minus,
+      titleText: lang.excludedFodlers,
+      trailingBuilder: (arrow) => _AddFolderTrailing(
+        arrow: arrow,
+        onAdd: host._promptAddExcludedFolder,
+      ),
+      children: [
+        _ExcludedFoldersList(
+          host: host,
+        ),
+      ],
+    );
+  }
+}
+
+class _ExcludedFoldersList extends StatelessWidget {
+  final IndexerSettings host;
+
+  const _ExcludedFoldersList({required this.host});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.directoriesToExclude,
+      builder: (context, directoriesToExclude) {
+        if (directoriesToExclude.isEmpty) {
+          return ListTile(
+            title: Text(
+              lang.noExcludedFolders,
+              style: context.textTheme.displayMedium,
+            ),
+          );
+        }
+        final tiles = directoriesToExclude
+            .map(
+              (e) => _ExcludedFolderTile(
+                dir: e,
+                host: host,
+              ),
+            )
+            .toFixedList();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: tiles,
+        );
+      },
+    );
+  }
+}
+
+class _ExcludedFolderTile extends StatelessWidget {
+  final DirectoryIndex dir;
+  final IndexerSettings host;
+
+  const _ExcludedFolderTile({
+    required this.dir,
+    required this.host,
+  });
+
+  void _onRemoveTap() {
+    settings.directoriesToExclude.update((list) => list.remove(dir));
+    host._maybeShowRefreshPromptDialog(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      title: dir.toSourceInfo(),
+      subtitle: dir.username,
+      trailingRaw: NamidaTextButton(
+        minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,
+        onTap: _onRemoveTap,
+        text: lang.remove.toUpperCase(),
+        fontSizeMultiplier: 0.92,
+      ),
+    );
+  }
+}
+
+class _AddFolderTrailing extends StatelessWidget {
+  final Widget arrow;
+  final void Function() onAdd;
+
+  const _AddFolderTrailing({
+    required this.arrow,
+    required this.onAdd,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NamidaButton(
+          icon: Broken.folder_add,
+          text: lang.add,
+          opaqueBG: true,
+          onTap: onAdd,
+        ),
+        arrow,
+      ],
     );
   }
 }
@@ -2361,7 +2615,10 @@ class _TextChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(text),
+          Text(
+            text,
+            style: theme.textTheme.displayMedium,
+          ),
           if (onRemove != null) ...[
             const SizedBox(
               width: 6.0,

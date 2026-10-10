@@ -374,7 +374,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final pickColorsFromDeviceWallpaper = _key('pickColorsFromDeviceWallpaper', false, sync: false);
   late final onNotificationTapAction = _keyEnum('onNotificationTapAction', NotificationTapAction.openApp, NotificationTapAction.values);
   late final performanceMode = _keyEnum('performanceMode', isDesktop ? PerformanceMode.goodLooking : PerformanceMode.balanced, PerformanceMode.values, sync: false);
-  late final floatingActionButton = _keyEnum('floatingActionButton', isKuru ? FABType.search : FABType.none, FABType.values);
+  late final floatingActionButton = _keyEnum('floatingActionButton', FABType.search, FABType.values);
   late final vibrationType = _keyEnum('vibrationType', VibrationType.vibration, VibrationType.values);
 
   late final trackItem = _keyMap<TrackTilePosition, TrackTileItem>(
@@ -683,7 +683,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   (Rx<List<GroupSortType>>, Rx<bool>)? groupSortingRxOf(MediaType media) => _groupSortingKeysOf(media);
 
-  (_SettingsListKey<GroupSortType>, _SettingsKey<bool>)? _groupSortingKeysOf(MediaType media) => switch (media) {
+  (_SettingsListKey<GroupSortType>, SettingsKey<bool>)? _groupSortingKeysOf(MediaType media) => switch (media) {
     MediaType.album => (albumSorts, albumSortReversed),
     MediaType.artist || MediaType.albumArtist || MediaType.composer => (artistSorts, artistSortReversed),
     MediaType.genre || MediaType.style => (genreSorts, genreSortReversed),

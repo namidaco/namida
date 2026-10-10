@@ -17,7 +17,6 @@ import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -28,45 +27,10 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
-import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
-
-enum _ExtraSettingsKeys with SettingKeysBase {
-  collapsedTiles,
-  bottomNavBar,
-  pip(NamidaFeaturesAvailablity.android),
-  fabType,
-  defaultLibraryTab,
-  libraryTabs,
-  filterTracksBy,
-  ignoreCommonPrefixesFor,
-  searchCleanup,
-  lyrics,
-  lyricsSource,
-  prioritizeEmbeddedLyrics,
-  romanization,
-  stretchLyricsDuration,
-  simpleLyricsLine,
-  lyricsSaveLocation,
-  lyricsFolders,
-  imageSource,
-  imageSourceAlbum,
-  imageSourceArtist,
-  immersiveMode(NamidaFeaturesAvailablity.android),
-  swipeToOpenDrawer,
-  alwaysExpandedSearchbar,
-  enableClipboardMonitoring,
-  vibrationType(NamidaFeaturesAvailablity.android),
-  extractAllPalettes,
-  ;
-
-  @override
-  final NamidaFeaturesAvailablityBase? availability;
-  const _ExtraSettingsKeys([this.availability]);
-}
 
 class ExtrasSettings extends SettingSubpageProvider {
   const ExtrasSettings({super.key, super.initialItem});
@@ -75,109 +39,239 @@ class ExtrasSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.extra;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _ExtraSettingsKeys.collapsedTiles: [lang.useCollapsedSettingTiles],
-    _ExtraSettingsKeys.bottomNavBar: [lang.enableBottomNavBar, lang.enableBottomNavBarSubtitle],
-    _ExtraSettingsKeys.pip: [lang.enablePictureInPicture],
-    _ExtraSettingsKeys.defaultLibraryTab: [lang.defaultLibraryTab],
-    _ExtraSettingsKeys.fabType: [lang.floatingActionButton],
-    _ExtraSettingsKeys.libraryTabs: [lang.libraryTabs],
-    _ExtraSettingsKeys.filterTracksBy: [lang.filterTracksBy],
-    _ExtraSettingsKeys.ignoreCommonPrefixesFor: [lang.ignoreCommonPrefixesWhileSorting],
-    _ExtraSettingsKeys.searchCleanup: [lang.enableSearchCleanup, lang.enableSearchCleanupSubtitle],
-    _ExtraSettingsKeys.lyrics: [lang.lyrics],
-    _ExtraSettingsKeys.prioritizeEmbeddedLyrics: [lang.prioritizeEmbeddedLyrics],
-    _ExtraSettingsKeys.lyricsSource: [lang.lyricsSource],
-    _ExtraSettingsKeys.romanization: [lang.romanization, lang.dictionary],
-    _ExtraSettingsKeys.stretchLyricsDuration: [lang.stretchLyricsDuration],
-    _ExtraSettingsKeys.simpleLyricsLine: [lang.simpleLyricsLine, lang.simpleLyricsLineSubtitle],
-    _ExtraSettingsKeys.lyricsSaveLocation: [lang.lyricsSaveLocation, lang.lyricsSaveLocationSubtitle, lang.lyricsDeleteWithTrack],
-    _ExtraSettingsKeys.lyricsFolders: [lang.lyricsFolders, lang.lyricsFoldersSubtitle],
-    _ExtraSettingsKeys.imageSource: [lang.imageSource, lang.album, lang.albums],
-    _ExtraSettingsKeys.imageSourceAlbum: [lang.imageSource, lang.album, lang.albums],
-    _ExtraSettingsKeys.imageSourceArtist: [lang.imageSource, lang.artist, lang.artists],
-    _ExtraSettingsKeys.immersiveMode: [lang.immersiveMode, lang.immersiveModeSubtitle],
-    _ExtraSettingsKeys.swipeToOpenDrawer: [lang.swipeToOpenDrawer],
-    _ExtraSettingsKeys.alwaysExpandedSearchbar: [lang.alwaysExpandedSearchbar],
-    _ExtraSettingsKeys.enableClipboardMonitoring: [lang.enableClipboardMonitoring, lang.enableClipboardMonitoringSubtitle],
-    _ExtraSettingsKeys.vibrationType: [lang.vibrationType, lang.vibration, lang.hapticFeedback],
-    _ExtraSettingsKeys.extractAllPalettes: [lang.extractAllColorPalettes],
-  };
+  List<List<SettingEntry>> get sections => _sections;
 
-  Widget _getImageSourceTile({
-    required _ExtraSettingsKeys key,
-    required String title,
-    required IconData icon,
-    required RxBaseCore<List<LibraryImageSource>> settingsKey,
-    required Function(LibraryImageSource sources) onAdd,
-    required Function(LibraryImageSource sources) onRemove,
-  }) => getItemWrapper(
-    key: key,
-    child: ObxO(
-      rx: settingsKey,
-      builder: (context, sources) => CustomListTile(
-        bgColor: getBgColor(key),
-        title: title,
-        icon: icon,
-        borderR: 16.0,
-        subtitle: LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', '), // to be sorted
-        extraDense: true,
-        onTap: () {
-          void tileOnTap(LibraryImageSource source, {bool removeIfExists = true}) {
-            final alreadyExist = settingsKey.value.contains(source);
-            if (alreadyExist) {
-              if (removeIfExists) {
-                if (settingsKey.value.length <= 1) {
-                  showMinimumItemsSnack(1);
-                } else {
-                  onRemove(source);
-                }
-              }
-            } else {
-              onAdd(source);
-            }
-          }
-
-          NamidaNavigator.inst.navigateDialog(
-            dialog: CustomBlurryDialog(
-              title: title,
-              actions: [
-                IconButton(
-                  onPressed: () {
-                    for (final s in LibraryImageSource.values) {
-                      tileOnTap(s, removeIfExists: false);
-                    }
-                  },
-                  icon: const Icon(Broken.refresh),
-                ),
-                const DoneButton(),
-              ],
-              child: ObxO(
-                rx: settingsKey,
-                builder: (context, imageSources) => SuperSmoothListView(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  children: [
-                    ...LibraryImageSource.values.map(
-                      (e) => Padding(
-                        padding: const EdgeInsets.all(3.0),
-                        child: ListTileWithCheckMark(
-                          active: imageSources.contains(e),
-                          icon: e.toIcon(),
-                          title: e.toText(),
-                          onTap: () => tileOnTap(e),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
+  static final libraryTabs = SettingCustom(
+    title: () => lang.libraryTabs,
+    keys: [settings.libraryTabs],
+    onReset: _LibraryTabsTile._ensureSelectedTabExists,
+    tile: (args) => _LibraryTabsTile(
+      bgColor: args.bgColor,
     ),
   );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      SettingCustom(
+        title: () => lang.useCollapsedSettingTiles,
+        keys: [settings.useSettingCollapsedTiles],
+        tile: (args) => CollapsedSettingTileWidget(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingToggle(
+        settings.enableBottomNavBar,
+        icon: Broken.direct,
+        title: () => lang.enableBottomNavBar,
+        subtitle: () => lang.enableBottomNavBarSubtitle,
+        enabledWhen: () => !Dimensions.inst.showNavigationAtSide,
+        onChanged: (isEnabled) => MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(isEnabled),
+      ),
+      SettingToggle(
+        settings.enablePip,
+        availability: NamidaFeaturesAvailablity.android,
+        icon: Broken.screenmirroring,
+        title: () => lang.enablePictureInPicture,
+        onChanged: (isEnabled) => NamidaChannel.inst.setCanEnterPip(isEnabled),
+      ),
+      SettingChoice(
+        settings.floatingActionButton,
+        values: FABType.values,
+        valueToText: (e) => e.toText(),
+        valueToIcon: (e) => e.toIcon(),
+        icon: Broken.safe_home,
+        title: () => lang.floatingActionButton,
+      ),
+    ],
+    [
+      SettingCustom(
+        title: () => lang.defaultLibraryTab,
+        keys: [settings.extra.autoLibraryTab, settings.extra.staticLibraryTab],
+        tile: (args) => _DefaultLibraryTabTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      libraryTabs,
+    ],
+    [
+      SettingCustom(
+        title: () => lang.filterTracksBy,
+        keys: [settings.trackSearchFilter],
+        tile: (args) => _FilterTracksByTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.ignoreCommonPrefixesWhileSorting,
+        keys: [settings.ignoreCommonPrefixForTypes, settings.commonPrefixes],
+        tile: (args) => _CommonPrefixesTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingToggle(
+        settings.enableSearchCleanup,
+        icon: Broken.document_filter,
+        title: () => lang.enableSearchCleanup,
+        subtitle: () => lang.enableSearchCleanupSubtitle,
+        onChanged: (_) => SearchSortController.inst.disposeResources(),
+      ),
+      SettingCustom(
+        title: () => lang.romanization,
+        aliases: () => [lang.dictionary],
+        keys: [settings.romanizeLyrics, settings.romanizeSorting],
+        tile: (args) => _RomanizationTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      SettingToggleGroup(
+        settings.enableLyrics,
+        leading: const StackedIcon(
+          baseIcon: Broken.document,
+          secondaryIcon: Broken.cpu,
+          secondaryIconSize: 13.0,
+        ),
+        title: () => lang.lyrics,
+        onChanged: (_) => _refreshCurrentLyrics(),
+        children: [
+          SettingChoice(
+            settings.lyricsSource,
+            values: LyricsSource.values,
+            valueToText: (e) => e.toText(),
+            icon: Broken.document_cloud,
+            title: () => lang.lyricsSource,
+          ),
+          SettingChoice(
+            settings.embeddedLyricsPriority,
+            values: EmbeddedLyricsPriority.values,
+            valueToText: (e) => e.toText(),
+            icon: Broken.mobile_programming,
+            title: () => lang.prioritizeEmbeddedLyrics,
+          ),
+          SettingToggle(
+            settings.stretchLyricsDuration,
+            icon: Broken.arrange_square,
+            title: () => lang.stretchLyricsDuration,
+            subtitle: () => 'spedup/slowed/nightcore',
+          ),
+          SettingToggle(
+            settings.enableSimpleLyricsLine,
+            icon: Broken.text,
+            title: () => lang.simpleLyricsLine,
+            subtitle: () => lang.simpleLyricsLineSubtitle,
+            onChanged: (_) => _refreshCurrentLyrics(),
+          ),
+          SettingCustom(
+            title: () => lang.lyricsFolders,
+            aliases: () => [lang.lyricsFoldersSubtitle],
+            keys: [settings.lyricsFolders],
+            tile: (args) => _LyricsFoldersTile(
+              args: args,
+            ),
+            children: [
+              SettingCustom(
+                title: () => lang.lyricsSaveLocation,
+                aliases: () => [lang.lyricsSaveLocationSubtitle, lang.lyricsDeleteWithTrack],
+                keys: [settings.lyricsSaveLocation, settings.lyricsDeleteWithTrackIn],
+                tile: (args) => _LyricsSaveLocationTile(
+                  bgColor: args.bgColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      SettingExpansion(
+        leading: const StackedIcon(
+          baseIcon: Broken.image,
+          secondaryIcon: Broken.cpu,
+          secondaryIconSize: 13.0,
+        ),
+        title: () => lang.imageSource,
+        children: [
+          SettingCustom(
+            title: () => lang.albums,
+            aliases: () => [lang.album],
+            keys: [settings.imageSourceAlbum],
+            tile: (args) => _ImageSourceTile(
+              bgColor: args.bgColor,
+              setting: settings.imageSourceAlbum,
+              update: settings.imageSourceAlbum.update,
+              title: lang.albums,
+              icon: LibraryTab.albums.toIcon(),
+            ),
+          ),
+          SettingCustom(
+            title: () => lang.artists,
+            aliases: () => [lang.artist],
+            keys: [settings.imageSourceArtist],
+            tile: (args) => _ImageSourceTile(
+              bgColor: args.bgColor,
+              setting: settings.imageSourceArtist,
+              update: settings.imageSourceArtist.update,
+              title: lang.artists,
+              icon: LibraryTab.artists.toIcon(),
+            ),
+          ),
+        ],
+      ),
+    ],
+    [
+      SettingToggle(
+        settings.hideStatusBarInExpandedMiniplayer,
+        availability: NamidaFeaturesAvailablity.android,
+        icon: Broken.external_drive,
+        title: () => lang.immersiveMode,
+        subtitle: () => lang.immersiveModeSubtitle,
+        onChanged: (isEnabled) => MiniPlayerController.inst.setImmersiveMode(isEnabled),
+      ),
+      SettingToggle(
+        settings.swipeableDrawer,
+        icon: Broken.sidebar_right,
+        title: () => lang.swipeToOpenDrawer,
+        onChanged: (isEnabled) => NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(isEnabled),
+      ),
+      SettingToggle(
+        settings.alwaysExpandedSearchbar,
+        leading: const StackedIcon(
+          baseIcon: Broken.scroll,
+          secondaryIcon: Broken.search_normal,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.alwaysExpandedSearchbar,
+        onChanged: (isEnabled) => ScrollSearchController.inst.searchBarKey.currentState?.setAlwaysExpanded(isEnabled),
+      ),
+      SettingToggle(
+        settings.enableClipboardMonitoring,
+        icon: Broken.clipboard_export,
+        title: () => lang.enableClipboardMonitoring,
+        subtitle: () => lang.enableClipboardMonitoringSubtitle,
+      ),
+      SettingCustom(
+        availability: NamidaFeaturesAvailablity.android,
+        title: () => lang.vibrationType,
+        aliases: () => [lang.vibration, lang.hapticFeedback],
+        keys: [settings.vibrationType],
+        tile: (args) => _VibrationTypeTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      SettingCustom(
+        title: () => lang.extractAllColorPalettes,
+        tile: (args) => _ExtractAllPalettesTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+  ];
+
+  static void _refreshCurrentLyrics() {
+    final currentItem = Player.inst.currentItem.value;
+    if (currentItem != null) Lyrics.inst.updateLyrics(currentItem);
+  }
 
   void _showExtrasFlagsDialog() {
     NamidaNavigator.inst.navigateDialog(
@@ -199,8 +293,6 @@ class ExtrasSettings extends SettingSubpageProvider {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return SettingsCard(
       title: lang.extras,
       subtitle: lang.extrasSubtitle,
@@ -211,886 +303,10 @@ class ExtrasSettings extends SettingSubpageProvider {
         iconColor: context.defaultIconColor(),
         onPressed: _showExtrasFlagsDialog,
       ),
-      child: Column(
-        children: <Widget>[
-          getItemWrapper(
-            key: _ExtraSettingsKeys.collapsedTiles,
-            child: CollapsedSettingTileWidget(
-              bgColor: getBgColor(_ExtraSettingsKeys.collapsedTiles),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.bottomNavBar,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                enabled: !Dimensions.inst.showNavigationAtSide,
-                bgColor: getBgColor(_ExtraSettingsKeys.bottomNavBar),
-                icon: Broken.direct,
-                title: lang.enableBottomNavBar,
-                subtitle: lang.enableBottomNavBarSubtitle,
-                value: settings.enableBottomNavBar.valueR,
-                onChanged: (p0) {
-                  settings.enableBottomNavBar.save(!p0);
-                  MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(!p0);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.pip,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.pip),
-                icon: Broken.screenmirroring,
-                title: lang.enablePictureInPicture,
-                value: settings.enablePip.valueR,
-                onChanged: (isTrue) {
-                  settings.enablePip.save(!isTrue);
-                  NamidaChannel.inst.setCanEnterPip(!isTrue);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.fabType,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.fabType),
-                icon: Broken.safe_home,
-                title: lang.floatingActionButton,
-                trailingText: settings.floatingActionButton.valueR.toText(),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      title: lang.floatingActionButton,
-                      actions: const [
-                        DoneButton(),
-                      ],
-                      child: SizedBox(
-                        width: context.width,
-                        child: Column(
-                          children: FABType.values
-                              .map(
-                                (e) => ObxO(
-                                  rx: settings.floatingActionButton,
-                                  builder: (context, floatingActionButton) => Padding(
-                                    padding: const EdgeInsets.all(3.0),
-                                    child: ListTileWithCheckMark(
-                                      title: e.toText(),
-                                      icon: e.toIcon(),
-                                      active: floatingActionButton == e,
-                                      onTap: () => settings.floatingActionButton.save(e),
-                                    ),
-                                  ),
-                                ),
-                              )
-                              .toFixedList(),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.defaultLibraryTab,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.defaultLibraryTab),
-                icon: Broken.receipt_1,
-                title: lang.defaultLibraryTab,
-                trailingText: settings.extra.autoLibraryTab.valueR ? lang.auto : settings.extra.staticLibraryTab.valueR.toText(),
-                onTap: () => NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    title: lang.defaultLibraryTab,
-                    actions: const [
-                      DoneButton(),
-                    ],
-                    child: SizedBox(
-                      width: context.width,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: Obx(
-                              (context) => ListTileWithCheckMark(
-                                title: lang.auto,
-                                icon: Broken.recovery_convert,
-                                onTap: () => settings.extra.autoLibraryTab.save(!settings.extra.autoLibraryTab.value),
-                                active: settings.extra.autoLibraryTab.valueR,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12.0),
-                          ...settings.libraryTabs.value.mapIndexed(
-                            (tab, index) => Obx(
-                              (context) => Padding(
-                                padding: const EdgeInsets.all(3.0),
-                                child: ListTileWithCheckMark(
-                                  title: "${index + 1}. ${tab.toText()}",
-                                  icon: tab.toIcon(),
-                                  onTap: () {
-                                    settings.extra.transaction(() {
-                                      settings.extra.setSelectedLibraryTab(tab);
-                                      settings.extra.staticLibraryTab.save(tab);
-                                      settings.extra.autoLibraryTab.save(false);
-                                    });
-                                  },
-                                  active: !settings.extra.autoLibraryTab.valueR && settings.extra.selectedLibraryTab.valueR == tab,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          getLibraryTabsTile(context),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.filterTracksBy,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.filterTracksBy),
-                icon: Broken.filter_search,
-                title: lang.filterTracksBy,
-                trailingText: "${settings.trackSearchFilter.valueR.length}",
-                onTap: () {
-                  final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
-
-                  void refreshNecessary() {
-                    final didChange = settings.trackSearchFilter.value.didChangeFrom(original);
-                    if (didChange) {
-                      SearchSortController.inst.disposeMediaResources(MediaType.track);
-                    }
-                  }
-
-                  NamidaNavigator.inst.navigateDialog(
-                    onDismissing: refreshNecessary,
-                    dialog: CustomBlurryDialog(
-                      title: lang.filterTracksBy,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Broken.refresh),
-                          tooltip: lang.restoreDefaults,
-                          onPressed: () {
-                            settings.trackSearchFilter.reset();
-                          },
-                        ),
-                        DoneButton(
-                          additional: refreshNecessary,
-                        ),
-                      ],
-                      child: SizedBox(
-                        width: context.width,
-                        height: context.height * 0.6,
-                        child: SmoothSingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ...TrackSearchFilter.values.map(
-                                (e) => Padding(
-                                  padding: const EdgeInsets.all(3.0),
-                                  child: Obx(
-                                    (context) => ListTileWithCheckMark(
-                                      title: e.toText(),
-                                      subtitle: e.canAffectPerformance ? lang.performanceNote : '',
-                                      onTap: () => _trackFilterOnTap(e),
-                                      active: settings.trackSearchFilter.valueR.contains(e),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-
-          getItemWrapper(
-            key: _ExtraSettingsKeys.ignoreCommonPrefixesFor,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.ignoreCommonPrefixesFor),
-                icon: Broken.message_remove,
-                title: lang.ignoreCommonPrefixesWhileSorting,
-                subtitle: settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', '),
-                trailingText: "${settings.ignoreCommonPrefixForTypes.valueR.length}",
-                onTap: () {
-                  final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
-
-                  final list = List<TrackSearchFilter>.from(TrackSearchFilter.values);
-                  list.remove(TrackSearchFilter.comment);
-                  list.remove(TrackSearchFilter.description);
-                  list.remove(TrackSearchFilter.year);
-                  list.remove(TrackSearchFilter.moods);
-                  list.remove(TrackSearchFilter.tags);
-                  list.remove(TrackSearchFilter.lyrics);
-
-                  void resortIfNecessary() {
-                    final didChange = settings.ignoreCommonPrefixForTypes.value.didChangeFrom(original);
-                    if (didChange) Indexer.inst.resortAllAfterSortKeysChange();
-                  }
-
-                  NamidaNavigator.inst.navigateDialog(
-                    onDismissing: resortIfNecessary,
-                    dialog: CustomBlurryDialog(
-                      title: lang.ignoreCommonPrefixesWhileSorting,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Broken.refresh),
-                          tooltip: lang.restoreDefaults,
-                          onPressed: () {
-                            settings.ignoreCommonPrefixForTypes.reset();
-                          },
-                        ),
-                        DoneButton(
-                          additional: resortIfNecessary,
-                        ),
-                      ],
-                      child: SmoothSingleChildScrollView(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ObxO(
-                              rx: settings.commonPrefixes,
-                              builder: (context, commonPrefixes) => Wrap(
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  ...commonPrefixes.map(
-                                    (e) => Container(
-                                      margin: const EdgeInsets.all(2.0),
-                                      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                                      decoration: BoxDecoration(
-                                        color: theme.cardTheme.color,
-                                        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                                      ),
-                                      child: InkWell(
-                                        onTap: () {
-                                          if (settings.commonPrefixes.value.length <= 1) return showMinimumItemsSnack(1);
-
-                                          settings.commonPrefixes.update((prefixes) => prefixes.remove(e));
-                                        },
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(e),
-                                            const SizedBox(width: 6.0),
-                                            const Icon(
-                                              Broken.close_circle,
-                                              size: 18.0,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  NamidaContainerDivider(
-                                    height: 24.0,
-                                    width: 1.5,
-                                    margin: EdgeInsets.symmetric(horizontal: 2.0),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.all(2.0),
-                                    padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                                    decoration: BoxDecoration(
-                                      color: theme.cardTheme.color?.withOpacityExt(1.0),
-                                      borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-                                    ),
-                                    child: InkWell(
-                                      onTap: () {
-                                        final controller = TextEditingController();
-                                        void onAdd(String value) {
-                                          settings.commonPrefixes.update((list) => list.addNoDuplicates(value.toLowerCase()));
-                                          NamidaNavigator.inst.closeDialog();
-                                        }
-
-                                        NamidaNavigator.inst.navigateDialog(
-                                          onDisposing: () {
-                                            controller.dispose();
-                                          },
-                                          dialog: CustomBlurryDialog(
-                                            title: lang.add,
-                                            actions: [
-                                              IconButton(
-                                                tooltip: lang.restoreDefaults,
-                                                onPressed: () {
-                                                  settings.commonPrefixes.reset();
-                                                  NamidaNavigator.inst.closeDialog();
-                                                },
-                                                icon: const Icon(Broken.refresh),
-                                              ),
-                                              const CancelButton(),
-                                              NamidaButton(
-                                                text: lang.save,
-                                                onTap: () => onAdd(controller.text),
-                                              ),
-                                            ],
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(top: 14.0),
-                                              child: CustomTagTextField(
-                                                controller: controller,
-                                                onFieldSubmitted: onAdd,
-                                                hintText: '',
-                                                labelText: lang.value,
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(lang.add),
-                                          const SizedBox(width: 6.0),
-                                          const Icon(
-                                            Broken.add_circle,
-                                            size: 18.0,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 4.0),
-                            NamidaContainerDivider(),
-                            ...list.map(
-                              (e) => Padding(
-                                padding: const EdgeInsets.all(3.0),
-                                child: Obx(
-                                  (context) => ListTileWithCheckMark(
-                                    title: e.toText(),
-                                    onTap: () => _ignoreCommonPrefixForTypeFilterOnTap(e),
-                                    active: settings.ignoreCommonPrefixForTypes.valueR.contains(e),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.searchCleanup,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.searchCleanup),
-                icon: Broken.document_filter,
-                title: lang.enableSearchCleanup,
-                subtitle: lang.enableSearchCleanupSubtitle,
-                value: settings.enableSearchCleanup.valueR,
-                onChanged: (p0) {
-                  settings.enableSearchCleanup.save(!p0);
-                  SearchSortController.inst.disposeResources();
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.lyrics,
-            child: NamidaExpansionTile(
-              bgColor: getBgColor(_ExtraSettingsKeys.lyrics),
-              bigahh: true,
-              normalRightPadding: true,
-              initiallyExpanded: true,
-              // initiallyExpanded: const [
-              //   _ExtraSettingsKeys.lyrics,
-              //   _ExtraSettingsKeys.lyricsSource,
-              //   _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
-              //   _ExtraSettingsKeys.romanization,
-              // ].contains(initialItem),
-              leading: const StackedIcon(
-                baseIcon: Broken.document,
-                secondaryIcon: Broken.cpu,
-                secondaryIconSize: 13.0,
-              ),
-              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-              iconColor: context.defaultIconColor(),
-              titleText: lang.lyrics,
-              children: [
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.lyricsSource,
-                  child: Obx(
-                    (context) => CustomListTile(
-                      bgColor: getBgColor(_ExtraSettingsKeys.lyricsSource),
-                      title: lang.lyricsSource,
-                      leading: const StackedIcon(
-                        baseIcon: Broken.mobile_programming,
-                        secondaryIcon: Broken.cpu_setting,
-                      ),
-                      trailingText: settings.lyricsSource.valueR.toText(),
-                      onTap: () {
-                        void tileOnTap(LyricsSource val) => settings.lyricsSource.save(val);
-                        NamidaNavigator.inst.navigateDialog(
-                          dialog: CustomBlurryDialog(
-                            title: lang.lyricsSource,
-                            actions: [
-                              IconButton(
-                                onPressed: () => tileOnTap(LyricsSource.auto),
-                                icon: const Icon(Broken.refresh),
-                              ),
-                              const DoneButton(),
-                            ],
-                            child: ObxO(
-                              rx: settings.lyricsSource,
-                              builder: (context, lyricsSource) => SuperSmoothListView(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                children: [
-                                  ObxO(
-                                    rx: settings.enableLyrics,
-                                    builder: (context, enableLyrics) => CustomSwitchListTile(
-                                      icon: Broken.document,
-                                      title: lang.lyrics,
-                                      value: enableLyrics,
-                                      onChanged: (isTrue) {
-                                        settings.enableLyrics.save(!isTrue);
-                                        final currentItem = Player.inst.currentItem.value;
-                                        if (currentItem != null) {
-                                          Lyrics.inst.updateLyrics(currentItem);
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  const NamidaContainerDivider(
-                                    margin: EdgeInsets.symmetric(vertical: 4.0),
-                                  ),
-                                  ...LyricsSource.values.map(
-                                    (e) => Padding(
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: ListTileWithCheckMark(
-                                        active: lyricsSource == e,
-                                        title: e.toText(),
-                                        onTap: () => tileOnTap(e),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.romanization,
-                  child: CustomListTile(
-                    bgColor: getBgColor(_ExtraSettingsKeys.romanization),
-                    icon: Broken.translate,
-                    title: lang.romanization,
-                    trailing: const Icon(
-                      Broken.arrow_right_3,
-                      size: 16.0,
-                    ),
-                    onTap: () {
-                      NamidaNavigator.inst.navigateDialog(
-                        dialog: CustomBlurryDialog(
-                          title: lang.romanization,
-                          actions: const [
-                            DoneButton(),
-                          ],
-                          child: SuperSmoothListView(
-                            padding: EdgeInsets.zero,
-                            shrinkWrap: true,
-                            children: [
-                              ObxO(
-                                rx: settings.romanizeLyrics,
-                                builder: (context, romanizeLyrics) => CustomSwitchListTile(
-                                  icon: Broken.document,
-                                  title: '${lang.romanization}: ${lang.lyrics}',
-                                  value: romanizeLyrics,
-                                  onChanged: (isTrue) => Romanizer.inst.setLyricsEnabled(!isTrue),
-                                ),
-                              ),
-                              ObxO(
-                                rx: settings.romanizeSorting,
-                                builder: (context, romanizeSorting) => CustomSwitchListTile(
-                                  icon: Broken.sort,
-                                  title: '${lang.romanization}: ${lang.sortBy}',
-                                  value: romanizeSorting,
-                                  onChanged: (isTrue) => Romanizer.inst.setSortingEnabled(!isTrue),
-                                ),
-                              ),
-                              const NamidaContainerDivider(
-                                margin: EdgeInsets.symmetric(vertical: 4.0),
-                              ),
-                              ObxO(
-                                rx: Romanizer.inst.isDictionaryInstalled,
-                                builder: (context, isDictionaryInstalled) => ObxO(
-                                  rx: Romanizer.inst.downloadProgress,
-                                  builder: (context, downloadProgress) => CustomListTile(
-                                    icon: Broken.book,
-                                    title: lang.dictionary,
-                                    subtitle: '日本語 (漢字) • 中文',
-                                    trailingText: downloadProgress != null
-                                        ? '${(downloadProgress * 100).round()}%'
-                                        : isDictionaryInstalled
-                                        ? lang.delete
-                                        : lang.download,
-                                    onTap: () {
-                                      if (downloadProgress != null) {
-                                        Romanizer.inst.cancelDownload();
-                                      } else if (isDictionaryInstalled) {
-                                        Romanizer.inst.deleteDictionary();
-                                      } else {
-                                        Romanizer.inst.downloadDictionary(enableLyrics: true);
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.prioritizeEmbeddedLyrics,
-                  child: EmbeddedLyricsPriorityTile(
-                    bgColor: getBgColor(_ExtraSettingsKeys.prioritizeEmbeddedLyrics),
-                    onChanged: settings.embeddedLyricsPriority.save,
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.stretchLyricsDuration,
-                  child: ObxO(
-                    rx: settings.stretchLyricsDuration,
-                    builder: (context, stretch) => CustomSwitchListTile(
-                      bgColor: getBgColor(_ExtraSettingsKeys.stretchLyricsDuration),
-                      icon: Broken.arrange_square,
-                      title: lang.stretchLyricsDuration,
-                      subtitle: 'spedup/slowed/nightcore',
-                      value: stretch,
-                      onChanged: (val) => settings.stretchLyricsDuration.save(!val),
-                    ),
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.simpleLyricsLine,
-                  child: ObxO(
-                    rx: settings.enableSimpleLyricsLine,
-                    builder: (context, enableSimpleLyricsLine) => CustomSwitchListTile(
-                      bgColor: getBgColor(_ExtraSettingsKeys.simpleLyricsLine),
-                      icon: Broken.text,
-                      title: lang.simpleLyricsLine,
-                      subtitle: lang.simpleLyricsLineSubtitle,
-                      value: enableSimpleLyricsLine,
-                      onChanged: (isTrue) {
-                        settings.enableSimpleLyricsLine.save(!isTrue);
-                        final currentItem = Player.inst.currentItem.value;
-                        if (currentItem != null) {
-                          Lyrics.inst.updateLyrics(currentItem);
-                        }
-                      },
-                    ),
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.lyricsSaveLocation,
-                  child: _LyricsSaveLocationTile(
-                    bgColor: getBgColor(_ExtraSettingsKeys.lyricsSaveLocation),
-                  ),
-                ),
-                getItemWrapper(
-                  key: _ExtraSettingsKeys.lyricsFolders,
-                  child: _LyricsFoldersTile(
-                    bgColor: getBgColor(_ExtraSettingsKeys.lyricsFolders),
-                    initiallyExpanded: initialItem == _ExtraSettingsKeys.lyricsFolders,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          getItemWrapper(
-            key: _ExtraSettingsKeys.imageSource,
-            child: NamidaExpansionTile(
-              bgColor: getBgColor(_ExtraSettingsKeys.imageSource),
-              bigahh: true,
-              normalRightPadding: true,
-              initiallyExpanded: false || initialItem == _ExtraSettingsKeys.imageSource,
-              leading: const StackedIcon(
-                baseIcon: Broken.image,
-                secondaryIcon: Broken.cpu,
-                secondaryIconSize: 13.0,
-              ),
-              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-              iconColor: context.defaultIconColor(),
-              titleText: lang.imageSource,
-              children: [
-                _getImageSourceTile(
-                  key: _ExtraSettingsKeys.imageSourceAlbum,
-                  settingsKey: settings.imageSourceAlbum,
-                  title: lang.albums,
-                  icon: LibraryTab.albums.toIcon(),
-                  onAdd: (s) => settings.imageSourceAlbum.update((list) => list.insertSafe(0, s)),
-                  onRemove: (s) => settings.imageSourceAlbum.update((list) => list.remove(s)),
-                ),
-                _getImageSourceTile(
-                  key: _ExtraSettingsKeys.imageSourceArtist,
-                  settingsKey: settings.imageSourceArtist,
-                  title: lang.artists,
-                  icon: LibraryTab.artists.toIcon(),
-                  onAdd: (s) => settings.imageSourceArtist.update((list) => list.insertSafe(0, s)),
-                  onRemove: (s) => settings.imageSourceArtist.update((list) => list.remove(s)),
-                ),
-              ],
-            ),
-          ),
-
-          getItemWrapper(
-            key: _ExtraSettingsKeys.immersiveMode,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.immersiveMode),
-                icon: Broken.external_drive,
-                title: lang.immersiveMode,
-                subtitle: lang.immersiveModeSubtitle,
-                value: settings.hideStatusBarInExpandedMiniplayer.valueR,
-                onChanged: (isTrue) {
-                  final newValue = !isTrue;
-                  settings.hideStatusBarInExpandedMiniplayer.save(newValue);
-                  MiniPlayerController.inst.setImmersiveMode(newValue);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.swipeToOpenDrawer,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.swipeToOpenDrawer),
-                icon: Broken.sidebar_right,
-                title: lang.swipeToOpenDrawer,
-                value: settings.swipeableDrawer.valueR,
-                onChanged: (isTrue) {
-                  settings.swipeableDrawer.save(!isTrue);
-                  NamidaNavigator.inst.innerDrawerKey.currentState?.toggleCanSwipe(!isTrue);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.alwaysExpandedSearchbar,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.alwaysExpandedSearchbar),
-                // icon: Broken.scroll,
-                leading: const StackedIcon(
-                  baseIcon: Broken.scroll,
-                  secondaryIcon: Broken.search_normal,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.alwaysExpandedSearchbar,
-                value: settings.alwaysExpandedSearchbar.valueR,
-                onChanged: (isTrue) {
-                  settings.alwaysExpandedSearchbar.save(!isTrue);
-                  ScrollSearchController.inst.searchBarKey.currentState?.setAlwaysExpanded(!isTrue);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.enableClipboardMonitoring,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_ExtraSettingsKeys.enableClipboardMonitoring),
-                icon: Broken.clipboard_export,
-                title: lang.enableClipboardMonitoring,
-                subtitle: lang.enableClipboardMonitoringSubtitle,
-                value: settings.enableClipboardMonitoring.valueR,
-                onChanged: (isTrue) {
-                  settings.enableClipboardMonitoring.save(!isTrue);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _ExtraSettingsKeys.vibrationType,
-            child: CustomListTile(
-              bgColor: getBgColor(_ExtraSettingsKeys.vibrationType),
-              leading: const StackedIcon(
-                baseIcon: Broken.alarm,
-                secondaryIcon: Broken.wind_2,
-                secondaryIconSize: 13.0,
-              ),
-              title: lang.vibrationType,
-              trailing: NamidaPopupWrapper(
-                childrenDefault: () => VibrationType.values.map(
-                  (e) {
-                    void onTap() {
-                      settings.vibrationType.save(e);
-                      NamidaNavigator.inst.popMenu();
-                    }
-
-                    return NamidaPopupItem(
-                      onTap: onTap,
-                      icon: e.toIcon(),
-                      title: e.toText(),
-                      selected: e == settings.vibrationType.value,
-                    );
-                  },
-                ),
-                child: ObxO(
-                  rx: settings.vibrationType,
-                  builder: (context, vibrationType) => Text(
-                    vibrationType.toText(),
-                    style: textTheme.displaySmall,
-                    textAlign: TextAlign.end,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          getItemWrapper(
-            key: _ExtraSettingsKeys.extractAllPalettes,
-            child: Obx(
-              (context) {
-                final genProgress = CurrentColor.inst.allColorPalettesGeneratingProgress.valueR;
-                final genTotal = CurrentColor.inst.allColorPalettesGeneratingTotal.valueR;
-                final isGenerating = genTotal > 0;
-                return CustomListTile(
-                  bgColor: getBgColor(_ExtraSettingsKeys.extractAllPalettes),
-                  icon: Broken.colorfilter,
-                  title: lang.extractAllColorPalettes,
-                  trailing: isGenerating
-                      ? Column(
-                          children: [
-                            Text("$genProgress/$genTotal"),
-                            if (isGenerating) const LoadingIndicator(),
-                          ],
-                        )
-                      : null,
-                  onTap: () async {
-                    if (CurrentColor.inst.allColorPalettesGeneratingTotal.value > 0) {
-                      NamidaNavigator.inst.navigateDialog(
-                        dialog: CustomBlurryDialog(
-                          title: lang.note,
-                          bodyText: lang.forceStopColorPaletteGeneration,
-                          actions: [
-                            const CancelButton(),
-                            NamidaButton(
-                              text: lang.stop,
-                              onTap: () {
-                                CurrentColor.inst.stopGeneratingColorPalettes();
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    } else {
-                      final remainingCount = await CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
-                      NamidaNavigator.inst.navigateDialog(
-                        dialog: CustomBlurryDialog(
-                          title: lang.note,
-                          bodyText: lang.extractAllColorPalettesSubtitle(number: remainingCount),
-                          actions: [
-                            const CancelButton(),
-                            NamidaButton(
-                              text: lang.extract,
-                              onTap: () {
-                                CurrentColor.inst.generateAllColorPalettes();
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+      child: SettingSectionsColumn(
+        page: this,
       ),
     );
-  }
-
-  Widget getLibraryTabsTile(BuildContext context) {
-    return getItemWrapper(
-      key: _ExtraSettingsKeys.libraryTabs,
-      child: ObxO(
-        rx: settings.libraryTabs,
-        builder: (context, libraryTabs) => CustomListTile(
-          bgColor: getBgColor(_ExtraSettingsKeys.libraryTabs),
-          icon: Broken.color_swatch,
-          title: lang.libraryTabs,
-          subtitle: libraryTabs.map((e) => e.toText()).join(', '),
-          trailingText: "${libraryTabs.length}",
-          onTap: () => NamidaNavigator.inst.navigateDialog(
-            scale: 1.0,
-            dialog: CustomBlurryDialog(
-              title: "${lang.libraryTabs} (${lang.reorderable})",
-              actions: const [
-                DoneButton(),
-              ],
-              child: SizedBox(
-                width: namida.width,
-                height: namida.height * 0.5,
-                child: NamidaReorderableActiveListView(
-                  enumValues: LibraryTab.values.where((e) => e.isGroupHead).toList(),
-                  activeItems: libraryTabs,
-                  toText: (item) => item.toText(),
-                  toIcon: (item) => item.toIcon(),
-                  minimumItems: 2,
-                  onItemRemoved: (i, activeItems) {
-                    settings.extra.setSelectedLibraryTab(settings.libraryTabs.value.first);
-                  },
-                  onSave: (activeItems) {
-                    settings.libraryTabs.replace(activeItems);
-                  },
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _trackFilterOnTap(TrackSearchFilter type) {
-    final canRemove = settings.trackSearchFilter.value.length > 1;
-
-    if (settings.trackSearchFilter.value.contains(type)) {
-      if (canRemove) {
-        settings.trackSearchFilter.update((list) => list.remove(type));
-      } else {
-        showMinimumItemsSnack(1);
-      }
-    } else {
-      settings.trackSearchFilter.update((list) => list.addNoDuplicates(type));
-    }
-  }
-
-  void _ignoreCommonPrefixForTypeFilterOnTap(TrackSearchFilter type) {
-    if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
-      settings.ignoreCommonPrefixForTypes.update((list) => list.remove(type));
-    } else {
-      settings.ignoreCommonPrefixForTypes.update((list) => list.addNoDuplicates(type));
-    }
   }
 }
 
@@ -1730,6 +946,524 @@ class JellysFlagsTiles extends StatelessWidget {
   }
 }
 
+class _DefaultLibraryTabTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _DefaultLibraryTabTile({required this.bgColor});
+
+  static void _onAutoTap() {
+    settings.extra.autoLibraryTab.save(true);
+    NamidaNavigator.inst.popMenu();
+  }
+
+  static void _onTabTap(LibraryTab tab) {
+    settings.extra.transaction(() {
+      settings.extra.setSelectedLibraryTab(tab);
+      settings.extra.staticLibraryTab.save(tab);
+      settings.extra.autoLibraryTab.save(false);
+    });
+    NamidaNavigator.inst.popMenu();
+  }
+
+  static Iterable<NamidaPopupItem> _getMenuItems() sync* {
+    final isAuto = settings.extra.autoLibraryTab.value;
+    final staticTab = settings.extra.staticLibraryTab.value;
+    yield NamidaPopupItem(
+      icon: Broken.recovery_convert,
+      title: lang.auto,
+      selected: isAuto,
+      onTap: _onAutoTap,
+    );
+    for (final tab in settings.libraryTabs.value) {
+      yield NamidaPopupItem(
+        icon: tab.toIcon(),
+        title: tab.toText(),
+        selected: !isAuto && staticTab == tab,
+        onTap: () => _onTabTap(tab),
+      );
+    }
+  }
+
+  void _showMenu(BuildContext context) {
+    const menu = NamidaPopupWrapper(
+      childrenDefault: _getMenuItems,
+    );
+    menu.showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final valueText = settings.extra.autoLibraryTab.valueR ? lang.auto : settings.extra.staticLibraryTab.valueR.toText();
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.receipt_1,
+          title: lang.defaultLibraryTab,
+          trailing: NamidaPopupWrapper(
+            childrenDefault: _getMenuItems,
+            child: Text(
+              valueText,
+              style: CustomListTile.getTrailingTextStyle(context.theme),
+              maxLines: 1,
+            ),
+          ),
+          onTap: () => _showMenu(context),
+        );
+      },
+    );
+  }
+}
+
+class _LibraryTabsTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _LibraryTabsTile({required this.bgColor});
+
+  static void _ensureSelectedTabExists() {
+    final tabs = settings.libraryTabs.value;
+    final selectedGroup = settings.extra.selectedLibraryTab.value.group;
+    if (!tabs.contains(selectedGroup)) settings.extra.setSelectedLibraryTab(tabs.first);
+  }
+
+  void _onItemRemoved(int index, List<LibraryTab> activeItems) {
+    final firstTab = settings.libraryTabs.value.first;
+    settings.extra.setSelectedLibraryTab(firstTab);
+  }
+
+  void _showDialog(List<LibraryTab> libraryTabs) {
+    final groupHeads = LibraryTab.values.where((e) => e.isGroupHead).toFixedList();
+    NamidaNavigator.inst.navigateDialog(
+      scale: 1.0,
+      dialog: CustomBlurryDialog(
+        title: "${lang.libraryTabs} (${lang.reorderable})",
+        actions: const [
+          DoneButton(),
+        ],
+        child: SizedBox(
+          width: namida.width,
+          height: namida.height * 0.5,
+          child: NamidaReorderableActiveListView(
+            enumValues: groupHeads,
+            activeItems: libraryTabs,
+            toText: (item) => item.toText(),
+            toIcon: (item) => item.toIcon(),
+            minimumItems: 2,
+            onItemRemoved: _onItemRemoved,
+            onSave: settings.libraryTabs.replace,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.libraryTabs,
+      builder: (context, libraryTabs) {
+        final tabsText = libraryTabs.map((e) => e.toText()).join(', ');
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.color_swatch,
+          title: lang.libraryTabs,
+          subtitle: tabsText,
+          trailingText: "${libraryTabs.length}",
+          onTap: () => _showDialog(libraryTabs),
+        );
+      },
+    );
+  }
+}
+
+class _FilterTracksByTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _FilterTracksByTile({required this.bgColor});
+
+  void _onFilterTap(TrackSearchFilter type) {
+    final canRemove = settings.trackSearchFilter.value.length > 1;
+
+    if (settings.trackSearchFilter.value.contains(type)) {
+      if (canRemove) {
+        settings.trackSearchFilter.update((list) => list.remove(type));
+      } else {
+        showMinimumItemsSnack(1);
+      }
+    } else {
+      settings.trackSearchFilter.update((list) => list.addNoDuplicates(type));
+    }
+  }
+
+  void _showDialog(BuildContext context) {
+    final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
+
+    void refreshNecessary() {
+      final didChange = settings.trackSearchFilter.value.didChangeFrom(original);
+      if (didChange) {
+        SearchSortController.inst.disposeMediaResources(MediaType.track);
+      }
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDismissing: refreshNecessary,
+      dialog: CustomBlurryDialog(
+        title: lang.filterTracksBy,
+        actions: [
+          IconButton(
+            icon: const Icon(Broken.refresh),
+            tooltip: lang.restoreDefaults,
+            onPressed: settings.trackSearchFilter.reset,
+          ),
+          DoneButton(
+            additional: refreshNecessary,
+          ),
+        ],
+        child: SizedBox(
+          width: context.width,
+          height: context.height * 0.6,
+          child: SmoothSingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ...TrackSearchFilter.values.map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.all(3.0),
+                    child: Obx(
+                      (context) => ListTileWithCheckMark(
+                        title: e.toText(),
+                        subtitle: e.canAffectPerformance ? lang.performanceNote : '',
+                        onTap: () => _onFilterTap(e),
+                        active: settings.trackSearchFilter.valueR.contains(e),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.trackSearchFilter,
+      builder: (context, trackSearchFilter) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.filter_search,
+        title: lang.filterTracksBy,
+        trailingText: "${trackSearchFilter.length}",
+        onTap: () => _showDialog(context),
+      ),
+    );
+  }
+}
+
+class _CommonPrefixesTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _CommonPrefixesTile({required this.bgColor});
+
+  static const _kUnsortableTypes = {
+    TrackSearchFilter.comment, TrackSearchFilter.description, TrackSearchFilter.year, //
+    TrackSearchFilter.moods, TrackSearchFilter.tags, TrackSearchFilter.lyrics, //
+  };
+
+  void _onTypeTap(TrackSearchFilter type) {
+    if (settings.ignoreCommonPrefixForTypes.value.contains(type)) {
+      settings.ignoreCommonPrefixForTypes.update((list) => list.remove(type));
+    } else {
+      settings.ignoreCommonPrefixForTypes.update((list) => list.addNoDuplicates(type));
+    }
+  }
+
+  void _onPrefixRemoveTap(String prefix) {
+    if (settings.commonPrefixes.value.length <= 1) return showMinimumItemsSnack(1);
+
+    settings.commonPrefixes.update((prefixes) => prefixes.remove(prefix));
+  }
+
+  void _onRestorePrefixesTap() {
+    settings.commonPrefixes.reset();
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  void _showAddPrefixDialog() {
+    final controller = TextEditingController();
+    void onAdd(String value) {
+      settings.commonPrefixes.update((list) => list.addNoDuplicates(value.toLowerCase()));
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: controller.dispose,
+      dialog: CustomBlurryDialog(
+        title: lang.add,
+        actions: [
+          IconButton(
+            tooltip: lang.restoreDefaults,
+            onPressed: _onRestorePrefixesTap,
+            icon: const Icon(Broken.refresh),
+          ),
+          const CancelButton(),
+          NamidaButton(
+            text: lang.save,
+            onTap: () => onAdd(controller.text),
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.only(top: 14.0),
+          child: CustomTagTextField(
+            controller: controller,
+            onFieldSubmitted: onAdd,
+            hintText: '',
+            labelText: lang.value,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDialog(ThemeData theme) {
+    final original = List<TrackSearchFilter>.from(settings.ignoreCommonPrefixForTypes.value);
+    final types = TrackSearchFilter.values.where((e) => !_kUnsortableTypes.contains(e)).toFixedList();
+    final chipColor = theme.cardTheme.color;
+    final addChipColor = chipColor?.withOpacityExt(1.0);
+
+    void resortIfNecessary() {
+      final didChange = settings.ignoreCommonPrefixForTypes.value.didChangeFrom(original);
+      if (didChange) Indexer.inst.resortAllAfterSortKeysChange();
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDismissing: resortIfNecessary,
+      dialog: CustomBlurryDialog(
+        title: lang.ignoreCommonPrefixesWhileSorting,
+        actions: [
+          IconButton(
+            icon: const Icon(Broken.refresh),
+            tooltip: lang.restoreDefaults,
+            onPressed: settings.ignoreCommonPrefixForTypes.reset,
+          ),
+          DoneButton(
+            additional: resortIfNecessary,
+          ),
+        ],
+        child: SmoothSingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ObxO(
+                rx: settings.commonPrefixes,
+                builder: (context, commonPrefixes) => Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    ...commonPrefixes.map(
+                      (e) => _PrefixChip(
+                        text: e,
+                        icon: Broken.close_circle,
+                        color: chipColor,
+                        onTap: () => _onPrefixRemoveTap(e),
+                      ),
+                    ),
+                    const NamidaContainerDivider(
+                      height: 24.0,
+                      width: 1.5,
+                      margin: EdgeInsets.symmetric(horizontal: 2.0),
+                    ),
+                    _PrefixChip(
+                      text: lang.add,
+                      icon: Broken.add_circle,
+                      color: addChipColor,
+                      onTap: _showAddPrefixDialog,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4.0),
+              const NamidaContainerDivider(),
+              ...types.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: Obx(
+                    (context) => ListTileWithCheckMark(
+                      title: e.toText(),
+                      onTap: () => _onTypeTap(e),
+                      active: settings.ignoreCommonPrefixForTypes.valueR.contains(e),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Obx(
+      (context) {
+        final prefixesText = settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', ');
+        final typesCount = settings.ignoreCommonPrefixForTypes.valueR.length;
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.message_remove,
+          title: lang.ignoreCommonPrefixesWhileSorting,
+          subtitle: prefixesText,
+          trailingText: "$typesCount",
+          onTap: () => _showDialog(theme),
+        );
+      },
+    );
+  }
+}
+
+class _PrefixChip extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final Color? color;
+  final void Function() onTap;
+
+  const _PrefixChip({
+    required this.text,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16.0.multipliedRadius),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              style: context.textTheme.displayMedium,
+            ),
+            const SizedBox(width: 6.0),
+            Icon(
+              icon,
+              size: 18.0,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RomanizationTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _RomanizationTile({required this.bgColor});
+
+  void _showDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.romanization,
+        actions: const [
+          DoneButton(),
+        ],
+        child: SuperSmoothListView(
+          padding: EdgeInsets.zero,
+          shrinkWrap: true,
+          children: [
+            ObxO(
+              rx: settings.romanizeLyrics,
+              builder: (context, romanizeLyrics) => CustomSwitchListTile(
+                icon: Broken.document,
+                title: '${lang.romanization}: ${lang.lyrics}',
+                value: romanizeLyrics,
+                onChanged: (isTrue) => Romanizer.inst.setLyricsEnabled(!isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.romanizeSorting,
+              builder: (context, romanizeSorting) => CustomSwitchListTile(
+                icon: Broken.sort,
+                title: '${lang.romanization}: ${lang.sortBy}',
+                value: romanizeSorting,
+                onChanged: (isTrue) => Romanizer.inst.setSortingEnabled(!isTrue),
+              ),
+            ),
+            const NamidaContainerDivider(
+              margin: EdgeInsets.symmetric(vertical: 4.0),
+            ),
+            const _RomanizationDictionaryTile(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.translate,
+      title: lang.romanization,
+      trailing: const Icon(
+        Broken.arrow_right_3,
+        size: 16.0,
+      ),
+      onTap: _showDialog,
+    );
+  }
+}
+
+class _RomanizationDictionaryTile extends StatelessWidget {
+  const _RomanizationDictionaryTile();
+
+  void _onTap(bool isDictionaryInstalled, double? downloadProgress) {
+    if (downloadProgress != null) {
+      Romanizer.inst.cancelDownload();
+    } else if (isDictionaryInstalled) {
+      Romanizer.inst.deleteDictionary();
+    } else {
+      Romanizer.inst.downloadDictionary(enableLyrics: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: Romanizer.inst.isDictionaryInstalled,
+      builder: (context, isDictionaryInstalled) => ObxO(
+        rx: Romanizer.inst.downloadProgress,
+        builder: (context, downloadProgress) {
+          final trailingText = downloadProgress != null
+              ? '${(downloadProgress * 100).round()}%'
+              : isDictionaryInstalled
+              ? lang.delete
+              : lang.download;
+          return CustomListTile(
+            icon: Broken.book,
+            title: lang.dictionary,
+            subtitle: '日本語 (漢字) • 中文',
+            trailingText: trailingText,
+            onTap: () => _onTap(isDictionaryInstalled, downloadProgress),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _LyricsSaveLocationTile extends StatelessWidget {
   final Color? bgColor;
 
@@ -1847,13 +1581,9 @@ class _LyricsSaveLocationOption extends StatelessWidget {
 }
 
 class _LyricsFoldersTile extends StatelessWidget {
-  final Color? bgColor;
-  final bool initiallyExpanded;
+  final SettingTileArgs args;
 
-  const _LyricsFoldersTile({
-    required this.bgColor,
-    required this.initiallyExpanded,
-  });
+  const _LyricsFoldersTile({required this.args});
 
   void _onRemoveTap(String folder) {
     settings.lyricsFolders.update((list) => list.remove(folder));
@@ -1863,22 +1593,27 @@ class _LyricsFoldersTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
+    final page = args.page;
+    final isTargetWithin = page?.isTargetWithin(args.entry) == true;
+    final entryChildren = args.entry.children
+        .map(
+          (e) => SettingEntryTile(
+            entry: e,
+            page: page,
+          ),
+        )
+        .toFixedList();
     return Obx(
       (context) {
         final lyricsFolders = settings.lyricsFolders.valueR;
         final isSavingInFolder = settings.lyricsSaveLocation.valueR == LyricsSaveLocation.customFolder;
         final saveFolder = isSavingInFolder ? lyricsFolders.firstOrNull : null;
         return NamidaExpansionTile(
-          bgColor: bgColor,
-          bigahh: false,
-          compact: false,
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          initiallyExpanded: initiallyExpanded,
+          bgColor: args.bgColor,
+          initiallyExpanded: isTargetWithin,
           icon: Broken.folder_2,
           titleText: lang.lyricsFolders,
           subtitleText: lang.lyricsFoldersSubtitle,
-          textColor: textTheme.displayLarge!.color,
           trailingBuilder: (iconWidget) => Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1892,6 +1627,7 @@ class _LyricsFoldersTile extends StatelessWidget {
             ],
           ),
           children: [
+            ...entryChildren,
             ...lyricsFolders.map(
               (e) => CustomListTile(
                 extraDense: true,
@@ -1907,6 +1643,221 @@ class _LyricsFoldersTile extends StatelessWidget {
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+class _ImageSourceTile extends StatelessWidget {
+  final Color? bgColor;
+  final SettingsKey<List<LibraryImageSource>> setting;
+  final void Function(void Function(List<LibraryImageSource> sources) fn) update;
+  final String title;
+  final IconData icon;
+
+  const _ImageSourceTile({
+    required this.bgColor,
+    required this.setting,
+    required this.update,
+    required this.title,
+    required this.icon,
+  });
+
+  void _onSourceTap(LibraryImageSource source) {
+    final sources = setting.value;
+    if (!sources.contains(source)) {
+      update((list) => list.insertSafe(0, source));
+    } else if (sources.length <= 1) {
+      showMinimumItemsSnack(1);
+    } else {
+      update((list) => list.remove(source));
+    }
+  }
+
+  void _addMissingSources() {
+    for (final source in LibraryImageSource.values) {
+      if (setting.value.contains(source)) continue;
+      update((list) => list.insertSafe(0, source));
+    }
+  }
+
+  void _showDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: title,
+        actions: [
+          IconButton(
+            onPressed: _addMissingSources,
+            icon: const Icon(Broken.refresh),
+          ),
+          const DoneButton(),
+        ],
+        child: ObxO(
+          rx: setting,
+          builder: (context, imageSources) => SuperSmoothListView(
+            padding: EdgeInsets.zero,
+            shrinkWrap: true,
+            children: [
+              ...LibraryImageSource.values.map(
+                (e) => Padding(
+                  padding: const EdgeInsets.all(3.0),
+                  child: ListTileWithCheckMark(
+                    active: imageSources.contains(e),
+                    icon: e.toIcon(),
+                    title: e.toText(),
+                    onTap: () => _onSourceTap(e),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: setting,
+      builder: (context, sources) {
+        final sourcesText = LibraryImageSource.values.where((element) => sources.contains(element)).map((e) => e.toText()).join(', ');
+        return CustomListTile(
+          bgColor: bgColor,
+          title: title,
+          icon: icon,
+          borderR: 16.0,
+          subtitle: sourcesText,
+          extraDense: true,
+          onTap: _showDialog,
+        );
+      },
+    );
+  }
+}
+
+class _VibrationTypeTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _VibrationTypeTile({required this.bgColor});
+
+  static Iterable<NamidaPopupItem> _getChildren() {
+    return VibrationType.values.map(
+      (e) {
+        void onTap() {
+          settings.vibrationType.save(e);
+          NamidaNavigator.inst.popMenu();
+        }
+
+        return NamidaPopupItem(
+          onTap: onTap,
+          icon: e.toIcon(),
+          title: e.toText(),
+          selected: e == settings.vibrationType.value,
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return CustomListTile(
+      bgColor: bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.alarm,
+        secondaryIcon: Broken.wind_2,
+        secondaryIconSize: 13.0,
+      ),
+      title: lang.vibrationType,
+      trailing: NamidaPopupWrapper(
+        childrenDefault: _getChildren,
+        child: ObxO(
+          rx: settings.vibrationType,
+          builder: (context, vibrationType) => Text(
+            vibrationType.toText(),
+            style: textTheme.displaySmall,
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExtractAllPalettesTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _ExtractAllPalettesTile({required this.bgColor});
+
+  void _onStopTap() {
+    CurrentColor.inst.stopGeneratingColorPalettes();
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  void _onExtractTap() {
+    CurrentColor.inst.generateAllColorPalettes();
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  Future<void> _onTap() async {
+    final isGenerating = CurrentColor.inst.allColorPalettesGeneratingTotal.value > 0;
+    if (isGenerating) {
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          title: lang.note,
+          bodyText: lang.forceStopColorPaletteGeneration,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.stop,
+              onTap: _onStopTap,
+            ),
+          ],
+        ),
+      );
+    } else {
+      final remainingCount = await CurrentColor.inst.getRemainingColorsToExtractCount(allTracksInLibrary);
+      NamidaNavigator.inst.navigateDialog(
+        dialog: CustomBlurryDialog(
+          title: lang.note,
+          bodyText: lang.extractAllColorPalettesSubtitle(number: remainingCount),
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.extract,
+              onTap: _onExtractTap,
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final genProgress = CurrentColor.inst.allColorPalettesGeneratingProgress.valueR;
+        final genTotal = CurrentColor.inst.allColorPalettesGeneratingTotal.valueR;
+        final isGenerating = genTotal > 0;
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.colorfilter,
+          title: lang.extractAllColorPalettes,
+          trailing: isGenerating
+              ? Column(
+                  children: [
+                    Text(
+                      "$genProgress/$genTotal",
+                      style: context.textTheme.displaySmall,
+                    ),
+                    const LoadingIndicator(),
+                  ],
+                )
+              : null,
+          onTap: _onTap,
         );
       },
     );

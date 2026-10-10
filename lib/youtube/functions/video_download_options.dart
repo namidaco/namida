@@ -205,7 +205,6 @@ Future<void> showVideoDownloadOptionsSheet({
                     getTextChip(FFMPEGTagField.synopsis),
                     getTextChip(FFMPEGTagField.lyrics),
                     NamidaExpansionTile(
-                      compact: false,
                       icon: Broken.more_square,
                       titleText: lang.showMore,
                       children:

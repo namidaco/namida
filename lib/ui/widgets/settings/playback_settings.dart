@@ -12,7 +12,6 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/wakelock_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -32,42 +31,6 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 
-enum _PlaybackSettingsKeys with SettingKeysBase {
-  enableVideoPlayback,
-  videoSource,
-  videoQuality,
-  localVideoMatching,
-  keepScreenAwake,
-  notificationButtons(NamidaFeaturesAvailablity.android),
-  displayArtworkOnLockscreen(NamidaFeaturesAvailablity.android12and_below),
-  killPlayerAfterDismissing(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux])),
-  onNotificationTap(NamidaFeaturesAvailablity.android),
-  dismissibleMiniplayer,
-  soundControl,
-  replayGain,
-  skipSilence(NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.linux])),
-  gaplessPlayback,
-  crossfade,
-  fadeEffectOnPlayPause,
-  autoPlayOnNextPrev,
-  infinityQueue,
-  onVolume0,
-  longPressSpeed,
-  onInterruption(NamidaFeaturesAvailablity.android),
-  onConnect(NamidaFeaturesAvailablity.android),
-  jumpToFirstTrackAfterFinishing,
-  previousButtonReplays,
-  skipButtonsJumpChapters,
-  seekDuration,
-  minimumTrackDurToRestoreLastPosition,
-  countListenAfter,
-  ;
-
-  @override
-  final NamidaFeaturesAvailablityBase? availability;
-  const _PlaybackSettingsKeys([this.availability]);
-}
-
 class PlaybackSettings extends SettingSubpageProvider {
   final bool isInDialog;
   const PlaybackSettings({super.key, super.initialItem, this.isInDialog = false});
@@ -76,114 +39,435 @@ class PlaybackSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.playback;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _PlaybackSettingsKeys.enableVideoPlayback: [lang.enableVideoPlayback],
-    _PlaybackSettingsKeys.videoSource: [lang.videoPlaybackSource],
-    _PlaybackSettingsKeys.videoQuality: [lang.videoQuality],
-    _PlaybackSettingsKeys.localVideoMatching: [lang.localVideoMatching],
-    _PlaybackSettingsKeys.keepScreenAwake: [lang.keepScreenAwakeWhen],
-    _PlaybackSettingsKeys.notificationButtons: [lang.notificationButtons],
-    _PlaybackSettingsKeys.displayArtworkOnLockscreen: [lang.displayArtworkOnLockscreen],
-    _PlaybackSettingsKeys.killPlayerAfterDismissing: [lang.killPlayerAfterDismissingApp],
-    _PlaybackSettingsKeys.onNotificationTap: [lang.onNotificationTap],
-    _PlaybackSettingsKeys.dismissibleMiniplayer: [lang.dismissibleMiniplayer],
-    _PlaybackSettingsKeys.soundControl: [
-      lang.soundControl, lang.outputDevice, lang.bitPerfect, lang.usbDirect, lang.exclusiveMode, lang.signalPath, lang.equalizer, lang.preamp, //
-      lang.speed, lang.pitch, lang.volume, lang.loudnessEnhancer, lang.monoAudio, //
-    ],
-    _PlaybackSettingsKeys.replayGain: [lang.normalizeAudio, lang.normalizeAudioSubtitle],
-    _PlaybackSettingsKeys.skipSilence: [lang.skipSilence],
-    _PlaybackSettingsKeys.gaplessPlayback: [lang.gaplessPlayback],
-    _PlaybackSettingsKeys.crossfade: [lang.enableCrossfadeEffect, lang.crossfadeDuration, lang.crossfadeTriggerSeconds(seconds: 0), lang.style, lang.smart, lang.beatMatching],
-    _PlaybackSettingsKeys.fadeEffectOnPlayPause: [lang.enableFadeEffectOnPlayPause, lang.playFadeDuration, lang.pauseFadeDuration],
-    _PlaybackSettingsKeys.autoPlayOnNextPrev: [lang.playAfterNextPrev],
-    _PlaybackSettingsKeys.infinityQueue: [lang.infinityQueueOnNextPrev, lang.infinityQueueOnNextPrevSubtitle],
-    _PlaybackSettingsKeys.onVolume0: [lang.onVolumeZero],
-    _PlaybackSettingsKeys.longPressSpeed: [lang.longPressAction, lang.speed],
-    _PlaybackSettingsKeys.onInterruption: [lang.onInterruption, lang.duckAudio],
-    _PlaybackSettingsKeys.onConnect: [lang.onDeviceConnect],
-    _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing: [lang.jumpToFirstTrackAfterQueueFinish],
-    _PlaybackSettingsKeys.previousButtonReplays: [lang.previousButtonReplays, lang.previousButtonReplaysSubtitle],
-    _PlaybackSettingsKeys.skipButtonsJumpChapters: [lang.skipButtonsJumpChapters, lang.chapters],
-    _PlaybackSettingsKeys.seekDuration: [lang.seekDuration, lang.seekDurationInfo],
-    _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition: [lang.minTrackDurationToRestoreLastPosition],
-    _PlaybackSettingsKeys.countListenAfter: [lang.minValueToCountTrackListen],
-  };
+  List<List<SettingEntry>> get sections => _sections;
 
-  Widget getNormalizeAudioWidget({bool isInEQPage = false}) {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.replayGain,
-      child: CustomListTile(
-        bgColor: getBgColor(_PlaybackSettingsKeys.replayGain),
-        leading: const StackedIcon(
-          baseIcon: Broken.airpods,
-          secondaryIcon: Broken.voice_cricle,
+  static final replayGain = SettingCustom(
+    title: () => lang.normalizeAudio,
+    aliases: () => [lang.normalizeAudioSubtitle],
+    keys: [settings.player.replayGainType],
+    onReset: _applyReplayGainType,
+    tile: (args) => _ReplayGainTile(
+      bgColor: args.bgColor,
+    ),
+  );
+
+  static final autoPlayOnNextPrev = SettingToggle(
+    settings.player.playOnNextPrev,
+    leading: const StackedIcon(
+      baseIcon: Broken.play,
+      secondaryIcon: Broken.record,
+    ),
+    title: () => lang.playAfterNextPrev,
+  );
+
+  static final infinityQueueOnNextPrev = SettingToggle(
+    settings.player.infiniyQueueOnNextPrevious,
+    icon: Broken.repeat,
+    title: () => lang.infinityQueueOnNextPrev,
+    subtitle: () => lang.infinityQueueOnNextPrevSubtitle,
+  );
+
+  static final jumpToFirstTrackAfterFinishing = SettingToggle(
+    settings.player.jumpToFirstTrackAfterFinishingQueue,
+    icon: Broken.rotate_left,
+    title: () => lang.jumpToFirstTrackAfterQueueFinish,
+  );
+
+  static final previousButtonReplays = SettingToggle(
+    settings.previousButtonReplays,
+    leading: const StackedIcon(
+      baseIcon: Broken.previous,
+      secondaryIcon: Broken.rotate_left,
+      secondaryIconSize: 12.0,
+    ),
+    title: () => lang.previousButtonReplays,
+    subtitle: () => lang.previousButtonReplaysSubtitle,
+  );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      SettingToggle(
+        settings.enableVideoPlayback,
+        icon: Broken.video,
+        title: () => lang.enableVideoPlayback,
+        onChanged: (isEnabled) => VideoController.inst.onVideoPlaybackToggled(isEnabled),
+      ),
+      SettingChoice(
+        settings.videoPlaybackSource,
+        values: VideoPlaybackSource.values,
+        valueToText: (e) => e.toText(),
+        valueToSubtitle: (e) => e.toSubtitle(),
+        icon: Broken.scroll,
+        title: () => lang.videoPlaybackSource,
+        enabledWhen: _isVideoPlaybackEnabled,
+      ),
+      SettingCustom(
+        title: () => lang.videoQuality,
+        keys: [settings.youtubeVideoQualities],
+        tile: (args) => _VideoQualityTile(
+          bgColor: args.bgColor,
         ),
-        title: lang.normalizeAudio,
-        subtitle: lang.normalizeAudioSubtitle,
-        trailing: Padding(
-          padding: isInEQPage ? const EdgeInsetsGeometry.only(right: 12.0) : EdgeInsetsGeometry.zero,
-          child: NamidaPopupWrapper(
-            childrenDefault: () => ReplayGainType.valuesForPlatform.map(
-              (e) {
-                void onTap() async {
-                  NamidaNavigator.inst.popMenu();
-
-                  settings.player.replayGainType.save(e);
-
-                  // -- safer to disable all first
-                  Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(0);
-                  Player.inst.loudnessEnhancerExtended?.refreshEnabled();
-                  Player.inst.setReplayGainLinearVolume(1.0);
-
-                  if (e.isAnyEnabled) {
-                    double? vol;
-                    final currentItem = Player.inst.currentItem.value;
-                    if (currentItem is Track) {
-                      final gainData = currentItem.toTrackExt().gainData;
-                      if (e.isLoudnessEnhancerEnabled) {
-                        final gainToUse = gainData?.gainToUse;
-                        if (gainToUse != null) Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
-                      } else if (e.isVolumeEnabled) {
-                        vol = gainData?.calculateGainAsVolume();
-                      }
-                    } else if (currentItem is YoutubeID) {
-                      final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
-                      final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
-                      if (loudnessDb != null) {
-                        if (e.isLoudnessEnhancerEnabled) {
-                          Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(-loudnessDb.toDouble());
-                        } else if (e.isVolumeEnabled) {
-                          vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
-                        }
-                      }
-                    }
-                    vol ??= ReplayGainData.kDefaultFallbackVolume;
-                    Player.inst.setReplayGainLinearVolume(vol);
-                  }
-                }
-
-                return NamidaPopupItem(
-                  icon: Broken.airpods,
-                  secondaryIcon: Broken.voice_cricle,
-                  selected: e == settings.player.replayGainType.value,
-                  title: e.toText(),
-                  onTap: onTap,
-                );
-              },
+      ),
+      SettingCustom(
+        title: () => lang.localVideoMatching,
+        aliases: () => [lang.matchingType, lang.sameDirectoryOnly],
+        keys: [settings.localVideoMatchingType, settings.localVideoMatchingCheckSameDir],
+        tile: (args) => _LocalVideoMatchingTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      SettingChoice(
+        settings.wakelockMode,
+        values: WakelockMode.values,
+        valueToText: (e) => e.toText(),
+        icon: Broken.external_drive,
+        title: () => lang.keepScreenAwakeWhen,
+        isValueInSubtitle: true,
+        onChanged: (_) => WakelockController.inst.onSettingChanged(),
+      ),
+      SettingCustom(
+        availability: NamidaFeaturesAvailablity.android,
+        title: () => lang.notificationButtons,
+        keys: [settings.notificationButtons, settings.notificationButtonsPlaylist, settings.notificationButtonsYTPlaylist],
+        tile: (args) => _NotificationButtonsTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingToggle(
+        settings.player.lockscreenArtwork,
+        availability: NamidaFeaturesAvailablity.android12and_below,
+        leading: const StackedIcon(
+          baseIcon: Broken.gallery,
+          secondaryIcon: Broken.lock_circle,
+        ),
+        title: () => lang.displayArtworkOnLockscreen,
+        onChanged: (isEnabled) => AudioService.setLockScreenArtwork(isEnabled).then((_) => Player.inst.refreshNotification()),
+      ),
+      SettingChoice(
+        settings.player.killAfterDismissingApp,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux]),
+        values: KillAppMode.values,
+        valueToText: (e) => e.toText(),
+        icon: Broken.forbidden_2,
+        title: () => lang.killPlayerAfterDismissingApp,
+      ),
+      SettingChoice(
+        settings.onNotificationTapAction,
+        availability: NamidaFeaturesAvailablity.android,
+        values: NotificationTapAction.values,
+        valueToText: (e) => e.toText(),
+        icon: Broken.card,
+        title: () => lang.onNotificationTap,
+      ),
+      SettingToggle(
+        settings.dismissibleMiniplayer,
+        icon: Broken.sidebar_bottom,
+        title: () => lang.dismissibleMiniplayer,
+        enabledWhen: () => !Dimensions.inst.miniplayerIsWideScreen,
+      ),
+    ],
+    [
+      SettingCustom(
+        title: () => lang.soundControl,
+        aliases: () => [
+          lang.outputDevice, lang.bitPerfect, lang.usbDirect, lang.exclusiveMode, lang.signalPath, lang.equalizer, lang.preamp, //
+          lang.speed, lang.pitch, lang.volume, lang.loudnessEnhancer, lang.monoAudio, //
+        ],
+        tile: (args) => _SoundControlTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      replayGain,
+      SettingToggle(
+        settings.player.skipSilenceEnabled,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.linux]),
+        icon: Broken.forward,
+        title: () => lang.skipSilence,
+        onChanged: (isEnabled) => Player.inst.setSkipSilenceEnabled(isEnabled),
+      ),
+      SettingToggle(
+        settings.player.enableGaplessPlayback,
+        icon: Broken.blend_2,
+        title: () => "${lang.gaplessPlayback} (${lang.beta})",
+        onChanged: (_) => Player.inst.resetGaplessPlaybackData(),
+      ),
+      SettingCustom(
+        title: () => lang.enableCrossfadeEffect,
+        keys: [settings.player.enableCrossFade],
+        tile: (args) => _ForcedOffToggleGroupTile(
+          args: args,
+          option: AudioOutputForcedOff.crossfade,
+          setting: settings.player.enableCrossFade,
+          leading: const StackedIcon(
+            baseIcon: Broken.play,
+            secondaryIcon: Broken.recovery_convert,
+          ),
+          title: lang.enableCrossfadeEffect,
+          onToggle: _onCrossfadeToggle,
+        ),
+        children: [
+          SettingWheel(
+            settings.player.crossFadeDurationMS,
+            icon: Broken.blend_2,
+            title: () => lang.crossfadeDuration,
+            min: 100,
+            max: 10000,
+            stepper: 100,
+            valueToText: (ms) => ms >= 1000 ? "${ms / 1000}s" : "${ms}ms",
+            enabledWhen: _isCrossfadeEnabled,
+          ),
+          SettingCustom(
+            title: () => lang.crossfadeTriggerSeconds(seconds: settings.player.crossFadeAutoTriggerSeconds.value),
+            keys: [settings.player.crossFadeAutoTriggerSeconds],
+            tile: (args) => _CrossfadeTriggerTile(
+              bgColor: args.bgColor,
             ),
-            child: ObxO(
-              rx: settings.player.replayGainType,
-              builder: (context, replayGainType) => Text(
-                "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
-                style: context.textTheme.displayMedium,
-                textAlign: TextAlign.center,
+          ),
+          SettingCustom(
+            title: () => lang.style,
+            aliases: () => [lang.smart, lang.beatMatching],
+            keys: [settings.player.crossfadeMode],
+            onReset: () => Player.inst.refreshCrossfadeTransition(),
+            tile: (args) => _CrossfadeModeTile(
+              bgColor: args.bgColor,
+            ),
+          ),
+        ],
+      ),
+      SettingCustom(
+        title: () => lang.enableFadeEffectOnPlayPause,
+        keys: [settings.player.enableVolumeFadeOnPlayPause],
+        onReset: _applyPlayerVolume,
+        tile: (args) => _ForcedOffToggleGroupTile(
+          args: args,
+          option: AudioOutputForcedOff.fadeOnPlayPause,
+          setting: settings.player.enableVolumeFadeOnPlayPause,
+          leading: const StackedIcon(
+            baseIcon: Broken.play,
+            secondaryIcon: Broken.pause,
+          ),
+          title: lang.enableFadeEffectOnPlayPause,
+          onToggle: _onFadeOnPlayPauseToggle,
+        ),
+        children: [
+          SettingWheel(
+            settings.player.playFadeDurInMilli,
+            icon: Broken.play,
+            title: () => lang.playFadeDuration,
+            min: 100,
+            max: 2000,
+            stepper: 50,
+            valueToText: (ms) => "${ms}ms",
+            enabledWhen: _isFadeOnPlayPauseEnabled,
+          ),
+          SettingWheel(
+            settings.player.pauseFadeDurInMilli,
+            icon: Broken.pause,
+            title: () => lang.pauseFadeDuration,
+            min: 100,
+            max: 2000,
+            stepper: 50,
+            valueToText: (ms) => "${ms}ms",
+            enabledWhen: _isFadeOnPlayPauseEnabled,
+          ),
+        ],
+      ),
+    ],
+    [
+      autoPlayOnNextPrev,
+      infinityQueueOnNextPrev,
+      SettingExpansion(
+        icon: Broken.volume_slash,
+        title: () => lang.onVolumeZero,
+        children: [
+          SettingToggle(
+            settings.player.pauseOnVolume0,
+            icon: Broken.pause_circle,
+            title: () => lang.pausePlayback,
+          ),
+          SettingCustom(
+            title: () => lang.resumeIfWasPausedByVolume,
+            keys: [settings.player.volume0ResumeThresholdMin],
+            tile: (args) => _ResumeThresholdTile(
+              bgColor: args.bgColor,
+              setting: settings.player.volume0ResumeThresholdMin,
+              max: 60,
+              icon: Broken.play_circle,
+              alwaysText: lang.resumeIfWasPausedByVolume,
+            ),
+          ),
+        ],
+      ),
+      SettingCustom(
+        title: () => lang.longPressAction,
+        aliases: () => [lang.speed],
+        keys: [settings.player.longPressSpeed],
+        tile: (args) => _LongPressSpeedTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingExpansion(
+        availability: NamidaFeaturesAvailablity.android,
+        icon: Broken.notification_bing,
+        title: () => lang.onInterruption,
+        children: [
+          ...InterruptionType.values.map(
+            (type) => SettingCustom(
+              title: () => type.toText(),
+              aliases: () => [lang.duckAudio],
+              keys: [settings.player.onInterrupted],
+              tile: (args) => _InterruptionActionTile(
+                type: type,
+                bgColor: args.bgColor,
               ),
             ),
           ),
+          SettingCustom(
+            title: () => lang.resumeIfWasInterrupted,
+            keys: [settings.player.interruptionResumeThresholdMin],
+            tile: (args) => _InterruptionResumeTile(
+              bgColor: args.bgColor,
+            ),
+          ),
+        ],
+      ),
+      SettingExpansion(
+        availability: NamidaFeaturesAvailablity.android,
+        icon: Broken.electricity,
+        title: () => lang.onDeviceConnect,
+        children: [
+          SettingCustom(
+            title: () => lang.wiredDevice,
+            keys: [settings.player.connectWiredResumeThresholdMin],
+            tile: (args) => _ResumeThresholdTile(
+              bgColor: args.bgColor,
+              setting: settings.player.connectWiredResumeThresholdMin,
+              max: 120,
+              leading: const StackedIcon(
+                baseIcon: Broken.headphones,
+                secondaryIcon: Broken.play_circle,
+                secondaryIconSize: 13.0,
+              ),
+              title: lang.wiredDevice,
+              alwaysText: lang.resumeIfWasPausedByDeviceDisconnect,
+            ),
+          ),
+          SettingCustom(
+            title: () => lang.wirelessDevice,
+            keys: [settings.player.connectWirelessResumeThresholdMin],
+            tile: (args) => _ResumeThresholdTile(
+              bgColor: args.bgColor,
+              setting: settings.player.connectWirelessResumeThresholdMin,
+              max: 120,
+              leading: const StackedIcon(
+                baseIcon: Broken.airpods,
+                secondaryIcon: Broken.play_circle,
+                secondaryIconSize: 13.0,
+              ),
+              title: lang.wirelessDevice,
+              alwaysText: lang.resumeIfWasPausedByDeviceDisconnect,
+            ),
+          ),
+        ],
+      ),
+    ],
+    [
+      jumpToFirstTrackAfterFinishing,
+      previousButtonReplays,
+      SettingToggle(
+        settings.skipButtonsJumpChapters,
+        icon: Broken.arrow_square_right,
+        title: () => lang.skipButtonsJumpChapters,
+        aliases: () => [lang.chapters],
+      ),
+      SettingCustom(
+        title: () => lang.seekDuration,
+        aliases: () => [lang.seekDurationInfo],
+        keys: [settings.player.isSeekDurationPercentage, settings.player.seekDurationInPercentage, settings.player.seekDurationInSeconds],
+        tile: (args) => _SeekDurationTile(
+          bgColor: args.bgColor,
         ),
       ),
-    );
+    ],
+    [
+      SettingWheel(
+        settings.player.minTrackDurationToRestoreLastPosInMinutes,
+        icon: Broken.refresh_left_square,
+        title: () => lang.minTrackDurationToRestoreLastPosition,
+        max: 120,
+        extraValue: true,
+        valueToText: (minutes) => minutes == 0
+            ? lang.alwaysRestore
+            : minutes <= -1
+            ? lang.dontRestorePosition
+            : "${minutes}m",
+      ),
+      SettingCustom(
+        title: () => lang.minValueToCountTrackListen,
+        keys: [settings.isTrackPlayedSecondsCount, settings.isTrackPlayedPercentageCount],
+        tile: (args) => _CountListenAfterTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+  ];
+
+  static bool _isVideoPlaybackEnabled() => settings.enableVideoPlayback.valueR;
+
+  static bool _isCrossfadeEnabled() => settings.player.enableCrossFade.valueR;
+
+  static bool _isFadeOnPlayPauseEnabled() => settings.player.enableVolumeFadeOnPlayPause.valueR;
+
+  static void _onCrossfadeToggle(bool isEnabled) {
+    if (isEnabled) {
+      SussyBaka.monetize(unlockable: EggUnlockable.crossfade, onEnable: () => settings.player.enableCrossFade.save(true));
+    } else {
+      settings.player.enableCrossFade.save(false);
+    }
+  }
+
+  static void _onFadeOnPlayPauseToggle(bool isEnabled) {
+    settings.player.enableVolumeFadeOnPlayPause.save(isEnabled);
+    _applyPlayerVolume();
+  }
+
+  static void _applyPlayerVolume() => Player.inst.setVolume(Player.inst.userPlayerVolumeForItem);
+
+  static Future<void> _applyReplayGainType() async {
+    final type = settings.player.replayGainType.value;
+
+    // -- safer to disable all first
+    Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(0);
+    Player.inst.loudnessEnhancerExtended?.refreshEnabled();
+    Player.inst.setReplayGainLinearVolume(1.0);
+
+    if (!type.isAnyEnabled) return;
+
+    double? vol;
+    final currentItem = Player.inst.currentItem.value;
+    if (currentItem is Track) {
+      final gainData = currentItem.toTrackExt().gainData;
+      if (type.isLoudnessEnhancerEnabled) {
+        final gainToUse = gainData?.gainToUse;
+        if (gainToUse != null) Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(gainToUse);
+      } else if (type.isVolumeEnabled) {
+        vol = gainData?.calculateGainAsVolume();
+      }
+    } else if (currentItem is YoutubeID) {
+      final streamsResult = await YoutubeInfoController.video.fetchVideoStreamsCache(currentItem.id);
+      final loudnessDb = streamsResult?.loudnessDBData?.loudnessDb;
+      if (loudnessDb != null) {
+        if (type.isLoudnessEnhancerEnabled) {
+          Player.inst.loudnessEnhancerExtended?.setTargetGainTrack(-loudnessDb.toDouble());
+        } else if (type.isVolumeEnabled) {
+          vol = ReplayGainData.convertGainToVolume(gain: -loudnessDb.toDouble());
+        }
+      }
+    }
+    vol ??= ReplayGainData.kDefaultFallbackVolume;
+    Player.inst.setReplayGainLinearVolume(vol);
   }
 
   // Widget _getInternalPlayerWidget() {
@@ -250,943 +534,11 @@ class PlaybackSettings extends SettingSubpageProvider {
   //   );
   // }
 
-  Widget getAutoPlayOnNextPrevWidget() {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.autoPlayOnNextPrev,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.autoPlayOnNextPrev),
-          leading: const StackedIcon(
-            baseIcon: Broken.play,
-            secondaryIcon: Broken.record,
-          ),
-          title: lang.playAfterNextPrev,
-          onChanged: (value) => settings.player.playOnNextPrev.save(!value),
-          value: settings.player.playOnNextPrev.valueR,
-        ),
-      ),
-    );
-  }
-
-  Widget getInfinityQueueOnNextPrevWidget() {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.infinityQueue,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.infinityQueue),
-          icon: Broken.repeat,
-          title: lang.infinityQueueOnNextPrev,
-          subtitle: lang.infinityQueueOnNextPrevSubtitle,
-          onChanged: (value) => settings.player.infiniyQueueOnNextPrevious.save(!value),
-          value: settings.player.infiniyQueueOnNextPrevious.valueR,
-        ),
-      ),
-    );
-  }
-
-  Widget getJumpToFirstTrackAfterFinishingWidget() {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.jumpToFirstTrackAfterFinishing),
-          icon: Broken.rotate_left,
-          title: lang.jumpToFirstTrackAfterQueueFinish,
-          onChanged: (value) => settings.player.jumpToFirstTrackAfterFinishingQueue.save(!value),
-          value: settings.player.jumpToFirstTrackAfterFinishingQueue.valueR,
-        ),
-      ),
-    );
-  }
-
-  Widget getPreviousButtonReplaysWidget() {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.previousButtonReplays,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.previousButtonReplays),
-          leading: const StackedIcon(
-            baseIcon: Broken.previous,
-            secondaryIcon: Broken.rotate_left,
-            secondaryIconSize: 12.0,
-          ),
-          title: lang.previousButtonReplays,
-          subtitle: lang.previousButtonReplaysSubtitle,
-          onChanged: (value) => settings.previousButtonReplays.save(!value),
-          value: settings.previousButtonReplays.valueR,
-        ),
-      ),
-    );
-  }
-
-  Widget getSkipButtonsJumpChaptersWidget() {
-    return getItemWrapper(
-      key: _PlaybackSettingsKeys.skipButtonsJumpChapters,
-      child: Obx(
-        (context) => CustomSwitchListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.skipButtonsJumpChapters),
-          icon: Broken.arrow_square_right,
-          title: lang.skipButtonsJumpChapters,
-          onChanged: (value) => settings.skipButtonsJumpChapters.save(!value),
-          value: settings.skipButtonsJumpChapters.valueR,
-        ),
-      ),
-    );
-  }
-
-  static String _getSoundControlSubtitle() => [lang.outputDevice, lang.bitPerfect, lang.equalizer, lang.speed, lang.pitch].join(', ');
-
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    final children = <Widget>[
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.enableVideoPlayback,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.enableVideoPlayback),
-            title: lang.enableVideoPlayback,
-            icon: Broken.video,
-            value: settings.enableVideoPlayback.valueR,
-            onChanged: (p0) async => await VideoController.inst.toggleVideoPlayback(),
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.videoSource,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.videoSource),
-            enabled: settings.enableVideoPlayback.valueR,
-            title: lang.videoPlaybackSource,
-            icon: Broken.scroll,
-            trailingText: settings.videoPlaybackSource.valueR.toText(),
-            onTap: () {
-              void tileOnTap(VideoPlaybackSource val) => settings.videoPlaybackSource.save(val);
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  title: lang.videoPlaybackSource,
-                  actions: [
-                    IconButton(
-                      onPressed: () => tileOnTap(VideoPlaybackSource.auto),
-                      icon: const Icon(Broken.refresh),
-                    ),
-                    const DoneButton(),
-                  ],
-                  child: ObxO(
-                    rx: settings.videoPlaybackSource,
-                    builder: (context, videoPlaybackSource) => SuperSmoothListView(
-                      padding: EdgeInsets.zero,
-                      shrinkWrap: true,
-                      children: [
-                        ...VideoPlaybackSource.values.map(
-                          (e) => Padding(
-                            padding: const EdgeInsets.all(3.0),
-                            child: ListTileWithCheckMark(
-                              active: videoPlaybackSource == e,
-                              title: e.toText(),
-                              subtitle: e.toSubtitle(),
-                              onTap: () => tileOnTap(e),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.videoQuality,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.videoQuality),
-            enabled: settings.enableVideoPlayback.valueR,
-            title: lang.videoQuality,
-            icon: Broken.story,
-            trailingText: settings.youtubeVideoQualities.valueR.first,
-            onTap: () {
-              void tileOnTap(String val, int index) {
-                if (settings.youtubeVideoQualities.value.contains(val)) {
-                  if (settings.youtubeVideoQualities.value.length == 1) {
-                    showMinimumItemsSnack(1);
-                  } else {
-                    settings.youtubeVideoQualities.update((list) => list.remove(val));
-                  }
-                } else {
-                  settings.youtubeVideoQualities.update((list) => list.addNoDuplicates(val));
-                }
-                // sorts and saves dec
-                settings.youtubeVideoQualities.update((list) => list.sortByReverse((e) => kStockVideoQualities.indexOf(e)));
-              }
-
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  title: lang.videoQuality,
-                  actions: const [
-                    // IconButton(
-                    //   onPressed: () => tileOnTap(0),
-                    //   icon: const Icon(Broken.refresh),
-                    // ),
-                    DoneButton(),
-                  ],
-                  child: DefaultTextStyle(
-                    style: textTheme.displaySmall!,
-                    child: Column(
-                      children: [
-                        Text(lang.videoQualitySubtitle),
-                        const SizedBox(
-                          height: 12.0,
-                        ),
-                        Text("${lang.note}: ${lang.videoQualitySubtitleNote}"),
-                        const SizedBox(height: 18.0),
-                        SizedBox(
-                          width: namida.width,
-                          height: namida.height * 0.4,
-                          child: ObxO(
-                            rx: settings.youtubeVideoQualities,
-                            builder: (context, youtubeVideoQualities) => SuperSmoothListView(
-                              padding: EdgeInsets.zero,
-                              children: [
-                                ...kStockVideoQualities.mapIndexed(
-                                  (q, index) => Padding(
-                                    padding: const EdgeInsets.all(3.0),
-                                    child: ListTileWithCheckMark(
-                                      icon: Broken.story,
-                                      active: youtubeVideoQualities.contains(q),
-                                      title: q,
-                                      onTap: () => tileOnTap(q, index),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.localVideoMatching,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.localVideoMatching),
-            enabled: settings.enableVideoPlayback.valueR,
-            icon: Broken.video_tick,
-            title: lang.localVideoMatching,
-            trailingText: settings.localVideoMatchingType.valueR.toText(),
-            onTap: () {
-              NamidaNavigator.inst.navigateDialog(
-                dialog: CustomBlurryDialog(
-                  title: lang.localVideoMatching,
-                  actions: const [
-                    DoneButton(),
-                  ],
-                  child: Column(
-                    children: [
-                      Obx(
-                        (context) => CustomListTile(
-                          icon: Broken.video_tick,
-                          title: lang.matchingType,
-                          trailingText: settings.localVideoMatchingType.valueR.toText(),
-                          onTap: () {
-                            final menu = NamidaPopupWrapper(
-                              childrenDefault: () => LocalVideoMatchingType.values.map(
-                                (e) => NamidaPopupItem(
-                                  icon: Broken.video_tick,
-                                  title: e.toText(),
-                                  selected: e == settings.localVideoMatchingType.value,
-                                  onTap: () {
-                                    settings.localVideoMatchingType.save(e);
-                                    NamidaNavigator.inst.popMenu();
-                                  },
-                                ),
-                              ),
-                            );
-                            menu.showPopupMenu(context);
-                          },
-                        ),
-                      ),
-                      Obx(
-                        (context) => CustomSwitchListTile(
-                          icon: Broken.folder,
-                          title: lang.sameDirectoryOnly,
-                          value: settings.localVideoMatchingCheckSameDir.valueR,
-                          onChanged: (isTrue) => settings.localVideoMatchingCheckSameDir.save(!isTrue),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.keepScreenAwake,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.keepScreenAwake),
-            title: '${lang.keepScreenAwakeWhen}:',
-            subtitle: settings.wakelockMode.valueR.toText(),
-            icon: Broken.external_drive,
-            onTap: () {
-              final menu = NamidaPopupWrapper(
-                childrenDefault: () => WakelockMode.values.map(
-                  (e) => NamidaPopupItem(
-                    icon: Broken.external_drive,
-                    title: e.toText(),
-                    selected: e == settings.wakelockMode.value,
-                    onTap: () {
-                      settings.wakelockMode.save(e);
-                      WakelockController.inst.onSettingChanged();
-                      NamidaNavigator.inst.popMenu();
-                    },
-                  ),
-                ),
-              );
-              menu.showPopupMenu(context);
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.notificationButtons,
-        child: ObxO(
-          rx: settings.notificationButtons,
-          builder: (context, notificationButtons) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.notificationButtons),
-            icon: Broken.notification_bing,
-            title: lang.notificationButtons,
-            subtitle: notificationButtons.map((e) => e.toText()).join(', '),
-            trailing: const Icon(
-              Broken.arrow_right_3,
-              size: 18.0,
-            ),
-            onTap: () => NamidaNavigator.inst.navigateDialog(
-              scale: 1.0,
-              dialog: CustomBlurryDialog(
-                title: "${lang.notificationButtons} (${lang.reorderable})",
-                actions: const [
-                  DoneButton(),
-                ],
-                child: SizedBox(
-                  width: namida.width,
-                  height: namida.height * 0.5,
-                  child: const _NotificationButtonsEditor(),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.displayArtworkOnLockscreen,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.displayArtworkOnLockscreen),
-            title: lang.displayArtworkOnLockscreen,
-            leading: const StackedIcon(
-              baseIcon: Broken.gallery,
-              secondaryIcon: Broken.lock_circle,
-            ),
-            value: settings.player.lockscreenArtwork.valueR,
-            onChanged: (val) {
-              settings.player.lockscreenArtwork.save(!val);
-              AudioService.setLockScreenArtwork(!val).then((_) => Player.inst.refreshNotification());
-            },
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.killPlayerAfterDismissing,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.killPlayerAfterDismissing),
-            title: lang.killPlayerAfterDismissingApp,
-            icon: Broken.forbidden_2,
-            onTap: () {
-              final menu = NamidaPopupWrapper(
-                childrenDefault: () => KillAppMode.values.map(
-                  (e) => NamidaPopupItem(
-                    icon: Broken.forbidden_2,
-                    title: e.toText(),
-                    selected: e == settings.player.killAfterDismissingApp.value,
-                    onTap: () {
-                      settings.player.killAfterDismissingApp.save(e);
-                      NamidaNavigator.inst.popMenu();
-                    },
-                  ),
-                ),
-              );
-              menu.showPopupMenu(context);
-            },
-            trailingText: settings.player.killAfterDismissingApp.valueR.toText(),
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.onNotificationTap,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.onNotificationTap),
-            title: lang.onNotificationTap,
-            trailingText: settings.onNotificationTapAction.valueR.toText(),
-            icon: Broken.card,
-            onTap: () {
-              final menu = NamidaPopupWrapper(
-                childrenDefault: () => NotificationTapAction.values.map(
-                  (e) => NamidaPopupItem(
-                    icon: Broken.card,
-                    title: e.toText(),
-                    selected: e == settings.onNotificationTapAction.value,
-                    onTap: () {
-                      settings.onNotificationTapAction.save(e);
-                      NamidaNavigator.inst.popMenu();
-                    },
-                  ),
-                ),
-              );
-              menu.showPopupMenu(context);
-            },
-          ),
-        ),
-      ),
-
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.dismissibleMiniplayer,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            enabled: !Dimensions.inst.miniplayerIsWideScreen,
-            bgColor: getBgColor(_PlaybackSettingsKeys.dismissibleMiniplayer),
-            icon: Broken.sidebar_bottom,
-            title: lang.dismissibleMiniplayer,
-            onChanged: (value) => settings.dismissibleMiniplayer.save(!value),
-            value: settings.dismissibleMiniplayer.valueR,
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.soundControl,
-        child: CustomListTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.soundControl),
-          icon: Broken.sound,
-          title: lang.soundControl,
-          subtitle: _getSoundControlSubtitle(),
-          trailing: const Icon(
-            Broken.arrow_right_3,
-            size: 18.0,
-          ),
-          onTap: NamidaOnTaps.inst.openSoundControl,
-        ),
-      ),
-      getNormalizeAudioWidget(),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.skipSilence,
-        child: ObxO(
-          rx: settings.player.skipSilenceEnabled,
-          builder: (context, skipSilenceEnabled) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.skipSilence),
-            icon: Broken.forward,
-            title: lang.skipSilence,
-            onChanged: (value) async {
-              final willBeTrue = !value;
-              settings.player.skipSilenceEnabled.save(willBeTrue);
-              await Player.inst.setSkipSilenceEnabled(willBeTrue);
-            },
-            value: skipSilenceEnabled,
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.gaplessPlayback,
-        child: Obx(
-          (context) => CustomSwitchListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.gaplessPlayback),
-            icon: Broken.blend_2,
-            title: "${lang.gaplessPlayback} (${lang.beta})",
-            onChanged: (value) {
-              settings.player.enableGaplessPlayback.save(!value);
-              Player.inst.resetGaplessPlaybackData();
-            },
-            value: settings.player.enableGaplessPlayback.valueR,
-          ),
-        ),
-      ),
-
-      // -- Crossfade
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.crossfade,
-        child: _ForcedOffWrapper(
-          option: AudioOutputForcedOff.crossfade,
-          builder: (causePill) => NamidaExpansionTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.crossfade),
-            bigahh: true,
-            normalRightPadding: true,
-            borderless: true,
-            initiallyExpanded: settings.player.enableCrossFade.value || initialItem == _PlaybackSettingsKeys.crossfade,
-            leading: const StackedIcon(
-              baseIcon: Broken.play,
-              secondaryIcon: Broken.recovery_convert,
-            ),
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-            iconColor: context.defaultIconColor(),
-            titleText: lang.enableCrossfadeEffect,
-            subtitle: causePill,
-            onExpansionChanged: (wasCollapsed) {
-              if (wasCollapsed) {
-                SussyBaka.monetize(unlockable: EggUnlockable.crossfade, onEnable: () => settings.player.enableCrossFade.save(true));
-              } else {
-                settings.player.enableCrossFade.save(false);
-              }
-            },
-            trailingBuilder: (_) => Obx((context) {
-              return CustomSwitch(active: settings.player.enableCrossFade.valueR);
-            }),
-            children: [
-              Obx(
-                (context) {
-                  final enableCrossFade = settings.player.enableCrossFade.valueR;
-                  final crossFadeDurationMS = settings.player.crossFadeDurationMS.valueR;
-                  return CustomListTile(
-                    enabled: enableCrossFade,
-                    icon: Broken.blend_2,
-                    title: lang.crossfadeDuration,
-                    trailing: NamidaWheelSlider(
-                      min: 100,
-                      max: 10000,
-                      stepper: 100,
-                      initValue: crossFadeDurationMS,
-                      onValueChanged: (val) => settings.player.crossFadeDurationMS.save(val),
-                      text: crossFadeDurationMS >= 1000 ? "${crossFadeDurationMS / 1000}s" : "${crossFadeDurationMS}ms",
-                    ),
-                  );
-                },
-              ),
-              ObxO(
-                rx: settings.player.enableGaplessPlayback,
-                builder: (context, gaplessEnabled) => Obx(
-                  (context) {
-                    final crossFadeAutoTriggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
-                    return AnimatedEnabled(
-                      enabled: !gaplessEnabled,
-                      child: CustomListTile(
-                        enabled: settings.player.enableCrossFade.valueR,
-                        icon: Broken.blend,
-                        title: crossFadeAutoTriggerSeconds == 0 ? lang.crossfadeTriggerSecondsDisabled : lang.crossfadeTriggerSeconds(seconds: crossFadeAutoTriggerSeconds),
-                        subtitleWidget: gaplessEnabled
-                            ? DisabledByPill(
-                                icon: Broken.blend_2,
-                                title: lang.gaplessPlayback,
-                              )
-                            : null,
-                        trailing: NamidaWheelSlider(
-                          max: 30,
-                          initValue: crossFadeAutoTriggerSeconds,
-                          onValueChanged: (val) => settings.player.crossFadeAutoTriggerSeconds.save(val),
-                          text: "${crossFadeAutoTriggerSeconds}s",
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const _CrossfadeModeTile(),
-            ],
-          ),
-        ),
-      ),
-      // -- Play/Pause Fade
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.fadeEffectOnPlayPause,
-        child: _ForcedOffWrapper(
-          option: AudioOutputForcedOff.fadeOnPlayPause,
-          builder: (causePill) => NamidaExpansionTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.fadeEffectOnPlayPause),
-            bigahh: true,
-            normalRightPadding: true,
-            borderless: true,
-            initiallyExpanded: settings.player.enableVolumeFadeOnPlayPause.value || initialItem == _PlaybackSettingsKeys.fadeEffectOnPlayPause,
-            leading: const StackedIcon(
-              baseIcon: Broken.play,
-              secondaryIcon: Broken.pause,
-            ),
-            childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-            iconColor: context.defaultIconColor(),
-            titleText: lang.enableFadeEffectOnPlayPause,
-            subtitle: causePill,
-            onExpansionChanged: (value) {
-              settings.player.enableVolumeFadeOnPlayPause.save(value);
-              Player.inst.setVolume(Player.inst.userPlayerVolumeForItem);
-            },
-            trailingBuilder: (_) => Obx((context) => CustomSwitch(active: settings.player.enableVolumeFadeOnPlayPause.valueR)),
-            children: [
-              Obx(
-                (context) => CustomListTile(
-                  enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
-                  icon: Broken.play,
-                  title: lang.playFadeDuration,
-                  trailing: NamidaWheelSlider(
-                    min: 100,
-                    max: 2000,
-                    stepper: 50,
-                    initValue: settings.player.playFadeDurInMilli.valueR,
-                    onValueChanged: (val) => settings.player.playFadeDurInMilli.save(val),
-                    text: "${settings.player.playFadeDurInMilli.valueR}ms",
-                  ),
-                ),
-              ),
-              Obx(
-                (context) => CustomListTile(
-                  enabled: settings.player.enableVolumeFadeOnPlayPause.valueR,
-                  icon: Broken.pause,
-                  title: lang.pauseFadeDuration,
-                  trailing: NamidaWheelSlider(
-                    min: 100,
-                    max: 2000,
-                    stepper: 50,
-                    initValue: settings.player.pauseFadeDurInMilli.valueR,
-                    onValueChanged: (val) => settings.player.pauseFadeDurInMilli.save(val),
-                    text: "${settings.player.pauseFadeDurInMilli.valueR}ms",
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      getAutoPlayOnNextPrevWidget(),
-      getInfinityQueueOnNextPrevWidget(),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.onVolume0,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.onVolume0),
-          bigahh: true,
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          icon: Broken.volume_slash,
-          titleText: lang.onVolumeZero,
-          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onVolume0,
-          children: [
-            Obx(
-              (context) => CustomSwitchListTile(
-                icon: Broken.pause_circle,
-                title: lang.pausePlayback,
-                onChanged: (value) => settings.player.pauseOnVolume0.save(!value),
-                value: settings.player.pauseOnVolume0.valueR,
-              ),
-            ),
-            Obx(
-              (context) {
-                final valInSet = settings.player.volume0ResumeThresholdMin.valueR;
-                return CustomListTile(
-                  icon: Broken.play_circle,
-                  title: valInSet == 0
-                      ? lang.resumeIfWasPausedByVolume
-                      : valInSet <= -1
-                      ? lang.dontResume
-                      : lang.resumeIfWasPausedForLessThanNMin(number: settings.player.volume0ResumeThresholdMin.valueR),
-                  trailing: NamidaWheelSlider(
-                    max: 60,
-                    extraValue: true,
-                    initValue: valInSet,
-                    onValueChanged: (val) {
-                      settings.player.volume0ResumeThresholdMin.save(val);
-                    },
-                    text: valInSet == 0
-                        ? lang.always
-                        : valInSet <= -1
-                        ? lang.never
-                        : "${valInSet}m",
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.longPressSpeed,
-        child: ObxO(
-          rx: settings.player.longPressSpeed,
-          builder: (context, longPressSpeed) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.longPressSpeed),
-            icon: Broken.forward,
-            title: '${lang.longPressAction}: ${lang.speed}',
-            trailing: NamidaWheelSlider(
-              initValue: (longPressSpeed * 100).round(),
-              max: 2 * 100,
-              onValueChanged: (val) {
-                settings.player.longPressSpeed.save(val / 100);
-              },
-              text: "${longPressSpeed}x",
-            ),
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.onInterruption,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.onInterruption),
-          bigahh: true,
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          icon: Broken.notification_bing,
-          titleText: lang.onInterruption,
-          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onInterruption,
-          children: [
-            ...InterruptionType.values.map(
-              (type) {
-                return CustomListTile(
-                  icon: type.toIcon(),
-                  title: type.toText(),
-                  subtitle: type.toSubtitle(),
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => InterruptionAction.values.map(
-                      (action) => NamidaPopupItem(
-                        icon: action.toIcon(),
-                        title: action.toText(),
-                        selected: action == settings.player.onInterrupted.value[type],
-                        onTap: () => settings.player.onInterrupted.update((actions) => actions[type] = action),
-                      ),
-                    ),
-                    child: Obx(
-                      (context) {
-                        final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
-                        return Text(
-                          actionInSetting.toText(),
-                          style: context.textTheme.displayMedium,
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-            const NamidaContainerDivider(margin: EdgeInsets.symmetric(horizontal: 16.0)),
-            const SizedBox(height: 6.0),
-            ObxO(
-              rx: settings.player.interruptionResumeThresholdMin,
-              builder: (context, valInSet) => CustomListTile(
-                icon: Broken.play_circle,
-                title: valInSet == 0
-                    ? lang.resumeIfWasInterrupted
-                    : valInSet <= -1
-                    ? lang.dontResume
-                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
-                trailing: NamidaWheelSlider(
-                  max: 60,
-                  extraValue: true,
-                  initValue: valInSet,
-                  onValueChanged: (val) {
-                    settings.player.interruptionResumeThresholdMin.save(val);
-                  },
-                  text: valInSet == 0
-                      ? lang.always
-                      : valInSet <= -1
-                      ? lang.never
-                      : "${valInSet}m",
-                ),
-              ),
-            ),
-            const SizedBox(height: 6.0),
-          ],
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.onConnect,
-        child: NamidaExpansionTile(
-          bgColor: getBgColor(_PlaybackSettingsKeys.onConnect),
-          bigahh: true,
-          childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-          iconColor: context.defaultIconColor(),
-          icon: Broken.electricity,
-          titleText: lang.onDeviceConnect,
-          initiallyExpanded: initialItem == _PlaybackSettingsKeys.onConnect,
-          children: [
-            ObxO(
-              rx: settings.player.connectWiredResumeThresholdMin,
-              builder: (context, valInSet) => CustomListTile(
-                leading: const StackedIcon(
-                  baseIcon: Broken.headphones,
-                  secondaryIcon: Broken.play_circle,
-                  secondaryIconSize: 13.0,
-                ),
-                title: lang.wiredDevice,
-                subtitle: valInSet == 0
-                    ? lang.resumeIfWasPausedByDeviceDisconnect
-                    : valInSet <= -1
-                    ? lang.dontResume
-                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
-                trailing: NamidaWheelSlider(
-                  max: 120,
-                  extraValue: true,
-                  initValue: valInSet,
-                  onValueChanged: (val) {
-                    settings.player.connectWiredResumeThresholdMin.save(val);
-                  },
-                  text: valInSet == 0
-                      ? lang.always
-                      : valInSet <= -1
-                      ? lang.never
-                      : "${valInSet}m",
-                ),
-              ),
-            ),
-            ObxO(
-              rx: settings.player.connectWirelessResumeThresholdMin,
-              builder: (context, valInSet) => CustomListTile(
-                leading: const StackedIcon(
-                  baseIcon: Broken.airpods,
-                  secondaryIcon: Broken.play_circle,
-                  secondaryIconSize: 13.0,
-                ),
-                title: lang.wirelessDevice,
-                subtitle: valInSet == 0
-                    ? lang.resumeIfWasPausedByDeviceDisconnect
-                    : valInSet <= -1
-                    ? lang.dontResume
-                    : lang.resumeIfWasPausedForLessThanNMin(number: valInSet),
-                trailing: NamidaWheelSlider(
-                  max: 120,
-                  extraValue: true,
-                  initValue: valInSet,
-                  onValueChanged: (val) {
-                    settings.player.connectWirelessResumeThresholdMin.save(val);
-                  },
-                  text: valInSet == 0
-                      ? lang.always
-                      : valInSet <= -1
-                      ? lang.never
-                      : "${valInSet}m",
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-      getJumpToFirstTrackAfterFinishingWidget(),
-      getPreviousButtonReplaysWidget(),
-      getSkipButtonsJumpChaptersWidget(),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.seekDuration,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.seekDuration),
-            icon: Broken.forward_5_seconds,
-            title: "${lang.seekDuration} (${settings.player.isSeekDurationPercentage.valueR ? lang.percentage : lang.seconds})",
-            subtitle: lang.seekDurationInfo,
-            onTap: () => settings.player.isSeekDurationPercentage.save(!settings.player.isSeekDurationPercentage.value),
-            trailing: settings.player.isSeekDurationPercentage.valueR
-                ? NamidaWheelSlider(
-                    max: 50,
-                    initValue: settings.player.seekDurationInPercentage.valueR,
-                    onValueChanged: (val) => settings.player.seekDurationInPercentage.save(val),
-                    text: "${settings.player.seekDurationInPercentage.valueR}%",
-                  )
-                : NamidaWheelSlider(
-                    max: 120,
-                    initValue: settings.player.seekDurationInSeconds.valueR,
-                    onValueChanged: (val) => settings.player.seekDurationInSeconds.save(val),
-                    text: "${settings.player.seekDurationInSeconds.valueR}s",
-                  ),
-          ),
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition,
-        child: Obx(
-          (context) {
-            final valInSet = settings.player.minTrackDurationToRestoreLastPosInMinutes.valueR;
-            return CustomListTile(
-              bgColor: getBgColor(_PlaybackSettingsKeys.minimumTrackDurToRestoreLastPosition),
-              icon: Broken.refresh_left_square,
-              title: lang.minTrackDurationToRestoreLastPosition,
-              trailing: NamidaWheelSlider(
-                max: 120,
-                initValue: valInSet,
-                onValueChanged: (val) => settings.player.minTrackDurationToRestoreLastPosInMinutes.save(val),
-                extraValue: true,
-                text: valInSet == 0
-                    ? lang.alwaysRestore
-                    : valInSet <= -1
-                    ? lang.dontRestorePosition
-                    : "${valInSet}m",
-              ),
-            );
-          },
-        ),
-      ),
-      getItemWrapper(
-        key: _PlaybackSettingsKeys.countListenAfter,
-        child: Obx(
-          (context) => CustomListTile(
-            bgColor: getBgColor(_PlaybackSettingsKeys.countListenAfter),
-            icon: Broken.timer,
-            title: lang.minValueToCountTrackListen,
-            onTap: () => NamidaNavigator.inst.navigateDialog(
-              dialog: CustomBlurryDialog(
-                title: lang.choose,
-                actions: const [
-                  DoneButton(),
-                ],
-                child: Column(
-                  children: [
-                    Text(
-                      lang.minValueToCountTrackListen,
-                      style: textTheme.displayLarge,
-                    ),
-                    const SizedBox(
-                      height: 32.0,
-                    ),
-                    Obx(
-                      (context) => Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          NamidaWheelSlider(
-                            min: 20,
-                            max: 180,
-                            initValue: settings.isTrackPlayedSecondsCount.valueR,
-                            onValueChanged: (val) => settings.isTrackPlayedSecondsCount.save(val),
-                            text: "${settings.isTrackPlayedSecondsCount.valueR}s",
-                            topText: lang.seconds.capitalizeFirst(),
-                            textPadding: 8.0,
-                          ),
-                          Text(
-                            lang.or,
-                            style: textTheme.displayMedium,
-                          ),
-                          NamidaWheelSlider(
-                            min: 20,
-                            max: 100,
-                            initValue: settings.isTrackPlayedPercentageCount.valueR,
-                            onValueChanged: (val) => settings.isTrackPlayedPercentageCount.save(val),
-                            text: "${settings.isTrackPlayedPercentageCount.valueR}%",
-                            topText: lang.percentage,
-                            textPadding: 8.0,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            trailingText: "${settings.isTrackPlayedSecondsCount.valueR}s | ${settings.isTrackPlayedPercentageCount.valueR}%",
-          ),
-        ),
-      ),
-    ];
+    final sectionsColumn = SettingSectionsColumn(
+      page: this,
+    );
     return SettingsCard(
       title: lang.playbackSetting,
       subtitle: isInDialog ? null : lang.playbackSettingSubtitle,
@@ -1199,14 +551,656 @@ class PlaybackSettings extends SettingSubpageProvider {
           ? SizedBox(
               height: context.height * 0.7,
               width: context.width,
-              child: SuperSmoothListView(
-                padding: EdgeInsets.zero,
-                children: children,
+              child: SmoothSingleChildScrollView(
+                child: sectionsColumn,
               ),
             )
-          : Column(
-              children: children,
+          : sectionsColumn,
+    );
+  }
+}
+
+class _VideoQualityTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _VideoQualityTile({required this.bgColor});
+
+  void _onQualityTap(String quality) {
+    if (settings.youtubeVideoQualities.value.contains(quality)) {
+      if (settings.youtubeVideoQualities.value.length == 1) {
+        showMinimumItemsSnack(1);
+      } else {
+        settings.youtubeVideoQualities.update((list) => list.remove(quality));
+      }
+    } else {
+      settings.youtubeVideoQualities.update((list) => list.addNoDuplicates(quality));
+    }
+    // sorts and saves dec
+    settings.youtubeVideoQualities.update((list) => list.sortByReverse((e) => kStockVideoQualities.indexOf(e)));
+  }
+
+  void _showDialog(TextTheme textTheme) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.videoQuality,
+        actions: const [
+          // IconButton(
+          //   onPressed: () => tileOnTap(0),
+          //   icon: const Icon(Broken.refresh),
+          // ),
+          DoneButton(),
+        ],
+        child: DefaultTextStyle(
+          style: textTheme.displaySmall!,
+          child: Column(
+            children: [
+              Text(lang.videoQualitySubtitle),
+              const SizedBox(
+                height: 12.0,
+              ),
+              Text("${lang.note}: ${lang.videoQualitySubtitleNote}"),
+              const SizedBox(height: 18.0),
+              SizedBox(
+                width: namida.width,
+                height: namida.height * 0.4,
+                child: ObxO(
+                  rx: settings.youtubeVideoQualities,
+                  builder: (context, youtubeVideoQualities) => SuperSmoothListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      ...kStockVideoQualities.map(
+                        (q) => Padding(
+                          padding: const EdgeInsets.all(3.0),
+                          child: ListTileWithCheckMark(
+                            icon: Broken.story,
+                            active: youtubeVideoQualities.contains(q),
+                            title: q,
+                            onTap: () => _onQualityTap(q),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return Obx(
+      (context) => CustomListTile(
+        bgColor: bgColor,
+        enabled: settings.enableVideoPlayback.valueR,
+        title: lang.videoQuality,
+        icon: Broken.story,
+        trailingText: settings.youtubeVideoQualities.valueR.first,
+        onTap: () => _showDialog(textTheme),
+      ),
+    );
+  }
+}
+
+class _LocalVideoMatchingTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _LocalVideoMatchingTile({required this.bgColor});
+
+  static Iterable<NamidaPopupItem> _getMatchingTypeItems() => LocalVideoMatchingType.values.map(
+    (e) => NamidaPopupItem(
+      icon: Broken.video_tick,
+      title: e.toText(),
+      selected: e == settings.localVideoMatchingType.value,
+      onTap: () {
+        settings.localVideoMatchingType.save(e);
+        NamidaNavigator.inst.popMenu();
+      },
+    ),
+  );
+
+  void _showDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.localVideoMatching,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Column(
+          children: [
+            Obx(
+              (context) => CustomListTile(
+                icon: Broken.video_tick,
+                title: lang.matchingType,
+                trailing: NamidaPopupWrapper(
+                  childrenDefault: _getMatchingTypeItems,
+                  child: Text(
+                    settings.localVideoMatchingType.valueR.toText(),
+                    style: CustomListTile.getTrailingTextStyle(context.theme),
+                    maxLines: 1,
+                  ),
+                ),
+                onTap: () {
+                  const menu = NamidaPopupWrapper(
+                    childrenDefault: _getMatchingTypeItems,
+                  );
+                  menu.showPopupMenu(context);
+                },
+              ),
             ),
+            Obx(
+              (context) => CustomSwitchListTile(
+                icon: Broken.folder,
+                title: lang.sameDirectoryOnly,
+                value: settings.localVideoMatchingCheckSameDir.valueR,
+                onChanged: (isTrue) => settings.localVideoMatchingCheckSameDir.save(!isTrue),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final videosCountText = VideoController.inst.getLocalVideosCountTextR();
+        return CustomListTile(
+          bgColor: bgColor,
+          enabled: settings.enableVideoPlayback.valueR,
+          icon: Broken.video_tick,
+          title: lang.localVideoMatching,
+          subtitle: '${lang.videos}: $videosCountText',
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const LocalVideosRescanButton(),
+              const SizedBox(width: 8.0),
+              Text(
+                settings.localVideoMatchingType.valueR.toText(),
+                style: CustomListTile.getTrailingTextStyle(context.theme),
+                maxLines: 1,
+              ),
+            ],
+          ),
+          onTap: _showDialog,
+        );
+      },
+    );
+  }
+}
+
+class LocalVideosRescanButton extends StatelessWidget {
+  final EdgeInsetsGeometry? padding;
+
+  const LocalVideosRescanButton({super.key, this.padding});
+
+  static Future<void> _rescan() async {
+    await VideoController.inst.rescanLocalVideosPaths();
+    snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaIconButton(
+      icon: Broken.refresh,
+      iconSize: 20.0,
+      padding: padding,
+      tooltip: () => lang.rescanVideos,
+      onPressed: _rescan,
+    );
+  }
+}
+
+class _NotificationButtonsTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _NotificationButtonsTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.notificationButtons,
+      builder: (context, notificationButtons) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.notification_bing,
+        title: lang.notificationButtons,
+        subtitle: notificationButtons.map((e) => e.toText()).join(', '),
+        trailing: const Icon(
+          Broken.arrow_right_3,
+          size: 18.0,
+        ),
+        onTap: () => NamidaNavigator.inst.navigateDialog(
+          scale: 1.0,
+          dialog: CustomBlurryDialog(
+            title: "${lang.notificationButtons} (${lang.reorderable})",
+            actions: const [
+              DoneButton(),
+            ],
+            child: SizedBox(
+              width: namida.width,
+              height: namida.height * 0.5,
+              child: const _NotificationButtonsEditor(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SoundControlTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _SoundControlTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = [lang.outputDevice, lang.bitPerfect, lang.equalizer, lang.speed, lang.pitch].join(', ');
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.sound,
+      title: lang.soundControl,
+      subtitle: subtitle,
+      trailing: const Icon(
+        Broken.arrow_right_3,
+        size: 18.0,
+      ),
+      onTap: NamidaOnTaps.inst.openSoundControl,
+    );
+  }
+}
+
+class _ReplayGainTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _ReplayGainTile({required this.bgColor});
+
+  void _onTypeTap(ReplayGainType e) {
+    NamidaNavigator.inst.popMenu();
+    settings.player.replayGainType.save(e);
+    PlaybackSettings._applyReplayGainType();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.airpods,
+        secondaryIcon: Broken.voice_cricle,
+      ),
+      title: lang.normalizeAudio,
+      subtitle: lang.normalizeAudioSubtitle,
+      trailing: NamidaPopupWrapper(
+        childrenDefault: () => ReplayGainType.valuesForPlatform.map(
+          (e) => NamidaPopupItem(
+            icon: Broken.airpods,
+            secondaryIcon: Broken.voice_cricle,
+            selected: e == settings.player.replayGainType.value,
+            title: e.toText(),
+            onTap: () => _onTypeTap(e),
+          ),
+        ),
+        child: ObxO(
+          rx: settings.player.replayGainType,
+          builder: (context, replayGainType) => Text(
+            "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
+            style: context.textTheme.displayMedium,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ForcedOffToggleGroupTile extends StatelessWidget {
+  final SettingTileArgs args;
+  final AudioOutputForcedOff option;
+  final SettingsKey<bool> setting;
+  final Widget leading;
+  final String title;
+  final void Function(bool isEnabled) onToggle;
+
+  const _ForcedOffToggleGroupTile({
+    required this.args,
+    required this.option,
+    required this.setting,
+    required this.leading,
+    required this.title,
+    required this.onToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final page = args.page;
+    final isTargetWithin = page?.isTargetWithin(args.entry) == true;
+    final initiallyExpanded = setting.value || isTargetWithin;
+    final children = args.entry.children
+        .map(
+          (e) => SettingEntryTile(
+            entry: e,
+            page: page,
+          ),
+        )
+        .toFixedList();
+    return _ForcedOffWrapper(
+      option: option,
+      builder: (causePill) => NamidaExpansionTile(
+        bgColor: args.bgColor,
+        initiallyExpanded: initiallyExpanded,
+        expandedRx: setting,
+        onTap: () => onToggle(!setting.value),
+        leading: leading,
+        titleText: title,
+        subtitle: causePill,
+        trailingBuilder: (_) => ObxO(
+          rx: setting,
+          builder: (context, isEnabled) => CustomSwitch(
+            active: isEnabled,
+          ),
+        ),
+        children: children,
+      ),
+    );
+  }
+}
+
+class _CrossfadeTriggerTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _CrossfadeTriggerTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final gaplessEnabled = settings.player.enableGaplessPlayback.valueR;
+        final triggerSeconds = settings.player.crossFadeAutoTriggerSeconds.valueR;
+        final title = triggerSeconds == 0 ? lang.crossfadeTriggerSecondsDisabled : lang.crossfadeTriggerSeconds(seconds: triggerSeconds);
+        return AnimatedEnabled(
+          enabled: !gaplessEnabled,
+          child: CustomListTile(
+            bgColor: bgColor,
+            enabled: settings.player.enableCrossFade.valueR,
+            icon: Broken.blend,
+            title: title,
+            subtitleWidget: gaplessEnabled
+                ? DisabledByPill(
+                    icon: Broken.blend_2,
+                    title: lang.gaplessPlayback,
+                  )
+                : null,
+            trailing: NamidaWheelSlider(
+              max: 30,
+              initValue: triggerSeconds,
+              onValueChanged: settings.player.crossFadeAutoTriggerSeconds.save,
+              text: "${triggerSeconds}s",
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 0 always resumes, -1 never, otherwise only when paused for less than that many minutes.
+class _ResumeThresholdTile extends StatelessWidget {
+  final Color? bgColor;
+  final SettingsKey<int> setting;
+  final int max;
+  final IconData? icon;
+  final Widget? leading;
+
+  /// the threshold goes in the subtitle when set, otherwise it's the title.
+  final String? title;
+  final String alwaysText;
+
+  const _ResumeThresholdTile({
+    required this.bgColor,
+    required this.setting,
+    required this.max,
+    this.icon,
+    this.leading,
+    this.title,
+    required this.alwaysText,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: setting,
+      builder: (context, minutes) {
+        final thresholdText = minutes == 0
+            ? alwaysText
+            : minutes <= -1
+            ? lang.dontResume
+            : lang.resumeIfWasPausedForLessThanNMin(number: minutes);
+        final valueText = minutes == 0
+            ? lang.always
+            : minutes <= -1
+            ? lang.never
+            : "${minutes}m";
+        final title = this.title;
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: icon,
+          leading: leading,
+          title: title ?? thresholdText,
+          subtitle: title == null ? null : thresholdText,
+          trailing: NamidaWheelSlider(
+            max: max,
+            extraValue: true,
+            initValue: minutes,
+            onValueChanged: setting.save,
+            text: valueText,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LongPressSpeedTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _LongPressSpeedTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.player.longPressSpeed,
+      builder: (context, longPressSpeed) {
+        final speedPercentage = (longPressSpeed * 100).round();
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.forward,
+          title: '${lang.longPressAction}: ${lang.speed}',
+          trailing: NamidaWheelSlider(
+            initValue: speedPercentage,
+            max: 2 * 100,
+            onValueChanged: (val) => settings.player.longPressSpeed.save(val / 100),
+            text: "${longPressSpeed}x",
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _InterruptionActionTile extends StatelessWidget {
+  final InterruptionType type;
+  final Color? bgColor;
+
+  const _InterruptionActionTile({required this.type, required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: type.toIcon(),
+      title: type.toText(),
+      subtitle: type.toSubtitle(),
+      trailing: NamidaPopupWrapper(
+        childrenDefault: () => InterruptionAction.values.map(
+          (action) => NamidaPopupItem(
+            icon: action.toIcon(),
+            title: action.toText(),
+            selected: action == settings.player.onInterrupted.value[type],
+            onTap: () => settings.player.onInterrupted.update((actions) => actions[type] = action),
+          ),
+        ),
+        child: Obx(
+          (context) {
+            final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
+            return Text(
+              actionInSetting.toText(),
+              style: context.textTheme.displayMedium,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _InterruptionResumeTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _InterruptionResumeTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const NamidaContainerDivider(
+          margin: EdgeInsets.symmetric(horizontal: 16.0),
+        ),
+        const SizedBox(height: 6.0),
+        _ResumeThresholdTile(
+          bgColor: bgColor,
+          setting: settings.player.interruptionResumeThresholdMin,
+          max: 60,
+          icon: Broken.play_circle,
+          alwaysText: lang.resumeIfWasInterrupted,
+        ),
+      ],
+    );
+  }
+}
+
+class _SeekDurationTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _SeekDurationTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final isPercentage = settings.player.isSeekDurationPercentage.valueR;
+        final unitText = isPercentage ? lang.percentage : lang.seconds;
+        final slider = isPercentage
+            ? NamidaWheelSlider(
+                max: 50,
+                initValue: settings.player.seekDurationInPercentage.valueR,
+                onValueChanged: settings.player.seekDurationInPercentage.save,
+                text: "${settings.player.seekDurationInPercentage.valueR}%",
+              )
+            : NamidaWheelSlider(
+                max: 120,
+                initValue: settings.player.seekDurationInSeconds.valueR,
+                onValueChanged: settings.player.seekDurationInSeconds.save,
+                text: "${settings.player.seekDurationInSeconds.valueR}s",
+              );
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.forward_5_seconds,
+          title: "${lang.seekDuration} ($unitText)",
+          subtitle: lang.seekDurationInfo,
+          onTap: () => settings.player.isSeekDurationPercentage.save(!isPercentage),
+          trailing: slider,
+        );
+      },
+    );
+  }
+}
+
+class _CountListenAfterTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _CountListenAfterTile({required this.bgColor});
+
+  void _showDialog(TextTheme textTheme) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: lang.choose,
+        actions: const [
+          DoneButton(),
+        ],
+        child: Column(
+          children: [
+            Text(
+              lang.minValueToCountTrackListen,
+              style: textTheme.displayLarge,
+            ),
+            const SizedBox(
+              height: 32.0,
+            ),
+            Obx(
+              (context) => Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  NamidaWheelSlider(
+                    min: 20,
+                    max: 180,
+                    initValue: settings.isTrackPlayedSecondsCount.valueR,
+                    onValueChanged: settings.isTrackPlayedSecondsCount.save,
+                    text: "${settings.isTrackPlayedSecondsCount.valueR}s",
+                    topText: lang.seconds.capitalizeFirst(),
+                    textPadding: 8.0,
+                  ),
+                  Text(
+                    lang.or,
+                    style: textTheme.displayMedium,
+                  ),
+                  NamidaWheelSlider(
+                    min: 20,
+                    max: 100,
+                    initValue: settings.isTrackPlayedPercentageCount.valueR,
+                    onValueChanged: settings.isTrackPlayedPercentageCount.save,
+                    text: "${settings.isTrackPlayedPercentageCount.valueR}%",
+                    topText: lang.percentage,
+                    textPadding: 8.0,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return Obx(
+      (context) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.timer,
+        title: lang.minValueToCountTrackListen,
+        onTap: () => _showDialog(textTheme),
+        trailingText: "${settings.isTrackPlayedSecondsCount.valueR}s | ${settings.isTrackPlayedPercentageCount.valueR}%",
+      ),
     );
   }
 }
@@ -1545,21 +1539,25 @@ class _NotificationPlaylistsDialogState extends State<_NotificationPlaylistsDial
 }
 
 class _CrossfadeModeTile extends StatelessWidget {
-  const _CrossfadeModeTile();
+  final Color? bgColor;
+
+  const _CrossfadeModeTile({required this.bgColor});
+
+  static Iterable<NamidaPopupItem> _getModeItems() => CrossfadeMode.values.map(
+    (e) => NamidaPopupItem(
+      icon: e.toIcon(),
+      title: e.toText(),
+      selected: e == settings.player.crossfadeMode.value,
+      onTap: () {
+        RhythmController.inst.setMode(e);
+        NamidaNavigator.inst.popMenu();
+      },
+    ),
+  );
 
   void _showModes(BuildContext context) {
-    final menu = NamidaPopupWrapper(
-      childrenDefault: () => CrossfadeMode.values.map(
-        (e) => NamidaPopupItem(
-          icon: e.toIcon(),
-          title: e.toText(),
-          selected: e == settings.player.crossfadeMode.value,
-          onTap: () {
-            RhythmController.inst.setMode(e);
-            NamidaNavigator.inst.popMenu();
-          },
-        ),
-      ),
+    const menu = NamidaPopupWrapper(
+      childrenDefault: _getModeItems,
     );
     menu.showPopupMenu(context);
   }
@@ -1570,10 +1568,18 @@ class _CrossfadeModeTile extends StatelessWidget {
       (context) {
         final mode = settings.player.crossfadeMode.valueR;
         return CustomListTile(
+          bgColor: bgColor,
           enabled: RhythmController.inst.hasAutoTransitionsR,
           icon: Broken.brush_3,
           title: lang.style,
-          trailingText: mode.toText(),
+          trailing: NamidaPopupWrapper(
+            childrenDefault: _getModeItems,
+            child: Text(
+              mode.toText(),
+              style: CustomListTile.getTrailingTextStyle(context.theme),
+              maxLines: 1,
+            ),
+          ),
           onTap: () => _showModes(context),
         );
       },

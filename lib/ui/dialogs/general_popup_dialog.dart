@@ -1169,14 +1169,12 @@ Future<void> showGeneralPopupDialog(
 
                               if (availableAlbums.length > 1)
                                 NamidaExpansionTile(
-                                  borderless: true,
-                                  bigahh: true,
                                   initiallyExpanded: availableAlbums.length < 5,
                                   icon: Broken.music_dashboard,
                                   iconColor: iconColor,
                                   titleText: lang.goToAlbum,
                                   textColorScheme: colorDelightened,
-                                  childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  childrenPadding: const EdgeInsetsDirectional.only(end: 20.0),
                                   trailingBuilder: (iconWidget) => Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -1250,14 +1248,12 @@ Future<void> showGeneralPopupDialog(
 
                               if (artistToAddFrom == null && availableArtists.length > 1)
                                 NamidaExpansionTile(
-                                  borderless: true,
-                                  bigahh: true,
                                   initiallyExpanded: availableArtists.length < 5,
                                   icon: Broken.profile_2user,
                                   iconColor: iconColor,
                                   titleText: lang.goToArtist,
                                   textColorScheme: colorDelightened,
-                                  childrenPadding: const EdgeInsets.only(left: 20.0, right: 20.0, bottom: 12.0, top: 0),
+                                  childrenPadding: const EdgeInsetsDirectional.only(end: 20.0),
                                   trailingBuilder: (iconWidget) => Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -1750,6 +1746,7 @@ class _ArtworkManager extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaIconButton(
       icon: Broken.gallery_edit,
+      tooltip: () => lang.editArtwork,
       onPressed: customArtworkManager.showEditDialog,
     );
   }

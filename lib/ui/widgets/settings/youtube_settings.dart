@@ -10,7 +10,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -28,43 +27,6 @@ import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/yt_miniplayer_ui_controller.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 
-enum _YoutubeSettingKeys with SettingKeysBase {
-  manageYourAccounts,
-  sponsorBlock,
-  ryd,
-  youtubeStyleMiniplayer,
-  rememberAudioOnly,
-  showShortsIn,
-  showMixesIn,
-  topComments,
-  preferNewComments,
-  showChannelWatermarkFullscreen,
-  showVideoEndcards,
-  autoStartRadio,
-  personalizedRelatedVideos,
-  personalizedMixPlaylists,
-  searchCleanup,
-  dimMiniplayerAfter,
-  dimIntensity,
-  downloadsMetadataTags,
-  downloadLocation,
-  downloadNotifications(
-    NamidaFeaturesAvailablityGroup(
-      items: [
-        NamidaFeaturesAvailablity.windows,
-        NamidaFeaturesAvailablity.linux,
-      ],
-    ),
-  ),
-  onOpeningYTLink,
-  seekbar,
-  ;
-
-  @override
-  final NamidaFeaturesAvailablityBase? availability;
-  const _YoutubeSettingKeys([this.availability]);
-}
-
 class YoutubeSettings extends SettingSubpageProvider {
   const YoutubeSettings({super.key, super.initialItem});
 
@@ -72,30 +34,311 @@ class YoutubeSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.youtube;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _YoutubeSettingKeys.manageYourAccounts: [lang.manageYourAccounts],
-    _YoutubeSettingKeys.sponsorBlock: [lang.sponsorblock, lang.skipSponsorSegmentsInVideos],
-    _YoutubeSettingKeys.ryd: [lang.returnYoutubeDislike],
-    _YoutubeSettingKeys.youtubeStyleMiniplayer: [lang.youtubeStyleMiniplayer],
-    _YoutubeSettingKeys.rememberAudioOnly: [lang.rememberAudioOnlyMode],
-    _YoutubeSettingKeys.showShortsIn: [lang.showShortVideosIn],
-    _YoutubeSettingKeys.showMixesIn: [lang.showMixPlaylistsIn],
-    _YoutubeSettingKeys.topComments: [lang.topComments, lang.topCommentsSubtitle],
-    _YoutubeSettingKeys.preferNewComments: [lang.ytPreferNewComments, lang.ytPreferNewCommentsSubtitle],
-    _YoutubeSettingKeys.showChannelWatermarkFullscreen: [lang.showChannelWatermarkInFullscreen],
-    _YoutubeSettingKeys.showVideoEndcards: [lang.showVideoEndcards],
-    _YoutubeSettingKeys.autoStartRadio: [lang.autoStartRadio, lang.autoStartRadioSubtitle],
-    _YoutubeSettingKeys.personalizedRelatedVideos: [lang.personalizedRelatedVideos, lang.personalizedRelatedVideosSubtitle],
-    _YoutubeSettingKeys.personalizedMixPlaylists: [lang.personalizedMixPlaylists],
-    _YoutubeSettingKeys.searchCleanup: [lang.enableSearchCleanup],
-    _YoutubeSettingKeys.dimMiniplayerAfter: [lang.dimMiniplayerAfterSeconds(seconds: 0)],
-    _YoutubeSettingKeys.dimIntensity: [lang.dimIntensity],
-    _YoutubeSettingKeys.seekbar: [lang.seekbar, lang.tapToSeek, lang.dragToSeek, "${lang.dragToSeek} (${lang.video})"],
-    _YoutubeSettingKeys.downloadsMetadataTags: [lang.downloadsMetadataTags, lang.downloadsMetadataTagsSubtitle],
-    _YoutubeSettingKeys.downloadLocation: [lang.defaultDownloadLocation],
-    _YoutubeSettingKeys.downloadNotifications: [lang.notifications, lang.downloads],
-    _YoutubeSettingKeys.onOpeningYTLink: [lang.onOpeningYoutubeLink],
-  };
+  List<List<SettingEntry>> get sections => _sections;
+
+  static final autoStartRadio = SettingToggle(
+    settings.youtube.autoStartRadio,
+    leading: const StackedIcon(
+      baseIcon: Broken.radar_1,
+      secondaryIcon: Broken.next,
+      secondaryIconSize: 12.0,
+    ),
+    title: () => lang.autoStartRadio,
+    subtitle: () => lang.autoStartRadioSubtitle,
+    onChanged: (_) => Player.inst.tryAddingMixPlaylist(),
+  );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      SettingCustom(
+        title: () => lang.manageYourAccounts,
+        tile: (args) => _NavigationTile(
+          bgColor: args.bgColor,
+          icon: Broken.user_edit,
+          title: lang.manageYourAccounts,
+          onTap: const YoutubeAccountManagePage().navigate,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.sponsorblock,
+        aliases: () => [lang.skipSponsorSegmentsInVideos],
+        keys: [settings.youtube.sponsorBlockSettings],
+        tile: (args) => _NavigationTile(
+          bgColor: args.bgColor,
+          icon: Broken.shield_slash,
+          title: lang.sponsorblock,
+          onTap: _openSponsorBlockPage,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.returnYoutubeDislike,
+        keys: [settings.youtube.ryd],
+        tile: (args) => _NavigationTile(
+          bgColor: args.bgColor,
+          icon: Broken.dislike,
+          title: lang.returnYoutubeDislike,
+          onTap: _openReturnYoutubeDislikePage,
+        ),
+      ),
+    ],
+    [
+      SettingToggle(
+        settings.youtube.youtubeStyleMiniplayer,
+        leading: const StackedIcon(
+          baseIcon: Broken.external_drive,
+          secondaryIcon: Broken.video_octagon,
+          secondaryIconSize: 14.0,
+        ),
+        title: () => lang.youtubeStyleMiniplayer,
+        onChanged: (_) => Player.inst.tryGenerateWaveform(Player.inst.currentVideo),
+      ),
+      SettingToggle(
+        settings.youtube.rememberAudioOnly,
+        icon: Broken.musicnote,
+        title: () => lang.rememberAudioOnlyMode,
+      ),
+      SettingToggle(
+        settings.youtube.topComments,
+        leading: const StackedIcon(
+          baseIcon: Broken.document,
+          secondaryIcon: Broken.arrow_circle_up,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.topComments,
+        subtitle: () => lang.topCommentsSubtitle,
+        onChanged: _onTopCommentsToggle,
+      ),
+      SettingToggle(
+        settings.youtube.preferNewComments,
+        leading: const StackedIcon(
+          baseIcon: Broken.document,
+          secondaryIcon: Broken.global_refresh,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.ytPreferNewComments,
+        subtitle: () => lang.ytPreferNewCommentsSubtitle,
+      ),
+      SettingToggle(
+        settings.youtube.showChannelWatermarkFullscreen,
+        leading: const StackedIcon(
+          baseIcon: Broken.profile_circle,
+          secondaryIcon: Broken.drop,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.showChannelWatermarkInFullscreen,
+      ),
+      SettingToggle(
+        settings.youtube.showVideoEndcards,
+        icon: Broken.card_tick,
+        title: () => lang.showVideoEndcards,
+      ),
+    ],
+    [
+      autoStartRadio,
+      SettingToggle(
+        settings.youtube.personalizedRelatedVideos,
+        leading: const StackedIcon(
+          baseIcon: Broken.video_square,
+          secondaryIcon: Broken.profile_circle,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.personalizedRelatedVideos,
+        subtitle: () => lang.personalizedRelatedVideosSubtitle,
+        onChanged: _onPersonalizedRelatedVideosToggle,
+      ),
+      SettingToggle(
+        settings.youtube.personalizedMixPlaylists,
+        leading: const StackedIcon(
+          baseIcon: Broken.video_square,
+          secondaryIcon: Broken.music_playlist,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.personalizedMixPlaylists,
+        onChanged: _onPersonalizedMixPlaylistsToggle,
+      ),
+      SettingToggle(
+        settings.youtube.searchCleanup,
+        icon: Broken.document_filter,
+        title: () => lang.enableSearchCleanup,
+      ),
+      SettingCustom(
+        title: () => lang.showShortVideosIn,
+        keys: [settings.youtube.ytVisibleShorts],
+        tile: (args) => _ShowItemInListTile(
+          bgColor: args.bgColor,
+          title: lang.showShortVideosIn,
+          icon: Broken.video_vertical,
+          activeMapRx: settings.youtube.ytVisibleShorts,
+          onToggle: (item) => settings.youtube.ytVisibleShorts.update((map) => map[item] = !(map[item] ?? true)),
+          getValues: () => YTVisibleShortPlaces.values,
+          toText: (item) => item.toText(),
+          getIconsLookup: () => {
+            YTVisibleShortPlaces.homeFeed: Broken.home,
+            YTVisibleShortPlaces.relatedVideos: Broken.activity,
+            YTVisibleShortPlaces.history: Broken.refresh,
+            YTVisibleShortPlaces.search: Broken.search_favorite,
+          },
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.showMixPlaylistsIn,
+        keys: [settings.youtube.ytVisibleMixes],
+        tile: (args) => _ShowItemInListTile(
+          bgColor: args.bgColor,
+          title: lang.showMixPlaylistsIn,
+          icon: Broken.radar_1,
+          activeMapRx: settings.youtube.ytVisibleMixes,
+          onToggle: (item) => settings.youtube.ytVisibleMixes.update((map) => map[item] = !(map[item] ?? true)),
+          getValues: () => YTVisibleMixesPlaces.values,
+          toText: (item) => item.toText(),
+          getIconsLookup: () => {
+            YTVisibleMixesPlaces.homeFeed: Broken.home,
+            YTVisibleMixesPlaces.relatedVideos: Broken.activity,
+            YTVisibleMixesPlaces.search: Broken.search_favorite,
+          },
+        ),
+      ),
+    ],
+    [
+      SettingCustom(
+        title: () => _DimAfterTile._getTitle(settings.youtube.ytMiniplayerDimAfterSeconds.value),
+        aliases: () => [lang.dimMiniplayerAfterSeconds(seconds: 0)],
+        keys: [settings.youtube.ytMiniplayerDimAfterSeconds],
+        tile: (args) => _DimAfterTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.dimIntensity,
+        keys: [settings.youtube.ytMiniplayerDimOpacity],
+        tile: (args) => _DimIntensityTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingExpansion(
+        icon: Broken.candle_2,
+        title: () => lang.seekbar,
+        children: [
+          SettingCustom(
+            title: () => lang.tapToSeek,
+            keys: [settings.youtube.tapToSeek],
+            tile: (args) => _SeekModeTile(
+              bgColor: args.bgColor,
+              setting: settings.youtube.tapToSeek,
+              values: YTSeekActionMode.values,
+              valueToText: (e) => e.toText(),
+              icon: Broken.mouse_circle,
+              title: lang.tapToSeek,
+            ),
+          ),
+          SettingCustom(
+            title: () => lang.dragToSeek,
+            keys: [settings.youtube.dragToSeek],
+            tile: (args) => _SeekModeTile(
+              bgColor: args.bgColor,
+              setting: settings.youtube.dragToSeek,
+              values: YTSeekActionMode.values,
+              valueToText: (e) => e.toText(),
+              icon: Broken.arrow_swap_horizontal,
+              title: lang.dragToSeek,
+            ),
+          ),
+          SettingCustom(
+            title: () => "${lang.dragToSeek} (${lang.video})",
+            keys: [settings.youtube.horizontalDrag],
+            tile: (args) => _SeekModeTile(
+              bgColor: args.bgColor,
+              setting: settings.youtube.horizontalDrag,
+              values: YTHorizontalDragMode.values,
+              valueToText: (e) => e.toText(),
+              icon: Broken.video_horizontal,
+              title: "${lang.dragToSeek} (${lang.video})",
+            ),
+          ),
+        ],
+      ),
+    ],
+    [
+      SettingToggle(
+        settings.youtube.autoExtractVideoTagsFromInfo,
+        leading: const StackedIcon(
+          baseIcon: Broken.import,
+          secondaryIcon: Broken.tick_circle,
+          secondaryIconSize: 12.0,
+        ),
+        title: () => lang.downloadsMetadataTags,
+        subtitle: () => lang.downloadsMetadataTagsSubtitle,
+      ),
+      SettingCustom(
+        title: () => lang.defaultDownloadLocation,
+        keys: [settings.youtube.ytDownloadLocation],
+        tile: (args) => _DownloadLocationTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingChoice(
+        settings.youtube.downloadNotifications,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux]),
+        values: DownloadNotifications.values,
+        valueToText: (e) => e.toText(),
+        icon: Broken.notification_bing,
+        title: () => '${lang.downloads} -> ${lang.notifications}',
+        aliases: () => [lang.notifications, lang.downloads],
+      ),
+    ],
+    [
+      SettingChoice(
+        settings.youtube.onYoutubeLinkOpen,
+        values: OnYoutubeLinkOpenAction.values,
+        valueToText: (e) => e.toText(),
+        valueToIcon: (e) => e.toIcon(),
+        icon: Broken.import_1,
+        title: () => lang.onOpeningYoutubeLink,
+      ),
+    ],
+  ];
+
+  static void _openSponsorBlockPage() {
+    SettingsSubPage(
+      title: () => lang.sponsorblock,
+      docsLink: AppDocsLinks.SETTINGS_SPONSORBLOCK,
+      child: const SponsorBlockSettingsPage(),
+    ).navigate();
+  }
+
+  static void _openReturnYoutubeDislikePage() {
+    SettingsSubPage(
+      title: () => lang.returnYoutubeDislike,
+      docsLink: AppDocsLinks.SETTINGS_RETURN_YOUTUBE_DISLIKE,
+      child: const ReturnYoutubeDislikeSettingsPage(),
+    ).navigate();
+  }
+
+  static void _onTopCommentsToggle(bool isEnabled) {
+    YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
+    if (isEnabled) return;
+
+    // -- pop comments subpage in case was inside.
+    if (NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
+      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
+      NamidaNavigator.inst.isInYTCommentRepliesSubpage = false;
+    }
+    // we need to pop both if required
+    if (NamidaNavigator.inst.isInYTCommentsSubpage) {
+      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
+      NamidaNavigator.inst.isInYTCommentsSubpage = false;
+    }
+  }
+
+  static void _onPersonalizedRelatedVideosToggle(bool isEnabled) {
+    if (settings.youtube.preferMixRelatedVideos.value) return;
+    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: isEnabled, preferMix: null);
+  }
+
+  static void _onPersonalizedMixPlaylistsToggle(bool isEnabled) {
+    if (!settings.youtube.preferMixRelatedVideos.value) return;
+    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: isEnabled, preferMix: null);
+  }
 
   void _showYTFlagsDialog() {
     NamidaNavigator.inst.navigateDialog(
@@ -146,6 +389,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                               rx: settings.youtube.dataSaverMode,
                               builder: (context, dataSaverMode) => Text(
                                 dataSaverMode.toText(),
+                                style: CustomListTile.getTrailingTextStyle(context.theme),
                               ),
                             ),
                           ),
@@ -164,6 +408,7 @@ class YoutubeSettings extends SettingSubpageProvider {
                               rx: settings.youtube.dataSaverModeMobile,
                               builder: (context, dataSaverModeMobile) => Text(
                                 dataSaverModeMobile.toText(),
+                                style: CustomListTile.getTrailingTextStyle(context.theme),
                               ),
                             ),
                           ),
@@ -174,43 +419,6 @@ class YoutubeSettings extends SettingSubpageProvider {
                 ),
               ),
             );
-          },
-        ),
-      ),
-    );
-  }
-
-  Iterable<NamidaPopupItem> _notificationsChildren() {
-    return DownloadNotifications.values.map(
-      (e) => NamidaPopupItem(
-        icon: Broken.notification_bing,
-        title: e.toText(),
-        selected: e == settings.youtube.downloadNotifications.value,
-        onTap: () {
-          settings.youtube.downloadNotifications.save(e);
-        },
-      ),
-    );
-  }
-
-  Widget getAutoStartRadioWidget() {
-    return getItemWrapper(
-      key: _YoutubeSettingKeys.autoStartRadio,
-      child: ObxO(
-        rx: settings.youtube.autoStartRadio,
-        builder: (context, autoStartRadio) => CustomSwitchListTile(
-          bgColor: getBgColor(_YoutubeSettingKeys.autoStartRadio),
-          leading: const StackedIcon(
-            baseIcon: Broken.radar_1,
-            secondaryIcon: Broken.next,
-            secondaryIconSize: 12.0,
-          ),
-          title: lang.autoStartRadio,
-          subtitle: lang.autoStartRadioSubtitle,
-          value: autoStartRadio,
-          onChanged: (isTrue) {
-            settings.youtube.autoStartRadio.save(!isTrue);
-            Player.inst.tryAddingMixPlaylist();
           },
         ),
       ),
@@ -243,535 +451,36 @@ class YoutubeSettings extends SettingSubpageProvider {
         iconColor: context.defaultIconColor(),
         onPressed: _showYTFlagsDialog,
       ),
-      child: Column(
-        children: [
-          getItemWrapper(
-            key: _YoutubeSettingKeys.manageYourAccounts,
-            child: CustomListTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.manageYourAccounts),
-              icon: Broken.user_edit,
-              title: lang.manageYourAccounts,
-              trailing: const Icon(Broken.arrow_right_3),
-              onTap: const YoutubeAccountManagePage().navigate,
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.sponsorBlock,
-            child: CustomListTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.sponsorBlock),
-              icon: Broken.shield_slash,
-              title: lang.sponsorblock,
-              trailing: const Icon(Broken.arrow_right_3),
-              onTap: () {
-                SettingsSubPage(
-                  title: () => lang.sponsorblock,
-                  docsLink: AppDocsLinks.SETTINGS_SPONSORBLOCK,
-                  child: const SponsorBlockSettingsPage(),
-                ).navigate();
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.ryd,
-            child: CustomListTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.ryd),
-              icon: Broken.dislike,
-              title: lang.returnYoutubeDislike,
-              trailing: const Icon(Broken.arrow_right_3),
-              onTap: () {
-                SettingsSubPage(
-                  title: () => lang.returnYoutubeDislike,
-                  docsLink: AppDocsLinks.SETTINGS_RETURN_YOUTUBE_DISLIKE,
-                  child: const ReturnYoutubeDislikeSettingsPage(),
-                ).navigate();
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.youtubeStyleMiniplayer,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.youtubeStyleMiniplayer),
-                leading: const StackedIcon(
-                  baseIcon: Broken.external_drive,
-                  secondaryIcon: Broken.video_octagon,
-                  secondaryIconSize: 14.0,
-                ),
-                title: lang.youtubeStyleMiniplayer,
-                value: settings.youtube.youtubeStyleMiniplayer.valueR,
-                onChanged: (isTrue) {
-                  settings.youtube.youtubeStyleMiniplayer.save(!isTrue);
-                  Player.inst.tryGenerateWaveform(Player.inst.currentVideo);
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.rememberAudioOnly,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.rememberAudioOnly),
-                icon: Broken.musicnote,
-                title: lang.rememberAudioOnlyMode,
-                value: settings.youtube.rememberAudioOnly.valueR,
-                onChanged: (isTrue) => settings.youtube.rememberAudioOnly.save(!isTrue),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.topComments,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.topComments),
-                leading: const StackedIcon(
-                  baseIcon: Broken.document,
-                  secondaryIcon: Broken.arrow_circle_up,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.topComments,
-                subtitle: lang.topCommentsSubtitle,
-                value: settings.youtube.topComments.valueR,
-                onChanged: (isTrue) {
-                  settings.youtube.topComments.save(!isTrue);
-                  YoutubeMiniplayerUiController.inst.resetGlowUnderVideo();
-
-                  // -- pop comments subpage in case was inside.
-                  if (settings.youtube.topComments.value == false) {
-                    if (NamidaNavigator.inst.isInYTCommentRepliesSubpage) {
-                      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
-                      NamidaNavigator.inst.isInYTCommentRepliesSubpage = false;
-                    }
-                    // we need to pop both if required
-                    if (NamidaNavigator.inst.isInYTCommentsSubpage) {
-                      NamidaNavigator.inst.ytMiniplayerCommentsPageKey.currentState?.pop();
-                      NamidaNavigator.inst.isInYTCommentsSubpage = false;
-                    }
-                  }
-                },
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.preferNewComments,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.preferNewComments),
-                leading: const StackedIcon(
-                  baseIcon: Broken.document,
-                  secondaryIcon: Broken.global_refresh,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.ytPreferNewComments,
-                subtitle: lang.ytPreferNewCommentsSubtitle,
-                value: settings.youtube.preferNewComments.valueR,
-                onChanged: (isTrue) => settings.youtube.preferNewComments.save(!isTrue),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.showChannelWatermarkFullscreen,
-            child: ObxO(
-              rx: settings.youtube.showChannelWatermarkFullscreen,
-              builder: (context, showChannelWatermarkFullscreen) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.showChannelWatermarkFullscreen),
-                leading: const StackedIcon(
-                  baseIcon: Broken.profile_circle,
-                  secondaryIcon: Broken.drop,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.showChannelWatermarkInFullscreen,
-                value: showChannelWatermarkFullscreen,
-                onChanged: (isTrue) => settings.youtube.showChannelWatermarkFullscreen.save(!isTrue),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.showVideoEndcards,
-            child: ObxO(
-              rx: settings.youtube.showVideoEndcards,
-              builder: (context, showVideoEndcards) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.showVideoEndcards),
-                icon: Broken.card_tick,
-                title: lang.showVideoEndcards,
-                value: showVideoEndcards,
-                onChanged: (isTrue) => settings.youtube.showVideoEndcards.save(!isTrue),
-              ),
-            ),
-          ),
-          getAutoStartRadioWidget(),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.personalizedRelatedVideos,
-            child: ObxO(
-              rx: settings.youtube.personalizedRelatedVideos,
-              builder: (context, personalizedRelatedVideos) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.personalizedRelatedVideos),
-                leading: const StackedIcon(
-                  baseIcon: Broken.video_square,
-                  secondaryIcon: Broken.profile_circle,
-                  secondaryIconSize: 12.0,
-                ),
-                value: personalizedRelatedVideos,
-                onChanged: (isTrue) {
-                  settings.youtube.personalizedRelatedVideos.save(!isTrue);
-                  if (settings.youtube.preferMixRelatedVideos.value != true) {
-                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
-                  }
-                },
-                title: lang.personalizedRelatedVideos,
-                subtitle: lang.personalizedRelatedVideosSubtitle,
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.personalizedMixPlaylists,
-            child: ObxO(
-              rx: settings.youtube.personalizedMixPlaylists,
-              builder: (context, personalizedMixPlaylists) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.personalizedMixPlaylists),
-                leading: const StackedIcon(
-                  baseIcon: Broken.video_square,
-                  secondaryIcon: Broken.music_playlist,
-                  secondaryIconSize: 12.0,
-                ),
-                value: personalizedMixPlaylists,
-                onChanged: (isTrue) {
-                  settings.youtube.personalizedMixPlaylists.save(!isTrue);
-                  if (settings.youtube.preferMixRelatedVideos.value == true) {
-                    YoutubeInfoController.current.onPersonalizedRelatedVideosChanged(personalized: !isTrue, preferMix: null);
-                  }
-                },
-                title: lang.personalizedMixPlaylists,
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.searchCleanup,
-            child: ObxO(
-              rx: settings.youtube.searchCleanup,
-              builder: (context, searchCleanup) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.searchCleanup),
-                icon: Broken.document_filter,
-                value: searchCleanup,
-                onChanged: (isTrue) => settings.youtube.searchCleanup.save(!isTrue),
-                title: lang.enableSearchCleanup,
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.showShortsIn,
-            child: _ShowItemInListTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.showShortsIn),
-              title: lang.showShortVideosIn,
-              icon: Broken.video_vertical,
-              activeMapRx: settings.youtube.ytVisibleShorts,
-              onToggle: (item) => settings.youtube.ytVisibleShorts.update((map) => map[item] = !(map[item] ?? true)),
-              getValues: () => YTVisibleShortPlaces.values,
-              toText: (item) => item.toText(),
-              getIconsLookup: () => {
-                YTVisibleShortPlaces.homeFeed: Broken.home,
-                YTVisibleShortPlaces.relatedVideos: Broken.activity,
-                YTVisibleShortPlaces.history: Broken.refresh,
-                YTVisibleShortPlaces.search: Broken.search_favorite,
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.showMixesIn,
-            child: _ShowItemInListTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.showMixesIn),
-              title: lang.showMixPlaylistsIn,
-              icon: Broken.radar_1,
-              activeMapRx: settings.youtube.ytVisibleMixes,
-              onToggle: (item) => settings.youtube.ytVisibleMixes.update((map) => map[item] = !(map[item] ?? true)),
-              getValues: () => YTVisibleMixesPlaces.values,
-              toText: (item) => item.toText(),
-              getIconsLookup: () => {
-                YTVisibleMixesPlaces.homeFeed: Broken.home,
-                YTVisibleMixesPlaces.relatedVideos: Broken.activity,
-                YTVisibleMixesPlaces.search: Broken.search_favorite,
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.dimMiniplayerAfter,
-            child: ObxO(
-              rx: settings.youtube.ytMiniplayerDimAfterSeconds,
-              builder: (context, valInSet) {
-                return CustomListTile(
-                  bgColor: getBgColor(_YoutubeSettingKeys.dimMiniplayerAfter),
-                  leading: const StackedIcon(
-                    baseIcon: Broken.moon,
-                    secondaryIcon: Broken.clock,
-                    secondaryIconSize: 12.0,
-                  ),
-                  title: valInSet == 0
-                      ? lang.alwaysDim
-                      : valInSet <= -1
-                      ? lang.dontDim
-                      : lang.dimMiniplayerAfterSeconds(seconds: valInSet),
-                  trailing: NamidaWheelSlider(
-                    max: 120,
-                    initValue: valInSet,
-                    extraValue: true,
-                    text: valInSet <= -1 ? '' : "${valInSet}s",
-                    onValueChanged: (val) {
-                      settings.youtube.ytMiniplayerDimAfterSeconds.save(val);
-                      YoutubeMiniplayerUiController.inst.startDimTimer();
-                    },
-                  ),
-                );
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.dimIntensity,
-            child: ObxO(
-              rx: settings.youtube.ytMiniplayerDimAfterSeconds,
-              builder: (context, ytMiniplayerDimAfterSeconds) => CustomListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.dimIntensity),
-                enabled: ytMiniplayerDimAfterSeconds >= 0,
-                leading: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(
-                      Broken.devices,
-                      size: 24.0,
-                      color: context.defaultIconColor(),
-                    ),
-                    // -- hide middle part
-                    Container(
-                      width: 7.0,
-                      height: 7.0,
-                      decoration: BoxDecoration(
-                        boxShadow: [
-                          BoxShadow(
-                            color: context.theme.scaffoldBackgroundColor,
-                            blurRadius: 1.0,
-                            offset: const Offset(0, 2.0),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // -- needle
-                    Obx(
-                      (context) {
-                        const multiplier = 4.5;
-                        const minus = multiplier / 2;
-                        const height = 7.0;
-                        const origin = height / 2;
-                        return Transform.rotate(
-                          origin: const Offset(0, origin),
-                          angle: (settings.youtube.ytMiniplayerDimOpacity.valueR * multiplier) - minus,
-                          child: Container(
-                            width: 2.0,
-                            height: height,
-                            decoration: BoxDecoration(
-                              color: context.defaultIconColor(),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                title: lang.dimIntensity,
-                trailing: ObxO(
-                  rx: settings.youtube.ytMiniplayerDimOpacity,
-                  builder: (context, ytMiniplayerDimOpacity) => NamidaWheelSlider(
-                    max: 100,
-                    initValue: (ytMiniplayerDimOpacity * 100).round(),
-                    text: "${(ytMiniplayerDimOpacity * 100).round()}%",
-                    onValueChanged: (val) {
-                      settings.youtube.ytMiniplayerDimOpacity.save(val / 100);
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.seekbar,
-            child: NamidaExpansionTile(
-              bgColor: getBgColor(_YoutubeSettingKeys.seekbar),
-              childrenPadding: const EdgeInsets.symmetric(horizontal: 12.0),
-              iconColor: context.defaultIconColor(),
-              icon: Broken.candle_2,
-              titleText: lang.seekbar,
-              initiallyExpanded: initialItem == _YoutubeSettingKeys.seekbar,
-              children: [
-                CustomListTile(
-                  icon: Broken.mouse_circle,
-                  title: lang.tapToSeek,
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => YTSeekActionMode.values.map(
-                      (e) => NamidaPopupItem(
-                        icon: Broken.external_drive,
-                        title: e.toText(),
-                        selected: e == settings.youtube.tapToSeek.value,
-                        onTap: () {
-                          settings.youtube.tapToSeek.save(e);
-                        },
-                      ),
-                    ),
-                    child: Obx(
-                      (context) => Text(
-                        settings.youtube.tapToSeek.valueR.toText(),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ),
-                CustomListTile(
-                  icon: Broken.arrow_swap_horizontal,
-                  title: lang.dragToSeek,
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => YTSeekActionMode.values.map(
-                      (e) => NamidaPopupItem(
-                        icon: Broken.external_drive,
-                        title: e.toText(),
-                        selected: e == settings.youtube.dragToSeek.value,
-                        onTap: () {
-                          settings.youtube.dragToSeek.save(e);
-                        },
-                      ),
-                    ),
-                    child: Obx(
-                      (context) => Text(
-                        settings.youtube.dragToSeek.valueR.toText(),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ),
-                CustomListTile(
-                  icon: Broken.video_horizontal,
-                  title: "${lang.dragToSeek} (${lang.video})",
-                  trailing: NamidaPopupWrapper(
-                    childrenDefault: () => YTHorizontalDragMode.values.map(
-                      (e) => NamidaPopupItem(
-                        icon: Broken.external_drive,
-                        title: e.toText(),
-                        selected: e == settings.youtube.horizontalDrag.value,
-                        onTap: () {
-                          settings.youtube.horizontalDrag.save(e);
-                        },
-                      ),
-                    ),
-                    child: Obx(
-                      (context) => Text(
-                        settings.youtube.horizontalDrag.valueR.toText(),
-                        textAlign: TextAlign.end,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.downloadsMetadataTags,
-            child: Obx(
-              (context) => CustomSwitchListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.downloadsMetadataTags),
-                leading: const StackedIcon(
-                  baseIcon: Broken.import,
-                  secondaryIcon: Broken.tick_circle,
-                  secondaryIconSize: 12.0,
-                ),
-                title: lang.downloadsMetadataTags,
-                subtitle: lang.downloadsMetadataTagsSubtitle,
-                value: settings.youtube.autoExtractVideoTagsFromInfo.valueR,
-                onChanged: (isTrue) => settings.youtube.autoExtractVideoTagsFromInfo.save(!isTrue),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.downloadLocation,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.downloadLocation),
-                title: lang.defaultDownloadLocation,
-                icon: Broken.folder_favorite,
-                subtitle: settings.youtube.ytDownloadLocation.valueR,
-                onTap: () async {
-                  final path = await NamidaFileBrowser.getDirectory(note: lang.defaultDownloadLocation);
-                  if (path != null) settings.youtube.ytDownloadLocation.save(path);
-                },
-                trailingRaw: NamidaChannel.inst.canOpenFileInExplorer
-                    ? IconButton(
-                        tooltip: lang.openInFileExplorer,
-                        onPressed: () {
-                          final path = settings.youtube.ytDownloadLocation.value;
-                          NamidaChannel.inst.openFileInExplorer(path, isDirectory: true);
-                        },
-                        icon: const Icon(
-                          Broken.export_1,
-                          size: 20.0,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.downloadNotifications,
-            child: NamidaPopupWrapper(
-              childrenDefault: _notificationsChildren,
-              child: ObxO(
-                rx: settings.youtube.downloadNotifications,
-                builder: (context, downloadNotifications) => CustomListTile(
-                  bgColor: getBgColor(_YoutubeSettingKeys.downloadNotifications),
-                  icon: Broken.notification_bing,
-                  title: '${lang.downloads} -> ${lang.notifications}',
-                  trailingText: downloadNotifications.toText(),
-                ),
-              ),
-            ),
-          ),
-          getItemWrapper(
-            key: _YoutubeSettingKeys.onOpeningYTLink,
-            child: Obx(
-              (context) => CustomListTile(
-                bgColor: getBgColor(_YoutubeSettingKeys.onOpeningYTLink),
-                icon: Broken.import_1,
-                title: lang.onOpeningYoutubeLink,
-                trailingText: settings.youtube.onYoutubeLinkOpen.valueR.toText(),
-                onTap: () {
-                  NamidaNavigator.inst.navigateDialog(
-                    dialog: CustomBlurryDialog(
-                      title: lang.choose,
-                      actions: const [
-                        DoneButton(),
-                      ],
-                      child: Column(
-                        children: [
-                          ...OnYoutubeLinkOpenAction.values.map(
-                            (e) => Padding(
-                              padding: const EdgeInsets.all(3.0),
-                              child: ObxO(
-                                rx: settings.youtube.onYoutubeLinkOpen,
-                                builder: (context, onYoutubeLinkOpen) => ListTileWithCheckMark(
-                                  icon: e.toIcon(),
-                                  title: e.toText(),
-                                  active: onYoutubeLinkOpen == e,
-                                  onTap: () {
-                                    settings.youtube.onYoutubeLinkOpen.save(e);
-                                  },
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
+      child: SettingSectionsColumn(
+        page: this,
       ),
+    );
+  }
+}
+
+class _NavigationTile extends StatelessWidget {
+  final Color? bgColor;
+  final IconData icon;
+  final String title;
+  final void Function() onTap;
+
+  const _NavigationTile({
+    required this.bgColor,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: icon,
+      title: title,
+      trailing: const Icon(
+        Broken.arrow_right_3,
+      ),
+      onTap: onTap,
     );
   }
 }
@@ -848,6 +557,228 @@ class _ShowItemInListTile<E extends Enum> extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _DimAfterTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _DimAfterTile({required this.bgColor});
+
+  static String _getTitle(int seconds) {
+    return seconds == 0
+        ? lang.alwaysDim
+        : seconds <= -1
+        ? lang.dontDim
+        : lang.dimMiniplayerAfterSeconds(seconds: seconds);
+  }
+
+  static void _onSecondsChanged(int seconds) {
+    settings.youtube.ytMiniplayerDimAfterSeconds.save(seconds);
+    YoutubeMiniplayerUiController.inst.startDimTimer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.youtube.ytMiniplayerDimAfterSeconds,
+      builder: (context, seconds) {
+        final valueText = seconds <= -1 ? '' : "${seconds}s";
+        return CustomListTile(
+          bgColor: bgColor,
+          leading: const StackedIcon(
+            baseIcon: Broken.moon,
+            secondaryIcon: Broken.clock,
+            secondaryIconSize: 12.0,
+          ),
+          title: _getTitle(seconds),
+          trailing: NamidaWheelSlider(
+            max: 120,
+            initValue: seconds,
+            extraValue: true,
+            text: valueText,
+            onValueChanged: _onSecondsChanged,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DimIntensityTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _DimIntensityTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.youtube.ytMiniplayerDimAfterSeconds,
+      builder: (context, dimAfterSeconds) => CustomListTile(
+        bgColor: bgColor,
+        enabled: dimAfterSeconds >= 0,
+        leading: const _DimIntensityIcon(),
+        title: lang.dimIntensity,
+        trailing: ObxO(
+          rx: settings.youtube.ytMiniplayerDimOpacity,
+          builder: (context, dimOpacity) {
+            final percentage = (dimOpacity * 100).round();
+            return NamidaWheelSlider(
+              max: 100,
+              initValue: percentage,
+              text: "$percentage%",
+              onValueChanged: (val) => settings.youtube.ytMiniplayerDimOpacity.save(val / 100),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _DimIntensityIcon extends StatelessWidget {
+  const _DimIntensityIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    const multiplier = 4.5;
+    const minus = multiplier / 2;
+    const height = 7.0;
+    const origin = height / 2;
+    final iconColor = context.defaultIconColor();
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Icon(
+          Broken.devices,
+          size: 24.0,
+          color: iconColor,
+        ),
+        // -- hide middle part
+        Container(
+          width: 7.0,
+          height: 7.0,
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: context.theme.scaffoldBackgroundColor,
+                blurRadius: 1.0,
+                offset: const Offset(0, 2.0),
+              ),
+            ],
+          ),
+        ),
+        // -- needle
+        ObxO(
+          rx: settings.youtube.ytMiniplayerDimOpacity,
+          builder: (context, dimOpacity) {
+            final angle = (dimOpacity * multiplier) - minus;
+            return Transform.rotate(
+              origin: const Offset(0, origin),
+              angle: angle,
+              child: Container(
+                width: 2.0,
+                height: height,
+                decoration: BoxDecoration(
+                  color: iconColor,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _SeekModeTile<E extends Enum> extends StatelessWidget {
+  final Color? bgColor;
+  final SettingsKey<E> setting;
+  final List<E> values;
+  final String Function(E value) valueToText;
+  final IconData icon;
+  final String title;
+
+  const _SeekModeTile({
+    required this.bgColor,
+    required this.setting,
+    required this.values,
+    required this.valueToText,
+    required this.icon,
+    required this.title,
+  });
+
+  Iterable<NamidaPopupItem> _getMenuItems() {
+    return values.map(
+      (e) => NamidaPopupItem(
+        icon: Broken.external_drive,
+        title: valueToText(e),
+        selected: e == setting.value,
+        onTap: () => setting.save(e),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: icon,
+      title: title,
+      trailing: NamidaPopupWrapper(
+        childrenDefault: _getMenuItems,
+        child: ObxO(
+          rx: setting,
+          builder: (context, value) => Text(
+            valueToText(value),
+            style: CustomListTile.getTrailingTextStyle(context.theme),
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DownloadLocationTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _DownloadLocationTile({required this.bgColor});
+
+  Future<void> _pickDirectory() async {
+    final path = await NamidaFileBrowser.getDirectory(note: lang.defaultDownloadLocation);
+    if (path != null) settings.youtube.ytDownloadLocation.save(path);
+  }
+
+  void _openInFileExplorer() {
+    final path = settings.youtube.ytDownloadLocation.value;
+    NamidaChannel.inst.openFileInExplorer(path, isDirectory: true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final openInFileExplorerButton = NamidaChannel.inst.canOpenFileInExplorer
+        ? IconButton(
+            tooltip: lang.openInFileExplorer,
+            onPressed: _openInFileExplorer,
+            icon: const Icon(
+              Broken.export_1,
+              size: 20.0,
+            ),
+          )
+        : null;
+    return ObxO(
+      rx: settings.youtube.ytDownloadLocation,
+      builder: (context, downloadLocation) => CustomListTile(
+        bgColor: bgColor,
+        title: lang.defaultDownloadLocation,
+        icon: Broken.folder_favorite,
+        subtitle: downloadLocation,
+        onTap: _pickDirectory,
+        trailingRaw: openInFileExplorerButton,
+      ),
     );
   }
 }

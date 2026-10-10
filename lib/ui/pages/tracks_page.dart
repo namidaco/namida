@@ -66,7 +66,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
     SettingsSearchController.inst
         .onResultTap(
           settingPage: SettingSubpageEnum.indexer,
-          key: IndexerSettingsKeysGlobal.addFolder,
+          key: IndexerSettings.addFolder,
           context: context,
         )
         .ignoreError();

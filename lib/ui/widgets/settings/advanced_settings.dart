@@ -21,7 +21,6 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/storage_cache_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -35,27 +34,9 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
-import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
-
-enum _AdvancedSettingKeys with SettingKeysBase {
-  performanceMode,
-  rescanVideos,
-  removeSourceHistory,
-  updateDirPath,
-  fixYTDLPBigThumbnail,
-  compressImages,
-  maxServerCache,
-  maxImageCache,
-  maxAudioCache,
-  maxVideoCache,
-  clearServerCache,
-  clearImageCache,
-  clearAudioCache,
-  clearVideoCache,
-}
 
 class AdvancedSettings extends SettingSubpageProvider {
   const AdvancedSettings({super.key, super.initialItem});
@@ -64,28 +45,134 @@ class AdvancedSettings extends SettingSubpageProvider {
   SettingSubpageEnum get settingPage => SettingSubpageEnum.advanced;
 
   @override
-  Map<SettingKeysBase, List<String>> buildLookupMap() => {
-    _AdvancedSettingKeys.performanceMode: [
-      lang.performanceMode,
-      for (final e in PerformanceMode.values)
-        if (e != PerformanceMode.custom) e.toText(),
-    ],
-    _AdvancedSettingKeys.rescanVideos: [lang.rescanVideos],
-    _AdvancedSettingKeys.removeSourceHistory: [lang.removeSourceFromHistory],
-    _AdvancedSettingKeys.updateDirPath: [lang.updateDirectoryPath],
-    _AdvancedSettingKeys.fixYTDLPBigThumbnail: [lang.fixYtdlpBigThumbnailSize],
-    _AdvancedSettingKeys.compressImages: [lang.compressImages],
-    _AdvancedSettingKeys.maxServerCache: [lang.maxServerCacheSize],
-    _AdvancedSettingKeys.maxImageCache: [lang.maxImageCacheSize],
-    _AdvancedSettingKeys.maxAudioCache: [lang.maxAudioCacheSize],
-    _AdvancedSettingKeys.maxVideoCache: [lang.maxVideoCacheSize],
-    _AdvancedSettingKeys.clearServerCache: [lang.clearServerCache],
-    _AdvancedSettingKeys.clearImageCache: [lang.clearImageCache],
-    _AdvancedSettingKeys.clearAudioCache: [lang.clearAudioCache],
-    _AdvancedSettingKeys.clearVideoCache: [lang.clearVideoCache],
-  };
+  List<List<SettingEntry>> get sections => _sections;
 
-  void _onPerformanceTileTap(BuildContext context) {
+  static final performanceMode = SettingCustom(
+    title: () => lang.performanceMode,
+    aliases: _getPerformanceModeAliases,
+    keys: [settings.performanceMode, settings.artworkCacheHeightMultiplier],
+    onReset: () => settings.performanceMode.value.executeAndSave(),
+    tile: (args) => _PerformanceModeTile(
+      bgColor: args.bgColor,
+    ),
+  );
+
+  static final _sections = <List<SettingEntry>>[
+    [
+      performanceMode,
+    ],
+    [
+      // SettingCustom(
+      //   title: () => lang.rescanVideos,
+      //   tile: (args) => _RescanVideosTile(
+      //     bgColor: args.bgColor,
+      //   ),
+      // ),
+      SettingCustom(
+        title: () => lang.removeSourceFromHistory,
+        tile: (args) => _RemoveSourceFromHistoryTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.updateDirectoryPath,
+        tile: (args) => UpdateDirectoryPathListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      // -- this will loop all choosen files, get yt thumbnail (download or cache), edit tags, without affecting file modified time.
+      SettingCustom(
+        title: () => lang.fixYtdlpBigThumbnailSize,
+        tile: (args) => _FixYTDLPThumbnailSizeListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.compressImages,
+        tile: (args) => _CompressImagesListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+    [
+      SettingCustom(
+        title: () => lang.clearServerCache,
+        aliases: () => [lang.maxServerCacheSize],
+        keys: [settings.serversMaxCacheInMB],
+        tile: (args) => _ClearServerCacheListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.clearImageCache,
+        aliases: () => [lang.maxImageCacheSize],
+        keys: [settings.imagesMaxCacheInMB],
+        tile: (args) => _ClearImageCacheListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.clearAudioCache,
+        aliases: () => [lang.maxAudioCacheSize],
+        keys: [settings.audiosMaxCacheInMB],
+        tile: (args) => _ClearAudioCacheListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+      SettingCustom(
+        title: () => lang.clearVideoCache,
+        aliases: () => [lang.maxVideoCacheSize],
+        keys: [settings.videosMaxCacheInMB],
+        tile: (args) => _ClearVideoCacheListTile(
+          bgColor: args.bgColor,
+        ),
+      ),
+    ],
+  ];
+
+  static List<String> _getPerformanceModeAliases() => PerformanceMode.values.where((e) => e != PerformanceMode.custom).map((e) => e.toText()).toFixedList();
+
+  void _showAdvancedFlagsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flag,
+        title: lang.configure,
+        normalTitleStyle: true,
+        horizontalInset: 32.0,
+        actions: const [
+          DoneButton(),
+        ],
+        child: const _AdvancedFlagsOptions(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsCard(
+      title: lang.advancedSettings,
+      subtitle: lang.advancedSettingsSubtitle,
+      icon: Broken.hierarchy_3,
+      // icon: Broken.danger,
+      trailing: NamidaIconButton(
+        icon: Broken.flag,
+        tooltip: () => lang.configure,
+        iconColor: context.defaultIconColor(),
+        onPressed: _showAdvancedFlagsDialog,
+      ),
+      child: SettingSectionsColumn(
+        page: this,
+      ),
+    );
+  }
+}
+
+class _PerformanceModeTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _PerformanceModeTile({required this.bgColor});
+
+  void _onTap(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
     const artworkPartsMultiplier = 100;
@@ -133,7 +220,9 @@ class AdvancedSettings extends SettingSubpageProvider {
               const SizedBox(height: 6.0),
               const NamidaContainerDivider(),
               const SizedBox(height: 6.0),
-              const ThemeSetting().getAutoColoringTile(),
+              SettingEntryTile(
+                entry: ThemeSetting.autoColoring,
+              ),
               ObxO(
                 rx: settings.enableBlurEffect,
                 builder: (context, enableBlurEffect) => CustomSwitchListTile(
@@ -208,61 +297,111 @@ class AdvancedSettings extends SettingSubpageProvider {
     );
   }
 
-  Widget getPerformanceTile(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     final theme = context.theme;
     final textTheme = theme.textTheme;
-    return getItemWrapper(
-      key: _AdvancedSettingKeys.performanceMode,
-      child: CustomListTile(
-        bgColor: getBgColor(_AdvancedSettingKeys.performanceMode),
-        icon: Broken.cpu_setting,
-        title: lang.performanceMode,
-        trailing: ObxO(
-          rx: settings.performanceMode,
-          builder: (context, performanceMode) => Text(
-            performanceMode.toText(),
-            style: textTheme.displayMedium,
-            textAlign: TextAlign.end,
-          ),
+    return CustomListTile(
+      bgColor: bgColor,
+      icon: Broken.cpu_setting,
+      title: lang.performanceMode,
+      trailing: ObxO(
+        rx: settings.performanceMode,
+        builder: (context, performanceMode) => Text(
+          performanceMode.toText(),
+          style: textTheme.displayMedium,
+          textAlign: TextAlign.end,
         ),
-        onTap: () => _onPerformanceTileTap(context),
       ),
+      onTap: () => _onTap(context),
     );
   }
+}
 
-  Widget _getCacheSliderWidget({
-    required int stepper,
-    required int maxGB,
-    required _AdvancedSettingKeys key,
-    required IconData icon,
-    required String title,
-    required Rx<int> rx,
-    required void Function(int val) onSave,
-  }) {
-    final minimumValue = stepper;
-    final maxValue = maxGB * 1024;
-    return getItemWrapper(
-      key: key,
-      child: CustomListTile(
-        bgColor: getBgColor(key),
-        leading: StackedIcon(
-          baseIcon: icon,
-          secondaryIcon: Broken.cpu,
-        ),
-        title: title,
-        trailing: ObxO(
-          rx: rx,
-          builder: (context, valInSettings) {
-            return NamidaWheelSlider(
-              min: minimumValue,
-              max: maxValue,
-              stepper: stepper,
-              extraValue: true,
-              initValue: valInSettings,
-              text: valInSettings < 0 ? lang.unlimited : (valInSettings * 1024 * 1024).fileSizeFormatted,
-              onValueChanged: onSave,
-            );
-          },
+// class _RescanVideosTile extends StatelessWidget {
+//   final Color? bgColor;
+
+//   const _RescanVideosTile({required this.bgColor});
+
+//   Future<void> _onTap() async {
+//     await VideoController.inst.rescanLocalVideosPaths();
+//     snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return CustomListTile(
+//       bgColor: bgColor,
+//       leading: const StackedIcon(
+//         baseIcon: Broken.video,
+//         secondaryIcon: Broken.refresh,
+//       ),
+//       trailingRaw: Obx(
+//         (context) {
+//           final current = VideoController.inst.localVideoExtractCurrent.valueR;
+//           final total = VideoController.inst.localVideoExtractTotal.valueR;
+//           final isCounterVisible = total != 0;
+//           final isLoadingVisible = current != null;
+
+//           if (!isCounterVisible && !isLoadingVisible) {
+//             return Text(
+//               "${VideoController.inst.localVideosTotalCount}",
+//               style: context.textTheme.displayMedium,
+//             );
+//           }
+
+//           return Column(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               if (isCounterVisible)
+//                 Text(
+//                   "$current/$total",
+//                   style: context.textTheme.displaySmall,
+//                 ),
+//               if (isLoadingVisible) const LoadingIndicator(),
+//             ],
+//           );
+//         },
+//       ),
+//       title: lang.rescanVideos,
+//       onTap: _onTap,
+//     );
+//   }
+// }
+
+class _RemoveSourceFromHistoryTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _RemoveSourceFromHistoryTile({required this.bgColor});
+
+  void _onTap() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        normalTitleStyle: true,
+        title: lang.choose,
+        child: SmoothSingleChildScrollView(
+          child: Column(
+            children: [
+              CustomListTile(
+                title: lang.local,
+                subtitle: '',
+                icon: Broken.music_library_2,
+                onTap: () {
+                  NamidaNavigator.inst.closeDialog();
+                  _removeSourceFromHistory(HistoryController.inst);
+                },
+              ),
+              CustomListTile(
+                title: lang.youtube,
+                subtitle: '',
+                icon: Broken.video_square,
+                onTap: () {
+                  NamidaNavigator.inst.closeDialog();
+                  _removeSourceFromHistory(YoutubeHistoryController.inst);
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -430,200 +569,48 @@ class AdvancedSettings extends SettingSubpageProvider {
     );
   }
 
-  void _showAdvancedFlagsDialog() {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        icon: Broken.flag,
-        title: lang.configure,
-        normalTitleStyle: true,
-        horizontalInset: 32.0,
-        actions: const [
-          DoneButton(),
-        ],
-        child: const _AdvancedFlagsOptions(),
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.trash,
+        secondaryIcon: Broken.refresh,
       ),
+      title: lang.removeSourceFromHistory,
+      onTap: _onTap,
     );
   }
+}
+
+class _CacheLimitWheel extends StatelessWidget {
+  final SettingsKey<int> setting;
+  final int stepper;
+  final int maxGB;
+
+  const _CacheLimitWheel({
+    required this.setting,
+    required this.stepper,
+    required this.maxGB,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SettingsCard(
-      title: lang.advancedSettings,
-      subtitle: lang.advancedSettingsSubtitle,
-      icon: Broken.hierarchy_3,
-      // icon: Broken.danger,
-      trailing: NamidaIconButton(
-        icon: Broken.flag,
-        tooltip: () => lang.configure,
-        iconColor: context.defaultIconColor(),
-        onPressed: _showAdvancedFlagsDialog,
-      ),
-      child: Column(
-        children: [
-          getPerformanceTile(context),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.rescanVideos,
-            child: CustomListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.rescanVideos),
-              leading: const StackedIcon(
-                baseIcon: Broken.video,
-                secondaryIcon: Broken.refresh,
-              ),
-              trailingRaw: Obx(
-                (context) {
-                  final current = VideoController.inst.localVideoExtractCurrent.valueR;
-                  final total = VideoController.inst.localVideoExtractTotal.valueR;
-                  final isCounterVisible = total != 0;
-                  final isLoadingVisible = current != null;
-
-                  if (!isCounterVisible && !isLoadingVisible) {
-                    return Text(
-                      "${VideoController.inst.localVideosTotalCount}",
-                      style: context.textTheme.displayMedium,
-                    );
-                  }
-
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isCounterVisible) Text("$current/$total"),
-                      if (isLoadingVisible) const LoadingIndicator(),
-                    ],
-                  );
-                },
-              ),
-              title: lang.rescanVideos,
-              onTap: () async {
-                await VideoController.inst.rescanLocalVideosPaths();
-                snackyy(title: lang.done, message: lang.finishedUpdatingLibrary);
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.removeSourceHistory,
-            child: CustomListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.removeSourceHistory),
-              leading: const StackedIcon(
-                baseIcon: Broken.trash,
-                secondaryIcon: Broken.refresh,
-              ),
-              title: lang.removeSourceFromHistory,
-              onTap: () {
-                NamidaNavigator.inst.navigateDialog(
-                  dialog: CustomBlurryDialog(
-                    normalTitleStyle: true,
-                    title: lang.choose,
-                    child: SmoothSingleChildScrollView(
-                      child: Column(
-                        children: [
-                          CustomListTile(
-                            title: lang.local,
-                            subtitle: '',
-                            icon: Broken.music_library_2,
-                            onTap: () {
-                              NamidaNavigator.inst.closeDialog();
-                              _removeSourceFromHistory(HistoryController.inst);
-                            },
-                          ),
-                          CustomListTile(
-                            title: lang.youtube,
-                            subtitle: '',
-                            icon: Broken.video_square,
-                            onTap: () {
-                              NamidaNavigator.inst.closeDialog();
-                              _removeSourceFromHistory(YoutubeHistoryController.inst);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.updateDirPath,
-            child: UpdateDirectoryPathListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.updateDirPath),
-            ),
-          ),
-          // -- this will loop all choosen files, get yt thumbnail (download or cache), edit tags, without affecting file modified time.
-          getItemWrapper(
-            key: _AdvancedSettingKeys.fixYTDLPBigThumbnail,
-            child: _FixYTDLPThumbnailSizeListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.fixYTDLPBigThumbnail),
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.compressImages,
-            child: _CompressImagesListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.compressImages),
-            ),
-          ),
-          _getCacheSliderWidget(
-            stepper: 8 * 32,
-            maxGB: 32,
-            key: _AdvancedSettingKeys.maxServerCache,
-            icon: Broken.cloud,
-            title: lang.maxServerCacheSize,
-            rx: settings.serversMaxCacheInMB,
-            onSave: (val) => settings.serversMaxCacheInMB.save(val),
-          ),
-          _getCacheSliderWidget(
-            stepper: 8 * 4,
-            maxGB: 4,
-            key: _AdvancedSettingKeys.maxImageCache,
-            icon: Broken.gallery,
-            title: lang.maxImageCacheSize,
-            rx: settings.imagesMaxCacheInMB,
-            onSave: (val) => settings.imagesMaxCacheInMB.save(val),
-          ),
-          _getCacheSliderWidget(
-            stepper: 8 * 4,
-            maxGB: 12,
-            key: _AdvancedSettingKeys.maxAudioCache,
-            icon: Broken.audio_square,
-            title: lang.maxAudioCacheSize,
-            rx: settings.audiosMaxCacheInMB,
-            onSave: (val) => settings.audiosMaxCacheInMB.save(val),
-          ),
-          _getCacheSliderWidget(
-            stepper: 8 * 32,
-            maxGB: 32,
-            key: _AdvancedSettingKeys.maxVideoCache,
-            icon: Broken.video,
-            title: lang.maxVideoCacheSize,
-            rx: settings.videosMaxCacheInMB,
-            onSave: (val) => settings.videosMaxCacheInMB.save(val),
-          ),
-
-          getItemWrapper(
-            key: _AdvancedSettingKeys.clearServerCache,
-            child: _ClearServerCacheListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.clearServerCache),
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.clearImageCache,
-            child: _ClearImageCacheListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.clearAudioCache,
-            child: _ClearAudioCacheListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.clearImageCache),
-            ),
-          ),
-          getItemWrapper(
-            key: _AdvancedSettingKeys.clearVideoCache,
-            child: _ClearVideoCacheListTile(
-              bgColor: getBgColor(_AdvancedSettingKeys.clearVideoCache),
-            ),
-          ),
-        ],
-      ),
+    final maxValue = maxGB * 1024;
+    return ObxO(
+      rx: setting,
+      builder: (context, valInSettings) {
+        final valueText = valInSettings < 0 ? lang.unlimited : (valInSettings * 1024 * 1024).fileSizeFormatted;
+        return NamidaWheelSlider(
+          min: stepper,
+          max: maxValue,
+          stepper: stepper,
+          extraValue: true,
+          initValue: valInSettings,
+          text: valueText,
+          onValueChanged: setting.save,
+        );
+      },
     );
   }
 }
@@ -665,6 +652,7 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
 
   @override
   Widget build(BuildContext context) {
+    final usedText = totalSize.fileSizeFormatted;
     return CustomListTile(
       bgColor: widget.bgColor,
       leading: const StackedIcon(
@@ -672,7 +660,12 @@ class __ClearVideoCacheListTileState extends State<_ClearVideoCacheListTile> {
         secondaryIcon: Broken.close_circle,
       ),
       title: lang.clearVideoCache,
-      trailingText: totalSize.fileSizeFormatted,
+      subtitle: '${lang.used}: $usedText',
+      trailing: _CacheLimitWheel(
+        setting: settings.videosMaxCacheInMB,
+        stepper: 8 * 32,
+        maxGB: 32,
+      ),
       onTap: () async {
         final allvideos = await VideoController.inst.getCurrentVideosInCache();
         const cacheManager = StorageCacheManager();
@@ -779,84 +772,92 @@ class __ClearImageCacheListTileState extends State<_ClearImageCacheListTile> {
   Widget build(BuildContext context) {
     return ObxO(
       rx: totalBytesRx,
-      builder: (context, totalBytes) => CustomListTile(
-        bgColor: widget.bgColor,
-        leading: const StackedIcon(
-          baseIcon: Broken.image,
-          secondaryIcon: Broken.close_circle,
-        ),
-        title: lang.clearImageCache,
-        trailingText: totalBytes < 0 ? '?' : totalBytes.fileSizeFormatted,
-        onTap: () {
-          NamidaNavigator.inst.navigateDialog(
-            dialog: CustomBlurryDialog(
-              title: lang.configure,
-              normalTitleStyle: true,
-              actions: [
-                const CancelButton(),
-                Obx(
-                  (context) {
-                    final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMapRx.valueR[element] ?? 0));
-                    return NamidaButton(
-                      colorScheme: Colors.red,
-                      text: "${lang.clear.toUpperCase()} (${total.fileSizeFormatted})",
-                      onTap: () async {
-                        NamidaNavigator.inst.closeDialog();
+      builder: (context, totalBytes) {
+        final usedText = totalBytes < 0 ? '?' : totalBytes.fileSizeFormatted;
+        return CustomListTile(
+          bgColor: widget.bgColor,
+          leading: const StackedIcon(
+            baseIcon: Broken.image,
+            secondaryIcon: Broken.close_circle,
+          ),
+          title: lang.clearImageCache,
+          subtitle: '${lang.used}: $usedText',
+          trailing: _CacheLimitWheel(
+            setting: settings.imagesMaxCacheInMB,
+            stepper: 8 * 4,
+            maxGB: 4,
+          ),
+          onTap: () {
+            NamidaNavigator.inst.navigateDialog(
+              dialog: CustomBlurryDialog(
+                title: lang.configure,
+                normalTitleStyle: true,
+                actions: [
+                  const CancelButton(),
+                  Obx(
+                    (context) {
+                      final total = dirsChoosen.valueR.fold(0, (p, element) => p + (dirsMapRx.valueR[element] ?? 0));
+                      return NamidaButton(
+                        colorScheme: Colors.red,
+                        text: "${lang.clear.toUpperCase()} (${total.fileSizeFormatted})",
+                        onTap: () async {
+                          NamidaNavigator.inst.closeDialog();
 
-                        for (final d in dirsChoosen.value) {
-                          await Directory(d).delete(recursive: true);
-                          await Directory(d).create();
-                        }
+                          for (final d in dirsChoosen.value) {
+                            await Directory(d).delete(recursive: true);
+                            await Directory(d).create();
+                          }
 
-                        if (dirsChoosen.contains(AppDirs.ARTWORKS)) {
-                          await Indexer.inst.clearImageCache();
-                        }
+                          if (dirsChoosen.contains(AppDirs.ARTWORKS)) {
+                            await Indexer.inst.clearImageCache();
+                          }
 
-                        _fillSizes();
-                      },
-                    );
-                  },
-                ),
-              ],
-              child: ObxO(
-                rx: dirsMapRx,
-                builder: (context, dirsMap) => Column(
-                  children: [
-                    ...mainDirs.map(
-                      (e) {
-                        final bytes = dirsMap[e] ?? 0;
-                        final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';
-                        final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
-                        return Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Obx(
-                            (context) => ListTileWithCheckMark(
-                              active: dirsChoosen.contains(e),
-                              dense: true,
-                              icon: Broken.cpu_setting,
-                              title:
-                                  e.splitLastM(
-                                    Platform.pathSeparator,
-                                    onMatch: (part) {
-                                      if (part.isNotEmpty) return part;
-                                      return null;
-                                    },
-                                  ) ??
-                                  e,
-                              subtitle: subtitle,
-                              onTap: () => dirsChoosen.addOrRemove(e),
+                          _fillSizes();
+                        },
+                      );
+                    },
+                  ),
+                ],
+                child: ObxO(
+                  rx: dirsMapRx,
+                  builder: (context, dirsMap) => Column(
+                    children: [
+                      ...mainDirs.map(
+                        (e) {
+                          final bytes = dirsMap[e] ?? 0;
+                          final warningText = e == AppDirs.ARTWORKS || e == AppDirs.THUMBNAILS ? lang.clearImageCacheWarning : '';
+                          final subtitle = warningText == '' ? bytes.fileSizeFormatted : "${bytes.fileSizeFormatted}\n$warningText";
+                          return Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Obx(
+                              (context) => ListTileWithCheckMark(
+                                active: dirsChoosen.contains(e),
+                                dense: true,
+                                icon: Broken.cpu_setting,
+                                title:
+                                    e.splitLastM(
+                                      Platform.pathSeparator,
+                                      onMatch: (part) {
+                                        if (part.isNotEmpty) return part;
+                                        return null;
+                                      },
+                                    ) ??
+                                    e,
+                                subtitle: subtitle,
+                                onTap: () => dirsChoosen.addOrRemove(e),
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -894,6 +895,7 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
 
   @override
   Widget build(BuildContext context) {
+    final usedText = totalSize == -1 ? '?' : totalSize.fileSizeFormatted;
     return CustomListTile(
       bgColor: widget.bgColor,
       leading: const StackedIcon(
@@ -901,7 +903,12 @@ class __ClearAudioCacheListTileState extends State<_ClearAudioCacheListTile> {
         secondaryIcon: Broken.close_circle,
       ),
       title: lang.clearAudioCache,
-      trailingText: totalSize == -1 ? '?' : totalSize.fileSizeFormatted,
+      subtitle: '${lang.used}: $usedText',
+      trailing: _CacheLimitWheel(
+        setting: settings.audiosMaxCacheInMB,
+        stepper: 8 * 4,
+        maxGB: 12,
+      ),
       onTap: () {
         final allaudios = <AudioCacheDetails>[];
         for (final acFiles in AudioCacheController.inst.audioCacheMap.values) {
@@ -1056,6 +1063,7 @@ class _ClearServerCacheListTileState extends State<_ClearServerCacheListTile> {
   @override
   Widget build(BuildContext context) {
     final stats = _stats;
+    final usedText = stats == null ? '?' : stats.totalSize.fileSizeFormatted;
     return CustomListTile(
       bgColor: widget.bgColor,
       leading: const StackedIcon(
@@ -1063,7 +1071,12 @@ class _ClearServerCacheListTileState extends State<_ClearServerCacheListTile> {
         secondaryIcon: Broken.close_circle,
       ),
       title: lang.clearServerCache,
-      trailingText: stats == null ? '?' : stats.totalSize.fileSizeFormatted,
+      subtitle: '${lang.used}: $usedText',
+      trailing: _CacheLimitWheel(
+        setting: settings.serversMaxCacheInMB,
+        stepper: 8 * 32,
+        maxGB: 32,
+      ),
       onTap: stats == null ? null : () => _onTap(stats),
     );
   }

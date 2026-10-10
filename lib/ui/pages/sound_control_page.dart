@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:just_audio/just_audio.dart' show BitPerfectStatusMessage, BitPerfectReasonMessage, UsbDirectStatusMessage, UsbDirectStateMessage;
 
+import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
@@ -980,7 +981,12 @@ class SoundControlPageState extends State<SoundControlPage> {
                               vertical: verticalInBetweenPaddingH / 2,
                             ),
                           ),
-                          const PlaybackSettings().getNormalizeAudioWidget(isInEQPage: true),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
+                            child: SettingEntryTile(
+                              entry: PlaybackSettings.replayGain,
+                            ),
+                          ),
                           NamidaContainerDivider(
                             margin: EdgeInsets.symmetric(
                               horizontal: 12.0,

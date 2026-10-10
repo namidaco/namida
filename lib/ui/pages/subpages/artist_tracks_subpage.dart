@@ -335,12 +335,10 @@ class _AlbumsRow extends StatelessWidget {
       child: BorderRadiusClip(
         borderRadius: BorderRadiusGeometry.circular(8.0.multipliedRadius),
         child: NamidaExpansionTile(
-          compact: false,
           bgColor: context.theme.cardColor,
           leading: _AlbumsRowLeading(
             icon: icon,
           ),
-          borderless: true,
           titleText: "$title: ${albums.length}",
           initiallyExpanded: albums.isNotEmpty && initiallyExpanded,
           onExpansionChanged: albums.isEmpty ? null : onExpansionChanged,

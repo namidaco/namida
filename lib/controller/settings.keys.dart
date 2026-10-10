@@ -12,7 +12,7 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
 
   Map<String, dynamic> _raw = {'_v': _kVersion};
   List? _legacy;
-  final _keys = <String, _SettingsKey>{};
+  final _keys = <String, SettingsKey>{};
   bool _didCreateAllKeys = false;
 
   bool get syncable => false;
@@ -38,17 +38,17 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     return {for (final key in _keys.values) key.name: key._encode(key.value)};
   }
 
-  _SettingsKey<T> _key<T>(String name, T fallback, {_SettingsCodec<T>? codec, bool sync = true}) {
-    final key = _SettingsKey<T>._(this, name, fallback, codec, sync);
+  SettingsKey<T> _key<T>(String name, T fallback, {_SettingsCodec<T>? codec, bool sync = true}) {
+    final key = SettingsKey<T>._(this, name, fallback, codec, sync);
     key._load(_raw[name]);
     return _keys[name] = key;
   }
 
-  _SettingsKey<E> _keyEnum<E extends Enum>(String name, E fallback, List<E> values, {bool sync = true}) {
+  SettingsKey<E> _keyEnum<E extends Enum>(String name, E fallback, List<E> values, {bool sync = true}) {
     return _key(name, fallback, codec: _EnumCodec(values), sync: sync);
   }
 
-  _SettingsKey<T> _keyObject<T>(String name, T fallback, T? Function(Map<String, dynamic> json) fromJson, Object? Function(T value) toJson, {bool sync = true}) {
+  SettingsKey<T> _keyObject<T>(String name, T fallback, T? Function(Map<String, dynamic> json) fromJson, Object? Function(T value) toJson, {bool sync = true}) {
     return _key(name, fallback, codec: _ObjectCodec(fromJson, toJson), sync: sync);
   }
 
@@ -256,7 +256,7 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
 }
 
 /// [value] is [userValue] or, when none is set, [fallback].
-class _SettingsKey<T> extends Rx<T> {
+class SettingsKey<T> extends Rx<T> {
   final String name;
   final bool sync;
   final T fallback;
@@ -264,7 +264,7 @@ class _SettingsKey<T> extends Rx<T> {
   final _SettingsCodec<T>? _codec;
   T? _override;
 
-  _SettingsKey._(this._owner, this.name, this.fallback, this._codec, this.sync) : super(fallback);
+  SettingsKey._(this._owner, this.name, this.fallback, this._codec, this.sync) : super(fallback);
 
   T? get userValue => _override;
 
@@ -379,7 +379,7 @@ class _SettingsKey<T> extends Rx<T> {
   }
 }
 
-class _SettingsListKey<T> extends _SettingsKey<_ProtectedList<T>> {
+class _SettingsListKey<T> extends SettingsKey<_ProtectedList<T>> {
   _SettingsListKey._(super.owner, super.name, super.fallback, super.codec, super.sync) : super._();
 
   void update(void Function(List<T> value) fn) {
@@ -456,7 +456,7 @@ class _SettingsEnumListKey<E extends Enum> extends _SettingsListKey<E> {
   }
 }
 
-class _SettingsSetKey<T> extends _SettingsKey<_ProtectedSet<T>> {
+class _SettingsSetKey<T> extends SettingsKey<_ProtectedSet<T>> {
   _SettingsSetKey._(super.owner, super.name, super.fallback, super.codec, super.sync) : super._();
 
   @override
@@ -476,7 +476,7 @@ class _SettingsSetKey<T> extends _SettingsKey<_ProtectedSet<T>> {
 
 /// only entries that differ from a non-empty default are stored, the rest is merged back in on load,
 /// so entries added to or changed in the default later still apply.
-class _SettingsMapKey<K, V> extends _SettingsKey<_ProtectedMap<K, V>> {
+class _SettingsMapKey<K, V> extends SettingsKey<_ProtectedMap<K, V>> {
   _SettingsMapKey._(super.owner, super.name, super.fallback, super.codec, super.sync) : super._();
 
   @override

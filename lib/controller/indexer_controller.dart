@@ -329,7 +329,7 @@ class Indexer<T extends Track> {
               SettingsSearchController.inst
                   .onResultTap(
                     settingPage: SettingSubpageEnum.indexer,
-                    key: IndexerSettingsKeysGlobal.addFolder,
+                    key: IndexerSettings.addFolder,
                     context: namida.context!,
                   )
                   .ignoreError();

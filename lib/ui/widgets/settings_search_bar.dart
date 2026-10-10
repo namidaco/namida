@@ -105,7 +105,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
             iconSize: 22,
             onPressed: () {
               controller.clear();
-              SettingsSearchController.inst.searchResults.clear();
+              SettingsSearchController.inst.onSearchChanged('');
             },
           ),
           onTap: () => _onSearch(isOpen: true),

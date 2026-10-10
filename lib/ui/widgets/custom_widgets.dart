@@ -303,6 +303,8 @@ class CustomListTile extends StatelessWidget {
     this.extraDense = false,
   });
 
+  static TextStyle? getTrailingTextStyle(ThemeData theme) => theme.textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200));
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -313,19 +315,15 @@ class CustomListTile extends StatelessWidget {
     final hasSubtitleText = subtitle != null && subtitle.isNotEmpty;
     final hasSubtitle = hasSubtitleText || subtitleWidget != null;
 
-    final baseDensity = VisualDensity.compact.baseSizeAdjustment;
-    var minTileHeight =
-        6.0 +
-        baseDensity.dy +
-        switch (hasSubtitle) {
-          true => dense ? 60.0 : 62.0, // 2 lines
-          false => dense ? 50.0 : 56.0, // 1 line
-        };
+    final baseHeight = 6.0 + VisualDensity.compact.baseSizeAdjustment.dy;
+    var oneLineHeight = baseHeight + (dense ? 50.0 : 56.0);
+    var minTileHeight = hasSubtitle ? baseHeight + (dense ? 60.0 : 62.0) : oneLineHeight;
     var verticalPadding = 8.0;
     var borderR = this.borderR;
     var iconSize = 24.0;
 
     if (this.extraDense) {
+      oneLineHeight *= 0.85;
       minTileHeight *= 0.85;
       verticalPadding = 1.0;
       borderR *= 0.8;
@@ -428,14 +426,14 @@ class CustomListTile extends StatelessWidget {
                       constraints: BoxConstraints(
                         minWidth: 0,
                         maxWidth: Dimensions.inst.availableAppContentWidth * 0.3,
-                        maxHeight: minTileHeight,
+                        maxHeight: oneLineHeight,
                       ),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: trailingText != null
                             ? Text(
                                 trailingText!,
-                                style: textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200)),
+                                style: getTrailingTextStyle(theme),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
@@ -1474,6 +1472,7 @@ class SmallListTile extends StatelessWidget {
   }
 }
 
+// rewritten by claude, header is a [CustomListTile], one animation drives size, fade, slide, arrow and tint, children sit on a rail.
 class NamidaExpansionTile extends StatefulWidget {
   final IconData? icon;
   final Color? iconColor;
@@ -1485,15 +1484,17 @@ class NamidaExpansionTile extends StatefulWidget {
   final Color? textColor;
   final Color? textColorScheme;
   final List<Widget> children;
-  final EdgeInsetsGeometry? childrenPadding;
+
+  /// inside the rail.
+  final EdgeInsetsGeometry childrenPadding;
   final bool initiallyExpanded;
-  final Widget Function(Widget iconWidget)? trailingBuilder;
+  final Widget Function(Widget arrow)? trailingBuilder;
   final ValueChanged<bool>? onExpansionChanged;
-  final bool normalRightPadding;
+
+  /// followed instead of toggling on tap, [onTap] is expected to change it.
+  final RxBaseCore<bool>? expandedRx;
+  final VoidCallback? onTap;
   final Color? bgColor;
-  final bool bigahh;
-  final bool compact;
-  final bool borderless;
 
   const NamidaExpansionTile({
     super.key,
@@ -1511,113 +1512,310 @@ class NamidaExpansionTile extends StatefulWidget {
     this.initiallyExpanded = false,
     this.trailingBuilder,
     this.onExpansionChanged,
-    this.normalRightPadding = false,
+    this.expandedRx,
+    this.onTap,
     this.bgColor,
-    this.bigahh = false,
-    this.compact = true,
-    this.borderless = false,
   });
 
   @override
   State<NamidaExpansionTile> createState() => _NamidaExpansionTileState();
 }
 
-class _NamidaExpansionTileState extends State<NamidaExpansionTile> {
-  final _rotationTurns = 0.0.obs;
-  void _rotateTrailingIcon([_]) {
-    _rotationTurns.value += 0.5;
-  }
+class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTickerProviderStateMixin {
+  static const _kBorderRadius = 18.0;
 
-  void _onExpansionChanged(bool expanding) {
-    _rotateTrailingIcon();
-    widget.onExpansionChanged?.call(expanding);
-  }
+  late bool _isExpanded = widget.initiallyExpanded;
+  late bool _isBodyBuilt = _isExpanded;
+
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+    reverseDuration: const Duration(milliseconds: 220),
+    value: _isExpanded ? 1.0 : 0.0,
+  );
+  late final _sizeAnimation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+    reverseCurve: Curves.easeInCubic,
+  );
+  late final _fadeAnimation = CurvedAnimation(
+    parent: _controller,
+    curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    reverseCurve: const Interval(0.5, 1.0, curve: Curves.easeIn),
+  );
+  late final _arrowTurns = Tween(begin: 0.0, end: 0.5).animate(_sizeAnimation);
 
   @override
   void initState() {
     super.initState();
-    if (widget.initiallyExpanded) _rotateTrailingIcon();
+    _controller.addStatusListener(_onStatusChanged);
+    widget.expandedRx?.addListener(_onExpandedRxChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant NamidaExpansionTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final expandedRx = widget.expandedRx;
+    if (expandedRx == oldWidget.expandedRx) return;
+    oldWidget.expandedRx?.removeListener(_onExpandedRxChanged);
+    expandedRx?.addListener(_onExpandedRxChanged);
   }
 
   @override
   void dispose() {
-    _rotationTurns.close();
+    widget.expandedRx?.removeListener(_onExpandedRxChanged);
+    _sizeAnimation.dispose();
+    _fadeAnimation.dispose();
+    _controller.dispose();
     super.dispose();
+  }
+
+  void _onStatusChanged(AnimationStatus status) {
+    final isBodyBuilt = status != AnimationStatus.dismissed;
+    if (isBodyBuilt == _isBodyBuilt) return;
+    setState(() => _isBodyBuilt = isBodyBuilt);
+  }
+
+  void _onExpandedRxChanged() {
+    final expandedRx = widget.expandedRx;
+    if (expandedRx != null) _setExpanded(expandedRx.value);
+  }
+
+  void _setExpanded(bool isExpanded) {
+    if (isExpanded == _isExpanded) return;
+    _isExpanded = isExpanded;
+    if (isExpanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  void _onHeaderTap() {
+    if (widget.expandedRx == null) {
+      final isExpanded = !_isExpanded;
+      _setExpanded(isExpanded);
+      widget.onExpansionChanged?.call(isExpanded);
+    }
+    widget.onTap?.call();
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    final trailingIconWidget = ObxO(
-      rx: _rotationTurns,
-      builder: (context, turns) => AnimatedRotation(
-        turns: turns,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.fastEaseInToSlowEaseOut,
-        child: Padding(
-          padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 4.0),
-          child: Icon(
-            Broken.arrow_down_2,
-            size: widget.trailingIconSize,
-          ),
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final textColorScheme = widget.textColorScheme;
+    final titleStyle = textTheme.displayMedium!;
+    final normalTitleColor = titleStyle.color!;
+    final brightTitleColor = textTheme.displayLarge!.color!;
+    final schemeTint = textColorScheme?.withAlpha(40);
+    final collapsedTitleColor = schemeTint == null ? normalTitleColor : Color.alphaBlend(schemeTint, normalTitleColor);
+    final expandedTitleColor = widget.textColor ?? (schemeTint == null ? brightTitleColor : Color.alphaBlend(schemeTint, brightTitleColor));
+    final arrow = Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: RotationTransition(
+        turns: _arrowTurns,
+        child: Icon(
+          Broken.arrow_down_2,
+          size: widget.trailingIconSize,
         ),
       ),
     );
-    Widget child = ExpansionTile(
-      collapsedShape: widget.borderless ? const Border() : null,
-      shape: widget.borderless ? const Border() : null,
-      visualDensity: widget.compact ? VisualDensity.compact : VisualDensity.comfortable,
-      controlAffinity: ListTileControlAffinity.trailing,
-      collapsedBackgroundColor: widget.bgColor,
-      backgroundColor: widget.bgColor,
-      initiallyExpanded: widget.initiallyExpanded,
-      onExpansionChanged: widget.onExpansionChanged == null ? _rotateTrailingIcon : _onExpansionChanged,
-      expandedAlignment: Alignment.centerLeft,
-      tilePadding: EdgeInsets.only(left: 16.0, right: widget.normalRightPadding ? 16.0 : 12.0),
-      leading:
-          widget.leading ??
-          Icon(
-            widget.icon,
-            color: widget.iconColor,
-          ),
-      trailing: widget.trailingBuilder?.call(trailingIconWidget) ?? trailingIconWidget,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            widget.titleText,
-            style: textTheme.displayMedium?.copyWith(
-              color:
-                  widget.textColor ??
-                  (widget.textColorScheme == null
-                      ? null
-                      : Color.alphaBlend(
-                          widget.textColorScheme!.withAlpha(40),
-                          textTheme.displayMedium!.color!,
-                        )),
-            ),
-          ),
-          if (widget.subtitle != null)
-            widget.subtitle!
-          else if (widget.subtitleText != null)
-            Text(
-              widget.subtitleText!,
-              style: textTheme.displaySmall,
-            ),
-        ],
-      ),
-      childrenPadding: widget.childrenPadding,
-      children: widget.children,
+    final trailing = widget.trailingBuilder?.call(arrow) ?? arrow;
+    final icon = widget.icon;
+    final iconColor = widget.iconColor;
+    final leading =
+        widget.leading ??
+        (iconColor == null
+            ? null
+            : Icon(
+                icon,
+                color: iconColor,
+              ));
+    final header = _ExpansionHeader(
+      animation: _sizeAnimation,
+      titleStyle: titleStyle,
+      collapsedTitleColor: collapsedTitleColor,
+      expandedTitleColor: expandedTitleColor,
+      icon: leading == null ? icon : null,
+      leading: leading,
+      title: widget.titleText,
+      subtitle: widget.subtitleText,
+      subtitleWidget: widget.subtitle,
+      trailing: trailing,
+      onTap: _onHeaderTap,
     );
-    if (widget.bgColor == null && !widget.borderless) {
-      child = Material(
-        type: MaterialType.transparency,
-        child: child,
+    final borderRadius = BorderRadius.circular(_kBorderRadius.multipliedRadius);
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        header,
+        if (_isBodyBuilt)
+          SizeTransition(
+            sizeFactor: _sizeAnimation,
+            alignment: AlignmentDirectional.topStart,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: _ExpansionSlideIn(
+                animation: _sizeAnimation,
+                child: _ExpansionChildrenRail(
+                  padding: widget.childrenPadding,
+                  children: widget.children,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+    final bgColor = widget.bgColor;
+    if (bgColor != null) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: borderRadius,
+        ),
+        child: content,
       );
     }
-    return ListTileTheme(
-      dense: !widget.bigahh,
+    final isDark = theme.brightness == Brightness.dark;
+    return _ExpansionTint(
+      animation: _sizeAnimation,
+      color: theme.cardColor,
+      maxOpacity: isDark ? 0.3 : 0.18,
+      borderRadius: borderRadius,
+      child: content,
+    );
+  }
+}
+
+class _ExpansionHeader extends AnimatedWidget {
+  final Animation<double> animation;
+  final TextStyle titleStyle;
+  final Color collapsedTitleColor;
+  final Color expandedTitleColor;
+  final IconData? icon;
+  final Widget? leading;
+  final String title;
+  final String? subtitle;
+  final Widget? subtitleWidget;
+  final Widget trailing;
+  final VoidCallback onTap;
+
+  const _ExpansionHeader({
+    required this.animation,
+    required this.titleStyle,
+    required this.collapsedTitleColor,
+    required this.expandedTitleColor,
+    required this.icon,
+    required this.leading,
+    required this.title,
+    required this.subtitle,
+    required this.subtitleWidget,
+    required this.trailing,
+    required this.onTap,
+  }) : super(listenable: animation);
+
+  @override
+  Widget build(BuildContext context) {
+    final titleColor = Color.lerp(collapsedTitleColor, expandedTitleColor, animation.value);
+    return CustomListTile(
+      icon: icon,
+      leading: leading,
+      title: title,
+      titleStyle: titleStyle.copyWith(color: titleColor),
+      subtitle: subtitle,
+      subtitleWidget: subtitleWidget,
+      trailing: trailing,
+      onTap: onTap,
+    );
+  }
+}
+
+class _ExpansionTint extends AnimatedWidget {
+  final Animation<double> animation;
+  final Color color;
+  final double maxOpacity;
+  final BorderRadius borderRadius;
+  final Widget child;
+
+  const _ExpansionTint({
+    required this.animation,
+    required this.color,
+    required this.maxOpacity,
+    required this.borderRadius,
+    required this.child,
+  }) : super(listenable: animation);
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = animation.value;
+    if (progress == 0.0) return child;
+    final tint = color.withOpacityExt(maxOpacity * progress);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: borderRadius,
+      ),
       child: child,
+    );
+  }
+}
+
+class _ExpansionSlideIn extends AnimatedWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const _ExpansionSlideIn({required this.animation, required this.child}) : super(listenable: animation);
+
+  static const _kDistance = 8.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final offsetY = (animation.value - 1.0) * _kDistance;
+    return Transform.translate(
+      offset: Offset(0.0, offsetY),
+      child: child,
+    );
+  }
+}
+
+class _ExpansionChildrenRail extends StatelessWidget {
+  final EdgeInsetsGeometry padding;
+  final List<Widget> children;
+
+  const _ExpansionChildrenRail({required this.padding, required this.children});
+
+  static const _kRailLeft = 20.0;
+  static const _kChildrenIndent = 12.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final railColor = context.theme.dividerColor.withAlpha(namida.isDarkMode ? 100 : 40);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: _kChildrenIndent),
+            child: Padding(
+              padding: padding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: children,
+              ),
+            ),
+          ),
+          PositionedDirectional(
+            start: _kRailLeft,
+            top: 4.0,
+            bottom: 4.0,
+            width: 1.0,
+            child: ColoredBox(
+              color: railColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -7482,7 +7680,6 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
-      borderless: true,
       initiallyExpanded: true,
       titleText: title,
       subtitleText: subtitle,
@@ -7504,7 +7701,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
           iconWidget,
         ],
       ),
-      childrenPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+      childrenPadding: const EdgeInsetsDirectional.only(end: 8.0, top: 6.0),
       children: [
         ...items.map(
           (item) {

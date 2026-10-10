@@ -185,6 +185,15 @@ class VideoController {
 
   int get localVideosTotalCount => _allVideoPaths.length;
 
+  /// `current/total` while extracting, `?` while listing paths, otherwise how many were found.
+  String getLocalVideosCountTextR() {
+    final current = localVideoExtractCurrent.valueR;
+    final total = localVideoExtractTotal.valueR;
+    if (total != 0) return '${current ?? total}/$total';
+    if (current != null) return '?';
+    return localVideosTotalCount.formatDecimal();
+  }
+
   final localVideoExtractCurrent = Rxn<int>();
   final localVideoExtractTotal = 0.obs;
 
@@ -613,14 +622,17 @@ class VideoController {
   }
 
   Future<void> toggleVideoPlayback() async {
-    final currentValue = settings.enableVideoPlayback.value;
-    settings.enableVideoPlayback.save(!currentValue);
+    final isEnabled = !settings.enableVideoPlayback.value;
+    settings.enableVideoPlayback.save(isEnabled);
+    await onVideoPlaybackToggled(isEnabled);
+  }
 
+  Future<void> onVideoPlaybackToggled(bool isEnabled) async {
     // only modify if not playing yt/local video, since [enableVideoPlayback] is
     // limited to local music.
     if (Player.inst.currentItem.value is! Selectable) return;
 
-    if (currentValue) {
+    if (!isEnabled) {
       // should close/hide
       currentVideo.value = null;
       YoutubeController.inst.dispose();

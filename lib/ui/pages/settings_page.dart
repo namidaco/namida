@@ -289,7 +289,7 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
                         fullWidth: true,
                         icon: Broken.folder_add,
                         title: lang.addFolder,
-                        subtitle: indexer.getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
+                        subtitle: IndexerSettings.getAddFolderSubtitleKeys(includeAllInfo: false).join(', '),
                         onTap: indexer.promptAddFolderType,
                       ),
                     ),
