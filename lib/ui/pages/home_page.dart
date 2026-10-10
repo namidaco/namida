@@ -2789,7 +2789,7 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      track.originalArtist,
+                      track.displayArtist(),
                       style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

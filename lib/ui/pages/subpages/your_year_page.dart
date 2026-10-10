@@ -873,7 +873,7 @@ class _TrackStoryAdapter extends _StoryAdapter<Track> {
   @override
   String title(Track item) {
     final ext = item.toTrackExt();
-    return '${ext.originalArtist} - ${ext.title}';
+    return '${ext.displayArtist()} - ${ext.title}';
   }
 
   @override

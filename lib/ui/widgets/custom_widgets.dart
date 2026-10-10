@@ -9291,7 +9291,7 @@ class _PlayableTitleSubtitleWidgetState extends State<PlayableTitleSubtitleWidge
   void _onLocalChange(Selectable item) async {
     final track = item.track;
     _videoName = track.title;
-    _channelName = track.originalArtist;
+    _channelName = track.displayArtist();
 
     refreshState();
   }

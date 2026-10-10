@@ -183,7 +183,7 @@ class StatsTopTrackTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  trExt.originalArtist,
+                  trExt.displayArtist(),
                   style: textTheme.displaySmall?.copyWith(fontSize: 11.5),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

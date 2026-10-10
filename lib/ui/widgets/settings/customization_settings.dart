@@ -65,6 +65,7 @@ enum _CustomizationSettingsKeys with SettingKeysBase {
   displayThirdItemInRow,
   displayFavButtonInTrackTile,
   itemsSeparator,
+  artistsDisplaySeparator,
   // -----------
   MINIPLAYERCUSTOMIZATION,
   partyMode,
@@ -136,6 +137,7 @@ class CustomizationSettings extends SettingSubpageProvider {
     _CustomizationSettingsKeys.displayThirdItemInRow: [lang.displayThirdItemInRowInTrackTile],
     _CustomizationSettingsKeys.displayFavButtonInTrackTile: [lang.displayFavouriteIconInTrackTile],
     _CustomizationSettingsKeys.itemsSeparator: [lang.trackTileItemsSeparator],
+    _CustomizationSettingsKeys.artistsDisplaySeparator: [lang.trackArtistsDisplaySeparator],
     // -----------
     _CustomizationSettingsKeys.MINIPLAYERCUSTOMIZATION: [lang.miniplayerCustomization],
     _CustomizationSettingsKeys.partyMode: [lang.enablePartyMode, lang.enablePartyModeSubtitle],
@@ -827,6 +829,25 @@ class CustomizationSettings extends SettingSubpageProvider {
                   icon: Broken.minus_square,
                 ),
               ),
+            ),
+          ),
+          getItemWrapper(
+            key: _CustomizationSettingsKeys.artistsDisplaySeparator,
+            child: Obx(
+              (context) {
+                final separator = settings.trackArtistsDisplaySeparator.valueR;
+                return CustomListTile(
+                  bgColor: getBgColor(_CustomizationSettingsKeys.artistsDisplaySeparator),
+                  icon: Broken.profile_2user,
+                  title: lang.trackArtistsDisplaySeparator,
+                  trailingText: separator.isEmpty ? null : 'A${separator}B',
+                  onTap: () => showSettingDialogWithTextField(
+                    title: lang.trackArtistsDisplaySeparator,
+                    trackArtistsDisplaySeparator: true,
+                    icon: Broken.profile_2user,
+                  ),
+                );
+              },
             ),
           ),
           Obx(

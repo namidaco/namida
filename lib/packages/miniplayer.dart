@@ -215,7 +215,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     final track = (playable as Selectable).track;
     final trExt = track.toTrackExt();
     final title = trExt.title;
-    final artist = trExt.originalArtist;
+    final artist = trExt.displayArtist();
     if (settings.displayArtistBeforeTitle.value) {
       firstLine = artist.overflow;
       secondLine = title.overflow;

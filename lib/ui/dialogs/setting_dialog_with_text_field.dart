@@ -22,6 +22,7 @@ Future<void> showSettingDialogWithTextField({
   bool fontScaleFactor = false,
   bool dateTimeFormat = false,
   bool trackTileSeparator = false,
+  bool trackArtistsDisplaySeparator = false,
 }) async {
   final controller = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -29,14 +30,14 @@ Future<void> showSettingDialogWithTextField({
   if (dateTimeFormat) {
     controller.text = settings.dateTimeFormat.value;
   }
-  void showResetToDefaultSnackBar(
-    String message, {
-    String? title,
-    Duration? duration,
-  }) {
+  if (trackArtistsDisplaySeparator) {
+    controller.text = settings.trackArtistsDisplaySeparator.value;
+  }
+  void showResetToDefaultSnackBar(String value) {
+    final valueText = value.isEmpty ? lang.emptyValue : value;
     snackyy(
-      title: title ?? '',
-      message: "${lang.resetToDefault}: $message",
+      title: title,
+      message: "${lang.resetToDefault}: $valueText",
       animationDurationMS: 400,
       icon: icon,
     );
@@ -59,41 +60,46 @@ Future<void> showSettingDialogWithTextField({
             onPressed: () {
               if (trackThumbnailSizeinList) {
                 settings.trackThumbnailSizeinList.reset();
-                showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}", title: title);
+                showResetToDefaultSnackBar("${settings.trackThumbnailSizeinList.value}");
                 onTTSetChange();
               }
               if (trackListTileHeight) {
                 settings.trackListTileHeight.reset();
-                showResetToDefaultSnackBar("${settings.trackListTileHeight.value}", title: title);
+                showResetToDefaultSnackBar("${settings.trackListTileHeight.value}");
                 Dimensions.inst.updateTrackTileDimensions();
                 onTTSetChange();
               }
               if (albumThumbnailSizeinList) {
                 settings.albumThumbnailSizeinList.reset();
-                showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}", title: title);
+                showResetToDefaultSnackBar("${settings.albumThumbnailSizeinList.value}");
               }
               if (albumListTileHeight) {
                 settings.albumListTileHeight.reset();
-                showResetToDefaultSnackBar("${settings.albumListTileHeight.value}", title: title);
+                showResetToDefaultSnackBar("${settings.albumListTileHeight.value}");
                 Dimensions.inst.updateAlbumTileDimensions();
               }
               if (borderRadiusMultiplier) {
                 settings.borderRadiusMultiplier.reset();
-                showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}", title: title);
+                showResetToDefaultSnackBar("${settings.borderRadiusMultiplier.value}");
               }
               if (fontScaleFactor) {
                 settings.fontScaleFactor.reset();
-                showResetToDefaultSnackBar("${settings.fontScaleFactor.value.toInt() * 100}%", title: title);
+                showResetToDefaultSnackBar("${(settings.fontScaleFactor.value * 100).toInt()}%");
               }
               if (dateTimeFormat) {
                 settings.dateTimeFormat.reset();
-                showResetToDefaultSnackBar("${settings.dateTimeFormat}", title: title);
+                showResetToDefaultSnackBar(settings.dateTimeFormat.value);
                 onTIPropChange();
               }
               if (trackTileSeparator) {
                 settings.trackTileSeparator.reset();
-                showResetToDefaultSnackBar("${settings.trackTileSeparator}", title: title);
+                showResetToDefaultSnackBar(settings.trackTileSeparator.value);
                 onTTSetChange();
+                onTIPropChange();
+              }
+              if (trackArtistsDisplaySeparator) {
+                settings.trackArtistsDisplaySeparator.reset();
+                showResetToDefaultSnackBar(settings.trackArtistsDisplaySeparator.value);
                 onTIPropChange();
               }
 
@@ -139,6 +145,10 @@ Future<void> showSettingDialogWithTextField({
                   onTTSetChange();
                   onTIPropChange();
                 }
+                if (trackArtistsDisplaySeparator) {
+                  settings.trackArtistsDisplaySeparator.save(controller.text);
+                  onTIPropChange();
+                }
 
                 NamidaNavigator.inst.closeDialog();
                 Player.inst.refreshRxVariables();
@@ -153,7 +163,7 @@ Future<void> showSettingDialogWithTextField({
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: CustomTagTextField(
-                keyboardType: dateTimeFormat || trackTileSeparator ? TextInputType.text : TextInputType.number,
+                keyboardType: dateTimeFormat || trackTileSeparator || trackArtistsDisplaySeparator ? TextInputType.text : TextInputType.number,
                 controller: controller,
                 hintText: lang.value,
                 labelText: '',

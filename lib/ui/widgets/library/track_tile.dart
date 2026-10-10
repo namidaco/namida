@@ -906,7 +906,7 @@ class TrackTileManager {
 
   static final _lookup = <TrackTileItem, String Function(TrackExtended track, Track rawTrack)>{
     TrackTileItem.title: (track, _) => track.title,
-    TrackTileItem.artists: (track, _) => track.originalArtist,
+    TrackTileItem.artists: (track, _) => track.displayArtist(),
     TrackTileItem.album: (track, _) => track.originalAlbum,
     TrackTileItem.albumArtist: (track, _) => track.albumArtist,
     TrackTileItem.genres: (track, _) => track.originalGenre,

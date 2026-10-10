@@ -345,6 +345,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final displayThirdRow = _key('displayThirdRow', true);
   late final displayThirdItemInEachRow = _key('displayThirdItemInEachRow', false);
   late final trackTileSeparator = _key('trackTileSeparator', '•');
+  late final trackArtistsDisplaySeparator = _key('trackArtistsDisplaySeparator', '');
   late final displayFavouriteIconInListTile = _key('displayFavouriteIconInListTile', true);
   late final gradientTiles = _key('gradientTiles', true);
   late final preferredSearchType = _keyEnum('preferredSearchType', SearchType.auto, SearchType.values);

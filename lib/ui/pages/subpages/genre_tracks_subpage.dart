@@ -87,7 +87,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
                   onOpenMenu: () => NamidaDialogs.inst.showGenreDialog(name, widget.type),
                   title: name,
                   source: queueSource,
-                  subtitle: tracks.map((e) => e.originalArtist).takeUnique(10).join(', '),
+                  subtitle: tracks.map((e) => e.displayArtist()).takeUnique(10).join(', '),
                   heroTag: heroTag,
                   imageBuilder: (size) => MultiArtworkContainer(
                     size: size,

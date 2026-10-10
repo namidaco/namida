@@ -384,6 +384,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     displayThirdRow,
     displayThirdItemInEachRow,
     trackTileSeparator,
+    trackArtistsDisplaySeparator,
     displayFavouriteIconInListTile,
     gradientTiles,
     preferredSearchType,

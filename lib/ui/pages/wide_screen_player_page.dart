@@ -268,7 +268,7 @@ class _TrackInfoText extends StatelessWidget {
     return _build(
       context,
       item.execute(selectable: (finalItem) => finalItem.track.title, youtubeID: (_) => '') ?? '',
-      item.execute(selectable: (finalItem) => finalItem.track.originalArtist, youtubeID: (_) => '') ?? '',
+      item.execute(selectable: (finalItem) => finalItem.track.displayArtist(), youtubeID: (_) => '') ?? '',
     );
   }
 

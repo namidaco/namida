@@ -43,7 +43,7 @@ class NamidaDialogs {
     final trExt = track.toTrackExt();
     await showGeneralPopupDialog(
       [track],
-      trExt.originalArtist,
+      trExt.displayArtist(),
       trExt.title,
       source,
       thirdLineText: trExt.originalAlbum,
