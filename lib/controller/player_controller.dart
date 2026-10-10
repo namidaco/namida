@@ -203,6 +203,8 @@ class Player {
 
   RxMap<String, int>? get totalListenedTimeInSec => _audioHandler.totalListenedTimeInSec;
 
+  Future<void> importTotalListenTimeFile(File file) => _audioHandler.importTotalListenTimeFile(file);
+
   int sleepingItemIndex(int sleepAfterItems, int currentIndex) => sleepAfterItems + currentIndex - 1;
 
   int? sleepAfterItemsForIndex(int index) {

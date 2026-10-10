@@ -476,6 +476,9 @@ enum AppPathsBackupEnum {
   bool? supportsSync() {
     return switch (this) {
       // -- supported
+      AppPathsBackupEnum.SETTINGS ||
+      AppPathsBackupEnum.SETTINGS_PLAYER ||
+      AppPathsBackupEnum.SETTINGS_YOUTUBE ||
       AppPathsBackupEnum.TRACKS_DB_INFO ||
       AppPathsBackupEnum.TRACKS_STATS_DB_INFO ||
       AppPathsBackupEnum.LATEST_PLAYED_FOR_SOURCE ||
@@ -507,10 +510,7 @@ enum AppPathsBackupEnum {
       AppPathsBackupEnum.VIDEOS_CACHE_DB_INFO => true,
 
       // -- coming soon
-      AppPathsBackupEnum.SETTINGS ||
       AppPathsBackupEnum.SETTINGS_EQUALIZER ||
-      AppPathsBackupEnum.SETTINGS_PLAYER ||
-      AppPathsBackupEnum.SETTINGS_YOUTUBE ||
       AppPathsBackupEnum.SETTINGS_EXTRA ||
       AppPathsBackupEnum.SETTINGS_TUTORIAL ||
       AppPathsBackupEnum.SETTINGS_SHORTCUTS ||

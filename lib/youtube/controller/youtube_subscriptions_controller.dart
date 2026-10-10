@@ -60,9 +60,11 @@ class YoutubeSubscriptionsController {
   Future<void> _loadSubscriptionsFileAsync() async {
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
     if (!await file.exists()) return;
-    final res = await _parseSubscriptionsFile.thready(file);
+    final res = await readSubscriptionsFile(file);
     _availableChannels.value = res;
   }
+
+  Future<Map<String, YoutubeSubscription>> readSubscriptionsFile(File file) => _parseSubscriptionsFile.thready(file);
 
   static Map<String, YoutubeSubscription> _parseSubscriptionsFile(File file) {
     final res = file.readAsJsonSync() as Map?;

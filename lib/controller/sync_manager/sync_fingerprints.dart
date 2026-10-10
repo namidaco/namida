@@ -71,6 +71,7 @@ abstract final class SyncPathResolver {
 
   static List<List<Object>>? _localEntriesCache;
   static Future<List<List<Object>>>? _localEntriesBuild;
+  static int _localEntriesCacheSourceId = 0;
   static int _localEntriesCacheCount = -1;
 
   /// `{senderDeviceId: {senderPath: localTrack}}`, only differing paths are kept.
@@ -79,7 +80,7 @@ abstract final class SyncPathResolver {
   static Future<_LocalFingerprintIndex> _ensureLocalIndex() {
     final source = Indexer.inst.allTracksMappedByPath;
     final current = _localIndex;
-    if (current != null && current.builtForCount == source.length) return Future.value(current);
+    if (current != null && current.isBuiltFor(source)) return Future.value(current);
 
     return _localIndexBuild ??= Isolate.run(() => _buildLocalIndexSync(source)).then(
       (index) {
@@ -102,24 +103,59 @@ abstract final class SyncPathResolver {
       full[SyncTrackFingerprint.fullOf(trExt)] ??= track;
       core[SyncTrackFingerprint.coreOf(trExt)] ??= track;
     }
-    return _LocalFingerprintIndex(full: full, core: core, builtForCount: source.length);
+    return _LocalFingerprintIndex(full: full, core: core, builtForSourceId: identityHashCode(source), builtForCount: source.length);
   }
 
   /// entries of the local library to be sent to other devices, each as `[path, fullHash, coreHash]`.
   static Future<List<List<Object>>> buildLocalEntries() {
     final source = Indexer.inst.allTracksMappedByPath;
     final cached = _localEntriesCache;
-    if (cached != null && _localEntriesCacheCount == source.length) return Future.value(cached);
-
+    final sourceId = identityHashCode(source);
     final sourceCount = source.length;
+    if (cached != null && _localEntriesCacheSourceId == sourceId && _localEntriesCacheCount == sourceCount) return Future.value(cached);
+
     return _localEntriesBuild ??= Isolate.run(() => _buildLocalEntriesSync(source)).then(
       (entries) {
         _localEntriesCache = entries;
+        _localEntriesCacheSourceId = sourceId;
         _localEntriesCacheCount = sourceCount;
         _localEntriesBuild = null;
         return entries;
       },
     );
+  }
+
+  /// entries of another tracks db (ex: an extracted backup) like [buildLocalEntries], [oldJsonFilePath] is its pre-db json if any.
+  static Future<List<List<Object>>> buildEntriesFromDb(DbWrapperFileInfo dbInfo, String oldJsonFilePath) {
+    final splitConfig = SplitArtistGenreConfigsWrapper.settings();
+    return _buildEntriesFromDbSync.thready((dbInfo: dbInfo, oldJsonFilePath: oldJsonFilePath, splitConfig: splitConfig));
+  }
+
+  static List<List<Object>> _buildEntriesFromDbSync(({DbWrapperFileInfo dbInfo, String oldJsonFilePath, SplitArtistGenreConfigsWrapper splitConfig}) params) {
+    final splitConfig = params.splitConfig;
+    final source = <String, TrackExtended>{};
+    if (params.dbInfo.file.existsSync()) {
+      final db = DBWrapper.openFromInfoSync(fileInfo: params.dbInfo, config: const DBConfig(autoDisposeTimerDuration: null));
+      db.loadEverythingKeyed(
+        (path, item) {
+          try {
+            source[path] = TrackExtended.fromJson(path, item, splitConfig: splitConfig);
+          } catch (_) {}
+        },
+      );
+      db.close();
+    }
+    final oldJsonFile = File(params.oldJsonFilePath);
+    if (oldJsonFile.existsSync()) {
+      final list = oldJsonFile.readAsJsonSync() as List?;
+      for (final item in list ?? const []) {
+        try {
+          final path = item['path'] as String;
+          source[path] ??= TrackExtended.fromJson(path, item, splitConfig: splitConfig);
+        } catch (_) {}
+      }
+    }
+    return _buildLocalEntriesSync(source);
   }
 
   static List<List<Object>> _buildLocalEntriesSync(Map<String, TrackExtended> source) {
@@ -163,6 +199,9 @@ abstract final class SyncPathResolver {
   }
 
   static bool hasFingerprintsFor(String senderDeviceId) => _deviceMaps.containsKey(senderDeviceId);
+
+  /// `{senderPath: localTrack}` of [senderDeviceId], only paths that differ here.
+  static Map<String, Track> resolvedTracksFor(String senderDeviceId) => _deviceMaps[senderDeviceId] ?? const {};
 
   static final _pendingMessagesByDevice = <String, List<BaseMessage>>{};
 
@@ -214,11 +253,16 @@ abstract final class SyncPathResolver {
 class _LocalFingerprintIndex {
   final Map<int, Track> full;
   final Map<int, Track> core;
+  final int builtForSourceId;
   final int builtForCount;
 
   const _LocalFingerprintIndex({
     required this.full,
     required this.core,
+    required this.builtForSourceId,
     required this.builtForCount,
   });
+
+  /// the library map gets replaced on a reload, a same sized one can still hold other tracks.
+  bool isBuiltFor(Map<String, TrackExtended> source) => builtForSourceId == identityHashCode(source) && builtForCount == source.length;
 }

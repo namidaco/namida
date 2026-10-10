@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart' show listEquals, visibleForTesting;
 
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
@@ -377,6 +377,37 @@ class QueueController {
     return map;
   }
 
+  /// adds the queues of [directoryPath] (ex: an extracted backup), replacing ours of the same date.
+  /// [resolvedTracks] maps paths of the source device to tracks on this one.
+  Future<void> importQueuesDirectory(String directoryPath, Map<String, Track> resolvedTracks) async {
+    await _importQueuesDirectorySync.thready((sourceDirPath: directoryPath, targetDirPath: AppDirs.QUEUES, resolvedTracks: resolvedTracks));
+    await prepareAllQueuesFile();
+  }
+
+  static void _importQueuesDirectorySync(({String sourceDirPath, String targetDirPath, Map<String, Track> resolvedTracks}) params) {
+    final sourceDirPath = params.sourceDirPath;
+    final resolvedTracks = params.resolvedTracks;
+    for (final f in Directory(sourceDirPath).listSyncSafe()) {
+      if (f is! File) continue;
+      final date = int.tryParse(f.path.getFilenameWOExt);
+      if (date == null) continue;
+      final targetPath = '${params.targetDirPath}$date.json';
+      try {
+        if (resolvedTracks.isEmpty) {
+          f.renameSync(targetPath);
+          continue;
+        }
+        final q = _readQueueFile(sourceDirPath, date);
+        if (q == null) continue;
+        final tracks = q.tracks.map((tr) => resolvedTracks[tr.path] ?? tr).toFixedList();
+        final bytes = _QueueSerializer.encode(tracks, meta: q.metaToJson());
+        final tempFile = File('$targetPath$_kTempFileSuffix');
+        tempFile.writeAsBytesSync(bytes, flush: true);
+        tempFile.renameSync(targetPath);
+      } catch (_) {}
+    }
+  }
+
   static Queue? _readQueueFile(String dirPath, int date) {
     try {
       final bytes = File('$dirPath$date.json').readAsBytesSync();
@@ -413,9 +444,29 @@ class QueueController {
 
   /// Assigns the last queue to the [Player]
   Future<void> _prepareLatestQueueAsync() async {
-    var (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
+    final (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(AppPaths.LATEST_QUEUE);
     if (latestQueue.isEmpty) return;
+    final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeSelfSentMediaCommand();
+    _assignLatestQueue(latestQueue, originalIndices, startPlaying: startPlaying, updateQueue: false);
+  }
 
+  /// replaces the player queue with the one of [filePath] (ex: an extracted backup), paused.
+  Future<void> importLatestQueue(String filePath, String senderDeviceId) async {
+    final (latestQueue, originalIndices) = await _prepareLatestQueueSync.thready(filePath);
+    if (latestQueue.isEmpty) return;
+    Playable resolvePlayable(Playable item) {
+      if (item is! Track) return item;
+      return SyncPathResolver.resolveTrack(senderDeviceId, item) ?? item;
+    }
+
+    final resolvedQueue = latestQueue.map(resolvePlayable).toList();
+    // -- the player toggles play/pause when given the queue it already has
+    final isAlreadyPlayerQueue = listEquals(Player.inst.currentQueue.value, resolvedQueue);
+    if (isAlreadyPlayerQueue) return;
+    _assignLatestQueue(resolvedQueue, originalIndices, startPlaying: false, updateQueue: true);
+  }
+
+  void _assignLatestQueue(List<Playable> latestQueue, List<int>? originalIndices, {required bool startPlaying, required bool updateQueue}) {
     int index = settings.extra.lastPlayedIndex.value;
     if (index > latestQueue.length - 1) index = 0;
 
@@ -429,15 +480,13 @@ class QueueController {
       originalIndices = null;
     }
 
-    final startPlaying = Player.inst.playWhenReady.value && await NamidaChannel.inst.consumeSelfSentMediaCommand();
-
     Player.inst.playOrPause(
       index,
       latestQueue,
       QueueSource.playerQueue,
       originalIndices: originalIndices,
       startPlaying: startPlaying,
-      updateQueue: false,
+      updateQueue: updateQueue,
       maximumItems: null,
     );
   }
@@ -789,8 +838,9 @@ class _LatestPlayedForSourceManager {
     );
   }
 
-  Future<void> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId) async {
-    bool anyChanged = false;
+  /// [incomingWins] skips the newest wins check, ex: restoring a backup.
+  Future<void> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId, {bool incomingWins = false}) async {
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final entry in incomingEntries) {
       final incoming = entry.value;
       final incomingMt = incoming['_mt'] as int? ?? 0;
@@ -799,7 +849,7 @@ class _LatestPlayedForSourceManager {
       final QueueSourceBase? source = QueueSource.fromJson(sourceRaw) ?? QueueSourceYoutubeID.fromJson(sourceRaw);
       if (source == null) continue; // -- unknown source, dont force into `others`
 
-      if (_mapRx.value[source] != null && (_modifiedTimesMap[source] ?? 0) >= incomingMt) continue;
+      if (!incomingWins && _mapRx.value[source] != null && (_modifiedTimesMap[source] ?? 0) >= incomingMt) continue;
 
       final type = _QueueSerializer.typeFromJsonKey(incoming['t']);
       if (type == null) continue;
@@ -808,17 +858,17 @@ class _LatestPlayedForSourceManager {
 
       _mapRx.value[source] = item;
       _modifiedTimesMap[source] = incomingMt;
-      anyChanged = true;
-      await _dBManager.put(source.toDbKey(), {
+      final row = <String, dynamic>{
         'p': payload,
         't': resolvedType.jsonKey,
         '_mt': incomingMt,
-      });
+      };
+      dbEntries.add(MapEntry(source.toDbKey(), row));
     }
-    if (anyChanged) {
-      _mapRx.refresh();
-      _markAllSortsDirty();
-    }
+    if (dbEntries.isEmpty) return;
+    _mapRx.refresh();
+    _markAllSortsDirty();
+    await _dBManager.putAll(dbEntries, (e) => e);
   }
 
   // -- lists sorted by last played reorder on the next page change, never while being viewed.

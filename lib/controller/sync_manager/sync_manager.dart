@@ -8,10 +8,11 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Colors;
 
-import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfig;
+import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfigOverrides;
 import 'package:crypto/crypto.dart' show Hmac, sha256;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:mdns_dart/mdns_dart.dart';
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:queue/queue.dart' show Queue;
@@ -19,6 +20,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_cache_controller.dart';

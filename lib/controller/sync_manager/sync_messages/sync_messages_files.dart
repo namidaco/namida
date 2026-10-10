@@ -293,8 +293,12 @@ class DbFileMessage extends BaseMessage with BinaryPayloadMessage {
       return;
     }
 
-    final tempFile = File('${subtype.resolve()}.sync_incoming');
+    final dbPath = subtype.resolve();
+    final tempDir = Directory('$dbPath.sync_incoming');
+    // -- keeps our db filename, the table inside is named after it
+    final tempFile = FileParts.join(tempDir.path, dbPath.getFilename);
     try {
+      await tempFile.create(recursive: true);
       await tempFile.writeAsBytes(bytes);
       final changed = await switch (subtype) {
         AppPathsBackupEnum.VIDEO_ID_STATS_DB_INFO => YoutubeController.inst.statsManager.importFromSyncDb(tempFile),
@@ -305,9 +309,7 @@ class DbFileMessage extends BaseMessage with BinaryPayloadMessage {
     } catch (e, st) {
       logger.error('Error merging synced db file ${subtype.name}', e: e, st: st);
     } finally {
-      for (final suffix in const ['', '-wal', '-wal2', '-shm', '-journal']) {
-        await File('${tempFile.path}$suffix').tryDeleting();
-      }
+      await tempDir.delete(recursive: true).ignoreError();
     }
   }
 }
@@ -546,6 +548,14 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
   /// filesystems keep mtimes at different precisions (fat: 2s), a copy written with the sender's mtime can read back slightly off.
   static const _kMtimeToleranceMS = 2000;
 
+  /// queue files arrive one message each, they get read once the burst is over.
+  static Timer? _queuesReloadTimer;
+
+  static void _reloadQueuesSoon() {
+    _queuesReloadTimer?.cancel();
+    _queuesReloadTimer = Timer(const Duration(seconds: 1), QueueController.inst.prepareAllQueuesFile);
+  }
+
   /// the rule both sides use to tell whether the incoming copy replaces the existing one: newer wins,
   /// same sized copies with mtimes within [_kMtimeToleranceMS] are the same file.
   /// [isNamedByContent] (see [_DirFilesSyncUtils.isNamedByContent]) makes any same sized copy the same file.
@@ -623,18 +633,10 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
       await file.setLastModified(DateTime.fromMillisecondsSinceEpoch(mtime));
 
       if (subtype == AppPathsBackupEnum.AUDIOS_CACHE) AudioCacheController.inst.addFileToCacheMap(file);
+      if (subtype == AppPathsBackupEnum.QUEUES) _reloadQueuesSoon();
 
       final info = this.info;
-      if (info != null) {
-        switch (subtype) {
-          case AppPathsBackupEnum.VIDEOS_CACHE:
-            VideoController.inst.importSyncedCacheVideoInfo(fileName, info);
-          case AppPathsBackupEnum.QUEUES:
-            QueueController.inst.prepareAllQueuesFile();
-          default:
-            null;
-        }
-      }
+      if (info != null && subtype == AppPathsBackupEnum.VIDEOS_CACHE) VideoController.inst.importSyncedCacheVideoInfo(fileName, info);
     } catch (e, st) {
       logger.error('Error writing synced file ${subtype.name}/$fileName', e: e, st: st);
     }

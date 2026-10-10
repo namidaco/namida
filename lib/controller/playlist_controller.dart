@@ -1190,8 +1190,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     }
   }
 
-  late final _m3uPropertiesFile = FileParts.join(playlistsMetadataDirectory, 'm3u_metadata.json');
+  static const _kM3UPropertiesFilename = 'm3u_metadata.json';
+  late final _m3uPropertiesFile = FileParts.join(playlistsMetadataDirectory, _kM3UPropertiesFilename);
   late final _m3uProperties = _M3UPlaylistsProperties(_m3uPropertiesFile);
+
+  /// m3u playlists properties saved in [metadataDirectoryPath] (ex: an extracted backup), the playlists have no tracks.
+  Future<Map<String, LocalPlaylist>> readM3UProperties(String metadataDirectoryPath) async {
+    final propertiesFile = FileParts.join(metadataDirectoryPath, _kM3UPropertiesFilename);
+    final properties = _M3UPlaylistsProperties(propertiesFile);
+    await properties.load();
+    return {
+      for (final name in properties._entries.keys) name: ?properties.propertiesOf(name),
+    };
+  }
 
   @override
   Future<bool> writePlaylistToStorage(LocalPlaylist playlist) async {
@@ -1337,9 +1348,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   @override
-  Future<Map<String, LocalPlaylist>> prepareAllPlaylistsFunction() async {
-    return await _readPlaylistFilesCompute.thready(playlistsDirectory);
-  }
+  Future<Map<String, LocalPlaylist>> prepareAllPlaylistsFunction() => readPlaylistsDirectory(playlistsDirectory);
+
+  /// the json playlists inside [directoryPath], ex: an extracted backup.
+  Future<Map<String, LocalPlaylist>> readPlaylistsDirectory(String directoryPath) => _readPlaylistFilesCompute.thready(directoryPath);
 
   @override
   Future<void> prepareDefaultPlaylistsFileAsync() async {
@@ -1350,9 +1362,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   @override
-  Future<LocalPlaylist?> prepareFavouritePlaylistFunction() {
-    return _prepareFavouritesFile.thready(favouritePlaylistPath);
-  }
+  Future<LocalPlaylist?> prepareFavouritePlaylistFunction() => readFavouritesFile(favouritePlaylistPath);
+
+  Future<LocalPlaylist?> readFavouritesFile(String path) => _prepareFavouritesFile.thready(path);
 
   static LocalPlaylist? _prepareFavouritesFile(String path) {
     try {

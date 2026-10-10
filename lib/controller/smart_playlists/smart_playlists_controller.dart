@@ -195,14 +195,15 @@ class SmartPlaylistsController {
 
   Map<String, dynamic>? buildSyncOrder() => _orderModifiedDate > 0 ? _buildOrderRow() : null;
 
-  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order}) async {
+  /// [incomingWins] skips the newest wins check, ex: restoring a backup.
+  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order, bool incomingWins = false}) async {
     bool anyChanged = false;
     bool orderChanged = false;
     for (final incoming in incomingPlaylists) {
       final key = incoming.key;
       if (key == _orderRowKey) continue;
       final local = smartPlaylistsMap.value[key];
-      if (local != null && local.value.modifiedDate >= incoming.modifiedDate) continue;
+      if (!incomingWins && local != null && local.value.modifiedDate >= incoming.modifiedDate) continue;
       if (local != null) {
         local.value = incoming;
       } else {
@@ -214,7 +215,7 @@ class SmartPlaylistsController {
     }
     final incomingOrderKeys = order?['keys'] as List?;
     final incomingOrderModifiedDate = order?['_mt'] as int? ?? 0;
-    if (incomingOrderKeys != null && incomingOrderModifiedDate > _orderModifiedDate) {
+    if (incomingOrderKeys != null && (incomingWins || incomingOrderModifiedDate > _orderModifiedDate)) {
       _orderModifiedDate = incomingOrderModifiedDate;
       _applyOrder(incomingOrderKeys);
       anyChanged = true;
@@ -222,6 +223,18 @@ class SmartPlaylistsController {
     }
     if (anyChanged) _refresh();
     if (orderChanged) await _saveOrder();
+  }
+
+  /// rows of a backup's smart playlists db, they win over ours.
+  Future<void> importBackupDbRows(Map<String, Map<String, dynamic>> rows) {
+    final order = rows.remove(_orderRowKey);
+    final playlists = <SmartPlaylist>[];
+    for (final row in rows.values) {
+      try {
+        playlists.add(SmartPlaylist.fromMap(row));
+      } catch (_) {}
+    }
+    return import(playlists, order: order, incomingWins: true);
   }
 
   String? validatePlaylistName(String? value, {required SmartPlaylistKey? oldKey}) {

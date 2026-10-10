@@ -91,6 +91,29 @@ class ListenTimeController {
     return all;
   }
 
+  /// rows of another listen time db (ex: a backup) holding the same days, each key keeps the bigger count.
+  Future<void> importDbRows(Map<String, Map<String, dynamic>> rows) async {
+    final all = await loadAll();
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
+    for (final e in rows.entries) {
+      final day = int.tryParse(e.key);
+      if (day == null) continue;
+      final dayTotals = all[day] ??= {};
+      bool didChange = false;
+      for (final keyTotal in e.value.entries) {
+        final seconds = keyTotal.value;
+        if (seconds is! int) continue;
+        final key = keyTotal.key;
+        if (seconds <= (dayTotals[key] ?? 0)) continue;
+        dayTotals[key] = seconds;
+        didChange = true;
+      }
+      if (didChange) dbEntries.add(MapEntry(e.key, Map<String, dynamic>.of(dayTotals)));
+    }
+    if (dbEntries.isEmpty) return;
+    await _db.putAll(dbEntries, (e) => e);
+  }
+
   /// sums seconds of [keys] between [firstDay] and [lastDay] inclusive.
   int sumSeconds(Map<int, Map<String, int>> all, int firstDay, int lastDay, List<String> keys) {
     int total = 0;

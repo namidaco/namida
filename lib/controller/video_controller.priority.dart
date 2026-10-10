@@ -117,9 +117,10 @@ class VideosPriorityManager {
 
   static bool _syncShouldReplace(int incomingIndex, int? localIndex) => localIndex == null || incomingIndex < localIndex;
 
-  Future<int> importFromSyncDb(File incomingDbFile) async {
+  /// [incomingWins] skips the higher priority wins check, ex: restoring a backup.
+  Future<int> importFromSyncDb(File incomingDbFile, {bool incomingWins = false}) async {
     final localFileInfo = AppPaths.CACHE_VIDEOS_PRIORITY;
-    final changed = await Isolate.run(() => _importFromSyncDbIsolate(incomingDbFile, localFileInfo));
+    final changed = await Isolate.run(() => _importFromSyncDbIsolate(incomingDbFile, localFileInfo, incomingWins));
     _applyImportedPriorities(changed);
     return changed.length;
   }
@@ -132,7 +133,7 @@ class VideosPriorityManager {
   }
 
   /// returns map `{videoId: priorityIndex}` of the entries that were written.
-  static Map<String, int> _importFromSyncDbIsolate(File incomingDbFile, DbWrapperFileInfo localFileInfo) {
+  static Map<String, int> _importFromSyncDbIsolate(File incomingDbFile, DbWrapperFileInfo localFileInfo, bool incomingWins) {
     final changed = <String, int>{};
     final incomingDb = DBWrapper.openFromFileSync(incomingDbFile, config: _dbConfig);
     final localDb = DBWrapper.openFromInfoSync(fileInfo: localFileInfo, config: _dbConfig);
@@ -140,8 +141,10 @@ class VideosPriorityManager {
       incomingDb.loadEverythingKeyed((key, incomingMap) {
         final incomingIndex = _syncTokenOf(incomingMap);
         if (incomingIndex == null) return;
-        final local = localDb.get(key);
-        if (!_syncShouldReplace(incomingIndex, local == null ? null : _syncTokenOf(local))) return;
+        if (!incomingWins) {
+          final local = localDb.get(key);
+          if (!_syncShouldReplace(incomingIndex, local == null ? null : _syncTokenOf(local))) return;
+        }
         localDb.put(key, {_priorityKey: incomingIndex});
         changed[key] = incomingIndex;
       });

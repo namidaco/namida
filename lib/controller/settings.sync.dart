@@ -92,6 +92,20 @@ class _SyncSettings extends _SettingsKeysWriter {
     return json;
   }
 
+  /// devices known on either side stay known when a backup is applied.
+  late final _knownDevicesKeyNames = {deviceIdNames.name, manualServerAddresses.name, allowedServerIds.name, allowedDeviceIds.name, blockedClientIds.name};
+
+  /// this device's identity never comes from a backup.
+  @override
+  Object? _backupJsonFor(String name, Object? backupJson) {
+    final localJson = _raw[name];
+    if (_identityKeyNames.contains(name)) return localJson;
+    if (!_knownDevicesKeyNames.contains(name)) return backupJson;
+    if (localJson is Map && backupJson is Map) return <String, dynamic>{...localJson, ...backupJson};
+    if (localJson is List && backupJson is List) return [...localJson, ...backupJson.where((e) => !localJson.contains(e))];
+    return backupJson ?? localJson;
+  }
+
   /// puts this device's id and pair secrets into [json], the sync settings of a backup that may come from another device.
   void keepIdentityIn(Map<String, dynamic> json) {
     for (final name in _identityKeyNames) {

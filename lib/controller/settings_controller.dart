@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:io';
 import 'dart:math' show Random;
 
 import 'package:flutter/foundation.dart';
@@ -65,6 +66,16 @@ class _SettingsController extends _SettingsKeysWriter {
 
   /// the main file stored the window bounds before `extra` existed, applied once both files loaded.
   Rect? _legacyWindowBounds;
+
+  /// applies each settings file of an extracted backup, see [_SettingsKeysWriter.applyBackupJson].
+  Future<void> applyBackupFiles(String Function(String filePath) backupPathOf) async {
+    final writers = <_SettingsKeysWriter>[this, equalizer, player, youtube, extra, sync, party, tutorial, if (isDesktop) shortcuts];
+    for (final writer in writers) {
+      final backupFile = File(backupPathOf(writer.filePath));
+      final json = await backupFile.readAsJson();
+      if (json is Map<String, dynamic>) writer.applyBackupJson(json);
+    }
+  }
 
   SettingsFileWriter syncWriterOf(SyncDataItem item) => switch (item) {
     SyncDataItem.settingsGeneral => this,

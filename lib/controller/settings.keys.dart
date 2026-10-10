@@ -225,6 +225,70 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
     if (didChange) writeToStorage();
   }
 
+  /// [json] is this file from a backup, a key it sets or reset wins. a key the backup never touched keeps ours.
+  void applyBackupJson(Map<String, dynamic> json) {
+    final (incoming, dumpedNames) = _migrateDetached(json);
+    _createAllKeys();
+    final Map? incomingModified = incoming['_m'];
+    final nowMS = DateTime.now().millisecondsSinceEpoch;
+    bool didChange = false;
+    for (final key in _keys.values) {
+      final name = key.name;
+      final wasModifiedInBackup = incomingModified != null && incomingModified.containsKey(name);
+      final hasValue = incoming.containsKey(name);
+      if (!hasValue && !wasModifiedInBackup) continue;
+      final dumpedJson = incoming[name];
+      final isDumpedDefault = dumpedNames != null && dumpedNames.contains(name) && _jsonEquals(dumpedJson, key._encodedFallback);
+      if (isDumpedDefault) continue;
+      final backupJson = _backupJsonFor(name, dumpedJson);
+      if (_jsonEquals(backupJson, _raw[name])) continue;
+      if (backupJson == null) {
+        _raw.remove(name);
+      } else {
+        _raw[name] = backupJson;
+      }
+      if (syncable && key.sync) {
+        final Map modified = _raw['_m'] ??= <String, dynamic>{};
+        modified[name] = nowMS;
+      }
+      key._loadFromPeer(backupJson);
+      didChange = true;
+    }
+    if (didChange) writeToStorage();
+  }
+
+  /// what the key named [name] gets when a backup sets [backupJson].
+  Object? _backupJsonFor(String name, Object? backupJson) => backupJson;
+
+  bool _isMigratingDetached = false;
+
+  /// runs the format migrations over [json], this file from elsewhere, leaving this writer's own state as it was.
+  /// also returns the names still holding values of the old full-dump format, defaults included.
+  (Map<String, dynamic>, Set<String>?) _migrateDetached(Map<String, dynamic> json) {
+    final ownRaw = _raw;
+    final ownLegacy = _legacy;
+    final isLegacyFormat = json['_v'] == null;
+    _raw = json;
+    _legacy = isLegacyFormat ? json.keys.toList() : json['_legacy'] as List?;
+    _isMigratingDetached = true;
+    try {
+      if (isLegacyFormat) _migrateLegacy();
+      _migrateKeys();
+      final dumpedNames = _legacy?.cast<String>().toSet();
+      return (_raw, dumpedNames);
+    } finally {
+      _raw = ownRaw;
+      _legacy = ownLegacy;
+      _isMigratingDetached = false;
+    }
+  }
+
+  @override
+  Future<void> writeToStorage() async {
+    if (_isMigratingDetached) return;
+    return super.writeToStorage();
+  }
+
   bool _takeLegacy(String name) {
     final legacy = _legacy;
     if (legacy == null) return false;

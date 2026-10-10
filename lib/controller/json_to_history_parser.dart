@@ -1687,7 +1687,29 @@ class JsonToHistoryParser {
   static void debugUpdateYoutubeStatsDirectory(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort progressPort}) params) =>
       _updateYoutubeStatsDirectoryIsolate(params);
 
-  static void _updateYoutubeStatsDirectoryIsolate(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort progressPort}) params) {
+  /// merges the stats buckets of [sourceDirPath] (ex: an extracted backup) into [AppDirs.YT_STATS], watches are combined.
+  static Future<void> mergeYoutubeStatsDirectory(String sourceDirPath) {
+    return _mergeYoutubeStatsDirectoryIsolate.thready((sourceDirPath: sourceDirPath, dirPath: AppDirs.YT_STATS));
+  }
+
+  static void _mergeYoutubeStatsDirectoryIsolate(({String sourceDirPath, String dirPath}) params) {
+    final affectedIds = <String, YoutubeVideoHistory>{};
+    for (final f in Directory(params.sourceDirPath).listSyncSafe()) {
+      if (f is! File || !f.path.endsWith('.json')) continue;
+      try {
+        final list = f.readAsJsonSync() as List?;
+        if (list == null) continue;
+        for (final videoJson in list) {
+          final video = YoutubeVideoHistory.fromJson(videoJson);
+          affectedIds[video.id] = video;
+        }
+      } catch (_) {}
+    }
+    if (affectedIds.isEmpty) return;
+    _updateYoutubeStatsDirectoryIsolate((affectedIds: affectedIds, dirPath: params.dirPath, progressPort: null));
+  }
+
+  static void _updateYoutubeStatsDirectoryIsolate(({Map<String, YoutubeVideoHistory> affectedIds, String dirPath, SendPort? progressPort}) params) {
     final affectedIds = params.affectedIds;
     final progressPort = params.progressPort;
     final dirPath = params.dirPath;
@@ -1718,7 +1740,7 @@ class JsonToHistoryParser {
       final res = file.readAsJsonSync(onError: () => didFailReading = true);
       if (didFailReading) {
         // -- rewriting it would keep only the affected videos
-        progressPort.send(videos.length);
+        progressPort?.send(videos.length);
         continue;
       }
       final videosInStorage = (res as List?)?.map((e) => YoutubeVideoHistory.fromJson(e)) ?? [];
@@ -1752,7 +1774,7 @@ class JsonToHistoryParser {
         file.writeAsJsonSync(bucketVideos);
         tempFile.deleteIfExistsSync();
       }
-      progressPort.send(updatedIds.length);
+      progressPort?.send(updatedIds.length);
     }
   }
 

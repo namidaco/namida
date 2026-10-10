@@ -1569,8 +1569,9 @@ class Indexer<T extends Track> {
     unawaited(_trackStatsDBManager.put(track.path, newStats.toJsonWithoutTrack()));
   }
 
-  Future<void> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId) async {
-    bool anyChanged = false;
+  /// [incomingWins] skips the newest wins check, ex: restoring a backup.
+  Future<void> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId, {bool incomingWins = false}) async {
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final incoming in incomingStats) {
       final resolvedTrack = SyncPathResolver.resolveTrackByPath(senderDeviceId, incoming.track.path);
       final effective = resolvedTrack == null
@@ -1587,15 +1588,21 @@ class Indexer<T extends Track> {
             );
       final track = effective.track;
       final local = trackStatsMap.value[track];
-      if (local != null && local.modifiedDate >= effective.modifiedDate) continue;
+      if (!incomingWins && local != null && local.modifiedDate >= effective.modifiedDate) continue;
       final json = effective.toJsonWithoutTrack();
       if (json == null) continue;
       trackStatsMap.value[track] = effective;
-      anyChanged = true;
       if (track is Video) json['v'] = true;
-      await _trackStatsDBManager.put(track.path, json);
+      dbEntries.add(MapEntry(track.path, json));
     }
-    if (anyChanged) trackStatsMap.refresh();
+    if (dbEntries.isEmpty) return;
+    trackStatsMap.refresh();
+    await _trackStatsDBManager.putAll(dbEntries, (e) => e);
+  }
+
+  /// stats of another stats db (ex: an extracted backup), [oldJsonFilePath] is its pre-db json if any.
+  static Future<Map<Track, TrackStats>> readTrackStatsDb(DbWrapperFileInfo dbInfo, String oldJsonFilePath) {
+    return _IndexerIsolateExecuter._readTrackStatsDataSync.thready((dbInfo: dbInfo, oldJsonFilePath: oldJsonFilePath));
   }
 
   Future<void> moveStatsPath(Map<Track, Track> oldNewTrack) async {

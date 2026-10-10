@@ -3,29 +3,41 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart' show visibleForTesting;
 
+import 'package:basic_audio_handler/basic_audio_handler.dart' show PlayerConfigOverrides;
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:playlist_manager/playlist_manager.dart';
+import 'package:youtipie/class/map_serializable.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/json_to_history_parser.dart';
+import 'package:namida/controller/listen_time_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
+import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
+import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
+
+part 'backup_controller.merge.dart';
 
 class BackupController {
   static BackupController get inst => _instance;
@@ -376,11 +388,19 @@ class BackupController {
 
       isRestoringBackup.value = true;
 
-      await extractBackup(backupzip);
-
-      Indexer.inst.calculateAllImageSizesInStorage();
-      // Indexer.inst.updateColorPalettesSizeInStorage();
-      await _readNewFiles();
+      if (_kRestoreByOverwriting) {
+        await extractBackup(backupzip);
+        Indexer.inst.calculateAllImageSizesInStorage();
+        // Indexer.inst.updateColorPalettesSizeInStorage();
+        await _reloadAllFromStorage();
+      } else {
+        final failedItems = await mergeBackup(backupzip);
+        if (failedItems.isNotEmpty) {
+          final failedNames = failedItems.map((e) => e.name).join(', ');
+          snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: failedNames, isError: true);
+          return;
+        }
+      }
       snackyy(title: lang.restoredBackupSuccessfully, message: lang.restoredBackupSuccessfullySub);
     } catch (e) {
       snackyy(title: "${lang.error}: ${lang.restoreBackup}", message: e.toString());
@@ -406,6 +426,28 @@ class BackupController {
     });
   }
 
+  /// replaces the live files with the backup's, superseded by [mergeBackup] which doesn't drops local data.
+  static const _kRestoreByOverwriting = false;
+
+  static const _kRestoreStagingDirName = 'TEMP_RESTORE';
+
+  /// extracts [backupzip] next to the live data and merges it in, see [_BackupMerger]. returns the items that failed.
+  @visibleForTesting
+  Future<List<AppPathsBackupEnum>> mergeBackup(File backupzip) async {
+    final stagingDirPath = FileParts.joinPath(AppDirs.USER_DATA, _kRestoreStagingDirName);
+    final stagingDir = Directory(stagingDirPath);
+    await stagingDir.delete(recursive: true).ignoreError(); // -- leftover of an interrupted restore
+    await stagingDir.create(recursive: true);
+    try {
+      await _zipManager.extractZip(zipFile: backupzip, destinationDir: stagingDir);
+      final merger = _BackupMerger('$stagingDirPath${Platform.pathSeparator}');
+      await _extractInnerZips(merger.pathOf);
+      return await merger.merge();
+    } finally {
+      await stagingDir.delete(recursive: true).ignoreError();
+    }
+  }
+
   Future<void> _keepSyncIdentity() async {
     final syncSettingsFile = File(settings.sync.filePath);
     final restored = await syncSettingsFile.readAsJson();
@@ -416,30 +458,36 @@ class BackupController {
 
   /// extracts the zips that the main backup zip placed in [AppDirs.USER_DATA].
   @visibleForTesting
-  Future<void> extractBackupInnerZips() async {
+  Future<void> extractBackupInnerZips() => _extractInnerZips((livePath) => livePath);
+
+  /// [pathOf] maps a live path to where the backup was extracted, its user data dir holds the main zip's entries.
+  Future<void> _extractInnerZips(String Function(String livePath) pathOf) async {
+    final userDataPath = pathOf(AppDirs.USER_DATA);
+    final youtubeDirPath = pathOf(AppDirs.YOUTUBE_MAIN_DIRECTORY);
+
     // -- leftovers of older restores would be moved over this backup's youtube files
     for (final path in _flatYoutubeFilesPaths) {
-      final flatFile = FileParts.join(AppDirs.USER_DATA, path.getFilename);
+      final flatFile = FileParts.join(userDataPath, path.getFilename);
       try {
         await flatFile.delete();
       } catch (_) {}
     }
 
-    await for (final backupItem in Directory(AppDirs.USER_DATA).list()) {
+    await for (final backupItem in Directory(userDataPath).list()) {
       if (backupItem is! File) continue;
 
       final filename = backupItem.path.getFilename;
       final Directory destinationDir;
       if (filename == 'LOCAL_FILES.zip') {
-        destinationDir = Directory(AppDirs.USER_DATA);
+        destinationDir = Directory(userDataPath);
       } else if (filename == 'YOUTUBE_FILES.zip') {
-        destinationDir = Directory(AppDirs.USER_DATA); // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
+        destinationDir = Directory(userDataPath); // since the zipped file has the directory 'AppDirs.YOUTUBE_MAIN_DIRECTORY/'
       } else if (filename.startsWith('YOUTUBE_TEMPDIR_')) {
         final dirName = filename.replaceFirst('YOUTUBE_TEMPDIR_', '').replaceFirst('.zip', '');
-        destinationDir = Directory(FileParts.joinPath(AppDirs.YOUTUBE_MAIN_DIRECTORY, dirName));
+        destinationDir = Directory(FileParts.joinPath(youtubeDirPath, dirName));
       } else if (filename.startsWith('TEMPDIR_')) {
         final dirName = filename.replaceFirst('TEMPDIR_', '').replaceFirst('.zip', '');
-        destinationDir = Directory(FileParts.joinPath(AppDirs.USER_DATA, dirName));
+        destinationDir = Directory(FileParts.joinPath(userDataPath, dirName));
       } else {
         continue;
       }
@@ -451,9 +499,10 @@ class BackupController {
     }
 
     for (final path in _flatYoutubeFilesPaths) {
-      final flatFile = FileParts.join(AppDirs.USER_DATA, path.getFilename);
+      final flatFile = FileParts.join(userDataPath, path.getFilename);
+      final targetPath = pathOf(path);
       try {
-        await flatFile.rename(path);
+        await flatFile.rename(targetPath);
       } catch (_) {} // -- not a flat youtube files zip
     }
   }
@@ -479,7 +528,7 @@ class BackupController {
     }
   }
 
-  Future<void> _readNewFiles() async {
+  Future<void> _reloadAllFromStorage() async {
     settings.prepareAllSettings();
 
     Indexer.inst.prepareTracksFile();

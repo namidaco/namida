@@ -2373,6 +2373,22 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     }
   }
 
+  /// keeps the bigger total of each key between ours and [file]'s (ex: a backup), then raises them to the daily sums.
+  Future<void> importTotalListenTimeFile(File file) async {
+    final incoming = await _readTotalListenTime(file);
+    if (incoming == null) return;
+    final totals = totalListenedTimeInSec.value;
+    for (final e in incoming.entries) {
+      final key = e.key;
+      final seconds = e.value;
+      if (seconds > (totals[key] ?? 0)) totals[key] = seconds;
+    }
+    await _healTotalListenTimeFromDaily(totals);
+    totalListenedTimeInSec.refresh();
+    _totalListenTimeWriteLock = _totalListenTimeWriteLock.then((_) => _writeTotalListenTime(totals)).ignoreError();
+    await _totalListenTimeWriteLock;
+  }
+
   Future<void> _writeTotalListenTime(Map<String, int> totalTimeInSeconds) async {
     if (!_canWriteTotalListenTime) return;
     final path = AppPaths.TOTAL_LISTEN_TIME;

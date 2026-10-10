@@ -285,9 +285,12 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   bool get addTracksAtBeginning => settings.playlistAddTracksAtBeginningYT.value;
 
   @override
-  Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() async {
+  Future<Map<String, YoutubePlaylist>> prepareAllPlaylistsFunction() => readPlaylistsDirectory(playlistsDirectory);
+
+  /// the playlists inside [directoryPath], ex: an extracted backup.
+  Future<Map<String, YoutubePlaylist>> readPlaylistsDirectory(String directoryPath) async {
     final params = _ReadPlaylistFilesParams(
-      path: playlistsDirectory,
+      path: directoryPath,
       sortBy: settings.ytPlaylistSort.value,
       reverse: settings.ytPlaylistSortReversed.value,
       customIndicesOrder: customIndicesOrderRx.value,
@@ -297,9 +300,9 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   }
 
   @override
-  Future<YoutubePlaylist?> prepareFavouritePlaylistFunction() {
-    return _prepareFavouritesFile.thready(favouritePlaylistPath);
-  }
+  Future<YoutubePlaylist?> prepareFavouritePlaylistFunction() => readFavouritesFile(favouritePlaylistPath);
+
+  Future<YoutubePlaylist?> readFavouritesFile(String path) => _prepareFavouritesFile.thready(path);
 
   static YoutubePlaylist? _prepareFavouritesFile(String path) {
     try {
