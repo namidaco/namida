@@ -4,7 +4,9 @@ import 'dart:io';
 
 import 'package:audio_service/audio_service.dart';
 
+import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/logs_controller.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -20,11 +22,14 @@ class NowPlayingBroadcaster {
     settings.scrobblerBroadcast.addListener(_rebuildSinks);
     settings.webhookUrl.addListener(_rebuildSinks);
     settings.webhookEvents.addListener(_rebuildSinks);
+    settings.reportPlaybackToServers.addListener(_rebuildSinks);
+    settings.directoriesToScan.addListener(_rebuildSinks);
     _rebuildSinks();
   }
 
   final _sinks = <_NowPlayingSink>[];
   MediaItem? _lastMedia;
+  final _serverReporter = ServerNowPlayingReporter();
 
   void _rebuildSinks() {
     _sinks.clear();
@@ -34,6 +39,16 @@ class NowPlayingBroadcaster {
     }
     final webhookUri = parseWebhookUrl(settings.webhookUrl.value);
     if (webhookUri != null) _sinks.add(_WebhookSink(webhookUri, settings.webhookEvents.value));
+    if (_shouldReportToServers()) {
+      _sinks.add(_ServerReportSink(_serverReporter));
+    } else {
+      _serverReporter.end();
+    }
+  }
+
+  bool _shouldReportToServers() {
+    if (!settings.reportPlaybackToServers.value) return false;
+    return settings.directoriesToScan.value.any((d) => d.type.check(DirectoryIndexTypeTag.reportsPlayback));
   }
 
   static Uri? parseWebhookUrl(String url) {
@@ -122,6 +137,25 @@ class _ScrobblerBroadcastSink extends _NowPlayingSink {
       'mbid': ?mbTrackId,
     };
     NamidaChannel.inst.sendBroadcast(_kAction, extras, packages: _kPackages);
+  }
+}
+
+class _ServerReportSink extends _NowPlayingSink {
+  final ServerNowPlayingReporter reporter;
+
+  const _ServerReportSink(this.reporter);
+
+  @override
+  void send(_NowPlayingEvent event) {
+    switch (event.type) {
+      case WebhookEvent.trackChanged:
+        final media = event.media;
+        final path = media.extras?[NowPlayingExtras.path] as String?;
+        final durationMS = media.duration?.inMilliseconds;
+        reporter.onItemChanged(path, isPlaying: event.isPlaying, positionMS: event.positionMS, durationMS: durationMS);
+      case WebhookEvent.play || WebhookEvent.pause:
+        reporter.onPlayingChanged(event.isPlaying, positionMS: event.positionMS);
+    }
   }
 }
 

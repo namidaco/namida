@@ -124,6 +124,36 @@ class _JellyfinServer extends MusicWebServer {
     return WebStreamUriDetails.fromUri(uri);
   }
 
+  /// jellyfin stops sessions that stay silent for 5 minutes.
+  @override
+  Duration? get _playbackProgressInterval => const Duration(seconds: 60);
+
+  /// jellyfin counts plays from these reports itself.
+  @override
+  Future<void> _reportPlayback(String id, _PlaybackReport report, int positionMS) {
+    final endpoint = switch (report) {
+      _PlaybackReport.started => '/Sessions/Playing',
+      _PlaybackReport.resumed || _PlaybackReport.paused || _PlaybackReport.progress => '/Sessions/Playing/Progress',
+      _PlaybackReport.stopped => '/Sessions/Playing/Stopped',
+    };
+    final eventName = switch (report) {
+      _PlaybackReport.resumed => 'Unpause',
+      _PlaybackReport.paused => 'Pause',
+      _PlaybackReport.progress => 'TimeUpdate',
+      _PlaybackReport.started || _PlaybackReport.stopped => null,
+    };
+    final positionTicks = positionMS * 10000;
+    final info = <String, Object>{
+      'ItemId': id,
+      'PositionTicks': positionTicks,
+      'IsPaused': report == _PlaybackReport.paused,
+      'CanSeek': true,
+      'PlayMethod': 'DirectPlay',
+      'EventName': ?eventName,
+    };
+    return _wrapper.reportPlayback(endpoint, info);
+  }
+
   bool _checkResError(DirectoryIndex dir, Response<dynamic>? res) {
     final statusCode = res?.statusCode;
     if (statusCode == 401 || statusCode == 403) {

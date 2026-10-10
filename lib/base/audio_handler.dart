@@ -846,6 +846,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
           track: finalItem.track,
         );
         await HistoryController.inst.addTracksToHistory([newTrackWithDate]);
+        if (finalItem.track.isNetwork) ServerListensReporter.inst.onListened(newTrackWithDate);
       },
       youtubeID: (finalItem) async {
         final dateAddedMS = DateTime.now().millisecondsSinceEpoch;

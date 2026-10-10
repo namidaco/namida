@@ -339,6 +339,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     enableM3USync,
     enableM3USyncStartup,
     importServerPlaylists,
+    reportPlaybackToServers,
     embeddedLyricsPriority,
     romanizeLyrics,
     romanizeSorting,

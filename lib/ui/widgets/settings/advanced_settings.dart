@@ -1444,6 +1444,16 @@ class _AdvancedFlagsOptions extends StatelessWidget {
             const _LyricsIntegrationsListTile(),
           ],
           const _WebhookListTile(),
+          ObxO(
+            rx: settings.reportPlaybackToServers,
+            builder: (context, enabled) => CustomSwitchListTile(
+              icon: Broken.cloud_change,
+              title: 'server_playback_reports'.toUpperCase(),
+              subtitle: 'Subsonic & Jellyfin: now playing, play counts',
+              value: enabled,
+              onChanged: (isTrue) => settings.reportPlaybackToServers.save(!isTrue),
+            ),
+          ),
           if (RhythmController.inst.isSupported) const _RhythmScanListTile(),
           if (LosslessCheckController.inst.isSupported) const _LosslessCheckListTile(),
         ],

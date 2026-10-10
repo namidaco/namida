@@ -282,6 +282,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final enableM3USync = _key('enableM3USync', false, sync: false);
   late final enableM3USyncStartup = _key('enableM3USyncStartup', true, sync: false);
   late final importServerPlaylists = _key('importServerPlaylists', true, sync: false);
+  late final reportPlaybackToServers = _key('reportPlaybackToServers', true, sync: false);
   late final embeddedLyricsPriority = _keyEnum('embeddedLyricsPriority', EmbeddedLyricsPriority.onlyWhenSynced, EmbeddedLyricsPriority.values);
   late final romanizeLyrics = _key('romanizeLyrics', false);
   late final romanizeSorting = _key('romanizeSorting', false);

@@ -59,6 +59,54 @@ class _SubsonicWebServer extends MusicWebServer {
     return WebStreamUriDetails.fromUri(uri);
   }
 
+  @override
+  Future<void> _reportPlayback(String id, _PlaybackReport report, int positionMS) async {
+    final client = _client;
+    if (client == null) return;
+    final isNowPlaying = switch (report) {
+      _PlaybackReport.started || _PlaybackReport.resumed => true,
+      _PlaybackReport.paused || _PlaybackReport.progress || _PlaybackReport.stopped => false,
+    };
+    if (!isNowPlaying) return;
+    await client.get<void>(
+      '/rest/scrobble',
+      queryParameters: {
+        'id': id,
+        'submission': false,
+      },
+    );
+  }
+
+  @override
+  Future<_ListensReportResult> _reportListens(List<_ServerListen> listens) async {
+    final client = _client;
+    if (client == null) return _ListensReportResult.retryLater;
+    final ids = listens.map((e) => e.id).toFixedList();
+    final times = listens.map((e) => e.dateMS).toFixedList();
+    try {
+      final res = await client.get<Map<String, dynamic>>(
+        '/rest/scrobble',
+        queryParameters: {
+          'id': ids,
+          'time': times,
+          'submission': true,
+        },
+      );
+      final body = res.data?['subsonic-response'] as Map?;
+      final error = body?['error'] as Map?;
+      if (error == null) return _ListensReportResult.sent;
+      final code = error['code'] as int?;
+      final isAuthError = code == SubsonicErrorModel.wrongUsernameOrPassword || code == SubsonicErrorModel.tokenAuthenticationNotSupportedForLdapUsers;
+      return isAuthError ? _ListensReportResult.retryLater : _ListensReportResult.rejected;
+    } on DioException catch (e) {
+      final statusCode = e.response?.statusCode;
+      return _ListensReportResult.fromStatusCode(statusCode);
+    } catch (_) {
+      // -- unexpected response, would fail the same way again
+      return _ListensReportResult.rejected;
+    }
+  }
+
   static final _cachedArtworksForAlbumIds = <String, Completer<Uint8List>>{};
 
   @override

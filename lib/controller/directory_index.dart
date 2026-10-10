@@ -303,6 +303,8 @@ enum DirectoryIndexTypeTag {
   supportsLibraryId,
   isFileBased,
   downloadsWholeFiles,
+  reportsPlayback,
+  reportsListens,
 }
 
 enum DirectoryIndexType {
@@ -310,11 +312,14 @@ enum DirectoryIndexType {
   subsonic({
     .server,
     .legacyAuthEncode,
+    .reportsPlayback,
+    .reportsListens,
   }),
   jellyfin({
     .server,
     .legacyAuthOnly,
     .supportsLibraryId,
+    .reportsPlayback,
   }),
   webdav({
     .server,

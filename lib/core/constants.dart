@@ -917,6 +917,7 @@ class AppPaths {
   }
 
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');
+  static final SERVERS_PENDING_LISTENS = _join(_USER_DATA, 'servers_pending_listens.json');
   static final LISTEN_TIME_DAILY_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'listen_time_daily');
   static final FAVOURITES_PLAYLIST = _join(_USER_DATA, 'favs.json');
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';

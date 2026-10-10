@@ -29,6 +29,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
 import 'package:namida/controller/files_download_manager.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
@@ -57,6 +58,7 @@ part 'jellyfin_server.dart';
 part 'local_range_proxy.dart';
 part 'saf_server.dart';
 part 'server_cache_controller.dart';
+part 'server_playback_reporter.dart';
 part 'sftp_server.dart';
 part 'smb_server.dart';
 part 'subsonic_web_server.dart';
@@ -81,6 +83,10 @@ abstract class MusicWebServer {
   Future<List<WebServerPlaylist>?> fetchPlaylists({required int? Function(String remoteId) knownChangedMS}) async => null;
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
+
+  Future<void> _reportPlayback(String id, _PlaybackReport report, int positionMS) async {}
+  Duration? get _playbackProgressInterval => null;
+  Future<_ListensReportResult> _reportListens(List<_ServerListen> listens) async => _ListensReportResult.rejected;
 
   /// the original file, never transcoded.
   Future<_ServerFileSource?> _getOriginalFileSource(String id) async {
