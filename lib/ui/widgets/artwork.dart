@@ -47,6 +47,7 @@ class ArtworkWidget extends StatefulWidget {
   final double? iconSize;
   final double borderRadius;
   final double blur;
+  final ValueListenable<double>? glowOpacity;
   final bool disableBlurBgSizeShrink;
   final bool forceDummyArtwork;
   final Color? bgcolor;
@@ -77,6 +78,7 @@ class ArtworkWidget extends StatefulWidget {
     this.child,
     this.borderRadius = 8.0,
     this.blur = 5.0,
+    this.glowOpacity,
     this.disableBlurBgSizeShrink = false,
     this.width,
     this.height,
@@ -578,6 +580,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
         glowBlur: dropShadowEnabled ? widget.blur : 0.0,
         glowScale: glowScale,
         glowOffset: _kGlowOffset,
+        glowOpacity: widget.glowOpacity,
         isBackdropSource: isBackdropSource,
         fit: widget.fit,
         alignment: widget.alignment,

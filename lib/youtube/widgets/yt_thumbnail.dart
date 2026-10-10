@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/loading_items_delay.dart';
@@ -47,6 +48,7 @@ class YoutubeThumbnail extends StatefulWidget {
   final bool displayFallbackIcon;
   final bool extractColor;
   final double blur;
+  final ValueListenable<double>? glowOpacity;
   final bool compressed;
   final bool isImportantInCache;
   final bool preferLowerRes;
@@ -80,6 +82,7 @@ class YoutubeThumbnail extends StatefulWidget {
     this.displayFallbackIcon = true,
     this.extractColor = false,
     this.blur = 5.0,
+    this.glowOpacity,
     this.compressed = true,
     required this.isImportantInCache,
     this.preferLowerRes = true,
@@ -290,6 +293,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
         bgcolor: context.theme.cardColor.withAlpha(60),
         compressed: widget.compressed,
         blur: widget.blur,
+        glowOpacity: widget.glowOpacity,
         disableBlurBgSizeShrink: widget.disableBlurBgSizeShrink,
         borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
         fadeMilliSeconds: widget.fadeMilliSeconds,

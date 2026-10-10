@@ -3,6 +3,7 @@
 
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -16,6 +17,7 @@ class BakedBlurArtwork extends StatefulWidget {
   final double glowBlur;
   final double glowScale;
   final Offset glowOffset;
+  final ValueListenable<double>? glowOpacity;
   final bool isBackdropSource;
   final BoxFit fit;
   final AlignmentGeometry alignment;
@@ -30,6 +32,7 @@ class BakedBlurArtwork extends StatefulWidget {
     required this.glowBlur,
     required this.glowScale,
     required this.glowOffset,
+    this.glowOpacity,
     required this.isBackdropSource,
     required this.fit,
     required this.alignment,
@@ -124,6 +127,7 @@ class _BakedBlurArtworkState extends State<BakedBlurArtwork> {
       imageScale: imageScale,
       imageCompleter: _imageCompleter,
       glow: glow,
+      glowOpacity: widget.glowOpacity,
       sources: sources,
       fit: widget.fit,
       alignment: alignment,
@@ -137,6 +141,7 @@ class _BakedBlurArtworkBox extends SingleChildRenderObjectWidget {
   final double imageScale;
   final ImageStreamCompleter? imageCompleter;
   final _GlowStyle? glow;
+  final ValueListenable<double>? glowOpacity;
   final ArtworkBlurSources? sources;
   final BoxFit fit;
   final Alignment alignment;
@@ -146,6 +151,7 @@ class _BakedBlurArtworkBox extends SingleChildRenderObjectWidget {
     required this.imageScale,
     required this.imageCompleter,
     required this.glow,
+    required this.glowOpacity,
     required this.sources,
     required this.fit,
     required this.alignment,
@@ -159,6 +165,7 @@ class _BakedBlurArtworkBox extends SingleChildRenderObjectWidget {
       imageScale: imageScale,
       imageCompleter: imageCompleter,
       glow: glow,
+      glowOpacity: glowOpacity,
       sources: sources,
       fit: fit,
       alignment: alignment,
@@ -170,6 +177,7 @@ class _BakedBlurArtworkBox extends SingleChildRenderObjectWidget {
     renderObject
       ..updateImage(image, imageScale, imageCompleter)
       ..glow = glow
+      ..glowOpacity = glowOpacity
       ..sources = sources
       ..fit = fit
       ..alignment = alignment;
@@ -182,6 +190,7 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
     required this._imageScale,
     required this._imageCompleter,
     required this._glow,
+    required this._glowOpacity,
     required this._sources,
     required this._fit,
     required this._alignment,
@@ -196,6 +205,7 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
   /// tied to the decoded image's lifetime in the image cache, so they're dropped together.
   static final _bakesPerImage = Expando<Map<_BakeKey, _Bake>>();
   static final _bakePaint = Paint()..filterQuality = FilterQuality.low;
+  static final _fadedBakePaint = Paint()..filterQuality = FilterQuality.low;
 
   ui.Image? _image;
   double _imageScale;
@@ -214,6 +224,17 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
   set glow(_GlowStyle? value) {
     if (value == _glow) return;
     _glow = value;
+    markNeedsPaint();
+  }
+
+  ValueListenable<double>? _glowOpacity;
+  set glowOpacity(ValueListenable<double>? value) {
+    if (identical(value, _glowOpacity)) return;
+    if (attached) {
+      _glowOpacity?.removeListener(markNeedsPaint);
+      value?.addListener(markNeedsPaint);
+    }
+    _glowOpacity = value;
     markNeedsPaint();
   }
 
@@ -247,11 +268,13 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
   void attach(PipelineOwner owner) {
     super.attach(owner);
     _sources?._add(this);
+    _glowOpacity?.addListener(markNeedsPaint);
   }
 
   @override
   void detach() {
     _sources?._remove(this);
+    _glowOpacity?.removeListener(markNeedsPaint);
     super.detach();
   }
 
@@ -263,6 +286,8 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
   }
 
   void _paintGlow(Canvas canvas, Rect boxRect, _GlowStyle glow) {
+    final opacity = _glowOpacity?.value ?? 1.0;
+    if (opacity <= 0.0) return;
     final center = boxRect.center;
     canvas.save();
     canvas.translate(center.dx, center.dy);
@@ -271,13 +296,16 @@ class _RenderBakedBlurArtwork extends RenderProxyBox {
     final stockColor = glow.stockColor;
     if (stockColor != null) {
       final shape = _shapeOf(boxRect, glow.isCircle, glow.borderRadius);
+      final color = stockColor.withValues(alpha: stockColor.a * opacity);
       final paint = Paint()
-        ..color = stockColor
+        ..color = color
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, glow.blur);
       canvas.drawRRect(shape, paint);
     } else {
       final bake = _obtainBake(isGlow: true, blur: glow.blur, isCircle: glow.isCircle, borderRadius: glow.borderRadius);
-      bake?.paint(canvas, boxRect, _bakePaint);
+      var paint = _bakePaint;
+      if (opacity < 1.0) paint = _fadedBakePaint..color = Color.fromRGBO(0, 0, 0, opacity);
+      bake?.paint(canvas, boxRect, paint);
     }
     canvas.restore();
   }
