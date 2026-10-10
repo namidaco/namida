@@ -281,7 +281,12 @@ void main() {
     settings.player.onInterrupted.update((actions) => actions[InterruptionType.shouldDuck] = InterruptionAction.duckAudio);
     expect(settings.player.buildJson().containsKey('onInterrupted'), false);
 
-    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(jsonEncode({'_v': 2, 'onInterrupted': {'shouldPause': 'pause', 'unknown': 'doNothing'}}));
+    File(AppPaths.SETTINGS_PLAYER).writeAsStringSync(
+      jsonEncode({
+        '_v': 2,
+        'onInterrupted': {'shouldPause': 'pause', 'unknown': 'doNothing'},
+      }),
+    );
     await settings.player.prepareSettingsFile();
     expect(settings.player.buildJson()['onInterrupted'], {'unknown': 'doNothing'});
     expect(settings.player.onInterrupted.value.length, 3);
@@ -913,6 +918,46 @@ void main() {
       settings.extra.setSelectedLibraryTab(LibraryTab.playlists);
       expect(settings.extra.libraryTabGroupVariants.value, {LibraryTab.tracks: LibraryTab.tracksVideos});
       expect(settings.extra.getPreferredTabIndexIfLoggedInYT(), 0);
+    });
+
+    test('extra: yt home section sources', () async {
+      await loadFile(settings.extra, {'_v': 2});
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.home), YTHomeSource.local);
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.notifications), YTHomeSource.youtube);
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.downloads), YTHomeSource.local);
+
+      settings.extra.setYTHomeSectionSource(YTHomePages.playlists, YTHomeSource.youtube);
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.playlists), YTHomeSource.youtube);
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.channels), YTHomeSource.local);
+      settings.extra.setYTHomeSectionSource(YTHomePages.playlists, YTHomeSource.local);
+      expect(settings.extra.getYTHomeSectionSource(YTHomePages.playlists), YTHomeSource.local);
+
+      settings.extra.setYTHomeSectionSource(YTHomePages.channels, YTHomeSource.youtube);
+      expect(settings.extra.buildJson(), {
+        '_v': 2,
+        'ytHomeSectionSources': {'playlists': 'local', 'channels': 'youtube'},
+      });
+
+      for (final section in YTHomePages.values) {
+        expect(section.sources, isNotEmpty);
+        expect(section.hasSourceChoice, section.sources.length > 1);
+      }
+    });
+
+    test('extra: old yt split page indexes migrate to section sources', () async {
+      await loadFile(settings.extra, {'_v': 2, 'ytInitialHomePage': 'channels', 'ytHomePageIndex': 1, 'ytChannelsPageIndex': 0, 'ytPlaylistsPageIndex': 'x'});
+      expect(settings.extra.ytInitialHomePage.value, YTHomePages.channels);
+      expect(settings.extra.ytHomeSectionSources.value, {YTHomePages.home: YTHomeSource.youtube, YTHomePages.channels: YTHomeSource.local});
+      final migrated = settings.extra.buildJson();
+      for (final oldName in ['ytHomePageIndex', 'ytChannelsPageIndex', 'ytPlaylistsPageIndex']) {
+        expect(migrated.containsKey(oldName), false, reason: oldName);
+      }
+
+      await loadFile(settings.extra, migrated);
+      expect(settings.extra.buildJson(), migrated);
+
+      await loadFile(settings.extra, {'_v': 2, 'ytPlaylistsPageIndex': null});
+      expect(settings.extra.buildJson(), {'_v': 2});
     });
 
     test('extra: recent searches', () async {

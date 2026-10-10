@@ -16,6 +16,10 @@
   },
   "autoLibraryTab": true,
   "ytInitialHomePage": "playlists",
+  "ytHomeSectionSources": {
+    "home": "youtube",
+    "playlists": "local"
+  },
   "recentSearches": [
     "search 1",
     "search 2",
@@ -34,8 +38,6 @@
   "recentSearchesEnabled": true,
   "lastPlayedIndex": 0,
   "ytAddToPlaylistsTabIndex": 1,
-  "ytPlaylistsPageIndex": 0,
-  "ytHomePageIndex": 1,
   "audioConfigPageIndex": 0,
   "widePlayerPageIndex": 1,
   "windowBounds": {

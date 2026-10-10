@@ -126,16 +126,11 @@ class DownloadsAppBarIcon extends StatelessWidget {
   const DownloadsAppBarIcon({super.key});
 
   static void _openYoutubeDownloads() {
-    final currentRouteType = NamidaNavigator.inst.currentRoute?.route;
-    if (currentRouteType == RouteType.YOUTUBE_HOME && settings.extra.ytInitialHomePage.value == YTHomePages.downloads) {
+    if (settings.libraryTabs.value.contains(LibraryTab.ytDownloads)) {
+      ScrollSearchController.inst.animatePageController(LibraryTab.ytDownloads);
       return;
     }
-    settings.extra.ytInitialHomePage.save(YTHomePages.downloads);
-    if (currentRouteType == RouteType.YOUTUBE_HOME) {
-      NamidaNavigator.inst.navigateOffAll(const YouTubeHomeView()); // -- the tab view only reads its initial page once
-    } else {
-      ScrollSearchController.inst.animatePageController(LibraryTab.youtube);
-    }
+    YouTubeHomeView.openSection(YTHomePages.downloads);
   }
 
   @override

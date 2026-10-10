@@ -371,53 +371,57 @@ class NamidaDrawer extends StatelessWidget {
     return Column(
       children: [
         Expanded(
-          child: SuperSmoothListView(
-            children: [
-              if (showLogoInDrawer)
-                NamidaLogoContainer(
-                  afterTap: NamidaNavigator.inst.toggleDrawer,
-                ),
-              const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
-              ...LibraryTab.values
-                  .where((element) => element != LibraryTab.search && element.isGroupHead)
-                  .map(
-                    (e) => ObxO(
-                      rx: settings.extra.selectedLibraryTab,
-                      builder: (context, selectedLibraryTab) => ObxO(
-                        rx: settings.includeVideos,
-                        builder: (context, includeVideos) {
-                          final enabled = selectedLibraryTab.group == e;
-                          final variants = e.availableVariants(includeVideos);
-                          return NamidaDrawerListTile(
-                            enabled: enabled,
-                            title: e.toText(),
-                            icon: e.toIcon(),
-                            trailing: variants.isEmpty
-                                ? null
-                                : LibraryTabVariantsPopup(
-                                    tab: enabled ? selectedLibraryTab : e,
-                                    variants: variants,
-                                    openOnTap: true,
-                                    onSelected: toggleDrawer,
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                      child: Icon(
-                                        Broken.arrow_right_3,
-                                        size: 16.0,
-                                        color: enabled ? Colors.white.withAlpha(200) : null,
+          child: ObxO(
+            rx: settings.libraryTabs,
+            builder: (context, libraryTabs) => SuperSmoothListView(
+              children: [
+                if (showLogoInDrawer)
+                  NamidaLogoContainer(
+                    afterTap: NamidaNavigator.inst.toggleDrawer,
+                  ),
+                const NamidaContainerDivider(width: 42.0, margin: EdgeInsets.all(10.0)),
+                ...LibraryTab.values
+                    .where((element) => element != LibraryTab.search && element.isGroupHead && (!element.isInDrawerOnlyWhenActive || libraryTabs.contains(element)))
+                    .map(
+                      (e) => ObxO(
+                        rx: settings.extra.selectedLibraryTab,
+                        builder: (context, selectedLibraryTab) => ObxO(
+                          rx: settings.includeVideos,
+                          builder: (context, includeVideos) {
+                            final enabled = selectedLibraryTab.group == e;
+                            final variants = e.availableVariants(includeVideos);
+                            final hasMenu = variants.isNotEmpty || e.hasSectionsMenu;
+                            return NamidaDrawerListTile(
+                              enabled: enabled,
+                              title: e.toText(),
+                              icon: e.toIcon(),
+                              trailing: !hasMenu
+                                  ? null
+                                  : LibraryTabVariantsPopup(
+                                      tab: enabled ? selectedLibraryTab : e,
+                                      variants: variants,
+                                      openOnTap: true,
+                                      onSelected: toggleDrawer,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                        child: Icon(
+                                          Broken.arrow_right_3,
+                                          size: 16.0,
+                                          color: enabled ? Colors.white.withAlpha(200) : null,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                            onTap: () async {
-                              ScrollSearchController.inst.animatePageController(e.activeVariant());
-                              toggleDrawer();
-                            },
-                          );
-                        },
+                              onTap: () async {
+                                ScrollSearchController.inst.animatePageController(e.activeVariant());
+                                toggleDrawer();
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
-                  ),
-            ],
+              ],
+            ),
           ),
         ),
         SizedBox(height: gap12),

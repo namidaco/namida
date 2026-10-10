@@ -500,14 +500,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
             Widget? blockedPage;
             if (widget.operation.requiresAccount) {
               if (activeAccountChannel == null) {
-                blockedPage = _BlockedPage(
-                  icon: Broken.profile_circle,
-                  title: lang.signInYouNeedAccountToViewPage,
-                  subtitle: null,
-                  buttonIcon: Broken.user_edit,
-                  buttonText: lang.manageYourAccounts,
-                  onButtonTap: const YoutubeAccountManagePage().navigate,
-                );
+                blockedPage = const YoutubeSignInRequiredPage();
               } else if (YoutubeAccountController.operationBlockedByMembership(widget.operation, membership)) {
                 blockedPage = _BlockedPage(
                   icon: Broken.ticket_star,
@@ -688,6 +681,22 @@ class YoutubeMainPageHeaderIconButton extends StatelessWidget {
       iconColor: context.defaultIconColor(),
       tooltip: tooltip,
       onPressed: onPressed,
+    );
+  }
+}
+
+class YoutubeSignInRequiredPage extends StatelessWidget {
+  const YoutubeSignInRequiredPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return _BlockedPage(
+      icon: Broken.profile_circle,
+      title: lang.signInYouNeedAccountToViewPage,
+      subtitle: null,
+      buttonIcon: Broken.user_edit,
+      buttonText: lang.manageYourAccounts,
+      onButtonTap: const YoutubeAccountManagePage().navigate,
     );
   }
 }

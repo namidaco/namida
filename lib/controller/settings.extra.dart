@@ -7,11 +7,9 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   static const _kDefaultLibraryTab = isKuru ? LibraryTab.playlists : LibraryTab.tracks;
 
-  int getPreferredTabIndexIfLoggedInYT() {
-    final activeChannel = YoutubeAccountController.current.activeAccountChannel.value;
-    if (activeChannel != null) return 1;
-    return 0;
-  }
+  bool _isSignedInYT() => YoutubeAccountController.current.activeAccountChannel.value != null;
+
+  int getPreferredTabIndexIfLoggedInYT() => _isSignedInYT() ? 1 : 0;
 
   late final selectedLibraryTab = _keyEnum('selectedLibraryTab', _kDefaultLibraryTab, LibraryTab.values);
   late final staticLibraryTab = _keyEnum('staticLibraryTab', _kDefaultLibraryTab, LibraryTab.values);
@@ -23,6 +21,12 @@ class _ExtraSettings extends _SettingsKeysWriter {
     value: LibraryTab.values.asCodec(),
   );
   late final ytInitialHomePage = _keyEnum('ytInitialHomePage', YTHomePages.playlists, YTHomePages.values);
+  late final ytHomeSectionSources = _keyMap<YTHomePages, YTHomeSource>(
+    'ytHomeSectionSources',
+    const {},
+    key: YTHomePages.values.asCodec(),
+    value: YTHomeSource.values.asCodec(),
+  );
 
   late final recentSearchesEnabled = _key<bool?>('recentSearchesEnabled', null);
   late final recentSearches = _keyList<String>('recentSearches', const []);
@@ -43,9 +47,6 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final lastPlayedIndex = _key('lastPlayedIndex', 0);
 
   late final ytAddToPlaylistsTabIndex = _key<int?>('ytAddToPlaylistsTabIndex', null);
-  late final ytPlaylistsPageIndex = _key<int?>('ytPlaylistsPageIndex', null);
-  late final ytChannelsPageIndex = _key<int?>('ytChannelsPageIndex', null);
-  late final ytHomePageIndex = _key<int?>('ytHomePageIndex', null);
   late final audioConfigPageIndex = _key<int?>('audioConfigPageIndex', null);
   late final widePlayerPageIndex = _key<int?>('widePlayerPageIndex', null);
 
@@ -58,6 +59,19 @@ class _ExtraSettings extends _SettingsKeysWriter {
       selectedLibraryTab.save(tab);
       if (tab.groupVariants.isNotEmpty) libraryTabGroupVariants.update((variants) => variants[tab.group] = tab);
     });
+  }
+
+  YTHomeSource getYTHomeSectionSource(YTHomePages section) {
+    final savedSource = ytHomeSectionSources.value[section];
+    if (savedSource != null) return savedSource;
+    final sources = section.sources;
+    final preferredSource = _isSignedInYT() ? YTHomeSource.youtube : YTHomeSource.local;
+    if (sources.contains(preferredSource)) return preferredSource;
+    return sources.first;
+  }
+
+  void setYTHomeSectionSource(YTHomePages section, YTHomeSource source) {
+    ytHomeSectionSources.update((sources) => sources[section] = source);
   }
 
   void setRecentSearchesEnabled(bool enabled) {
@@ -85,6 +99,25 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   void clearRecentSearches() {
     recentSearches.reset();
+  }
+
+  @override
+  void _migrateKeys() {
+    final sectionSources = <String, String>{};
+    void migrateSectionIndex(String oldName, YTHomePages section) {
+      final index = _dropKey(oldName);
+      final source = switch (index) {
+        0 => YTHomeSource.local,
+        1 => YTHomeSource.youtube,
+        _ => null,
+      };
+      if (source != null) sectionSources[section.name] = source.name;
+    }
+
+    migrateSectionIndex('ytHomePageIndex', YTHomePages.home);
+    migrateSectionIndex('ytChannelsPageIndex', YTHomePages.channels);
+    migrateSectionIndex('ytPlaylistsPageIndex', YTHomePages.playlists);
+    if (sectionSources.isNotEmpty) _raw['ytHomeSectionSources'] = sectionSources;
   }
 
   @override

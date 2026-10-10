@@ -166,6 +166,11 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.home => null,
       LibraryTab.search => null,
       LibraryTab.youtube => null,
+      LibraryTab.ytHome => null,
+      LibraryTab.ytNotifications => null,
+      LibraryTab.ytChannels => null,
+      LibraryTab.ytPlaylists => null,
+      LibraryTab.ytDownloads => null,
       LibraryTab.queues => null,
       LibraryTab.currentQueue => null,
       LibraryTab.favourites => null,
@@ -216,6 +221,11 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.foldersVideos => FoldersPage.videos(),
       LibraryTab.home => const HomePageLocal(),
       LibraryTab.youtube => const YouTubeHomeView(),
+      LibraryTab.ytHome => const YouTubeHomeSectionView(section: YTHomePages.home),
+      LibraryTab.ytNotifications => const YouTubeHomeSectionView(section: YTHomePages.notifications),
+      LibraryTab.ytChannels => const YouTubeHomeSectionView(section: YTHomePages.channels),
+      LibraryTab.ytPlaylists => const YouTubeHomeSectionView(section: YTHomePages.playlists),
+      LibraryTab.ytDownloads => const YouTubeHomeSectionView(section: YTHomePages.downloads),
       LibraryTab.search => const NamidaDummyPage(),
       LibraryTab.queues => const QueuesPage(isLibraryTab: true),
       LibraryTab.currentQueue => const CurrentQueuePage(),
@@ -1276,7 +1286,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.SUBPAGE_recentlyAddedTracks => QueueSource.recentlyAdded,
 
       // -- YOUTUBE
-      RouteType.YOUTUBE_HOME => QueueSourceYoutubeID.ytHomeFeed,
+      RouteType.YOUTUBE_HOME || RouteType.YOUTUBE_HOME_SECTION => QueueSourceYoutubeID.ytHomeFeed,
       RouteType.YOUTUBE_PLAYLIST_SUBPAGE => QueueSourceYoutubeID.ytPlaylist(name),
       RouteType.YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE => QueueSourceYoutubeID.ytDownloadTask,
       RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED => QueueSourceYoutubeID.ytPlaylistHosted,
@@ -1959,6 +1969,11 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.home => lang.home,
     LibraryTab.search => lang.search,
     LibraryTab.youtube => lang.youtube,
+    LibraryTab.ytHome => YTHomePages.home._toLibraryTabText(),
+    LibraryTab.ytNotifications => YTHomePages.notifications._toLibraryTabText(),
+    LibraryTab.ytChannels => YTHomePages.channels._toLibraryTabText(),
+    LibraryTab.ytPlaylists => YTHomePages.playlists._toLibraryTabText(),
+    LibraryTab.ytDownloads => YTHomePages.downloads._toLibraryTabText(),
     LibraryTab.queues => lang.queues,
     LibraryTab.currentQueue => lang.queue,
     LibraryTab.favourites => lang.favourites,
@@ -1997,6 +2012,11 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.home => Broken.home_2,
     LibraryTab.search => Broken.search_normal_1,
     LibraryTab.youtube => Broken.video_square,
+    LibraryTab.ytHome => YTHomePages.home.toIcon(),
+    LibraryTab.ytNotifications => YTHomePages.notifications.toIcon(),
+    LibraryTab.ytChannels => YTHomePages.channels.toIcon(),
+    LibraryTab.ytPlaylists => YTHomePages.playlists.toIcon(),
+    LibraryTab.ytDownloads => YTHomePages.downloads.toIcon(),
     LibraryTab.queues => Broken.driver,
     LibraryTab.currentQueue => Broken.row_vertical,
     LibraryTab.favourites => Broken.heart,
@@ -2816,22 +2836,34 @@ extension FABTypeL10n on FABType {
   };
 }
 
+extension YTHomeSourceL10n on YTHomeSource {
+  String toText() => switch (this) {
+    YTHomeSource.local => lang.local,
+    YTHomeSource.youtube => lang.youtube,
+  };
+
+  IconData toIcon() => switch (this) {
+    YTHomeSource.local => Broken.driver,
+    YTHomeSource.youtube => Broken.video_square,
+  };
+}
+
 extension YTHomePagesL10n on YTHomePages {
   String toText() => switch (this) {
     YTHomePages.home => lang.home,
     YTHomePages.notifications => lang.notifications,
     YTHomePages.channels => lang.channels,
     YTHomePages.playlists => lang.playlists,
-    // YTHomePages.userplaylists: '${lang.playlists} (${lang.youtube})',
     YTHomePages.downloads => lang.downloads,
   };
+
+  String _toLibraryTabText() => '${toText()} (${lang.youtube})';
 
   IconData toIcon() => switch (this) {
     YTHomePages.home => Broken.home_1,
     YTHomePages.notifications => Broken.notification_bing,
     YTHomePages.channels => Broken.profile_2user,
     YTHomePages.playlists => Broken.music_library_2,
-    // YTHomePages.userplaylists: Broken.music_dashboard,
     YTHomePages.downloads => Broken.import,
   };
 }

@@ -366,7 +366,12 @@ enum LibraryTab {
   foldersMusic,
   foldersVideos,
   search,
-  youtube,
+  youtube(hasSectionsMenu: true),
+  ytHome(isInDrawerOnlyWhenActive: true),
+  ytNotifications(isInDrawerOnlyWhenActive: true),
+  ytChannels(isInDrawerOnlyWhenActive: true),
+  ytPlaylists(isInDrawerOnlyWhenActive: true),
+  ytDownloads(isInDrawerOnlyWhenActive: true),
   queues,
   currentQueue,
   favourites,
@@ -378,6 +383,11 @@ enum LibraryTab {
   languages,
   stats,
   party;
+
+  final bool isInDrawerOnlyWhenActive;
+  final bool hasSectionsMenu;
+
+  const LibraryTab({this.isInDrawerOnlyWhenActive = false, this.hasSectionsMenu = false});
 
   LibraryTab get group => switch (this) {
     LibraryTab.tracksMusic || LibraryTab.tracksVideos => LibraryTab.tracks,
@@ -793,6 +803,7 @@ enum RouteType {
   // ----- Youtube -----
   YOUTUBE_HOME_LOCAL,
   YOUTUBE_HOME,
+  YOUTUBE_HOME_SECTION,
   YOUTUBE_PLAYLISTS,
   YOUTUBE_PLAYLIST_SUBPAGE,
   YOUTUBE_PLAYLIST_DOWNLOAD_SUBPAGE,
@@ -1052,12 +1063,30 @@ enum FABType {
   search,
 }
 
+enum YTHomeSource {
+  local,
+  youtube(requiresAccount: true),
+  ;
+
+  final bool requiresAccount;
+
+  const YTHomeSource({this.requiresAccount = false});
+}
+
 enum YTHomePages {
-  home,
-  notifications,
-  channels,
-  playlists,
-  downloads,
+  home([YTHomeSource.local, YTHomeSource.youtube]),
+  notifications([YTHomeSource.youtube]),
+  channels([YTHomeSource.local, YTHomeSource.youtube]),
+  playlists([YTHomeSource.local, YTHomeSource.youtube]),
+  downloads([YTHomeSource.local], showsSource: false),
+  ;
+
+  final List<YTHomeSource> sources;
+  final bool showsSource;
+
+  const YTHomePages(this.sources, {this.showsSource = true});
+
+  bool get hasSourceChoice => sources.length > 1;
 }
 
 enum SetMusicAsAction {

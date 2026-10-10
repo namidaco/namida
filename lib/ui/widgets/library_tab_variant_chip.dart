@@ -8,6 +8,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/pages/youtube_home_view.dart';
 
 class LibraryTabVariantsPopup extends StatelessWidget {
   final LibraryTab tab;
@@ -25,21 +26,40 @@ class LibraryTabVariantsPopup extends StatelessWidget {
     required this.child,
   });
 
+  Iterable<NamidaPopupItem> _getYTSectionItems() {
+    final currentSection = settings.extra.ytInitialHomePage.value;
+    return YTHomePages.values.map(
+      (section) => NamidaPopupItem(
+        icon: section.toIcon(),
+        title: section.toText(),
+        selected: section == currentSection,
+        onTap: () {
+          YouTubeHomeView.openSection(section);
+          onSelected?.call();
+        },
+      ),
+    );
+  }
+
+  Iterable<NamidaPopupItem> _getVariantItems() {
+    return variants.map(
+      (variant) => NamidaPopupItem(
+        icon: variant.toIcon(),
+        title: variant.toVariantText(),
+        selected: variant == tab,
+        onTap: () {
+          ScrollSearchController.inst.animatePageController(variant);
+          onSelected?.call();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return NamidaPopupWrapper(
       openOnTap: openOnTap,
-      childrenDefault: () => variants.map(
-        (variant) => NamidaPopupItem(
-          icon: variant.toIcon(),
-          title: variant.toVariantText(),
-          selected: variant == tab,
-          onTap: () {
-            ScrollSearchController.inst.animatePageController(variant);
-            onSelected?.call();
-          },
-        ),
-      ),
+      childrenDefault: tab.hasSectionsMenu ? _getYTSectionItems : _getVariantItems,
       child: child,
     );
   }
