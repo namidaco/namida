@@ -209,11 +209,6 @@ abstract final class SyncPathResolver {
       source: twd.sourceNull,
     );
   }
-
-  static Iterable<TrackWithDate> resolveTracksWithDates(String senderDeviceId, Iterable<TrackWithDate> tracks) {
-    if (_deviceMaps[senderDeviceId]?.isNotEmpty != true) return tracks;
-    return tracks.map((twd) => resolveTrackWithDate(senderDeviceId, twd));
-  }
 }
 
 class _LocalFingerprintIndex {

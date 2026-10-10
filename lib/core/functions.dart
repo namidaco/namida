@@ -401,8 +401,8 @@ class NamidaOnTaps {
     List<S>? newSorts;
     bool? newSortReverse;
 
-    void onFinalUpdatePropertySort(List<S> sorts, bool? reverse) {
-      playlistManager.updatePropertyInPlaylist(playlistName, itemsSortType: sorts, itemsSortReverse: reverse);
+    void onFinalUpdatePropertySort(List<S> sorts, bool? reverse, {bool restoreCustomOrder = false}) {
+      playlistManager.updatePropertyInPlaylist(playlistName, itemsSortType: sorts, itemsSortReverse: reverse, restoreCustomOrder: restoreCustomOrder);
       playlistManager.resetCanReorder();
     }
 
@@ -427,28 +427,38 @@ class NamidaOnTaps {
       },
       onDone: () {
         final pl = playlistManager.getPlaylist(playlistName);
-        if (pl != null && newSorts != null) {
-          if (!listEquals(pl.sortsType, newSorts)) {
-            if ((pl.sortsType?.isEmpty ?? true) && newSorts!.isNotEmpty) {
+        final sorts = newSorts;
+        if (pl != null && sorts != null) {
+          if (!listEquals(pl.sortsType, sorts)) {
+            final canRestoreCustomOrder = sorts.isEmpty && pl.customOrder != null;
+            if (!canRestoreCustomOrder) {
+              onFinalUpdatePropertySort(sorts, newSortReverse);
+            } else if (pl.isReadOnly) {
+              onFinalUpdatePropertySort(sorts, newSortReverse, restoreCustomOrder: true); // -- the source order is back on next refresh anyways
+            } else {
               NamidaNavigator.inst.navigateDialog(
                 dialog: CustomBlurryDialog(
-                  isWarning: true,
                   normalTitleStyle: true,
-                  bodyText: lang.yourCustomOrderWillBeLost,
+                  icon: Broken.rotate_left,
+                  title: '${lang.restoreCustomOrder}?',
                   actions: [
-                    const CancelButton(),
+                    NamidaButton(
+                      text: lang.keepCurrentOrder,
+                      onTap: () {
+                        onFinalUpdatePropertySort(sorts, newSortReverse);
+                        NamidaNavigator.inst.closeDialog();
+                      },
+                    ),
                     NamidaButton(
                       text: lang.confirm,
                       onTap: () {
-                        onFinalUpdatePropertySort(newSorts!, newSortReverse);
+                        onFinalUpdatePropertySort(sorts, newSortReverse, restoreCustomOrder: true);
                         NamidaNavigator.inst.closeDialog();
                       },
                     ),
                   ],
                 ),
               );
-            } else {
-              onFinalUpdatePropertySort(newSorts!, newSortReverse);
             }
           }
         }

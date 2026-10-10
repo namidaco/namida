@@ -529,9 +529,7 @@ class PlaylistsMessage extends BaseMessage {
   FutureOr<void> executeOnReceived() async {
     final senderDeviceId = messageInfo.senderDeviceId;
     final resolved = playlists.map(
-      (pl) => pl.copyWith(
-        tracks: SyncPathResolver.resolveTracksWithDates(senderDeviceId, pl.tracks).toList(),
-      ),
+      (pl) => pl.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(senderDeviceId, twd)),
     );
     if (SyncUtils.kAllowModification) {
       await PlaylistController.inst.importSyncedPlaylists(resolved);

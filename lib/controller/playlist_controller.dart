@@ -162,7 +162,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
       final filePath = getUniqueM3UFilePath(name, directoryPath, p.context, shouldReplaceReservedChars: _shouldReplaceReservedChars, isTaken: exportedPaths.contains);
       exportedPaths.add(filePath);
       try {
-        await exportPlaylistToM3UFile(pl, filePath);
+        await exportPlaylistToM3UFile(pl, filePath, inDisplayedOrder: true);
         exportedCount++;
       } catch (_) {}
     }
@@ -293,14 +293,19 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
     return rt.length;
   }
 
-  Future<void> exportPlaylistToM3UFile(LocalPlaylist playlist, String path) async {
+  /// [inDisplayedOrder] writes the sorted order instead of the custom one that linked files hold.
+  Future<void> exportPlaylistToM3UFile(LocalPlaylist playlist, String path, {bool inDisplayedOrder = false}) async {
+    final tracks = inDisplayedOrder ? playlist.tracks : _getLinkedM3UTracks(playlist);
     await _saveM3UPlaylistToFile.thready((
       path: path,
-      entries: _buildM3UEntries(playlist.tracks),
+      entries: _buildM3UEntries(tracks),
       artworkUrl: _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
       relative: true,
     ));
   }
+
+  /// sorters are re-applied when the file is read, see [ensureNewSourceItemsSorted].
+  List<TrackWithDate> _getLinkedM3UTracks(LocalPlaylist playlist) => computeCustomOrder(playlist) ?? playlist.tracks;
 
   List<_M3UEntry> _buildM3UEntries(List<TrackWithDate> tracks) {
     final infoMap = _pathsM3ULookup;
@@ -606,7 +611,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
 
   Future<bool> _writeSyncedM3UFile(LocalPlaylist playlist, String m3uPath) async {
     _m3uWriteTimers.remove(m3uPath)?.cancel();
-    final entries = _buildM3UEntries(playlist.tracks);
+    final tracks = _getLinkedM3UTracks(playlist);
+    final entries = _buildM3UEntries(tracks);
     try {
       await _saveM3UPlaylistToFile.thready((
         path: m3uPath,
@@ -819,23 +825,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   }
 
   bool _serverPlaylistTracksEqual(LocalPlaylist existing, List<TrackWithDate> newTracks) {
-    final oldTracks = existing.tracks;
+    final hasSorters = existing.sortsType?.isNotEmpty == true;
+    final oldTracks = hasSorters ? existing.customOrder : existing.tracks;
+    if (oldTracks == null) return false; // -- sorted before the server order was kept, re-importing keeps it
 
     if (oldTracks.length != newTracks.length) return false;
-
-    if (existing.sortsType?.isNotEmpty == true) {
-      // -- order is locally overridden by sorters, compare content only
-      final counts = <Track, int>{};
-      for (final twd in oldTracks) {
-        counts.update(twd.track, (v) => v + 1, ifAbsent: () => 1);
-      }
-      for (final twd in newTracks) {
-        final c = counts[twd.track];
-        if (c == null || c == 0) return false;
-        counts[twd.track] = c - 1;
-      }
-      return true;
-    }
 
     for (int i = 0; i < newTracks.length; i++) {
       if (oldTracks[i].track != newTracks[i].track) return false;
@@ -1182,9 +1176,10 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
         final writeTimer = _m3uWriteTimers[m3uPath];
         writeTimer?.cancel();
         _m3uWriteTimers[m3uPath] = Timer(const Duration(seconds: 2), () async {
+          final tracks = _getLinkedM3UTracks(playlist);
           await _saveM3UPlaylistToFile.thready((
             path: m3uPath,
-            entries: _buildM3UEntries(playlist.tracks),
+            entries: _buildM3UEntries(tracks),
             artworkUrl: _artworkUrlForM3uInfoMap[playlist.m3uPath ?? ''],
             relative: true,
           ));
