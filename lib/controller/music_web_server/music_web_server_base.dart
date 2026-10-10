@@ -21,6 +21,7 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
+import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -160,6 +161,15 @@ String? _serverFolderOf(String remoteFilePath, {List<String> baseSegments = cons
   if (dirStart >= dirEnd) return null;
   return segments.getRange(dirStart, dirEnd).join('/');
 }
+
+String _channelsText(int? channels) => switch (channels) {
+  null || 0 => '',
+  1 => 'mono',
+  2 => 'stereo',
+  _ => channels.toString(),
+};
+
+List<String>? _namesOrNull(Iterable<String> names) => names.isEmpty ? null : names.toFixedList();
 
 bool _startsWithSegments(List<String> segments, List<String> prefix) {
   if (prefix.length > segments.length) return false;

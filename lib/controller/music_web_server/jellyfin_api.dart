@@ -33,7 +33,10 @@ enum _JellyfinItemField {
   dateModified('dateModified'),
   overview('Overview'),
   path('Path'),
-  tags('Tags');
+  tags('Tags'),
+  people('People'),
+  studios('Studios'),
+  providerIds('ProviderIds');
 
   const _JellyfinItemField(this.value);
   final String value;
@@ -76,10 +79,13 @@ class _JellyfinUserItemData {
 }
 
 class _JellyfinMediaStream {
+  static const kTypeAudio = 'Audio';
+
   final String? codec;
   final String? language;
   final String? type;
   final int? bitRate;
+  final int? bitDepth;
   final int? channels;
   final int? sampleRate;
   final int? width;
@@ -90,6 +96,7 @@ class _JellyfinMediaStream {
     this.language,
     this.type,
     this.bitRate,
+    this.bitDepth,
     this.channels,
     this.sampleRate,
     this.width,
@@ -101,6 +108,7 @@ class _JellyfinMediaStream {
     language: j['Language'] as String?,
     type: j['Type'] as String?,
     bitRate: j['BitRate'] as int?,
+    bitDepth: j['BitDepth'] as int?,
     channels: j['Channels'] as int?,
     sampleRate: j['SampleRate'] as int?,
     width: j['Width'] as int?,
@@ -136,6 +144,10 @@ class _JellyfinMediaSource {
 }
 
 class _JellyfinItem {
+  static const kPersonTypeComposer = 'Composer';
+  static const kProviderMusicBrainzAlbum = 'MusicBrainzAlbum';
+  static const kProviderMusicBrainzAlbumArtist = 'MusicBrainzAlbumArtist';
+
   final String? id;
   final String? name;
   final String? type;
@@ -150,12 +162,18 @@ class _JellyfinItem {
   // Music-specific
   final List<String> artists;
   final String? albumArtist;
+  final List<String> albumArtists;
+  final List<String> composers;
+  final List<String> studios;
+  final Map<String, dynamic> providerIds;
   final String? album;
   final String? albumId;
   final int? indexNumber; // track number
   final int? parentIndexNumber; // disc number
   final int? productionYear;
+  final DateTime? premiereDate;
   final int? runTimeTicks; // 100-nanosecond units
+  final double? normalizationGainDB;
 
   final String? container;
   final _JellyfinUserItemData? userData;
@@ -175,16 +193,53 @@ class _JellyfinItem {
     this.mediaSources = const [],
     this.artists = const [],
     this.albumArtist,
+    this.albumArtists = const [],
+    this.composers = const [],
+    this.studios = const [],
+    this.providerIds = const {},
     this.album,
     this.albumId,
     this.indexNumber,
     this.parentIndexNumber,
     this.productionYear,
+    this.premiereDate,
     this.runTimeTicks,
+    this.normalizationGainDB,
     this.container,
     this.userData,
     this.videoType,
   });
+
+  _JellyfinMediaStream? getAudioStream() {
+    for (final s in mediaStreams) {
+      if (s.type == _JellyfinMediaStream.kTypeAudio) return s;
+    }
+    for (final source in mediaSources) {
+      for (final s in source.mediaStreams) {
+        if (s.type == _JellyfinMediaStream.kTypeAudio) return s;
+      }
+    }
+    return null;
+  }
+
+  static List<String> _namesOf(Map<String, dynamic> j, String key) {
+    final items = j[key] as List<dynamic>?;
+    if (items == null) return const [];
+    return items.map((e) => (e as Map<String, dynamic>)['Name'] as String?).nonNulls.toFixedList();
+  }
+
+  static List<String> _peopleNamesOf(Map<String, dynamic> j, String type) {
+    final items = j['People'] as List<dynamic>?;
+    if (items == null) return const [];
+    final names = <String>[];
+    for (final e in items) {
+      final person = e as Map<String, dynamic>;
+      if (person['Type'] != type) continue;
+      final name = person['Name'] as String?;
+      if (name != null) names.add(name);
+    }
+    return names;
+  }
 
   factory _JellyfinItem.fromJson(Map<String, dynamic> j) => _JellyfinItem(
     id: j['Id'] as String?,
@@ -200,12 +255,18 @@ class _JellyfinItem {
     mediaSources: (j['MediaSources'] as List<dynamic>?)?.map((e) => _JellyfinMediaSource.fromJson(e as Map<String, dynamic>)).toList() ?? [],
     artists: (j['Artists'] as List<dynamic>?)?.cast<String>() ?? [],
     albumArtist: j['AlbumArtist'] as String?,
+    albumArtists: _namesOf(j, 'AlbumArtists'),
+    composers: _peopleNamesOf(j, kPersonTypeComposer),
+    studios: _namesOf(j, 'Studios'),
+    providerIds: j['ProviderIds'] as Map<String, dynamic>? ?? const {},
     album: j['Album'] as String?,
     albumId: j['AlbumId'] as String?,
     indexNumber: j['IndexNumber'] as int?,
     parentIndexNumber: j['ParentIndexNumber'] as int?,
     productionYear: j['ProductionYear'] as int?,
+    premiereDate: j['PremiereDate'] != null ? DateTime.tryParse(j['PremiereDate'] as String) : null,
     runTimeTicks: j['RunTimeTicks'] as int?,
+    normalizationGainDB: (j['NormalizationGain'] as num?)?.toDouble(),
     container: j['Container'] as String?,
     userData: j['UserData'] != null ? _JellyfinUserItemData.fromJson(j['UserData'] as Map<String, dynamic>) : null,
     videoType: _JellyfinVideoType.fromJson(j['VideoType'] as String?),

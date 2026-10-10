@@ -240,6 +240,7 @@ class _SubsonicWebServer extends MusicWebServer {
             tracks = songs.map(
               (s) => _mediaModelToTrackExtended(
                 s,
+                album: null,
                 splitConfig: splitConfig,
                 server: server,
                 serverUriParsed: serverUriParsed,
@@ -291,10 +292,12 @@ class _SubsonicWebServer extends MusicWebServer {
       final results = await Future.wait(futures);
 
       for (final albumDetail in results) {
-        final songs = albumDetail.response.data?.song ?? [];
+        final album = albumDetail.response.data;
+        final songs = album?.song ?? [];
         for (final s in songs) {
           yield _mediaModelToTrackExtended(
             s,
+            album: album,
             splitConfig: splitConfig,
             server: server,
             serverUriParsed: serverUriParsed,
@@ -304,8 +307,10 @@ class _SubsonicWebServer extends MusicWebServer {
     }
   }
 
-  TrackExtended _mediaModelToTrackExtended(
+  /// [album] is the `getAlbum` detail the song came from, playlist songs don't have one.
+  static TrackExtended _mediaModelToTrackExtended(
     MediaModel media, {
+    required AlbumModel? album,
     required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
     required Uri serverUriParsed,
@@ -318,46 +323,65 @@ class _SubsonicWebServer extends MusicWebServer {
       },
     );
     final path = newUri.toString();
-    final title = media.title;
-    final artist = media.artist;
-    final genre = media.genre;
-    final album = media.album ?? '';
-    final albums = Indexer.splitAlbum(
-      album,
-      config: splitConfig.albumConfig,
-    );
-    const albumArtist = ''; // not there
     final year = media.year;
-    final yearString = year?.toString() ?? '';
-    final artists = artist == null
-        ? <String>[]
-        : Indexer.splitArtist(
-            title: title,
-            originalArtist: artist,
-            config: splitConfig.artistsConfig,
+    final yearFallbackText = year?.toString() ?? '';
+    final yearString = _releaseDateText(album, year) ?? yearFallbackText;
+    final remotePath = media.path;
+    final serverFolder = remotePath == null ? null : _serverFolderOf(remotePath);
+
+    final artists = _namesOrNull(media.artists.map((e) => e.name));
+    final albumArtists = _namesOrNull(media.albumArtists.map((e) => e.name));
+    final genres = _namesOrNull(media.genres.map((e) => e.name));
+    final composerContributors = media.contributors.where((c) => c.role == _kSubsonicComposerRole);
+    final composers = _namesOrNull(composerContributors.map((c) => c.artist.name));
+    final moods = _namesOrNull(media.moods);
+    final recordLabels = album?.recordLabels ?? const [];
+    final labels = _namesOrNull(recordLabels.map((e) => e.name));
+    final releaseTypes = _namesOrNull(album?.releaseTypes ?? const []);
+
+    final originalArtist = artists?.join(FTagsMultiValues.kJoiner) ?? media.artist ?? '';
+    final albumArtist = albumArtists?.join(FTagsMultiValues.kJoiner) ?? media.displayAlbumArtist ?? album?.artist ?? '';
+    final originalGenre = genres?.join(FTagsMultiValues.kJoiner) ?? media.genre ?? '';
+    final composer = composers?.join(FTagsMultiValues.kJoiner) ?? media.displayComposer ?? '';
+    final mood = moods?.join(FTagsMultiValues.kJoiner) ?? '';
+    final label = labels?.join(FTagsMultiValues.kJoiner) ?? '';
+    final releaseType = releaseTypes?.join(FTagsMultiValues.kJoiner) ?? '';
+
+    final multiValues = FTagsMultiValues.orNull(
+      artists: artists == null ? null : FTagsMultiValues.valuesOrNull(artists),
+      albumArtists: albumArtists == null ? null : FTagsMultiValues.valuesOrNull(albumArtists),
+      genres: genres == null ? null : FTagsMultiValues.valuesOrNull(genres),
+      composers: composers == null ? null : FTagsMultiValues.valuesOrNull(composers),
+      moods: moods == null ? null : FTagsMultiValues.valuesOrNull(moods),
+    );
+    final replayGain = media.replayGain;
+    final gainData = replayGain == null
+        ? null
+        : ReplayGainData.orNull(
+            trackGain: replayGain.trackGain,
+            albumGain: replayGain.albumGain,
+            trackPeak: replayGain.trackPeak,
+            albumPeak: replayGain.albumPeak,
           );
-    final genres = genre == null
-        ? <String>[]
-        : Indexer.splitGenre(
-            genre,
-            config: splitConfig.genresConfig,
-          );
-    return TrackExtended(
+    final sortInfo = FTagsSortInfo.orNull(
+      title: media.sortName,
+      album: album?.sortName,
+    );
+    final bpm = media.bpm;
+    final validBpm = bpm == null || bpm <= 0 ? null : bpm;
+
+    return TrackExtended.derive(
+      splitConfig: splitConfig,
+      mbAlbumId: album?.musicBrainzId ?? '',
+      mbAlbumArtistId: '',
       title: media.title,
-      originalArtist: media.artist ?? '',
-      artistsList: artists,
-      originalAlbum: album,
-      albumsList: albums,
+      originalArtist: originalArtist,
+      originalAlbum: media.album ?? '',
       albumArtist: albumArtist,
-      albumArtistsList: const [albumArtist],
-      originalGenre: media.genre ?? '',
-      genresList: genres,
+      originalGenre: originalGenre,
       originalStyle: '',
-      stylesList: const [],
-      originalMood: '',
-      moodList: [],
-      composer: '',
-      composersList: const [UnknownTags.COMPOSER],
+      originalMood: mood,
+      composer: composer,
       trackNo: media.track ?? 0,
       trackTo: 0,
       durationMS: media.duration?.inMilliseconds ?? 0,
@@ -368,40 +392,61 @@ class _SubsonicWebServer extends MusicWebServer {
       dateAdded: media.created?.millisecondsSinceEpoch ?? 0,
       dateModified: media.created?.millisecondsSinceEpoch ?? 0,
       path: path,
-      comment: '',
+      comment: media.comment ?? '',
       description: '',
       synopsis: '',
       bitrate: media.bitRate ?? 0,
-      sampleRate: 0,
-      bits: 0,
+      sampleRate: media.samplingRate ?? 0,
+      bits: media.bitDepth ?? 0,
       isLossless: null,
       format: media.suffix ?? media.contentType ?? '',
-      channels: '',
+      channels: _channelsText(media.channelCount),
       discNo: media.discNumber ?? 0,
       discTo: 0,
       language: '',
-      languagesList: const [],
       lyrics: '',
-      label: '',
-      releaseType: '',
-      bpm: 0,
+      label: label,
+      releaseType: releaseType,
+      bpm: validBpm,
       musicalKey: '',
       rating: (media.userRating ?? 0) / 5.0,
       originalTags: null,
-      tagsList: [],
-      gainData: null,
-      sortInfo: null,
+      gainData: gainData,
+      sortInfo: sortInfo,
+      multiValues: multiValues,
       extraTags: null,
       hashKey: media.id, // TrackExtended.generateHashKeyIfEnabled(null, path, null)
       isVideo: media.isVideo ?? false,
       server: server,
-      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
-        albums: albums,
-        albumArtist: albumArtist,
-        year: yearString,
-        mbAlbumId: '',
-        mbAlbumArtistId: '',
-      ),
+      serverFolder: serverFolder,
     );
   }
+}
+
+/// the album's release date as a tag-like `yyyy-mm-dd` text, only when it's the song's year.
+String? _releaseDateText(AlbumModel? album, int? songYear) {
+  if (album == null || songYear == null) return null;
+  final date = album.originalReleaseDate ?? album.releaseDate;
+  if (date == null || date.year != songYear) return null;
+  final month = date.month;
+  if (month == null) return null;
+  final day = date.day;
+  final buffer = StringBuffer()
+    ..write(songYear)
+    ..write('-')
+    ..write(month.toString().padLeft(2, '0'));
+  if (day != null) {
+    buffer
+      ..write('-')
+      ..write(day.toString().padLeft(2, '0'));
+  }
+  return buffer.toString();
+}
+
+const _kSubsonicComposerRole = 'composer';
+
+@visibleForTesting
+TrackExtended debugSubsonicMediaToTrack(MediaModel media, {AlbumModel? album, required SplitArtistGenreConfigsWrapper splitConfig, required String server}) {
+  final serverUriParsed = Uri.parse(server);
+  return _SubsonicWebServer._mediaModelToTrackExtended(media, album: album, splitConfig: splitConfig, server: server, serverUriParsed: serverUriParsed);
 }

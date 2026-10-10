@@ -31,6 +31,21 @@ class ReplayGainData {
     return gainLinear * withRespectiveVolume;
   }
 
+  static ReplayGainData? orNull({
+    required double? trackGain,
+    required double? albumGain,
+    required double? trackPeak,
+    required double? albumPeak,
+  }) {
+    if (trackGain == null && albumGain == null && trackPeak == null && albumPeak == null) return null;
+    return ReplayGainData._(
+      trackGain: trackGain,
+      trackPeak: trackPeak,
+      albumGain: albumGain,
+      albumPeak: albumPeak,
+    );
+  }
+
   static ReplayGainData? fromTagLibMap(TagLibPropertiesWrapper properties) {
     final simpleMap = properties.propertiesMap.map<String, String?>((key, value) => MapEntry(key, value.firstOrNull));
     return ReplayGainData.fromPropertiesMap(simpleMap);

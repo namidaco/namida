@@ -161,64 +161,66 @@ class _JellyfinServer extends MusicWebServer {
 
     final title = item.name ?? '';
     final album = item.album ?? '';
-    final albumsList = Indexer.splitAlbum(
-      album,
-      config: splitConfig.albumConfig,
+    final albumArtists = item.albumArtists;
+    final albumArtistFallback = item.albumArtist ?? '';
+    final albumArtist = albumArtists.isEmpty ? albumArtistFallback : albumArtists.join(FTagsMultiValues.kJoiner);
+    final originalArtist = item.artists.join(FTagsMultiValues.kJoiner);
+    final originalGenre = item.genres.join(FTagsMultiValues.kJoiner);
+    final composer = item.composers.join(FTagsMultiValues.kJoiner);
+    final originalTags = item.tags.isEmpty ? null : item.tags.join(FTagsMultiValues.kJoiner);
+    final multiValues = FTagsMultiValues.orNull(
+      artists: FTagsMultiValues.valuesOrNull(item.artists),
+      albumArtists: FTagsMultiValues.valuesOrNull(albumArtists),
+      genres: FTagsMultiValues.valuesOrNull(item.genres),
+      composers: FTagsMultiValues.valuesOrNull(item.composers),
+      tags: FTagsMultiValues.valuesOrNull(item.tags),
     );
-    final albumArtist = item.albumArtist ?? '';
 
-    final originalArtist = item.artists.join('; ');
-    final artistsList = _splitAll(
-      item.artists,
-      (p) => Indexer.splitArtist(
-        title: title,
-        originalArtist: p,
-        config: splitConfig.artistsConfig,
-      ),
-    ).toList();
-
-    final originalGenre = item.genres.join('; ');
-    final genresList = _splitAll(
-      item.genres,
-      (p) => Indexer.splitGenre(
-        p,
-        config: splitConfig.genresConfig,
-      ),
-    ).toList();
-
-    final year = item.productionYear ?? 0;
-    final yearString = year != 0 ? year.toString() : '';
+    final premiereDate = item.premiereDate;
+    final year = item.productionYear ?? premiereDate?.year ?? 0;
+    final yearFallbackText = year != 0 ? year.toString() : '';
+    final yearString = _premiereDateText(premiereDate, year) ?? yearFallbackText;
 
     final durationMs = item.runTimeTicks != null ? (item.runTimeTicks! ~/ 10000) : 0;
     final mediaSource = item.mediaSources.firstOrNull;
-    final bitrate = (mediaSource?.bitrate ?? 0) ~/ 1000;
+    final audioStream = item.getAudioStream();
+    final bitrateBps = mediaSource?.bitrate ?? audioStream?.bitRate ?? 0;
+    final bitrate = bitrateBps ~/ 1000;
     final size = mediaSource?.size ?? 0;
-    final format = item.container ?? '';
+    final format = item.container ?? mediaSource?.container ?? '';
     final dateAddedMs = item.dateCreated?.millisecondsSinceEpoch ?? 0;
     final dateModifiedMs = item.dateModified?.millisecondsSinceEpoch ?? 0;
-    final rating = (item.userData?.rating ?? 0);
+    final rating = (item.userData?.rating ?? 0) / 10.0;
+    final normalizationGainDB = item.normalizationGainDB;
+    final gainData = normalizationGainDB == null
+        ? null
+        : ReplayGainData.orNull(
+            trackGain: normalizationGainDB,
+            albumGain: null,
+            trackPeak: null,
+            albumPeak: null,
+          );
+    final providerIds = item.providerIds;
+    final mbAlbumId = providerIds[_JellyfinItem.kProviderMusicBrainzAlbum] as String?;
+    final mbAlbumArtistId = providerIds[_JellyfinItem.kProviderMusicBrainzAlbumArtist] as String?;
 
     final isVideo = item.videoType != null;
 
-    return TrackExtended(
+    final remotePath = item.path;
+    final serverFolder = remotePath == null ? null : _serverFolderOf(remotePath);
+
+    return TrackExtended.derive(
+      splitConfig: splitConfig,
+      mbAlbumId: mbAlbumId ?? '',
+      mbAlbumArtistId: mbAlbumArtistId ?? '',
       title: title,
       originalArtist: originalArtist,
-      artistsList: artistsList,
       originalAlbum: album,
-      albumsList: albumsList,
       albumArtist: albumArtist,
-      albumArtistsList: Indexer.splitAlbumArtist(
-        albumArtist,
-        config: splitConfig.artistsConfig,
-      ),
       originalGenre: originalGenre,
-      genresList: genresList,
       originalStyle: '',
-      stylesList: const [],
       originalMood: '',
-      moodList: [],
-      composer: '',
-      composersList: const [UnknownTags.COMPOSER],
+      composer: composer,
       trackNo: item.indexNumber ?? 0,
       trackTo: 0,
       durationMS: durationMs,
@@ -229,42 +231,54 @@ class _JellyfinServer extends MusicWebServer {
       dateAdded: dateAddedMs,
       dateModified: dateModifiedMs,
       path: path,
-      comment: '',
+      comment: item.overview ?? '',
       description: '',
       synopsis: '',
       bitrate: bitrate,
-      sampleRate: 0,
-      bits: 0,
+      sampleRate: audioStream?.sampleRate ?? 0,
+      bits: audioStream?.bitDepth ?? 0,
       isLossless: null,
       format: format,
-      channels: '',
+      channels: _channelsText(audioStream?.channels),
       discNo: item.parentIndexNumber ?? 0,
       discTo: 0,
-      language: '',
-      languagesList: const [],
+      language: audioStream?.language ?? '',
       lyrics: '',
-      label: '',
+      label: item.studios.join(FTagsMultiValues.kJoiner),
       releaseType: '',
-      bpm: 0,
+      bpm: null,
       musicalKey: '',
       rating: rating,
-      originalTags: null,
-      tagsList: [],
-      gainData: null,
+      originalTags: originalTags,
+      gainData: gainData,
       sortInfo: null,
+      multiValues: multiValues,
       extraTags: null,
       hashKey: id,
       isVideo: isVideo,
       server: server,
-      albumsIdentifiersWrappers: AlbumIdentifierWrapper.fromAlbums(
-        albums: albumsList,
-        albumArtist: albumArtist,
-        year: yearString,
-        mbAlbumId: '',
-        mbAlbumArtistId: '',
-      ),
+      serverFolder: serverFolder,
     );
   }
+}
+
+/// `PremiereDate` as a tag-like `yyyy-mm-dd` text, only when it's the item's year.
+String? _premiereDateText(DateTime? premiereDate, int year) {
+  if (premiereDate == null || premiereDate.year != year) return null;
+  final buffer = StringBuffer()
+    ..write(year)
+    ..write('-')
+    ..write(premiereDate.month.toString().padLeft(2, '0'))
+    ..write('-')
+    ..write(premiereDate.day.toString().padLeft(2, '0'));
+  return buffer.toString();
+}
+
+@visibleForTesting
+TrackExtended debugJellyfinItemToTrack(Map<String, dynamic> itemJson, {required SplitArtistGenreConfigsWrapper splitConfig, required String server}) {
+  final item = _JellyfinItem.fromJson(itemJson);
+  final serverUriParsed = Uri.parse(server);
+  return _JellyfinServer._baseItemDtoToTrackExtended(item, splitConfig: splitConfig, server: server, serverUriParsed: serverUriParsed);
 }
 
 class JellyfinAuth {
