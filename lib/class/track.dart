@@ -415,6 +415,9 @@ class TrackExtended {
   /// `/` separated, relative to [server].
   final String? serverFolder;
 
+  /// set while indexing, false also means unknown.
+  final bool hasNoEmbeddedArtwork;
+
   List<AlbumIdentifierWrapper> albumsIdentifiersWrappersModifed(List<AlbumIdentifier> identifiers) => albumsIdentifiersWrappers.map((e) => e.modifyOnly(identifiers)).toList();
 
   // -- cache for image path instead of resolving it each time.
@@ -478,6 +481,7 @@ class TrackExtended {
     required this.isVideo,
     required this.server,
     required this.serverFolder,
+    required this.hasNoEmbeddedArtwork,
   });
 
   late final String yearPreferyyyyMMdd = _computeYearPreferyyyyMMdd();
@@ -638,6 +642,7 @@ class TrackExtended {
     required bool isVideo,
     required String? server,
     required String? serverFolder,
+    required bool hasNoEmbeddedArtwork,
   }) {
     final artistsConfig = splitConfig.artistsConfig;
     final genresConfig = splitConfig.genresConfig;
@@ -707,6 +712,7 @@ class TrackExtended {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
     );
   }
 
@@ -775,6 +781,7 @@ class TrackExtended {
       isVideo: json['v'] ?? false,
       server: json['server'],
       serverFolder: json['serverFolder'],
+      hasNoEmbeddedArtwork: json['noArt'] ?? false,
     );
   }
 
@@ -830,6 +837,7 @@ class TrackExtended {
       if (isVideo) 'v': isVideo,
       if (server != null) 'server': server,
       if (serverFolder != null) 'serverFolder': serverFolder,
+      if (hasNoEmbeddedArtwork) 'noArt': hasNoEmbeddedArtwork,
     };
   }
 
@@ -1095,6 +1103,7 @@ extension TrackExtUtils on TrackExtended {
       multiValues: multiValues,
       extraTags: tag.extraTags ?? extraTags,
       chapters: tag.chapters ?? chapters,
+      hasNoEmbeddedArtwork: hasNoEmbeddedArtwork && !tag.artwork.hasArtwork,
 
       // -- uneditable fields
       bitrate: bitrate,
@@ -1164,6 +1173,7 @@ extension TrackExtUtils on TrackExtended {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
     );
   }
 
@@ -1224,6 +1234,7 @@ extension TrackExtUtils on TrackExtended {
     required bool generatePathHash,
     String? server,
     String? serverFolder,
+    bool? hasNoEmbeddedArtwork,
   }) {
     final newPath = path ?? this.path;
     String? newHashKey = TrackExtended.generateHashKeyIfEnabled(path, newPath, this.hashKey);
@@ -1283,6 +1294,7 @@ extension TrackExtUtils on TrackExtended {
       isVideo: isVideo ?? this.isVideo,
       server: server ?? this.server,
       serverFolder: serverFolder ?? this.serverFolder,
+      hasNoEmbeddedArtwork: hasNoEmbeddedArtwork ?? this.hasNoEmbeddedArtwork,
     );
   }
 }

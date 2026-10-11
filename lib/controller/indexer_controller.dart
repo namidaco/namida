@@ -545,6 +545,7 @@ class Indexer<T extends Track> {
       server: server,
       stats: stats,
       trackInfo: trackInfo,
+      didExtractArtwork: false,
       tryExtractingFromFilename: tryExtractingFromFilename,
       minDur: minDur,
       minSize: minSize,
@@ -560,6 +561,7 @@ class Indexer<T extends Track> {
     String? server,
     FileStatsAdv? stats,
     required FAudioModel trackInfo,
+    required bool didExtractArtwork,
     required bool tryExtractingFromFilename,
     int minDur = 0,
     int minSize = 0,
@@ -586,6 +588,9 @@ class Indexer<T extends Track> {
       if (minDur != 0 && durationInMS != 0 && durationInMS < minDur * 1000) {
         return onMinDurTrigger();
       }
+
+      final isVideo = trackPath.isVideo();
+      final hasNoEmbeddedArtwork = didExtractArtwork && !isVideo && info != null && !info.tags.artwork.hasArtwork;
 
       final initialTrack = TrackExtended(
         title: UnknownTags.TITLE,
@@ -639,10 +644,11 @@ class Indexer<T extends Track> {
         multiValues: null,
         extraTags: null,
         albumsIdentifiersWrappers: const [],
-        isVideo: trackPath.isVideo(),
+        isVideo: isVideo,
         hashKey: null,
         server: server,
         serverFolder: null,
+        hasNoEmbeddedArtwork: hasNoEmbeddedArtwork,
       );
 
       final tags = info?.tags ?? _emptyTags;
@@ -681,6 +687,7 @@ class Indexer<T extends Track> {
     return convertTagToTrack(
       trackPath: trackPath,
       trackInfo: res,
+      didExtractArtwork: false,
       tryExtractingFromFilename: tryExtractingFromFilename,
       minDur: minDur,
       minSize: minSize,
@@ -839,6 +846,7 @@ class Indexer<T extends Track> {
       final trext = await convertTagToTrack(
         trackPath: item.tags.path,
         trackInfo: item,
+        didExtractArtwork: updateArtwork,
         tryExtractingFromFilename: tryExtractingFromFilename,
         onMinDurTrigger: () => null,
         onMinSizeTrigger: () => null,
@@ -914,10 +922,12 @@ class Indexer<T extends Track> {
     }
 
     final splitConfig = _createSplitConfig();
+    final shouldExtractArtwork = _isArtworkCachingEnabled;
 
     Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
       trackPath: item.tags.path,
       trackInfo: item,
+      didExtractArtwork: shouldExtractArtwork,
       tryExtractingFromFilename: true,
       onMinDurTrigger: () => null,
       onMinSizeTrigger: () => null,
@@ -927,7 +937,7 @@ class Indexer<T extends Track> {
 
     final model = await NamidaTaggerController.inst.extractMetadata(
       trackPath: trackPath,
-      extractArtwork: null,
+      extractArtwork: shouldExtractArtwork,
       isVideo: trackPath.isVideo(),
       isNetwork: false,
     );
@@ -999,10 +1009,12 @@ class Indexer<T extends Track> {
 
     if (tracksToExtract.isNotEmpty) {
       final splitConfig = _createSplitConfig();
+      final shouldExtractArtwork = _isArtworkCachingEnabled;
 
       Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
         trackPath: item.tags.path,
         trackInfo: item,
+        didExtractArtwork: shouldExtractArtwork,
         tryExtractingFromFilename: true,
         onMinDurTrigger: () => null,
         onMinSizeTrigger: () => null,
@@ -1013,7 +1025,7 @@ class Indexer<T extends Track> {
       final keyWrapper = ExtractingPathKey.create();
       final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
         paths: tracksToExtract,
-        extractArtwork: null,
+        extractArtwork: shouldExtractArtwork,
         keyWrapper: keyWrapper,
         isNetwork: false,
       );
@@ -1141,10 +1153,12 @@ class Indexer<T extends Track> {
         if (paths.isEmpty) return;
 
         final splittersConfigs = _createSplitConfig();
+        final shouldExtractArtwork = _isArtworkCachingEnabled;
         Future<TrackExtended?> extractFunction(FAudioModel item) => convertTagToTrack(
           trackPath: item.tags.path,
           stats: filesStats?[item.tags.path],
           trackInfo: item,
+          didExtractArtwork: shouldExtractArtwork,
           tryExtractingFromFilename: true,
           minDur: minDur,
           minSize: minSize,
@@ -1163,7 +1177,7 @@ class Indexer<T extends Track> {
         final stream = await NamidaTaggerController.inst.extractMetadataAsStream(
           paths: paths,
           keyWrapper: keyWrapper,
-          extractArtwork: null,
+          extractArtwork: shouldExtractArtwork,
           overrideArtwork: isModified,
           isNetwork: false,
         );
@@ -2212,6 +2226,7 @@ class Indexer<T extends Track> {
         hashKey: TrackExtended.generateHashKeyIfEnabled(null, path, null),
         server: null,
         serverFolder: null,
+        hasNoEmbeddedArtwork: false,
       );
       tracks.add(trext);
       _backupMediaStoreIDS[trext.pathToImage] = (trext.asTrack(), e.id);

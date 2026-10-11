@@ -1,6 +1,7 @@
 // by claude
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,11 +33,12 @@ void main() {
 
   String pathOf(String filename) => '${dir.path}$sep$filename';
 
-  Future<TrackExtended> index(String path, FTags tags, {bool hasError = false}) async {
+  Future<TrackExtended> index(String path, FTags tags, {bool hasError = false, bool didExtractArtwork = false}) async {
     final trExt = await Indexer.convertTagToTrack(
       trackPath: path,
       stats: const FileStatsAdv(creationDateMS: 1600000000000, modifiedMS: 1600000001000, size: 4000000),
       trackInfo: FAudioModel(tags: tags, durationMS: 180000, bitRate: 320, sampleRate: 44100, bits: 16, format: 'mp3', channels: '2', hasError: hasError),
+      didExtractArtwork: didExtractArtwork,
       tryExtractingFromFilename: true,
       onMinDurTrigger: () => null,
       onMinSizeTrigger: () => null,
@@ -379,6 +381,33 @@ void main() {
       expect(FTagsMultiValues.valuesOrNull([' A ', '', 'a', 'B  C']), ['A', 'B C']);
       expect(FTagsMultiValues.valuesOrNull(['A', ' a ', '']), isNull);
       expect(FTagsMultiValues.splitJoined('A;B ;  C'), ['A', 'B', 'C']);
+    });
+  });
+
+  group('missing embedded artwork', () {
+    FTags tagsWith(FArtwork artwork) => FTags.edit(path: '', artwork: artwork, title: 'T', artist: 'Ar');
+
+    test('is known only when indexing extracted the artwork and found none', () async {
+      final none = await index(pathOf('none.mp3'), tagsWith(FArtwork()), didExtractArtwork: true);
+      final withBytes = await index(pathOf('bytes.mp3'), tagsWith(FArtwork(bytes: Uint8List(4))), didExtractArtwork: true);
+      final withCachedFile = await index(pathOf('cached.mp3'), tagsWith(FArtwork(file: File(pathOf('cached.png')))), didExtractArtwork: true);
+      final notExtracted = await index(pathOf('skipped.mp3'), tagsWith(FArtwork()));
+      final video = await index(pathOf('video.mp4'), tagsWith(FArtwork()), didExtractArtwork: true);
+      final failed = await index(pathOf('failed.mp3'), tagsWith(FArtwork()), didExtractArtwork: true, hasError: true);
+      expect(none.hasNoEmbeddedArtwork, isTrue);
+      for (final trExt in [withBytes, withCachedFile, notExtracted, video, failed]) {
+        expect(trExt.hasNoEmbeddedArtwork, isFalse, reason: trExt.path);
+        expect(trExt.toJsonWithoutPath().containsKey('noArt'), isFalse, reason: trExt.path);
+      }
+    });
+
+    test('survives reloads and edits until an artwork is written', () async {
+      final fresh = await index(pathOf('kept.mp3'), tagsWith(FArtwork()), didExtractArtwork: true);
+      expect(reload(fresh).hasNoEmbeddedArtwork, isTrue);
+      expect(fresh.rederive(splitConfig).hasNoEmbeddedArtwork, isTrue);
+      expect(fresh.copyWith(size: 1, generatePathHash: false).hasNoEmbeddedArtwork, isTrue);
+      expect(editedFrom(fresh, editTags(lyrics: 'la')).hasNoEmbeddedArtwork, isTrue);
+      expect(editedFrom(fresh, tagsWith(FArtwork(file: File(pathOf('cover.jpg'))))).hasNoEmbeddedArtwork, isFalse);
     });
   });
 

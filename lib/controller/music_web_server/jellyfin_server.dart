@@ -281,6 +281,7 @@ class _JellyfinServer extends MusicWebServer {
       isVideo: isVideo,
       server: server,
       serverFolder: serverFolder,
+      hasNoEmbeddedArtwork: false,
     );
   }
 }

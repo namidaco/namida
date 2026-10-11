@@ -69,6 +69,7 @@ void main() {
       trackPath: trackPath(filename),
       stats: const FileStatsAdv(creationDateMS: 0, modifiedMS: 0, size: 0),
       trackInfo: untaggedInfo,
+      didExtractArtwork: false,
       tryExtractingFromFilename: true,
       onMinDurTrigger: () => null,
       onMinSizeTrigger: () => null,

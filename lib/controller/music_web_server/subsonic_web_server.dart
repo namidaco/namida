@@ -467,6 +467,7 @@ class _SubsonicWebServer extends MusicWebServer {
       isVideo: media.isVideo ?? false,
       server: server,
       serverFolder: serverFolder,
+      hasNoEmbeddedArtwork: false,
     );
   }
 }

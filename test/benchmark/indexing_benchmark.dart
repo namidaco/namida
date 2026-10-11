@@ -44,6 +44,7 @@ void main() {
           trackPath: tracks[i].path,
           stats: stats[i],
           trackInfo: infos[i],
+          didExtractArtwork: false,
           tryExtractingFromFilename: true,
           onMinDurTrigger: () => null,
           onMinSizeTrigger: () => null,

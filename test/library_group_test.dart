@@ -96,6 +96,7 @@ void main() {
       isVideo: path.endsWith('.mp4'),
       server: null,
       serverFolder: null,
+      hasNoEmbeddedArtwork: false,
     );
   }
 

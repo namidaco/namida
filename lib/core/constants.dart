@@ -1447,6 +1447,7 @@ final kDummyExtendedTrack = TrackExtended(
   isVideo: false,
   server: null,
   serverFolder: null,
+  hasNoEmbeddedArtwork: false,
 );
 
 /// Unknown Tag Fields

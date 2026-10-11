@@ -90,6 +90,8 @@ class _FileBasedArtworkExtractStrategy extends _ArtworkExtractStrategy {
     }
 
     if (track != null) {
+      final hasNoEmbeddedArtwork = track.toTrackExtOrNull()?.hasNoEmbeddedArtwork == true;
+      if (hasNoEmbeddedArtwork) return FArtwork.dummy();
       return await _extractFromTrack(
         trackPath: track.path,
         imagePath: imagePath,

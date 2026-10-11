@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:ffmpeg_kit_flutter/ffmpeg_kit_config.dart';
+import 'package:path/path.dart' as p;
 
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
@@ -270,26 +272,50 @@ class NamidaFFMPEG {
     }
   }
 
-  Future<bool> compressImage({
+  /// written only when smaller, [outputPath] can be [path].
+  Future<bool> _compressImage({
     required String path,
-    required String saveDir,
-    bool keepOriginalFileStats = true,
-    int percentage = 50,
+    required String outputPath,
+    required _ImageKind kind,
+    required bool keepOriginalFileStats,
+    required int percentage,
   }) async {
     assert(percentage >= 0 && percentage <= 100);
 
     final toQSC = (percentage / 3.2).round();
+    final encodingArgs = switch (kind) {
+      _ImageKind.opaque => ['-qscale:v', '$toQSC'],
+      _ImageKind.transparent => const ['-compression_level', '9', '-pred', 'mixed'],
+    };
 
-    final imageFile = File(path);
-    final originalStats = keepOriginalFileStats ? await imageFile.stat() : null;
-    final newFilePath = FileParts.joinPath(saveDir, "${path.getFilenameWOExt}.jpg");
-    final didSuccess = await _executer.ffmpegExecute(['-i', path, '-qscale:v', '$toQSC', '-y', newFilePath]);
+    final tempFile = FileParts.join(AppDirs.APP_CACHE, '.compress_${path.hashCode}.${kind.outputExtension}');
+    try {
+      final originalStats = await File(path).stat();
+      final didSuccess = await _executer.ffmpegExecute(['-i', path, '-frames:v', '1', ...encodingArgs, '-y', tempFile.path]);
+      if (!didSuccess) return false;
 
-    if (originalStats != null) {
-      await setFileStats(File(newFilePath), originalStats);
+      final compressedSize = await tempFile.length();
+      if (compressedSize >= originalStats.size) return true;
+
+      if (outputPath != path) {
+        final outputDirectory = Directory(outputPath.getDirectoryPath);
+        await outputDirectory.create(recursive: true);
+      }
+      final outputFile = await tempFile.copy(outputPath);
+      if (keepOriginalFileStats) await setFileStats(outputFile, originalStats);
+      return true;
+    } catch (e) {
+      printy(e, isError: true);
+      return false;
+    } finally {
+      tempFile.tryDeleting();
     }
+  }
 
-    return didSuccess;
+  static bool _isAppDataDirectory(String dirPath) {
+    final sep = Platform.pathSeparator;
+    final dirPathWithSep = dirPath.endsWith(sep) ? dirPath : '$dirPath$sep';
+    return dirPathWithSep.startsWith('${AppDirs.USER_DATA}$sep');
   }
 
   Future<void> compressImageDirectories({
@@ -299,25 +325,50 @@ class NamidaFFMPEG {
     bool recursive = true,
   }) async {
     final saveDirPath = AppDirs.COMPRESSED_IMAGES;
-    if (!await requestManageStoragePermission(directoryToCreate: saveDirPath)) return;
+    final hasAppDirs = dirs.any(_isAppDataDirectory);
+    final hasOtherDirs = dirs.any((d) => !_isAppDataDirectory(d));
+    if (hasOtherDirs && !await requestManageStoragePermission(directoryToCreate: saveDirPath)) return;
 
-    final dirFiles = <FileSystemEntity>[];
+    final imagesToCompress = <({String path, String outputPath, _ImageKind kind})>[];
+    final usedOutputPaths = <String>{};
 
     for (final d in dirs) {
-      dirFiles.addAll(await Directory(d).listAllIsolate(recursive: recursive));
+      final isAppDir = _isAppDataDirectory(d);
+      final dirName = d.getFilename;
+      final dirFiles = await Directory(d).listAllIsolate(recursive: recursive);
+      for (final f in dirFiles) {
+        final path = f.path;
+        if (f is! File || !NamidaFileExtensionsWrapper.image.isPathValid(path)) continue;
+        final kind = await _ImageKindSniffer.sniff(path);
+        if (kind == null) continue;
+        final outputExtension = kind.outputExtension;
+        if (isAppDir) {
+          if (usedOutputPaths.add(path)) imagesToCompress.add((path: path, outputPath: path, kind: kind));
+          continue;
+        }
+        final relativePath = p.relative(path, from: d);
+        final relativePathWOExt = p.withoutExtension(relativePath);
+        var outputPath = FileParts.joinPath(saveDirPath, dirName, '$relativePathWOExt.$outputExtension');
+        if (!usedOutputPaths.add(outputPath)) {
+          // -- same name with another extension
+          outputPath = FileParts.joinPath(saveDirPath, dirName, '$relativePath.$outputExtension');
+          if (!usedOutputPaths.add(outputPath)) continue;
+        }
+        imagesToCompress.add((path: path, outputPath: outputPath, kind: kind));
+      }
     }
 
-    dirFiles.retainWhere((element) => element is File);
     currentOperations[OperationType.imageCompress]!.value = OperationProgress(); // resetting
 
-    final totalFiles = dirFiles.length;
+    final totalFiles = imagesToCompress.length;
     int currentProgress = 0;
     int currentFailed = 0;
 
-    for (final f in dirFiles) {
-      final didUpdate = await compressImage(
-        path: f.path,
-        saveDir: saveDirPath,
+    for (final image in imagesToCompress) {
+      final didUpdate = await _compressImage(
+        path: image.path,
+        outputPath: image.outputPath,
+        kind: image.kind,
         percentage: compressionPerc,
         keepOriginalFileStats: keepOriginalFileStats,
       );
@@ -326,11 +377,16 @@ class NamidaFFMPEG {
       currentOperations[OperationType.imageCompress]!.value = OperationProgress(
         totalFiles: totalFiles,
         progress: currentProgress,
-        currentFilePath: f.path,
+        currentFilePath: image.path,
         totalFailed: currentFailed,
       );
     }
     currentOperations[OperationType.imageCompress]!.value.currentFilePath = null;
+
+    if (hasAppDirs) {
+      Indexer.clearMemoryImageCache();
+      Indexer.inst.calculateAllImageSizesInStorage();
+    }
   }
 
   Future<void> fixYTDLPBigThumbnailSize({required List<String> directoriesPaths, bool recursive = true}) async {
@@ -356,6 +412,7 @@ class NamidaFFMPEG {
 
     currentOperations[OperationType.ytdlpThumbnailFix]!.value = OperationProgress(); // resetting
 
+    final tracksWithNewArtwork = <Track, TrackExtended>{};
     for (final filee in allFiles) {
       currentProgress++;
       if (filee is File) {
@@ -400,7 +457,11 @@ class NamidaFFMPEG {
             audioPath: filee.path,
             thumbnailPath: thumbnailFile.path,
           );
-          if (!didUpdate) currentFailed++;
+          if (!didUpdate) {
+            currentFailed++;
+          } else if (tr.hasNoEmbeddedArtwork) {
+            tracksWithNewArtwork[tr.asTrack()] = tr.copyWith(hasNoEmbeddedArtwork: false, generatePathHash: false);
+          }
 
           if (isTempThumbnail) {
             thumbnailFile.tryDeleting();
@@ -416,6 +477,8 @@ class NamidaFFMPEG {
       }
     }
     currentOperations[OperationType.ytdlpThumbnailFix]!.value.currentFilePath = null;
+
+    if (tracksWithNewArtwork.isNotEmpty) await Indexer.inst.updateTrackMetadata(tracksMap: tracksWithNewArtwork);
   }
 
   /// * Extracts thumbnail from a given video, usually this tries to get embed thumbnail,
@@ -645,6 +708,76 @@ class NamidaFFMPEG {
   // }
 }
 
+// by claude
+class _ImageKindSniffer {
+  static const _kPngSignature = '\x89PNG\r\n\x1a\n';
+  static const _kHeadLength = 30;
+  static const _kPngColorTypeOffset = 25;
+  static const _kPngColorTypeGrayAlpha = 4;
+  static const _kPngColorTypeRgba = 6;
+  static const _kPngChunkHeaderLength = 8;
+  static const _kPngChunkCrcLength = 4;
+  static const _kWebpChunkTypeOffset = 12;
+  static const _kWebpChunkDataOffset = 20;
+  static const _kWebpAnimationFlag = 0x02;
+  static const _kWebpAlphaFlag = 0x10;
+  static const _kWebpLosslessAlphaBit = 28;
+
+  /// by content, cached images are named `.png` whatever they hold. null for animated ones, gifs included.
+  static Future<_ImageKind?> sniff(String path) async {
+    RandomAccessFile? file;
+    try {
+      file = await File(path).open();
+      final head = await file.read(_kHeadLength);
+      final signature = String.fromCharCodes(head, 0, 8);
+      if (signature == _kPngSignature) return await _sniffPng(file, head);
+      if (signature.startsWith('GIF8')) return null;
+      if (signature.startsWith('RIFF')) return _sniffWebp(head);
+      return _ImageKind.opaque;
+    } catch (_) {
+      return _ImageKind.opaque; // -- unreadable files are reported by ffmpeg
+    } finally {
+      await file?.close();
+    }
+  }
+
+  /// `acTL` and `tRNS` both come before the first `IDAT`.
+  static Future<_ImageKind?> _sniffPng(RandomAccessFile file, Uint8List head) async {
+    final colorType = head[_kPngColorTypeOffset];
+    bool isTransparent = colorType == _kPngColorTypeGrayAlpha || colorType == _kPngColorTypeRgba;
+    int position = _kPngSignature.length;
+    while (true) {
+      await file.setPosition(position);
+      final chunkHeader = await file.read(_kPngChunkHeaderLength);
+      if (chunkHeader.length < _kPngChunkHeaderLength) break;
+      final chunkType = String.fromCharCodes(chunkHeader, 4, _kPngChunkHeaderLength);
+      if (chunkType == 'acTL') return null;
+      if (chunkType == 'IDAT') break;
+      if (chunkType == 'tRNS') isTransparent = true;
+      final chunkDataLength = ByteData.sublistView(chunkHeader).getUint32(0);
+      position += _kPngChunkHeaderLength + chunkDataLength + _kPngChunkCrcLength;
+    }
+    return isTransparent ? _ImageKind.transparent : _ImageKind.opaque;
+  }
+
+  static _ImageKind? _sniffWebp(Uint8List head) {
+    final chunkType = String.fromCharCodes(head, _kWebpChunkTypeOffset, _kWebpChunkTypeOffset + 4);
+    if (chunkType == 'VP8X') {
+      final flags = head[_kWebpChunkDataOffset];
+      final isAnimated = flags & _kWebpAnimationFlag != 0;
+      if (isAnimated) return null;
+      final hasAlpha = flags & _kWebpAlphaFlag != 0;
+      return hasAlpha ? _ImageKind.transparent : _ImageKind.opaque;
+    }
+    if (chunkType == 'VP8L') {
+      final bits = ByteData.sublistView(head).getUint32(_kWebpChunkDataOffset + 1, Endian.little); // -- after the 0x2f signature
+      final hasAlpha = (bits >> _kWebpLosslessAlphaBit) & 1 == 1;
+      return hasAlpha ? _ImageKind.transparent : _ImageKind.opaque;
+    }
+    return _ImageKind.opaque;
+  }
+}
+
 enum FFMPEGTagField {
   title('title'),
   artist('artist'),
@@ -750,4 +883,13 @@ class OperationProgress {
 enum OperationType {
   imageCompress,
   ytdlpThumbnailFix,
+}
+
+enum _ImageKind {
+  opaque(outputExtension: 'jpg'),
+  transparent(outputExtension: 'png'),
+  ;
+
+  final String outputExtension;
+  const _ImageKind({required this.outputExtension});
 }
