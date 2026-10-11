@@ -63,12 +63,11 @@ class IndexerSettings extends SettingSubpageProvider {
         keys: [settings.groupArtworksByAlbum],
         onReset: () => _showReindexingPrompt(title: lang.groupArtworksByAlbum, body: lang.requiresClearingImageCacheAndReIndexing),
         tile: (args) => _ExclusiveArtworkToggleTile(
-          bgColor: args.bgColor,
+          args: args,
           setting: settings.groupArtworksByAlbum,
           exclusiveSetting: settings.uniqueArtworkHash,
           icon: Broken.backward_item,
           title: lang.groupArtworksByAlbum,
-          subtitle: lang.requiresClearingImageCacheAndReIndexing,
         ),
       ),
       SettingCustom(
@@ -76,7 +75,7 @@ class IndexerSettings extends SettingSubpageProvider {
         keys: [settings.uniqueArtworkHash],
         onReset: () => _showReindexingPrompt(title: lang.uniqueArtworkHash, body: lang.requiresClearingImageCacheAndReIndexing),
         tile: (args) => _ExclusiveArtworkToggleTile(
-          bgColor: args.bgColor,
+          args: args,
           setting: settings.uniqueArtworkHash,
           exclusiveSetting: settings.groupArtworksByAlbum,
           leading: const StackedIcon(
@@ -85,7 +84,7 @@ class IndexerSettings extends SettingSubpageProvider {
             secondaryIconSize: 13.0,
           ),
           title: lang.uniqueArtworkHash,
-          subtitle: "${lang.performanceNote}. ${lang.requiresClearingImageCacheAndReIndexing}",
+          note: lang.performanceNote,
         ),
       ),
     ],
@@ -122,6 +121,40 @@ class IndexerSettings extends SettingSubpageProvider {
     onReset: () => showRefreshPromptDialog(true),
     tile: (args) => _FoldersToExcludeTile(
       args: args,
+    ),
+  );
+
+  static final respectNoMedia = SettingCustom(
+    title: () => lang.respectNoMedia,
+    aliases: () => [lang.respectNoMediaSubtitle],
+    keys: [settings.respectNoMedia],
+    tile: (args) => _RespectNoMediaTile(
+      args: args,
+    ),
+  );
+
+  static final minFileDuration = SettingCustom(
+    title: () => lang.minFileDuration,
+    keys: [settings.indexMinDurationInSec],
+    tile: (args) => _MinFileDurationTile(
+      args: args,
+    ),
+  );
+
+  static final minFileSize = SettingCustom(
+    title: () => lang.minFileSize,
+    keys: [settings.indexMinFileSizeInB],
+    tile: (args) => _MinFileSizeTile(
+      args: args,
+    ),
+  );
+
+  static final albumIdentifiers = SettingCustom(
+    title: () => lang.albumIdentifiers,
+    keys: [settings.albumIdentifiers],
+    onReset: () => _showReindexingPrompt(title: lang.albumIdentifiers, body: lang.requiresClearingImageCacheAndReIndexing),
+    tile: (args) => _AlbumIdentifiersTile(
+      bgColor: args.bgColor,
     ),
   );
 
@@ -175,39 +208,13 @@ class IndexerSettings extends SettingSubpageProvider {
           bgColor: args.bgColor,
         ),
       ),
-      SettingCustom(
-        title: () => lang.albumIdentifiers,
-        keys: [settings.albumIdentifiers],
-        onReset: () => _showReindexingPrompt(title: lang.albumIdentifiers, body: lang.requiresClearingImageCacheAndReIndexing),
-        tile: (args) => _AlbumIdentifiersTile(
-          bgColor: args.bgColor,
-        ),
-      ),
+      albumIdentifiers,
     ],
     [
       includeVideos,
-      SettingCustom(
-        title: () => lang.respectNoMedia,
-        aliases: () => [lang.respectNoMediaSubtitle],
-        keys: [settings.respectNoMedia],
-        tile: (args) => _RespectNoMediaTile(
-          bgColor: args.bgColor,
-        ),
-      ),
-      SettingCustom(
-        title: () => lang.minFileDuration,
-        keys: [settings.indexMinDurationInSec],
-        tile: (args) => _MinFileDurationTile(
-          bgColor: args.bgColor,
-        ),
-      ),
-      SettingCustom(
-        title: () => lang.minFileSize,
-        keys: [settings.indexMinFileSizeInB],
-        tile: (args) => _MinFileSizeTile(
-          bgColor: args.bgColor,
-        ),
-      ),
+      respectNoMedia,
+      minFileDuration,
+      minFileSize,
       SettingCustom(
         title: () => '${lang.extension} (${lang.blacklist})',
         keys: [settings.extensionsBlacklist],
@@ -260,6 +267,11 @@ class IndexerSettings extends SettingSubpageProvider {
 
   void _maybeShowRefreshPromptDialog(bool didModifyFolder) {
     if (!isInFirstConfigScreen) showRefreshPromptDialog(didModifyFolder);
+  }
+
+  String? _withIndexingNote(String? subtitle, String note) {
+    if (isInFirstConfigScreen) return subtitle;
+    return [?subtitle, note].join('. ');
   }
 
   void _reAuthDirIndex(DirectoryIndexServer e) {
@@ -909,6 +921,7 @@ class IndexerSettings extends SettingSubpageProvider {
     required String title,
     required String body,
   }) {
+    if (Indexer.inst.tracksInfoList.value.isEmpty) return;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: title,
@@ -1023,24 +1036,26 @@ class IndexerSettings extends SettingSubpageProvider {
 }
 
 class _RespectNoMediaTile extends StatelessWidget {
-  final Color? bgColor;
+  final SettingTileArgs args;
 
-  const _RespectNoMediaTile({required this.bgColor});
+  const _RespectNoMediaTile({required this.args});
 
   void _onChanged(bool isTrue) => settings.respectNoMedia.save(!isTrue);
 
   @override
   Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final subtitle = host._withIndexingNote(lang.respectNoMediaSubtitle, lang.indexRefreshRequired);
     return Obx(
       (context) {
         final isMediaStoreEnabled = settings.useMediaStore.valueR;
         final value = !isMediaStoreEnabled && settings.respectNoMedia.valueR;
         return CustomSwitchListTile(
-          bgColor: bgColor,
+          bgColor: args.bgColor,
           enabled: !isMediaStoreEnabled,
           icon: Broken.cd,
           title: lang.respectNoMedia,
-          subtitle: "${lang.respectNoMediaSubtitle}. ${lang.indexRefreshRequired}",
+          subtitle: subtitle,
           onChanged: _onChanged,
           value: value,
         );
@@ -1050,22 +1065,22 @@ class _RespectNoMediaTile extends StatelessWidget {
 }
 
 class _ExclusiveArtworkToggleTile extends StatelessWidget {
-  final Color? bgColor;
+  final SettingTileArgs args;
   final SettingsKey<bool> setting;
   final SettingsKey<bool> exclusiveSetting;
   final IconData? icon;
   final Widget? leading;
   final String title;
-  final String subtitle;
+  final String? note;
 
   const _ExclusiveArtworkToggleTile({
-    required this.bgColor,
+    required this.args,
     required this.setting,
     required this.exclusiveSetting,
     this.icon,
     this.leading,
     required this.title,
-    required this.subtitle,
+    this.note,
   });
 
   void _onChanged(bool isTrue) {
@@ -1075,11 +1090,13 @@ class _ExclusiveArtworkToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final subtitle = host._withIndexingNote(note, lang.requiresClearingImageCacheAndReIndexing);
     return Obx(
       (context) => AnimatedEnabled(
         enabled: !exclusiveSetting.valueR,
         child: CustomSwitchListTile(
-          bgColor: bgColor,
+          bgColor: args.bgColor,
           icon: icon,
           leading: leading,
           title: title,
@@ -1222,13 +1239,17 @@ class _AlbumIdentifiersTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: settings.albumIdentifiers,
-      builder: (context, albumIdentifiers) => CustomListTile(
-        bgColor: bgColor,
-        icon: Broken.arrow_square,
-        title: lang.albumIdentifiers,
-        trailingText: albumIdentifiers.length.toString(),
-        onTap: _showDialog,
-      ),
+      builder: (context, albumIdentifiers) {
+        final albumIdentifiersText = albumIdentifiers.map((e) => e.toText()).join(', ');
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.arrow_square,
+          title: lang.albumIdentifiers,
+          subtitle: albumIdentifiersText,
+          trailingText: albumIdentifiers.length.toString(),
+          onTap: _showDialog,
+        );
+      },
     );
   }
 }
@@ -1325,19 +1346,21 @@ class _ExtensionsBlacklistTile extends StatelessWidget {
 }
 
 class _MinFileSizeTile extends StatelessWidget {
-  final Color? bgColor;
+  final SettingTileArgs args;
 
-  const _MinFileSizeTile({required this.bgColor});
+  const _MinFileSizeTile({required this.args});
 
   @override
   Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final subtitle = host._withIndexingNote(null, lang.indexRefreshRequired);
     return ObxO(
       rx: settings.indexMinFileSizeInB,
       builder: (context, indexMinFileSizeInB) => CustomListTile(
-        bgColor: bgColor,
+        bgColor: args.bgColor,
         icon: Broken.unlimited,
         title: lang.minFileSize,
-        subtitle: lang.indexRefreshRequired,
+        subtitle: subtitle,
         trailing: NamidaWheelSlider(
           width: 100.0,
           max: 1024,
@@ -1352,19 +1375,21 @@ class _MinFileSizeTile extends StatelessWidget {
 }
 
 class _MinFileDurationTile extends StatelessWidget {
-  final Color? bgColor;
+  final SettingTileArgs args;
 
-  const _MinFileDurationTile({required this.bgColor});
+  const _MinFileDurationTile({required this.args});
 
   @override
   Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final subtitle = host._withIndexingNote(null, lang.indexRefreshRequired);
     return ObxO(
       rx: settings.indexMinDurationInSec,
       builder: (context, indexMinDurationInSec) => CustomListTile(
-        bgColor: bgColor,
+        bgColor: args.bgColor,
         icon: Broken.timer_1,
         title: lang.minFileDuration,
-        subtitle: lang.indexRefreshRequired,
+        subtitle: subtitle,
         trailing: NamidaWheelSlider(
           width: 100.0,
           max: 180,
@@ -1390,6 +1415,12 @@ class _IncludeVideosTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final host = IndexerSettings._forTile(args);
+    final rescanButton = host.isInFirstConfigScreen
+        ? null
+        : const LocalVideosRescanButton(
+            padding: EdgeInsetsDirectional.only(start: 8.0),
+          );
     return Obx(
       (context) {
         final videosCountText = VideoController.inst.getLocalVideosCountTextR();
@@ -1402,9 +1433,7 @@ class _IncludeVideosTile extends StatelessWidget {
           ),
           title: lang.includeVideos,
           subtitle: '${lang.videos}: $videosCountText',
-          trailingBeforeSwitch: const LocalVideosRescanButton(
-            padding: EdgeInsetsDirectional.only(start: 8.0),
-          ),
+          trailingBeforeSwitch: rescanButton,
           value: settings.includeVideos.valueR,
           onChanged: _onChanged,
         );
@@ -1578,6 +1607,9 @@ class _FoldersToScanTile extends StatelessWidget {
       initiallyExpanded: isTargetWithin,
       icon: Broken.folder,
       titleText: lang.listOfFolders,
+      subtitle: _FoldersCountSubtitle(
+        foldersRx: settings.directoriesToScan,
+      ),
       trailingBuilder: (arrow) => _AddFolderTrailing(
         arrow: arrow,
         onAdd: host.promptAddFolderType,
@@ -1743,6 +1775,9 @@ class _FoldersToExcludeTile extends StatelessWidget {
       initiallyExpanded: isTargetWithin,
       icon: Broken.folder_minus,
       titleText: lang.excludedFodlers,
+      subtitle: _FoldersCountSubtitle(
+        foldersRx: settings.directoriesToExclude,
+      ),
       trailingBuilder: (arrow) => _AddFolderTrailing(
         arrow: arrow,
         onAdd: host._promptAddExcludedFolder,
@@ -1815,6 +1850,24 @@ class _ExcludedFolderTile extends StatelessWidget {
         onTap: _onRemoveTap,
         text: lang.remove.toUpperCase(),
         fontSizeMultiplier: 0.92,
+      ),
+    );
+  }
+}
+
+class _FoldersCountSubtitle extends StatelessWidget {
+  final RxBaseCore<List<DirectoryIndex>> foldersRx;
+
+  const _FoldersCountSubtitle({required this.foldersRx});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = context.textTheme;
+    return ObxO(
+      rx: foldersRx,
+      builder: (context, folders) => Text(
+        folders.length.displayFolderKeyword,
+        style: textTheme.displaySmall,
       ),
     );
   }

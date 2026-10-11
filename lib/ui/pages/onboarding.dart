@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -15,6 +16,7 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
+import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
@@ -47,7 +49,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     if (mounted) setState(() {});
   }
 
-  void _navigateToNamida() async {
+  void _navigateToNamida(NamidaRouteWidget? pageAfterFirstLoad) async {
     if (!didGrantStoragePermission) {
       snackyy(
         title: lang.storagePermissionDenied,
@@ -58,6 +60,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       return;
     }
 
+    if (pageAfterFirstLoad != null) NamidaNavigator.inst.openAfterFirstLoad(pageAfterFirstLoad);
     NamidaNavigator.inst.navigateToRootReplacement(
       const MainPageWrapper(),
     );
@@ -65,7 +68,18 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
     return QueueController.inst.prepareLatestQueueAndLatestPlayedForSourceAsync();
   }
 
-  void _onRestoreBackupIconTap() async {
+  Future<void> _onContinueTap([NamidaRouteWidget? pageAfterFirstLoad]) async {
+    await _requestPermission();
+    if (BackupController.inst.isRestoringBackup.value) {
+      snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
+      return;
+    }
+    _navigateToNamida(pageAfterFirstLoad);
+  }
+
+  void _onSyncTap() => _onContinueTap(const NamidaSyncManagerPage());
+
+  void _onRestoreBackupTap() async {
     await _requestPermission();
     if (!didGrantStoragePermission) return;
     NamidaNavigator.inst.navigateDialog(
@@ -93,17 +107,38 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final maxWidth = context.width; // use context as dimensions might not be initialized yet
 
     Dimensions.inst.availableAppContentWidth = maxWidth;
 
     const firstConfigIndexer = IndexerSettings(isInFirstConfigScreen: true);
     // final useMediaStore = indexer.getMediaStoreWidget();
-    final includeVideosWidget = SettingEntryTile(
-      entry: IndexerSettings.includeVideos,
-      page: firstConfigIndexer,
+
+    final returningUserRow = _ReturningUserRow(
+      onRestoreBackupTap: _onRestoreBackupTap,
+      onSyncTap: _onSyncTap,
     );
+
+    final languageTile = SettingEntryTile(
+      entry: ThemeSetting.language,
+    );
+    final themeTile = SettingEntryTile(
+      entry: ThemeSetting.themeMode,
+    );
+    final performanceTile = SettingEntryTile(
+      entry: AdvancedSettings.performanceMode,
+    );
+    final libraryTabsTile = SettingEntryTile(
+      entry: ExtrasSettings.libraryTabs,
+    );
+
+    final storagePermissionTile = NamidaFeaturesVisibility.isStoragePermissionNotRequired
+        ? null
+        : _StoragePermissionTile(
+            isGranted: didGrantStoragePermission,
+            isDenied: didDenyStoragePermission,
+            onTap: _requestPermission,
+          );
     final addFolderWidget = SettingEntryTile(
       entry: IndexerSettings.addFolder,
       page: firstConfigIndexer,
@@ -116,25 +151,66 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
       entry: IndexerSettings.foldersToExclude,
       page: firstConfigIndexer,
     );
+    final includeVideosWidget = SettingEntryTile(
+      entry: IndexerSettings.includeVideos,
+      page: firstConfigIndexer,
+    );
+    final minFileDurationTile = SettingEntryTile(
+      entry: IndexerSettings.minFileDuration,
+      page: firstConfigIndexer,
+    );
+    final minFileSizeTile = SettingEntryTile(
+      entry: IndexerSettings.minFileSize,
+      page: firstConfigIndexer,
+    );
+    final albumIdentifiersTile = SettingEntryTile(
+      entry: IndexerSettings.albumIdentifiers,
+      page: firstConfigIndexer,
+    );
+    final respectNoMediaTile = SettingEntryTile(
+      entry: IndexerSettings.respectNoMedia,
+      page: firstConfigIndexer,
+    );
     final artworkCacheWidget = SettingEntryTile(
       entry: IndexerSettings.artworkCache,
       page: firstConfigIndexer,
     );
 
-    final themeTile = SettingEntryTile(
-      entry: ThemeSetting.themeMode,
-    );
-    final languageTile = SettingEntryTile(
-      entry: ThemeSetting.language,
-    );
-
-    final libraryTabsTile = SettingEntryTile(
-      entry: ExtrasSettings.libraryTabs,
-    );
-
-    final performanceTile = SettingEntryTile(
-      entry: AdvancedSettings.performanceMode,
-    );
+    final sections = <List<Widget>>[
+      [
+        returningUserRow,
+      ],
+      [
+        languageTile,
+        themeTile,
+        performanceTile,
+        libraryTabsTile,
+      ],
+      [
+        ?storagePermissionTile,
+        addFolderWidget,
+        foldersToScan,
+        foldersToExclude,
+        includeVideosWidget,
+        minFileDurationTile,
+        minFileSizeTile,
+        // useMediaStore,
+        albumIdentifiersTile,
+        respectNoMediaTile,
+        artworkCacheWidget,
+      ],
+    ];
+    final sectionsWidgets = sections
+        .map(
+          (section) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: section,
+          ),
+        )
+        .addSeparators(
+          separator: SettingSectionsColumn.sectionsDivider,
+        )
+        .toFixedList();
 
     return BackgroundWrapper(
       child: Stack(
@@ -163,24 +239,11 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                 icon: Broken.candle,
                 title: lang.configure,
                 subtitle: lang.setupFirstStartup,
-                trailing: Column(
-                  children: [
-                    NamidaIconButton(
-                      tooltip: () => lang.restoreBackup,
-                      icon: Broken.back_square,
-                      onPressed: _onRestoreBackupIconTap,
-                    ),
-                    const SizedBox(height: 2.0),
-                    ObxShow(
-                      showIf: BackupController.inst.isRestoringBackup,
-                      child: const LoadingIndicator(),
-                    ),
-                  ],
-                ),
                 childRaw: Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(4.0),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
                           child: NamidaScrollbarWithController(
@@ -188,18 +251,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                             child: (c) => SuperSmoothListView(
                               controller: c,
                               padding: EdgeInsets.zero,
-                              children: [
-                                themeTile,
-                                languageTile,
-                                performanceTile,
-                                libraryTabsTile,
-                                includeVideosWidget,
-                                addFolderWidget,
-                                foldersToScan,
-                                foldersToExclude,
-                                // useMediaStore,
-                                artworkCacheWidget,
-                              ],
+                              children: sectionsWidgets,
                             ),
                           ),
                         ),
@@ -208,74 +260,20 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                             color: Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.7), theme.cardColor),
                             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                           ),
-                          child: Row(
-                            children: [
-                              if (!NamidaFeaturesVisibility.isStoragePermissionNotRequired)
-                                Expanded(
-                                  child: NamidaInkWell(
-                                    animationDurationMS: 100,
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        width: 1.5,
-                                        color: didGrantStoragePermission
-                                            ? Colors.green.withOpacityExt(0.3)
-                                            : didDenyStoragePermission
-                                            ? Colors.red.withOpacityExt(0.3)
-                                            : Colors.transparent,
-                                      ),
-                                    ),
-                                    onTap: _requestPermission,
-                                    borderRadius: didGrantStoragePermission ? 8.0 : 16.0,
-                                    bgColor: theme.cardColor,
-                                    margin: const EdgeInsets.all(12.0),
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            lang.grantStoragePermission,
-                                            style: textTheme.displayMedium,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12.0),
-                                        NamidaCheckMark(
-                                          size: 18.0,
-                                          active: didGrantStoragePermission,
-                                          burst: true,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              Flexible(
-                                flex: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? 1 : 0,
-                                fit: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? FlexFit.tight : FlexFit.loose,
-                                child: AnimatedOpacity(
-                                  duration: const Duration(milliseconds: 400),
-                                  opacity: didGrantStoragePermission ? 1.0 : 0.5,
-                                  child: NamidaInkWell(
-                                    width: NamidaFeaturesVisibility.isStoragePermissionNotRequired ? null : maxWidth * 0.2,
-                                    onTap: () async {
-                                      await _requestPermission();
-                                      if (BackupController.inst.isRestoringBackup.value) {
-                                        snackyy(title: lang.note, message: lang.anotherProcessIsRunning);
-                                        return;
-                                      }
-                                      _navigateToNamida();
-                                    },
-                                    borderRadius: 8.0,
-                                    bgColor: theme.cardColor,
-                                    margin: const EdgeInsets.all(12.0),
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: const Icon(
-                                      Broken.arrow_right,
-                                      size: 24.0,
-                                    ),
-                                  ),
-                                ),
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 400),
+                            opacity: didGrantStoragePermission ? 1.0 : 0.5,
+                            child: NamidaInkWell(
+                              onTap: _onContinueTap,
+                              borderRadius: 8.0,
+                              bgColor: theme.cardColor,
+                              margin: const EdgeInsets.all(12.0),
+                              padding: const EdgeInsets.all(12.0),
+                              child: const Icon(
+                                Broken.arrow_right,
+                                size: 24.0,
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
@@ -285,6 +283,105 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                 child: const SizedBox(),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReturningUserRow extends StatelessWidget {
+  final void Function() onRestoreBackupTap;
+  final void Function() onSyncTap;
+
+  const _ReturningUserRow({
+    required this.onRestoreBackupTap,
+    required this.onSyncTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: ObxO(
+              rx: BackupController.inst.isRestoringBackup,
+              builder: (context, isRestoringBackup) => NamidaInkWellButton(
+                bgColor: bgColor,
+                centered: true,
+                paddingMultiplier: 1.65,
+                icon: Broken.back_square,
+                text: lang.restoreBackup,
+                enabled: !isRestoringBackup,
+                onTap: onRestoreBackupTap,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: NamidaInkWellButton(
+              bgColor: bgColor,
+              centered: true,
+              paddingMultiplier: 1.65,
+              icon: Broken.cloud_change,
+              text: lang.sync,
+              onTap: onSyncTap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StoragePermissionTile extends StatelessWidget {
+  final bool isGranted;
+  final bool isDenied;
+  final void Function() onTap;
+
+  const _StoragePermissionTile({
+    required this.isGranted,
+    required this.isDenied,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final borderColor = isGranted
+        ? Colors.green.withOpacityExt(0.3)
+        : isDenied
+        ? Colors.red.withOpacityExt(0.3)
+        : Colors.transparent;
+    return NamidaInkWell(
+      animationDurationMS: 100,
+      decoration: BoxDecoration(
+        border: Border.all(
+          width: 1.5,
+          color: borderColor,
+        ),
+      ),
+      onTap: onTap,
+      borderRadius: isGranted ? 8.0 : 16.0,
+      bgColor: theme.cardColor,
+      margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      padding: const EdgeInsets.all(12.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              lang.grantStoragePermission,
+              style: theme.textTheme.displayMedium,
+            ),
+          ),
+          const SizedBox(width: 12.0),
+          NamidaCheckMark(
+            size: 18.0,
+            active: isGranted,
+            burst: true,
           ),
         ],
       ),

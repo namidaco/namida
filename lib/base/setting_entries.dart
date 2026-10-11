@@ -76,6 +76,11 @@ class SettingSectionsColumn extends StatelessWidget {
 
   const SettingSectionsColumn({super.key, required this.page});
 
+  static const sectionsDivider = NamidaContainerDivider(
+    height: 1.0,
+    margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
+  );
+
   @override
   Widget build(BuildContext context) {
     final children = page.sections
@@ -93,10 +98,7 @@ class SettingSectionsColumn extends StatelessWidget {
           ),
         )
         .addSeparators(
-          separator: const NamidaContainerDivider(
-            height: 1.0,
-            margin: EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
-          ),
+          separator: sectionsDivider,
         )
         .toFixedList();
     return Column(
