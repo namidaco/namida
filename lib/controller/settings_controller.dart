@@ -422,6 +422,7 @@ class _SettingsController extends _SettingsKeysWriter {
       QueueInsertionType.algorithm: QueueInsertion(numberOfTracks: 20, insertNext: true),
       QueueInsertionType.algorithmDiscoverDate: QueueInsertion(numberOfTracks: 20, insertNext: true),
       QueueInsertionType.algorithmTimeRange: QueueInsertion(numberOfTracks: 20, insertNext: true),
+      QueueInsertionType.similar: QueueInsertion(numberOfTracks: 20, insertNext: true, similarSources: SimilarTracksSource.values),
       QueueInsertionType.mix: QueueInsertion(numberOfTracks: 0, insertNext: true),
       QueueInsertionType.advancedPlay: QueueInsertion(numberOfTracks: 0, insertNext: false),
       QueueInsertionType.advancedShuffle: QueueInsertion(numberOfTracks: 0, insertNext: false, shuffle: true),

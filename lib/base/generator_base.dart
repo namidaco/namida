@@ -124,8 +124,21 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   }
 
   Iterable<E> generateRecommendedItemsFor(E item, E Function(T current) itemToSub, {int? sampleCount}) {
+    final numberOfListensMap = _collectRecommendedListens(item, itemToSub, sampleCount: sampleCount);
+    return numberOfListensMap.finalize(item);
+  }
+
+  /// [item] itself excluded.
+  Map<E, int> getRecommendedListensFor(E item, E Function(T current) itemToSub) {
+    final numberOfListensMap = _collectRecommendedListens(item, itemToSub).numberOfListensMap;
+    numberOfListensMap.remove(item);
+    return numberOfListensMap;
+  }
+
+  _TracksWithNumberOfListensMap<E> _collectRecommendedListens(E item, E Function(T current) itemToSub, {int? sampleCount}) {
+    final numberOfListensMap = _TracksWithNumberOfListensMap<E>();
     final historytracks = historyController.historyTracks.toFixedList();
-    if (historytracks.isEmpty) return [];
+    if (historytracks.isEmpty) return numberOfListensMap;
 
     if (sampleCount == null) {
       final q = QueueInsertionType.algorithm.toQueueInsertion();
@@ -134,8 +147,6 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
 
     final max = historytracks.length;
     int clamped(int range) => range.clampInt(0, max);
-
-    final numberOfListensMap = _TracksWithNumberOfListensMap<E>();
 
     Iterable<T>? tempHeatTracks;
 
@@ -171,7 +182,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
       }
     }
 
-    return numberOfListensMap.finalize(item);
+    return numberOfListensMap;
   }
 }
 

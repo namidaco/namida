@@ -385,7 +385,7 @@ class SortOptionsCards extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: _SortOptionCard(
+          child: NamidaToggleCard(
             icon: Broken.arrange_circle,
             title: lang.reverseOrder,
             showTitle: showTitles,
@@ -480,78 +480,6 @@ class _SortAdvancedHeader extends StatelessWidget {
   }
 }
 
-class _SortOptionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool showTitle;
-  final bool active;
-  final bool halfActive;
-  final VoidCallback? onTap;
-
-  const _SortOptionCard({
-    required this.icon,
-    required this.title,
-    required this.showTitle,
-    required this.active,
-    this.halfActive = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final inactiveColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!);
-    final activeColor = theme.colorScheme.secondaryContainer;
-    final bgColor = active
-        ? activeColor
-        : halfActive
-        ? Color.alphaBlend(activeColor.withOpacityExt(0.4), inactiveColor)
-        : inactiveColor;
-    final isEnabled = onTap != null;
-    final card = NamidaInkWell(
-      borderRadius: 10.0,
-      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
-      animationDurationMS: 200,
-      bgColor: bgColor,
-      onTap: onTap,
-      child: showTitle
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 22.0,
-                ),
-                const SizedBox(
-                  height: 4.0,
-                ),
-                Text(
-                  title,
-                  style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            )
-          : Icon(
-              icon,
-              size: 20.0,
-            ),
-    );
-    return AnimatedOpacity(
-      opacity: isEnabled ? 1.0 : 0.4,
-      duration: const Duration(milliseconds: 200),
-      child: NamidaTooltip(
-        message: showTitle ? null : () => title,
-        child: card,
-      ),
-    );
-  }
-}
-
 class _SortRomanizationCard extends StatelessWidget {
   final bool showTitle;
 
@@ -568,7 +496,7 @@ class _SortRomanizationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return ObxO(
       rx: settings.romanizeSorting,
-      builder: (context, romanizeSorting) => _SortOptionCard(
+      builder: (context, romanizeSorting) => NamidaToggleCard(
         icon: Broken.translate,
         title: lang.romanization,
         showTitle: showTitle,
@@ -608,7 +536,7 @@ class _SortIgnorePrefixCard extends StatelessWidget {
       builder: (context, ignoreCommonPrefixForTypes) {
         final ignoredCount = filters.where(ignoreCommonPrefixForTypes.contains).length;
         final isAllIgnored = filters.isNotEmpty && ignoredCount == filters.length;
-        return _SortOptionCard(
+        return NamidaToggleCard(
           icon: Broken.message_remove,
           title: lang.ignorePrefixes,
           showTitle: showTitle,

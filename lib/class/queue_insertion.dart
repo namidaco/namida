@@ -17,6 +17,7 @@ class QueueInsertion {
   final bool sortReverse;
   final SortType? filterSort;
   final Map<SortType, int> filterMinimums;
+  final List<SimilarTracksSource> similarSources;
 
   const QueueInsertion({
     required this.numberOfTracks,
@@ -28,6 +29,7 @@ class QueueInsertion {
     this.sortReverse = false,
     this.filterSort,
     this.filterMinimums = const {},
+    this.similarSources = const [],
   });
 
   int? get maxCount => numberOfTracks == 0 ? null : numberOfTracks;
@@ -44,6 +46,7 @@ class QueueInsertion {
     List<SortType>? sorts,
     bool? sortReverse,
     Map<SortType, int>? filterMinimums,
+    List<SimilarTracksSource>? similarSources,
   }) {
     return QueueInsertion(
       numberOfTracks: numberOfTracks ?? this.numberOfTracks,
@@ -55,6 +58,7 @@ class QueueInsertion {
       sortReverse: sortReverse ?? this.sortReverse,
       filterSort: filterSort,
       filterMinimums: filterMinimums ?? this.filterMinimums,
+      similarSources: similarSources ?? this.similarSources,
     );
   }
 
@@ -69,6 +73,7 @@ class QueueInsertion {
       sortReverse: sortReverse,
       filterSort: filterSort,
       filterMinimums: filterMinimums,
+      similarSources: similarSources,
     );
   }
 
@@ -138,6 +143,8 @@ class QueueInsertion {
     }
     final sortsJson = map['sorts'];
     final sorts = sortsJson is List ? sortsJson.map((e) => SortType.values.getEnum(e)).nonNulls.toFixedList() : _legacySorts(legacySortBy);
+    final similarSourcesJson = map['similarSources'];
+    final similarSources = similarSourcesJson is List ? similarSourcesJson.map((e) => SimilarTracksSource.values.getEnum(e)).nonNulls.toFixedList() : const <SimilarTracksSource>[];
     return QueueInsertion(
       numberOfTracks: map['numberOfTracks'],
       insertNext: map['insertNext'],
@@ -148,6 +155,7 @@ class QueueInsertion {
       sortReverse: map['sortReverse'] ?? legacySortBy == 'rating',
       filterSort: SortType.values.getEnum(map['filterSort']),
       filterMinimums: filterMinimums,
+      similarSources: similarSources,
     );
   }
 
@@ -169,6 +177,7 @@ class QueueInsertion {
       'sortReverse': sortReverse,
       if (filterSort != null) 'filterSort': filterSort.name,
       'filterMinimums': {for (final e in filterMinimums.entries) e.key.name: e.value},
+      if (similarSources.isNotEmpty) 'similarSources': [for (final source in similarSources) source.name],
     };
   }
 }

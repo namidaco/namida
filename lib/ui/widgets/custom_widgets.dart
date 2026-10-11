@@ -9536,3 +9536,80 @@ class _PlayableTitleSubtitleWidgetState extends State<PlayableTitleSubtitleWidge
     return widget.builder(_videoName, _channelName);
   }
 }
+
+class NamidaToggleCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool showTitle;
+  final bool active;
+  final bool halfActive;
+  final VoidCallback? onTap;
+  final EdgeInsetsGeometry padding;
+  final double iconSize;
+
+  const NamidaToggleCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    this.showTitle = false,
+    required this.active,
+    this.halfActive = false,
+    required this.onTap,
+    this.padding = const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
+    this.iconSize = 20.0,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    final tileAlpha = context.isDarkMode ? 5 : 20;
+    final inactiveColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!);
+    final activeColor = theme.colorScheme.secondaryContainer;
+    final bgColor = active
+        ? activeColor
+        : halfActive
+        ? Color.alphaBlend(activeColor.withOpacityExt(0.4), inactiveColor)
+        : inactiveColor;
+    final isEnabled = onTap != null;
+    final card = NamidaInkWell(
+      borderRadius: 10.0,
+      padding: padding,
+      animationDurationMS: 200,
+      bgColor: bgColor,
+      onTap: onTap,
+      child: showTitle
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22.0,
+                ),
+                const SizedBox(
+                  height: 4.0,
+                ),
+                Text(
+                  title,
+                  style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            )
+          : Icon(
+              icon,
+              size: iconSize,
+            ),
+    );
+    return AnimatedOpacity(
+      opacity: isEnabled ? 1.0 : 0.4,
+      duration: const Duration(milliseconds: 200),
+      child: NamidaTooltip(
+        message: showTitle ? null : () => title,
+        child: card,
+      ),
+    );
+  }
+}

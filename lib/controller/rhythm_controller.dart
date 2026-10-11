@@ -130,8 +130,14 @@ class RhythmController {
 
   QueueShuffler<Q> createFlowShuffler<Q extends Playable>() => _RhythmFlowShuffler<Q>(this);
 
+  static const maxTempoCost = _RhythmFlowShuffler._maxTempoCost;
+
+  static double tempoCostBetween(double a, double b) => _RhythmFlowShuffler._tempoCostBetween(a, b);
+
+  static double keyCostBetween(int a, int b) => _MusicalKey.costBetween(a, b);
+
   /// bpm 0 and key -1 when unknown.
-  _Flow _flowOf(Playable item) {
+  RhythmFlow flowOf(Playable item) {
     final rhythm = _rhythms[item.key];
     double bpm = rhythm != null && rhythm.bpm > 0 ? rhythm.bpm : 0.0;
     int key = rhythm != null && rhythm.keyConfidence >= _minKeyConfidence ? rhythm.key : -1;
@@ -354,7 +360,7 @@ class _RhythmFlowShuffler<Q extends Playable> extends QueueShuffler<Q> {
     final bpms = Float64List(count);
     final keys = Int8List(count);
     for (int i = 0; i < count; i++) {
-      final flow = _controller._flowOf(items[start + i]);
+      final flow = _controller.flowOf(items[start + i]);
       bpms[i] = flow.bpm;
       keys[i] = flow.key;
     }
@@ -371,9 +377,9 @@ class _RhythmFlowShuffler<Q extends Playable> extends QueueShuffler<Q> {
     }
 
     int position = start;
-    _Flow previous;
+    RhythmFlow previous;
     if (start > 0) {
-      previous = _controller._flowOf(items[start - 1]);
+      previous = _controller.flowOf(items[start - 1]);
     } else {
       final first = start + _random.nextInt(count);
       swap(start, first);
@@ -400,7 +406,7 @@ class _RhythmFlowShuffler<Q extends Playable> extends QueueShuffler<Q> {
     }
   }
 
-  static double _costBetween(_Flow previous, double bpm, int key) {
+  static double _costBetween(RhythmFlow previous, double bpm, int key) {
     final tempoCost = previous.bpm <= 0 || bpm <= 0 ? _unknownTempoCost : _tempoCostBetween(previous.bpm, bpm);
     final keyCost = previous.key < 0 || key < 0 ? _unknownKeyCost : _MusicalKey.costBetween(previous.key, key);
     return tempoCost + keyCost;
@@ -630,6 +636,6 @@ class _RhythmJob {
   const _RhythmJob(this.item, {required this.isScan});
 }
 
-typedef _Flow = ({double bpm, int key});
+typedef RhythmFlow = ({double bpm, int key});
 
 typedef RhythmTagsWritePlan = ({Map<Track, FTags> tagsPerTrack, int notAnalyzedCount});

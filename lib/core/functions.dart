@@ -1783,30 +1783,28 @@ class TracksAddOnTap {
                   },
                 ),
               ),
-              // const _VerticalDivider(),
-              // Expanded(
-              //   child: getAddTracksTile(
-              //     chip: true,
-              //     title: lang.similarDiscoverDate,
-              //     subtitle: lang.similarDiscoverDateSubtitle(
-              //       currentTrack.title.addDQuotation(),
-              //     ),
-              //     icon: Broken.calendar_search,
-              //     insertionType: QueueInsertionType.algorithmDiscoverDate,
-              //     onTap: (insertionType) {
-              //       final gentracks = NamidaGenerator.inst.generateRecommendedSimilarDiscoverDate(currentTrack);
+              const _VerticalDivider(),
+              Expanded(
+                child: getAddTracksTile(
+                  chip: true,
+                  title: lang.similarDiscoverDate,
+                  subtitle: lang.similarDiscoverDateSubtitle(currentTrack: currentTrack.title.addDQuotation()),
+                  icon: Broken.calendar_search,
+                  insertionType: QueueInsertionType.algorithmDiscoverDate,
+                  onTap: (insertionType) {
+                    final gentracks = NamidaGenerator.inst.generateRecommendedSimilarDiscoverDate(currentTrack);
 
-              //       Player.inst
-              //           .addToQueue(
-              //             gentracks,
-              //             insertionType: insertionType,
-              //             insertNext: true,
-              //             emptyTracksMessage: lang.noTracksInHistory,
-              //           )
-              //           .closeDialog();
-              //     },
-              //   ),
-              // ),
+                    Player.inst
+                        .addToQueue(
+                          gentracks,
+                          insertionType: insertionType,
+                          insertNext: true,
+                          emptyTracksMessage: lang.noTracksInHistory,
+                        )
+                        .closeDialog();
+                  },
+                ),
+              ),
               const _VerticalDivider(),
               Expanded(
                 child: getAddTracksTile(
@@ -1832,19 +1830,21 @@ class TracksAddOnTap {
             ],
           ),
           getAddTracksTile(
-            title: lang.similarDiscoverDate,
-            subtitle: lang.similarDiscoverDateSubtitle(currentTrack: currentTrack.title.addDQuotation()),
-            icon: Broken.calendar_search,
-            insertionType: QueueInsertionType.algorithmDiscoverDate,
-            onTap: (insertionType) {
-              final gentracks = NamidaGenerator.inst.generateRecommendedSimilarDiscoverDate(currentTrack);
+            title: lang.newTracksSimilar,
+            subtitle: lang.newTracksSimilarSubtitle(currentTrack: currentTrack.title.addDQuotation()),
+            icon: Broken.blend,
+            insertionType: QueueInsertionType.similar,
+            extraTrailing: const _SimilarTracksSourcesChip(),
+            onTap: (insertionType) async {
+              final insertion = insertionType.toQueueInsertion();
+              final gentracks = await NamidaGenerator.inst.generateSimilarTracks(currentTrack, insertion);
 
               Player.inst
                   .addToQueue(
                     gentracks,
                     insertionType: insertionType,
                     insertNext: true,
-                    emptyTracksMessage: lang.noTracksInHistory,
+                    emptyTracksMessage: lang.noEnoughTracks,
                   )
                   .closeDialog();
             },
@@ -2131,6 +2131,7 @@ class TracksAddOnTap {
         required QueueInsertionType insertionType,
         required void Function(QueueInsertionType insertionType) onTap,
         Widget? trailingRaw,
+        Widget? extraTrailing,
         bool? chip,
       })
       addTracksTile,
@@ -2146,6 +2147,7 @@ class TracksAddOnTap {
       required QueueInsertionType insertionType,
       required void Function(QueueInsertionType insertionType) onTap,
       Widget? trailingRaw,
+      Widget? extraTrailing,
       bool? chip,
     }) {
       final trailingMargin = chip == true ? const EdgeInsets.only(top: 4.0) : EdgeInsets.zero;
@@ -2166,6 +2168,15 @@ class TracksAddOnTap {
                       showWhen: shouldShowConfigureIcon.valueR,
                     ),
               ),
+            );
+      final listTileTrailing = extraTrailing == null
+          ? trailingFinal
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                extraTrailing,
+                trailingFinal,
+              ],
             );
       return chip == true
           ? NamidaInkWell(
@@ -2198,7 +2209,7 @@ class TracksAddOnTap {
               maxSubtitleLines: 22,
               dense: false,
               onTap: () => onTap(insertionType),
-              trailingRaw: trailingFinal,
+              trailingRaw: listTileTrailing,
             );
     }
 
@@ -2468,6 +2479,126 @@ abstract final class _TrackSortPresetNameDialog {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SimilarTracksSourcesChip extends StatelessWidget {
+  const _SimilarTracksSourcesChip();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return NamidaPopupWrapper(
+      children: () => const [
+        _SimilarTracksSourcesGrid(),
+      ],
+      child: NamidaInkWell(
+        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
+        bgColor: theme.cardColor.withOpacityExt(0.5),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Broken.filter_edit,
+              size: 16.0,
+            ),
+            const SizedBox(width: 6.0),
+            ObxO(
+              rx: settings.queueInsertion,
+              builder: (context, insertions) {
+                final activeCount = insertions[QueueInsertionType.similar]?.similarSources.length ?? 0;
+                final totalCount = SimilarTracksSource.values.length;
+                final text = activeCount == totalCount ? lang.all : '$activeCount/$totalCount';
+                return Text(
+                  text,
+                  style: textTheme.displayMedium,
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SimilarTracksSourcesGrid extends StatelessWidget {
+  const _SimilarTracksSourcesGrid();
+
+  static const _type = QueueInsertionType.similar;
+  static const _sourcesPerRow = 4;
+
+  void _toggle(SimilarTracksSource source) {
+    final insertion = _type.toQueueInsertion();
+    final sources = insertion.similarSources;
+    final isActive = sources.contains(source);
+    if (isActive && sources.length == 1) return;
+    final newSources = SimilarTracksSource.values.where((e) => e == source ? !isActive : sources.contains(e)).toFixedList();
+    final newInsertion = insertion.copyWith(similarSources: newSources);
+    settings.queueInsertion.update((insertions) => insertions[_type] = newInsertion);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.queueInsertion,
+      builder: (context, insertions) {
+        final activeSources = insertions[_type]?.similarSources ?? const <SimilarTracksSource>[];
+        const allSources = SimilarTracksSource.values;
+        final rows = <Widget>[];
+        for (int start = 0; start < allSources.length; start += _sourcesPerRow) {
+          final end = (start + _sourcesPerRow).withMaximum(allSources.length);
+          rows.add(
+            _SimilarTracksSourcesRow(
+              sources: allSources.sublist(start, end),
+              activeSources: activeSources,
+              onTap: _toggle,
+            ),
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: rows,
+        );
+      },
+    );
+  }
+}
+
+class _SimilarTracksSourcesRow extends StatelessWidget {
+  final List<SimilarTracksSource> sources;
+  final List<SimilarTracksSource> activeSources;
+  final void Function(SimilarTracksSource source) onTap;
+
+  const _SimilarTracksSourcesRow({
+    required this.sources,
+    required this.activeSources,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
+      child: Row(
+        children: sources
+            .map(
+              (source) => Expanded(
+                child: NamidaToggleCard(
+                  icon: source.toIcon(),
+                  title: source.toText(),
+                  active: activeSources.contains(source),
+                  onTap: () => onTap(source),
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
+                  iconSize: 22.0,
+                ),
+              ),
+            )
+            .addSeparators(separator: const SizedBox(width: 6.0))
+            .toFixedList(),
       ),
     );
   }

@@ -824,7 +824,7 @@ class _SubpageInfoStyleRow extends StatelessWidget {
                   for (final style in SubpageInfoStyle.values) ...[
                     if (style != SubpageInfoStyle.values.first) const SizedBox(width: 4.0),
                     Expanded(
-                      child: _StyleOptionCard(
+                      child: NamidaToggleCard(
                         icon: style.toIcon(),
                         title: style.toText(),
                         active: style == current,
@@ -838,43 +838,6 @@ class _SubpageInfoStyleRow extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _StyleOptionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool active;
-  final VoidCallback onTap;
-
-  const _StyleOptionCard({
-    required this.icon,
-    required this.title,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final onSurfaceTint = theme.colorScheme.onSurface.withAlpha(tileAlpha);
-    final inactiveColor = Color.alphaBlend(onSurfaceTint, theme.cardTheme.color!);
-    final bgColor = active ? theme.colorScheme.secondaryContainer : inactiveColor;
-    return NamidaTooltip(
-      message: () => title,
-      child: NamidaInkWell(
-        borderRadius: 10.0,
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
-        animationDurationMS: 200,
-        bgColor: bgColor,
-        onTap: onTap,
-        child: Icon(
-          icon,
-          size: 20.0,
-        ),
-      ),
     );
   }
 }

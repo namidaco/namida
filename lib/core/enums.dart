@@ -937,6 +937,7 @@ enum QueueInsertionType {
   algorithm,
   algorithmDiscoverDate,
   algorithmTimeRange,
+  similar,
   mix,
   advancedPlay,
   advancedShuffle,
@@ -955,6 +956,27 @@ enum QueueInsertionType {
     QueueInsertionType.algorithmTimeRange => 7,
     _ => null,
   };
+}
+
+/// [weight] per shared value, scaled by closeness for [year], [bpm], [key] and [history].
+enum SimilarTracksSource {
+  genre(weight: 3.0),
+  style(weight: 3.0),
+  mood(weight: 2.0),
+  tag(weight: 2.0),
+  artist(weight: 2.0),
+  albumArtist(weight: 1.0),
+  composer(weight: 1.5),
+  year(weight: 1.5),
+  language(weight: 1.0),
+  bpm(weight: 1.5, isRhythm: true),
+  key(weight: 1.0, isRhythm: true),
+  history(weight: 3.0),
+  ;
+
+  final double weight;
+  final bool isRhythm;
+  const SimilarTracksSource({required this.weight, this.isRhythm = false});
 }
 
 enum LocalVideoMatchingType {

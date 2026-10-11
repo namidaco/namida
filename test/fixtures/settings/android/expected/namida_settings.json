@@ -421,6 +421,28 @@
       "sortReverse": false,
       "filterMinimums": {}
     },
+    "similar": {
+      "numberOfTracks": 20,
+      "insertNext": true,
+      "shuffle": false,
+      "sorts": [],
+      "sortReverse": false,
+      "filterMinimums": {},
+      "similarSources": [
+        "genre",
+        "style",
+        "mood",
+        "tag",
+        "artist",
+        "albumArtist",
+        "composer",
+        "year",
+        "language",
+        "bpm",
+        "key",
+        "history"
+      ]
+    },
     "mix": {
       "numberOfTracks": 0,
       "insertNext": true,
