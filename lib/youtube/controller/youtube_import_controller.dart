@@ -16,8 +16,13 @@ import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart'
 enum _YTPlaylistVisibility { public, unlisted, private, unknown }
 
 class _YTPlaylistEntry {
+  static const _kLikesPlaylistID = 'LL';
+  static const _kLikesPlaylistName = 'Liked videos';
+
   final String name;
   final _YTPlaylistDetails? details;
+
+  bool get isLikes => details?.playlistID == _kLikesPlaylistID || name == _kLikesPlaylistName;
 
   const _YTPlaylistEntry({
     required this.name,
@@ -92,6 +97,9 @@ class YoutubePlaylistImportDetails {
   final int totalCount;
   final int countAfterMerging;
   final List<String> playlistsNames;
+
+  /// the takeout likes playlist, kept out of the playlists by [YoutubeImportController.scanPlaylistsDirectories].
+  final List<({String id, int? dateAddedMS})> likedVideos;
   final List<(_YTPlaylistEntry, List<_VideoEntry>)> _data;
 
   const YoutubePlaylistImportDetails._(
@@ -99,6 +107,7 @@ class YoutubePlaylistImportDetails {
     required this.totalCount,
     required this.countAfterMerging,
     required this.playlistsNames,
+    required this.likedVideos,
   });
 }
 
@@ -112,8 +121,7 @@ class YoutubeImportController {
   Future<YoutubePlaylistImportDetails?> importPlaylists(String directoryPath) async {
     isImportingPlaylists.value = true;
     final resDetails = await _scanAllPlaylistTakeoutDirectoriesCompute.thready(directoryPath);
-    final res = resDetails._data;
-    if (res.isEmpty) {
+    if (resDetails._data.isEmpty) {
       isImportingPlaylists.value = false;
       return resDetails;
     }
@@ -127,6 +135,29 @@ class YoutubeImportController {
       isImportingPlaylists.value = false;
       return null;
     }
+
+    await addPlaylists(resDetails, actionIfPlaylistsExist);
+    isImportingPlaylists.value = false;
+    return resDetails;
+  }
+
+  /// scans takeout `playlists` directories, the likes playlist goes to [YoutubePlaylistImportDetails.likedVideos].
+  static Future<YoutubePlaylistImportDetails> scanPlaylistsDirectories(Iterable<String> playlistsDirectories) {
+    final params = (directories: playlistsDirectories.toFixedList(), separateLikes: true);
+    return _scanPlaylistsDirectoriesCompute.thready(params);
+  }
+
+  static bool isTakeoutPlaylistsDirectory(String dirPath) {
+    return dirPath.splitLast(Platform.pathSeparator) == 'playlists';
+  }
+
+  /// returns the count of playlists that didn't exist before.
+  Future<int> addPlaylists(YoutubePlaylistImportDetails details, PlaylistAddDuplicateAction actionIfPlaylistsExist) async {
+    final res = details._data;
+    if (res.isEmpty) return 0;
+
+    final existingPlaylists = YoutubePlaylistController.inst.playlistsMap.value;
+    final newPlaylistsCount = res.where((e) => !existingPlaylists.containsKey(e.$1.name)).length;
 
     final completer = Completer<void>();
     res.loopAdv((playlist, index) {
@@ -162,8 +193,7 @@ class YoutubeImportController {
 
     await completer.future;
     YoutubePlaylistController.inst.playlistsMap.refresh();
-    isImportingPlaylists.value = false;
-    return resDetails;
+    return newPlaylistsCount;
   }
 
   Future<int> importSubscriptions(String subscriptionsFilePath) async {
@@ -313,14 +343,26 @@ class YoutubeImportController {
   }
 
   static YoutubePlaylistImportDetails _scanAllPlaylistTakeoutDirectoriesCompute(String mainDir) {
+    final playlistsDirectories = <String>[];
+    if (isTakeoutPlaylistsDirectory(mainDir)) {
+      playlistsDirectories.add(mainDir);
+    } else {
+      final files = Directory(mainDir).listSync(recursive: true);
+      for (var plsdir in files) {
+        final plsDirPath = plsdir.path;
+        if (plsdir is Directory && isTakeoutPlaylistsDirectory(plsDirPath)) {
+          playlistsDirectories.add(plsDirPath);
+        }
+      }
+    }
+    return _scanPlaylistsDirectoriesCompute((directories: playlistsDirectories, separateLikes: false));
+  }
+
+  static YoutubePlaylistImportDetails _scanPlaylistsDirectoriesCompute(({List<String> directories, bool separateLikes}) params) {
     final playlistsMap = <String, List<List<_VideoEntry>>>{};
     final playlistsDetailsMap = <String, _YTPlaylistDetails?>{};
 
-    bool isPlaylistDirectory(String dirPath) {
-      return dirPath.splitLast(Platform.pathSeparator) == 'playlists';
-    }
-
-    void onDirMatch(String plsdirPath) {
+    for (final plsdirPath in params.directories) {
       final details = _parsePlaylistsFiles(plsdirPath);
       for (var pl in details) {
         final playlistName = pl.$1.name;
@@ -333,25 +375,19 @@ class YoutubeImportController {
       }
     }
 
-    if (isPlaylistDirectory(mainDir)) {
-      onDirMatch(mainDir);
-    } else {
-      final files = Directory(mainDir).listSync(recursive: true);
-      for (var plsdir in files) {
-        final plsDirPath = plsdir.path;
-        if (plsdir is Directory && isPlaylistDirectory(plsDirPath)) {
-          onDirMatch(plsDirPath);
-        }
-      }
-    }
-
+    final likedVideos = <({String id, int? dateAddedMS})>[];
     final playlistsListMerged = <(_YTPlaylistEntry, List<_VideoEntry>)>[];
     for (final entries in playlistsMap.entries) {
       final mainList = <_VideoEntry>[];
       entries.value.forEach(mainList.addAll);
       mainList.removeDuplicates((element) => '${element.id}${element.dateAdded}');
       mainList.sortBy((e) => e.dateAdded ?? DateTime(0));
-      playlistsListMerged.add((_YTPlaylistEntry(name: entries.key, details: playlistsDetailsMap[entries.key]), mainList));
+      final playlist = _YTPlaylistEntry(name: entries.key, details: playlistsDetailsMap[entries.key]);
+      if (params.separateLikes && playlist.isLikes) {
+        likedVideos.addAll(mainList.map((e) => (id: e.id, dateAddedMS: e.dateAdded?.millisecondsSinceEpoch)));
+        continue;
+      }
+      playlistsListMerged.add((playlist, mainList));
     }
 
     int totalCount = playlistsMap.values.fold(0, (previousValue, element) => previousValue + element.length);
@@ -363,6 +399,7 @@ class YoutubeImportController {
       totalCount: totalCount,
       countAfterMerging: countAfterMerging,
       playlistsNames: playlistsNames,
+      likedVideos: likedVideos,
     );
     return details;
   }

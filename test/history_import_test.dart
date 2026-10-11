@@ -15,7 +15,9 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/controller/youtube_import_controller.dart';
 
 void main() {
   late Directory dir;
@@ -82,6 +84,7 @@ void main() {
   parseYT(
     List<File> files,
     List<_YTTrack> tracks, {
+    List<({String id, int dateMS})> likedVideos = const [],
     bool isMatchingTypeLink = false,
     bool isMatchingTypeTitleAndArtist = true,
     bool matchAll = false,
@@ -91,6 +94,7 @@ void main() {
     return JsonToHistoryParser.debugParseYTHistory((
       tracks: tracks,
       files: files,
+      likedVideos: likedVideos,
       isMatchingTypeLink: isMatchingTypeLink,
       isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist,
       matchYT: true,
@@ -100,7 +104,7 @@ void main() {
       matchAll: matchAll,
       artistsSplitConfig: splitConfig,
       portProgressParsed: newPort(),
-      portProgressAdded: newPort(),
+      portProgressMatched: newPort(),
       portLoadingProgress: newPort(),
       localHistory: localHistory ?? SplayTreeMap(),
       ytHistory: ytHistory ?? SplayTreeMap(),
@@ -491,10 +495,11 @@ void main() {
     expect(listenedPaths, {tracks[0].path, tracks[1].path, tracks[2].path});
   });
 
-  _Track track(String title, String artist, {List<String>? taggedArtists}) => (
+  _Track track(String title, String artist, {List<String>? taggedArtists, String? mbid}) => (
     title: title,
     artist: artist,
     taggedArtists: taggedArtists,
+    mbid: mbid,
     path: trackPath('$artist - $title.mp3'),
     isVideo: false,
   );
@@ -507,10 +512,12 @@ void main() {
         oldestDay: null,
         newestDay: null,
         files: [file],
+        favouriteFiles: const [],
+        addHistory: true,
         matchAll: false,
         artistsSplitConfig: splitConfig,
         portProgressParsed: newPort(),
-        portProgressAdded: newPort(),
+        portProgressMatched: newPort(),
         portLoadingProgress: newPort(),
         localHistory: localHistory ?? SplayTreeMap(),
       ));
@@ -597,16 +604,18 @@ void main() {
   });
 
   group('spotify json', () {
-    addSpotify(List<File> files, List<_Track> tracks) {
+    addSpotify(List<File> files, List<_Track> tracks, {List<File> favouriteFiles = const [], bool addHistory = true}) {
       return JsonToHistoryParser.debugAddSpotifySource((
         tracks: tracks,
         oldestDay: null,
         newestDay: null,
         files: files,
+        favouriteFiles: favouriteFiles,
+        addHistory: addHistory,
         matchAll: false,
         artistsSplitConfig: splitConfig,
         portProgressParsed: newPort(),
-        portProgressAdded: newPort(),
+        portProgressMatched: newPort(),
         portLoadingProgress: newPort(),
         localHistory: SplayTreeMap(),
       ));
@@ -645,14 +654,248 @@ void main() {
       expect(dates, [utcMS(2023, 1, 15, 14, 32), utcMS(2023, 1, 16, 10, 0)]);
     });
 
-    test('podcast history files are skipped, music and extended ones are kept', () async {
+    test('podcast history files are skipped, music and extended ones are kept, the library goes to favourites', () async {
       const names = [
         'StreamingHistory_music_0.json', 'StreamingHistory0.json', 'StreamingHistory_podcast_0.json', //
-        'Streaming_History_Audio_2019-2020_0.json', 'endsong_0.json', 'Userdata.json',
+        'Streaming_History_Audio_2019-2020_0.json', 'endsong_0.json', 'Userdata.json', 'YourLibrary.json',
       ];
       final files = names.map((e) => File(trackPath(e))).toList();
       final filtered = await JsonToHistoryParser.debugFilterFiles(files, TrackSource.spotify);
-      expect(filtered.map((e) => e.path), [files[0].path, files[1].path, files[3].path, files[4].path]);
+      expect(filtered.history.map((e) => e.path), [files[0].path, files[1].path, files[3].path, files[4].path]);
+      expect(filtered.favourites.map((e) => e.path), [files[6].path]);
+    });
+
+    test('library tracks become favourites dated at import time in file order, without touching history', () async {
+      final first = track('Never Gonna Give You Up', 'Rick Astley');
+      final second = track('Take On Me', 'a-ha');
+      final library = writeFile('json', r'''
+{
+  "tracks": [
+    {"artist": "Rick Astley", "album": "Whenever You Need Somebody", "track": "Never Gonna Give You Up", "uri": "spotify:track:4PTG3Z6ehGkBFwjybzWkR8"},
+    {"artist": "Somebody", "album": "Album", "track": "Unknown Song", "uri": "spotify:track:0000000000000000000000"},
+    {"artist": "a-ha", "album": "Hunting High and Low", "track": "Take On Me", "uri": "spotify:track:2WfaOiMkCvy7F5fcp2zZ8L"}
+  ],
+  "albums": [{"artist": "a-ha", "album": "Hunting High and Low", "uri": "spotify:album:1ER3B6zev5JEAaqhnyyfbf"}]
+}
+''');
+      final before = DateTime.now().millisecondsSinceEpoch;
+      final res = await addSpotify([], [first, second], favouriteFiles: [library], addHistory: false);
+      final after = DateTime.now().millisecondsSinceEpoch;
+
+      expect(res!.favourites.map((e) => e.track.path), [first.path, second.path]);
+      expect(res.favourites.map((e) => e.source).toSet(), {TrackSource.spotify});
+      final dates = res.favourites.map((e) => e.dateAdded).toSet();
+      expect(dates.length, 1);
+      expect(dates.single, inInclusiveRange(before, after));
+      expect(res.localHistory, isEmpty);
+      final missing = res.missingEntriesSorted.keys.single;
+      expect((missing.title, missing.isFavourite), ('Unknown Song', true));
+    });
+  });
+
+  group('listenbrainz export', () {
+    addListenBrainz(
+      List<File> files,
+      List<_Track> tracks, {
+      List<File> favouriteFiles = const [],
+      bool addHistory = true,
+      int? oldestDay,
+      int? newestDay,
+      SplayTreeMap<int, List<TrackWithDate>>? localHistory,
+      SendPort? portProgressMatched,
+    }) {
+      return JsonToHistoryParser.debugAddListenBrainzSource((
+        tracks: tracks,
+        oldestDay: oldestDay,
+        newestDay: newestDay,
+        files: files,
+        favouriteFiles: favouriteFiles,
+        addHistory: addHistory,
+        matchAll: false,
+        artistsSplitConfig: splitConfig,
+        portProgressParsed: newPort(),
+        portProgressMatched: portProgressMatched ?? newPort(),
+        portLoadingProgress: newPort(),
+        localHistory: localHistory ?? SplayTreeMap(),
+      ));
+    }
+
+    String listenLine(String artist, String title, num listenedAt, {String? msid, String? submittedMbid, String? mappedMbid}) {
+      return jsonEncode({
+        'inserted_at': 1700000000,
+        'listened_at': listenedAt,
+        'recording_msid': msid,
+        'track_metadata': {
+          'artist_name': artist,
+          'track_name': title,
+          'additional_info': {'recording_mbid': ?submittedMbid},
+          'mbid_mapping': mappedMbid == null ? null : {'recording_mbid': mappedMbid, 'recording_name': title},
+        },
+      });
+    }
+
+    String feedbackLine(int score, int created, {String? msid, String? mbid}) {
+      return jsonEncode({'recording_msid': msid, 'recording_mbid': mbid, 'score': score, 'created': created});
+    }
+
+    test('matched counts every match in range, also ones already imported, the added count only new ones', () async {
+      final tr = track('Song', 'Artist');
+      final listens = writeFile(
+        'jsonl',
+        [
+          listenLine('Artist', 'Song', 1700000000, msid: 'msid-1'),
+          listenLine('Artist', 'Song', 1700000100, msid: 'msid-1'),
+          listenLine('Somebody', 'Unknown', 1700000200),
+        ].join('\n'),
+      );
+      final feedback = writeFile('jsonl', feedbackLine(1, 1700001000, msid: 'msid-1'));
+
+      Future<(int?, Map<String, int>)> importOnce(SplayTreeMap<int, List<TrackWithDate>> localHistory) async {
+        final matchedPort = ReceivePort();
+        final matched = <String, int>{};
+        matchedPort.listen((message) {
+          final (target, count) = message as (Enum, int);
+          matched[target.name] = (matched[target.name] ?? 0) + count;
+        });
+        final res = await addListenBrainz([listens], [tr], favouriteFiles: [feedback], localHistory: localHistory, portProgressMatched: matchedPort.sendPort);
+        await Future.delayed(Duration.zero);
+        matchedPort.close();
+        return (res?.addedHistoryCount, matched);
+      }
+
+      final localHistory = SplayTreeMap<int, List<TrackWithDate>>();
+      final first = await importOnce(localHistory);
+      expect(first.$1, 2);
+      expect(first.$2, {'history': 2, 'favourites': 1});
+      final second = await importOnce(localHistory);
+      expect(second.$1, 0);
+      expect(second.$2, {'history': 2, 'favourites': 1});
+    });
+
+    test('float listen dates of newer exports are read', () async {
+      final tr = track('Song', 'Artist');
+      final listens = writeFile('jsonl', listenLine('Artist', 'Song', 1700000000.5));
+      final res = await addListenBrainz([listens], [tr]);
+
+      expect(res!.localHistory.values.single.single.dateAdded, 1700000000500);
+    });
+
+    test('a recording mbid matches the tagged track before titles do', () async {
+      final tagged = track('Renamed Locally', 'Someone Else', mbid: 'mbid-1');
+      final byTitle = track('Song', 'Artist');
+      final listens = writeFile('jsonl', listenLine('Artist', 'Song', 1700000000, mappedMbid: 'mbid-1'));
+      final res = await addListenBrainz([listens], [byTitle, tagged]);
+
+      expect(res!.localHistory.values.single.single.track.path, tagged.path);
+    });
+
+    test('loves are resolved through the listens of the same export, hated ones are skipped', () async {
+      final bySubmitted = track('First', 'Artist');
+      final byMsid = track('Second', 'Artist');
+      final byTag = track('Third', 'Artist', mbid: 'mbid-tagged');
+      final listens = writeFile(
+        'jsonl',
+        [
+          listenLine('Artist', 'First', 1700000000, msid: 'msid-1', submittedMbid: 'mbid-1'),
+          listenLine('Artist', 'Second', 1700000100, msid: 'msid-2'),
+        ].join('\n'),
+      );
+      final feedback = writeFile(
+        'jsonl',
+        [
+          feedbackLine(1, 1700001000, mbid: 'mbid-1'),
+          feedbackLine(1, 1700002000, msid: 'msid-2'),
+          feedbackLine(1, 1700003000, mbid: 'mbid-tagged'),
+          feedbackLine(-1, 1700004000, msid: 'msid-1'),
+          feedbackLine(1, 1700005000, mbid: 'mbid-unknown'),
+        ].join('\n'),
+      );
+      final res = await addListenBrainz([listens], [bySubmitted, byMsid, byTag], favouriteFiles: [feedback], addHistory: false);
+
+      expect(res!.favourites.map((e) => (e.track.path, e.dateAdded)), [
+        (bySubmitted.path, 1700001000000),
+        (byMsid.path, 1700002000000),
+        (byTag.path, 1700003000000),
+      ]);
+      expect(res.localHistory, isEmpty);
+      expect(res.addedHistoryCount, 0);
+      final missing = res.missingEntriesSorted.keys.single;
+      expect((missing.title, missing.isFavourite), ('mbid-unknown', true));
+    });
+
+    test('the date range filters loves too', () async {
+      final tr = track('Song', 'Artist');
+      final listens = writeFile('jsonl', listenLine('Artist', 'Song', 1700000000, msid: 'msid-1'));
+      final feedback = writeFile('jsonl', feedbackLine(1, 1700000000, msid: 'msid-1'));
+      final day = DateTime.fromMillisecondsSinceEpoch(1700000000 * 1000).toDaysSince1970();
+
+      final outside = await addListenBrainz([listens], [tr], favouriteFiles: [feedback], oldestDay: day + 1, newestDay: day + 2);
+      expect(outside!.favourites, isEmpty);
+      final inside = await addListenBrainz([listens], [tr], favouriteFiles: [feedback], oldestDay: day, newestDay: day);
+      expect(inside!.favourites.single.track.path, tr.path);
+    });
+
+    test('feedback goes to favourites, pinned recordings are skipped', () async {
+      const names = ['1.jsonl', '12.jsonl', 'feedback.jsonl', 'pinned_recording.jsonl', 'user.json'];
+      final files = names.map((e) => File(trackPath(e))).toList();
+      final filtered = await JsonToHistoryParser.debugFilterFiles(files, TrackSource.listenbrainz);
+      expect(filtered.history.map((e) => e.path), [files[0].path, files[1].path]);
+      expect(filtered.favourites.map((e) => e.path), [files[2].path]);
+    });
+  });
+
+  group('youtube likes', () {
+    test('likes match by link even when history link matching is off, history stays on its own matching', () async {
+      final linked = ytTrack('A', 'X', comment: 'https://youtu.be/dQw4w9WgXcQ');
+      final file = takeoutJson([jsonWatch('dQw4w9WgXcQ', 'Something else', 'Channel', '2022-02-04T14:20:56.789Z')]);
+      final likedDateMS = utcMS(2022, 3, 1, 10, 0);
+      final res = await parseYT(
+        [file],
+        [linked],
+        likedVideos: [(id: 'dQw4w9WgXcQ', dateMS: likedDateMS), (id: 'kJQP7kiw5Fk', dateMS: likedDateMS)],
+        isMatchingTypeLink: false,
+      );
+
+      expect(res!.favourites.map((e) => (e.track.path, e.dateAdded, e.source)), [(linked.path, likedDateMS, TrackSource.youtube)]);
+      expect(res.addedLocalHistoryCount, 0);
+    });
+
+    test('csv files in takeout playlists folders are collected as playlists directories', () async {
+      final playlistsDir = Directory('${dir.path}${Platform.pathSeparator}Takeout${Platform.pathSeparator}playlists')..createSync(recursive: true);
+      final likes = File('${playlistsDir.path}${Platform.pathSeparator}Liked videos-videos.csv')..writeAsStringSync('');
+      final other = File('${dir.path}${Platform.pathSeparator}subscriptions.csv')..writeAsStringSync('');
+      final history = File('${dir.path}${Platform.pathSeparator}watch-history.json')..writeAsStringSync('[]');
+      final filtered = await JsonToHistoryParser.debugFilterFiles([likes, other, history], TrackSource.youtube);
+
+      expect(filtered.playlistsDirectories, {playlistsDir.path});
+      expect(filtered.history.map((e) => e.path), [history.path]);
+    });
+
+    test('the likes playlist is kept out of the takeout playlists, by its id or its name', () async {
+      String takeoutDir(String name) {
+        final playlistsDir = Directory('${dir.path}${Platform.pathSeparator}$name${Platform.pathSeparator}playlists')..createSync(recursive: true);
+        return playlistsDir.path;
+      }
+
+      void writeCsv(String dirPath, String filename, List<String> lines) {
+        File('$dirPath${Platform.pathSeparator}$filename').writeAsStringSync(lines.join('\n'));
+      }
+
+      final byId = takeoutDir('takeout_by_id');
+      writeCsv(byId, 'playlists.csv', [
+        'Playlist ID,Add new videos to top,Playlist Title (Original),Playlist Title (Original Language),Playlist Create Timestamp,Playlist Update Timestamp,Playlist Video Order,Playlist Visibility',
+        'LL,False,Videos que me gustan,,2020-01-01T00:00:00+00:00,2022-01-01T00:00:00+00:00,Manual,Private',
+      ]);
+      writeCsv(byId, 'Videos que me gustan-videos.csv', ['Video ID,Playlist Video Creation Timestamp', 'dQw4w9WgXcQ,2022-02-04T14:20:56+00:00']);
+      writeCsv(byId, 'Mix-videos.csv', ['Video ID,Playlist Video Creation Timestamp', 'kJQP7kiw5Fk,2022-02-05T14:20:56+00:00']);
+
+      final byName = takeoutDir('takeout_by_name');
+      writeCsv(byName, 'Liked videos-videos.csv', ['Video ID,Playlist Video Creation Timestamp', 'lYBUbBu4W08,2022-02-06T14:20:56+00:00']);
+
+      final details = await YoutubeImportController.scanPlaylistsDirectories([byId, byName]);
+      expect(details.likedVideos.map((e) => e.id), unorderedEquals(['dQw4w9WgXcQ', 'lYBUbBu4W08']));
+      expect(details.likedVideos.firstWhere((e) => e.id == 'dQw4w9WgXcQ').dateAddedMS, utcMS(2022, 2, 4, 14, 20, 56));
+      expect(details.countAfterMerging, 1);
     });
   });
 
@@ -747,4 +990,4 @@ void main() {
 
 typedef _YTTrack = ({String title, String artist, String album, String path, String comment, bool isVideo});
 
-typedef _Track = ({String title, String artist, List<String>? taggedArtists, String path, bool isVideo});
+typedef _Track = ({String title, String artist, List<String>? taggedArtists, String? mbid, String path, bool isVideo});

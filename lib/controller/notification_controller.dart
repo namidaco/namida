@@ -217,12 +217,12 @@ class NotificationManager {
     );
   }
 
-  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
+  void importHistoryNotification(String title, int parsed, int total, DateTime displayTime) {
     _createProgressNotification(
       id: _historyImportID,
       progress: parsed,
       maxProgress: total,
-      title: 'Importing History',
+      title: title,
       subtitle: (progressText) => progressText,
       channelName: _historyImportChannelName,
       channelDescription: _historyImportChannelDescription,
@@ -232,11 +232,11 @@ class NotificationManager {
     );
   }
 
-  void doneImportingHistoryNotification(int totalParsed, int totalAdded) {
+  void doneImportingHistoryNotification(String title, String resultsText) {
     _createNotification(
       id: _historyImportID,
-      title: 'Done importing history',
-      body: '${totalParsed.formatDecimal()} parsed, ${totalAdded.formatDecimal()} added',
+      title: title,
+      body: resultsText,
       channelName: _historyImportChannelName,
       channelDescription: _historyImportChannelDescription,
       subText: '100% ✓',
@@ -246,10 +246,10 @@ class NotificationManager {
     );
   }
 
-  void failedImportingHistoryNotification(String error) {
+  void failedImportingHistoryNotification(String title, String error) {
     _createNotification(
       id: _historyImportID,
-      title: 'Failed importing history',
+      title: title,
       body: error,
       channelName: _historyImportChannelName,
       channelDescription: _historyImportChannelDescription,
@@ -429,7 +429,7 @@ class _NotificationManagerSuppressed extends NotificationManager {
   }
 
   @override
-  void importHistoryNotification(int parsed, int total, DateTime displayTime) {
+  void importHistoryNotification(String title, int parsed, int total, DateTime displayTime) {
     return;
   }
 }

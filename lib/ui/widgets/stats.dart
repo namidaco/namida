@@ -1285,7 +1285,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       cards.add(
         (context) {
           final entries = s.sources.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-          final data = entries.map((e) => ChartData(_sourceText(e.key), e.value)).toFixedList();
+          final data = entries.map((e) => ChartData(e.key.toText(), e.value)).toFixedList();
           return StatsChartCard(
             title: lang.source,
             icon: Broken.import_1,
@@ -1389,15 +1389,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       ),
     );
   }
-
-  static String _sourceText(TrackSource source) => switch (source) {
-    TrackSource.local => lang.local,
-    TrackSource.youtube => lang.youtube,
-    TrackSource.youtubeMusic => lang.youtubeMusic,
-    TrackSource.lastfm => 'Last.fm',
-    TrackSource.spotify => 'Spotify',
-    TrackSource.listenbrainz => 'ListenBrainz',
-  };
 
   static Int32List _aligned(HistoryStatsSnapshot s, int firstDay, int lastDay) {
     if (s.firstDay == firstDay && s.lastDay == lastDay) return s.listensPerDay;

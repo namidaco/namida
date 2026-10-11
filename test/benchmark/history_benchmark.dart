@@ -69,13 +69,14 @@ void main() {
 
     Future<int> parse({required bool link, required bool titleAndArtist, List<String>? lines}) async {
       final portsParsed = ReceivePort();
-      final portsAdded = ReceivePort();
+      final portsMatched = ReceivePort();
       final portsLoading = ReceivePort();
       final localHistory = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
       final ytHistory = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
       final res = await JsonToHistoryParser.debugParseYTHistory((
         tracks: tracks,
         files: [file],
+        likedVideos: const [],
         isMatchingTypeLink: link,
         isMatchingTypeTitleAndArtist: titleAndArtist,
         matchYT: true,
@@ -85,13 +86,13 @@ void main() {
         matchAll: false,
         artistsSplitConfig: splitConfig,
         portProgressParsed: portsParsed.sendPort,
-        portProgressAdded: portsAdded.sendPort,
+        portProgressMatched: portsMatched.sendPort,
         portLoadingProgress: portsLoading.sendPort,
         localHistory: localHistory,
         ytHistory: ytHistory,
       ));
       portsParsed.close();
-      portsAdded.close();
+      portsMatched.close();
       portsLoading.close();
       final addedLocalHistoryCount = res!.addedLocalHistoryCount;
       if (lines != null) {
@@ -107,7 +108,12 @@ void main() {
       await parse(link: mode.link, titleAndArtist: mode.titleAndArtist, lines: lines);
       print('INFO|history_import|$name|${lines.first}');
       runner.digest(name, lines);
-      await runner.run('takeout ${watches.length} watches vs ${tracks.length} tracks, $name', () => parse(link: mode.link, titleAndArtist: mode.titleAndArtist), warmups: 1, iterations: 5);
+      await runner.run(
+        'takeout ${watches.length} watches vs ${tracks.length} tracks, $name',
+        () => parse(link: mode.link, titleAndArtist: mode.titleAndArtist),
+        warmups: 1,
+        iterations: 5,
+      );
     }
     runner.finish();
   }, timeout: Timeout.none);
@@ -174,7 +180,12 @@ void main() {
     final removedCount = HistoryController.inst.removeDuplicatedItems();
     print('INFO|history_load|removeDuplicatedItems|added=$duplicatesCount removed=$removedCount');
     runner.digest('history after removeDuplicatedItems', _historyLines(HistoryController.inst.historyMap.value));
-    await runner.run('removeDuplicatedItems all days (+$duplicatesCount duplicates)', HistoryController.inst.removeDuplicatedItems, setUp: resetHistoryWithDuplicates, iterations: 10);
+    await runner.run(
+      'removeDuplicatedItems all days (+$duplicatesCount duplicates)',
+      HistoryController.inst.removeDuplicatedItems,
+      setUp: resetHistoryWithDuplicates,
+      iterations: 10,
+    );
 
     HistoryController.inst.historyMap.value = info.historyMap;
     for (final mptr in const [MostPlayedTimeRange.month, MostPlayedTimeRange.year, MostPlayedTimeRange.allTime]) {

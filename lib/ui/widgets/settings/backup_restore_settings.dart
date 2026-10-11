@@ -15,6 +15,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -79,43 +80,34 @@ class BackupAndRestore extends SettingSubpageProvider {
     ],
     [
       SettingCustom(
-        title: () => lang.importYoutubeHistory,
-        tile: (args) => _ImportHistoryTile(
+        title: () => lang.importData,
+        aliases: () => [
+          ..._importSources.map(JsonToHistoryParser.getImportTitle),
+          ...DataImportType.values.map((e) => e.toText()),
+        ],
+        tile: (args) => _ImportDataTile(
           bgColor: args.bgColor,
-          source: TrackSource.youtube,
-          title: lang.importYoutubeHistory,
-          onTap: _importYoutubeHistory,
-        ),
-      ),
-      SettingCustom(
-        title: () => lang.importLastFmHistory,
-        tile: (args) => _ImportHistoryTile(
-          bgColor: args.bgColor,
-          source: TrackSource.lastfm,
-          title: lang.importLastFmHistory,
-          onTap: _importLastFmHistory,
-        ),
-      ),
-      SettingCustom(
-        title: () => lang.importSpotifyHistory,
-        tile: (args) => _ImportHistoryTile(
-          bgColor: args.bgColor,
-          source: TrackSource.spotify,
-          title: lang.importSpotifyHistory,
-          onTap: _importSpotifyHistory,
-        ),
-      ),
-      SettingCustom(
-        title: () => lang.importListenBrainzHistory,
-        tile: (args) => _ImportHistoryTile(
-          bgColor: args.bgColor,
-          source: TrackSource.listenbrainz,
-          title: lang.importListenBrainzHistory,
-          onTap: _importListenBrainzHistory,
         ),
       ),
     ],
   ];
+
+  static const _importSources = [TrackSource.youtube, TrackSource.lastfm, TrackSource.spotify, TrackSource.listenbrainz];
+
+  static List<DataImportType> _importTypesOf(TrackSource source) => switch (source) {
+    TrackSource.youtube || TrackSource.youtubeMusic => const [DataImportType.history, DataImportType.favourites, DataImportType.playlists],
+    TrackSource.spotify || TrackSource.listenbrainz => const [DataImportType.history, DataImportType.favourites],
+    TrackSource.lastfm => const [DataImportType.history],
+    TrackSource.local => const [],
+  };
+
+  static Map<DataImportType, Rx<bool>> _createImportTypesRx(TrackSource source) {
+    return {for (final e in _importTypesOf(source)) e: true.obs};
+  }
+
+  static Set<DataImportType> _selectedImportTypes(Map<DataImportType, Rx<bool>> typesRx) {
+    return typesRx.entries.where((e) => e.value.value).map((e) => e.key).toSet();
+  }
 
   static String _autoBackupIntervalToText(int days) {
     if (days == 0) return lang.none;
@@ -437,41 +429,41 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
-  static void _importLastFmHistory() {
-    _importGeneralNonYTSource(
-      source: TrackSource.lastfm,
-      title: lang.importLastFmHistory,
-      guideWithLink: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv'),
-      allowedExtensions: NamidaFileExtensionsWrapper.csv,
-    );
-  }
-
-  static void _importSpotifyHistory() {
-    _importGeneralNonYTSource(
-      source: TrackSource.spotify,
-      title: lang.importSpotifyHistory,
-      guideWithLink: lang.importSpotifyHistoryGuide(link: 'https://www.spotify.com/account/privacy'),
-      allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip,
-    );
-  }
-
-  static void _importListenBrainzHistory() {
-    _importGeneralNonYTSource(
-      source: TrackSource.listenbrainz,
-      title: lang.importListenBrainzHistory,
-      guideWithLink: lang.importListenBrainzHistoryGuide(link: 'https://listenbrainz.org/settings/export'),
-      allowedExtensions: NamidaFileExtensionsWrapper.jsonlAndZip,
-    );
+  static void _importFrom(TrackSource source) {
+    switch (source) {
+      case TrackSource.youtube || TrackSource.youtubeMusic:
+        _importYoutubeData();
+      case TrackSource.lastfm:
+        _importGeneralNonYTSource(
+          source: source,
+          guideWithLink: lang.importLastFmHistoryGuide(lastfmCsvLink: 'https://benjaminbenben.com/lastfm-to-csv'),
+          allowedExtensions: NamidaFileExtensionsWrapper.csv,
+        );
+      case TrackSource.spotify:
+        _importGeneralNonYTSource(
+          source: source,
+          guideWithLink: lang.importSpotifyHistoryGuide(link: 'https://www.spotify.com/account/privacy'),
+          allowedExtensions: NamidaFileExtensionsWrapper.jsonAndZip,
+        );
+      case TrackSource.listenbrainz:
+        _importGeneralNonYTSource(
+          source: source,
+          guideWithLink: lang.importListenBrainzHistoryGuide(link: 'https://listenbrainz.org/settings/export'),
+          allowedExtensions: NamidaFileExtensionsWrapper.jsonlAndZip,
+        );
+      case TrackSource.local:
+        break;
+    }
   }
 
   static void _importGeneralNonYTSource({
     required TrackSource source,
-    required String title,
     required String guideWithLink,
     required NamidaFileExtensionsWrapper allowedExtensions,
   }) {
     if (!_canDoImport(isYT: false)) return;
 
+    final title = JsonToHistoryParser.getImportTitle(source);
     const divider = NamidaContainerDivider(
       margin: EdgeInsets.symmetric(vertical: 8.0),
     );
@@ -486,12 +478,16 @@ class BackupAndRestore extends SettingSubpageProvider {
       }
 
       if (selectedFiles.isNotEmpty || mainDirectory != null) {
+        final typesRx = _createImportTypesRx(source);
         final oldestDate = Rxn<DateTime>();
         DateTime? newestDate;
         final matchAll = false.obs;
         final backupHistoryFirst = true.obs;
         NamidaNavigator.inst.navigateDialog(
           onDisposing: () {
+            for (final rx in typesRx.values) {
+              rx.close();
+            }
             oldestDate.close();
             matchAll.close();
             backupHistoryFirst.close();
@@ -504,17 +500,19 @@ class BackupAndRestore extends SettingSubpageProvider {
               const CancelButton(),
               Obx(
                 (context) => NamidaButton(
+                  enabled: typesRx.values.any((e) => e.valueR),
                   text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
                   onTap: () async {
                     NamidaNavigator.inst.closeDialog();
-                    await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
+                    await JsonToHistoryParser.inst.importSourceFiles(
                       files: selectedFiles,
                       mainDirectory: mainDirectory,
                       source: source,
+                      types: _selectedImportTypes(typesRx),
                       oldestDate: oldestDate.value,
                       newestDate: newestDate,
                       matchAll: matchAll.value,
-                      backupHistoryFirst: backupHistoryFirst.value,
+                      backupFirst: backupHistoryFirst.value,
                     );
                   },
                 ),
@@ -523,10 +521,18 @@ class BackupAndRestore extends SettingSubpageProvider {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (typesRx.length > 1) ...[
+                  _ImportTypesCards(
+                    typesRx: typesRx,
+                  ),
+                  divider,
+                ],
                 _BackupHistoryBeforeImportTile(
                   activeRx: backupHistoryFirst,
                 ),
-                divider,
+                const SizedBox(
+                  height: 8.0,
+                ),
                 Obx(
                   (context) => _MatchAllTracksTile(
                     active: matchAll.valueR,
@@ -534,7 +540,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                     displayPerfWarning: true,
                   ),
                 ),
-                divider,
+                const SizedBox(
+                  height: 8.0,
+                ),
                 BetweenDatesTextButton(
                   useHistoryDates: false,
                   maxToday: true,
@@ -580,9 +588,10 @@ class BackupAndRestore extends SettingSubpageProvider {
     );
   }
 
-  static void _importYoutubeHistory() {
+  static void _importYoutubeData() {
     if (!_canDoImport(isYT: true)) return;
 
+    final title = JsonToHistoryParser.getImportTitle(TrackSource.youtube);
     const divider = NamidaContainerDivider(
       margin: EdgeInsets.symmetric(vertical: 8.0),
     );
@@ -591,11 +600,12 @@ class BackupAndRestore extends SettingSubpageProvider {
       var jsonfiles = <File>[];
       Directory? mainDirectory;
       if (pickDirectory) {
-        mainDirectory = await NamidaFileBrowser.pickDirectory(note: lang.importYoutubeHistory);
+        mainDirectory = await NamidaFileBrowser.pickDirectory(note: title);
       } else {
-        jsonfiles = await NamidaFileBrowser.pickFiles(note: lang.importYoutubeHistory, allowedExtensions: NamidaFileExtensionsWrapper.jsonHtmlAndZip);
+        jsonfiles = await NamidaFileBrowser.pickFiles(note: title, allowedExtensions: NamidaFileExtensionsWrapper.jsonHtmlAndZip);
       }
       if (jsonfiles.isNotEmpty || mainDirectory != null) {
+        final typesRx = _createImportTypesRx(TrackSource.youtube);
         final isMatchingTypeLink = true.obs;
         final isMatchingTypeTitleAndArtist = false.obs;
         final matchYT = true.obs;
@@ -606,6 +616,9 @@ class BackupAndRestore extends SettingSubpageProvider {
         final backupHistoryFirst = true.obs;
         NamidaNavigator.inst.navigateDialog(
           onDisposing: () {
+            for (final rx in typesRx.values) {
+              rx.close();
+            }
             isMatchingTypeLink.close();
             isMatchingTypeTitleAndArtist.close();
             matchYT.close();
@@ -618,69 +631,87 @@ class BackupAndRestore extends SettingSubpageProvider {
             title: lang.configure,
             actions: [
               Obx(
-                (context) => NamidaButton(
-                  enabled: isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR,
-                  text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
-                  onTap: () async {
-                    NamidaNavigator.inst.closeDialog();
-                    await JsonToHistoryParser.inst.addFilesSourceToNamidaHistory(
-                      files: jsonfiles,
-                      mainDirectory: mainDirectory,
-                      source: TrackSource.youtube,
-                      ytIsMatchingTypeLink: isMatchingTypeLink.value,
-                      isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
-                      ytMatchYT: matchYT.value,
-                      ytMatchYTMusic: matchYTMusic.value,
-                      oldestDate: oldestDate.value,
-                      newestDate: newestDate,
-                      matchAll: matchAll.value,
-                      backupHistoryFirst: backupHistoryFirst.value,
-                    );
-                  },
-                ),
+                (context) {
+                  final hasMatchingType = isMatchingTypeLink.valueR || isMatchingTypeTitleAndArtist.valueR;
+                  final isHistoryEnabled = typesRx[DataImportType.history]?.valueR == true;
+                  final hasAnyType = typesRx.values.any((e) => e.valueR);
+                  return NamidaButton(
+                    enabled: hasAnyType && (hasMatchingType || !isHistoryEnabled),
+                    text: oldestDate.valueR != null ? lang.importTimeRange : lang.importAll,
+                    onTap: () async {
+                      NamidaNavigator.inst.closeDialog();
+                      await JsonToHistoryParser.inst.importSourceFiles(
+                        files: jsonfiles,
+                        mainDirectory: mainDirectory,
+                        source: TrackSource.youtube,
+                        types: _selectedImportTypes(typesRx),
+                        ytIsMatchingTypeLink: isMatchingTypeLink.value,
+                        isMatchingTypeTitleAndArtist: isMatchingTypeTitleAndArtist.value,
+                        ytMatchYT: matchYT.value,
+                        ytMatchYTMusic: matchYTMusic.value,
+                        oldestDate: oldestDate.value,
+                        newestDate: newestDate,
+                        matchAll: matchAll.value,
+                        backupFirst: backupHistoryFirst.value,
+                      );
+                    },
+                  );
+                },
               ),
             ],
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _BackupHistoryBeforeImportTile(
-                  activeRx: backupHistoryFirst,
+                _ImportTypesCards(
+                  typesRx: typesRx,
                 ),
-                divider,
+                const SizedBox(
+                  height: 12.0,
+                ),
                 _ImportDialogTitle(
                   text: lang.source,
                 ),
-                ListTileWithCheckMark(
-                  activeRx: matchYT,
-                  title: lang.youtube,
-                  onTap: matchYT.toggle,
+                _ImportOptionCardsRow(
+                  cards: [
+                    _ImportOptionCard(
+                      activeRx: matchYT,
+                      icon: Broken.video_square,
+                      title: lang.youtube,
+                    ),
+                    _ImportOptionCard(
+                      activeRx: matchYTMusic,
+                      icon: Broken.music_square,
+                      title: lang.youtubeMusic,
+                    ),
+                  ],
                 ),
                 const SizedBox(
-                  height: 8.0,
+                  height: 12.0,
                 ),
-                ListTileWithCheckMark(
-                  activeRx: matchYTMusic,
-                  title: lang.youtubeMusic,
-                  onTap: matchYTMusic.toggle,
-                ),
-                divider,
                 _ImportDialogTitle(
                   text: lang.matchingType,
                 ),
-                ListTileWithCheckMark(
-                  activeRx: isMatchingTypeLink,
-                  title: lang.link,
-                  onTap: isMatchingTypeLink.toggle,
+                _ImportOptionCardsRow(
+                  cards: [
+                    _ImportOptionCard(
+                      activeRx: isMatchingTypeLink,
+                      icon: Broken.link,
+                      title: lang.link,
+                    ),
+                    _ImportOptionCard(
+                      activeRx: isMatchingTypeTitleAndArtist,
+                      icon: Broken.text,
+                      title: [lang.title, lang.artist].join(' & '),
+                    ),
+                  ],
+                ),
+                divider,
+                _BackupHistoryBeforeImportTile(
+                  activeRx: backupHistoryFirst,
                 ),
                 const SizedBox(
                   height: 8.0,
                 ),
-                ListTileWithCheckMark(
-                  activeRx: isMatchingTypeTitleAndArtist,
-                  title: [lang.title, lang.artist].join(' & '),
-                  onTap: isMatchingTypeTitleAndArtist.toggle,
-                ),
-                divider,
                 Obx(
                   (context) => _MatchAllTracksTile(
                     active: matchAll.valueR,
@@ -688,7 +719,9 @@ class BackupAndRestore extends SettingSubpageProvider {
                     displayPerfWarning: isMatchingTypeTitleAndArtist.valueR, // link matching wont result in perf issue
                   ),
                 ),
-                divider,
+                const SizedBox(
+                  height: 8.0,
+                ),
                 BetweenDatesTextButton(
                   useHistoryDates: false,
                   maxToday: true,
@@ -845,45 +878,116 @@ class _SyncTile extends StatelessWidget {
   }
 }
 
-class _ImportHistoryTile extends StatelessWidget {
+class _ImportDataTile extends StatelessWidget {
   final Color? bgColor;
-  final TrackSource source;
-  final String title;
-  final void Function() onTap;
 
-  const _ImportHistoryTile({
+  const _ImportDataTile({
     required this.bgColor,
-    required this.source,
-    required this.title,
-    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      bgColor: bgColor,
-      title: title,
-      leading: StackedIcon(
-        baseIcon: Broken.import_2,
-        smallChild: BorderRadiusClip(
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          child: Image.asset(
-            'assets/icons/${source.name}.png',
-            width: 12.0,
-            height: 12.0,
+    final typesText = DataImportType.values.map((e) => e.toText()).join(', ');
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomListTile(
+            title: lang.importData,
+            subtitle: typesText,
+            icon: Broken.import_2,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 8.0),
+            child: Row(
+              children: BackupAndRestore._importSources
+                  .map(
+                    (e) => Flexible(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: _ImportSourceCard._kMaxWidth),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: _ImportSourceCard(
+                            source: e,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .addSeparators(
+                    separator: const SizedBox(
+                      width: 6.0,
+                    ),
+                  )
+                  .toFixedList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImportSourceCard extends StatelessWidget {
+  static const _kMaxWidth = 148.0;
+
+  final TrackSource source;
+
+  const _ImportSourceCard({
+    required this.source,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final sourceText = source.toText();
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        NamidaInkWell(
+          borderRadius: 10.0,
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
+          bgColor: theme.cardTheme.color,
+          onTap: () => BackupAndRestore._importFrom(source),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              BorderRadiusClip(
+                borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                child: Image.asset(
+                  'assets/icons/${source.name}.png',
+                  width: 24.0,
+                  height: 24.0,
+                ),
+              ),
+              const SizedBox(
+                height: 6.0,
+              ),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  sourceText,
+                  style: theme.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                  maxLines: 1,
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-      trailing: SizedBox(
-        height: 32.0,
-        width: 32.0,
-        child: ParsingJsonPercentage(
-          size: 32.0,
-          source: source,
-          forceDisplay: false,
+        Positioned(
+          top: 2.0,
+          right: 2.0,
+          child: ParsingJsonPercentage(
+            size: 26.0,
+            source: source,
+            forceDisplay: false,
+          ),
         ),
-      ),
-      onTap: onTap,
+      ],
     );
   }
 }
@@ -1031,6 +1135,84 @@ class _BackupItemsTile extends StatelessWidget {
           },
         );
       },
+    );
+  }
+}
+
+class _ImportTypesCards extends StatelessWidget {
+  final Map<DataImportType, Rx<bool>> typesRx;
+
+  const _ImportTypesCards({
+    required this.typesRx,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ImportOptionCardsRow(
+      cards: typesRx.entries
+          .map(
+            (e) => _ImportOptionCard(
+              activeRx: e.value,
+              icon: e.key.toIcon(),
+              title: e.key.toText(),
+            ),
+          )
+          .toFixedList(),
+    );
+  }
+}
+
+class _ImportOptionCardsRow extends StatelessWidget {
+  final List<_ImportOptionCard> cards;
+
+  const _ImportOptionCardsRow({
+    required this.cards,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: cards
+            .map(
+              (e) => Expanded(
+                child: e,
+              ),
+            )
+            .addSeparators(
+              separator: const SizedBox(
+                width: 6.0,
+              ),
+            )
+            .toFixedList(),
+      ),
+    );
+  }
+}
+
+class _ImportOptionCard extends StatelessWidget {
+  final Rx<bool> activeRx;
+  final IconData icon;
+  final String title;
+
+  const _ImportOptionCard({
+    required this.activeRx,
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: activeRx,
+      builder: (context, active) => NamidaToggleCard(
+        icon: icon,
+        title: title,
+        showTitle: true,
+        active: active,
+        onTap: activeRx.toggle,
+      ),
     );
   }
 }
