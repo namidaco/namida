@@ -24,6 +24,7 @@ import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
+import 'package:namida/controller/back_cover_controller.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
@@ -666,6 +667,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
     TrackExecuteActions.openArtwork => "${lang.artwork} (${lang.open})",
     TrackExecuteActions.editArtwork => lang.editArtwork,
     TrackExecuteActions.saveArtwork => "${lang.artwork} (${lang.save})",
+    TrackExecuteActions.flipArtwork => lang.flipArtwork,
     TrackExecuteActions.editTags => lang.editTags,
     TrackExecuteActions.setRating => lang.setRating,
     TrackExecuteActions.setRatingAdv => "${lang.rating}/${lang.moods}/${lang.tags}",
@@ -698,6 +700,7 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
       TrackExecuteActions.openArtwork => Broken.gallery,
       TrackExecuteActions.editArtwork => Broken.gallery_edit,
       TrackExecuteActions.saveArtwork => Broken.gallery_import,
+      TrackExecuteActions.flipArtwork => Broken.convert_card,
       TrackExecuteActions.editTags => Broken.edit,
       TrackExecuteActions.setRating => Broken.grammerly,
       TrackExecuteActions.setRatingAdv => Broken.smileys,
@@ -837,6 +840,22 @@ extension TrackExecuteActionsUtils on TrackExecuteActions {
             final savePath = await YTUtils.copyThumbnailToStorage(finalItem.id);
             NamidaOnTaps.inst.showSavedImageInSnack(savePath, null);
           },
+        );
+      case TrackExecuteActions.flipArtwork:
+        item.execute(
+          selectable: (finalItem) async {
+            if (!Player.inst.isCurrentItem(finalItem)) return;
+            final hasBackCover = await BackCoverController.inst.toggle(finalItem.track);
+            if (!hasBackCover) {
+              snackyy(
+                icon: Broken.gallery_slash,
+                message: lang.noBackCoverFound,
+                top: false,
+                type: SnackbarType.playerInfo,
+              );
+            }
+          },
+          youtubeID: (finalItem) {},
         );
       case TrackExecuteActions.editTags:
         item.execute(

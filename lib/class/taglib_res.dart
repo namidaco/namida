@@ -1,5 +1,7 @@
 // ignore_for_file: constant_identifier_names, non_constant_identifier_names
 
+import 'dart:typed_data';
+
 import 'package:flutter_taglib/flutter_taglib.dart';
 
 import 'package:namida/class/faudiomodel.dart';
@@ -58,6 +60,20 @@ class TagLibRes {
   static List<MediaChapter>? _toMediaChapters(List<TagLibChapter> chapters) {
     if (chapters.length < 2) return null;
     return chapters.map((e) => MediaChapter(startMS: e.start.inMilliseconds, title: e.title.trim())).toFixedList();
+  }
+
+  static Uint8List? readPictureOfTypeSync(String trackPath, String pictureType) {
+    TagLibFile? tagFile;
+    try {
+      tagFile = TagLibFile.open(trackPath, audioPropertiesStyle: TagLibAudioPropertiesStyle.none);
+      if (tagFile == null) return null;
+      final picture = tagFile.pictureOfType(pictureType);
+      return picture?.bytes;
+    } catch (_) {
+      return null;
+    } finally {
+      tagFile?.close();
+    }
   }
 
   static String? writeSync(String trackPath, {required Map<String, List<String>> newPropertiesMap, required FArtwork? artwork, required List<MediaChapter>? chapters}) {

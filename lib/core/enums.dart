@@ -1189,6 +1189,7 @@ enum TrackExecuteActions {
   openArtwork,
   editArtwork,
   saveArtwork,
+  flipArtwork(isPlayingItemOnly: true),
   editTags,
   setRating,
   setRatingAdv,

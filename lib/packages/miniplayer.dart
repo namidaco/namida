@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_output_controller.dart';
+import 'package:namida/controller/back_cover_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
@@ -914,7 +916,7 @@ class _AnimatingTrackImage extends StatelessWidget {
       isLocal: true,
       lyricsMaxSize: lyricsMaxSize,
       showLyricsOverlay: showLyricsOverlay,
-      fallback: _TrackImage(
+      fallback: _BackCoverFlip(
         track: track,
       ),
     );
@@ -1286,21 +1288,136 @@ class _RenderScaleWithinWidth extends RenderProxyBox {
   }
 }
 
-class _TrackImage extends StatelessWidget {
+// by claude
+class _BackCoverFlip extends StatefulWidget {
   final Track track;
 
-  const _TrackImage({
+  const _BackCoverFlip({
     required this.track,
   });
 
   @override
+  State<_BackCoverFlip> createState() => _BackCoverFlipState();
+}
+
+class _BackCoverFlipState extends State<_BackCoverFlip> with SingleTickerProviderStateMixin {
+  static const _kPerspective = 0.0012;
+  static final _kRestTransform = Matrix4.identity();
+
+  late final _flipController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  late final _flipAnimation = CurvedAnimation(
+    parent: _flipController,
+    curve: Curves.easeInOut,
+  );
+
+  /// kept while flipping back, the back stays visible until half way.
+  BackCover? _backCover;
+  bool _isShowingBack = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncWithoutAnimation();
+    _flipAnimation.addListener(_onFlipTick);
+    _flipController.addStatusListener(_onFlipStatus);
+    BackCoverController.inst.displayed.addListener(_onBackCoverChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _BackCoverFlip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.track != widget.track) _syncWithoutAnimation();
+  }
+
+  @override
+  void dispose() {
+    BackCoverController.inst.displayed.removeListener(_onBackCoverChanged);
+    _flipAnimation.dispose();
+    _flipController.dispose();
+    super.dispose();
+  }
+
+  BackCover? _getBackCoverOfTrack() {
+    final backCover = BackCoverController.inst.displayed.value;
+    return backCover?.track == widget.track ? backCover : null;
+  }
+
+  void _syncWithoutAnimation() {
+    final backCover = _getBackCoverOfTrack();
+    _backCover = backCover;
+    _isShowingBack = backCover != null;
+    _flipController.value = backCover == null ? 0.0 : 1.0;
+  }
+
+  void _onBackCoverChanged() {
+    final backCover = _getBackCoverOfTrack();
+    if (backCover != null) {
+      _backCover = backCover;
+      _flipController.forward();
+    } else {
+      _flipController.reverse();
+    }
+  }
+
+  void _onFlipTick() {
+    final isShowingBack = _flipAnimation.value > 0.5;
+    if (isShowingBack == _isShowingBack) return;
+    refreshState(() => _isShowingBack = isShowingBack);
+  }
+
+  void _onFlipStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed) _backCover = null;
+  }
+
+  static Matrix4 _computeTransform(double progress) {
+    if (progress == 0.0 || progress == 1.0) return _kRestTransform; // -- identity, so no transform layer is pushed
+    final angle = progress > 0.5 ? (progress - 1.0) * math.pi : progress * math.pi;
+    return Matrix4.identity()
+      ..setEntry(3, 2, _kPerspective)
+      ..rotateY(angle);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final backCover = _isShowingBack ? _backCover : null;
+    return MatrixTransition(
+      animation: _flipAnimation,
+      onTransform: _computeTransform,
+      child: _TrackImage(
+        track: widget.track,
+        backCover: backCover,
+      ),
+    );
+  }
+}
+
+class _TrackImage extends StatelessWidget {
+  final Track track;
+  final BackCover? backCover;
+
+  const _TrackImage({
+    required this.track,
+    this.backCover,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final backCover = this.backCover;
+    final isFront = backCover == null;
+    final artworkKey = isFront ? Key(track.pathToImage) : ObjectKey(backCover);
+    final imagePath = isFront ? track.pathToImage : backCover.filePath;
     return _PlaybackGlowOpacity(
       builder: (glowOpacity) => LayoutWidthProvider(
         builder: (context, maxWidth) => ArtworkWidget(
-          key: Key(track.pathToImage),
-          track: track,
-          path: track.pathToImage,
+          key: artworkKey,
+          track: isFront ? track : null,
+          path: imagePath,
+          bytes: backCover?.bytes,
+          extractInternally: isFront,
+          fallbackToFolderCover: isFront,
           thumbnailSize: maxWidth,
           compressed: MiniPlayerController.inst.shouldCompressArtwork,
           borderRadius: 6.0 + 8.0.multipliedRadius * (maxWidth * 0.004),
