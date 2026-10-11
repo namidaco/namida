@@ -139,8 +139,9 @@ abstract final class _SignalPathSteps {
     final item = Player.inst.currentItem.valueR;
     final itemKey = item?.key;
     final isPerTrackConfigOverriden = settings.player.isPerTrackAudioConfigOverriden.valueR;
-    final itemConfig = isPerTrackConfigOverriden || itemKey == null ? null : Player.audioConfigs.map.valueR[itemKey];
-    final config = itemConfig ?? Player.inst.getDefaultPlayerConfigR(item);
+    final itemOverrides = isPerTrackConfigOverriden || itemKey == null ? null : Player.audioConfigs.map.valueR[itemKey];
+    final defaultConfig = Player.inst.getDefaultPlayerConfigR(item);
+    final config = itemOverrides?.resolve(defaultConfig) ?? defaultConfig;
     final replayGainLinear = Player.inst.replayGainLinearVolumeMultiplierRx.valueR;
     final outputType = path.outputType;
     final isUsbDirect = outputType == AudioSignalOutputType.usbDirect;

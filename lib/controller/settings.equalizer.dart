@@ -17,6 +17,7 @@ class _EqualizerSettings extends _SettingsKeysWriter {
 
   /// [AudioOutputDevice.key] -> [EqualizerPreset.name], applied when that device becomes the output.
   late final devicePresets = _keyMap<String, String>('devicePresets', const {}, sync: false);
+  late final configPresets = _keyList('configPresets', const <PlayerConfigPreset>[], item: _ObjectCodec(PlayerConfigPreset.fromMap, (v) => v.toMap()));
   late final uiTapToUpdate = _key('uiTapToUpdate', isKuru ? false : true);
 
   /// replaces the preset named [replacing], or [preset]'s own name, in place, appends it otherwise.
@@ -40,6 +41,27 @@ class _EqualizerSettings extends _SettingsKeysWriter {
       eqPresets.update((presets) => presets.removeWhere((p) => p.name == name));
       _renameDevicePresets(name, null);
     });
+  }
+
+  /// replaces the config preset named [replacing], or [preset]'s own name, in place, appends it otherwise.
+  void putConfigPreset(PlayerConfigPreset preset, {String? replacing}) {
+    final oldName = replacing ?? preset.name;
+    configPresets.update((presets) {
+      final index = presets.indexWhere((p) => p.name == oldName);
+      if (index < 0) {
+        presets.add(preset);
+      } else {
+        presets[index] = preset;
+      }
+    });
+  }
+
+  PlayerConfigPreset? findConfigPresetDuplicate(PlayerConfig config, {required String exceptName}) {
+    return configPresets.value.firstWhereEff((p) => p.name != exceptName && p.config == config);
+  }
+
+  void removeConfigPreset(String name) {
+    configPresets.update((presets) => presets.removeWhere((p) => p.name == name));
   }
 
   void _renameDevicePresets(String oldName, String? newName) {

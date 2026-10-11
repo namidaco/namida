@@ -354,7 +354,7 @@ class LatestPlayedForSourceMessage extends BaseMessage {
 }
 
 class AudioConfigsMessage extends BaseMessage {
-  final Iterable<MapEntry<String, PlayerConfig>> configs;
+  final Iterable<MapEntry<String, PlayerConfigOverrides>> configs;
 
   const AudioConfigsMessage({
     required this.configs,
@@ -368,10 +368,10 @@ class AudioConfigsMessage extends BaseMessage {
     );
   }
 
-  static MapEntry<String, PlayerConfig>? _tryParse(dynamic pair) {
+  static MapEntry<String, PlayerConfigOverrides>? _tryParse(dynamic pair) {
     try {
       final list = pair as List;
-      return MapEntry(list[0] as String, PlayerConfig.fromMap((list[1] as Map).cast<String, dynamic>()));
+      return MapEntry(list[0] as String, PlayerConfigOverrides.fromMap((list[1] as Map).cast<String, dynamic>()));
     } catch (_) {
       return null;
     }

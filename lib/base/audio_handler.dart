@@ -1211,7 +1211,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   }
 
   @override
-  FutureOr<PlayerConfig?> getPlayerConfigForItem(Playable? item, AVPlayer player) {
+  Future<PlayerConfig?> getPlayerConfigForItem(Q? item, AVPlayer player) async {
     // -- a different speed or skipped silence would never stay in sync with the party
     if (partyGate != null) return getDefaultPlayerConfig(null).copyWith(speed: 1.0, skipSilence: false);
     final isPerTrackAudioConfigOverriden = settings.player.isPerTrackAudioConfigOverriden.value;
@@ -1220,7 +1220,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     final key = item?.key;
     if (key == null) return null;
 
-    return Player.audioConfigs.get(key);
+    final overrides = await Player.audioConfigs.get(key);
+    if (overrides == null) return null;
+    return overrides.resolve(getDefaultPlayerConfig(item));
   }
 
   Future<void> onItemPlayYoutubeIDSetQuality({

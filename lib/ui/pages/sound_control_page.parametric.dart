@@ -1046,7 +1046,7 @@ class _EqualizerPresetOptions extends StatelessWidget {
             title: lang.rename,
             onTap: () {
               pop();
-              _EqualizerPresetNameSheet.show(
+              _PresetNameSheet.show(
                 initialName: preset.name,
                 onName: (name) => settings.equalizer.putPreset(preset.copyWith(name: name), replacing: preset.name),
               );
@@ -1066,7 +1066,7 @@ class _EqualizerPresetOptions extends StatelessWidget {
   }
 }
 
-abstract final class _EqualizerPresetNameSheet {
+abstract final class _PresetNameSheet {
   static void show({required String initialName, required void Function(String name) onName}) {
     showNamidaBottomSheetWithTextField(
       title: lang.saveAsPreset,
@@ -1091,7 +1091,7 @@ class _EqualizerActionsRow extends StatelessWidget {
   const _EqualizerActionsRow({required this.config});
 
   void _saveAsPreset() {
-    _EqualizerPresetNameSheet.show(
+    _PresetNameSheet.show(
       initialName: config.presetRx.value?.name ?? '',
       onName: (name) {
         final preset = EqualizerPreset(name: name, equalizer: config.equalizerRx.value);

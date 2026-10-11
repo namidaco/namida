@@ -11,6 +11,7 @@ import 'package:just_audio/just_audio.dart' show BitPerfectStatusMessage, BitPer
 
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/custom_mpv_player.dart';
+import 'package:namida/class/player_config_preset.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/current_color.dart';
@@ -36,6 +37,7 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 part 'sound_control_page.parametric.dart';
+part 'sound_control_page.presets.dart';
 part 'sound_control_page.signal_path.dart';
 part 'sound_control_page.sound_effects.dart';
 
@@ -66,8 +68,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
   Widget build(BuildContext context) {
     var initialIndex = settings.extra.audioConfigPageIndex.value ?? 0;
     if (!settings.player.isPerTrackAudioConfigOverriden.value) {
-      final initialCurrentItemConfig = Player.audioConfigs.getSyncOrNull(Player.inst.currentItem.value?.key ?? '');
-      final isCurrentItemModified = initialCurrentItemConfig != null && initialCurrentItemConfig != PlayerConfig.initial;
+      final isCurrentItemModified = Player.audioConfigs.getForCurrentItem() != null;
       if (isCurrentItemModified) {
         initialIndex = 1;
       }
@@ -82,6 +83,9 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
       pages: [
         SplitPageInfo(
           title: lang.global,
+          headerTrailing: _ConfigPresetSaveButton(
+            onTap: () => _slidersWidgetGlobalKey.currentState?.showSaveConfigPresetSheet(),
+          ),
           page: _SoundControlMainSlidersColumnBase(
             currentItem: null,
             isInDialog: widget.isInDialog,
@@ -94,6 +98,9 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
         ),
         SplitPageInfo(
           title: lang.item,
+          headerTrailing: _ConfigPresetSaveButton(
+            onTap: () => _slidersWidgetPerItemKey.currentState?.showSaveConfigPresetSheet(),
+          ),
           titleIconWidget: Obx(
             (context) {
               final currentConfig = Player.audioConfigs.map.valueR[Player.inst.currentItem.valueR?.key ?? ''];
@@ -156,9 +163,8 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
                                 ),
                                 onPressed: () async {
                                   _saveToDbForCurrentItemConfig = false;
-                                  await _slidersWidgetPerItemKey.currentState?.updateFromConfig(
-                                    _SoundControlMainSlidersColumnUpdateConfig.global(),
-                                  );
+                                  final globalConfig = Player.inst.getDefaultPlayerConfig(currentItem);
+                                  await _slidersWidgetPerItemKey.currentState?.applyConfig(globalConfig);
                                   await Player.audioConfigs.delete(currentItem.key);
                                   _saveToDbForCurrentItemConfig = true;
                                 },
@@ -195,6 +201,12 @@ class _SoundControlMainSlidersColumnUpdateConfig {
   /// [preset] is the preset [equalizer] came from, null once edited.
   final Future<void> Function(ParametricEqualizer equalizer, EqualizerPreset? preset) setEqualizer;
 
+  /// the global config resets to the default value, an item drops its override and follows the global config again.
+  final Future<void> Function() resetVolume;
+  final Future<void> Function() resetSpeed;
+  final Future<void> Function() resetPitch;
+  final Future<void> Function(LoudnessEnhancerExtended? loudnessEnhancer) resetLoudnessEnhancer;
+
   const _SoundControlMainSlidersColumnUpdateConfig._({
     required this.skipSilenceEnabledRx,
     required this.loudnessEnhancerEnabledRx,
@@ -213,10 +225,38 @@ class _SoundControlMainSlidersColumnUpdateConfig {
     required this.setVolume,
     required this.setSpeed,
     required this.setPitch,
+    required this.resetVolume,
+    required this.resetSpeed,
+    required this.resetPitch,
+    required this.resetLoudnessEnhancer,
   });
 
   factory _SoundControlMainSlidersColumnUpdateConfig.global() {
-    bool canApplyGlobalConfig() => !Player.audioConfigs.itemHasCustomConfig(Player.inst.currentItem.value?.key);
+    PlayerConfigOverrides? currentItemOverrides() => Player.audioConfigs.getForCurrentItem();
+    Future<void> setVolume(double val) async {
+      settings.player.volume.save(val);
+      final overrides = currentItemOverrides();
+      if (overrides?.volume == null) Player.inst.setVolume(val);
+    }
+
+    Future<void> setSpeed(double val) async {
+      settings.player.speed.save(val);
+      final overrides = currentItemOverrides();
+      if (overrides?.speed == null) Player.inst.setSpeed(val);
+    }
+
+    Future<void> setPitch(double val) async {
+      settings.player.pitch.save(val);
+      final overrides = currentItemOverrides();
+      if (overrides?.pitch == null) Player.inst.setPitch(val);
+    }
+
+    Future<void> setLoudnessEnhancer(LoudnessEnhancerExtended? loudnessEnhancer, double val) async {
+      settings.equalizer.loudnessEnhancer.save(val);
+      final overrides = currentItemOverrides();
+      if (overrides?.loudnessEnhancer == null) loudnessEnhancer?.setTargetGainUser(val);
+    }
+
     return _SoundControlMainSlidersColumnUpdateConfig._(
       skipSilenceEnabledRx: settings.player.skipSilenceEnabled,
       loudnessEnhancerEnabledRx: settings.equalizer.loudnessEnhancerEnabled,
@@ -229,53 +269,31 @@ class _SoundControlMainSlidersColumnUpdateConfig {
       pitchRx: settings.player.pitch,
       setSkipSilenceEnabled: (enabled) async {
         settings.player.skipSilenceEnabled.save(enabled);
-
-        if (canApplyGlobalConfig()) {
-          await Player.inst.setSkipSilenceEnabled(enabled);
-        }
+        final overrides = currentItemOverrides();
+        if (overrides?.skipSilence == null) await Player.inst.setSkipSilenceEnabled(enabled);
       },
       setLoudnessEnhancerEnabled: (loudnessEnhancer, enabled) async {
         settings.equalizer.loudnessEnhancerEnabled.save(enabled);
-
-        if (canApplyGlobalConfig()) {
-          if (loudnessEnhancer != null) Player.inst.executeWithPausedOutput(() => loudnessEnhancer.setEnabledUser(enabled));
-        }
+        if (loudnessEnhancer == null) return;
+        final overrides = currentItemOverrides();
+        if (overrides?.loudnessEnhancerEnabled == null) Player.inst.executeWithPausedOutput(() => loudnessEnhancer.setEnabledUser(enabled));
       },
-      setLoudnessEnhancer: (loudnessEnhancer, val) async {
-        settings.equalizer.loudnessEnhancer.save(val);
-
-        if (canApplyGlobalConfig()) {
-          loudnessEnhancer?.setTargetGainUser(val);
-        }
-      },
+      setLoudnessEnhancer: setLoudnessEnhancer,
       setEqualizerEnabled: (enabled) async {
         settings.equalizer.equalizerEnabled.save(enabled);
-
-        if (canApplyGlobalConfig()) {
-          await Player.inst.equalizerExtended?.apply(enabled, settings.equalizer.equalizer.value);
-        }
+        final overrides = currentItemOverrides();
+        if (overrides?.equalizerEnabled != null) return;
+        final equalizer = overrides?.equalizer ?? settings.equalizer.equalizer.value;
+        await Player.inst.equalizerExtended?.apply(enabled, equalizer);
       },
       setEqualizer: (equalizer, preset) => Player.inst.setGlobalEqualizer(equalizer, preset: preset),
-      setVolume: (val) async {
-        settings.player.volume.save(val);
-        if (canApplyGlobalConfig()) {
-          Player.inst.setVolume(val);
-        }
-      },
-      setSpeed: (val) async {
-        settings.player.speed.save(val);
-
-        if (canApplyGlobalConfig()) {
-          Player.inst.setSpeed(val);
-        }
-      },
-      setPitch: (val) async {
-        settings.player.pitch.save(val);
-
-        if (canApplyGlobalConfig()) {
-          Player.inst.setPitch(val);
-        }
-      },
+      setVolume: setVolume,
+      setSpeed: setSpeed,
+      setPitch: setPitch,
+      resetVolume: () => setVolume(1.0),
+      resetSpeed: () => setSpeed(1.0),
+      resetPitch: () => setPitch(1.0),
+      resetLoudnessEnhancer: (loudnessEnhancer) => setLoudnessEnhancer(loudnessEnhancer, 0.0),
     );
   }
 
@@ -342,6 +360,30 @@ class _SoundControlMainSlidersColumnUpdateConfig {
       Player.inst.setPitch(val);
       if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.copyWith(pitch: val));
     },
+    resetVolume: () async {
+      final globalVolume = settings.player.volume.value;
+      volumeRx.value = globalVolume;
+      Player.inst.setVolume(globalVolume);
+      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.clear(volume: true));
+    },
+    resetSpeed: () async {
+      final globalSpeed = settings.player.speed.value;
+      speedRx.value = globalSpeed;
+      Player.inst.setSpeed(globalSpeed);
+      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.clear(speed: true));
+    },
+    resetPitch: () async {
+      final globalPitch = settings.player.pitch.value;
+      pitchRx.value = globalPitch;
+      Player.inst.setPitch(globalPitch);
+      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.clear(pitch: true));
+    },
+    resetLoudnessEnhancer: (loudnessEnhancer) async {
+      final globalGain = settings.equalizer.loudnessEnhancer.value;
+      loudnessEnhancerRx.value = globalGain;
+      loudnessEnhancer?.setTargetGainUser(globalGain);
+      if (saveToDb()) await Player.audioConfigs.updateProperty(item.key, (current) => current.clear(loudnessEnhancer: true));
+    },
   );
 }
 
@@ -377,32 +419,24 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
   final speedKey = GlobalKey<_CuteSliderState>();
   final volumeKey = GlobalKey<_CuteSliderState>();
 
-  Future<void> updateFromConfig(_SoundControlMainSlidersColumnUpdateConfig config) async {
-    await _setSpeed(config.speedRx.value);
-    if (settings.player.linkSpeedPitch.value) {
-      // -- apply speed to pitch if they were linked
-      await _setPitch(config.speedRx.value);
-    } else {
-      await _setPitch(config.pitchRx.value);
-    }
-    await _setVolume(config.volumeRx.value);
+  Future<void> applyConfig(PlayerConfig config) async {
+    speedKey.currentState?.updateValExternal(config.speed);
+    await widget.updateConfig.setSpeed(config.speed);
+    await _setPitch(config.pitch);
+    await _setVolume(config.volume);
 
-    await _setSkipSilence(config.skipSilenceEnabledRx.value);
-    await _setLoudnessEnhancerEnabled(config.loudnessEnhancerEnabledRx.value);
-    await _setLoudnessEnhancer(config.loudnessEnhancerRx.value);
+    await _setSkipSilence(config.skipSilence);
+    await _setLoudnessEnhancerEnabled(config.loudnessEnhancerEnabled);
+    await _setLoudnessEnhancer(config.loudnessEnhancer);
 
-    await widget.updateConfig.setEqualizerEnabled(config.equalizerEnabledRx.value);
-    await widget.updateConfig.setEqualizer(config.equalizerRx.value, config.presetRx.value);
+    await widget.updateConfig.setEqualizerEnabled(config.equalizerEnabled);
+    await widget.updateConfig.setEqualizer(config.equalizer, config.preset);
   }
 
-  Future<void> _setSpeed(double value) async {
-    speedKey.currentState?.updateValExternal(value);
-    await widget.updateConfig.setSpeed(value);
-
-    if (settings.player.linkSpeedPitch.value) {
-      pitchKey.currentState?.updateValExternal(value);
-      await widget.updateConfig.setPitch(value);
-    }
+  void showSaveConfigPresetSheet() {
+    final current = widget.updateConfig.getCurrentConfig();
+    final activePreset = settings.equalizer.configPresets.value.firstWhereEff((p) => p.config == current);
+    _ConfigPresetSaveSheet.show(config: current, initialName: activePreset?.name);
   }
 
   Future<void> _setPitch(double value) async {
@@ -426,6 +460,27 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
   Future<void> _setLoudnessEnhancer(double val) async {
     _loudnessKey.currentState?.updateValExternal(val);
     await widget.updateConfig.setLoudnessEnhancer(_loudnessEnhancerExtended, val);
+  }
+
+  Future<void> _resetSpeed() async {
+    await widget.updateConfig.resetSpeed();
+    speedKey.currentState?.updateValExternal(widget.updateConfig.speedRx.value);
+    if (settings.player.linkSpeedPitch.value) await _resetPitch();
+  }
+
+  Future<void> _resetPitch() async {
+    await widget.updateConfig.resetPitch();
+    pitchKey.currentState?.updateValExternal(widget.updateConfig.pitchRx.value);
+  }
+
+  Future<void> _resetVolume() async {
+    await widget.updateConfig.resetVolume();
+    volumeKey.currentState?.updateValExternal(widget.updateConfig.volumeRx.value);
+  }
+
+  Future<void> _resetLoudnessEnhancer() async {
+    await widget.updateConfig.resetLoudnessEnhancer(_loudnessEnhancerExtended);
+    _loudnessKey.currentState?.updateValExternal(widget.updateConfig.loudnessEnhancerRx.value);
   }
 
   @override
@@ -533,6 +588,10 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
             child: Column(
               mainAxisSize: .min,
               children: [
+                _ConfigPresetsRow(
+                  config: widget.updateConfig,
+                  onApply: applyConfig,
+                ),
                 const _ForcedOffBanner(),
                 if (NamidaFeaturesVisibility.skipSilenceAvailable) ...[
                   Obx(
@@ -609,7 +668,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                   value: pitch,
                                   valToText: isSemitones ? _SliderTextWidget.toSemitones : _SliderTextWidget.toPercentage,
                                   valueModifier: isSemitones ? _SliderTextWidget.ratioToSemitonesRound : null,
-                                  restoreDefault: () => _setPitch(1.0),
+                                  restoreDefault: _resetPitch,
                                   onManualChange: (convertedValue) {
                                     pitchKey.currentState?._updateValNoRound(convertedValue); // no conversion
                                   },
@@ -705,7 +764,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                               pitchKey.currentState?.updateValNoRoundExternal(value);
                             }
                           },
-                          restoreDefault: () => _setSpeed(1.0),
+                          restoreDefault: _resetSpeed,
                           useMaxToLimitPreciseValue: false,
                           valToText: _SliderTextWidget.toXMultiplier,
                           featuredButton: ObxO(
@@ -785,7 +844,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                             onManualChange: (value) {
                               volumeKey.currentState?.updateValNoRoundExternal(value);
                             },
-                            restoreDefault: () => _setVolume(1.0),
+                            restoreDefault: _resetVolume,
                           );
                         },
                       ),
@@ -833,7 +892,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                       onManualChange: (newVal) {
                                         _loudnessKey.currentState?.updateValNoRoundExternal(newVal);
                                       },
-                                      restoreDefault: () => _setLoudnessEnhancer(0.0),
+                                      restoreDefault: _resetLoudnessEnhancer,
                                       trailing: CustomSwitch(
                                         active: enabled,
                                         passedColor: null,
@@ -1512,8 +1571,8 @@ class _VerticalSliderState extends State<VerticalSlider> {
 
 class _TempConfigRxProviders extends StatefulWidget {
   final Playable currentItem;
-  final FutureOr<PlayerConfig?> Function() getConfig;
-  final PlayerConfig? Function() getConfigOrNullSync;
+  final FutureOr<PlayerConfigOverrides?> Function() getConfig;
+  final PlayerConfigOverrides? Function() getConfigOrNullSync;
   final Widget Function(
     Rx<bool> skipSilenceEnabledRx,
     Rx<bool> loudnessEnhancerEnabledRx,
@@ -1564,8 +1623,9 @@ class __TempConfigRxProvidersState extends State<_TempConfigRxProviders> {
   }
 
   Future<void> _fillData() async {
-    var config = widget.getConfigOrNullSync() ?? await widget.getConfig();
-    config ??= Player.inst.getDefaultPlayerConfig(widget.currentItem);
+    final overrides = widget.getConfigOrNullSync() ?? await widget.getConfig();
+    final defaultConfig = Player.inst.getDefaultPlayerConfig(widget.currentItem);
+    final config = overrides?.resolve(defaultConfig) ?? defaultConfig;
     skipSilenceEnabledRx.value = config.skipSilence;
     loudnessEnhancerEnabledRx.value = config.loudnessEnhancerEnabled;
     loudnessEnhancerRx.value = config.loudnessEnhancer;

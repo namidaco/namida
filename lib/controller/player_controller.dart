@@ -398,12 +398,14 @@ class Player {
     return _audioHandler.executeOnPlayers((player) => player.setAudioOutput(device, bitPerfect: bitPerfect, exclusive: exclusive, mono: mono));
   }
 
-  /// saves the global equalizer and applies it, unless the current item has its own config.
+  /// saves the global equalizer and applies it, unless the current item has its own.
   Future<void> setGlobalEqualizer(ParametricEqualizer equalizer, {required EqualizerPreset? preset}) async {
     settings.equalizer.equalizer.save(equalizer);
     settings.equalizer.preset.save(preset);
-    if (Player.audioConfigs.itemHasCustomConfig(currentItem.value?.key)) return;
-    await equalizerExtended?.apply(settings.equalizer.equalizerEnabled.value, equalizer);
+    final overrides = Player.audioConfigs.getForCurrentItem();
+    if (overrides?.equalizer != null) return;
+    final enabled = overrides?.equalizerEnabled ?? settings.equalizer.equalizerEnabled.value;
+    await equalizerExtended?.apply(enabled, equalizer);
   }
 
   double volumeUp() {
@@ -442,8 +444,8 @@ class Player {
 
   /// the item's own speed, or the global one.
   Future<void> restoreUserSpeed() {
-    final currentConfig = Player.audioConfigs.map.value[Player.inst.currentItem.value?.key ?? ''];
-    final originalSpeed = currentConfig?.speed ?? settings.player.speed.value;
+    final overrides = Player.audioConfigs.getForCurrentItem();
+    final originalSpeed = overrides?.speed ?? settings.player.speed.value;
     return Player.inst.setSpeed(originalSpeed);
   }
 
@@ -1209,8 +1211,8 @@ class Player {
 }
 
 class _AudioConfigsManager {
-  RxBaseCore<Map<String, PlayerConfig>> get map => _mapRx;
-  static final _mapRx = <String, PlayerConfig>{}.obs;
+  RxBaseCore<Map<String, PlayerConfigOverrides>> get map => _mapRx;
+  static final _mapRx = <String, PlayerConfigOverrides>{}.obs;
 
   Timer? _updateDebouncer;
 
@@ -1223,20 +1225,20 @@ class _AudioConfigsManager {
     final res = await _dBManager.loadEverythingKeyedResult();
     for (final entry in res.entries) {
       try {
-        final config = PlayerConfig.fromMap(entry.value);
+        final config = PlayerConfigOverrides.fromMap(entry.value);
         _mapRx.value[entry.key] ??= config;
       } catch (_) {}
     }
     _mapRx.refresh();
   }
 
-  FutureOr<PlayerConfig?> get(String key) async {
+  FutureOr<PlayerConfigOverrides?> get(String key) async {
     var config = _mapRx.value[key];
     if (config != null) return config;
     try {
       final configMapInDb = await _dBManager.get(key);
       if (configMapInDb != null) {
-        config = PlayerConfig.fromMap(configMapInDb);
+        config = PlayerConfigOverrides.fromMap(configMapInDb);
         _mapRx[key] ??= config;
         return config;
       }
@@ -1245,29 +1247,37 @@ class _AudioConfigsManager {
   }
 
   bool itemHasCustomConfig(String? key) => key == null ? false : _mapRx.value[key] != null;
-  PlayerConfig? getSyncOrNull(String key) => _mapRx.value[key];
+  PlayerConfigOverrides? getSyncOrNull(String key) => _mapRx.value[key];
+  PlayerConfigOverrides? getForCurrentItem() {
+    final key = Player.inst.currentItem.value?.key;
+    return key == null ? null : _mapRx.value[key];
+  }
 
-  Future<void> updateProperty(String key, PlayerConfig Function(PlayerConfig current) builder) async {
+  /// no overrides left means the item is removed
+  Future<void> updateProperty(String key, PlayerConfigOverrides Function(PlayerConfigOverrides current) builder) async {
     final currentConfig = await get(key);
-    final config = builder(currentConfig ?? PlayerConfig.initial).copyWith(modifiedDate: currentTimeMS);
-    _mapRx.value[key] = config;
+    final config = builder(currentConfig ?? PlayerConfigOverrides.none);
+    if (config.isEmpty) return delete(key);
+    _mapRx.value[key] = config.copyWith(modifiedDate: currentTimeMS);
     _scheduleSave(key);
   }
 
-  Iterable<MapEntry<String, PlayerConfig>> buildSyncEntries() => _mapRx.value.entries;
+  Iterable<MapEntry<String, PlayerConfigOverrides>> buildSyncEntries() => _mapRx.value.entries;
 
-  Future<void> import(Iterable<MapEntry<String, PlayerConfig>> incomingConfigs, String senderDeviceId) async {
-    bool anyChanged = false;
+  /// [incomingWins] skips the newest wins check, ex: restoring a backup.
+  Future<void> import(Iterable<MapEntry<String, PlayerConfigOverrides>> incomingConfigs, String senderDeviceId, {bool incomingWins = false}) async {
+    final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final e in incomingConfigs) {
       final incoming = e.value;
       final key = SyncPathResolver.resolvePath(senderDeviceId, e.key) ?? e.key;
       final local = _mapRx.value[key];
-      if (local != null && local.modifiedDate >= incoming.modifiedDate) continue;
+      if (!incomingWins && local != null && local.modifiedDate >= incoming.modifiedDate) continue;
       _mapRx.value[key] = incoming;
-      anyChanged = true;
-      await _dBManager.put(key, incoming.toMap());
+      dbEntries.add(MapEntry(key, incoming.toMap()));
     }
-    if (anyChanged) _mapRx.refresh();
+    if (dbEntries.isEmpty) return;
+    _mapRx.refresh();
+    await _dBManager.putAll(dbEntries, (e) => e);
   }
 
   final _dirtyKeys = <String>{};
@@ -1283,7 +1293,8 @@ class _AudioConfigsManager {
         _mapRx.refresh();
         for (final key in keys) {
           final config = _mapRx.value[key];
-          await _dBManager.put(key, config?.toMap());
+          if (config == null) continue; // -- deleted meanwhile
+          await _dBManager.put(key, config.toMap());
         }
       },
     );

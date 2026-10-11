@@ -7035,16 +7035,14 @@ class SoundControlButtonRaw extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       (context) {
-        PlayerConfigModificationScale? soundModificationScale;
         final currentItem = Player.inst.currentItem.valueR;
+        final defaultConfig = Player.inst.getDefaultPlayerConfigR(currentItem);
+        var config = defaultConfig;
         if (!settings.player.isPerTrackAudioConfigOverriden.valueR) {
-          final currentItemConfig = Player.audioConfigs.map.valueR[currentItem?.key ?? ''];
-          if (currentItemConfig != null) {
-            // -- if any config exists in map, it will be used even it's default, so global config means nothing here
-            soundModificationScale = currentItemConfig.getModificationScale();
-          }
+          final currentItemOverrides = Player.audioConfigs.map.valueR[currentItem?.key ?? ''];
+          if (currentItemOverrides != null) config = currentItemOverrides.resolve(defaultConfig);
         }
-        soundModificationScale ??= Player.inst.getDefaultPlayerConfigR(currentItem).getModificationScale();
+        final soundModificationScale = config.getModificationScale();
 
         final secondaryIcon = switch (soundModificationScale) {
           PlayerConfigModificationScale.main => Broken.edit_2,
@@ -9319,11 +9317,13 @@ class SplitPageInfo {
   final String title;
   final Widget page;
   final Widget? titleIconWidget;
+  final Widget? headerTrailing;
 
   const SplitPageInfo({
     required this.title,
     required this.page,
     this.titleIconWidget,
+    this.headerTrailing,
   });
 }
 
@@ -9369,6 +9369,7 @@ class SplitPageState extends State<SplitPage> {
     final theme = context.theme;
     final pages = widget.pages;
     final selectedIndex = _selectedIndex;
+    final selectedPage = pages[selectedIndex];
     return Column(
       mainAxisSize: .min,
       children: [
@@ -9377,67 +9378,69 @@ class SplitPageState extends State<SplitPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: pages
-                .mapIndexed(
-                  (e, i) {
-                    final isSelected = i == selectedIndex;
-                    BorderRadius borderRadius;
-                    final brValue = 8.0.multipliedRadius;
-                    if (widget.joinHeaderChips) {
-                      final brValueSmall = brValue * 0.25;
-                      borderRadius = i == 0
-                          ? BorderRadius.horizontal(
-                              left: Radius.circular(brValue),
-                              right: Radius.circular(brValueSmall),
-                            )
-                          : i == pages.length - 1
-                          ? BorderRadius.horizontal(
-                              left: Radius.circular(brValueSmall),
-                              right: Radius.circular(brValue),
-                            )
-                          : BorderRadius.circular(brValueSmall);
-                    } else {
-                      borderRadius = BorderRadius.circular(brValue);
-                    }
-                    return Expanded(
-                      child: NamidaInkWell(
-                        alignment: Alignment.center,
-                        animationDurationMS: 200,
-                        borderRadius: 8.0,
-                        bgColor: theme.cardTheme.color,
-                        padding: const EdgeInsets.all(8.0),
-                        decoration: BoxDecoration(
-                          border: isSelected
-                              ? Border.all(
-                                  color: theme.colorScheme.primary.withOpacityExt(0.6),
-                                  width: 1.2,
-                                )
-                              : null,
-                          borderRadius: borderRadius,
-                        ),
-                        onTap: () => _onButtonTap(i),
-                        child: Row(
-                          mainAxisAlignment: .center,
-                          children: [
-                            ?e.titleIconWidget,
-                            Flexible(
-                              fit: e.titleIconWidget == null ? FlexFit.tight : FlexFit.loose,
-                              child: Text(
-                                e.title,
-                                style: theme.textTheme.displayMedium,
-                                textAlign: TextAlign.center,
+            children: [
+              ...pages
+                  .mapIndexed(
+                    (e, i) {
+                      final isSelected = i == selectedIndex;
+                      BorderRadius borderRadius;
+                      final brValue = 8.0.multipliedRadius;
+                      if (widget.joinHeaderChips) {
+                        final brValueSmall = brValue * 0.25;
+                        borderRadius = i == 0
+                            ? BorderRadius.horizontal(
+                                left: Radius.circular(brValue),
+                                right: Radius.circular(brValueSmall),
+                              )
+                            : i == pages.length - 1
+                            ? BorderRadius.horizontal(
+                                left: Radius.circular(brValueSmall),
+                                right: Radius.circular(brValue),
+                              )
+                            : BorderRadius.circular(brValueSmall);
+                      } else {
+                        borderRadius = BorderRadius.circular(brValue);
+                      }
+                      return Expanded(
+                        child: NamidaInkWell(
+                          alignment: Alignment.center,
+                          animationDurationMS: 200,
+                          borderRadius: 8.0,
+                          bgColor: theme.cardTheme.color,
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            border: isSelected
+                                ? Border.all(
+                                    color: theme.colorScheme.primary.withOpacityExt(0.6),
+                                    width: 1.2,
+                                  )
+                                : null,
+                            borderRadius: borderRadius,
+                          ),
+                          onTap: () => _onButtonTap(i),
+                          child: Row(
+                            mainAxisAlignment: .center,
+                            children: [
+                              ?e.titleIconWidget,
+                              Flexible(
+                                fit: e.titleIconWidget == null ? FlexFit.tight : FlexFit.loose,
+                                child: Text(
+                                  e.title,
+                                  style: theme.textTheme.displayMedium,
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                )
-                .addSeparators(
-                  separator: widget.joinHeaderChips ? const SizedBox(width: 4.0) : const SizedBox(width: 8.0),
-                )
-                .toList(),
+                      );
+                    },
+                  )
+                  .addSeparators(
+                    separator: widget.joinHeaderChips ? const SizedBox(width: 4.0) : const SizedBox(width: 8.0),
+                  ),
+              ?selectedPage.headerTrailing,
+            ],
           ),
         ),
 
@@ -9450,7 +9453,7 @@ class SplitPageState extends State<SplitPage> {
 
         Flexible(
           fit: widget.expanded ? FlexFit.tight : FlexFit.loose,
-          child: pages[_selectedIndex].page,
+          child: selectedPage.page,
         ),
       ],
     );

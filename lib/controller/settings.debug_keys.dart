@@ -13,6 +13,7 @@ extension EqualizerSettingsDebugKeys on _EqualizerSettings {
     soundEffectIntensities,
     eqPresets,
     devicePresets,
+    configPresets,
     uiTapToUpdate,
   ];
 }
