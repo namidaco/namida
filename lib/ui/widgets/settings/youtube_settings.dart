@@ -1055,7 +1055,7 @@ class _YTFlagsOptions extends StatelessWidget {
                       : '$maxPageCacheDurationMin min',
                 ),
               ),
-              const _RefreshJSPlayerTile(),
+              const _ResetYoutubeSessionTile(),
               CustomListTile(
                 icon: Broken.hierarchy_square,
                 title: 'copy_yt_history_to_local_history'.toUpperCase(),
@@ -1092,27 +1092,31 @@ class _YTFlagsOptions extends StatelessWidget {
   }
 }
 
-class _RefreshJSPlayerTile extends StatefulWidget {
-  const _RefreshJSPlayerTile();
+class _ResetYoutubeSessionTile extends StatefulWidget {
+  const _ResetYoutubeSessionTile();
 
   @override
-  State<_RefreshJSPlayerTile> createState() => _RefreshJSPlayerTileState();
+  State<_ResetYoutubeSessionTile> createState() => _ResetYoutubeSessionTileState();
 }
 
-class _RefreshJSPlayerTileState extends State<_RefreshJSPlayerTile> {
-  bool _isRefreshing = false;
-  String? _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
+class _ResetYoutubeSessionTileState extends State<_ResetYoutubeSessionTile> {
+  bool _isResetting = false;
+  late String _subtitle = _getSubtitle();
 
-  Future<void> _refresh() async {
-    setState(() {
-      _isRefreshing = true;
-      _jsPlayerVersion = '?';
-    });
-    await YoutubeInfoController.video.forceRefreshJSPlayer();
+  String _getSubtitle() {
+    final jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion() ?? '?';
+    final lastReset = YoutubeInfoController.video.getLastSessionReset();
+    final lastResetText = lastReset?.dateAndClockFormatted ?? 'never';
+    return 'js player: $jsPlayerVersion | last reset: $lastResetText';
+  }
+
+  Future<void> _reset() async {
+    setState(() => _isResetting = true);
+    await YoutubeInfoController.video.resetSession();
     if (!mounted) return;
     setState(() {
-      _isRefreshing = false;
-      _jsPlayerVersion = YoutubeInfoController.video.getJSPlayerVersion();
+      _isResetting = false;
+      _subtitle = _getSubtitle();
     });
   }
 
@@ -1124,11 +1128,11 @@ class _RefreshJSPlayerTileState extends State<_RefreshJSPlayerTile> {
         secondaryIcon: Broken.refresh,
         secondaryIconSize: 12.0,
       ),
-      enabled: !_isRefreshing,
-      title: 'refresh_js_player'.toUpperCase(),
-      subtitle: _jsPlayerVersion,
-      trailing: _isRefreshing ? const LoadingIndicator() : null,
-      onTap: _refresh,
+      enabled: !_isResetting,
+      title: 'reset_youtube_session'.toUpperCase(),
+      subtitle: _subtitle,
+      trailing: _isResetting ? const LoadingIndicator() : null,
+      onTap: _reset,
     );
   }
 }

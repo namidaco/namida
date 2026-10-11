@@ -957,6 +957,8 @@ class AppPaths {
     final accounts = YoutiPie.signedInAccounts.value;
     final activeAccount = YoutiPie.activeAccountDetails.value;
     final expiredAccountsCount = accounts.where(cookies.isSessionExpired).length;
+    final sessionFailureReport = YoutiPie.lastSessionFailureReport;
+    final sessionFailureDetails = sessionFailureReport?.toText().split('\n');
 
     Map<String, dynamic> accountInfo(UserChannelInfo account) {
       final identity = account.identity;
@@ -973,6 +975,12 @@ class AppPaths {
       'has_connection': ConnectivityController.inst.hasConnection,
       'language': YoutiPie.languageCode,
       'country': YoutiPie.countryCode,
+      'last_session_reset': _formatLogsDate(YoutiPie.lastSessionReset),
+      if (sessionFailureReport != null)
+        'last_session_failure': {
+          'date': _formatLogsDate(sessionFailureReport.date),
+          'details': sessionFailureDetails,
+        },
       'js_player': {
         'version': cipher.jsPlayerVersion,
         'signature_timestamp': cipher.signatureTimestamp,

@@ -27,11 +27,11 @@ class _VideoInfoController {
     return YoutiPie.cipher.prepareJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
   }
 
-  Future<bool> forceRefreshJSPlayer() async {
-    return YoutiPie.cipher.forceRefreshJSPlayer(cacheDirectoryPath: AppDirs.YOUTIPIE_CACHE);
-  }
-
   String? getJSPlayerVersion() => YoutiPie.cipher.jsPlayerVersion;
+
+  Future<void> resetSession() => YoutiPie.resetSession();
+
+  DateTime? getLastSessionReset() => YoutiPie.lastSessionReset;
 
   Future<LikeStatus?> fetchLikeStatusForVideoCardInstant(String videoId, {ExecuteDetails? details}) async {
     if (settings.youtube.showLikeStatusOnCards.value) {

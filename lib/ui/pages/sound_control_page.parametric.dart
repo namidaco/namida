@@ -1716,6 +1716,8 @@ class _AudioOutputSection extends StatelessWidget {
       UsbDirectStateMessage.noDevice => lang.usbDirectNoDevice,
       UsbDirectStateMessage.awaitingPermission => lang.usbDirectAwaitingPermission(device: deviceName),
       UsbDirectStateMessage.permissionDenied => lang.usbDirectPermissionDenied(device: deviceName),
+      UsbDirectStateMessage.waitingPlayback => lang.usbDirectWaitingPlayback(device: deviceName),
+      UsbDirectStateMessage.claiming => lang.usbDirectClaiming(device: deviceName),
       UsbDirectStateMessage.unsupportedDevice => lang.usbDirectUnsupportedDevice(device: deviceName),
       UsbDirectStateMessage.failed => lang.usbDirectFailed(device: deviceName),
       UsbDirectStateMessage.active => status.hasHardwareVolume ? '$deviceName · ${lang.usbDirectHardwareVolume}' : deviceName,
