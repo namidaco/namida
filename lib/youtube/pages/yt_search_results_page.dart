@@ -60,6 +60,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
   static YoutiPieSearchFilters _filters = YoutiPieSearchFilters.defaults;
   static YoutiPieSearchFilters? _latestSearchedFilters;
   static bool _dateRangeFromText = false;
+  static YoutiPieSearchOperators? _searchOperators;
 
   static void setFilters(YoutiPieSearchFilters filters) {
     _filters = filters;
@@ -126,18 +127,26 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     }
   }
 
-  void _onFiltersChanged(YoutiPieSearchFilters newFilters, {bool dateRangeChanged = false}) {
-    if (newFilters == _filters) return;
-    if (dateRangeChanged) {
-      _dateRangeFromText = false;
-      if (widget.searchTextCallback == null) {
-        final textController = ScrollSearchController.inst.searchTextEditingController;
-        final stripped = YoutiPieSearchFilters.stripDateOperators(textController.text);
-        if (stripped != textController.text) textController.text = stripped;
-      }
+  void _onFiltersChanged(YoutiPieSearchFilters newFilters, {bool dateRangeChanged = false, bool clearMatch = false}) {
+    if (newFilters == _filters && !clearMatch) return;
+    if (dateRangeChanged) _dateRangeFromText = false;
+    if (widget.searchTextCallback == null && (dateRangeChanged || clearMatch)) {
+      final textController = ScrollSearchController.inst.searchTextEditingController;
+      var newText = textController.text;
+      if (dateRangeChanged) newText = YoutiPieSearchFilters.stripDateOperators(newText);
+      if (clearMatch) newText = YoutiPieSearchOperators.buildQuery(newText, matchMode: null, excluded: const []);
+      if (newText != textController.text) textController.text = newText;
     }
     _filters = newFilters;
     refreshState();
+    fetchSearch();
+  }
+
+  void _onMatchChanged(YoutiPieSearchMatchMode? matchMode, List<String> excluded) {
+    final textController = ScrollSearchController.inst.searchTextEditingController;
+    final newText = YoutiPieSearchOperators.buildQuery(textController.text, matchMode: matchMode, excluded: excluded);
+    if (newText == textController.text) return;
+    textController.text = newText;
     fetchSearch();
   }
 
@@ -146,6 +155,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
     final newSearch = customText == '' ? widget.searchTextCallback?.call() ?? ScrollSearchController.inst.searchTextEditingController.text : customText;
     _syncDateRangeFromText(newSearch);
+    _searchOperators = YoutiPieSearchOperators.parse(newSearch);
     final filters = _filters;
     if (_latestSearched == newSearch && _latestSearchedFilters == filters && _searchResult != null) {
       YTLocalSearchController.inst.search(newSearch, after: filters.after, before: filters.before); // has its own latest search checks
@@ -369,7 +379,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                     SliverToBoxAdapter(
                       child: _YTSearchFiltersRow(
                         filters: _filters,
+                        operators: _searchOperators,
                         onChanged: _onFiltersChanged,
+                        onMatchChanged: widget.searchTextCallback == null ? _onMatchChanged : null,
                       ),
                     ),
 
@@ -663,9 +675,11 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 // by claude
 class _YTSearchFiltersRow extends StatelessWidget {
   final YoutiPieSearchFilters filters;
-  final void Function(YoutiPieSearchFilters newFilters, {bool dateRangeChanged}) onChanged;
+  final YoutiPieSearchOperators? operators;
+  final void Function(YoutiPieSearchFilters newFilters, {bool dateRangeChanged, bool clearMatch}) onChanged;
+  final void Function(YoutiPieSearchMatchMode? matchMode, List<String> excluded)? onMatchChanged;
 
-  const _YTSearchFiltersRow({required this.filters, required this.onChanged});
+  const _YTSearchFiltersRow({required this.filters, required this.operators, required this.onChanged, required this.onMatchChanged});
 
   static String _typeToText(YoutiPieSearchType type) => switch (type) {
     YoutiPieSearchType.all => lang.all,
@@ -714,6 +728,21 @@ class _YTSearchFiltersRow extends StatelessWidget {
     return '${lang.isBefore} $before';
   }
 
+  static String _matchToText(YoutiPieSearchMatchMode? matchMode, List<String> excluded) {
+    final matchModeText = matchMode?.toText();
+    if (excluded.isEmpty) return matchModeText ?? lang.match;
+    final excludedText = '${lang.exclude} (${excluded.length})';
+    return matchModeText == null ? excludedText : '$matchModeText, $excludedText';
+  }
+
+  Future<void> _pickExcluded(YoutiPieSearchMatchMode? matchMode, List<String> excluded) async {
+    final onMatchChanged = this.onMatchChanged;
+    if (onMatchChanged == null) return;
+    final newExcluded = await _showYTSearchExcludeDialog(excluded);
+    if (newExcluded == null) return;
+    onMatchChanged(matchMode, newExcluded);
+  }
+
   Future<void> _pickDate({required bool isAfter}) async {
     final initial = isAfter ? filters.after : filters.before;
     final date = await showYTSearchDateDialog(
@@ -732,6 +761,10 @@ class _YTSearchFiltersRow extends StatelessWidget {
     final filters = this.filters;
     final hasDateRange = filters.hasDateRange;
     final isDateActive = hasDateRange || filters.uploadDate != YoutiPieSearchUploadDate.none;
+    final onMatchChanged = this.onMatchChanged;
+    final matchMode = operators?.matchMode;
+    final excluded = operators?.excluded ?? const <String>[];
+    final isMatchActive = onMatchChanged != null && (matchMode != null || excluded.isNotEmpty);
     return SizedBox(
       height: 40.0,
       child: ListView(
@@ -806,12 +839,36 @@ class _YTSearchFiltersRow extends StatelessWidget {
               ),
             ],
           ),
-          if (!filters.isDefault)
+          if (onMatchChanged != null)
+            _YTSearchFilterChip(
+              icon: Broken.quote_up,
+              title: _matchToText(matchMode, excluded),
+              isActive: isMatchActive,
+              onClear: () => onMatchChanged(null, const []),
+              items: () => [
+                ...YoutiPieSearchMatchMode.values.map(
+                  (e) => NamidaPopupItem(
+                    icon: e.toIcon(),
+                    title: e.toText(),
+                    selected: e == matchMode,
+                    onTap: () => onMatchChanged(e == matchMode ? null : e, excluded),
+                  ),
+                ),
+                NamidaPopupItem(
+                  icon: Broken.minus_cirlce,
+                  title: '${lang.exclude}...',
+                  subtitle: excluded.join(', '),
+                  selected: excluded.isNotEmpty,
+                  onTap: () => _pickExcluded(matchMode, excluded),
+                ),
+              ],
+            ),
+          if (!filters.isDefault || isMatchActive)
             _YTSearchFilterChip(
               icon: Broken.close_circle,
               title: lang.clear,
               isActive: false,
-              onTap: () => onChanged(YoutiPieSearchFilters.defaults, dateRangeChanged: hasDateRange),
+              onTap: () => onChanged(YoutiPieSearchFilters.defaults, dateRangeChanged: hasDateRange, clearMatch: isMatchActive),
             ),
         ],
       ),
@@ -948,4 +1005,52 @@ Future<YoutiPieSearchDate?> showYTSearchDateDialog({required String title, Youti
     ),
   );
   return result;
+}
+
+Future<List<String>?> _showYTSearchExcludeDialog(List<String> initial) async {
+  final controller = TextEditingController(text: initial.join(', '));
+  List<String>? result;
+
+  void submit() {
+    result = controller.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toFixedList();
+    NamidaNavigator.inst.closeDialog();
+  }
+
+  await NamidaNavigator.inst.navigateDialog(
+    onDisposing: controller.dispose,
+    dialog: CustomBlurryDialog(
+      title: lang.exclude,
+      icon: Broken.minus_cirlce,
+      normalTitleStyle: true,
+      actions: [
+        const CancelButton(),
+        NamidaButton(
+          text: lang.confirm,
+          onTap: submit,
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.only(top: 12.0),
+        child: CustomTagTextField(
+          controller: controller,
+          hintText: 'a, b, c...',
+          labelText: lang.exclude,
+          onFieldSubmitted: (_) => submit(),
+        ),
+      ),
+    ),
+  );
+  return result;
+}
+
+extension _YoutiPieSearchMatchModeUtils on YoutiPieSearchMatchMode {
+  String toText() => switch (this) {
+    YoutiPieSearchMatchMode.phrase => lang.exactPhrase,
+    YoutiPieSearchMatchMode.title => lang.inTitle,
+  };
+
+  IconData toIcon() => switch (this) {
+    YoutiPieSearchMatchMode.phrase => Broken.quote_up,
+    YoutiPieSearchMatchMode.title => Broken.text,
+  };
 }

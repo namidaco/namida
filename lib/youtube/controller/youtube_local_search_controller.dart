@@ -230,11 +230,23 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
         }
       }
 
-      final textCleaned = textPre.cleanUpForComparison;
-      final splittedText = enableFuzzySearch ? textPre.split(' ').map((e) => e.cleanUpForComparison).toList() : const <String>[];
+      final operators = YoutiPieSearchOperators.parse(textPre);
+      final textToMatch = operators?.remainingText ?? textPre;
+      final textCleaned = textToMatch.cleanUpForComparison;
+      final splittedText = enableFuzzySearch ? textToMatch.split(' ').map((e) => e.cleanUpForComparison).toList() : const <String>[];
 
-      bool isMatchText(_LookupEntry entry) {
+      bool isMatchRestText(_LookupEntry entry) {
         return enableFuzzySearch ? _isMatchFuzzy(splittedText, entry) : _isMatchStrict(textCleaned, entry);
+      }
+
+      final operatorsMatcher = operators == null ? null : _LookupOperatorsMatcher(operators);
+      final bool Function(_LookupEntry entry) isMatchText;
+      if (operatorsMatcher == null) {
+        isMatchText = isMatchRestText;
+      } else if (textToMatch.isEmpty) {
+        isMatchText = operatorsMatcher.isMatch;
+      } else {
+        isMatchText = (entry) => operatorsMatcher.isMatch(entry) && isMatchRestText(entry);
       }
 
       bool isMatchDate(_LookupEntry entry) {
@@ -513,6 +525,44 @@ class _LookupEntry {
   static String? _cleanChannel(Object? channelTitle) {
     if (channelTitle is! String || channelTitle.isEmpty) return null;
     return channelTitle.cleanUpForComparison;
+  }
+}
+
+// by claude
+class _LookupOperatorsMatcher {
+  final List<String> phrasesCleaned;
+  final List<String> titlePhrasesCleaned;
+  final List<String> excludedCleaned;
+
+  _LookupOperatorsMatcher(YoutiPieSearchOperators operators)
+    : phrasesCleaned = _cleanTerms(operators.phrases),
+      titlePhrasesCleaned = _cleanTerms(operators.titlePhrases),
+      excludedCleaned = _cleanTerms(operators.excluded);
+
+  static List<String> _cleanTerms(List<String> terms) => terms.map((e) => e.cleanUpForComparison).where((e) => e.isNotEmpty).toFixedList();
+
+  bool isMatch(_LookupEntry entry) {
+    final excludedCleaned = this.excludedCleaned;
+    final titlePhrasesCleaned = this.titlePhrasesCleaned;
+    final phrasesCleaned = this.phrasesCleaned;
+    final titleCleaned = entry.titleCleaned;
+    final channelCleaned = entry.channelCleaned;
+    for (int i = 0; i < excludedCleaned.length; i++) {
+      final element = excludedCleaned[i];
+      if (titleCleaned.contains(element)) return false;
+      if (channelCleaned != null && channelCleaned.contains(element)) return false;
+    }
+    for (int i = 0; i < titlePhrasesCleaned.length; i++) {
+      final element = titlePhrasesCleaned[i];
+      if (!titleCleaned.contains(element)) return false;
+    }
+    for (int i = 0; i < phrasesCleaned.length; i++) {
+      final element = phrasesCleaned[i];
+      if (titleCleaned.contains(element)) continue;
+      if (channelCleaned != null && channelCleaned.contains(element)) continue;
+      return false;
+    }
+    return true;
   }
 }
 
