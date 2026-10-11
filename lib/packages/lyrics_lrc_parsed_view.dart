@@ -18,6 +18,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -42,6 +43,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final Widget videoOrImage;
   final bool isFullScreenView;
   final bool canShowToggleFullscreenButton;
+  final bool canSwipeToSkip;
   final void Function()? onCloseFullscreenButtonTap;
   final bool allowOverflow;
   final bool useSafeArea;
@@ -64,6 +66,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     required this.videoOrImage,
     this.isFullScreenView = false,
     this.canShowToggleFullscreenButton = false,
+    this.canSwipeToSkip = false,
     this.onCloseFullscreenButtonTap,
     this.allowOverflow = true,
     this.useSafeArea = true,
@@ -102,6 +105,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
         key: Lyrics.inst.lrcViewKeyFullscreen,
         videoOrImage: widget.videoOrImage,
         isFullScreenView: true,
+        canSwipeToSkip: true,
       ),
       transition: Transition.native,
     );
@@ -428,6 +432,12 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
         _updateIsCurrentLineEmpty(true);
       }
     });
+  }
+
+  void _resumeAutoScroll() {
+    _scrollTimer?.cancel();
+    _scrollTimer = null;
+    _canAnimateScroll.value = true;
   }
 
   // -- mouse scroll
@@ -1053,6 +1063,39 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
       ],
     );
 
+    Widget lyricsAreaWidget = Listener(
+      onPointerDown: _onPointerDown,
+      onPointerUp: _onPointerUp,
+      onPointerCancel: _onPointerUp,
+      onPointerSignal: _onPointerSignal,
+      child: FadeTransition(
+        opacity: _visibility,
+        child: _TickerModeWhileVisible(
+          opacity: mpAnimation,
+          secondaryOpacity: _visibility,
+          child: fullscreen || !widget.allowOverflow
+              ? Padding(
+                  padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                  child: middleLyricsStackWidget,
+                )
+              : OverflowBox(
+                  maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
+                  maxHeight: widget.maxHeight, // -- the panel space, not the artwork box which reshapes per item
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
+                    child: middleLyricsStackWidget,
+                  ),
+                ),
+        ),
+      ),
+    );
+    if (widget.canSwipeToSkip) {
+      lyricsAreaWidget = _LyricsSwipeToSkip(
+        onSkip: _resumeAutoScroll,
+        child: lyricsAreaWidget,
+      );
+    }
+
     Widget mainLyricsWidget = Column(
       children: [
         if (topInfoWidget != null) ...[
@@ -1066,32 +1109,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
               Positioned.fill(
                 child: FadeIgnoreTransition(
                   opacity: mpAnimation,
-                  child: Listener(
-                    onPointerDown: _onPointerDown,
-                    onPointerUp: _onPointerUp,
-                    onPointerCancel: _onPointerUp,
-                    onPointerSignal: _onPointerSignal,
-                    child: FadeTransition(
-                      opacity: _visibility,
-                      child: _TickerModeWhileVisible(
-                        opacity: mpAnimation,
-                        secondaryOpacity: _visibility,
-                        child: fullscreen || !widget.allowOverflow
-                            ? Padding(
-                                padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                                child: middleLyricsStackWidget,
-                              )
-                            : OverflowBox(
-                                maxWidth: MiniPlayerController.inst.screenSize.width - pagePaddingHorizontal * 2, // keep the text steady while animating mp (virtual panel units)
-                                maxHeight: widget.maxHeight, // -- the panel space, not the artwork box which reshapes per item
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: pagePaddingHorizontal),
-                                  child: middleLyricsStackWidget,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
+                  child: lyricsAreaWidget,
                 ),
               ),
               if (fullscreenIconButton != null)
@@ -1951,6 +1969,113 @@ class _RenderLyricsViewportTick extends RenderProxyBox {
       _lastSize = size;
       _scrollTick.tick();
     }
+  }
+}
+
+// by claude
+class _LyricsSwipeToSkip extends StatefulWidget {
+  final VoidCallback onSkip;
+  final Widget child;
+
+  const _LyricsSwipeToSkip({
+    required this.onSkip,
+    required this.child,
+  });
+
+  @override
+  State<_LyricsSwipeToSkip> createState() => _LyricsSwipeToSkipState();
+}
+
+class _LyricsSwipeToSkipState extends State<_LyricsSwipeToSkip> with SingleTickerProviderStateMixin {
+  static const _kActuationFraction = 0.25;
+  static const _kFlingVelocity = 1000.0;
+  static const _kArmedOffsetInWidths = 0.05;
+
+  late final _offsetInWidths = AnimationController.unbounded(vsync: this);
+  late final _slide = _offsetInWidths.drive(Tween<Offset>(begin: Offset.zero, end: const Offset(1.0, 0.0)));
+
+  @override
+  void dispose() {
+    _offsetInWidths.dispose();
+    super.dispose();
+  }
+
+  double _dragDistance = 0.0;
+  double _actuationDistance = 0.0;
+  double _armedDirection = 0.0;
+
+  void _onStart(DragStartDetails details) {
+    final width = context.size?.width ?? 0.0;
+    _actuationDistance = width * _kActuationFraction;
+    _dragDistance = 0.0;
+  }
+
+  void _onUpdate(DragUpdateDetails details) {
+    final distance = _dragDistance + details.delta.dx;
+    _dragDistance = distance;
+    final isFarEnough = distance.abs() >= _actuationDistance;
+    final armedDirection = isFarEnough ? distance.sign : 0.0;
+    if (armedDirection == _armedDirection) return;
+    _armedDirection = armedDirection;
+    _offsetInWidths.animateTo(armedDirection * _kArmedOffsetInWidths, duration: const Duration(milliseconds: 200), curve: Curves.easeOutCubic);
+  }
+
+  void _onEnd(DragEndDetails details) {
+    final distance = _dragDistance;
+    final velocity = details.primaryVelocity ?? 0.0;
+    final isFling = velocity.abs() > _kFlingVelocity && velocity.sign == distance.sign;
+    final isArmed = _armedDirection != 0.0;
+    _armedDirection = 0.0;
+    if (!isArmed && !isFling) return;
+    _skip(forward: distance < 0.0);
+  }
+
+  void _onCancel() {
+    if (_armedDirection == 0.0) return;
+    _armedDirection = 0.0;
+    _settle();
+  }
+
+  void _settle() => _offsetInWidths.animateTo(0.0, duration: const Duration(milliseconds: 200), curve: Curves.easeOutCubic);
+
+  void _skip({required bool forward}) {
+    if (forward && !Player.inst.canJumpToNext) return _settle();
+    final isBlockedByParty = Player.inst.partyGate?.canSkip == false;
+    final staysInItem = isBlockedByParty || Player.inst.skipWillStayInItem(forward: forward, jumpChapters: false);
+    VibratorController.interfaceHapticOrNull?.verylight();
+    widget.onSkip();
+    final skipFuture = forward ? Player.inst.next(jumpChapters: false) : Player.inst.previous(jumpChapters: false);
+    skipFuture.ignoreError();
+    if (staysInItem) return _settle();
+    _slideAcross(forward ? -1.0 : 1.0);
+  }
+
+  Future<void> _slideAcross(double exitValue) async {
+    final exitAnimation = _offsetInWidths.animateTo(exitValue, duration: const Duration(milliseconds: 200), curve: Curves.easeIn);
+    try {
+      await exitAnimation.orCancel;
+    } on TickerCanceled {
+      return;
+    }
+    _offsetInWidths.value = -exitValue;
+    _offsetInWidths.animateTo(0.0, duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return HorizontalDragDetector(
+      behavior: HitTestBehavior.translucent,
+      onStart: _onStart,
+      onUpdate: _onUpdate,
+      onEnd: _onEnd,
+      onCancel: _onCancel,
+      child: ClipRect(
+        child: SlideTransition(
+          position: _slide,
+          child: widget.child,
+        ),
+      ),
+    );
   }
 }
 

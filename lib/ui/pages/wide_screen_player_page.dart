@@ -436,6 +436,7 @@ class _RightPane extends StatelessWidget {
                       key: lrcViewKey,
                       videoOrImage: const SizedBox(),
                       isFullScreenView: false,
+                      canSwipeToSkip: true,
                       useSafeArea: false,
                       allowOverflow: false,
                       largeText: true,
