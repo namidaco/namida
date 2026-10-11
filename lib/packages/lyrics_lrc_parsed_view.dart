@@ -18,6 +18,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
@@ -148,6 +149,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     if (widget.visibilityNotifier != null) _visibility.addListener(_reportVisibility);
     settings.fontScaleLRC.addListener(_onFontScaleSettingChanged);
     if (_largeText) settings.fontScaleLRCFull.addListener(_onFontScaleSettingChanged);
+    _effectsKey.addListener(_onEffectsSettingChanged);
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
     fillLists(lrc, txt);
@@ -360,6 +362,11 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   int _overlapEndMS = _kNoOverlapEndMS;
 
   late final bool _largeText = widget.isFullScreenView || widget.largeText;
+
+  late final _effectsKey = widget.isFullScreenView ? settings.lyricsEffectsExpanded : settings.lyricsEffectsNormal;
+  late LyricsEffects _effects = LyricsEffects.of(_effectsKey.value);
+
+  void _onEffectsSettingChanged() => refreshState(() => _effects = LyricsEffects.of(_effectsKey.value));
   late double _previousFontMultiplier = _fontMultiplier;
   late double _fontMultiplier = _getFontMultiplierSetting();
 
@@ -386,6 +393,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     _mountedViews.remove(this);
     settings.fontScaleLRC.removeListener(_onFontScaleSettingChanged);
     if (_largeText) settings.fontScaleLRCFull.removeListener(_onFontScaleSettingChanged);
+    _effectsKey.removeListener(_onEffectsSettingChanged);
     _cardSlide.removeListener(_onCardSlideTick);
     widget.visibilityNotifier?.value = 0.0;
     _visibility.dispose();
@@ -739,6 +747,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                     final lyrics = this.lyrics;
                     final highlightTimestampsMap = this.highlightTimestampsMap;
                     final lineEndsMS = _lineEndsMS;
+                    final effects = _effects;
+                    final hasFocalEffect = effects.contains(LyricsEffect.focalScale) || effects.contains(LyricsEffect.depthBlur) || effects.contains(LyricsEffect.springPop);
 
                     final lrcListChild = ObxO(
                       key: const ValueKey('lrc_list'),
@@ -759,6 +769,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                               : _LyricsList(
                                   key: ObjectKey(currentLRC),
                                   verticalPadding: _paddingVertical,
+                                  seekGlide: effects.contains(LyricsEffect.seekGlide),
                                   scrollTick: _scrollTick,
                                   onInit: _onListInit,
                                   onDispose: _onListDispose,
@@ -936,7 +947,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                     }
 
                                     final Widget textWidget;
-                                    if (_LyricsEffects.interludeDots && selectedAndEmpty) {
+                                    if (selectedAndEmpty && effects.contains(LyricsEffect.interludeDots)) {
                                       textWidget = _LyricsInterludeDots(
                                         start: lrc.timestamp,
                                         end: index + 1 < lyrics.length ? lyrics[index + 1].timestamp : null,
@@ -955,7 +966,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                         textDirection: textDirection,
                                         accentColor: miniplayerColor,
                                         isDark: isDark,
-                                        effects: _LyricsEffects.karaoke,
+                                        effects: effects,
                                       );
                                     } else {
                                       textWidget = Text(
@@ -965,6 +976,18 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                         // softWrap: false, // keep the text steady while animating mp
                                       );
                                     }
+
+                                    final lineWidget = NamidaInkWell(
+                                      alignment: alignment,
+                                      bgColor: bgColor,
+                                      decoration: BoxDecoration(
+                                        borderRadius: borderRadius,
+                                      ),
+                                      animationDurationMS: 300,
+                                      margin: lineMargin,
+                                      padding: padding,
+                                      child: textWidget,
+                                    );
 
                                     return Directionality(
                                       textDirection: textDirection,
@@ -994,22 +1017,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                                 child: NamidaHero(
                                                   tag: 'LYRICS_LINE_${lrc.timestamp}',
                                                   enabled: false,
-                                                  child: _LyricsFocalEffect(
-                                                    alignment: alignment.resolve(textDirection),
-                                                    selected: selected,
-                                                    scrollTick: _scrollTick,
-                                                    child: NamidaInkWell(
-                                                      alignment: alignment,
-                                                      bgColor: bgColor,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: borderRadius,
-                                                      ),
-                                                      animationDurationMS: 300,
-                                                      margin: lineMargin,
-                                                      padding: padding,
-                                                      child: textWidget,
-                                                    ),
-                                                  ),
+                                                  child: hasFocalEffect
+                                                      ? _LyricsFocalEffect(
+                                                          alignment: alignment.resolve(textDirection),
+                                                          selected: selected,
+                                                          scrollTick: _scrollTick,
+                                                          effects: effects,
+                                                          child: lineWidget,
+                                                        )
+                                                      : lineWidget,
                                                 ),
                                               ),
                                             ],
@@ -1271,39 +1287,14 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 //   }
 // }
 
-/// const switches for every lyrics effect, so disabling one tree-shakes it away.
+/// fixed lyrics effects, the user toggleable ones are [LyricsEffect]s.
 ///
 /// all effects below and their implementations by claude
 class _LyricsEffects {
   const _LyricsEffects._();
 
-  /// lines scale down continuously the further they are from the current line, following the scroll.
-  static const focalTransform = true;
-
-  /// far lines lean back in 3d, above & below tilting opposite ways. needs [focalTransform].
+  /// far lines lean back in 3d, above & below tilting opposite ways. needs [LyricsEffect.focalScale] or [LyricsEffect.depthBlur].
   static const perspectiveTilt = false;
-
-  /// far lines get blurred like a depth of field. costs a gpu blur per far line, first to disable on jank. needs [focalTransform].
-  static const depthBlur = true;
-
-  /// the line that just became current pops in with a small overshoot.
-  static const springPop = true;
-
-  /// instrumental gaps show three dots filling up until the next line, instead of an empty pill.
-  static const interludeDots = true;
-
-  /// the current line's karaoke sweep, lines without word timing get a short reveal or a whole-line sweep.
-  static const karaoke = LyricsKaraokeEffects(
-    accentTint: true,
-    glow: true,
-    wordBump: true,
-    shimmer: true,
-    feather: true,
-    untimedLineSweep: false,
-  );
-
-  /// far jumps (seeks) scroll slower with an emphasized curve, adjacent lines keep the quick glide.
-  static const velocityAwareScroll = true;
 
   /// where the current line rests inside the viewport, shared by the scroller and the focal effect.
   static const listAlignment = 0.4;
@@ -1338,9 +1329,9 @@ class _LyricsScrollPlan {
 
   const _LyricsScrollPlan._(this.duration, this.curve);
 
-  factory _LyricsScrollPlan.forDelta(double delta, double viewportHeight) {
+  factory _LyricsScrollPlan.forDelta(double delta, double viewportHeight, {required bool seekGlide}) {
     const short = _LyricsScrollPlan._(_shortDuration, _shortCurve);
-    if (!_LyricsEffects.velocityAwareScroll || viewportHeight <= 0) return short;
+    if (!seekGlide || viewportHeight <= 0) return short;
     final t = (delta.abs() / viewportHeight).clampDouble(0.0, 1.0);
     if (t < _shortThreshold) return short;
     return _LyricsScrollPlan._(
@@ -1356,12 +1347,14 @@ class _LyricsFocalEffect extends StatefulWidget {
   final Alignment alignment;
   final bool selected;
   final _LyricsScrollTick scrollTick;
+  final LyricsEffects effects;
   final Widget child;
 
   const _LyricsFocalEffect({
     required this.alignment,
     required this.selected,
     required this.scrollTick,
+    required this.effects,
     required this.child,
   });
 
@@ -1377,19 +1370,18 @@ class _LyricsFocalEffectState extends State<_LyricsFocalEffect> with SingleTicke
   Animation<double>? _pop;
 
   @override
-  void initState() {
-    super.initState();
-    if (_LyricsEffects.springPop) {
-      final controller = AnimationController(vsync: this, duration: _popDuration, value: 1.0);
-      _popController = controller;
-      _pop = controller.drive(CurveTween(curve: _popCurve));
-    }
-  }
-
-  @override
   void didUpdateWidget(covariant _LyricsFocalEffect oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.selected && !oldWidget.selected) _popController?.forward(from: 0.0);
+    if (widget.selected && !oldWidget.selected && widget.effects.contains(LyricsEffect.springPop)) _startPop();
+  }
+
+  void _startPop() {
+    var controller = _popController;
+    if (controller == null) {
+      controller = _popController = AnimationController(vsync: this, duration: _popDuration);
+      _pop = controller.drive(CurveTween(curve: _popCurve));
+    }
+    controller.forward(from: 0.0);
   }
 
   @override
@@ -1400,10 +1392,13 @@ class _LyricsFocalEffectState extends State<_LyricsFocalEffect> with SingleTicke
 
   @override
   Widget build(BuildContext context) {
+    final effects = widget.effects;
     return _LyricsFocalEffectRenderer(
       alignment: widget.alignment,
       scrollTick: widget.scrollTick,
-      pop: _pop,
+      focalScale: effects.contains(LyricsEffect.focalScale),
+      depthBlur: effects.contains(LyricsEffect.depthBlur),
+      pop: effects.contains(LyricsEffect.springPop) ? _pop : null,
       child: RepaintBoundary(
         child: widget.child,
       ),
@@ -1414,18 +1409,22 @@ class _LyricsFocalEffectState extends State<_LyricsFocalEffect> with SingleTicke
 class _LyricsFocalEffectRenderer extends SingleChildRenderObjectWidget {
   final Alignment alignment;
   final _LyricsScrollTick scrollTick;
+  final bool focalScale;
+  final bool depthBlur;
   final Animation<double>? pop;
 
   const _LyricsFocalEffectRenderer({
     required this.alignment,
     required this.scrollTick,
+    required this.focalScale,
+    required this.depthBlur,
     required this.pop,
     required super.child,
   });
 
   @override
   _RenderLyricsFocalEffect createRenderObject(BuildContext context) {
-    return _RenderLyricsFocalEffect(alignment, scrollTick, pop);
+    return _RenderLyricsFocalEffect(alignment, scrollTick, focalScale, depthBlur, pop);
   }
 
   @override
@@ -1433,6 +1432,8 @@ class _LyricsFocalEffectRenderer extends SingleChildRenderObjectWidget {
     renderObject
       ..alignment = alignment
       ..scrollTick = scrollTick
+      ..focalScale = focalScale
+      ..depthBlur = depthBlur
       ..pop = pop;
   }
 }
@@ -1451,7 +1452,7 @@ class _RenderLyricsFocalEffect extends RenderProxyBox {
   static const _popStrength = 0.06;
   static const _perspective = 0.002;
 
-  _RenderLyricsFocalEffect(this._alignment, this._scrollTick, this._pop);
+  _RenderLyricsFocalEffect(this._alignment, this._scrollTick, this._focalScale, this._depthBlur, this._pop);
 
   Alignment _alignment;
   set alignment(Alignment value) {
@@ -1463,9 +1464,40 @@ class _RenderLyricsFocalEffect extends RenderProxyBox {
   _LyricsScrollTick _scrollTick;
   set scrollTick(_LyricsScrollTick value) {
     if (identical(_scrollTick, value)) return;
-    if (attached) _scrollTick.removeListener(markNeedsPaint);
+    final isListening = attached && _tracksScroll;
+    if (isListening) _scrollTick.removeListener(markNeedsPaint);
     _scrollTick = value;
-    if (attached) _scrollTick.addListener(markNeedsPaint);
+    if (isListening) _scrollTick.addListener(markNeedsPaint);
+    markNeedsPaint();
+  }
+
+  bool _focalScale;
+  set focalScale(bool value) {
+    if (_focalScale == value) return;
+    final wasTrackingScroll = _tracksScroll;
+    _focalScale = value;
+    _onTrackingChanged(wasTrackingScroll);
+  }
+
+  bool _depthBlur;
+  set depthBlur(bool value) {
+    if (_depthBlur == value) return;
+    final wasTrackingScroll = _tracksScroll;
+    _depthBlur = value;
+    _onTrackingChanged(wasTrackingScroll);
+  }
+
+  bool get _tracksScroll => _focalScale || _depthBlur;
+
+  void _onTrackingChanged(bool wasTrackingScroll) {
+    final tracksScroll = _tracksScroll;
+    if (attached && tracksScroll != wasTrackingScroll) {
+      if (tracksScroll) {
+        _scrollTick.addListener(markNeedsPaint);
+      } else {
+        _scrollTick.removeListener(markNeedsPaint);
+      }
+    }
     markNeedsPaint();
   }
 
@@ -1491,13 +1523,13 @@ class _RenderLyricsFocalEffect extends RenderProxyBox {
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    _scrollTick.addListener(markNeedsPaint);
+    if (_tracksScroll) _scrollTick.addListener(markNeedsPaint);
     _pop?.addListener(markNeedsPaint);
   }
 
   @override
   void detach() {
-    _scrollTick.removeListener(markNeedsPaint);
+    if (_tracksScroll) _scrollTick.removeListener(markNeedsPaint);
     _pop?.removeListener(markNeedsPaint);
     _viewport = null;
     super.detach();
@@ -1530,15 +1562,15 @@ class _RenderLyricsFocalEffect extends RenderProxyBox {
   void paint(PaintingContext context, Offset offset) {
     if (child == null) return;
 
-    final signedDistance = _LyricsEffects.focalTransform ? _focalDistance() : 0.0;
+    final signedDistance = _tracksScroll ? _focalDistance() : 0.0;
     final distance = signedDistance.abs();
 
-    var scale = 1.0 - (1.0 - _minScale) * distance;
+    var scale = _focalScale ? 1.0 - (1.0 - _minScale) * distance : 1.0;
     final pop = _pop;
     if (pop != null) scale *= 1.0 + _popStrength * (pop.value - 1.0);
 
     final tilt = _LyricsEffects.perspectiveTilt ? signedDistance * _maxTilt : 0.0;
-    final sigma = _LyricsEffects.depthBlur ? (_maxBlurSigma * distance * distance * 4.0).roundToDouble() * 0.25 : 0.0;
+    final sigma = _depthBlur ? (_maxBlurSigma * distance * distance * 4.0).roundToDouble() * 0.25 : 0.0;
     if (sigma != _blurSigma) {
       _blurSigma = sigma;
       _blurFilter = sigma > _minBlurSigma ? ui.ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.decal) : null;
@@ -1778,6 +1810,7 @@ class _TickerModeWhileVisibleState extends State<_TickerModeWhileVisible> {
 
 class _LyricsList extends StatefulWidget {
   final double verticalPadding;
+  final bool seekGlide;
   final int itemCount;
   final IndexedWidgetBuilder itemBuilder;
   final _LyricsScrollTick scrollTick;
@@ -1787,6 +1820,7 @@ class _LyricsList extends StatefulWidget {
   const _LyricsList({
     super.key,
     required this.verticalPadding,
+    required this.seekGlide,
     required this.itemCount,
     required this.itemBuilder,
     required this.scrollTick,
@@ -1832,7 +1866,7 @@ class _LyricsListState extends State<_LyricsList> {
       position.jumpTo(offset);
       return;
     }
-    final plan = _LyricsScrollPlan.forDelta(offset - position.pixels, position.viewportDimension);
+    final plan = _LyricsScrollPlan.forDelta(offset - position.pixels, position.viewportDimension, seekGlide: widget.seekGlide);
     if (position is ScrollPositionWithSingleContext) {
       final activity = _TappableDrivenScrollActivity(
         position,

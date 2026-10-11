@@ -881,6 +881,50 @@ enum LyricsProvider {
   kugou,
 }
 
+enum LyricsEffect {
+  /// lines scale down continuously the further they are from the current line, following the scroll.
+  focalScale(isListOnly: true),
+
+  /// far lines get blurred like a depth of field. costs a gpu blur per far line, first to disable on jank.
+  depthBlur(isListOnly: true),
+
+  /// the line that just became current pops in with a small overshoot.
+  springPop(isListOnly: true),
+
+  /// instrumental gaps show three dots filling up until the next line, instead of an empty pill.
+  interludeDots(isListOnly: true),
+
+  /// far jumps (seeks) scroll slower with an emphasized curve, adjacent lines keep the quick glide.
+  seekGlide(isListOnly: true),
+
+  /// lines without word timing are revealed by a short sweep instead of showing at once.
+  lineReveal,
+
+  /// sung words are tinted towards the artwork color. free.
+  accentTint,
+
+  /// soft artwork colored halo behind sung words. a glyph blur rasterized once per line, drawn every frame.
+  glow,
+
+  /// the word being sung grows slightly as the sweep crosses it. paints the line twice per frame. word-synced only.
+  wordBump,
+
+  /// highlight band travelling over long held words (>=1s), or a line held after its last word. an extra layer per frame while it runs. word-synced only.
+  shimmer,
+
+  /// a soft sweep edge instead of a hard one. an offscreen layer every frame of the sweep.
+  feather,
+
+  /// lines without word timing sweep over most of their duration instead of a short reveal. repaints every frame like word-synced lines.
+  untimedLineSweep,
+  ;
+
+  final bool isListOnly;
+  const LyricsEffect({this.isListOnly = false});
+
+  static final karaokeEffects = values.where((effect) => !effect.isListOnly).toFixedList();
+}
+
 enum QueueInsertionType {
   moreAlbum,
   moreArtist,

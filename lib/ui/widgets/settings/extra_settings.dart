@@ -29,8 +29,11 @@ import 'package:namida/main.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/lyrics_karaoke_text.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+
+part 'extra_settings.lyrics_effects.dart';
 
 class ExtrasSettings extends SettingSubpageProvider {
   const ExtrasSettings({super.key, super.initialItem});
@@ -506,6 +509,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 ),
               const _SubpageInfoStyleTile(),
               const _ArtworkCollageStyleTile(),
+              const _LyricsEffectsTile(),
               // ObxO(
               //   rx: settings.extra.reduceAnimations,
               //   builder: (context, reduceAnimations) => CustomSwitchListTile(

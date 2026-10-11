@@ -27,7 +27,7 @@ class SubtitleOverlay extends StatelessWidget {
           respectEndTimestamps: true,
           stretchToItemDuration: false,
           maxSecondaryLines: 0,
-          karaoke: null,
+          karaoke: false,
           maxLines: maxLines,
           softWrap: true,
           style: style,

@@ -28,8 +28,8 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   /// translations/romanizations sharing the line's timestamp, one smaller line each below it.
   final int maxSecondaryLines;
 
-  /// word synced lines sweep word by word, others get a short reveal or a whole-line sweep. null keeps plain text.
-  final LyricsKaraokeEffects? karaoke;
+  /// word synced lines sweep word by word, others get a short reveal or a whole-line sweep. false keeps plain text.
+  final bool karaoke;
 
   const SimpleLyricsLineWidget({
     super.key,
@@ -42,7 +42,7 @@ class SimpleLyricsLineWidget extends StatefulWidget {
     this.stretchToItemDuration = true,
     this.fitToWidth = false,
     this.maxSecondaryLines = _defaultMaxSecondaryLines,
-    this.karaoke = _leanKaraoke,
+    this.karaoke = true,
   });
 
   static const shrinkFactor = 0.875;
@@ -50,16 +50,6 @@ class SimpleLyricsLineWidget extends StatefulWidget {
   static const _secondaryFontFactor = 0.8;
   static const _secondaryAlpha = 0.7;
   static const _defaultMaxSecondaryLines = 1;
-
-  /// only what costs nothing per frame.
-  static const _leanKaraoke = LyricsKaraokeEffects(
-    accentTint: true,
-    glow: true,
-    wordBump: false,
-    shimmer: true,
-    feather: true,
-    untimedLineSweep: false,
-  );
 
   /// tallest layout [fitToWidth] can pick for [lrc], for layouts reserving the room ahead of time.
   static double fittedMaxHeight({
@@ -107,6 +97,12 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   var _lineResolver = LrcLineResolver.empty;
 
   late final Rxn<Lrc> _source = widget.customSourceRx ?? Lyrics.inst.currentLyricsLRC;
+
+  late LyricsEffects? _karaokeEffects = _getKaraokeEffects();
+
+  LyricsEffects? _getKaraokeEffects() => widget.karaoke ? LyricsEffects.of(settings.lyricsEffectsLine.value) : null;
+
+  void _onEffectsSettingChanged() => refreshState(() => _karaokeEffects = _getKaraokeEffects());
 
   LrcLine? _fitLine;
   double _fitMaxWidth = -1;
@@ -164,12 +160,14 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
     _fillLines();
     _source.addListener(_fillLines);
     Player.inst.nowPlayingPosition.addListener(_updateLine);
+    if (widget.karaoke) settings.lyricsEffectsLine.addListener(_onEffectsSettingChanged);
   }
 
   @override
   void dispose() {
     _source.removeListener(_fillLines);
     Player.inst.nowPlayingPosition.removeListener(_updateLine);
+    if (widget.karaoke) settings.lyricsEffectsLine.removeListener(_onEffectsSettingChanged);
     _currentLine.close();
     super.dispose();
   }
@@ -268,7 +266,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
                       textDirection: direction,
                       maxLines: maxLines,
                       softWrap: widget.softWrap || maxLines > widget.maxLines,
-                      karaoke: widget.karaoke,
+                      karaoke: _karaokeEffects,
                     );
                   },
                 )
@@ -281,7 +279,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
                   textDirection: direction,
                   maxLines: widget.maxLines,
                   softWrap: widget.softWrap,
-                  karaoke: widget.karaoke,
+                  karaoke: _karaokeEffects,
                 );
           child = secondaryLines.isEmpty
               ? primary
@@ -318,7 +316,7 @@ class _PrimaryLine extends StatelessWidget {
   final TextDirection textDirection;
   final int maxLines;
   final bool softWrap;
-  final LyricsKaraokeEffects? karaoke;
+  final LyricsEffects? karaoke;
 
   const _PrimaryLine({
     super.key,
