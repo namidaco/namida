@@ -70,5 +70,6 @@ scripts/.obsolete/CHANGELOG_pretty.txt
 scripts/__pycache__/
 dist/
 scripts/bundle_output*
+assets/docs.tar.xz
 lib/core/translations/arb/*
 docs_internal/*

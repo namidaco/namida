@@ -40,6 +40,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
+import 'package:namida/ui/pages/offline_docs_page.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
@@ -1228,7 +1229,12 @@ class AppDocsLinks {
   final String link;
   const AppDocsLinks._(this.link);
 
-  Future<bool> launch() => NamidaLinkUtils.openLink(this.link);
+  Future<bool> launch() {
+    if (ConnectivityController.inst.hasConnection) {
+      return NamidaLinkUtils.openLink(this.link);
+    }
+    return OfflineDocs.open(this.link);
+  }
 
   static const _BASE_RAW = 'https://docs.namida.app';
   static const _SETTINGS_RAW = '$_BASE_RAW/settings/';

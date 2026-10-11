@@ -53,6 +53,10 @@ dependencies:
   flutter_archive: ^6.3.1
   archive: ^4.1.0
   url_launcher: ^6.3.0
+  flutter_inappwebview:
+    git:
+      url: https://github.com/MSOB7YY/flutter_inappwebview
+      path: flutter_inappwebview
   connectivity_plus: ^7.0.0
   mdns_dart:
     git:

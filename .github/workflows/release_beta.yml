@@ -138,6 +138,37 @@ jobs:
           body_path: ./beta_changelog.md
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
 
+  # docs site for offline viewing, every app build drops it into assets/
+  bundle_docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/checkout@v5
+        with:
+          repository: namidaco/namida-docs
+          path: namida_docs
+          fetch-depth: 0 # docmd git plugin reads page dates from history
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Build docs site
+        working-directory: namida_docs
+        run: |
+          npm install
+          npm run build
+
+      - name: Bundle docs
+        run: python3 scripts/bundle_docs.py namida_docs/site
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: namida-docs
+          path: assets/docs.tar.xz
+          retention-days: 3
+
   setup_matrix:
     if: ${{ inputs.android }}
     runs-on: ubuntu-22.04
@@ -154,7 +185,7 @@ jobs:
 
   build_android:
     if: ${{ inputs.android }}
-    needs: [create_release, setup_matrix]
+    needs: [create_release, setup_matrix, bundle_docs]
     runs-on: ubuntu-22.04
     continue-on-error: ${{ matrix.is_clone }}
     strategy:
@@ -244,6 +275,11 @@ jobs:
         if: matrix.is_clone
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
 
+      - uses: actions/download-artifact@v7
+        with:
+          name: namida-docs
+          path: assets
+
       - name: Build APKs
         run: |
           mkdir -p build_final
@@ -266,7 +302,7 @@ jobs:
 
   build_windows:
     if: ${{ inputs.windows }}
-    needs: create_release
+    needs: [create_release, bundle_docs]
     strategy:
       fail-fast: false
       matrix:
@@ -348,6 +384,11 @@ jobs:
           cargo --version
           rustup target list --installed
 
+      - uses: actions/download-artifact@v7
+        with:
+          name: namida-docs
+          path: assets
+
       - name: Build Windows App
         run: |
           flutter config --enable-windows-desktop
@@ -397,7 +438,7 @@ jobs:
 
   build_linux:
     if: ${{ inputs.is_beta && (inputs.linux || inputs.appimage) && inputs.source_run_id == '' }}
-    needs: create_release
+    needs: [create_release, bundle_docs]
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -464,6 +505,11 @@ jobs:
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
           echo "PATH=$HOME/.pub-cache/bin:$PATH" >> $GITHUB_ENV
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: namida-docs
+          path: assets
 
       - name: Build Linux deb/rpm/tar.gz
         run: |
@@ -579,7 +625,7 @@ jobs:
   #   - Namida-x86_64-<ver>-flatpak-payload.tar.gz    -> release asset, the source of the Flathub manifest
   build_linux_portable:
     if: ${{ inputs.is_beta && inputs.flatpak && inputs.source_run_id == '' }}
-    needs: create_release
+    needs: [create_release, bundle_docs]
     runs-on: ubuntu-24.04
 
     steps:
@@ -609,6 +655,11 @@ jobs:
           flutter clean
           git submodule update --init --remote --recursive
           flutter pub upgrade
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: namida-docs
+          path: assets
 
       - name: Build Linux App
         run: |
