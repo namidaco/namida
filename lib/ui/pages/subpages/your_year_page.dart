@@ -218,8 +218,8 @@ class _YourYearPageState extends State<YourYearPage> {
                   const SizedBox(height: 20.0),
                   Wrap(
                     children: [
-                      if (s.topAlbums.isNotEmpty) StatsMiniTile(icon: Broken.music_dashboard, label: lang.album, value: s.topAlbums.first.key),
-                      if (s.topGenres.isNotEmpty) StatsMiniTile(icon: Broken.smileys, label: lang.genre, value: s.topGenres.first.key),
+                      if (s.topAlbums.isNotEmpty) StatsMiniTile(icon: MediaType.album.toIcon(), label: lang.album, value: s.topAlbums.first.key),
+                      if (s.topGenres.isNotEmpty) StatsMiniTile(icon: MediaType.genre.toIcon(), label: lang.genre, value: s.topGenres.first.key),
                     ],
                   ),
                 ],

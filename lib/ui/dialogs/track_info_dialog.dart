@@ -17,8 +17,10 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -352,35 +354,35 @@ Future<void> showTrackInfoDialog(
                                       ? lang.artist
                                       : lang.artists,
                                   value: trackExt.hasUnknownArtist ? UnknownTags.ARTIST : trackExt.originalArtist,
-                                  icon: Broken.microphone,
+                                  icon: MediaType.artist.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbum))
                                 TrackInfoListTile(
                                   title: trackExt.albumsList.length == 1 ? lang.album : lang.albums,
                                   value: trackExt.hasUnknownAlbum ? UnknownTags.ALBUM : trackExt.originalAlbum,
-                                  icon: Broken.music_dashboard,
+                                  icon: MediaType.album.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownAlbumArtist))
                                 TrackInfoListTile(
                                   title: lang.albumArtist,
                                   value: trackExt.hasUnknownAlbumArtist ? UnknownTags.ALBUMARTIST : trackExt.albumArtist,
-                                  icon: Broken.user,
+                                  icon: MediaType.albumArtist.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownGenre))
                                 TrackInfoListTile(
                                   title: trackExt.genresList.length == 1 ? lang.genre : lang.genres,
                                   value: trackExt.hasUnknownGenre ? UnknownTags.GENRE : trackExt.genresList.join(', '),
-                                  icon: trackExt.genresList.length == 1 ? Broken.emoji_happy : Broken.smileys,
+                                  icon: MediaType.genre.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownComposer))
                                 TrackInfoListTile(
                                   title: lang.composer,
                                   value: trackExt.hasUnknownComposer ? UnknownTags.COMPOSER : trackExt.composer,
-                                  icon: Broken.profile_2user,
+                                  icon: MediaType.composer.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.durationMS == 0))
@@ -469,35 +471,35 @@ Future<void> showTrackInfoDialog(
                                 TrackInfoListTile(
                                   title: lang.language,
                                   value: trackExt.languagesList.join(', '),
-                                  icon: Broken.language_circle,
+                                  icon: MediaType.language.toIcon(),
                                 ),
 
                               if (shouldShowTheField(effectiveRating == 0))
                                 TrackInfoListTile(
                                   title: lang.rating,
                                   value: '$effectiveRating%',
-                                  icon: Broken.grammerly,
+                                  icon: MediaType.rating.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.hasUnknownStyle))
                                 TrackInfoListTile(
                                   title: trackExt.stylesList.length == 1 ? lang.style : lang.styles,
                                   value: trackExt.hasUnknownStyle ? UnknownTags.STYLE : trackExt.stylesList.join(', '),
-                                  icon: Broken.brush_1,
+                                  icon: MediaType.style.toIcon(),
                                 ),
 
                               if (shouldShowTheField(hasUnknownMood))
                                 TrackInfoListTile(
                                   title: effectiveMoods.length == 1 ? lang.mood : lang.moods,
                                   value: hasUnknownMood ? UnknownTags.MOOD : effectiveMoods.join(', '),
-                                  icon: Broken.emoji_happy,
+                                  icon: effectiveMoods.length == 1 ? MediaType.mood.toIcon() : Broken.smileys,
                                 ),
 
                               if (shouldShowTheField(effectiveTags.isEmpty))
                                 TrackInfoListTile(
                                   title: lang.tags,
                                   value: effectiveTags.join(', '),
-                                  icon: Broken.ticket_discount,
+                                  icon: MediaType.tag.toIcon(),
                                 ),
 
                               if (shouldShowTheField(trackExt.lyrics == ''))

@@ -591,7 +591,7 @@ const _allLocalizedLanguagePrefferredNamesWithCountryMap = {
   'ee': 'ee_GH',
   'el': 'el_GR',
   'en': 'en_US',
-  'es': 'es_MX',
+  'es': 'es_ES',
   'et': 'et_EE',
   'eu': 'eu_ES',
   'fa': 'fa_IR',

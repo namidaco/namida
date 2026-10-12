@@ -2294,7 +2294,11 @@ class _YTMixesCard extends StatefulWidget {
 }
 
 class _YTMixesCardState extends State<_YTMixesCard> {
+  static const _kHorizontalPadding = 4.0;
+
   Color? _cardColor;
+
+  double get _contentWidth => widget.width - _kHorizontalPadding * 2;
 
   static (String, YTWatch?) _videoIdToYTVideoId(String id) => (id, null);
 
@@ -2444,7 +2448,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
         fixArtifacts: true,
         child: AnimatedSizedBox(
           duration: const Duration(milliseconds: 300),
-          width: widget.width - horizontalPadding,
+          width: _contentWidth - horizontalPadding,
           height: double.infinity,
           decoration: BoxDecoration(
             color: _cardColor?.withAlpha(alpha),
@@ -2462,7 +2466,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
     const contentColorAlt = Color.fromRGBO(242, 242, 242, 0.8);
     final tag = 'ytmix_thumbnail_${widget.title}${widget.index}';
     final displayPlayCount = !fullscreen && widget.videoIds.isNotEmpty;
-    final width = fullscreen ? context.width : widget.width - 2.0;
+    final width = fullscreen ? context.width : _contentWidth - 2.0;
     return NamidaHero(
       tag: tag,
       child: YoutubeThumbnail(
@@ -2530,9 +2534,9 @@ class _YTMixesCardState extends State<_YTMixesCard> {
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
 
-    final thumbHeight = 6.0 + 2.0 + (widget.width - 2.0) * 9 / 16;
+    final thumbHeight = 6.0 + 2.0 + (_contentWidth - 2.0) * 9 / 16;
     final thumbnailWidget = SizedBox(
-      width: widget.width,
+      width: _contentWidth,
       height: thumbHeight,
       child: Stack(
         alignment: Alignment.topCenter,
@@ -2566,9 +2570,9 @@ class _YTMixesCardState extends State<_YTMixesCard> {
     return NamidaInkWell(
       onTap: () => onMixTap(artworkWidget(fullscreen: true)),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0),
+        padding: const EdgeInsets.symmetric(horizontal: _kHorizontalPadding),
         child: SizedBox(
-          width: widget.width,
+          width: _contentWidth,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

@@ -104,12 +104,12 @@ class StatsSection extends StatelessWidget {
             return Wrap(
               alignment: WrapAlignment.start,
               children: [
-                StatsMiniTile(icon: Broken.music_circle, label: lang.tracks, value: allTracks.length.formatDecimal()),
-                StatsMiniTile(icon: Broken.music_dashboard, label: lang.albums, value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal()),
-                StatsMiniTile(icon: Broken.microphone, label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
-                StatsMiniTile(icon: Broken.smileys, label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
-                if (stylesLength != null) StatsMiniTile(icon: Broken.brush_1, label: lang.styles, value: stylesLength.formatDecimal()),
-                if (languagesLength > 0) StatsMiniTile(icon: Broken.language_square, label: lang.languages, value: languagesLength.formatDecimal()),
+                StatsMiniTile(icon: MediaType.track.toIcon(), label: lang.tracks, value: allTracks.length.formatDecimal()),
+                StatsMiniTile(icon: MediaType.album.toIcon(), label: lang.albums, value: Indexer.inst.mainMapAlbums.valueR.keys.length.formatDecimal()),
+                StatsMiniTile(icon: MediaType.artist.toIcon(), label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
+                StatsMiniTile(icon: MediaType.genre.toIcon(), label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
+                if (stylesLength != null) StatsMiniTile(icon: MediaType.style.toIcon(), label: lang.styles, value: stylesLength.formatDecimal()),
+                if (languagesLength > 0) StatsMiniTile(icon: MediaType.language.toIcon(), label: lang.languages, value: languagesLength.formatDecimal()),
                 StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
                 Obx(
                   (context) {
@@ -502,18 +502,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       ),
     );
   }
-
-  static IconData _categoryIcon(MediaType type) => switch (type) {
-    MediaType.style => Broken.brush_1,
-    MediaType.language => Broken.language_square,
-    MediaType.mood => Broken.emoji_happy,
-    MediaType.tag => Broken.tag,
-    MediaType.artist => Broken.microphone,
-    MediaType.albumArtist => Broken.user,
-    MediaType.composer => Broken.profile_2user,
-    MediaType.album => Broken.music_dashboard,
-    _ => Broken.smileys,
-  };
 
   static String _categoryCountText(MediaType type, int count) => switch (type) {
     MediaType.style => lang.countStyles(count: count),
@@ -1025,8 +1013,8 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     {
       final rows = <(IconData, String, StatsRankEntry<String>?)>[
         (isYoutube ? Broken.profile_2user : Broken.microphone, isYoutube ? lang.channel : lang.artist, s.topArtists.firstOrNull),
-        if (!isYoutube) (Broken.music_dashboard, lang.album, s.topAlbums.firstOrNull),
-        if (!isYoutube) (Broken.smileys, lang.genre, s.topGenres.firstOrNull),
+        if (!isYoutube) (MediaType.album.toIcon(), lang.album, s.topAlbums.firstOrNull),
+        if (!isYoutube) (MediaType.genre.toIcon(), lang.genre, s.topGenres.firstOrNull),
       ].where((e) => e.$3 != null).toList();
       if (rows.isNotEmpty) {
         cards.add(
@@ -1196,7 +1184,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
               other += all[i].count;
             }
             final data = top.map((e) => ChartData(e.key, e.count)).toFixedList();
-            final categoryIcon = _categoryIcon(type);
+            final categoryIcon = type.toIcon();
             final categoryTextCount = _categoryCountText(type, rank.unique);
             final categoryText = type.toText();
             return StatsChartCard(
@@ -1206,7 +1194,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
               trailing: NamidaPopupWrapper(
                 childrenDefault: () => _donutTypes.map(
                   (t) => NamidaPopupItem(
-                    icon: _categoryIcon(t),
+                    icon: t.toIcon(),
                     title: t.toText(),
                     selected: t == type,
                     onTap: () => _donutType.value = t,

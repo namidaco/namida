@@ -426,7 +426,7 @@ enum SmartPlaylistRuleFilterNumberSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterNumberSource.totalListens => Broken.award,
     SmartPlaylistRuleFilterNumberSource.totalListensInRange => Broken.award,
     SmartPlaylistRuleFilterNumberSource.listenRate => Broken.trend_up,
-    SmartPlaylistRuleFilterNumberSource.rating => Broken.grammerly,
+    SmartPlaylistRuleFilterNumberSource.rating => MediaType.rating.toIcon(),
     SmartPlaylistRuleFilterNumberSource.lastPlayedPositionInMs => Broken.clock_1,
     SmartPlaylistRuleFilterNumberSource.playedPercentage => Broken.clock,
     SmartPlaylistRuleFilterNumberSource.durationMS => Broken.timer_1,
@@ -439,7 +439,7 @@ enum SmartPlaylistRuleFilterNumberSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterNumberSource.trackTotal => Broken.hashtag,
     SmartPlaylistRuleFilterNumberSource.discNumber => Broken.hashtag,
     SmartPlaylistRuleFilterNumberSource.discTotal => Broken.hashtag,
-    SmartPlaylistRuleFilterNumberSource.playlistsCount => Broken.music_library_2,
+    SmartPlaylistRuleFilterNumberSource.playlistsCount => MediaType.playlist.toIcon(),
     SmartPlaylistRuleFilterNumberSource.tracksCount => Broken.music_square,
   };
 
@@ -489,13 +489,13 @@ enum SmartPlaylistNumberScope {
 
   IconData toIcon() => switch (this) {
     SmartPlaylistNumberScope.track => Broken.music,
-    SmartPlaylistNumberScope.album => Broken.music_dashboard,
-    SmartPlaylistNumberScope.artist => Broken.microphone,
-    SmartPlaylistNumberScope.albumArtist => Broken.user,
-    SmartPlaylistNumberScope.composer => Broken.profile_2user,
-    SmartPlaylistNumberScope.genre => Broken.smileys,
-    SmartPlaylistNumberScope.style => Broken.brush_1,
-    SmartPlaylistNumberScope.folder => Broken.folder,
+    SmartPlaylistNumberScope.album => MediaType.album.toIcon(),
+    SmartPlaylistNumberScope.artist => MediaType.artist.toIcon(),
+    SmartPlaylistNumberScope.albumArtist => MediaType.albumArtist.toIcon(),
+    SmartPlaylistNumberScope.composer => MediaType.composer.toIcon(),
+    SmartPlaylistNumberScope.genre => MediaType.genre.toIcon(),
+    SmartPlaylistNumberScope.style => MediaType.style.toIcon(),
+    SmartPlaylistNumberScope.folder => MediaType.folder.toIcon(),
   };
 }
 

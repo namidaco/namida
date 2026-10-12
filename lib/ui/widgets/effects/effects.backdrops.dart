@@ -163,19 +163,27 @@ class _Backdrop extends StatelessWidget {
     return minFraction + (units - NamidaBackdrops.minUnits) * fractionPerUnit;
   }
 
-  static const _vignette = BoxDecoration(
-    gradient: RadialGradient(
-      radius: 0.95,
-      colors: [Color(0x00000000), Color(0x99000000)],
-      stops: [0.45, 1.0],
-    ),
-  );
+  static BoxDecoration _createVignette(Color color) {
+    return BoxDecoration(
+      gradient: RadialGradient(
+        radius: 0.95,
+        colors: [color.withOpacityExt(0.0), color.withOpacityExt(0.6)],
+        stops: const [0.45, 1.0],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final blurFraction = _unitsToFraction(blurUnits, kind.minBlurFraction);
     final dimFraction = _unitsToFraction(dimUnits, kind.minDimFraction);
-    final scrimColor = context.theme.scaffoldBackgroundColor.withOpacityExt(dimFraction);
+    final backgroundColor = context.theme.scaffoldBackgroundColor;
+    final scrimColor = backgroundColor.withOpacityExt(dimFraction);
+    final vignetteWidget = hasVignette
+        ? DecoratedBox(
+            decoration: _createVignette(backgroundColor),
+          )
+        : null;
     return LayoutBuilder(
       builder: (context, constraints) {
         // -- blurred in a box this much smaller then stretched back, so the blur only ever runs over a fraction of the pixels
@@ -212,10 +220,7 @@ class _Backdrop extends StatelessWidget {
             ColoredBox(
               color: scrimColor,
             ),
-            if (hasVignette)
-              const DecoratedBox(
-                decoration: _vignette,
-              ),
+            ?vignetteWidget,
           ],
         );
       },

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -66,7 +65,6 @@ Future<void> showSettingDialogWithTextField({
               if (trackListTileHeight) {
                 settings.trackListTileHeight.reset();
                 showResetToDefaultSnackBar("${settings.trackListTileHeight.value}");
-                Dimensions.inst.updateTrackTileDimensions();
                 onTTSetChange();
               }
               if (albumThumbnailSizeinList) {
@@ -76,7 +74,6 @@ Future<void> showSettingDialogWithTextField({
               if (albumListTileHeight) {
                 settings.albumListTileHeight.reset();
                 showResetToDefaultSnackBar("${settings.albumListTileHeight.value}");
-                Dimensions.inst.updateAlbumTileDimensions();
               }
               if (borderRadiusMultiplier) {
                 settings.borderRadiusMultiplier.reset();
@@ -119,7 +116,6 @@ Future<void> showSettingDialogWithTextField({
                 }
                 if (trackListTileHeight) {
                   settings.trackListTileHeight.save(double.parse(controller.text));
-                  Dimensions.inst.updateTrackTileDimensions();
                   onTTSetChange();
                 }
                 if (albumThumbnailSizeinList) {
@@ -127,7 +123,6 @@ Future<void> showSettingDialogWithTextField({
                 }
                 if (albumListTileHeight) {
                   settings.albumListTileHeight.save(double.parse(controller.text));
-                  Dimensions.inst.updateAlbumTileDimensions();
                 }
                 if (borderRadiusMultiplier) {
                   settings.borderRadiusMultiplier.save(double.parse(controller.text));

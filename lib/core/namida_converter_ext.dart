@@ -601,13 +601,13 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
 
   IconData ffmpegTagToIcon() => switch (this) {
     FFMPEGTagField.title => Broken.music,
-    FFMPEGTagField.album => Broken.music_dashboard,
-    FFMPEGTagField.artist => Broken.microphone,
-    FFMPEGTagField.albumArtist => Broken.user,
-    FFMPEGTagField.genre => Broken.smileys,
-    FFMPEGTagField.style => Broken.brush_1,
-    FFMPEGTagField.mood => Broken.emoji_happy,
-    FFMPEGTagField.composer => Broken.profile_2user,
+    FFMPEGTagField.album => MediaType.album.toIcon(),
+    FFMPEGTagField.artist => MediaType.artist.toIcon(),
+    FFMPEGTagField.albumArtist => MediaType.albumArtist.toIcon(),
+    FFMPEGTagField.genre => MediaType.genre.toIcon(),
+    FFMPEGTagField.style => MediaType.style.toIcon(),
+    FFMPEGTagField.mood => MediaType.mood.toIcon(),
+    FFMPEGTagField.composer => MediaType.composer.toIcon(),
     FFMPEGTagField.comment => Broken.text_block,
     FFMPEGTagField.description => Broken.note_text,
     FFMPEGTagField.synopsis => Broken.text,
@@ -619,17 +619,17 @@ extension FFMPEGTagFieldUtilsC on FFMPEGTagField {
     FFMPEGTagField.year => Broken.calendar,
     FFMPEGTagField.remixer => Broken.radio,
     FFMPEGTagField.lyricist => Broken.pen_add,
-    FFMPEGTagField.language => Broken.language_circle,
+    FFMPEGTagField.language => MediaType.language.toIcon(),
     FFMPEGTagField.recordLabel => Broken.ticket,
     FFMPEGTagField.releaseType => Broken.cd,
     FFMPEGTagField.country => Broken.house,
-    FFMPEGTagField.rating => Broken.grammerly,
-    FFMPEGTagField.tags => Broken.ticket_discount,
+    FFMPEGTagField.rating => MediaType.rating.toIcon(),
+    FFMPEGTagField.tags => MediaType.tag.toIcon(),
     FFMPEGTagField.titleSort => Broken.music,
-    FFMPEGTagField.albumSort => Broken.music_dashboard,
-    FFMPEGTagField.albumArtistSort => Broken.user,
-    FFMPEGTagField.artistSort => Broken.microphone,
-    FFMPEGTagField.composerSort => Broken.profile_2user,
+    FFMPEGTagField.albumSort => MediaType.album.toIcon(),
+    FFMPEGTagField.albumArtistSort => MediaType.albumArtist.toIcon(),
+    FFMPEGTagField.artistSort => MediaType.artist.toIcon(),
+    FFMPEGTagField.composerSort => MediaType.composer.toIcon(),
   };
 }
 
@@ -1216,6 +1216,38 @@ extension QueueInsertionTypeToQI on QueueInsertionType {
   QueueInsertion toQueueInsertion() => settings.queueInsertion.value[this] ?? const QueueInsertion(numberOfTracks: 0, insertNext: true);
 }
 
+extension SimilarTracksSourceL10n on SimilarTracksSource {
+  String toText() => switch (this) {
+    SimilarTracksSource.genre => lang.genre,
+    SimilarTracksSource.style => lang.style,
+    SimilarTracksSource.mood => lang.mood,
+    SimilarTracksSource.tag => lang.tags,
+    SimilarTracksSource.artist => lang.artist,
+    SimilarTracksSource.albumArtist => lang.albumArtist,
+    SimilarTracksSource.composer => lang.composer,
+    SimilarTracksSource.year => lang.year,
+    SimilarTracksSource.language => lang.language,
+    SimilarTracksSource.bpm => 'BPM',
+    SimilarTracksSource.key => lang.musicalKey,
+    SimilarTracksSource.history => lang.history,
+  };
+
+  IconData toIcon() => switch (this) {
+    SimilarTracksSource.genre => MediaType.genre.toIcon(),
+    SimilarTracksSource.style => MediaType.style.toIcon(),
+    SimilarTracksSource.mood => MediaType.mood.toIcon(),
+    SimilarTracksSource.tag => MediaType.tag.toIcon(),
+    SimilarTracksSource.artist => MediaType.artist.toIcon(),
+    SimilarTracksSource.albumArtist => MediaType.albumArtist.toIcon(),
+    SimilarTracksSource.composer => MediaType.composer.toIcon(),
+    SimilarTracksSource.year => Broken.calendar,
+    SimilarTracksSource.language => MediaType.language.toIcon(),
+    SimilarTracksSource.bpm => Broken.alarm,
+    SimilarTracksSource.key => Broken.musicnote,
+    SimilarTracksSource.history => Broken.refresh,
+  };
+}
+
 extension SponsorBlockCategoryExt on SponsorBlockCategory {
   String toText() => this.name.sponsorCategoryToText();
 }
@@ -1506,7 +1538,7 @@ extension RouteUtils on NamidaRoute {
       duration: const Duration(milliseconds: 400),
       child:
           displaySettingSearch //
-          ? NamidaSettingSearchBar.keyed(closedChild: finalWidget)
+          ? NamidaSettingSearchBar(closedChild: finalWidget)
           : finalWidget ?? ScrollSearchController.inst.searchBarWidget,
     );
   }
@@ -1906,6 +1938,17 @@ extension InterruptionTypeL10n on InterruptionType {
   };
 }
 
+extension TrackSourceL10n on TrackSource {
+  String toText() => switch (this) {
+    TrackSource.local => lang.local,
+    TrackSource.youtube => lang.youtube,
+    TrackSource.youtubeMusic => lang.youtubeMusic,
+    TrackSource.lastfm => 'Last.fm',
+    TrackSource.spotify => 'Spotify',
+    TrackSource.listenbrainz => 'ListenBrainz',
+  };
+}
+
 extension SyncDataItemL10n on SyncDataItem {
   String toText() => switch (this) {
     SyncDataItem.history => lang.history,
@@ -2017,17 +2060,17 @@ extension LibraryTabL10n on LibraryTab {
   };
 
   IconData toIcon() => switch (this) {
-    LibraryTab.albums => Broken.music_dashboard,
-    LibraryTab.tracks => Broken.music_circle,
+    LibraryTab.albums => MediaType.album.toIcon(),
+    LibraryTab.tracks => MediaType.track.toIcon(),
     LibraryTab.tracksMusic => Broken.musicnote,
     LibraryTab.tracksVideos => Broken.video_circle,
     LibraryTab.artists => Broken.profile_2user,
-    LibraryTab.genres => Broken.smileys,
-    LibraryTab.playlists => Broken.music_library_2,
+    LibraryTab.genres => MediaType.genre.toIcon(),
+    LibraryTab.playlists => MediaType.playlist.toIcon(),
     LibraryTab.smartPlaylists => Broken.magicpen,
-    LibraryTab.folders => Broken.folder,
-    LibraryTab.foldersMusic => Broken.folder_2,
-    LibraryTab.foldersVideos => Broken.video_play,
+    LibraryTab.folders => MediaType.folder.toIcon(),
+    LibraryTab.foldersMusic => MediaType.folderMusic.toIcon(),
+    LibraryTab.foldersVideos => MediaType.folderVideo.toIcon(),
     LibraryTab.home => Broken.home_2,
     LibraryTab.search => Broken.search_normal_1,
     LibraryTab.youtube => Broken.video_square,
@@ -2041,10 +2084,10 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.favourites => Broken.heart,
     LibraryTab.history => Broken.refresh,
     LibraryTab.mostPlayed => Broken.award,
-    LibraryTab.moods => Broken.emoji_happy,
-    LibraryTab.tags => Broken.tag,
-    LibraryTab.languages => Broken.language_square,
-    LibraryTab.rating => Broken.grammerly,
+    LibraryTab.moods => Broken.smileys,
+    LibraryTab.tags => MediaType.tag.toIcon(),
+    LibraryTab.languages => MediaType.language.toIcon(),
+    LibraryTab.rating => MediaType.rating.toIcon(),
     LibraryTab.stats => Broken.chart_21,
     LibraryTab.party => Broken.people,
   };
@@ -2067,6 +2110,24 @@ extension MediaTypeL10n on MediaType {
     MediaType.rating => lang.rating,
     MediaType.folderMusic => "${lang.folders}: ${lang.tracks}",
     MediaType.folderVideo => "${lang.folders}: ${lang.videos}",
+  };
+
+  IconData toIcon() => switch (this) {
+    MediaType.album => Broken.music_dashboard,
+    MediaType.track => Broken.music_circle,
+    MediaType.artist => Broken.microphone,
+    MediaType.albumArtist => Broken.user,
+    MediaType.composer => Broken.profile_2user,
+    MediaType.genre => Broken.shapes,
+    MediaType.style => Broken.brush_1,
+    MediaType.language => Broken.language_square,
+    MediaType.playlist => Broken.music_library_2,
+    MediaType.folder => Broken.folder,
+    MediaType.mood => Broken.emoji_happy,
+    MediaType.tag => Broken.tag,
+    MediaType.rating => Broken.grammerly,
+    MediaType.folderMusic => Broken.folder_2,
+    MediaType.folderVideo => Broken.video_play,
   };
 }
 
@@ -2157,18 +2218,18 @@ extension SortTypeL10n on SortType {
 
   IconData toIcon() => switch (this) {
     SortType.title => Broken.music,
-    SortType.album => Broken.music_dashboard,
-    SortType.artistsList => Broken.microphone,
-    SortType.albumArtist => Broken.user,
-    SortType.genresList => Broken.smileys,
-    SortType.composer => Broken.profile_2user,
+    SortType.album => MediaType.album.toIcon(),
+    SortType.artistsList => MediaType.artist.toIcon(),
+    SortType.albumArtist => MediaType.albumArtist.toIcon(),
+    SortType.genresList => MediaType.genre.toIcon(),
+    SortType.composer => MediaType.composer.toIcon(),
     SortType.trackNo => Broken.hashtag,
     SortType.discNo => Broken.hashtag,
     SortType.year => Broken.calendar,
     SortType.duration => Broken.timer_1,
     SortType.dateAdded => Broken.calendar_add,
     SortType.dateModified => Broken.calendar_edit,
-    SortType.rating => Broken.grammerly,
+    SortType.rating => MediaType.rating.toIcon(),
     SortType.favourite => Broken.heart,
     SortType.bitrate => Broken.voice_cricle,
     SortType.filename => Broken.quote_up_circle,
@@ -2183,10 +2244,10 @@ extension SortTypeL10n on SortType {
     SortType.latestPlayed => Broken.clock,
     SortType.firstListen => Broken.calendar_search,
     SortType.titleSort => Broken.music,
-    SortType.albumSort => Broken.music_dashboard,
-    SortType.albumArtistSort => Broken.user,
-    SortType.artistSort => Broken.microphone,
-    SortType.composerSort => Broken.profile_2user,
+    SortType.albumSort => MediaType.album.toIcon(),
+    SortType.albumArtistSort => MediaType.albumArtist.toIcon(),
+    SortType.artistSort => MediaType.artist.toIcon(),
+    SortType.composerSort => MediaType.composer.toIcon(),
   };
 }
 
@@ -2260,11 +2321,11 @@ extension GroupSortTypeL10n on GroupSortType {
 
   IconData toIcon() => switch (this) {
     GroupSortType.title => Broken.music,
-    GroupSortType.album => Broken.music_dashboard,
-    GroupSortType.artistsList => Broken.microphone,
-    GroupSortType.albumArtist => Broken.user,
-    GroupSortType.genresList => Broken.smileys,
-    GroupSortType.composer => Broken.profile_2user,
+    GroupSortType.album => MediaType.album.toIcon(),
+    GroupSortType.artistsList => MediaType.artist.toIcon(),
+    GroupSortType.albumArtist => MediaType.albumArtist.toIcon(),
+    GroupSortType.genresList => MediaType.genre.toIcon(),
+    GroupSortType.composer => MediaType.composer.toIcon(),
     GroupSortType.numberOfTracks => Broken.hashtag,
     GroupSortType.year => Broken.calendar,
     GroupSortType.duration => Broken.timer_1,
@@ -2283,10 +2344,10 @@ extension GroupSortTypeL10n on GroupSortType {
     GroupSortType.playCount => Broken.award,
     GroupSortType.latestPlayed => Broken.clock,
     GroupSortType.firstListen => Broken.calendar_search,
-    GroupSortType.albumSort => Broken.music_dashboard,
-    GroupSortType.albumArtistSort => Broken.user,
-    GroupSortType.artistSort => Broken.microphone,
-    GroupSortType.composerSort => Broken.profile_2user,
+    GroupSortType.albumSort => MediaType.album.toIcon(),
+    GroupSortType.albumArtistSort => MediaType.albumArtist.toIcon(),
+    GroupSortType.artistSort => MediaType.artist.toIcon(),
+    GroupSortType.composerSort => MediaType.composer.toIcon(),
   };
 }
 
@@ -2334,13 +2395,13 @@ extension TrackTileItemL10n on TrackTileItem {
   IconData toIcon() => switch (this) {
     TrackTileItem.none => Broken.minus_cirlce,
     TrackTileItem.title => Broken.music,
-    TrackTileItem.artists => Broken.microphone,
-    TrackTileItem.album => Broken.music_dashboard,
-    TrackTileItem.albumArtist => Broken.user,
-    TrackTileItem.genres => Broken.smileys,
-    TrackTileItem.styles => Broken.brush_1,
-    TrackTileItem.languages => Broken.language_square,
-    TrackTileItem.composer => Broken.profile_2user,
+    TrackTileItem.artists => MediaType.artist.toIcon(),
+    TrackTileItem.album => MediaType.album.toIcon(),
+    TrackTileItem.albumArtist => MediaType.albumArtist.toIcon(),
+    TrackTileItem.genres => MediaType.genre.toIcon(),
+    TrackTileItem.styles => MediaType.style.toIcon(),
+    TrackTileItem.languages => MediaType.language.toIcon(),
+    TrackTileItem.composer => MediaType.composer.toIcon(),
     TrackTileItem.year => Broken.calendar,
     TrackTileItem.bitrate => Broken.voice_cricle,
     TrackTileItem.channels => Broken.airpods,
@@ -2355,7 +2416,7 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.fileName => Broken.quote_up_circle,
     TrackTileItem.fileNameWOExt => Broken.quote_up_circle,
     TrackTileItem.extension => Broken.document,
-    TrackTileItem.folder => Broken.folder,
+    TrackTileItem.folder => MediaType.folder.toIcon(),
     TrackTileItem.format => Broken.voice_cricle,
     TrackTileItem.path => Broken.location,
     TrackTileItem.sampleRate => Broken.voice_cricle,
@@ -2363,9 +2424,9 @@ extension TrackTileItemL10n on TrackTileItem {
     TrackTileItem.lossless => Broken.voice_cricle,
     TrackTileItem.bpm => Broken.alarm,
     TrackTileItem.size => Broken.size,
-    TrackTileItem.rating => Broken.grammerly,
+    TrackTileItem.rating => MediaType.rating.toIcon(),
     TrackTileItem.moods => Broken.smileys,
-    TrackTileItem.tags => Broken.tag,
+    TrackTileItem.tags => MediaType.tag.toIcon(),
     TrackTileItem.listenCount => Broken.award,
     TrackTileItem.latestListenDate => Broken.clock,
     TrackTileItem.firstListenDate => Broken.calendar_search,
@@ -2469,13 +2530,13 @@ extension TagFieldL10n on TagField {
 
   IconData toIcon() => switch (this) {
     TagField.title => Broken.music,
-    TagField.album => Broken.music_dashboard,
-    TagField.artist => Broken.microphone,
-    TagField.albumArtist => Broken.user,
-    TagField.genre => Broken.smileys,
-    TagField.style => Broken.brush_1,
-    TagField.mood => Broken.emoji_happy,
-    TagField.composer => Broken.profile_2user,
+    TagField.album => MediaType.album.toIcon(),
+    TagField.artist => MediaType.artist.toIcon(),
+    TagField.albumArtist => MediaType.albumArtist.toIcon(),
+    TagField.genre => MediaType.genre.toIcon(),
+    TagField.style => MediaType.style.toIcon(),
+    TagField.mood => MediaType.mood.toIcon(),
+    TagField.composer => MediaType.composer.toIcon(),
     TagField.comment => Broken.text_block,
     TagField.description => Broken.note_text,
     TagField.synopsis => Broken.text,
@@ -2487,17 +2548,17 @@ extension TagFieldL10n on TagField {
     TagField.trackTotal => Broken.hashtag,
     TagField.discTotal => Broken.hashtag,
     TagField.lyricist => Broken.pen_add,
-    TagField.language => Broken.language_circle,
+    TagField.language => MediaType.language.toIcon(),
     TagField.recordLabel => Broken.ticket,
     TagField.releaseType => Broken.cd,
     TagField.country => Broken.house,
-    TagField.rating => Broken.grammerly,
-    TagField.tags => Broken.ticket_discount,
+    TagField.rating => MediaType.rating.toIcon(),
+    TagField.tags => MediaType.tag.toIcon(),
     TagField.titleSort => Broken.music,
-    TagField.albumSort => Broken.music_dashboard,
-    TagField.albumArtistSort => Broken.user,
-    TagField.artistSort => Broken.microphone,
-    TagField.composerSort => Broken.profile_2user,
+    TagField.albumSort => MediaType.album.toIcon(),
+    TagField.albumArtistSort => MediaType.albumArtist.toIcon(),
+    TagField.artistSort => MediaType.artist.toIcon(),
+    TagField.composerSort => MediaType.composer.toIcon(),
   };
 }
 
@@ -2590,10 +2651,10 @@ extension TrackPlayModeL10n on TrackPlayMode {
   IconData toIcon() => switch (this) {
     TrackPlayMode.selectedTrack => Broken.music_circle,
     TrackPlayMode.searchResults => Broken.search_normal_1,
-    TrackPlayMode.trackAlbum => Broken.music_dashboard,
-    TrackPlayMode.trackArtist => Broken.profile_2user,
-    TrackPlayMode.trackGenre => Broken.smileys,
-    TrackPlayMode.trackStyle => Broken.brush_1,
+    TrackPlayMode.trackAlbum => MediaType.album.toIcon(),
+    TrackPlayMode.trackArtist => MediaType.artist.toIcon(),
+    TrackPlayMode.trackGenre => MediaType.genre.toIcon(),
+    TrackPlayMode.trackStyle => MediaType.style.toIcon(),
   };
 }
 
@@ -2704,7 +2765,7 @@ extension NotificationButtonUtils on NotificationButton {
     NotificationButton.sleepTimer => Broken.timer_1,
     NotificationButton.stopAfterCurrent => Broken.pause_circle,
     NotificationButton.addToPlaylist => Broken.music_library_2,
-    NotificationButton.bookmark => Broken.book_saved,
+    NotificationButton.bookmark => Broken.bookmark,
   };
 }
 

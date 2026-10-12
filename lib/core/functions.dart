@@ -1477,7 +1477,7 @@ class TracksAddOnTap {
           getAddTracksTile(
             title: lang.newTracksMoods,
             subtitle: lang.newTracksMoodsSubtitle,
-            icon: Broken.emoji_happy,
+            icon: MediaType.mood.toIcon(),
             insertionType: QueueInsertionType.mood,
             onTap: (insertionType) async {
               NamidaNavigator.inst.closeDialog();

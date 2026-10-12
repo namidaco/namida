@@ -656,7 +656,6 @@ class _SearchResultsView extends StatelessWidget {
 
   _HorizontalSection<String> _artistSection({
     required String title,
-    required IconData icon,
     required RxList<String> rx,
     required MediaType type,
     required List<Track> Function(String item) getTracks,
@@ -665,7 +664,7 @@ class _SearchResultsView extends StatelessWidget {
       titleKey: sectionKeys[type],
       rx: rx,
       title: title,
-      icon: icon,
+      icon: type.toIcon(),
       trailing: NamidaButton(
         colors: .mid,
         icon: Broken.category,
@@ -689,7 +688,6 @@ class _SearchResultsView extends StatelessWidget {
 
   _HorizontalSection<String> _multiArtworkSection({
     required String title,
-    required IconData icon,
     required RxList<String> rx,
     required MediaType type,
     required Widget Function(String item) cardBuilder,
@@ -698,7 +696,7 @@ class _SearchResultsView extends StatelessWidget {
       titleKey: sectionKeys[type],
       rx: rx,
       title: title,
-      icon: icon,
+      icon: type.toIcon(),
       height: 138.0,
       itemExtent: 108.0,
       itemBuilder: (item) => Padding(
@@ -725,7 +723,7 @@ class _SearchResultsView extends StatelessWidget {
                 titleKey: sectionKeys[MediaType.album],
                 rx: searchController.albumSearchTemp,
                 title: lang.albums,
-                icon: Broken.music_dashboard,
+                icon: MediaType.album.toIcon(),
                 trailing: NamidaButton(
                   colors: .mid,
                   icon: Broken.category,
@@ -749,7 +747,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Artists ==
               _artistSection(
                 title: lang.artists,
-                icon: Broken.user,
                 rx: searchController.artistSearchTemp,
                 type: MediaType.artist,
                 getTracks: (item) => item.getArtistTracks(),
@@ -758,7 +755,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Album Artists ==
               _artistSection(
                 title: lang.albumArtists,
-                icon: Broken.user,
                 rx: searchController.albumArtistSearchTemp,
                 type: MediaType.albumArtist,
                 getTracks: (item) => item.getAlbumArtistTracks(),
@@ -767,7 +763,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Composers ==
               _artistSection(
                 title: lang.composer,
-                icon: Broken.profile_2user,
                 rx: searchController.composerSearchTemp,
                 type: MediaType.composer,
                 getTracks: (item) => item.getComposerTracks(),
@@ -776,7 +771,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Genres ==
               _multiArtworkSection(
                 title: lang.genres,
-                icon: Broken.smileys,
                 rx: searchController.genreSearchTemp,
                 type: MediaType.genre,
                 cardBuilder: (genreName) => MultiArtworkCard(
@@ -794,7 +788,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Styles ==
               _multiArtworkSection(
                 title: lang.styles,
-                icon: Broken.brush_1,
                 rx: searchController.styleSearchTemp,
                 type: MediaType.style,
                 cardBuilder: (styleName) => MultiArtworkCard(
@@ -812,7 +805,6 @@ class _SearchResultsView extends StatelessWidget {
               // == Languages ==
               _multiArtworkSection(
                 title: lang.languages,
-                icon: Broken.language_square,
                 rx: searchController.languageSearchTemp,
                 type: MediaType.language,
                 cardBuilder: (languageName) => MultiArtworkCard(
@@ -832,7 +824,7 @@ class _SearchResultsView extends StatelessWidget {
                 titleKey: sectionKeys[MediaType.playlist],
                 rx: searchController.playlistSearchTemp,
                 title: lang.playlists,
-                icon: Broken.music_library_2,
+                icon: MediaType.playlist.toIcon(),
                 height: 138.0,
                 itemExtent: 108.0,
                 itemBuilder: (playlistName) {
@@ -894,11 +886,11 @@ class _SearchResultsView extends StatelessWidget {
                 titleKey: sectionKeys[MediaType.mood],
                 rx: searchController.moodSearchTemp,
                 title: lang.moods,
-                icon: Broken.emoji_happy,
+                icon: Broken.smileys,
                 height: 32.0 + 4,
                 itemExtent: null,
                 itemBuilder: (item) => _MoodTagSmallCard(
-                  icon: Broken.emoji_happy,
+                  icon: MediaType.mood.toIcon(),
                   name: item,
                   onTap: () => MoodsTracksSubPage.open(item, Indexer.inst.getTracksForMood(item) ?? []),
                   onLongPress: () => NamidaDialogs.inst.showMoodDialog(item, Indexer.inst.getTracksForMood(item) ?? []),
@@ -910,7 +902,7 @@ class _SearchResultsView extends StatelessWidget {
                 titleKey: sectionKeys[MediaType.tag],
                 rx: searchController.tagSearchTemp,
                 title: lang.tags,
-                icon: Broken.tag,
+                icon: MediaType.tag.toIcon(),
                 height: 32.0 + 4,
                 itemExtent: null,
                 itemBuilder: (item) => _MoodTagSmallCard(

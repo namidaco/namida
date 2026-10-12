@@ -143,8 +143,6 @@ class NamidaNavigator {
   void openAfterFirstLoad(NamidaRouteWidget page) => _pageAfterFirstLoad = page;
 
   void onFirstLoad() {
-    Dimensions.inst.updateAllTileDimensions();
-
     final initialTab = settings.extra.selectedLibraryTab.value;
     final isSearchTab = initialTab == LibraryTab.search;
     final finalTab = isSearchTab ? settings.libraryTabs.value.first : initialTab;

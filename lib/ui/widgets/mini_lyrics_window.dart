@@ -33,18 +33,6 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
   void _exit() => WindowController.instance?.exitMiniLyricsMode();
 
   static const _borderRadius = BorderRadius.all(Radius.circular(14.0));
-  static const _edgeGripWidth = 6.0;
-
-  Widget _resizeGrip(ResizeEdge edge) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeLeftRight,
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onPanStart: (_) => windowManager.startResizing(edge),
-        child: const SizedBox(width: _edgeGripWidth, height: double.infinity),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,9 +96,54 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
               ),
             ),
           ),
-          Positioned(left: 0.0, top: 0.0, bottom: 0.0, child: _resizeGrip(ResizeEdge.left)),
-          Positioned(right: 0.0, top: 0.0, bottom: 0.0, child: _resizeGrip(ResizeEdge.right)),
+          const _ResizeGrip(ResizeEdge.left),
+          const _ResizeGrip(ResizeEdge.right),
+          const _ResizeGrip(ResizeEdge.top),
+          const _ResizeGrip(ResizeEdge.bottom),
+          const _ResizeGrip(ResizeEdge.topLeft),
+          const _ResizeGrip(ResizeEdge.topRight),
+          const _ResizeGrip(ResizeEdge.bottomLeft),
+          const _ResizeGrip(ResizeEdge.bottomRight),
         ],
+      ),
+    );
+  }
+}
+
+class _ResizeGrip extends StatelessWidget {
+  final ResizeEdge edge;
+
+  const _ResizeGrip(this.edge);
+
+  static const _thickness = 6.0;
+  static const _cornerSize = 12.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final (alignment, width, height, cursor) = switch (edge) {
+      ResizeEdge.left => (Alignment.centerLeft, _thickness, double.infinity, SystemMouseCursors.resizeLeftRight),
+      ResizeEdge.right => (Alignment.centerRight, _thickness, double.infinity, SystemMouseCursors.resizeLeftRight),
+      ResizeEdge.top => (Alignment.topCenter, double.infinity, _thickness, SystemMouseCursors.resizeUpDown),
+      ResizeEdge.bottom => (Alignment.bottomCenter, double.infinity, _thickness, SystemMouseCursors.resizeUpDown),
+      ResizeEdge.topLeft => (Alignment.topLeft, _cornerSize, _cornerSize, SystemMouseCursors.resizeUpLeftDownRight),
+      ResizeEdge.topRight => (Alignment.topRight, _cornerSize, _cornerSize, SystemMouseCursors.resizeUpRightDownLeft),
+      ResizeEdge.bottomLeft => (Alignment.bottomLeft, _cornerSize, _cornerSize, SystemMouseCursors.resizeUpRightDownLeft),
+      ResizeEdge.bottomRight => (Alignment.bottomRight, _cornerSize, _cornerSize, SystemMouseCursors.resizeUpLeftDownRight),
+    };
+    return Positioned.fill(
+      child: Align(
+        alignment: alignment,
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: MouseRegion(
+            cursor: cursor,
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onPanStart: (_) => windowManager.startResizing(edge),
+            ),
+          ),
+        ),
       ),
     );
   }

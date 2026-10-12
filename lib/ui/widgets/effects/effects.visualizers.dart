@@ -378,7 +378,7 @@ class _VisualizerCanvas extends StatelessWidget {
     required this.colors,
   });
 
-  static const _spectrumOpacity = 0.4;
+  static const _spectrumOpacity = 0.3;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +494,7 @@ class _ParticlesPainter extends _VisualizerPainter {
     required super.repaint,
   });
 
-  static const _swell = 0.12;
+  static const _swell = 0.08;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -523,7 +523,7 @@ class _BarsPainter extends _VisualizerPainter {
 
   static const barsCount = SpectrumController.bandCount * 2 - 1;
   static const gapFraction = 0.32;
-  static const _maxHeightFraction = 0.34;
+  static const _maxHeightFraction = 0.22;
   static const _minHeight = 3.0;
 
   final _points = Float32List(barsCount * 4);
@@ -562,10 +562,10 @@ class _BarsPainter extends _VisualizerPainter {
       _shadedSize = size;
       _shadedStrength = strength;
       if (colors.length > 1) {
-        _paint.shader = buildHorizontalShader(size.width, 0.45 * strength);
+        _paint.shader = buildHorizontalShader(size.width, 0.35 * strength);
       } else {
-        final colorAtBottom = color.withValues(alpha: 0.6 * strength);
-        final colorAtTop = color.withValues(alpha: 0.12 * strength);
+        final colorAtBottom = color.withValues(alpha: 0.45 * strength);
+        final colorAtTop = color.withValues(alpha: 0.08 * strength);
         final from = Offset(0, bottom);
         final to = Offset(0, bottom - maxHeight);
         _paint.shader = ui.Gradient.linear(from, to, [colorAtBottom, colorAtTop]);
@@ -591,7 +591,7 @@ class _MirroredBarsPainter extends _VisualizerPainter {
     required this.waveformPadding,
   });
 
-  static const _maxReach = 34.0;
+  static const _maxReach = 22.0;
   static const _strength = 0.35;
 
   Float32List _points = Float32List(0);
@@ -667,11 +667,11 @@ class _WavesPainter extends _VisualizerPainter {
   });
 
   static const _step = 14.0;
-  static const _maxHeightFraction = 0.26;
+  static const _maxHeightFraction = 0.17;
   static const _layers = [
-    (rest: 0.30, ripple: 0.0085, pace: 0.55, alpha: 0.16, isMirrored: false),
-    (rest: 0.20, ripple: 0.0120, pace: -0.80, alpha: 0.20, isMirrored: true),
-    (rest: 0.10, ripple: 0.0170, pace: 1.10, alpha: 0.26, isMirrored: false),
+    (rest: 0.30, ripple: 0.0085, pace: 0.55, alpha: 0.12, isMirrored: false),
+    (rest: 0.20, ripple: 0.0120, pace: -0.80, alpha: 0.15, isMirrored: true),
+    (rest: 0.10, ripple: 0.0170, pace: 1.10, alpha: 0.19, isMirrored: false),
   ];
 
   final _path = Path();
@@ -729,8 +729,8 @@ class _EdgeLightsPainter extends _VisualizerPainter {
     required super.repaint,
   });
 
-  static const _depthFraction = 0.2;
-  static const _strength = 0.7;
+  static const _depthFraction = 0.14;
+  static const _strength = 0.5;
   static const _falloff = [0.0, 0.4, 1.0];
   static const _lowsEnd = 5;
   static const _midsEnd = 11;
@@ -816,13 +816,13 @@ class _GlowPainter extends _VisualizerPainter {
     if (presence <= 0 || size.isEmpty) return;
 
     final hit = driver.beat;
-    final swell = artworkScale * (1 + 0.06 * driver.level + 0.10 * hit);
+    final swell = artworkScale * (1 + 0.04 * driver.level + 0.06 * hit);
     final core = Rect.fromCenter(
       center: size.center(Offset.zero),
       width: size.width * swell,
       height: size.height * swell,
     );
-    final brightness = (0.30 + 0.35 * driver.level + 0.45 * hit).withMaximum(1.0);
+    final brightness = (0.22 + 0.25 * driver.level + 0.30 * hit).withMaximum(1.0);
     final alpha = brightness * opacity * presence;
     final halo = _HaloSprite.obtain();
     final destination = _HaloSprite.destinationFor(core);
@@ -855,8 +855,8 @@ class _OutlinePainter extends _VisualizerPainter {
   static const _extraBarsPerCorner = 2;
   static const _gap = 7.0;
   static const _minLength = 2.0;
-  static const _maxLengthFraction = 0.11;
-  static const _thickness = 3.4;
+  static const _maxLengthFraction = 0.075;
+  static const _thickness = 3.0;
   static const _strength = 0.5;
 
   Float32List _anchors = Float32List(0);
@@ -993,8 +993,8 @@ class _BeatRingsPainter extends _VisualizerPainter {
 
   static const _ringsCount = 6;
   static const _lifetime = 0.9;
-  static const _growFraction = 0.2;
-  static const _thickness = 3.2;
+  static const _growFraction = 0.14;
+  static const _thickness = 2.6;
   static const _strength = 0.6;
 
   final _ages = Float32List(_ringsCount)..fillRange(0, _ringsCount, _lifetime);
@@ -1065,15 +1065,15 @@ class _ReactiveParticlesPainter extends _VisualizerPainter {
   });
 
   static const _capacity = 96;
-  static const _perBeat = 16;
+  static const _perBeat = 12;
   static const _minLife = 0.8;
   static const _maxLife = 1.5;
-  static const _minSpeed = 50.0;
-  static const _maxSpeed = 170.0;
-  static const _minSize = 5.0;
-  static const _maxSize = 10.0;
+  static const _minSpeed = 40.0;
+  static const _maxSpeed = 130.0;
+  static const _minSize = 4.0;
+  static const _maxSize = 8.0;
   static const _drag = 1.4;
-  static const _strength = 0.9;
+  static const _strength = 0.7;
   static const _sprite = _Sprite.glow;
 
   final _random = math.Random();
@@ -1241,7 +1241,7 @@ const _kVisualizerParticles = [
     minSpeed: 0.0,
     maxSpeed: 60.0,
     minAlpha: 0.0,
-    maxAlpha: 0.3,
+    maxAlpha: 0.22,
     audio: 1.0,
   ),
 ];

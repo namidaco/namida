@@ -408,7 +408,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
 
   String _tooltip() => ScrollSearchController.inst.isGlobalSearchMenuShown.value ? lang.clear : settings.floatingActionButton.value.toText();
 
-  void _onSettingsTap() => NamidaSettingSearchBar.globalKey.currentState?.toggle();
+  void _onSettingsTap() => NamidaSettingSearchBar.toggle();
 
   String _settingsTooltip() => SettingsSearchController.inst.canShowSearch.value ? lang.clear : '${lang.search}: ${lang.settings}';
 

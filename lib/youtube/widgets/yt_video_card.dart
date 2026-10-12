@@ -37,6 +37,7 @@ class YoutubeVideoCard extends StatefulWidget {
   final double? thumbnailWidth;
   final double? thumbnailHeight;
   final YoutiPiePlaylistResultBase? playlist;
+  final List<StreamInfoItem>? playlistSortedStreams;
   final ({int index, int totalLength, String playlistId})? playlistIndexAndCount;
   final double fontMultiplier;
   final double thumbnailWidthPercentage;
@@ -53,6 +54,7 @@ class YoutubeVideoCard extends StatefulWidget {
     this.thumbnailWidth,
     this.thumbnailHeight,
     this.playlist,
+    this.playlistSortedStreams,
     this.playlistIndexAndCount,
     this.fontMultiplier = 1.0,
     this.thumbnailWidthPercentage = 1.0,
@@ -165,6 +167,7 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
                 videoId: videoId,
                 index: widget.playlistIndexAndCount?.index,
                 playlist: widget.playlist,
+                playlistSortedStreams: widget.playlistSortedStreams,
                 playlistID: widget.playlistID,
                 queueSource: widget.properties.configs.queueSource,
               );
@@ -490,36 +493,42 @@ class _VideoCardUtils {
     PlaylistID? playlistID,
     int? index,
     YoutiPiePlaylistResultBase? playlist,
+    List<StreamInfoItem>? playlistSortedStreams,
     bool openInFullScreen = false,
   }) async {
     YTUtils.expandMiniplayer();
     if (openInFullScreen) {
       VideoController.inst.toggleFullScreenVideoView(isLocal: false, setOrientations: false);
     }
-    final gentlePlay = playlist == null ? true : false;
+    if (playlist == null || index == null) {
+      return Player.inst.playOrPause(
+        0,
+        [YoutubeID(id: videoId, playlistID: playlistID)],
+        queueSource,
+        gentlePlay: true,
+      );
+    }
+
+    YoutubeID toYoutubeID(StreamInfoItem e) => YoutubeID(id: e.id, playlistID: playlistID);
+
+    // -- local sorting only covers the loaded streams, so the rest isn't fetched
+    if (playlistSortedStreams != null) {
+      final sortedQueue = playlistSortedStreams.map(toYoutubeID).toFixedList();
+      return Player.inst.playOrPause(index, sortedQueue, queueSource);
+    }
+
+    final loadedCount = playlist.items.length;
+    final loadedQueue = playlist.items.map(toYoutubeID).toFixedList();
     return Player.inst.playOrPause(
-      0,
-      [YoutubeID(id: videoId, playlistID: playlistID)],
+      index,
+      loadedQueue,
       queueSource,
-      gentlePlay: gentlePlay,
       onAssigningCurrentItem: (currentItem) async {
         // -- add the remaining playlist videos, only if the same item is still playing
-
-        if (playlist != null && index != null) {
-          await playlist.basicInfo.fetchAllPlaylistStreams(showProgressSheet: false, playlist: playlist);
-          if (currentItem != Player.inst.currentItem.value) return; // nvm if item changed
-          if (currentItem is YoutubeID && currentItem.id == videoId) {
-            try {
-              final firstHalf = playlist.items.getRange(0, index).map((e) => YoutubeID(id: e.id, playlistID: playlistID));
-              final lastHalf = playlist.items.getRange(index + 1, playlist.items.length).map((e) => YoutubeID(id: e.id, playlistID: playlistID));
-
-              Player.inst.addToQueue(lastHalf); // adding first bcz inserting would mess up indexes in lastHalf.
-              await Player.inst.insertInQueue(firstHalf, 0);
-            } catch (e) {
-              printo(e, isError: true);
-            }
-          }
-        }
+        await playlist.basicInfo.fetchAllPlaylistStreams(showProgressSheet: false, playlist: playlist);
+        if (currentItem != Player.inst.currentItem.value) return;
+        final remainingItems = playlist.items.skip(loadedCount).map(toYoutubeID);
+        Player.inst.addToQueue(remainingItems);
       },
     );
   }

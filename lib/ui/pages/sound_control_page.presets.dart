@@ -55,14 +55,38 @@ class _ConfigPresetChip extends StatelessWidget {
     required this.onTap,
   });
 
-  void _openOptions() {
-    NamidaNavigator.inst.showSheet(
-      showDragHandle: true,
-      builder: (context, bottomPadding, maxWidth, maxHeight) => _ConfigPresetOptions(
-        preset: preset,
-        config: config,
+  List<NamidaPopupItem> _getMenuItems() {
+    final current = config.getCurrentConfig();
+    final duplicate = settings.equalizer.findConfigPresetDuplicate(current, exceptName: preset.name);
+    final duplicateText = duplicate == null ? '' : '${lang.alreadyExists}: ${duplicate.name}';
+    return [
+      NamidaPopupItem(
+        icon: Broken.document_download,
+        title: lang.save,
+        subtitle: duplicateText,
+        enabled: duplicate == null,
+        onTap: () {
+          final updated = preset.copyWith(config: current);
+          settings.equalizer.putConfigPreset(updated);
+        },
       ),
-    );
+      NamidaPopupItem(
+        icon: Broken.edit_2,
+        title: lang.rename,
+        onTap: () => _PresetNameSheet.show(
+          initialName: preset.name,
+          onName: (name) {
+            final renamed = preset.copyWith(name: name);
+            settings.equalizer.putConfigPreset(renamed, replacing: preset.name);
+          },
+        ),
+      ),
+      NamidaPopupItem(
+        icon: Broken.trash,
+        title: lang.delete,
+        onTap: () => settings.equalizer.removeConfigPreset(preset.name),
+      ),
+    ];
   }
 
   @override
@@ -70,109 +94,48 @@ class _ConfigPresetChip extends StatelessWidget {
     final theme = context.theme;
     final secondaryColor = theme.colorScheme.secondary;
     final itemsColor = secondaryColor.withOpacityExt(isActive ? 0.9 : 0.6);
-    return NamidaInkWell(
-      animationDurationMS: 200,
-      bgColor: secondaryColor.withOpacityExt(isActive ? 0.18 : 0.0),
-      borderRadius: 8.0,
-      onTap: () => onTap(preset.config),
-      onLongPress: _openOptions,
-      margin: const EdgeInsets.symmetric(horizontal: 2.0),
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: secondaryColor.withOpacityExt(isActive ? 0.7 : 0.3),
-          width: 1.5,
+    return NamidaPopupWrapper(
+      openOnTap: false,
+      childrenDefault: _getMenuItems,
+      child: NamidaInkWell(
+        animationDurationMS: 200,
+        bgColor: secondaryColor.withOpacityExt(isActive ? 0.18 : 0.0),
+        borderRadius: 8.0,
+        onTap: () => onTap(preset.config),
+        margin: const EdgeInsets.symmetric(horizontal: 2.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: secondaryColor.withOpacityExt(isActive ? 0.7 : 0.3),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Broken.layer,
-            size: 14.0,
-            color: itemsColor,
-          ),
-          const SizedBox(width: 6.0),
-          Text(
-            preset.name,
-            style: theme.textTheme.displayMedium?.copyWith(color: itemsColor),
-          ),
-          AnimatedShow(
-            isHorizontal: true,
-            show: isActive,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(start: 8.0),
-              child: NamidaCheckMark(
-                size: 14.0,
-                active: isActive,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Broken.layer,
+              size: 14.0,
+              color: itemsColor,
+            ),
+            const SizedBox(width: 6.0),
+            Text(
+              preset.name,
+              style: theme.textTheme.displayMedium?.copyWith(color: itemsColor),
+            ),
+            AnimatedShow(
+              isHorizontal: true,
+              show: isActive,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(start: 8.0),
+                child: NamidaCheckMark(
+                  size: 14.0,
+                  active: isActive,
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ConfigPresetOptions extends StatelessWidget {
-  final PlayerConfigPreset preset;
-  final _SoundControlMainSlidersColumnUpdateConfig config;
-
-  const _ConfigPresetOptions({
-    required this.preset,
-    required this.config,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final current = config.getCurrentConfig();
-    final duplicate = settings.equalizer.findConfigPresetDuplicate(current, exceptName: preset.name);
-    final duplicateText = duplicate == null ? null : '${lang.alreadyExists}: ${duplicate.name}';
-    void pop() => Navigator.pop(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 18.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            preset.name,
-            style: context.textTheme.displayLarge,
-          ),
-          const SizedBox(height: 12.0),
-          CustomListTile(
-            icon: Broken.document_download,
-            title: lang.save,
-            subtitle: duplicateText,
-            enabled: duplicate == null,
-            onTap: () {
-              final updated = preset.copyWith(config: current);
-              settings.equalizer.putConfigPreset(updated);
-              pop();
-            },
-          ),
-          CustomListTile(
-            icon: Broken.edit_2,
-            title: lang.rename,
-            onTap: () {
-              pop();
-              _PresetNameSheet.show(
-                initialName: preset.name,
-                onName: (name) {
-                  final renamed = preset.copyWith(name: name);
-                  settings.equalizer.putConfigPreset(renamed, replacing: preset.name);
-                },
-              );
-            },
-          ),
-          CustomListTile(
-            icon: Broken.trash,
-            title: lang.delete,
-            onTap: () {
-              settings.equalizer.removeConfigPreset(preset.name);
-              pop();
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

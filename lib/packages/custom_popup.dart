@@ -115,6 +115,7 @@ class CustomPopupState extends State<CustomPopup> {
         onLongPress: widget.openOnLongPress ? () => show() : null,
         child: isDesktop
             ? Stack(
+                fit: StackFit.passthrough,
                 children: [
                   widget.child,
                   const Positioned.fill(

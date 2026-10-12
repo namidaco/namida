@@ -1,8 +1,6 @@
 {
   "language": {
-    "code": "en",
-    "name": "English",
-    "country": "United States"
+    "code": "en"
   },
   "themeMode": "system",
   "pitchBlack": false,

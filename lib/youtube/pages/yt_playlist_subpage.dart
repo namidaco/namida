@@ -853,6 +853,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             video: item,
                             playlistID: plIdWrapper,
                             playlist: playlist,
+                            playlistSortedStreams: locallySortedStreams,
                             playlistIndexAndCount: (index: index, totalLength: playlist.basicInfo.videosCount ?? playlist.items.length, playlistId: playlist.basicInfo.id),
                           );
                         },

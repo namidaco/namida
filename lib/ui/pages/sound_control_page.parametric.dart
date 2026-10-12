@@ -890,15 +890,46 @@ class _EqualizerPresetsRow extends StatelessWidget {
     required this.isGlobal,
   });
 
-  void _openPresetOptions(EqualizerPreset preset) {
-    NamidaNavigator.inst.showSheet(
-      showDragHandle: true,
-      builder: (context, bottomPadding, maxWidth, maxHeight) => _EqualizerPresetOptions(
-        preset: preset,
-        config: config,
-        isGlobal: isGlobal,
+  List<NamidaPopupItem> _getPresetMenuItems(EqualizerPreset preset) {
+    final output = AudioOutputController.inst;
+    final routed = output.getRoutedDevice();
+    final deviceKey = output.keyForDevicePreset(routed);
+    final deviceName = routed?.name ?? lang.systemDefault;
+    final isDevicePreset = settings.equalizer.devicePresets.value[deviceKey] == preset.name;
+    return [
+      if (isGlobal)
+        NamidaPopupItem(
+          icon: Broken.headphone,
+          title: lang.useForDevice(device: deviceName),
+          selected: isDevicePreset,
+          onTap: () => output.setDevicePreset(deviceKey, isDevicePreset ? null : preset),
+        ),
+      NamidaPopupItem(
+        icon: Broken.document_download,
+        title: lang.save,
+        subtitle: lang.equalizer,
+        onTap: () {
+          final updated = preset.copyWith(equalizer: config.equalizerRx.value);
+          settings.equalizer.putPreset(updated);
+        },
       ),
-    );
+      NamidaPopupItem(
+        icon: Broken.edit_2,
+        title: lang.rename,
+        onTap: () => _PresetNameSheet.show(
+          initialName: preset.name,
+          onName: (name) {
+            final renamed = preset.copyWith(name: name);
+            settings.equalizer.putPreset(renamed, replacing: preset.name);
+          },
+        ),
+      ),
+      NamidaPopupItem(
+        icon: Broken.trash,
+        title: lang.delete,
+        onTap: () => settings.equalizer.removePreset(preset.name),
+      ),
+    ];
   }
 
   static final _defaultPresetNames = {for (final preset in EqualizerPreset.allDefaults) preset.name};
@@ -950,33 +981,36 @@ class _EqualizerPresetsRow extends StatelessWidget {
                   ),
                 ),
                 for (final preset in presets)
-                  NamidaInkWell(
-                    animationDurationMS: 200,
-                    borderRadius: 5.0,
-                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                    bgColor: activePreset?.name == preset.name ? activeColor : inactiveColor,
-                    onTap: () => config.setEqualizer(preset.equalizer, preset),
-                    onLongPress: () => _openPresetOptions(preset),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (devicePresets[routedKey] == preset.name) ...[
-                          const Icon(
-                            Broken.headphone,
-                            size: 12.0,
+                  NamidaPopupWrapper(
+                    openOnTap: false,
+                    childrenDefault: () => _getPresetMenuItems(preset),
+                    child: NamidaInkWell(
+                      animationDurationMS: 200,
+                      borderRadius: 5.0,
+                      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                      bgColor: activePreset?.name == preset.name ? activeColor : inactiveColor,
+                      onTap: () => config.setEqualizer(preset.equalizer, preset),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (devicePresets[routedKey] == preset.name) ...[
+                            const Icon(
+                              Broken.headphone,
+                              size: 12.0,
+                            ),
+                            const SizedBox(width: 4.0),
+                          ],
+                          Text(
+                            preset.name,
+                            style: textTheme.displaySmall?.copyWith(
+                              color: activePreset?.name == preset.name ? Colors.white.withOpacityExt(0.7) : null,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 13.5,
+                            ),
                           ),
-                          const SizedBox(width: 4.0),
                         ],
-                        Text(
-                          preset.name,
-                          style: textTheme.displaySmall?.copyWith(
-                            color: activePreset?.name == preset.name ? Colors.white.withOpacityExt(0.7) : null,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13.5,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                 const SizedBox(width: 8.0),
@@ -984,83 +1018,6 @@ class _EqualizerPresetsRow extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _EqualizerPresetOptions extends StatelessWidget {
-  final EqualizerPreset preset;
-  final _SoundControlMainSlidersColumnUpdateConfig config;
-  final bool isGlobal;
-
-  const _EqualizerPresetOptions({
-    required this.preset,
-    required this.config,
-    required this.isGlobal,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final output = AudioOutputController.inst;
-    final routed = output.getRoutedDevice();
-    final deviceKey = output.keyForDevicePreset(routed);
-    final deviceName = routed?.name ?? lang.systemDefault;
-    final isDevicePreset = settings.equalizer.devicePresets.value[deviceKey] == preset.name;
-    void pop() => Navigator.pop(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 18.0)),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            preset.name,
-            style: context.textTheme.displayLarge,
-          ),
-          const SizedBox(height: 12.0),
-          if (isGlobal)
-            CustomListTile(
-              icon: Broken.headphone,
-              title: lang.useForDevice(device: deviceName),
-              trailing: NamidaCheckMark(
-                size: 18.0,
-                active: isDevicePreset,
-              ),
-              onTap: () {
-                output.setDevicePreset(deviceKey, isDevicePreset ? null : preset);
-                pop();
-              },
-            ),
-          CustomListTile(
-            icon: Broken.document_download,
-            title: lang.save,
-            subtitle: lang.equalizer,
-            onTap: () {
-              final updated = preset.copyWith(equalizer: config.equalizerRx.value);
-              settings.equalizer.putPreset(updated);
-              pop();
-            },
-          ),
-          CustomListTile(
-            icon: Broken.edit_2,
-            title: lang.rename,
-            onTap: () {
-              pop();
-              _PresetNameSheet.show(
-                initialName: preset.name,
-                onName: (name) => settings.equalizer.putPreset(preset.copyWith(name: name), replacing: preset.name),
-              );
-            },
-          ),
-          CustomListTile(
-            icon: Broken.trash,
-            title: lang.delete,
-            onTap: () {
-              settings.equalizer.removePreset(preset.name);
-              pop();
-            },
-          ),
-        ],
       ),
     );
   }
@@ -1101,43 +1058,34 @@ class _EqualizerActionsRow extends StatelessWidget {
     );
   }
 
-  void _openTemplates() {
-    NamidaNavigator.inst.showSheet(
-      showDragHandle: true,
-      builder: (context, bottomPadding, maxWidth, maxHeight) {
-        final current = config.equalizerRx.value;
-        void apply(ParametricEqualizer template) {
-          final equalizer = template.copyWith(autoPreamp: current.autoPreamp, preamp: current.preamp, limiter: current.limiter);
-          config.setEqualizer(equalizer, null);
-          Navigator.pop(context);
-        }
+  static const _graphicTemplatesFrequencies = [
+    ParametricEqualizer.graphic5Frequencies,
+    ParametricEqualizer.graphic10Frequencies,
+    ParametricEqualizer.graphic15Frequencies,
+    ParametricEqualizer.graphic31Frequencies,
+  ];
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 18.0)),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomListTile(
-                icon: Broken.refresh,
-                title: lang.restoreDefaults,
-                onTap: () => apply(ParametricEqualizer.flat),
-              ),
-              for (final frequencies in const [
-                ParametricEqualizer.graphic5Frequencies,
-                ParametricEqualizer.graphic10Frequencies,
-                ParametricEqualizer.graphic15Frequencies,
-                ParametricEqualizer.graphic31Frequencies,
-              ])
-                CustomListTile(
-                  icon: Broken.weight_1,
-                  title: lang.graphicEqualizerBands(count: frequencies.length),
-                  onTap: () => apply(ParametricEqualizer.graphic(frequencies)),
-                ),
-            ],
-          ),
-        );
-      },
-    );
+  List<NamidaPopupItem> _getTemplateMenuItems() {
+    void apply(ParametricEqualizer template) {
+      final current = config.equalizerRx.value;
+      final equalizer = template.copyWith(autoPreamp: current.autoPreamp, preamp: current.preamp, limiter: current.limiter);
+      config.setEqualizer(equalizer, null);
+    }
+
+    return [
+      NamidaPopupItem(
+        icon: Broken.refresh,
+        title: lang.restoreDefaults,
+        onTap: () => apply(ParametricEqualizer.flat),
+      ),
+      ..._graphicTemplatesFrequencies.map(
+        (frequencies) => NamidaPopupItem(
+          icon: Broken.weight_1,
+          title: lang.graphicEqualizerBands(count: frequencies.length),
+          onTap: () => apply(ParametricEqualizer.graphic(frequencies)),
+        ),
+      ),
+    ];
   }
 
   void _import(String? text) {
@@ -1150,40 +1098,29 @@ class _EqualizerActionsRow extends StatelessWidget {
     config.setEqualizer(imported.copyWith(limiter: limiter), null);
   }
 
-  void _openImport() {
-    NamidaNavigator.inst.showSheet(
-      showDragHandle: true,
-      builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 18.0)),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CustomListTile(
-              icon: Broken.copy,
-              title: lang.fromClipboard,
-              subtitle: 'Equalizer APO / AutoEQ',
-              onTap: () async {
-                Navigator.pop(context);
-                final data = await Clipboard.getData(Clipboard.kTextPlain);
-                _import(data?.text);
-              },
-            ),
-            CustomListTile(
-              icon: Broken.document_upload,
-              title: lang.pickFromStorage,
-              subtitle: 'ParametricEQ.txt',
-              onTap: () async {
-                Navigator.pop(context);
-                final file = await NamidaFileBrowser.pickFile(note: lang.equalizer, allowedExtensions: NamidaFileExtensionsWrapper.txt);
-                if (file == null) return;
-                final text = await file.readAsString();
-                _import(text);
-              },
-            ),
-          ],
-        ),
+  List<NamidaPopupItem> _getImportMenuItems() {
+    return [
+      NamidaPopupItem(
+        icon: Broken.copy,
+        title: lang.fromClipboard,
+        subtitle: 'Equalizer APO / AutoEQ',
+        onTap: () async {
+          final data = await Clipboard.getData(Clipboard.kTextPlain);
+          _import(data?.text);
+        },
       ),
-    );
+      NamidaPopupItem(
+        icon: Broken.document_upload,
+        title: lang.pickFromStorage,
+        subtitle: 'ParametricEQ.txt',
+        onTap: () async {
+          final file = await NamidaFileBrowser.pickFile(note: lang.equalizer, allowedExtensions: NamidaFileExtensionsWrapper.txt);
+          if (file == null) return;
+          final text = await file.readAsString();
+          _import(text);
+        },
+      ),
+    ];
   }
 
   Future<void> _export() async {
@@ -1209,18 +1146,22 @@ class _EqualizerActionsRow extends StatelessWidget {
             ),
             const SizedBox(width: 6.0),
             Expanded(
-              child: _EqualizerActionButton(
-                icon: Broken.element_equal,
-                title: lang.templates,
-                onTap: _openTemplates,
+              child: NamidaPopupWrapper(
+                childrenDefault: _getTemplateMenuItems,
+                child: _EqualizerActionButton(
+                  icon: Broken.element_equal,
+                  title: lang.templates,
+                ),
               ),
             ),
             const SizedBox(width: 6.0),
             Expanded(
-              child: _EqualizerActionButton(
-                icon: Broken.import,
-                title: lang.import,
-                onTap: _openImport,
+              child: NamidaPopupWrapper(
+                childrenDefault: _getImportMenuItems,
+                child: _EqualizerActionButton(
+                  icon: Broken.import,
+                  title: lang.import,
+                ),
               ),
             ),
             const SizedBox(width: 6.0),
@@ -1241,12 +1182,12 @@ class _EqualizerActionsRow extends StatelessWidget {
 class _EqualizerActionButton extends StatelessWidget {
   final IconData icon;
   final String title;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   const _EqualizerActionButton({
     required this.icon,
     required this.title,
-    required this.onTap,
+    this.onTap,
   });
 
   @override

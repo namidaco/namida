@@ -34,7 +34,7 @@ class MoodsPage extends StatelessWidget with NamidaRouteWidget {
     return _MoodsOrTagsPage(
       MediaType.mood,
       route: route,
-      icon: LibraryTab.moods.toIcon(),
+      icon: MediaType.mood.toIcon(),
       queueSource: QueueSource.moods,
       onItemTap: MoodsTracksSubPage.open,
       onItemLongPress: NamidaDialogs.inst.showMoodDialog,

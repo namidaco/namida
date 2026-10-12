@@ -50,13 +50,13 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
 
     return [
       NamidaPopupItem(
-        icon: Broken.smileys,
+        icon: MediaType.genre.toIcon(),
         title: lang.genre,
         selected: MediaType.genre == settings.activeGenreType.value,
         onTap: () => onTap(MediaType.genre),
       ),
       NamidaPopupItem(
-        icon: Broken.brush_1,
+        icon: MediaType.style.toIcon(),
         title: lang.style,
         selected: MediaType.style == settings.activeGenreType.value,
         onTap: () => onTap(MediaType.style),

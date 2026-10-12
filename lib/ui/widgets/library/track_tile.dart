@@ -827,6 +827,15 @@ enum _TrackTileRowOrder {
 class TrackTileManager {
   const TrackTileManager._();
 
+  static void initialize() {
+    settings.trackItem.addListener(onTrackItemPropChange);
+    settings.displayThirdItemInEachRow.addListener(onTrackItemPropChange);
+    settings.trackTileSeparator.addListener(onTrackItemPropChange);
+    settings.trackArtistsDisplaySeparator.addListener(onTrackItemPropChange);
+    settings.dateTimeFormat.addListener(onTrackItemPropChange);
+    settings.hourFormat12.addListener(onTrackItemPropChange);
+  }
+
   static const _rowOrderToPosition = <_TrackTileRowOrder, List<TrackTilePosition>>{
     _TrackTileRowOrder.first: [TrackTilePosition.row1Item1, TrackTilePosition.row1Item2, TrackTilePosition.row1Item3],
     _TrackTileRowOrder.second: [TrackTilePosition.row2Item1, TrackTilePosition.row2Item2, TrackTilePosition.row2Item3],

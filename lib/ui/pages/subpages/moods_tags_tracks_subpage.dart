@@ -26,7 +26,7 @@ class MoodsTracksSubPage {
     return _MoodsTagsTracksPage(
       route: RouteType.SUBPAGE_moodsTracks,
       name: name,
-      icon: LibraryTab.moods.toIcon(),
+      icon: MediaType.mood.toIcon(),
       mediaType: MediaType.mood,
       queueSource: QueueSource.moods(name),
       tracks: tracks,

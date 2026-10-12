@@ -30,6 +30,7 @@ class YoutubeSubscriptionsController {
       subscribed: newSubscribed,
       lastFetched: valInMap?.lastFetched,
     );
+    if (valInMap?.lastFetched == null) _sortByLastFetched();
     _availableChannels.refresh();
 
     await saveFile();
@@ -42,9 +43,12 @@ class YoutubeSubscriptionsController {
   }
 
   Future<void> sortByLastFetched() async {
-    _availableChannels.sortBy((e) => e.value.lastFetched ?? DateTime(0));
+    _sortByLastFetched();
+    _availableChannels.refresh();
     await saveFile();
   }
+
+  void _sortByLastFetched() => _availableChannels.value.sortBy((e) => e.value.lastFetched ?? DateTime(0));
 
   Future<void> refreshLastFetchedTime(String channelID, {bool saveToStorage = true}) async {
     _availableChannels[channelID]?.lastFetched = DateTime.now();
@@ -90,6 +94,7 @@ class YoutubeSubscriptionsController {
   Future<void> import(Iterable<YoutubeSubscription> incomingChannels) async {
     await _didLoadCompleter.future;
     bool anyChanged = false;
+    bool anyAdded = false;
     for (final incoming in incomingChannels) {
       final channelID = incoming.channelID;
       if (channelID.isEmpty) continue;
@@ -98,6 +103,7 @@ class YoutubeSubscriptionsController {
       if (local == null) {
         _availableChannels.value[channelID] = incoming;
         anyChanged = true;
+        anyAdded = true;
         continue;
       }
 
@@ -123,14 +129,17 @@ class YoutubeSubscriptionsController {
       anyChanged = true;
     }
     if (anyChanged) {
+      if (anyAdded) _sortByLastFetched();
       _availableChannels.refresh();
       await saveFile();
     }
   }
 
-  Future<List<String>> readAllGroups() async {
+  Future<List<String>> readAllGroups() => readGroupsFile(File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL));
+
+  Future<List<String>> readGroupsFile(File file) async {
     try {
-      final list = await File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL).readAsJson() as List?;
+      final list = await file.readAsJson() as List?;
       if (list != null) return list.cast<String>();
     } catch (_) {}
     return [];

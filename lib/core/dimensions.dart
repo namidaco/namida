@@ -149,10 +149,10 @@ class Dimensions {
   static const youtubeThumbnailWidth = youtubeThumbnailHeight * 16 / 9;
 
   // -- Track Tile --
-  double trackTileItemExtent = 0.0;
+  double get trackTileItemExtent => settings.trackListTileHeight.value + totalVerticalDistance;
 
   // -- Album Tile --
-  double albumTileItemExtent = 0.0;
+  double get albumTileItemExtent => settings.albumListTileHeight.value + totalVerticalDistance;
 
   // -- Artist Tile --
   static const artistThumbnailSize = 64.0;
@@ -174,19 +174,6 @@ class Dimensions {
   static const genreSearchGridCount = CountPerRow(4);
   static const playlistSearchGridCount = CountPerRow(4);
   static const albumInsideArtistGridCount = CountPerRow(4);
-
-  void updateAllTileDimensions() {
-    updateTrackTileDimensions();
-    updateAlbumTileDimensions();
-  }
-
-  void updateTrackTileDimensions() {
-    trackTileItemExtent = settings.trackListTileHeight.value + totalVerticalDistance;
-  }
-
-  void updateAlbumTileDimensions() {
-    albumTileItemExtent = settings.albumListTileHeight.value + totalVerticalDistance;
-  }
 }
 
 const kBottomPaddingInsets = EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal);

@@ -91,31 +91,15 @@ class NamidaLanguage {
     );
   }
 
+  /// name and country are always derived, ones stored by older versions can be outdated.
   factory NamidaLanguage.fromJson(Map<String, dynamic> json) {
-    final code = json["code"] as String;
-    final name = json["name"];
-    if (name is! String || name.isEmpty) {
-      return NamidaLanguage.fromCode(code);
-    }
-    final langSplits = _splitCode(code);
-    final codeOnly = langSplits.$1;
-    final countryCodeOnly = langSplits.$2;
-
-    return NamidaLanguage._(
-      code: json["code"],
-      name: name,
-      country: json["country"],
-      codeOnly: codeOnly,
-      countryCodeOnly: countryCodeOnly,
-      locale: Locale(codeOnly, countryCodeOnly),
-    );
+    final langSplits = _splitCode(json["code"] as String);
+    return NamidaLanguage.fromLocale(Locale(langSplits.$1, langSplits.$2));
   }
 
   Map<String, String?> toJson() {
     return {
       "code": code,
-      "name": name,
-      "country": country,
     };
   }
 

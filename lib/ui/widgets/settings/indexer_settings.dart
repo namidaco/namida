@@ -2714,8 +2714,8 @@ enum _SeparatorsType {
 
   IconData toIcon() => switch (this) {
     _SeparatorsType.artists => Broken.profile_2user,
-    _SeparatorsType.genres => Broken.smileys,
-    _SeparatorsType.albums => Broken.music_dashboard,
+    _SeparatorsType.genres => MediaType.genre.toIcon(),
+    _SeparatorsType.albums => MediaType.album.toIcon(),
   };
 
   _SeparatorsList getList({required bool isBlacklist}) {

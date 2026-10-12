@@ -10,9 +10,12 @@ import 'package:namida/ui/widgets/eggs/eggs.dart';
 
 class NamidaSettingSearchBar extends StatefulWidget {
   final Widget? closedChild;
-  NamidaSettingSearchBar.keyed({this.closedChild}) : super(key: globalKey);
+  const NamidaSettingSearchBar({super.key, this.closedChild});
 
-  static final globalKey = GlobalKey<_NamidaSettingSearchBarState>();
+  static _NamidaSettingSearchBarState? _activeState;
+
+  static void open() => _activeState?.open();
+  static void toggle() => _activeState?.toggle();
 
   @override
   State<NamidaSettingSearchBar> createState() => _NamidaSettingSearchBarState();
@@ -30,7 +33,7 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
     _onSearch(isOpen: isOpen);
   }
 
-  static final _searchBarKey = GlobalKey<SearchBarAnimationState>();
+  final _searchBarKey = GlobalKey<SearchBarAnimationState>();
 
   late final TextEditingController controller;
   bool canShowClosedChild = true;
@@ -39,10 +42,12 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
   void initState() {
     super.initState();
     controller = TextEditingController();
+    NamidaSettingSearchBar._activeState = this;
   }
 
   @override
   void dispose() {
+    if (NamidaSettingSearchBar._activeState == this) NamidaSettingSearchBar._activeState = null;
     controller.dispose();
     super.dispose();
   }

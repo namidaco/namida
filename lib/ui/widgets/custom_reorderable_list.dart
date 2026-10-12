@@ -657,7 +657,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
 
   @override
   void dispose() {
-    _dragReset();
+    cancelReorder();
     _recognizer?.dispose();
     super.dispose();
   }
@@ -709,6 +709,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
   ///
   /// If no drag is active, this will do nothing.
   void cancelReorder() {
+    if (_dragInfo != null) widget.onReorderCancel?.call();
     _dragReset();
   }
 
@@ -784,7 +785,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
   }
 
   void _dragCancel(_DragInfo item) {
-    _dragReset();
+    cancelReorder();
   }
 
   void _dragEnd(_DragInfo item) {

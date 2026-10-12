@@ -26,8 +26,8 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/backup_controller.dart';
-import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/chapters_controller.dart';
+import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/eggs_controller.dart';
@@ -84,6 +84,7 @@ import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
+import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
@@ -231,6 +232,7 @@ Future<bool> _mainAppInitialization() async {
 
     await settings.prepareAllSettings();
     Language.initialize(); // should be done as early as possible
+    TrackTileManager.initialize();
     ShortcutsController.instance?.initUserShortcutsFromSettings();
     NamidaEffects.refreshSeason();
     EggsController.inst.refreshDateEgg();

@@ -10,6 +10,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -575,7 +576,7 @@ class TrackStatsEditSections extends StatelessWidget {
         ),
         _StatsItemsSection(
           title: lang.setTags,
-          icon: Broken.ticket_discount,
+          icon: MediaType.tag.toIcon(),
           selection: controller._tags,
           iconColor: iconColor,
           colorScheme: colorScheme,

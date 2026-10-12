@@ -60,6 +60,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
 
   /// The list that should be displayed.
   List<StreamInfoItem>? get sortedStreams => _sortedStreams ?? streamsList;
+  List<StreamInfoItem>? get locallySortedStreams => _sortedStreams;
 
   void disposeResources() {
     sorting.close();
