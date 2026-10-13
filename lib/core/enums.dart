@@ -1472,15 +1472,16 @@ enum LyricsIntegration {
 }
 
 enum SoundEffectType {
-  crossfeed,
-  virtualSurround,
-  echo,
-  chorus,
-  autoPan,
-  compressor,
-  instrumental(defaultIntensity: 0.8),
   bassEnhancer,
+  reverb,
+  virtualSurround,
+  autoPan,
+  instrumental(defaultIntensity: 0.8),
+  compressor,
+  crossfeed,
+  echo,
   tubeWarmth,
+  chorus,
   ;
 
   final double defaultIntensity;

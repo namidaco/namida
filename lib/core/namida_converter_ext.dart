@@ -3082,6 +3082,7 @@ extension SoundEffectTypeUtils on SoundEffectType {
     SoundEffectType.instrumental => lang.instrumental,
     SoundEffectType.bassEnhancer => lang.bassEnhancer,
     SoundEffectType.tubeWarmth => lang.tubeWarmth,
+    SoundEffectType.reverb => lang.reverb,
   };
 
   IconData toIcon() => switch (this) {
@@ -3094,6 +3095,7 @@ extension SoundEffectTypeUtils on SoundEffectType {
     SoundEffectType.instrumental => Broken.microphone_slash,
     SoundEffectType.bassEnhancer => Broken.speaker,
     SoundEffectType.tubeWarmth => Broken.lamp_on,
+    SoundEffectType.reverb => Broken.airdrop,
   };
 }
 

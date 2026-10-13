@@ -487,5 +487,6 @@ extension _SoundEffectTypeMessage on SoundEffectType {
     SoundEffectType.instrumental => SoundEffectTypeMessage.instrumental,
     SoundEffectType.bassEnhancer => SoundEffectTypeMessage.bassEnhancer,
     SoundEffectType.tubeWarmth => SoundEffectTypeMessage.tubeWarmth,
+    SoundEffectType.reverb => SoundEffectTypeMessage.reverb,
   };
 }
