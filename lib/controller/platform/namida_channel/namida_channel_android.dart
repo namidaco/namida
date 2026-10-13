@@ -68,8 +68,8 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
-  Future<void> sendBroadcast(String action, Map<String, Object?> extras, {List<String>? packages}) async {
-    await _channel.invokeMethod('sendBroadcast', {'action': action, 'extras': extras, 'packages': packages});
+  Future<void> sendBroadcast(String action, Map<String, Object?> extras) async {
+    await _channel.invokeMethod('sendBroadcast', {'action': action, 'extras': extras});
   }
 
   @override

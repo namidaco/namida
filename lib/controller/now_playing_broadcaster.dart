@@ -13,13 +13,12 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 
 /// fans out playback changes to whatever the user enabled: android broadcasts (tasker & co),
-/// scrobblers speaking the sls api, and a webhook url. nothing is built while no sink is active.
+/// server playback reports, and a webhook url. nothing is built while no sink is active.
 class NowPlayingBroadcaster {
   static final inst = NowPlayingBroadcaster._();
 
   NowPlayingBroadcaster._() {
     settings.nowPlayingBroadcast.addListener(_rebuildSinks);
-    settings.scrobblerBroadcast.addListener(_rebuildSinks);
     settings.webhookUrl.addListener(_rebuildSinks);
     settings.webhookEvents.addListener(_rebuildSinks);
     settings.reportPlaybackToServers.addListener(_rebuildSinks);
@@ -33,9 +32,8 @@ class NowPlayingBroadcaster {
 
   void _rebuildSinks() {
     _sinks.clear();
-    if (NamidaFeaturesVisibility.showAndroidIntegrations) {
-      if (settings.nowPlayingBroadcast.value) _sinks.add(const _NamidaBroadcastSink());
-      if (settings.scrobblerBroadcast.value) _sinks.add(const _ScrobblerBroadcastSink());
+    if (NamidaFeaturesVisibility.showAndroidIntegrations && settings.nowPlayingBroadcast.value) {
+      _sinks.add(const _NamidaBroadcastSink());
     }
     final webhookUri = parseWebhookUrl(settings.webhookUrl.value);
     if (webhookUri != null) _sinks.add(_WebhookSink(webhookUri, settings.webhookEvents.value));
@@ -101,45 +99,6 @@ class _NamidaBroadcastSink extends _NowPlayingSink {
   }
 }
 
-/// simple last.fm scrobbler api, also accepted by pano scrobbler.
-class _ScrobblerBroadcastSink extends _NowPlayingSink {
-  const _ScrobblerBroadcastSink();
-
-  static const _kAction = 'com.adam.aslfms.notify.playstatechanged';
-  static const _kPackages = ['com.adam.aslfms', 'com.arn.scrobble'];
-
-  static const _kStateStart = 0;
-  static const _kStateResume = 1;
-  static const _kStatePause = 2;
-
-  @override
-  void send(_NowPlayingEvent event) {
-    final isNewTrack = event.type == WebhookEvent.trackChanged;
-    // -- a track set while paused reaches the scrobbler through the resume that follows, it carries the same metadata.
-    if (isNewTrack && !event.isPlaying) return;
-    final media = event.media;
-    final state = switch (event.type) {
-      WebhookEvent.trackChanged => _kStateStart,
-      WebhookEvent.play => _kStateResume,
-      WebhookEvent.pause => _kStatePause,
-    };
-    final durationSeconds = media.duration?.inSeconds ?? 0;
-    final mbTrackId = media.extras?[NowPlayingExtras.mbTrackId];
-    final extras = <String, Object?>{
-      'app-name': 'Namida',
-      'app-package': 'com.msob7y.namida',
-      'state': state,
-      'artist': media.artist ?? '',
-      'album': media.album ?? '',
-      'track': media.title,
-      'duration': durationSeconds,
-      'source': 'P',
-      'mbid': ?mbTrackId,
-    };
-    NamidaChannel.inst.sendBroadcast(_kAction, extras, packages: _kPackages);
-  }
-}
-
 class _ServerReportSink extends _NowPlayingSink {
   final ServerNowPlayingReporter reporter;
 
@@ -194,13 +153,15 @@ class _WebhookSink extends _NowPlayingSink {
 }
 
 /// keys of [MediaItem.extras], read by media controllers directly and reused in broadcasts & webhooks.
-/// identifiers from the file tags sit next to them under their picard names (`MUSICBRAINZ_TRACKID`, `ISRC`, ...).
 class NowPlayingExtras {
   static const path = 'path';
   static const videoId = 'videoId';
   static const queueIndex = 'queueIndex';
   static const queueLength = 'queueLength';
-  static const mbTrackId = 'MUSICBRAINZ_TRACKID';
+
+  /// file tag ids as `org.musicbrainz.MUSICBRAINZ_TRACKID`, the keys proposed in https://github.com/OxygenCobalt/Auxio/issues/1268.
+  /// broadcasts & webhooks drop the prefix.
+  static const tagIdPrefix = 'org.musicbrainz.';
 
   /// colorOS lyrics json, too big for broadcasts & webhooks.
   static const lyricInfo = 'lyricInfo';
@@ -217,6 +178,7 @@ class _NowPlayingEvent {
   Map<String, dynamic>? _json;
 
   Map<String, dynamic> toJson() {
+    final extras = media.extras;
     return _json ??= {
       'event': type.name,
       'playing': isPlaying,
@@ -226,7 +188,15 @@ class _NowPlayingEvent {
       'album': media.album,
       'genre': media.genre,
       'durationMS': media.duration?.inMilliseconds,
-      ...?media.extras,
-    }..remove(NowPlayingExtras.lyricInfo);
+      if (extras != null)
+        for (final e in extras.entries)
+          if (e.key != NowPlayingExtras.lyricInfo) _toJsonKey(e.key): e.value,
+    };
+  }
+
+  /// tasker can't name variables with dots.
+  static String _toJsonKey(String key) {
+    const prefix = NowPlayingExtras.tagIdPrefix;
+    return key.startsWith(prefix) ? key.substring(prefix.length) : key;
   }
 }

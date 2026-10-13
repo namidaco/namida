@@ -433,7 +433,6 @@ extension SettingsControllerDebugKeys on _SettingsController {
     canAskForBatteryOptimizations,
     mediaBrowserQueue,
     nowPlayingBroadcast,
-    scrobblerBroadcast,
     webhookUrl,
     webhookEvents,
     lyricsIntegrations,

@@ -1444,16 +1444,6 @@ class _AdvancedFlagsOptions extends StatelessWidget {
                 onChanged: (isTrue) => settings.nowPlayingBroadcast.save(!isTrue),
               ),
             ),
-            ObxO(
-              rx: settings.scrobblerBroadcast,
-              builder: (context, enabled) => CustomSwitchListTile(
-                icon: Broken.export_1,
-                title: 'scrobbler_broadcast'.toUpperCase(),
-                subtitle: 'SLS api, for Pano Scrobbler & Simple Scrobbler',
-                value: enabled,
-                onChanged: (isTrue) => settings.scrobblerBroadcast.save(!isTrue),
-              ),
-            ),
             const _LyricsIntegrationsListTile(),
           ],
           const _WebhookListTile(),

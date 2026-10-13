@@ -198,23 +198,19 @@ class FTags {
     this.extraTags,
   });
 
-  static const _kExtraTagPrefixes = ['MUSICBRAINZ_', 'ACOUSTID_'];
-  static const _kExtraTagKeys = {'ISRC', 'BARCODE', 'CATALOGNUMBER'};
-
-  static bool _isExtraTagKey(String key) {
-    if (_kExtraTagKeys.contains(key)) return true;
-    for (final prefix in _kExtraTagPrefixes) {
-      if (key.startsWith(prefix)) return true;
-    }
-    return false;
-  }
+  // -- same as android's FAudioTagger, a prefix match pulls the huge ACOUSTID_FINGERPRINT
+  static const _kExtraTagKeys = [
+    'MUSICBRAINZ_TRACKID', 'MUSICBRAINZ_RELEASETRACKID', 'MUSICBRAINZ_ALBUMID', //
+    'MUSICBRAINZ_ALBUMARTISTID', 'MUSICBRAINZ_ARTISTID', 'MUSICBRAINZ_RELEASEGROUPID', //
+    'ACOUSTID_ID', 'ISRC', 'BARCODE', 'CATALOGNUMBER', //
+  ];
 
   static Map<String, String>? pickExtraTags(Map<String, List<String>> properties) {
     Map<String, String>? picked;
-    for (final e in properties.entries) {
-      final key = e.key;
-      if (!_isExtraTagKey(key)) continue;
-      final value = e.value.firstWhereEff((v) => v.isNotEmpty);
+    for (final key in _kExtraTagKeys) {
+      final values = properties[key];
+      if (values == null) continue;
+      final value = values.firstWhereEff((v) => v.isNotEmpty);
       if (value == null) continue;
       picked ??= <String, String>{};
       picked[key] = value;

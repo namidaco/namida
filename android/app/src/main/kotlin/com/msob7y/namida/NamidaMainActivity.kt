@@ -148,7 +148,6 @@ class NamidaMainActivity : FlutterActivity() {
         "sendBroadcast" -> {
           val action = call.argument<String>("action")
           val extras = call.argument<Map<String, Any?>>("extras")
-          val packages = call.argument<List<String>>("packages")
           if (action == null) {
             result.success(false)
           } else {
@@ -163,12 +162,7 @@ class NamidaMainActivity : FlutterActivity() {
                 is Double -> intent.putExtra(key, value)
               }
             }
-            if (packages == null) {
-              sendBroadcast(intent)
-            } else {
-              // -- manifest receivers only get explicit broadcasts since android 8
-              for (pkg in packages) sendBroadcast(Intent(intent).setPackage(pkg))
-            }
+            sendBroadcast(intent)
             result.success(true)
           }
         }

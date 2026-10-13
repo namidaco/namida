@@ -3093,6 +3093,7 @@ extension TrackToAudioSourceMediaItem on Selectable {
     final imagePath = tr.pathToImage;
     String? imagePathToUse = await File(imagePath).exists() ? imagePath : null;
     imagePathToUse ??= Indexer.inst.getFallbackFolderArtworkPath(folder: tr.folder);
+    final extraTags = tr.extraTags;
     return MediaItem(
       id: this.toMediaItemId(),
       title: tr.title,
@@ -3109,7 +3110,8 @@ extension TrackToAudioSourceMediaItem on Selectable {
         NowPlayingExtras.path: tr.path,
         NowPlayingExtras.queueIndex: currentIndex,
         NowPlayingExtras.queueLength: queueLength,
-        ...?tr.extraTags,
+        if (extraTags != null)
+          for (final e in extraTags.entries) '${NowPlayingExtras.tagIdPrefix}${e.key}': e.value,
       },
     );
   }
