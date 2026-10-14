@@ -339,6 +339,7 @@ class _AlbumsRow extends StatelessWidget {
             icon: icon,
           ),
           titleText: "$title: ${albums.length}",
+          showRail: false,
           initiallyExpanded: albums.isNotEmpty && initiallyExpanded,
           onExpansionChanged: albums.isEmpty ? null : onExpansionChanged,
           trailingBuilder: (iconWidget) => Row(

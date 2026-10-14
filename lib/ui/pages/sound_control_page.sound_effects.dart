@@ -21,6 +21,7 @@ class _SoundEffectsSection extends StatelessWidget {
             subtitleText: enabledNames.nullifyEmpty(),
             initiallyExpanded: enabledEffects.isNotEmpty,
             childrenPadding: const EdgeInsetsDirectional.only(end: 12.0, top: 6.0),
+            showRail: false,
             children: [
               LayoutBuilder(
                 builder: (context, constraints) {

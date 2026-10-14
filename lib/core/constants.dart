@@ -1550,6 +1550,7 @@ class NamidaFeaturesVisibility {
   static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isAndroid;
   static final deviceOrientationSensorAvailable = _isAndroid;
+  static final fullScreenChangesScreenSize = _isAndroid;
   static final floatingArtworkEffect = _isAndroid;
   static final mediaWaveHaptic = _isAndroid;
   static const accessibilitySemantics = true;

@@ -207,6 +207,7 @@ Future<void> showVideoDownloadOptionsSheet({
                     NamidaExpansionTile(
                       icon: Broken.more_square,
                       titleText: lang.showMore,
+                      showRail: false,
                       children:
                           [
                                 ...[

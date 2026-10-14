@@ -293,6 +293,7 @@ Future<bool> _mainAppInitialization() async {
       ),
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
+      NamidaDeviceInfo.packageInfoCompleter.future,
     ].executeAllAndSilentReportErrors();
 
     LyricsIntegrations.init();

@@ -277,13 +277,14 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   }
 
   /// relaid only when an input that affects layout or colors changed, [_KaraokeTextPainter.paint] never lays out.
-  _KaraokeLayout _ensureLayout(double minWidth, double maxWidth, TextScaler textScaler) {
+  _KaraokeLayout _ensureLayout(double minWidth, double maxWidth, TextScaler textScaler, Locale? locale) {
     final style = widget.textStyle;
     final effects = widget.effects;
     final key = (
       minWidth: minWidth,
       maxWidth: maxWidth,
       textScaler: textScaler,
+      locale: locale,
       style: style,
       accent: widget.accentColor,
       isDark: widget.isDark,
@@ -308,8 +309,8 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
     final transparentShimmer = shimmerColor.withValues(alpha: 0.0);
     _layoutKey = key;
     return _layout = _KaraokeLayout(
-      dim: _layoutPainter(style.copyWith(color: colors.dim), minWidth, maxWidth, textScaler),
-      full: _layoutPainter(style.copyWith(color: colors.sung), minWidth, maxWidth, textScaler),
+      dim: _layoutPainter(style.copyWith(color: colors.dim), minWidth, maxWidth, textScaler, locale),
+      full: _layoutPainter(style.copyWith(color: colors.sung), minWidth, maxWidth, textScaler, locale),
       glow: glowColor == null
           ? null
           : _layoutPainter(
@@ -321,6 +322,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
               minWidth,
               maxWidth,
               textScaler,
+              locale,
             ),
       shimmerColors: [transparentShimmer, shimmerColor, transparentShimmer],
       partStarts: _partCharStarts,
@@ -329,7 +331,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
     );
   }
 
-  TextPainter _layoutPainter(TextStyle style, double minWidth, double maxWidth, TextScaler textScaler) {
+  TextPainter _layoutPainter(TextStyle style, double minWidth, double maxWidth, TextScaler textScaler, Locale? locale) {
     final maxLines = widget.maxLines;
     return TextPainter(
       text: TextSpan(
@@ -341,6 +343,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
       textAlign: widget.textAlign,
       textDirection: widget.textDirection,
       textScaler: textScaler,
+      locale: locale,
       maxLines: maxLines,
       ellipsis: maxLines == null ? null : _ellipsis,
       textWidthBasis: TextWidthBasis.parent,
@@ -367,11 +370,12 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
   @override
   Widget build(BuildContext context) {
     final textScaler = MediaQuery.textScalerOf(context);
+    final locale = Localizations.maybeLocaleOf(context);
     final wordBump = widget.effects.contains(LyricsEffect.wordBump) && _isWordTimed;
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = constraints.maxWidth.isFinite ? constraints.maxWidth : double.infinity;
-        final layout = _ensureLayout(constraints.minWidth, maxWidth, textScaler);
+        final layout = _ensureLayout(constraints.minWidth, maxWidth, textScaler, locale);
         return RepaintBoundary(
           child: CustomPaint(
             size: layout.full.size,
@@ -859,6 +863,7 @@ typedef _KaraokeLayoutKey = ({
   double minWidth,
   double maxWidth,
   TextScaler textScaler,
+  Locale? locale,
   TextStyle style,
   Color accent,
   bool isDark,

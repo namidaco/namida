@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:lrc/lrc.dart';
 import 'package:rhttp/rhttp.dart';
@@ -50,7 +51,7 @@ class Romanizer {
     return _engine.romanize(text, plain: true);
   }
 
-  String Function(String text)? lyricsRomanizer(Lrc lrc) {
+  String Function(int index, String text)? lyricsRomanizer(Lrc lrc) {
     if (!settings.romanizeLyrics.value) return null;
     _ensureLoaded();
     final lines = lrc.lyrics;
@@ -61,7 +62,48 @@ class Romanizer {
         break;
       }
     }
-    return (text) => _engine.romanize(text, chinese: chinese);
+    final groupedLinesRomanized = _romanizeLinesGroupedWithLatin(lines, chinese);
+    if (groupedLinesRomanized == null) return (index, text) => _engine.romanize(text, chinese: chinese);
+    return (index, text) => groupedLinesRomanized[index] ?? _engine.romanize(text, chinese: chinese);
+  }
+
+  /// the line itself where a latin line sharing its timestamp already romanizes it.
+  List<String?>? _romanizeLinesGroupedWithLatin(List<LrcLine> lines, bool chinese) {
+    List<String?>? romanizedLines;
+    final normalizedLatinLines = <String>[];
+    final romanizableIndices = <int>[];
+    final length = lines.length;
+    var groupEnd = 0;
+    for (var groupStart = 0; groupStart < length; groupStart = groupEnd) {
+      final timestamp = lines[groupStart].timestamp;
+      groupEnd = groupStart + 1;
+      while (groupEnd < length && lines[groupEnd].timestamp == timestamp) {
+        groupEnd++;
+      }
+      if (groupEnd - groupStart == 1) continue;
+
+      normalizedLatinLines.clear();
+      romanizableIndices.clear();
+      for (var i = groupStart; i < groupEnd; i++) {
+        final text = lines[i].readableText;
+        if (RomanizerEngine.needsRomanization(text)) {
+          romanizableIndices.add(i);
+        } else {
+          final normalized = _RomanizationMatcher.normalize(text);
+          if (normalized.isNotEmpty) normalizedLatinLines.add(normalized);
+        }
+      }
+      if (normalizedLatinLines.isEmpty || romanizableIndices.isEmpty) continue;
+
+      romanizedLines ??= List<String?>.filled(length, null);
+      for (final i in romanizableIndices) {
+        final text = lines[i].readableText;
+        final romanized = _engine.romanize(text, chinese: chinese);
+        final isAlreadyRomanized = _RomanizationMatcher.matchesAny(romanized, normalizedLatinLines);
+        romanizedLines[i] = isAlreadyRomanized ? text : romanized;
+      }
+    }
+    return romanizedLines;
   }
 
   void setLyricsEnabled(bool enabled) {
@@ -160,5 +202,85 @@ class Romanizer {
     try {
       await Directory(AppDirs.ROMANIZATION).delete(recursive: true);
     } catch (_) {}
+  }
+}
+
+// by claude
+class _RomanizationMatcher {
+  static const _minSimilarity = 0.6;
+
+  static var _normalizeBuffer = Uint16List(128);
+  static var _previousRow = Int32List(128);
+  static var _currentRow = Int32List(128);
+
+  /// lower case a-z only, long vowels collapsed (`ou`, `oo` & `ō` => `o`).
+  static String normalize(String text) {
+    final length = text.length;
+    if (_normalizeBuffer.length < length) _normalizeBuffer = Uint16List(length * 2);
+    final buffer = _normalizeBuffer;
+    var outputLength = 0;
+    var previous = 0;
+    for (var i = 0; i < length; i++) {
+      final codeUnit = text.codeUnitAt(i);
+      var c = SortKey.baseLetterOf(codeUnit);
+      if (c >= 0x41 && c <= 0x5A) c += 0x20;
+      if (c < 0x61 || c > 0x7A) continue;
+      final isLongVowel = _isVowel(c) && (c == previous || (c == 0x75 && previous == 0x6F));
+      if (isLongVowel) continue;
+      buffer[outputLength++] = c;
+      previous = c;
+    }
+    return String.fromCharCodes(buffer, 0, outputLength);
+  }
+
+  static bool _isVowel(int c) => c == 0x61 || c == 0x65 || c == 0x69 || c == 0x6F || c == 0x75;
+
+  static bool matchesAny(String romanized, List<String> normalizedLines) {
+    final normalized = normalize(romanized);
+    if (normalized.isEmpty) return false;
+    for (final line in normalizedLines) {
+      if (_isSimilar(normalized, line)) return true;
+    }
+    return false;
+  }
+
+  static bool _isSimilar(String a, String b) {
+    final aLength = a.length;
+    final bLength = b.length;
+    final maxLength = aLength > bLength ? aLength : bLength;
+    final maxDistance = (maxLength * (1 - _minSimilarity)).floor();
+    final lengthDifference = (aLength - bLength).abs();
+    if (lengthDifference > maxDistance) return false;
+
+    if (_previousRow.length <= bLength) {
+      _previousRow = Int32List(bLength * 2 + 1);
+      _currentRow = Int32List(bLength * 2 + 1);
+    }
+    var previousRow = _previousRow;
+    var currentRow = _currentRow;
+    for (var j = 0; j <= bLength; j++) {
+      previousRow[j] = j;
+    }
+    for (var i = 1; i <= aLength; i++) {
+      final ac = a.codeUnitAt(i - 1);
+      currentRow[0] = i;
+      var rowMin = i;
+      for (var j = 1; j <= bLength; j++) {
+        final bc = b.codeUnitAt(j - 1);
+        final substitutionCost = ac == bc ? 0 : 1;
+        final substitution = previousRow[j - 1] + substitutionCost;
+        final deletion = previousRow[j] + 1;
+        final insertion = currentRow[j - 1] + 1;
+        var distance = substitution < deletion ? substitution : deletion;
+        if (insertion < distance) distance = insertion;
+        currentRow[j] = distance;
+        if (distance < rowMin) rowMin = distance;
+      }
+      if (rowMin > maxDistance) return false;
+      final swap = previousRow;
+      previousRow = currentRow;
+      currentRow = swap;
+    }
+    return previousRow[bLength] <= maxDistance;
   }
 }

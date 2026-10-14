@@ -36,7 +36,8 @@ so re-run `group add <topic> <same files>` after every further round of edits, a
 
 a bare path takes every hunk no other group holds, path:1,3 takes exactly those. claims on files that stop
 differing from HEAD, or get deleted after being grouped, are dropped by list, commit and prune.
-uncommit undoes the last commit back into a group named after its topic, with its message."""
+uncommit undoes the last commit back into a group named after its topic, with its message.
+absorb puts hunks edited after grouping into the one group whose lines they touch, optionally only for the given paths."""
 
 CHANGELOG_PREFIXES = ("feat", "core", "perf", "chore", "fix")
 OTHER_PREFIXES = ("code", "build", "github", "docs", "test")
@@ -47,7 +48,8 @@ DEFAULT_SCORES = {"feat": 3, "core": 2, "perf": 2, "chore": 2, "fix": 2}
 TRAILER_KEYS = ("topic", "score", "closes", "ref", "amends", "changelog")
 SUBJECT_MAX = 72
 VARIOUS_TEXT = "various fixes and tweaks"
-GROUP_SCHEMA = 2  # bump when the shape of a .git/chlog-groups file changes, old ones are then refused not misread
+GROUP_SCHEMA = 3  # bump when the shape of a .git/chlog-groups file changes, old ones are then refused not misread
+READABLE_SCHEMAS = (2, 3)  # 2 kept its message inline, it moves to the .msg file on first read
 
 H_HIGHLIGHTS = "### ✨ Highlights:"
 H_FEATURES = "### \U0001f389 New Features:"
@@ -88,6 +90,11 @@ def git(*args, check=True):
 
 def git_ok(*args):
     return subprocess.run(["git", *args], capture_output=True).returncode == 0
+
+
+def git_try(*args):
+    p = subprocess.run(["git", *args], capture_output=True, encoding="utf-8", errors="replace")
+    return p.stdout if p.returncode == 0 else None
 
 
 _PATHS = {}
@@ -1062,22 +1069,33 @@ def group_path(name):
     return os.path.join(groups_dir(), name + ".json")
 
 
-def load_group(name):
-    path = group_path(name)
-    if not os.path.exists(path):
-        raise SystemExit("no group %r, see: chlog group list" % name)
-    data = json.loads(read(path))
-    if data.get("schema") != GROUP_SCHEMA:
-        raise SystemExit("group %r was written by another chlog version, drop it with: chlog group rm %s" % (name, name))
-    return data
+def message_path(name):
+    """the message lives apart from the group, so the editor saving every keystroke never rewrites the patches."""
+    return os.path.join(groups_dir(), name + ".msg")
 
 
-def save_group(name, data):
-    data["schema"] = GROUP_SCHEMA
-    # written aside then swapped in, so a reader never catches a half written group
-    path = group_path(name)
+def read_message(name):
+    try:
+        return read(message_path(name))
+    except FileNotFoundError:
+        return ""
+
+
+def write_message(name, text):
+    replace_file(message_path(name), text)
+
+
+def remove_file(path):
+    try:
+        os.remove(path)
+    except FileNotFoundError:
+        pass
+
+
+def replace_file(path, text):
+    # written aside then swapped in, so a reader never catches a half written file
     temp = "%s.%d.tmp" % (path, os.getpid())
-    write(temp, json.dumps(data, indent=2) + "\n")
+    write(temp, text)
     for _ in range(40):
         try:
             os.replace(temp, path)
@@ -1087,6 +1105,29 @@ def save_group(name, data):
     os.replace(temp, path)
 
 
+def upgrade_group(name, data):
+    message = data.pop("message", None)
+    if message and not os.path.exists(message_path(name)):
+        write_message(name, message)
+    return data
+
+
+def load_group(name):
+    path = group_path(name)
+    if not os.path.exists(path):
+        raise SystemExit("no group %r, see: chlog group list" % name)
+    data = json.loads(read(path))
+    if data.get("schema") not in READABLE_SCHEMAS:
+        raise SystemExit("group %r was written by another chlog version, drop it with: chlog group rm %s" % (name, name))
+    return upgrade_group(name, data)
+
+
+def save_group(name, data):
+    data["schema"] = GROUP_SCHEMA
+    text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
+    replace_file(group_path(name), text)
+
+
 def all_groups():
     groups = []
     for name in sorted(f[:-5] for f in os.listdir(groups_dir()) if f.endswith(".json")):
@@ -1094,8 +1135,8 @@ def all_groups():
             data = json.loads(read(group_path(name)))
         except ValueError:
             continue  # half written by another process, the next run picks it up
-        if data.get("schema") == GROUP_SCHEMA:
-            groups.append((name, data))
+        if data.get("schema") in READABLE_SCHEMAS:
+            groups.append((name, upgrade_group(name, data)))
         else:
             print("chlog: group %r is in an older format, drop it with: chlog group rm %s" % (name, name), file=sys.stderr)
     return groups
@@ -1132,12 +1173,7 @@ def changed_status():
 
 def file_hunks(path):
     """header and hunks of a file's diff against HEAD, hunks is None for a binary file."""
-    diff = git("diff", "--no-ext-diff", "--no-color", "-U3", "HEAD", "--", path)
-    if not diff.strip():
-        return "", []
-    if "\nBinary files " in diff or diff.startswith("Binary files "):
-        return diff, None
-    return split_diff(diff)
+    return diff_hunks([path]).get(path, ("", []))
 
 
 def split_diff(diff):
@@ -1156,23 +1192,58 @@ def split_diff(diff):
     return header, ["\n".join(h).rstrip("\n") for h in hunks]
 
 
+DIFF_ARGS = ("-c", "core.quotePath=false", "diff", "--no-ext-diff", "--no-color", "--no-renames", "-U3")
+
+
 def diff_hunks(paths):
-    """current hunks of many files from one diff against HEAD, keyed by path, binary files left out."""
+    """header and hunks of many files from one diff against HEAD, keyed by path, hunks is None for a binary file."""
     found = {}
     for i in range(0, len(paths), 100):
-        diff = git("-c", "core.quotePath=false", "diff", "--no-ext-diff", "--no-color", "--no-renames", "-U3", "HEAD", "--", *paths[i:i + 100])
-        path = current = None
-        for line in diff.split("\n"):
-            if line.startswith("diff --git "):
-                path = current = None
-            elif current is None and line.startswith(("--- a/", "+++ b/")):
-                path = line[6:].rstrip("\t")  # git appends a tab to names holding a space
-            elif path is not None and HUNK_RE.match(line):
-                current = [line]
-                found.setdefault(path, []).append(current)
-            elif current is not None:
-                current.append(line)
-    return {path: ["\n".join(h).rstrip("\n") for h in hunks] for path, hunks in found.items()}
+        diff = git(*DIFF_ARGS, "HEAD", "--", *paths[i:i + 100])
+        found.update(parse_diff(diff))
+    return found
+
+
+def parse_diff(diff):
+    """a diff of many files as path -> (header, hunks), hunks is None for a binary file."""
+    sections, header, hunks, current = [], None, None, None
+    for line in diff.split("\n"):
+        if line.startswith("diff --git "):
+            header, hunks, current = [line], [], None
+            sections.append((header, hunks))
+        elif header is None:
+            continue
+        elif HUNK_RE.match(line):
+            current = [line]
+            hunks.append(current)
+        elif current is not None:
+            current.append(line)
+        else:
+            header.append(line)
+    found = {}
+    for header, hunks in sections:
+        binary = any(l.startswith("Binary files ") for l in header)
+        text = "\n".join(header).rstrip("\n")
+        found[section_path(header)] = (text, None if binary else ["\n".join(h).rstrip("\n") for h in hunks])
+    return found
+
+
+def section_path(header):
+    for line in header:
+        if line.startswith("+++ b/"):
+            return line[6:].rstrip("\t")  # git appends a tab to names holding a space
+    for line in header:
+        if line.startswith("--- a/"):
+            return line[6:].rstrip("\t")
+    # binary and mode only changes have no ---/+++ lines, and without renames both sides of this one match
+    names = header[0][11:]
+    length = (len(names) - 5) // 2
+    return names[2:2 + length]
+
+
+def hunks_of(current, path):
+    _, hunks = current.get(path, ("", []))
+    return hunks or []
 
 
 def patch_bodies(text):
@@ -1259,7 +1330,7 @@ def stale_claims(data, status, current):
             continue
         if not entry:
             continue
-        now = [span for hunk in current.get(path, []) for span in head_ranges(hunk)]
+        now = [span for hunk in hunks_of(current, path) for span in head_ranges(hunk)]
         held = head_ranges(entry["patch"])
         kept = [i for i, (s1, e1) in enumerate(held, 1) if any(s1 < e2 and s2 < e1 for s2, e2 in now)]
         if not kept:
@@ -1269,39 +1340,183 @@ def stale_claims(data, status, current):
     return drop, trim
 
 
-def prune(status, groups=None):
-    """drops stale claims from every group, so a commit never carries changes the working tree has since lost.
+def claimed_hunks(groups, status, extra=()):
+    paths = {p for _, d in groups for p, e in d["paths"].items() if e and p in status}
+    paths.update(p for p in extra if p in status)
+    return diff_hunks(sorted(paths))
 
-    returns the current hunks of every claimed file, read once for the whole run.
+
+def prune(status, groups=None, current=None):
+    """moves every group onto HEAD and drops stale claims, so a commit never carries changes the working tree has
+    since lost.
+
+    returns the current hunks of every claimed file, read once for the whole run, and HEAD.
     """
     groups = all_groups() if groups is None else groups
-    current = diff_hunks(sorted({p for _, d in groups for p, e in d["paths"].items() if e and p in status}))
+    if current is None:
+        current = claimed_hunks(groups, status)
+    head = git("rev-parse", "HEAD").strip()
+    moved = {}
     dropped = []
     for name, data in groups:
+        base = data.get("base")
+        rebased = base != head
+        if rebased:
+            if base not in moved:
+                moved[base] = changed_between(base, head)
+            rebase(data, head, status, current, moved[base])
         drop, trim = stale_claims(data, status, current)
         if not drop and not trim:
+            if rebased:
+                save_group(name, data)
             continue
         for path in drop:
             del data["paths"][path]
         for path, kept in trim.items():
             header, hunks = split_diff(data["paths"][path]["patch"])
             patch = build_patch(path, kept, header, hunks)
-            bodies, now = patch_bodies(patch), current.get(path, [])
+            bodies, now = patch_bodies(patch), hunks_of(current, path)
             picked = [i for i, hunk in enumerate(now, 1) if hunk_body(hunk) in bodies]
             data["paths"][path] = {"hunks": picked, "patch": patch, "full": len(picked) == len(now)}
         save_group(name, data)
         dropped += ["%s  %s" % (name, path) for path in drop] + ["%s  %s (reverted hunks)" % (name, path) for path in trim]
     if dropped:
         note("dropped what the working tree no longer has:\n    " + "\n    ".join(dropped))
-    return current
+    return current, head
+
+
+def changed_between(base, head):
+    """paths that differ between two commits, None when base is unknown or gone."""
+    if not base:
+        return None
+    out = git_try("diff", "--name-only", "-z", "--no-renames", base, head, "--")
+    if out is None:
+        return None
+    return set(filter(None, out.split("\0")))
+
+
+def rebase(data, head, status, current, moved):
+    """another commit shifts the HEAD side line numbers of every hunk it left behind, and prune keeps or drops a
+    claim by those."""
+    unmatched = []
+    for path, entry in data["paths"].items():
+        if not entry or path not in status or (moved is not None and path not in moved):
+            continue
+        header, hunks = current.get(path, ("", []))
+        bodies = patch_bodies(entry["patch"])
+        found = {hunk_body(hunk) for hunk in hunks or []}
+        if not hunks or not bodies <= found:
+            unmatched.append(path)
+            continue
+        picked = [i for i, hunk in enumerate(hunks, 1) if hunk_body(hunk) in bodies]
+        patch = build_patch(path, picked, header, hunks)
+        data["paths"][path] = {"hunks": picked, "patch": patch, "full": len(picked) == len(hunks)}
+    if unmatched:
+        reapply(data, unmatched, current)
+    data["base"] = head
+
+
+def reapply(data, paths, current):
+    """hunks edited further have no current twin to take line numbers from, so they go through git apply, which
+    absorbs the shift. one the new HEAD conflicts with stays as it is, its commit then says it no longer applies."""
+    index_file = os.path.join(groups_dir(), "index-rebase-%d" % os.getpid())
+    patch = os.path.join(groups_dir(), "rebase-%d.diff" % os.getpid())
+    try:
+        git_in(index_file, "read-tree", "HEAD")
+        applied = []
+        for path in paths:
+            write(patch, data["paths"][path]["patch"])
+            if git_in(index_file, "apply", "--cached", "--whitespace=nowarn", patch, check=False) is not None:
+                applied.append(path)
+        if not applied:
+            return
+        diff = git_in(index_file, *DIFF_ARGS, "--cached", "HEAD", "--", *applied)
+    finally:
+        remove_file(index_file)
+        remove_file(patch)
+    for path, (header, hunks) in parse_diff(diff).items():
+        if not hunks:
+            continue
+        bodies = {hunk_body(hunk) for hunk in hunks}
+        now = hunks_of(current, path)
+        picked = [i for i, hunk in enumerate(now, 1) if hunk_body(hunk) in bodies]
+        patch_text = build_patch(path, list(range(1, len(hunks) + 1)), header, hunks)
+        data["paths"][path] = {"hunks": picked, "patch": patch_text, "full": len(picked) == len(now)}
+
+
+def absorb(status, groups, current, paths):
+    """hunks edited after grouping go back into the one group whose lines they touch, the way git absorb finds the
+    commit owning them. returns what moved as (path, hunk, group)."""
+    by_name = dict(groups)
+    claimed = {}
+    for name, data in groups:
+        for path, entry in data["paths"].items():
+            claimed.setdefault(path, []).append((name, entry))
+    moved, changed = [], set()
+    for path, claims in sorted(claimed.items()):
+        skipped = paths and path not in paths
+        has_whole_claim = not all(entry for _, entry in claims)
+        if path not in status or skipped or has_whole_claim:
+            continue
+        header, hunks = current.get(path, ("", []))
+        if not hunks:
+            continue
+        targets = absorb_targets(claims, hunks)
+        for name in sorted(set(targets.values())):
+            absorbed = [i for i, owner in targets.items() if owner == name]
+            data = by_name[name]
+            data["paths"][path] = absorbed_entry(path, data["paths"][path], absorbed, header, hunks)
+            moved += [(path, i, name) for i in absorbed]
+            changed.add(name)
+    for name in changed:
+        save_group(name, by_name[name])
+    return moved
+
+
+def absorb_targets(claims, hunks):
+    """free hunk index -> the group whose held lines it touches. one touching two groups' lines belongs to neither."""
+    held = set()
+    for _, entry in claims:
+        held |= patch_bodies(entry["patch"])
+    held_ranges = [(name, head_ranges(entry["patch"])) for name, entry in claims]
+    targets = {}
+    for i, hunk in enumerate(hunks, 1):
+        if hunk_body(hunk) in held:
+            continue
+        span = head_ranges(hunk)[0]
+        owners = {name for name, ranges in held_ranges if any(spans_overlap(span, r) for r in ranges)}
+        if len(owners) == 1:
+            targets[i] = owners.pop()
+    return targets
+
+
+def absorbed_entry(path, entry, absorbed, header, hunks):
+    """the snapshot with the absorbed hunks in place of the older ones they overlap."""
+    taken = [hunks[i - 1] for i in absorbed]
+    taken_ranges = [head_ranges(hunk)[0] for hunk in taken]
+    _, stored = split_diff(entry["patch"])
+    kept = [hunk for hunk in stored if not any(spans_overlap(head_ranges(hunk)[0], r) for r in taken_ranges)]
+    merged = sorted(kept + taken, key=old_start)
+    patch = build_patch(path, list(range(1, len(merged) + 1)), header, merged)
+    bodies = patch_bodies(patch)
+    picked = [i for i, hunk in enumerate(hunks, 1) if hunk_body(hunk) in bodies]
+    return {"hunks": picked, "patch": patch, "full": len(picked) == len(hunks)}
+
+
+def spans_overlap(a, b):
+    return a[0] < b[1] and b[0] < a[1]
+
+
+def old_start(hunk):
+    header = hunk.split("\n", 1)[0]
+    return int(HUNK_RE.match(header).group(1))
 
 
 def note(text):
     print("chlog: %s" % text, file=sys.stderr)
 
 
-def add_paths(name, data, specs, swept, status):
-    others = [(n, d) for n, d in all_groups() if n != name]
+def add_paths(name, data, specs, swept, status, others, current):
     for spec in specs:
         path, picked = parse_spec(spec)
         quiet = path in swept
@@ -1310,7 +1525,7 @@ def add_paths(name, data, specs, swept, status):
             quiet or note("%s has no changes against HEAD, skipped" % path)
             continue
         held = [(n, d["paths"][path]) for n, d in others if path in d["paths"]]
-        header, hunks = file_hunks(path)
+        header, hunks = current.get(path, ("", []))
         explicit = picked is not None
         if not explicit and held:
             whole = [n for n, entry in held if not entry]
@@ -1363,38 +1578,49 @@ def uncommit(name):
     git("reset", "-q", "--soft", "HEAD~1")
     if files:
         git("reset", "-q", "--", *[path for _, path in files])
-    data = {"paths": {}, "message": message}
+    parent = git("rev-parse", "HEAD").strip()
+    data = {"paths": {}, "base": parent}
+    current = diff_hunks([path for _, path in files])
     for code, path in files:
         patch = patches.get(path, "")
         if not any(HUNK_RE.match(l) for l in patch.split("\n")):
             data["paths"][path] = None  # added, binary or mode only, all of them taken whole
             continue
         held = patch_bodies(patch)
-        _, hunks = file_hunks(path)
-        picked = [i for i, hunk in enumerate(hunks or [], 1) if hunk_body(hunk) in held]
+        hunks = hunks_of(current, path)
+        picked = [i for i, hunk in enumerate(hunks, 1) if hunk_body(hunk) in held]
         data["paths"][path] = {"hunks": picked, "patch": patch, "full": bool(hunks) and len(picked) == len(hunks)}
+    write_message(name, message)
     save_group(name, data)
+    # every other group's snapshots were taken on the commit just undone
+    prune(changed_status())
     print("undid %s into group %s (%d files)" % (head, name, len(files)))
 
 
 def cmd_group(args):
     # every path git hands back is repo relative, so work from the root and translate the ones typed in
     root, cwd = repo_root(), os.getcwd()
-    if args.action in ("add", "rm", "hunks", "revert", "blob"):
+    if args.action in ("add", "rm", "hunks", "revert", "blob", "absorb"):
         args.paths = [rebase_path(p, cwd, root) for p in args.paths]
-    if args.action == "hunks" and args.name:
+    if args.action in ("hunks", "absorb") and args.name:
         args.name = rebase_path(args.name, cwd, root)
     os.chdir(root)
 
     if args.action == "list":
         status, groups, taken = changed_status(), all_groups(), {}
-        current = prune(status, groups)
+        current, _ = prune(status, groups)
         for name, data in groups:
             listed = []
             for path, entry in sorted(data["paths"].items()):
                 taken.setdefault(path, []).append((name, entry))
-                listed.append(path if not entry or entry.get("full") else "%s:%s" % (path, ",".join(map(str, entry["hunks"]))))
-            print("%s  (%d files)%s" % (name, len(listed), "" if data.get("message") else "  [no message yet]"))
+                if not entry or entry.get("full"):
+                    listed.append(path)
+                elif entry["hunks"]:
+                    listed.append("%s:%s" % (path, ",".join(map(str, entry["hunks"]))))
+                else:
+                    listed.append("%s  (its hunks were edited further, the snapshot commits)" % path)
+            unwritten = "" if read_message(name).strip() else "  [no message yet]"
+            print("%s  (%d files)%s" % (name, len(listed), unwritten))
             for entry in listed:
                 print("    %s" % entry)
         unassigned = [p for p in status if p not in taken]
@@ -1408,13 +1634,20 @@ def cmd_group(args):
                 covered = set()
                 for _, entry in claims:
                     covered |= patch_bodies(entry["patch"])
-                hunks = [i for i, hunk in enumerate(current.get(path, []), 1) if hunk_body(hunk) not in covered]
+                hunks = [i for i, hunk in enumerate(hunks_of(current, path), 1) if hunk_body(hunk) not in covered]
                 if hunks:
                     leftovers[path] = hunks
         if leftovers:
             print("\nedited after being grouped, those hunks are in no commit yet:")
+            absorbable = False
             for path, hunks in leftovers.items():
-                print("    %s:%s" % (path, ",".join(map(str, hunks))))
+                targets = absorb_targets(taken[path], hunks_of(current, path))
+                into = ", ".join("%d -> %s" % (i, n) for i, n in sorted(targets.items()))
+                suffix = "  (absorb: %s)" % into if into else ""
+                absorbable = absorbable or bool(into)
+                print("    %s:%s%s" % (path, ",".join(map(str, hunks)), suffix))
+            if absorbable:
+                print("chlog group absorb puts those into the group whose lines they touch")
         for path, claims in taken.items():
             pairs = [(a, b) for i, a in enumerate(claims) for b in claims[i + 1:] if overlaps(a[1], b[1])]
             if pairs:
@@ -1441,6 +1674,18 @@ def cmd_group(args):
         prune(changed_status())
         return
 
+    if args.action == "absorb":
+        status = changed_status()
+        groups = all_groups()
+        current, _ = prune(status, groups)
+        paths = set(([args.name] if args.name else []) + args.paths)
+        moved = absorb(status, groups, current, paths)
+        for path, index, name in moved:
+            print("%s: hunk %d -> %s" % (path, index, name))
+        if not moved:
+            print("no leftover hunk touches a group's lines")
+        return
+
     if args.action == "uncommit":
         uncommit(args.name)
         return
@@ -1451,16 +1696,28 @@ def cmd_group(args):
     if args.action == "add":
         if not TOPIC_RE.match(args.name) or args.name == "unassigned":
             raise SystemExit("group name must be a lowercase topic slug like most-played, got %r" % args.name)
-        data = load_group(args.name) if os.path.exists(group_path(args.name)) else {"paths": {}, "message": ""}
         status = changed_status()
+        groups = all_groups()
         specs, swept = list(args.paths), set()
         if args.unassigned:
             named = {parse_spec(s)[0] for s in specs}
             swept = {p for p in status if p not in named}
             specs += sorted(swept)
-        add_paths(args.name, data, specs, swept, status)
+        # every other group sits on HEAD first, overlaps are judged by HEAD side line numbers
+        added = [parse_spec(s)[0] for s in specs]
+        current = claimed_hunks(groups, status, added)
+        current, head = prune(status, groups, current)
+        data = next((d for n, d in groups if n == args.name), None)
+        if data is None and os.path.exists(group_path(args.name)):
+            data = load_group(args.name)  # refuses another version's group instead of overwriting it
+        if data is None:
+            data = {"paths": {}}
+            remove_file(message_path(args.name))  # left by a gone group of the same name
+        others = [(n, d) for n, d in groups if n != args.name]
+        add_paths(args.name, data, specs, swept, status, others, current)
+        data["base"] = head
         if args.message:
-            data["message"] = args.message
+            write_message(args.name, args.message)
         save_group(args.name, data)
         print("%s: %d files" % (args.name, len(data["paths"])))
         return
@@ -1470,6 +1727,7 @@ def cmd_group(args):
             raise SystemExit("no group %r, see: chlog group list" % args.name)
         if not args.paths:
             os.remove(group_path(args.name))
+            remove_file(message_path(args.name))
             print("removed group %s" % args.name)
             return
         data = load_group(args.name)
@@ -1559,10 +1817,11 @@ def cmd_group(args):
             if not git_in(index_file, "diff", "--cached", "--name-only", "HEAD").strip():
                 raise SystemExit("group %s has nothing to commit against HEAD" % args.name)
             command = ["git", "commit"]
+            message = read_message(args.name).strip("\n")
             if args.message:
                 command += ["-m", args.message]
-            elif data.get("message"):
-                write(message_file, data["message"].rstrip("\n") + "\n")
+            elif message.strip():
+                write(message_file, message + "\n")
                 command += ["-F", message_file]
             code = subprocess.run(command, cwd=root, env=git_env(index_file)).returncode
         finally:
@@ -1573,6 +1832,9 @@ def cmd_group(args):
             raise SystemExit(code)
         git("reset", "-q", "--", *data["paths"])
         os.remove(group_path(args.name))
+        remove_file(message_path(args.name))
+        # the hunks other groups hold in the same files now sit at other HEAD lines
+        prune(changed_status())
         print("committed %s and removed the group" % args.name)
         return
 
@@ -1609,8 +1871,8 @@ def main():
         epilog=GROUP_ADD_NOTE,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    group.add_argument("action", choices=["add", "rm", "list", "show", "hunks", "commit", "revert", "blob", "prune", "uncommit"])
-    group.add_argument("name", nargs="?", help="group name, not needed for list, hunks and prune, optional for uncommit")
+    group.add_argument("action", choices=["add", "rm", "list", "show", "hunks", "commit", "revert", "blob", "prune", "uncommit", "absorb"])
+    group.add_argument("name", nargs="?", help="group name, not needed for list, hunks, prune and absorb, optional for uncommit")
     group.add_argument("paths", nargs="*", help="paths, or path:1,3 to take only those hunks")
     group.add_argument("-m", "--message", help="commit message, otherwise the editor opens with the template")
     group.add_argument("-u", "--unassigned", action="store_true", help="add: also take every changed file no group claims yet")

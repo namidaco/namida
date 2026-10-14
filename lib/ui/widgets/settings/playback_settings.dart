@@ -1291,8 +1291,10 @@ class _NotificationButtonsEditorState extends State<_NotificationButtonsEditor> 
       snackyy(title: lang.note, message: '${lang.maximum}: $maxActive');
       return false;
     }
-    if (activeCount + 1 == _kMaxButtons && NamidaFeaturesVisibility.notificationButtonsMightDisplaceArtwork) {
-      snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
+    if (NamidaFeaturesVisibility.notificationButtonsMightDisplaceArtwork) {
+      if (activeCount + 1 == _kMaxButtons) {
+        snackyy(title: lang.note, message: lang.displayFavButtonInNotificationSubtitle);
+      }
     }
     return true;
   }

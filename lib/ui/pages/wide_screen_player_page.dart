@@ -47,6 +47,9 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
 
   static const _paneGap = 26.0;
   static const _edgePadding = 16.0;
+  static const _backButtonInset = 4.0;
+  static const _backButtonSize = 48.0;
+  static const _backButtonEnd = _backButtonInset + _backButtonSize;
 
   @override
   void initState() {
@@ -113,8 +116,8 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
         child: Stack(
           children: [
             Positioned(
-              top: 4.0,
-              left: 4.0,
+              top: _backButtonInset,
+              left: _backButtonInset,
               child: IconButton(
                 tooltip: lang.exit,
                 icon: Icon(
@@ -168,12 +171,18 @@ class _LeftPane extends StatelessWidget {
           builder: (context, constraints) {
             final maxHeight = constraints.maxHeight;
             final verticalGap = (maxHeight * 0.02).clampDouble(6.0, 16.0);
+            final contentWidth = constraints.maxWidth.withMaximum(maxHeight);
+            final contentStart = _WideScreenPlayerPageState._edgePadding + (constraints.maxWidth - contentWidth) / 2;
+            final infoInset = (_WideScreenPlayerPageState._backButtonEnd - contentStart).withMinimum(0.0);
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: maxHeight),
                 child: Column(
                   children: [
-                    _TrackInfoText(item: currentItem),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: infoInset),
+                      child: _TrackInfoText(item: currentItem),
+                    ),
                     SizedBox(height: verticalGap),
                     Expanded(
                       child: _Artwork(

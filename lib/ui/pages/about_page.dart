@@ -255,7 +255,7 @@ class _AboutPageState extends State<AboutPage> {
               ],
             ),
           ),
-          const StatsSection(),
+          const StatsSection(showViewAll: true),
           const EggsSection(),
           SettingsCard(
             icon: Broken.hierarchy,

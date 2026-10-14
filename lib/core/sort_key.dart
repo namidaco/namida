@@ -36,6 +36,15 @@ class SortKey {
   static var _seenScripts = 0;
   static int get seenScripts => _seenScripts;
 
+  /// lower case base letter of a latin letter with diacritics, [codeUnit] itself otherwise.
+  static int baseLetterOf(int codeUnit) {
+    if (codeUnit >= _latinExtendedStart && codeUnit <= _latinExtendedEnd) return _baseLettersOfLatinExtended.codeUnitAt(codeUnit - _latinExtendedStart);
+    if (codeUnit >= _latinExtendedAdditionalStart && codeUnit <= _latinExtendedAdditionalEnd) {
+      return _baseLettersOfLatinExtendedAdditional.codeUnitAt(codeUnit - _latinExtendedAdditionalStart);
+    }
+    return codeUnit;
+  }
+
   static String of(String text) {
     final length = text.length;
     var i = 0;

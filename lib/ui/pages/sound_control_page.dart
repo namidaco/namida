@@ -593,52 +593,73 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                   onApply: applyConfig,
                 ),
                 const _ForcedOffBanner(),
-                if (NamidaFeaturesVisibility.skipSilenceAvailable) ...[
-                  Obx(
-                    (context) {
-                      final skipSilence = widget.updateConfig.skipSilenceEnabledRx.valueR;
-                      final currentItem = Player.inst.currentItem.valueR;
+                if (NamidaFeaturesVisibility.skipSilenceAvailable)
+                  ObxO(
+                    rx: Player.inst.currentItem,
+                    builder: (context, currentItem) {
                       final isSupported = Player.inst.supportsSkipSilence(currentItem);
-                      final isForcedOff = AudioOutputController.inst.isForcedOffR(AudioOutputForcedOff.skipSilence);
-                      return AnimatedEnabled(
-                        enabled: isSupported && !isForcedOff,
-                        child: Padding(
-                          padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
-                          child: NamidaInkWell(
-                            borderRadius: 12.0,
-                            padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
-                            onTap: () => _setSkipSilence(!skipSilence),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                              child: Row(
-                                children: [
-                                  NamidaIconButton(
-                                    horizontalPadding: 6.0,
-                                    icon: Broken.forward,
-                                  ),
-                                  const SizedBox(width: 6.0),
-                                  Expanded(
-                                    child: Text(
-                                      lang.skipSilence,
-                                      style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                      return AnimatedShow(
+                        show: widget.isGlobal || isSupported,
+                        child: Column(
+                          mainAxisSize: .min,
+                          children: [
+                            _ForcedOffEnabled(
+                              option: AudioOutputForcedOff.skipSilence,
+                              child: ObxO(
+                                rx: widget.updateConfig.skipSilenceEnabledRx,
+                                builder: (context, skipSilence) => Padding(
+                                  padding: const EdgeInsetsGeometry.symmetric(vertical: 2.0, horizontal: 8.0),
+                                  child: NamidaInkWell(
+                                    borderRadius: 12.0,
+                                    padding: const EdgeInsetsGeometry.symmetric(vertical: 10.0),
+                                    onTap: () => _setSkipSilence(!skipSilence),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                      child: Row(
+                                        children: [
+                                          NamidaIconButton(
+                                            horizontalPadding: 6.0,
+                                            icon: Broken.forward,
+                                          ),
+                                          const SizedBox(width: 6.0),
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisSize: .min,
+                                              crossAxisAlignment: .start,
+                                              children: [
+                                                Text(
+                                                  lang.skipSilence,
+                                                  style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                                                ),
+                                                if (!isSupported) ...[
+                                                  const SizedBox(height: 2.0),
+                                                  DisabledByPill(
+                                                    icon: Broken.video_square,
+                                                    title: lang.youtube,
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8.0),
+                                          CustomSwitch(
+                                            active: skipSilence,
+                                          ),
+                                          const SizedBox(width: 8.0),
+                                          const SizedBox(width: 6.0),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(width: 8.0),
-                                  CustomSwitch(
-                                    active: skipSilence,
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  const SizedBox(width: 6.0),
-                                ],
+                                ),
                               ),
                             ),
-                          ),
+                            verticalPadding,
+                          ],
                         ),
                       );
                     },
                   ),
-                  verticalPadding,
-                ],
 
                 _ForcedOffEnabled(
                   option: AudioOutputForcedOff.pitch,

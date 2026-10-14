@@ -508,9 +508,9 @@ class _SettingsController extends _SettingsKeysWriter {
 
   static const _kDefaultLyricsEffects = [
     LyricsEffect.focalScale, LyricsEffect.depthBlur, LyricsEffect.springPop, LyricsEffect.interludeDots, LyricsEffect.seekGlide, //
-    LyricsEffect.lineReveal, LyricsEffect.accentTint, LyricsEffect.glow, LyricsEffect.wordBump, LyricsEffect.shimmer, LyricsEffect.feather, //
+    LyricsEffect.accentTint, LyricsEffect.glow, LyricsEffect.wordBump, LyricsEffect.shimmer, LyricsEffect.feather, //
   ];
-  static const _kDefaultLyricsEffectsLine = [LyricsEffect.lineReveal, LyricsEffect.accentTint, LyricsEffect.glow, LyricsEffect.shimmer, LyricsEffect.feather];
+  static const _kDefaultLyricsEffectsLine = [LyricsEffect.accentTint, LyricsEffect.glow, LyricsEffect.shimmer, LyricsEffect.feather];
   late final lyricsEffectsLine = _keyEnumList('lyricsEffectsLine', _kDefaultLyricsEffectsLine, LyricsEffect.karaokeEffects);
   late final lyricsEffectsNormal = _keyEnumList('lyricsEffectsNormal', _kDefaultLyricsEffects, LyricsEffect.values);
   late final lyricsEffectsExpanded = _keyEnumList('lyricsEffectsExpanded', _kDefaultLyricsEffects, LyricsEffect.values);

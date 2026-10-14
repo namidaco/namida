@@ -3161,14 +3161,17 @@ extension YoutubeIDToMediaItem on YoutubeID {
 
 Uri _fileToContentUri(String filePath) {
   if (Platform.isAndroid) {
-    try {
-      return Uri(
-        scheme: 'content',
-        host: 'com.msob7y.namida',
-        queryParameters: {'path': filePath},
-      );
-    } catch (_) {
-      // -- error in content uri means nothing more than android auto/etc not showing artworks
+    final artworkProviderAuthority = NamidaDeviceInfo.packageInfo?.packageName;
+    if (artworkProviderAuthority != null) {
+      try {
+        return Uri(
+          scheme: 'content',
+          host: artworkProviderAuthority,
+          queryParameters: {'path': filePath},
+        );
+      } catch (_) {
+        // -- error in content uri means nothing more than android auto/etc not showing artworks
+      }
     }
   }
   return Uri.file(filePath);

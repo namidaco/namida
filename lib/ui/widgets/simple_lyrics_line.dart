@@ -108,15 +108,17 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
   double _fitMaxWidth = -1;
   TextStyle? _fitStyle;
   TextScaler? _fitScaler;
+  Locale? _fitLocale;
   TextStyle? _fitResultStyle;
   int _fitResultMaxLines = 1;
 
-  void _resolveFit(LrcLine line, String text, double maxWidth, TextDirection direction, TextScaler scaler) {
+  void _resolveFit(LrcLine line, String text, double maxWidth, TextDirection direction, TextScaler scaler, Locale? locale) {
     final style = widget.style;
-    if (identical(line, _fitLine) && maxWidth == _fitMaxWidth && scaler == _fitScaler && style == _fitStyle) return;
+    if (identical(line, _fitLine) && maxWidth == _fitMaxWidth && scaler == _fitScaler && locale == _fitLocale && style == _fitStyle) return;
     _fitLine = line;
     _fitMaxWidth = maxWidth;
     _fitScaler = scaler;
+    _fitLocale = locale;
     _fitStyle = style;
 
     // -- fixed line height, otherwise the painted band doesn't match [fittedMaxHeight].
@@ -133,6 +135,7 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
       textDirection: direction,
       textAlign: widget.textAlign,
       textScaler: scaler,
+      locale: locale,
     );
     bool fits(TextStyle? style, int lines) {
       painter
@@ -256,7 +259,9 @@ class _SimpleLyricsLineWidgetState extends State<SimpleLyricsLineWidget> {
               ? LayoutBuilder(
                   key: primaryKey,
                   builder: (context, constraints) {
-                    _resolveFit(line, text, constraints.maxWidth, direction, MediaQuery.textScalerOf(context));
+                    final textScaler = MediaQuery.textScalerOf(context);
+                    final locale = Localizations.maybeLocaleOf(context);
+                    _resolveFit(line, text, constraints.maxWidth, direction, textScaler, locale);
                     final maxLines = _fitResultMaxLines;
                     return _PrimaryLine(
                       line: line,

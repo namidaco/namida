@@ -66,14 +66,26 @@ class StatsPage extends StatelessWidget with NamidaRouteWidget {
 }
 
 class StatsSection extends StatelessWidget {
-  const StatsSection({super.key});
+  final bool showViewAll;
+  const StatsSection({super.key, this.showViewAll = false});
 
   @override
   Widget build(BuildContext context) {
+    final viewAllButton = showViewAll
+        ? NamidaIconButton(
+            icon: Broken.arrow_right_3,
+            iconSize: 18.0,
+            horizontalPadding: 8.0,
+            verticalPadding: 4.0,
+            tooltip: () => lang.viewAll,
+            onPressed: const StatsPage(isYoutube: false).navigate,
+          )
+        : null;
     return StatsChartCard(
       title: lang.stats,
       subtitle: lang.statsSubtitle,
       icon: Broken.chart_21,
+      trailing: viewAllButton,
       copyText: () {
         final map = Player.inst.totalListenedTimeInSec;
         final localSec = (map?[LibraryCategory.localTracks] ?? 0) + (map?[LibraryCategory.localVideos] ?? 0);
@@ -109,7 +121,7 @@ class StatsSection extends StatelessWidget {
                 StatsMiniTile(icon: MediaType.artist.toIcon(), label: lang.artists, value: Indexer.inst.mainMapArtists.valueR.length.formatDecimal()),
                 StatsMiniTile(icon: MediaType.genre.toIcon(), label: lang.genres, value: Indexer.inst.mainMapGenres.valueR.length.formatDecimal()),
                 if (stylesLength != null) StatsMiniTile(icon: MediaType.style.toIcon(), label: lang.styles, value: stylesLength.formatDecimal()),
-                if (languagesLength > 0) StatsMiniTile(icon: MediaType.language.toIcon(), label: lang.languages, value: languagesLength.formatDecimal()),
+                if (languagesLength > 1) StatsMiniTile(icon: MediaType.language.toIcon(), label: lang.languages, value: languagesLength.formatDecimal()),
                 StatsMiniTile(icon: Broken.music_library_2, label: lang.totalTracksDuration, value: allTracks.totalDurationFormatted),
                 Obx(
                   (context) {

@@ -1175,6 +1175,7 @@ Future<void> showGeneralPopupDialog(
                                   titleText: lang.goToAlbum,
                                   textColorScheme: colorDelightened,
                                   childrenPadding: const EdgeInsetsDirectional.only(end: 20.0),
+                                  showRail: false,
                                   trailingBuilder: (iconWidget) => Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -1254,6 +1255,7 @@ Future<void> showGeneralPopupDialog(
                                   titleText: lang.goToArtist,
                                   textColorScheme: colorDelightened,
                                   childrenPadding: const EdgeInsetsDirectional.only(end: 20.0),
+                                  showRail: false,
                                   trailingBuilder: (iconWidget) => Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [

@@ -1576,6 +1576,7 @@ class _BlockedDevicesTile extends StatelessWidget {
     return NamidaExpansionTile(
       icon: Broken.shield_slash,
       titleText: '${lang.blockedDevices} (${blockedClientIds.length})',
+      showRail: false,
       children: blockedClientIds
           .map(
             (deviceId) => CustomListTile(

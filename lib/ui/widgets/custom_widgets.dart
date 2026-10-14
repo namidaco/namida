@@ -1487,6 +1487,7 @@ class NamidaExpansionTile extends StatefulWidget {
 
   /// inside the rail.
   final EdgeInsetsGeometry childrenPadding;
+  final bool showRail;
   final bool initiallyExpanded;
   final Widget Function(Widget arrow)? trailingBuilder;
   final ValueChanged<bool>? onExpansionChanged;
@@ -1509,6 +1510,7 @@ class NamidaExpansionTile extends StatefulWidget {
     this.textColorScheme,
     this.children = const <Widget>[],
     this.childrenPadding = EdgeInsets.zero,
+    this.showRail = true,
     this.initiallyExpanded = false,
     this.trailingBuilder,
     this.onExpansionChanged,
@@ -1660,6 +1662,7 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
                 animation: _sizeAnimation,
                 child: _ExpansionChildrenRail(
                   padding: widget.childrenPadding,
+                  showRail: widget.showRail,
                   children: widget.children,
                 ),
               ),
@@ -1781,30 +1784,31 @@ class _ExpansionSlideIn extends AnimatedWidget {
 
 class _ExpansionChildrenRail extends StatelessWidget {
   final EdgeInsetsGeometry padding;
+  final bool showRail;
   final List<Widget> children;
 
-  const _ExpansionChildrenRail({required this.padding, required this.children});
+  const _ExpansionChildrenRail({required this.padding, required this.showRail, required this.children});
 
   static const _kRailLeft = 20.0;
   static const _kChildrenIndent = 12.0;
 
   @override
   Widget build(BuildContext context) {
-    final railColor = context.theme.dividerColor.withAlpha(namida.isDarkMode ? 100 : 40);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 18.0),
-      child: Stack(
+    final content = Padding(
+      padding: const EdgeInsetsDirectional.only(start: _kChildrenIndent),
+      child: Padding(
+        padding: padding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: children,
+        ),
+      ),
+    );
+    Widget body = content;
+    if (showRail) {
+      final railColor = context.theme.dividerColor.withAlpha(namida.isDarkMode ? 100 : 40);
+      body = Stack(
         children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(start: _kChildrenIndent),
-            child: Padding(
-              padding: padding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: children,
-              ),
-            ),
-          ),
           PositionedDirectional(
             start: _kRailLeft,
             top: 4.0,
@@ -1814,8 +1818,13 @@ class _ExpansionChildrenRail extends StatelessWidget {
               color: railColor,
             ),
           ),
+          content,
         ],
-      ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: body,
     );
   }
 }
@@ -3550,6 +3559,8 @@ class _SubpageInfoLayout {
     this.fontScale = 1.0,
   });
 
+  static const _kBesideImageFontScale = 1.25;
+
   static _SubpageInfoLayout resolve(SubpageInfoStyle style, bool showAtSide) {
     if (showAtSide) {
       return switch (style) {
@@ -3560,11 +3571,11 @@ class _SubpageInfoLayout {
       };
     }
     return switch (style) {
-      SubpageInfoStyle.compact => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 1),
-      SubpageInfoStyle.banner => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: true, titleMaxLines: 2),
+      SubpageInfoStyle.compact => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 1, fontScale: _kBesideImageFontScale),
+      SubpageInfoStyle.banner => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: true, titleMaxLines: 2, fontScale: _kBesideImageFontScale),
       SubpageInfoStyle.heroBanner => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: true, isTextOverImage: true, titleMaxLines: 2),
       SubpageInfoStyle.overlay => const _SubpageInfoLayout(isImageFullWidth: true, isEdgeToEdge: false, isTextOverImage: true, titleMaxLines: 2),
-      SubpageInfoStyle.blurBackdrop => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 2, fontScale: 1.25),
+      SubpageInfoStyle.blurBackdrop => const _SubpageInfoLayout(isImageFullWidth: false, isEdgeToEdge: false, titleMaxLines: 2, fontScale: _kBesideImageFontScale),
     };
   }
 }

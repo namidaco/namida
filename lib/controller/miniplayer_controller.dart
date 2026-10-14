@@ -95,7 +95,7 @@ class MiniPlayerController {
   }
 
   void _updateScreenValuesInternal(Size mediaSize, EdgeInsets viewPadding) {
-    if (NamidaChannel.inst.isInPip.value || NamidaNavigator.inst.isInFullScreen) return; // messes up things so we ignore
+    if (NamidaChannel.inst.isInPip.value || (NamidaNavigator.inst.isInFullScreen && NamidaFeaturesVisibility.fullScreenChangesScreenSize)) return; // messes up things so we ignore
 
     final newTopInset = viewPadding.top;
     final newBottomInset = viewPadding.bottom;
