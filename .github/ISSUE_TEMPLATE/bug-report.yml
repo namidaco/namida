@@ -1,6 +1,5 @@
 name: 🐛 Bug Report
 description: something's broken, crashing or just acting weird
-title: "[BUG] "
 labels:
   - bug
 type: Bug

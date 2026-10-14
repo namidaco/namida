@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   triage:
-    if: github.event.issue.state == 'open' && (github.event.action == 'opened' || github.event.changes.body || github.event.changes.title)
+    if: (github.event.issue.state == 'open' || contains(github.event.issue.labels.*.name, 'incomplete')) && (github.event.action == 'opened' || github.event.changes.body || github.event.changes.title)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

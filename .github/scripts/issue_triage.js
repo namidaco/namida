@@ -1,8 +1,10 @@
 // by claude
 
 const MARKER = '<!-- namida-triage -->';
-const OUTDATED_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
-const MIN_TITLE_LENGTH = 10;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const OUTDATED_GRACE_MS = 3 * DAY_MS;
+const AUTHOR_DUPLICATE_WINDOW_MS = 14 * DAY_MS;
+const MIN_TITLE_LENGTH = 2;
 const MIN_PASTED_LOGS_LENGTH = 300;
 const APP_LOGS_ZIP_PREFILL = '📦 attach ';
 const NO_RESPONSE = '_No response_';
@@ -19,15 +21,30 @@ const FIELD = {
   area: 'where does it happen',
   featureArea: 'where in the app',
   ytProblem: "what's broken on youtube",
+  idea: 'your idea',
+  question: 'what is it cutie',
   logs: 'logs',
   noLogs: "can't share logs?",
 };
 
 const LABEL = {
   bug: 'bug',
+  featureRequest: 'feature request',
   needsLogs: 'needs logs',
   outdated: 'outdated version',
+  incomplete: 'incomplete',
 };
+
+const TITLE_PREFIXES = [
+  { field: FIELD.ytProblem, prefix: '[BUG][YOUTUBE]' },
+  { field: FIELD.severity, prefix: '[BUG]' },
+  { field: FIELD.idea, prefix: '[FEATURE REQUEST]' },
+  { field: FIELD.question, prefix: '[QUESTION]' },
+];
+const TITLE_TAGS_REGEX = /^\s*(?:\[\s*(?:bug|youtube|feature request|feature|question)\s*\]\s*)+/i;
+
+const AREA_LABEL_PREFIX = 'area: ';
+const DUPLICATE_KIND_LABELS = [LABEL.bug, LABEL.featureRequest];
 
 const PLATFORM_LABELS = {
   Android: 'android',
@@ -60,6 +77,7 @@ const MANAGED_LABELS = new Set([
   ...Object.values(AREA_LABELS),
   LABEL.needsLogs,
   LABEL.outdated,
+  LABEL.incomplete,
 ]);
 
 const LABEL_COLORS = {
@@ -69,6 +87,7 @@ const LABEL_COLORS = {
   crash: 'b60205',
   [LABEL.needsLogs]: 'fbca04',
   [LABEL.outdated]: 'd4c5f9',
+  [LABEL.incomplete]: 'cfd3d7',
 };
 const AREA_LABEL_COLOR = 'c5def5';
 const DEFAULT_LABEL_COLOR = 'ededed';
@@ -89,8 +108,12 @@ const NOTE = {
 };
 
 const COMMENT_NOTES_HEADER = 'heyy 👋 couple things before we dig in:';
+const COMMENT_CLOSED_INCOMPLETE = "🔒 **closed for now**, fix the points above by editing the issue and i'll reopen it on my own";
+const COMMENT_AUTHOR_DUPLICATE = (number) =>
+  `🔁 **you already opened #${number} about this**, let's keep it all there. edit that one or drop a comment over there instead of opening a new one`;
 const COMMENT_DUPLICATES_HEADER = '👀 **these look kinda similar**, maybe one of them is yours? if so, a 👍 there helps more than a new issue';
 const COMMENT_FOOTER = "<sub>i'm a bot 🤖 edit the issue and i'll update this on my own</sub>";
+const COMMENT_FOOTER_FINAL = "<sub>i'm a bot 🤖</sub>";
 
 module.exports = async ({ github, context, core }) => {
   const issue = context.payload.issue;
@@ -103,18 +126,30 @@ module.exports = async ({ github, context, core }) => {
   const { owner, repo } = context.repo;
   const isMaintainer = MAINTAINER_ASSOCIATIONS.has(issue.author_association);
   const isBugLike = issue.labels.some((l) => l.name === LABEL.bug);
+  const isNewIssue = context.payload.action === 'opened';
+  const isOpen = issue.state === 'open';
+  const wasIncomplete = issue.labels.some((l) => l.name === LABEL.incomplete);
+
+  const shouldEnforcePrefix = isNewIssue || !isMaintainer;
+  const titlePrefix = shouldEnforcePrefix ? findTitlePrefix(fields) : null;
+  const title = titlePrefix ? prefixTitle(issue.title, titlePrefix) : issue.title;
 
   const desiredLabels = collectFieldLabels(fields);
   const notes = [];
+  let isIncomplete = false;
 
   if (!isMaintainer) {
-    if (isPlaceholderTitle(issue.title)) notes.push(NOTE.title);
+    if (isPlaceholderTitle(title)) {
+      notes.push(NOTE.title);
+      isIncomplete = true;
+    }
 
     const shouldHaveLogs = isBugLike && fields.has(FIELD.logs);
     const missingLogsNote = shouldHaveLogs ? findMissingLogsNote(fields) : null;
     if (missingLogsNote) {
       desiredLabels.add(LABEL.needsLogs);
       notes.push(missingLogsNote);
+      isIncomplete = true;
     }
 
     const reportedVersionText = fields.get(FIELD.version);
@@ -131,12 +166,28 @@ module.exports = async ({ github, context, core }) => {
     }
   }
 
-  const duplicates = isMaintainer ? [] : await findDuplicates(github, owner, repo, issue);
-  const comment = renderComment(notes, duplicates);
-  const isNewIssue = context.payload.action === 'opened';
+  const shouldCheckAuthorDuplicates = isNewIssue && !isMaintainer;
+  const authorDuplicate = shouldCheckAuthorDuplicates ? await findAuthorDuplicate(github, owner, repo, issue, title, desiredLabels, isIncomplete) : null;
+  const isIncompleteReport = isIncomplete && authorDuplicate == null;
+  const shouldCloseAsIncomplete = isIncompleteReport && isNewIssue;
+  const shouldKeepIncompleteLabel = isIncompleteReport && wasIncomplete;
+  if (shouldCloseAsIncomplete || shouldKeepIncompleteLabel) desiredLabels.add(LABEL.incomplete);
+
+  const canReopen = !isIncomplete && !isOpen && wasIncomplete;
+  const shouldReopen = canReopen && (await isClosedByBot(github, owner, repo, issue.number));
+  const isClosedIncomplete = shouldCloseAsIncomplete || (shouldKeepIncompleteLabel && !isOpen);
+
+  const shouldFindDuplicates = !isMaintainer && authorDuplicate == null;
+  const duplicates = shouldFindDuplicates ? await findDuplicates(github, owner, repo, issue.number, title) : [];
+  const comment = renderComment({ notes, duplicates, authorDuplicate, isClosedIncomplete });
+
+  const titleUpdate = title === issue.title ? null : { title };
+  const stateUpdate = buildStateUpdate({ authorDuplicate, shouldCloseAsIncomplete, shouldReopen });
+  const issueUpdate = { ...titleUpdate, ...stateUpdate };
 
   await syncLabels(github, owner, repo, issue, desiredLabels);
   await upsertComment(github, owner, repo, issue.number, comment, isNewIssue);
+  await updateIssue(github, owner, repo, issue.number, issueUpdate);
 };
 
 function parseForm(body) {
@@ -175,6 +226,16 @@ function collectFieldLabels(fields) {
   if (fields.has(FIELD.ytProblem)) labels.add(AREA_LABELS.YouTube);
 
   return labels;
+}
+
+function findTitlePrefix(fields) {
+  const match = TITLE_PREFIXES.find((p) => fields.has(p.field));
+  return match?.prefix;
+}
+
+function prefixTitle(title, prefix) {
+  const bareTitle = title.replace(TITLE_TAGS_REGEX, '').trim();
+  return bareTitle ? `${prefix} ${bareTitle}` : prefix;
 }
 
 function isPlaceholderTitle(title) {
@@ -243,8 +304,8 @@ function compareCore(a, b) {
   return 0;
 }
 
-async function findDuplicates(github, owner, repo, issue) {
-  const words = titleWords(issue.title);
+async function findDuplicates(github, owner, repo, issueNumber, title) {
+  const words = titleWords(title);
   if (words.length < 2) return [];
 
   const searchTerms = words.slice(0, MAX_SEARCH_WORDS).join(' OR ');
@@ -265,7 +326,7 @@ async function findDuplicates(github, owner, repo, issue) {
   const stems = new Set(words.map(stem));
   const candidates = [];
   for (const item of items) {
-    if (item.number === issue.number) continue;
+    if (item.number === issueNumber) continue;
 
     const itemStems = new Set(titleWords(item.title).map(stem));
     const score = diceScore(stems, itemStems);
@@ -275,6 +336,59 @@ async function findDuplicates(github, owner, repo, issue) {
   candidates.sort((a, b) => b.score - a.score);
   const bestCandidates = candidates.slice(0, MAX_DUPLICATES);
   return bestCandidates.map((c) => c.item);
+}
+
+async function findAuthorDuplicate(github, owner, repo, issue, title, desiredLabels, isIncomplete) {
+  const labelNames = new Set(issue.labels.map((l) => l.name));
+  const kindLabel = DUPLICATE_KIND_LABELS.find((l) => labelNames.has(l));
+  const areaLabel = [...desiredLabels].find((l) => l.startsWith(AREA_LABEL_PREFIX));
+  if (!kindLabel || !areaLabel) return null;
+
+  const windowStart = Date.parse(issue.created_at) - AUTHOR_DUPLICATE_WINDOW_MS;
+  const since = new Date(windowStart).toISOString();
+  let items;
+  try {
+    items = await github.paginate(github.rest.issues.listForRepo, {
+      owner,
+      repo,
+      creator: issue.user.login,
+      state: 'all',
+      since,
+      per_page: 100,
+    });
+  } catch (_) {
+    return null;
+  }
+
+  const titleStems = new Set(titleWords(title).map(stem));
+  const criteria = { issueNumber: issue.number, windowStart, kindLabel, areaLabel, titleStems, isIncomplete };
+  const candidates = items.filter((item) => isAuthorDuplicateCandidate(item, criteria));
+  candidates.sort((a, b) => a.number - b.number);
+
+  const openCandidate = candidates.find((c) => c.state === 'open');
+  if (openCandidate) return openCandidate;
+  return candidates.at(-1) ?? null;
+}
+
+function isAuthorDuplicateCandidate(item, criteria) {
+  if (item.pull_request || item.number >= criteria.issueNumber) return false;
+  if (Date.parse(item.created_at) < criteria.windowStart) return false;
+  if (item.state_reason === 'duplicate' || item.state_reason === 'completed') return false;
+
+  const itemLabels = new Set(item.labels.map((l) => l.name));
+  if (!itemLabels.has(criteria.kindLabel) || !itemLabels.has(criteria.areaLabel)) return false;
+
+  const itemStems = new Set(titleWords(item.title).map(stem));
+  const isSimilarTitle = diceScore(criteria.titleStems, itemStems) >= MIN_DUPLICATE_SCORE;
+  if (!criteria.isIncomplete) return isSimilarTitle && item.state === 'open';
+
+  const itemLacksDetails = itemLabels.has(LABEL.needsLogs) || itemLabels.has(LABEL.incomplete) || isPlaceholderTitle(item.title);
+  return isSimilarTitle || itemLacksDetails;
+}
+
+async function isClosedByBot(github, owner, repo, issueNumber) {
+  const response = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
+  return response.data.closed_by?.type === 'Bot';
 }
 
 function titleWords(title) {
@@ -319,13 +433,17 @@ async function createMissingLabels(github, owner, repo, names) {
   const existingNames = new Set(existing.map((l) => l.name.toLowerCase()));
   for (const name of names) {
     if (existingNames.has(name.toLowerCase())) continue;
-    const fallbackColor = name.startsWith('area: ') ? AREA_LABEL_COLOR : DEFAULT_LABEL_COLOR;
+    const fallbackColor = name.startsWith(AREA_LABEL_PREFIX) ? AREA_LABEL_COLOR : DEFAULT_LABEL_COLOR;
     const color = LABEL_COLORS[name] ?? fallbackColor;
     await github.rest.issues.createLabel({ owner, repo, name, color }).catch(() => {});
   }
 }
 
-function renderComment(notes, duplicates) {
+function renderComment({ notes, duplicates, authorDuplicate, isClosedIncomplete }) {
+  if (authorDuplicate) {
+    const duplicateLine = COMMENT_AUTHOR_DUPLICATE(authorDuplicate.number);
+    return [MARKER, duplicateLine, '', COMMENT_FOOTER_FINAL].join('\n');
+  }
   if (notes.length === 0 && duplicates.length === 0) return null;
 
   const lines = [MARKER];
@@ -333,6 +451,7 @@ function renderComment(notes, duplicates) {
     const noteLines = notes.map((n) => `- ${n}`);
     lines.push(COMMENT_NOTES_HEADER, '', ...noteLines, '');
   }
+  if (isClosedIncomplete) lines.push(COMMENT_CLOSED_INCOMPLETE, '');
   if (duplicates.length > 0) {
     const duplicateLines = duplicates.map(renderDuplicateLine);
     lines.push(COMMENT_DUPLICATES_HEADER, '', ...duplicateLines, '');
@@ -345,6 +464,18 @@ function renderDuplicateLine(duplicate) {
   const unmentionedTitle = duplicate.title.replace(/@/g, '@\u200b');
   const closedSuffix = duplicate.state === 'closed' ? ' _(closed)_' : '';
   return `- #${duplicate.number} ${unmentionedTitle}${closedSuffix}`;
+}
+
+function buildStateUpdate({ authorDuplicate, shouldCloseAsIncomplete, shouldReopen }) {
+  if (authorDuplicate) return { state: 'closed', state_reason: 'duplicate', duplicate_issue_id: authorDuplicate.id };
+  if (shouldCloseAsIncomplete) return { state: 'closed', state_reason: 'not_planned' };
+  if (shouldReopen) return { state: 'open', state_reason: 'reopened' };
+  return null;
+}
+
+async function updateIssue(github, owner, repo, issueNumber, update) {
+  if (Object.keys(update).length === 0) return;
+  await github.rest.issues.update({ owner, repo, issue_number: issueNumber, ...update });
 }
 
 async function upsertComment(github, owner, repo, issueNumber, body, isNewIssue) {
