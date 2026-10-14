@@ -150,7 +150,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       final wasShuffled = isQueueShuffled;
       await setQueueShuffled(settings.player.shuffleQueue.value);
       final shuffled = isQueueShuffled;
-      if (wasShuffled != shuffled) MiniPlayerController.inst.animateQueueToCurrentTrack(jump: false, minZero: true);
+      if (wasShuffled != shuffled) MiniPlayerController.inst.queueFollower.animateToCurrentItem();
       refreshPlaybackStateModes();
       _refreshNotificationButtonsIfShown(NotificationButton.shuffle);
       SMTCController.instance?.updateShuffle(shuffled);

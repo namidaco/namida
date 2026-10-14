@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/lyrics_controller.dart';
-import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -59,9 +59,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   late final AnimationController _bigBoxAnimation;
 
-  late final _queueScrollController = NamidaScrollController.create();
+  late final _queueFollower = QueueScrollFollower(currentItemStart: _currentItemStart, canFollow: () => isOpened);
   late final _canScrollQueue = true.obs;
-  late final _arrowIcon = Broken.cd.obs;
 
   bool get isOpened => _smallBoxAnimation.value == 1 && _bigBoxAnimation.value == 0;
   void toggleSheet() => isOpened ? dismissSheet() : openSheet();
@@ -82,7 +81,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
       duration: const Duration(milliseconds: 500),
     );
 
-    _queueScrollController.addListener(_updateScrollControllerThingys);
+    Player.inst.currentIndex.addListener(_queueFollower.onCurrentItemMoved);
+    Player.inst.currentQueue.addListener(_queueFollower.onCurrentItemMoved);
     if (widget.onExpandedStateChange != null) _bigBoxAnimation.addListener(_updateIsFullyOpened);
     Timer(Duration.zero, () {
       _updateIsFullyOpened();
@@ -95,10 +95,10 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     _wasOpened = isOpened;
     _smallBoxAnimation.dispose();
     _bigBoxAnimation.dispose();
-    _queueScrollController.dispose();
+    Player.inst.currentIndex.removeListener(_queueFollower.onCurrentItemMoved);
+    Player.inst.currentQueue.removeListener(_queueFollower.onCurrentItemMoved);
+    _queueFollower.dispose();
     _canScrollQueue.close();
-    _arrowIcon.close();
-    _queueScrollController.removeListener(_updateScrollControllerThingys);
     super.dispose();
   }
 
@@ -113,23 +113,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   void _updateCanScrollQueue(bool can) {
     if (_canScrollQueue.value != can) _canScrollQueue.value = can;
-  }
-
-  void _updateScrollControllerThingys() {
-    if (_queueScrollController.hasClients) {
-      final p = _queueScrollController.positions.lastOrNull;
-      if (p == null) return;
-      // -- icon
-      final pixels = p.pixels;
-      final sizeInSettings = _itemScrollOffsetInQueue.withMinimum(0);
-      if (pixels > sizeInSettings) {
-        _arrowIcon.value = Broken.arrow_up_1;
-      } else if (pixels < sizeInSettings) {
-        _arrowIcon.value = Broken.arrow_down;
-      } else if (pixels == sizeInSettings) {
-        _arrowIcon.value = Broken.cd;
-      }
-    }
   }
 
   void _animate(double small, double big) {
@@ -148,7 +131,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     YoutubeMiniplayerUiController.inst.startDimTimer();
     NamidaNavigator.inst.isQueueSheetOpen = true;
     _updateCanScrollQueue(true);
-    if (!wasAlreadyBig) WidgetsBinding.instance.addPostFrameCallback((_) => _animateQueueToCurrentTrack());
+    if (!wasAlreadyBig) WidgetsBinding.instance.addPostFrameCallback((_) => _queueFollower.animateToCurrentItem());
   }
 
   void _animateBigToSmall() {
@@ -158,26 +141,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     NamidaNavigator.inst.isQueueSheetOpen = false;
   }
 
-  double get _itemScrollOffsetInQueue => Dimensions.youtubeCardItemExtent * Player.inst.currentIndex.value - MiniPlayerController.inst.screenSize.height * 0.2;
-
-  void _animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
-    if (_queueScrollController.hasClients) {
-      final trackTileItemScrollOffsetInQueue = _itemScrollOffsetInQueue;
-      if (_queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
-        return;
-      }
-      final finalOffset = minZero ? trackTileItemScrollOffsetInQueue.withMinimum(0) : trackTileItemScrollOffsetInQueue;
-      if (jump) {
-        _queueScrollController.jumpTo(finalOffset);
-      } else {
-        _queueScrollController.animateToEff(
-          finalOffset,
-          duration: const Duration(milliseconds: 600),
-          curve: Curves.fastEaseInToSlowEaseOut,
-        );
-      }
-    }
-  }
+  double _currentItemStart() => Dimensions.youtubeCardItemExtent * Player.inst.currentIndex.value;
 
   double _smallBoxDrag = 1.0;
   double _bigBoxDrag = 0.0;
@@ -356,8 +320,9 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                   onPointerMove: (event) {
                     if (Player.inst.isModifyingQueue) return;
                     if (event.delta.dy > 0) {
-                      if (_queueScrollController.hasClients) {
-                        if (_queueScrollController.position.pixels <= 0) {
+                      final queueScrollController = _queueFollower.scrollController;
+                      if (queueScrollController.hasClients) {
+                        if (queueScrollController.position.pixels <= 0) {
                           _updateCanScrollQueue(false);
                         }
                       }
@@ -423,7 +388,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   ignoring: !canScroll,
                                   child: NamidaListView(
                                     listBottomPadding: 0,
-                                    scrollController: _queueScrollController,
+                                    scrollController: _queueFollower.scrollController,
                                     itemCount: queue.length,
                                     itemExtent: Dimensions.youtubeCardItemExtent,
                                     onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
@@ -473,10 +438,10 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                   itemsKeyword: (number) => number.displayVideoKeyword,
                                   onAddItemsTap: () => TracksAddOnTap().onAddVideosTap(context),
                                   scrollQueueWidget: ObxO(
-                                    rx: _arrowIcon,
+                                    rx: _queueFollower.arrowIcon,
                                     builder: (context, arrowIcon) => NamidaButton(
                                       tooltip: () => lang.jump,
-                                      onTap: _animateQueueToCurrentTrack,
+                                      onTap: _queueFollower.animateToCurrentItem,
                                       icon: arrowIcon,
                                     ),
                                   ),

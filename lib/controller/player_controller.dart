@@ -551,7 +551,7 @@ class Player {
     if (_audioHandler.partyGate?.interceptQueueRewrite(allTracks ? .shuffleAll : .shuffleNext) == true) return;
     if (allTracks) {
       _audioHandler.shuffleAllItems();
-      MiniPlayerController.inst.animateQueueToCurrentTrack(jump: true, minZero: true);
+      MiniPlayerController.inst.queueFollower.jumpToCurrentItem();
     } else {
       await _audioHandler.shuffleNextItems();
     }

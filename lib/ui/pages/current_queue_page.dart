@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/party/party_controller.dart';
@@ -113,18 +114,16 @@ class _QueueListBase extends StatefulWidget {
 }
 
 class _QueueListBaseState extends State<_QueueListBase> {
-  late final _scrollController = NamidaScrollController.create();
-  late final _arrowIcon = Broken.cd.obs;
+  late final _queueFollower = QueueScrollFollower(currentItemStart: _currentItemStart);
   double? _mixedCurrentItemStart;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_updateArrowIcon);
     Player.inst.currentIndex.addListener(_onCurrentItemMoved);
     Player.inst.currentQueue.addListener(_onCurrentItemMoved);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _updateArrowIcon();
+      if (mounted) _queueFollower.jumpToCurrentItem();
     });
   }
 
@@ -132,14 +131,13 @@ class _QueueListBaseState extends State<_QueueListBase> {
   void dispose() {
     Player.inst.currentIndex.removeListener(_onCurrentItemMoved);
     Player.inst.currentQueue.removeListener(_onCurrentItemMoved);
-    _scrollController.dispose();
-    _arrowIcon.close();
+    _queueFollower.dispose();
     super.dispose();
   }
 
   void _onCurrentItemMoved() {
     _mixedCurrentItemStart = null;
-    _updateArrowIcon();
+    _queueFollower.onCurrentItemMoved();
   }
 
   double _currentItemStart() {
@@ -155,36 +153,6 @@ class _QueueListBaseState extends State<_QueueListBase> {
     return _mixedCurrentItemStart = start;
   }
 
-  /// clamped, otherwise the icon never settles on [Broken.cd] for items near the edges.
-  double? _currentItemScrollOffset() {
-    final position = _scrollController.positions.lastOrNull;
-    if (position == null) return null;
-    final offset = _currentItemStart() - position.viewportDimension * 0.2;
-    return offset.clampDouble(position.minScrollExtent, position.maxScrollExtent);
-  }
-
-  void _updateArrowIcon() {
-    final position = _scrollController.positions.lastOrNull;
-    if (position == null || !position.hasContentDimensions) return;
-    final target = _currentItemScrollOffset()!;
-    final pixels = position.pixels;
-    _arrowIcon.value = pixels > target
-        ? Broken.arrow_up_1
-        : pixels < target
-        ? Broken.arrow_down
-        : Broken.cd;
-  }
-
-  void _animateToCurrentItem() {
-    final target = _currentItemScrollOffset();
-    if (target == null || _scrollController.positions.last.pixels == target) return;
-    _scrollController.animateToEff(
-      target,
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.fastEaseInToSlowEaseOut,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ObxO(
@@ -195,10 +163,11 @@ class _QueueListBaseState extends State<_QueueListBase> {
         final header = widget.header;
         final utilsRowBuilder = widget.utilsRowBuilder;
         final itemExtentOf = widget.itemExtentOf;
+        final scrollController = _queueFollower.scrollController;
         Widget listChild = NamidaScrollbar(
-          controller: _scrollController,
+          controller: scrollController,
           child: SmoothCustomScrollView(
-            controller: _scrollController,
+            controller: scrollController,
             slivers: [
               const SliverPadding(padding: EdgeInsets.only(top: Dimensions.tileBottomMargin6)),
               NamidaSliverReorderableList(
@@ -223,10 +192,10 @@ class _QueueListBaseState extends State<_QueueListBase> {
                 bottom: 12.0,
                 right: 12.0,
                 child: ObxO(
-                  rx: _arrowIcon,
+                  rx: _queueFollower.arrowIcon,
                   builder: (context, arrowIcon) => _FloatingJumpButton(
                     arrowIcon: arrowIcon,
-                    onTap: _animateToCurrentItem,
+                    onTap: _queueFollower.animateToCurrentItem,
                   ),
                 ),
               ),
@@ -248,10 +217,10 @@ class _QueueListBaseState extends State<_QueueListBase> {
                       alignment: Alignment.centerRight,
                       child: utilsRowBuilder(
                         ObxO(
-                          rx: _arrowIcon,
+                          rx: _queueFollower.arrowIcon,
                           builder: (context, arrowIcon) => NamidaButton(
                             tooltip: () => lang.jump,
-                            onTap: _animateToCurrentItem,
+                            onTap: _queueFollower.animateToCurrentItem,
                             icon: arrowIcon,
                           ),
                         ),

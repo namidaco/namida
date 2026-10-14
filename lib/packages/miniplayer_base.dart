@@ -756,10 +756,10 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                       itemsKeyword: (number) => widget.itemsKeyword(number, _getcurrentItem),
                       onAddItemsTap: () => widget.onAddItemsTap(_getcurrentItem),
                       scrollQueueWidget: ObxO(
-                        rx: MiniPlayerController.inst.arrowIcon,
+                        rx: MiniPlayerController.inst.queueFollower.arrowIcon,
                         builder: (context, arrow) => NamidaButton(
                           tooltip: () => lang.jump,
-                          onTap: MiniPlayerController.inst.animateQueueToCurrentTrack,
+                          onTap: MiniPlayerController.inst.queueFollower.animateToCurrentItem,
                           icon: arrow,
                         ),
                       ),
@@ -2474,10 +2474,11 @@ class _QueueListChildWrapper extends StatelessWidget {
             final queueLength = queue.length;
             if (queueLength == 0) return const SizedBox();
             // -- tiles observe the current index themselves, so a track change never rebuilds the whole list.
+            final queueScrollController = MiniPlayerController.inst.queueFollower.scrollController;
             return NamidaScrollbar(
-              controller: MiniPlayerController.inst.queueScrollController,
+              controller: queueScrollController,
               child: SmoothCustomScrollView(
-                controller: MiniPlayerController.inst.queueScrollController,
+                controller: queueScrollController,
                 slivers: [
                   SliverPadding(
                     padding: EdgeInsets.only(top: 2.0),

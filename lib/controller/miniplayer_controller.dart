@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -17,12 +18,10 @@ import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/mp.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
-import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_queue_chip.dart';
 
@@ -54,12 +53,9 @@ class MiniPlayerController {
   /// Prevents Listener while reorderding or dismissing items inside queue.
   bool get _isModifyingQueue => Player.inst.isModifyingQueue;
 
-  /// Icon that represents the direction of the current track
-  final arrowIcon = Broken.cd.obso;
-
   bool get _miniplayerIsWideScreen => Dimensions.inst.miniplayerIsWideScreen;
 
-  late final ScrollController queueScrollController = NamidaScrollController.create()..addListener(_updateIcon);
+  late final queueFollower = QueueScrollFollower(currentItemStart: _currentItemStart, canFollow: () => isInQueue);
 
   Future<void> _onMiniplayerDismiss() async => await Player.inst.clearQueue();
 
@@ -286,7 +282,10 @@ class MiniPlayerController {
 
   double? _mixedCurrentItemStart;
 
-  void _onCurrentItemMoved() => _mixedCurrentItemStart = null;
+  void _onCurrentItemMoved() {
+    _mixedCurrentItemStart = null;
+    queueFollower.onCurrentItemMoved();
+  }
 
   double _currentItemStart() {
     final index = Player.inst.currentIndex.value;
@@ -299,27 +298,6 @@ class MiniPlayerController {
       if (queue[i] is YoutubeID) videosCount++;
     }
     return _mixedCurrentItemStart = videosCount * Dimensions.youtubeCardItemExtent + (index - videosCount) * Dimensions.inst.trackTileItemExtent;
-  }
-
-  void animateQueueToCurrentTrack({bool jump = false, bool minZero = false}) {
-    if (queueScrollController.hasClients) {
-      final trackTileItemScrollOffsetInQueue = _currentItemStart() - screenSize.height * 0.2;
-      if (queueScrollController.positions.lastOrNull?.pixels == trackTileItemScrollOffsetInQueue) {
-        return;
-      }
-      final finalOffset = minZero ? trackTileItemScrollOffsetInQueue.withMinimum(0) : trackTileItemScrollOffsetInQueue;
-      try {
-        if (jump) {
-          queueScrollController.jumpTo(finalOffset);
-        } else {
-          queueScrollController.animateToEff(
-            finalOffset,
-            duration: const Duration(milliseconds: 600),
-            curve: Curves.fastEaseInToSlowEaseOut,
-          );
-        }
-      } catch (_) {}
-    }
   }
 
   bool onWillPop() {
@@ -348,7 +326,10 @@ class MiniPlayerController {
     bounceDown = false;
   }
 
-  bool _isInsideQueue() => _offset >= maxOffset * 2 && (queueScrollController.positions.isNotEmpty && queueScrollController.positions.first.pixels > 0.0);
+  bool _isInsideQueue() {
+    final queuePositions = queueFollower.scrollController.positions;
+    return _offset >= maxOffset * 2 && (queuePositions.isNotEmpty && queuePositions.first.pixels > 0.0);
+  }
 
   bool _canMinimizeMiniplayer(double dy) {
     if (_miniplayerIsWideScreen && animation.value <= 1 && dy > 0) {
@@ -549,23 +530,6 @@ class MiniPlayerController {
     return animation.value >= 1;
   }
 
-  void _updateIcon() {
-    final sizeInSettings = _currentItemStart() - maxOffset * 0.3;
-    double pixels;
-    try {
-      pixels = queueScrollController.positions.first.pixels;
-    } catch (_) {
-      pixels = sizeInSettings;
-    }
-    if (pixels > sizeInSettings) {
-      arrowIcon.value = Broken.arrow_up_1;
-    } else if (pixels < sizeInSettings) {
-      arrowIcon.value = Broken.arrow_down;
-    } else if (pixels == sizeInSettings) {
-      arrowIcon.value = Broken.cd;
-    }
-  }
-
   Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
     if (isInQueue && _offset >= maxOffset * 2) return;
 
@@ -577,7 +541,7 @@ class MiniPlayerController {
     if (animateScrollController) {
       // updating scroll before snapping makes a nice effect.
       SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
-        animateQueueToCurrentTrack(jump: true);
+        queueFollower.jumpToCurrentItem();
       });
     }
     await _snap(haptic: haptic, curve: _bouncingCurveSoft);
