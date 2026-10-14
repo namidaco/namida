@@ -17,6 +17,7 @@ import 'package:namida/class/lang.dart';
 import 'package:namida/class/player_config_preset.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track_sort_presets.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
@@ -173,34 +174,25 @@ class _SettingsController extends _SettingsKeysWriter {
   late final tracksSortSearchReversed = _key('tracksSortSearchReversed', false);
   late final tracksSortSearchIsAuto = _key('tracksSortSearchIsAuto_v2', true);
   late final tracksSearchShowLessRelevant = _key('tracksSearchShowLessRelevant', false);
-  late final albumSorts = _keyList(
-    'albumSorts',
-    isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album],
-    item: GroupSortType.values.asCodec(),
-    isUnique: true,
-    isNonEmpty: true,
+  static final _kDefaultGroupSorting = <MediaType, SortChain<GroupSortType>>{
+    MediaType.album: SortChain.of(isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.album], reverse: isKuru),
+    MediaType.artist: SortChain.of(isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList], reverse: isKuru),
+    MediaType.genre: SortChain.of(const [GroupSortType.genresList]),
+    MediaType.language: SortChain.of(const [GroupSortType.title]),
+    MediaType.mood: SortChain.of(const [GroupSortType.title]),
+    MediaType.tag: SortChain.of(const [GroupSortType.title]),
+    MediaType.playlist: SortChain.of(const [GroupSortType.dateModified]),
+  };
+
+  /// artist and genre variants share one entry, read through [groupSortingOf].
+  late final mediaGroupSorting = _keyMap<MediaType, SortChain<GroupSortType>>(
+    'mediaGroupSorting',
+    _kDefaultGroupSorting,
+    key: MediaType.values.asCodec(),
+    value: const _ObjectCodec(_groupSortingFromJson, _sortingToJson),
   );
-  late final albumSortReversed = _key('albumSortReversed', isKuru ? true : false);
   late final artistAlbumsSort = _key<GroupSortType?>('artistAlbumsSort', null, codec: GroupSortType.values.asCodec());
   late final artistAlbumsSortReversed = _key('artistAlbumsSortReversed', false);
-  late final artistSorts = _keyList(
-    'artistSorts',
-    isKuru ? const [GroupSortType.numberOfTracks] : const [GroupSortType.artistsList],
-    item: GroupSortType.values.asCodec(),
-    isUnique: true,
-    isNonEmpty: true,
-  );
-  late final artistSortReversed = _key('artistSortReversed', isKuru ? true : false);
-  late final genreSorts = _keyList('genreSorts', const [GroupSortType.genresList], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
-  late final genreSortReversed = _key('genreSortReversed', false);
-  late final languageSorts = _keyList('languageSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
-  late final languageSortReversed = _key('languageSortReversed', false);
-  late final moodSorts = _keyList('moodSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
-  late final moodSortReversed = _key('moodSortReversed', false);
-  late final tagSorts = _keyList('tagSorts', const [GroupSortType.title], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
-  late final tagSortReversed = _key('tagSortReversed', false);
-  late final playlistSorts = _keyList('playlistSorts', const [GroupSortType.dateModified], item: GroupSortType.values.asCodec(), isUnique: true, isNonEmpty: true);
-  late final playlistSortReversed = _key('playlistSortReversed', false);
   late final playlistsGroupByTags = _key('playlistsGroupByTags', false);
   late final ytPlaylistSort = _keyEnum('ytPlaylistSort', GroupSortType.dateModified, GroupSortType.values);
   late final ytPlaylistSortReversed = _key('ytPlaylistSortReversed', true);
@@ -416,9 +408,9 @@ class _SettingsController extends _SettingsKeysWriter {
       QueueInsertionType.moreFolder: QueueInsertion(numberOfTracks: 10, insertNext: false, shuffle: true),
       QueueInsertionType.random: QueueInsertion(numberOfTracks: 10, insertNext: false),
       QueueInsertionType.listenTimeRange: QueueInsertion(numberOfTracks: 0, insertNext: true),
-      QueueInsertionType.mood: QueueInsertion(numberOfTracks: 20, insertNext: true, sorts: [SortType.mostPlayed]),
-      QueueInsertionType.rating: QueueInsertion(numberOfTracks: 20, insertNext: false, sorts: [SortType.rating], sortReverse: true),
-      QueueInsertionType.sameReleaseDate: QueueInsertion(numberOfTracks: 30, insertNext: true, sorts: [SortType.mostPlayed]),
+      QueueInsertionType.mood: QueueInsertion(numberOfTracks: 20, insertNext: true, sorting: SortChain([SortEntry(SortType.mostPlayed)])),
+      QueueInsertionType.rating: QueueInsertion(numberOfTracks: 20, insertNext: false, sorting: SortChain([SortEntry(SortType.rating)], reverse: true)),
+      QueueInsertionType.sameReleaseDate: QueueInsertion(numberOfTracks: 30, insertNext: true, sorting: SortChain([SortEntry(SortType.mostPlayed)])),
       QueueInsertionType.algorithm: QueueInsertion(numberOfTracks: 20, insertNext: true),
       QueueInsertionType.algorithmDiscoverDate: QueueInsertion(numberOfTracks: 20, insertNext: true),
       QueueInsertionType.algorithmTimeRange: QueueInsertion(numberOfTracks: 20, insertNext: true),
@@ -458,60 +450,52 @@ class _SettingsController extends _SettingsKeysWriter {
 
   static const _kDefaultTracksSorting = isKuru ? [SortType.firstListen, SortType.title] : [SortType.title, SortType.year, SortType.album];
 
-  /// used while no preset is active, sorting reads [mediaItemsTrackSorting].
-  late final mediaItemsTrackSortingDefault = _keyMap<MediaType, List<SortType>>(
-    'mediaItemsTrackSorting',
-    const {
-      MediaType.track: _kDefaultTracksSorting,
-      MediaType.album: [SortType.discNo, SortType.trackNo, SortType.year, SortType.title],
-      MediaType.artist: [SortType.year, SortType.title],
-      MediaType.albumArtist: [SortType.year, SortType.title],
-      MediaType.composer: [SortType.year, SortType.title],
-      MediaType.genre: [SortType.year, SortType.title],
-      MediaType.style: [SortType.year, SortType.title],
-      MediaType.language: [SortType.year, SortType.title],
-      MediaType.mood: [SortType.title],
-      MediaType.tag: [SortType.title],
-      MediaType.rating: [SortType.title],
-      MediaType.folder: [SortType.filename],
-      MediaType.folderMusic: [SortType.filename],
-      MediaType.folderVideo: [SortType.filename],
-    },
-    key: MediaType.values.asCodec(),
-    value: _PlainListCodec(SortType.values.asCodec()),
-  );
+  static final _kDefaultTrackSorting = <MediaType, SortChain<SortType>>{
+    MediaType.track: SortChain.of(_kDefaultTracksSorting),
+    MediaType.album: SortChain.of(const [SortType.discNo, SortType.trackNo, SortType.year, SortType.title]),
+    MediaType.artist: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.albumArtist: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.composer: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.genre: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.style: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.language: SortChain.of(const [SortType.year, SortType.title]),
+    MediaType.mood: SortChain.of(const [SortType.title]),
+    MediaType.tag: SortChain.of(const [SortType.title]),
+    MediaType.rating: SortChain.of(const [SortType.title]),
+    MediaType.folder: SortChain.of(const [SortType.filename]),
+    MediaType.folderMusic: SortChain.of(const [SortType.filename]),
+    MediaType.folderVideo: SortChain.of(const [SortType.filename]),
+  };
 
-  late final mediaItemsTrackSortingReverseDefault = _keyMap<MediaType, bool>(
-    'mediaItemsTrackSortingReverse',
-    const {
-      MediaType.track: false,
-      MediaType.album: false,
-      MediaType.artist: false,
-      MediaType.genre: false,
-      MediaType.style: false,
-      MediaType.language: false,
-      MediaType.mood: false,
-      MediaType.tag: false,
-      MediaType.rating: false,
-      MediaType.folder: false,
-      MediaType.folderMusic: false,
-      MediaType.folderVideo: false,
-    },
+  /// used while no preset is active, sorting reads [mediaItemsTrackSorting].
+  late final mediaItemsTrackSortingDefault = _keyMap<MediaType, SortChain<SortType>>(
+    'mediaItemsTrackSorting_v2',
+    _kDefaultTrackSorting,
     key: MediaType.values.asCodec(),
+    value: const _ObjectCodec(_trackSortingFromJson, _sortingToJson),
   );
 
   late final mediaItemsTrackSortingPresets = _keyMap<MediaType, TrackSortPresets>(
-    'mediaItemsTrackSortingPresets',
+    'mediaItemsTrackSortingPresets_v2',
     const {},
     key: MediaType.values.asCodec(),
     value: _ObjectCodec(TrackSortPresets.fromJson, (v) => v.toJson()),
   );
 
   /// [mediaItemsTrackSortingDefault] with each type's active preset applied.
-  RxBaseCore<Map<MediaType, List<SortType>>> get mediaItemsTrackSorting => _activeTrackSorting.sorts;
-  RxBaseCore<Map<MediaType, bool>> get mediaItemsTrackSortingReverse => _activeTrackSorting.reverse;
+  RxBaseCore<Map<MediaType, SortChain<SortType>>> get mediaItemsTrackSorting => _activeTrackSorting.sorting;
 
-  late final _activeTrackSorting = _ActiveTrackSorting(mediaItemsTrackSortingDefault, mediaItemsTrackSortingReverseDefault, mediaItemsTrackSortingPresets);
+  late final _activeTrackSorting = _ActiveTrackSorting(mediaItemsTrackSortingDefault, mediaItemsTrackSortingPresets);
+
+  static SortChain<SortType> _trackSortingFromJson(Map<String, dynamic> json) => SortChain.fromMap(json, SortType.values);
+
+  /// groups always sort by something, an empty chain falls back to the default.
+  static SortChain<GroupSortType>? _groupSortingFromJson(Map<String, dynamic> json) {
+    final sorting = SortChain.fromMap(json, GroupSortType.values);
+    return sorting.isEmpty ? null : sorting;
+  }
+
+  static Object? _sortingToJson(SortChain sorting) => sorting.toJson();
 
   late final imageSourceAlbum = _keyList('imageSourceAlbum', const [LibraryImageSource.lastfm, LibraryImageSource.local], item: LibraryImageSource.values.asCodec());
   late final imageSourceArtist = _keyList('imageSourceArtist', const [LibraryImageSource.lastfm, LibraryImageSource.local], item: LibraryImageSource.values.asCodec());
@@ -593,6 +577,33 @@ class _SettingsController extends _SettingsKeysWriter {
       _migrateKey(name, listName, (json) => json is String && _raw[listName] == null ? [json] : null);
     }
 
+    // -- sorts and their reverse merged into one chain per media
+    final legacyTrackSorts = _dropKey('mediaItemsTrackSorting');
+    final legacyTrackSortsReverse = _dropKey('mediaItemsTrackSortingReverse');
+    if (_raw['mediaItemsTrackSorting_v2'] == null) {
+      final sortsMap = legacyTrackSorts is Map ? legacyTrackSorts : const {};
+      final reverseMap = legacyTrackSortsReverse is Map ? legacyTrackSortsReverse : const {};
+      final trackSorting = <String, dynamic>{};
+      for (final mediaName in {...sortsMap.keys, ...reverseMap.keys}) {
+        final media = MediaType.values.getEnum(mediaName);
+        final sortingJson = _legacySortingJson(sortsMap[mediaName], reverseMap[mediaName], _kDefaultTrackSorting[media]);
+        if (sortingJson != null) trackSorting[mediaName] = sortingJson;
+      }
+      if (trackSorting.isNotEmpty) _raw['mediaItemsTrackSorting_v2'] = trackSorting;
+    }
+    // -- same shape, old sort names load as non-reversed entries
+    _migrateKey('mediaItemsTrackSortingPresets', 'mediaItemsTrackSortingPresets_v2', (json) => _raw['mediaItemsTrackSortingPresets_v2'] == null ? json : null);
+    final groupSorting = <String, dynamic>{};
+    for (final e in _kDefaultGroupSorting.entries) {
+      final mediaName = e.key.name;
+      final legacySorts = _dropKey('${mediaName}Sorts');
+      final legacyReverse = _dropKey('${mediaName}SortReversed');
+      if (legacySorts == null && legacyReverse == null) continue;
+      final sortingJson = _legacySortingJson(legacySorts, legacyReverse, e.value);
+      if (sortingJson != null) groupSorting[mediaName] = sortingJson;
+    }
+    if (groupSorting.isNotEmpty && _raw['mediaGroupSorting'] == null) _raw['mediaGroupSorting'] = groupSorting;
+
     final isFavouriteInNotification = _dropKey('displayFavouriteButtonInNotification') == true;
     final isStopInNotification = _dropKey('displayStopButtonInNotification') != false;
     final didCustomizeNotification = isFavouriteInNotification || !isStopInNotification;
@@ -618,26 +629,35 @@ class _SettingsController extends _SettingsKeysWriter {
     }
   }
 
+  /// [sorts] and [reverse] as their old separate keys stored them, a missing one is taken from [defaultSorting].
+  static Map<String, dynamic>? _legacySortingJson(dynamic sorts, dynamic reverse, SortChain? defaultSorting) {
+    List? sortsJson = sorts is List ? sorts : null;
+    if (sortsJson == null && defaultSorting != null) sortsJson = SortEntry.listToJson(defaultSorting.entries);
+    if (sortsJson == null) return null;
+    final isReversed = reverse is bool ? reverse : defaultSorting?.reverse == true;
+    return {
+      'sorts': sortsJson,
+      if (isReversed) 'reverse': isReversed,
+    };
+  }
+
   /// writes to the active preset, [toDefault] writes to the default chain and deselects the preset.
-  void updateMediaItemsTrackSortingAll(MediaType media, List<SortType>? allsorts, bool? isReverse, {bool toDefault = false}) {
-    if (allsorts == null && isReverse == null) return;
+  void updateMediaItemsTrackSorting(MediaType media, SortChain<SortType> sorting, {bool toDefault = false}) {
     final presets = mediaItemsTrackSortingPresets.value[media];
     final hasActivePreset = presets?.activeIndex != null;
     if (presets != null && hasActivePreset && !toDefault) {
-      final newPresets = presets.withActiveChain(sorts: allsorts, reverse: isReverse);
+      final newPresets = presets.withActiveSorting(sorting);
       mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
       return;
     }
 
-    final didChangeSorts = allsorts.didChangeFrom(mediaItemsTrackSortingDefault.value[media], ordered: true);
-    final didChangeReverse = isReverse != mediaItemsTrackSortingReverseDefault.value[media];
+    final didChange = sorting != mediaItemsTrackSortingDefault.value[media];
     final deselectedPresets = hasActivePreset ? presets?.withActive(null) : null;
-    if (!didChangeSorts && !didChangeReverse && deselectedPresets == null) return;
+    if (!didChange && deselectedPresets == null) return;
 
     // -- default first, it doesn't change the active sorting while a preset is still selected
     transaction(() {
-      if (allsorts != null) mediaItemsTrackSortingDefault.update((sorting) => sorting[media] = allsorts);
-      if (isReverse != null) mediaItemsTrackSortingReverseDefault.update((reverse) => reverse[media] = isReverse);
+      if (didChange) mediaItemsTrackSortingDefault.update((map) => map[media] = sorting);
       if (deselectedPresets != null) mediaItemsTrackSortingPresets.update((map) => map[media] = deselectedPresets);
     });
   }
@@ -653,9 +673,8 @@ class _SettingsController extends _SettingsKeysWriter {
   void addTrackSortPreset(MediaType media, String name) {
     final presets = mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
     if (!presets.canAdd) return;
-    final sorts = mediaItemsTrackSorting.value[media] ?? const <SortType>[];
-    final reverse = mediaItemsTrackSortingReverse.value[media] ?? false;
-    final preset = TrackSortPreset(name: name, sorts: sorts, reverse: reverse);
+    final sorting = mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    final preset = TrackSortPreset(name: name, sorting: sorting);
     final newPresets = presets.withAdded(preset);
     mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
   }
@@ -681,37 +700,31 @@ class _SettingsController extends _SettingsKeysWriter {
     });
   }
 
-  void updateGroupSortingAll(MediaType media, List<GroupSortType> allSorts, bool isReverse) {
-    final keys = _groupSortingKeysOf(media);
-    if (keys == null) return;
-    final (sortsKey, reverseKey) = keys;
-    final didChangeSorts = allSorts.didChangeFrom(sortsKey.value, ordered: true);
-    final didChangeReverse = isReverse != reverseKey.value;
-    if (!didChangeSorts && !didChangeReverse) return;
-
-    transaction(() {
-      if (didChangeSorts) sortsKey.replace(allSorts);
-      if (didChangeReverse) reverseKey.save(isReverse);
-    });
+  void updateGroupSorting(MediaType media, SortChain<GroupSortType> sorting) {
+    final sortingMedia = _groupSortingMediaOf(media);
+    if (sortingMedia == null) return;
+    if (sorting == mediaGroupSorting.value[sortingMedia]) return;
+    mediaGroupSorting.update((map) => map[sortingMedia] = sorting);
   }
 
-  ({List<GroupSortType> sorts, bool isReverse})? groupSortingOf(MediaType media) {
-    final keys = _groupSortingKeysOf(media);
-    if (keys == null) return null;
-    final (sortsKey, reverseKey) = keys;
-    return (sorts: sortsKey.value, isReverse: reverseKey.value);
+  bool hasGroupSorting(MediaType media) => _groupSortingMediaOf(media) != null;
+
+  /// a media not sorted as a group gets [_kFallbackGroupSorting].
+  SortChain<GroupSortType> groupSortingOf(MediaType media) => _groupSortingIn(mediaGroupSorting.value, media);
+
+  SortChain<GroupSortType> groupSortingOfR(MediaType media) => _groupSortingIn(mediaGroupSorting.valueR, media);
+
+  static final _kFallbackGroupSorting = SortChain.of(const [GroupSortType.title]);
+
+  static SortChain<GroupSortType> _groupSortingIn(Map<MediaType, SortChain<GroupSortType>> map, MediaType media) {
+    final sortingMedia = _groupSortingMediaOf(media);
+    return map[sortingMedia] ?? _kFallbackGroupSorting;
   }
 
-  (Rx<List<GroupSortType>>, Rx<bool>)? groupSortingRxOf(MediaType media) => _groupSortingKeysOf(media);
-
-  (_SettingsListKey<GroupSortType>, SettingsKey<bool>)? _groupSortingKeysOf(MediaType media) => switch (media) {
-    MediaType.album => (albumSorts, albumSortReversed),
-    MediaType.artist || MediaType.albumArtist || MediaType.composer => (artistSorts, artistSortReversed),
-    MediaType.genre || MediaType.style => (genreSorts, genreSortReversed),
-    MediaType.language => (languageSorts, languageSortReversed),
-    MediaType.playlist => (playlistSorts, playlistSortReversed),
-    MediaType.mood => (moodSorts, moodSortReversed),
-    MediaType.tag => (tagSorts, tagSortReversed),
+  static MediaType? _groupSortingMediaOf(MediaType media) => switch (media) {
+    MediaType.album || MediaType.language || MediaType.playlist || MediaType.mood || MediaType.tag => media,
+    MediaType.artist || MediaType.albumArtist || MediaType.composer => MediaType.artist,
+    MediaType.genre || MediaType.style => MediaType.genre,
     MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.rating => null,
   };
 
@@ -773,44 +786,26 @@ class _DirectoryIndexCodec extends _SettingsCodec<DirectoryIndex> {
 
 // by claude
 class _ActiveTrackSorting {
-  final _SettingsMapKey<MediaType, List<SortType>> _defaultSorts;
-  final _SettingsMapKey<MediaType, bool> _defaultReverse;
+  final _SettingsMapKey<MediaType, SortChain<SortType>> _defaultSorting;
   final _SettingsMapKey<MediaType, TrackSortPresets> _presets;
 
-  final sorts = Rx<Map<MediaType, List<SortType>>>(const {});
-  final reverse = Rx<Map<MediaType, bool>>(const {});
+  final sorting = Rx<Map<MediaType, SortChain<SortType>>>(const {});
 
-  _ActiveTrackSorting(this._defaultSorts, this._defaultReverse, this._presets) {
+  _ActiveTrackSorting(this._defaultSorting, this._presets) {
     _rebuild();
-    _defaultSorts.addListener(_rebuild);
-    _defaultReverse.addListener(_rebuild);
+    _defaultSorting.addListener(_rebuild);
     _presets.addListener(_rebuild);
   }
 
-  /// both are set before either notifies, so a listener of one reads the other up to date.
   void _rebuild() {
-    final newSorts = <MediaType, List<SortType>>{..._defaultSorts.value};
-    final newReverse = <MediaType, bool>{..._defaultReverse.value};
+    final newSorting = <MediaType, SortChain<SortType>>{..._defaultSorting.value};
     for (final e in _presets.value.entries) {
       final preset = e.value.activePreset;
       if (preset == null) continue;
-      newSorts[e.key] = preset.sorts;
-      newReverse[e.key] = preset.reverse;
+      newSorting[e.key] = preset.sorting;
     }
-    final didChangeSorts = !_sortsEqual(newSorts, sorts.value);
-    final didChangeReverse = !mapEquals(newReverse, reverse.value);
-    if (didChangeSorts) sorts.set(_ProtectedMap(newSorts));
-    if (didChangeReverse) reverse.set(_ProtectedMap(newReverse));
-    if (didChangeSorts) sorts.refresh();
-    if (didChangeReverse) reverse.refresh();
-  }
-
-  static bool _sortsEqual(Map<MediaType, List<SortType>> a, Map<MediaType, List<SortType>> b) {
-    if (a.length != b.length) return false;
-    for (final e in a.entries) {
-      if (!listEquals(e.value, b[e.key])) return false;
-    }
-    return true;
+    if (mapEquals(newSorting, sorting.value)) return;
+    sorting.value = _ProtectedMap(newSorting);
   }
 }
 

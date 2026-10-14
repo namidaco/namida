@@ -14,8 +14,7 @@ class SmartPlaylist {
   final String name;
   final DateTime creationDate;
   final SmartJoiner joiner;
-  final List<SortType> sorts;
-  final bool sortReverse;
+  final SortChain<SortType> sorting;
   final List<String> moods;
   final List<SmartPlaylistRuleGroup> ruleGroups;
   final SmartPlaylistLimit? limit;
@@ -26,8 +25,7 @@ class SmartPlaylist {
     required this.name,
     required this.creationDate,
     required this.joiner,
-    required this.sorts,
-    required this.sortReverse,
+    required this.sorting,
     required this.moods,
     required this.ruleGroups,
     required this.limit,
@@ -37,19 +35,20 @@ class SmartPlaylist {
   List<Track> resolve() {
     final allTracks = Indexer.inst.tracksInfoList.value;
     final limit = this.limit;
-    if (limit == null && sorts.isEmpty) {
-      final orderedTracks = sortReverse ? allTracks.reversed : allTracks;
+    final sorting = this.sorting;
+    if (limit == null && sorting.isEmpty) {
+      final orderedTracks = sorting.reverse ? allTracks.reversed : allTracks;
       return resolveIterableUnSorted(orderedTracks).toList();
     }
 
     final matched = resolveIterableUnSorted(allTracks).toList();
     final list = limit == null ? matched : limit.select(matched);
-    if (sorts.isNotEmpty) {
-      final comparables = sorts.map(SearchSortController.inst.getTracksSortingComparables).toFixedList();
-      list.sortByAltsPrecomputed(comparables, reverse: sortReverse);
+    if (sorting.isNotEmpty) {
+      final comparables = SearchSortController.inst.getTracksChainComparables(sorting);
+      list.sortByChain(comparables);
       return list;
     }
-    return sortReverse ? list.reversed.toList() : list;
+    return sorting.reverse ? list.reversed.toList() : list;
   }
 
   int resolveCount() {
@@ -131,8 +130,7 @@ class SmartPlaylist {
       name: map['name'] as String,
       creationDate: DateTime.fromMillisecondsSinceEpoch(map['creationDate'] as int),
       joiner: SmartJoiner.values.getEnum(map['joiner']) ?? SmartJoiner.defaultForGroups,
-      sorts: _parseSorts(map),
-      sortReverse: map['sortReverse'] as bool,
+      sorting: _parseSorting(map),
       moods: (map['moods'] as List).cast<String>(),
       ruleGroups: (map['ruleGroups'] as List).map(SmartPlaylistRuleGroup.fromMap).toList(),
       limit: SmartPlaylistLimit.fromMapNullable(map['limit']),
@@ -140,11 +138,13 @@ class SmartPlaylist {
     );
   }
 
-  static List<SortType> _parseSorts(Map<String, dynamic> map) {
-    final sortsRaw = map['sorts'];
-    if (sortsRaw != null) return SortType.sortListFromJsonList(sortsRaw);
-    final legacySort = SortType.values.getEnum(map['sort']);
-    return legacySort == null ? const [] : [legacySort];
+  /// [map] from before each sort could be reversed holds `sorts`, or a single `sort`, and `sortReverse`.
+  static SortChain<SortType> _parseSorting(Map map) {
+    final sortingJson = map['sorts_v2'];
+    if (sortingJson is Map) return SortChain.fromMap(sortingJson, SortType.values);
+    final legacySortsJson = map['sorts'] ?? [?map['sort']];
+    final legacyEntries = SortEntry.listFromJson(legacySortsJson, SortType.values);
+    return SortChain(legacyEntries, reverse: map['sortReverse'] == true);
   }
 
   Map<String, dynamic> toMap() {
@@ -152,8 +152,7 @@ class SmartPlaylist {
       'name': name,
       'creationDate': creationDate.millisecondsSinceEpoch,
       'joiner': joiner.name,
-      'sorts': SortType.sortsToJson(sorts),
-      'sortReverse': sortReverse,
+      'sorts_v2': sorting.toJson(),
       'moods': moods,
       'ruleGroups': ruleGroups.map((e) => e.toMap()).toFixedList(),
       'limit': ?limit?.toMap(),
@@ -165,8 +164,7 @@ class SmartPlaylist {
     String? name,
     DateTime? creationDate,
     SmartJoiner? joiner,
-    List<SortType>? sorts,
-    bool? sortReverse,
+    SortChain<SortType>? sorting,
     List<String>? moods,
     List<SmartPlaylistRuleGroup>? ruleGroups,
     int? modifiedDate,
@@ -174,8 +172,7 @@ class SmartPlaylist {
     name: name ?? this.name,
     creationDate: creationDate ?? this.creationDate,
     joiner: joiner ?? this.joiner,
-    sorts: sorts ?? this.sorts,
-    sortReverse: sortReverse ?? this.sortReverse,
+    sorting: sorting ?? this.sorting,
     moods: moods ?? this.moods,
     ruleGroups: ruleGroups ?? this.ruleGroups,
     limit: this.limit,
@@ -326,7 +323,7 @@ class _SmartPlaylistResolveContext {
 
 sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S extends SmartPlaylistRuleFilterSource> {
   static ListensSortedMap get topTracksMapListens => HistoryController.inst.topTracksMapListens.value;
-  static FavouritePlaylist<TrackWithDate, Track, SortType> get favouritesMap => PlaylistController.inst.favouritesPlaylist;
+  static FavouritePlaylist<TrackWithDate, Track, SortEntry<SortType>> get favouritesMap => PlaylistController.inst.favouritesPlaylist;
 
   final SmartPlaylistFilterType type;
   final F filter;
@@ -553,27 +550,25 @@ mixin SmartPlaylistRuleFilterSource {
   IconData? toIcon();
 }
 
-/// keeps only the first tracks by [sorts] that fit in [amount] of [unit].
+/// keeps only the first tracks by [sorting] that fit in [amount] of [unit].
 ///
 /// by claude
 class SmartPlaylistLimit {
   final int amount;
   final SmartPlaylistLimitUnit unit;
-  final List<SortType> sorts;
-  final bool sortReverse;
+  final SortChain<SortType> sorting;
 
   const SmartPlaylistLimit({
     required this.amount,
     required this.unit,
-    required this.sorts,
-    required this.sortReverse,
+    required this.sorting,
   });
 
-  const SmartPlaylistLimit.initial() : amount = 25, unit = SmartPlaylistLimitUnit.tracks, sorts = const [SortType.mostPlayed], sortReverse = false;
+  const SmartPlaylistLimit.initial() : amount = 25, unit = SmartPlaylistLimitUnit.tracks, sorting = const SortChain([SortEntry(SortType.mostPlayed)]);
 
   Iterable<Track> _ordered(List<Track> tracks) {
-    final comparables = sorts.map(SearchSortController.inst.getTracksSortingComparables).toFixedList();
-    return tracks.lazySortedByAltsPrecomputed(comparables, reverse: sortReverse);
+    final comparables = SearchSortController.inst.getTracksChainComparables(sorting);
+    return tracks.lazySortedByChain(comparables);
   }
 
   List<Track> select(List<Track> tracks) {
@@ -606,7 +601,7 @@ class SmartPlaylistLimit {
 
   String toText() {
     final amountText = unit.toAmountText(amount);
-    final sortText = sorts.firstOrNull?.toText();
+    final sortText = sorting.firstType?.toText();
     return sortText == null ? amountText : '$amountText • $sortText';
   }
 
@@ -616,8 +611,7 @@ class SmartPlaylistLimit {
       return SmartPlaylistLimit(
         amount: map['amount'] as int,
         unit: SmartPlaylistLimitUnit.values.getEnum(map['unit']) ?? SmartPlaylistLimitUnit.tracks,
-        sorts: SortType.sortListFromJsonList(map['sorts']),
-        sortReverse: map['sortReverse'] == true,
+        sorting: SmartPlaylist._parseSorting(map),
       );
     } catch (_) {}
     return null;
@@ -627,21 +621,18 @@ class SmartPlaylistLimit {
     return <String, dynamic>{
       'amount': amount,
       'unit': unit.name,
-      'sorts': SortType.sortsToJson(sorts),
-      if (sortReverse) 'sortReverse': sortReverse,
+      'sorts_v2': sorting.toJson(),
     };
   }
 
   SmartPlaylistLimit copyWith({
     int? amount,
     SmartPlaylistLimitUnit? unit,
-    List<SortType>? sorts,
-    bool? sortReverse,
+    SortChain<SortType>? sorting,
   }) => SmartPlaylistLimit(
     amount: amount ?? this.amount,
     unit: unit ?? this.unit,
-    sorts: sorts ?? this.sorts,
-    sortReverse: sortReverse ?? this.sortReverse,
+    sorting: sorting ?? this.sorting,
   );
 }
 

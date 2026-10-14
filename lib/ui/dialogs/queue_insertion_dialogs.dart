@@ -349,10 +349,9 @@ class _QueueInsertionTiles extends StatelessWidget {
 
   void _pickSorts() {
     NamidaOnTaps.inst.onTracksSortIconTap(
-      currentSorts: insertion.sorts,
-      currentReverse: insertion.sortReverse,
+      currentSorting: insertion.sorting,
       allSorts: forYoutube ? const [SortType.mostPlayed] : null,
-      onChanged: (sorts, reverse) => onChanged(insertion.copyWith(sorts: sorts, sortReverse: reverse, shuffle: false)),
+      onChanged: (sorting) => onChanged(insertion.copyWith(sorting: sorting, shuffle: false)),
     );
   }
 
@@ -360,7 +359,7 @@ class _QueueInsertionTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     final minimumCounter = this.minimumCounter;
     final insertion = this.insertion;
-    final sortText = insertion.sorts.firstOrNull?.toText() ?? lang.defaultLabel;
+    final sortText = insertion.sorting.firstType?.toText() ?? lang.defaultLabel;
     final numberOfTracks = insertion.numberOfTracks;
     final filterSort = insertion.filterSort;
     final filterMinimum = filterSort == null ? null : TrackMinimum.of(filterSort);
@@ -386,7 +385,7 @@ class _QueueInsertionTiles extends StatelessWidget {
                 ),
                 const SizedBox(width: 4.0),
                 Icon(
-                  insertion.sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                  insertion.sorting.reverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                   size: 18.0,
                 ),
               ],

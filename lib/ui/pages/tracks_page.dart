@@ -91,7 +91,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
   }
 
   ScrollbarThumbLabelResolver? _createThumbLabel() {
-    final sort = settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull;
+    final sort = settings.mediaItemsTrackSorting.value[MediaType.track]?.firstType;
     if (sort == null) return null;
     final tracks = SearchSortController.inst.trackSearchList.value;
     final labelOf = SearchSortController.inst.getTracksSortLabelResolver(sort);
@@ -123,7 +123,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
               String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${totalTracksLength.displayTrackKeyword}' : finalTracksLength.displayTrackKeyword;
               final isIndexingR = Indexer.inst.isIndexing.valueR;
               final presetName = settings.mediaItemsTrackSortingPresets.valueR[MediaType.track]?.activePreset?.name;
-              final sortTitle = presetName ?? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull?.toText() ?? '';
+              final sorting = settings.mediaItemsTrackSorting.valueR[MediaType.track];
+              final sortReverse = sorting?.reverse == true;
+              final sortTitle = presetName ?? sorting?.firstType?.toText() ?? '';
               return ExpandableBox(
                 enableHero: false,
                 isBarVisible: libraryTab.isBarVisible.valueR,
@@ -156,9 +158,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                 sortByMenuWidget: SortByMenu(
                   title: sortTitle,
                   popupMenuChild: const SortByMenuTracks(),
-                  isCurrentlyReversed: settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true,
+                  isCurrentlyReversed: sortReverse,
                   onReverseIconTap: () {
-                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !(settings.mediaItemsTrackSortingReverse.value[MediaType.track] == true));
+                    SearchSortController.inst.sortMedia(MediaType.track, reverse: !sortReverse);
                   },
                 ),
                 textField: CustomTextField(

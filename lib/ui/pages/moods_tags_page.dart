@@ -4,6 +4,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -106,29 +107,23 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
   var _allEntries = <MapEntry<String, List<Track>>>[];
   var _entries = <MapEntry<String, List<Track>>>[];
   KeysSearchWrapper<MapEntry<String, List<Track>>>? _searchWrapper;
-  late final _sortingRx = settings.groupSortingRxOf(widget.type);
   late final _libraryTab = widget.type.toLibraryTab();
+
+  /// null when the type isn't sorted as a group.
+  SortChain<GroupSortType>? _sorting;
 
   @override
   void initState() {
+    final type = widget.type;
+    if (settings.hasGroupSorting(type)) _sorting = settings.groupSortingOf(type);
     _fillData();
-    final sortingRx = _sortingRx;
-    if (sortingRx != null) {
-      final (sortsRx, reverseRx) = sortingRx;
-      sortsRx.addListener(_onSortingChanged);
-      reverseRx.addListener(_onSortingChanged);
-    }
+    if (_sorting != null) settings.mediaGroupSorting.addListener(_onSortingChanged);
     super.initState();
   }
 
   @override
   void dispose() {
-    final sortingRx = _sortingRx;
-    if (sortingRx != null) {
-      final (sortsRx, reverseRx) = sortingRx;
-      sortsRx.removeListener(_onSortingChanged);
-      reverseRx.removeListener(_onSortingChanged);
-    }
+    if (_sorting != null) settings.mediaGroupSorting.removeListener(_onSortingChanged);
     super.dispose();
   }
 
@@ -146,7 +141,7 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
   }
 
   void _sortEntries() {
-    if (_sortingRx == null) return;
+    if (_sorting == null) return;
     SearchSortController.inst.sortMoodsTagsEntries(widget.type, _allEntries);
   }
 
@@ -160,6 +155,9 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
   }
 
   void _onSortingChanged() {
+    final sorting = settings.groupSortingOf(widget.type);
+    if (sorting == _sorting) return;
+    _sorting = sorting;
     _searchWrapper = null;
     _sortEntries();
     final searchText = _libraryTab.textSearchController?.text ?? '';
@@ -192,11 +190,10 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
 
     String? Function(String name, List<Track> tracks)? extraTextResolver;
     Widget? header;
-    final sortingRx = _sortingRx;
-    if (sortingRx != null) {
-      final (sortsRx, reverseRx) = sortingRx;
-      final sort = sortsRx.value.first;
-      final sortReverse = reverseRx.value;
+    final sorting = _sorting;
+    if (sorting != null) {
+      final sort = sorting.entries.first.type;
+      final sortReverse = sorting.reverse;
       final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
       extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getMoodsTagsExtraTextResolver(type, sort);
       final leftText = entriesLength != allEntriesLength ? '$entriesLength/${_countText(allEntriesLength)}' : _countText(entriesLength);

@@ -89,8 +89,9 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
           child: Obx(
             (context) {
               final genreType = settings.activeGenreType.valueR;
-              final sort = settings.genreSorts.valueR.first;
-              final sortReverse = settings.genreSortReversed.valueR;
+              final sorting = settings.groupSortingOfR(genreType);
+              final sort = sorting.entries.first.type;
+              final sortReverse = sorting.reverse;
 
               final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
               final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGenresExtraTextResolver(genreType, sort);
@@ -140,7 +141,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     title: sort.toText(),
                     popupMenuChild: const SortByMenuGenres(),
                     isCurrentlyReversed: sortReverse,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !settings.genreSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !sortReverse),
                   ),
                   textField: CustomTextField(
                     textFieldController: libraryTab.textSearchControllerR,

@@ -17,6 +17,7 @@ import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/track_sort_presets.dart';
 import 'package:namida/controller/current_color.dart';
@@ -320,6 +321,7 @@ class NamidaOnTaps {
       MediaType.folderMusic: [SortType.filename],
       MediaType.folderVideo: [SortType.filename],
     };
+    SortChain<SortType> activeSorting() => settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
     return _onSubPageSortIconTap<SortType>(
       header: header,
       minimumItems: 1,
@@ -327,16 +329,17 @@ class NamidaOnTaps {
       sortToText: (sort) => sort.toText(),
       sortToIcon: (sort) => sort.toIcon(),
       defaultSorts: defaultSorts[media] ?? [SortType.year],
-      currentSorts: settings.mediaItemsTrackSorting.value[media] ?? [],
-      currentReverse: settings.mediaItemsTrackSortingReverse.value[media] ?? false,
+      currentSorting: activeSorting(),
       allowCustom: false,
       withSortKeyOptions: true,
       prefixFiltersOf: SortOptionsCards.prefixFiltersOfTracks,
       onSortChange: (activeSorters) {
-        settings.updateMediaItemsTrackSortingAll(media, activeSorters, null);
+        final sorting = activeSorting().copyWith(entries: activeSorters);
+        settings.updateMediaItemsTrackSorting(media, sorting);
       },
       onSortReverseChange: (reverse) {
-        settings.updateMediaItemsTrackSortingAll(media, null, reverse);
+        final sorting = activeSorting().copyWith(reverse: reverse);
+        settings.updateMediaItemsTrackSorting(media, sorting);
       },
       onDone: () {
         Indexer.inst.sortMediaTracksSubLists([media]);
@@ -360,15 +363,15 @@ class NamidaOnTaps {
       MediaType.mood || MediaType.tag => GroupSortType.forMoodsTags(),
       MediaType.track || MediaType.folder || MediaType.folderMusic || MediaType.folderVideo || MediaType.rating => null,
     };
-    if (sorting == null || availableSorts == null) return;
+    if (availableSorts == null) return;
     final allSorts = availableSorts.where((e) => e != GroupSortType.shuffle && e != GroupSortType.custom).toList();
     final defaultSorts = [allSorts.first];
-    final currentSortsValid = sorting.sorts.where(allSorts.contains).toList();
-    final currentSorts = currentSortsValid.isEmpty ? defaultSorts : currentSortsValid;
+    final currentEntriesValid = sorting.entries.where((e) => allSorts.contains(e.type)).toList();
+    final currentEntries = currentEntriesValid.isEmpty ? [SortEntry(allSorts.first)] : currentEntriesValid;
+    final currentSorting = sorting.copyWith(entries: currentEntries);
     final isPlaylists = media == MediaType.playlist;
 
-    List<GroupSortType> newSorts = currentSorts;
-    bool newReverse = sorting.isReverse;
+    SortChain<GroupSortType> newSorting = currentSorting;
 
     return _onSubPageSortIconTap<GroupSortType>(
       minimumItems: 1,
@@ -376,32 +379,32 @@ class NamidaOnTaps {
       allSortsList: allSorts,
       sortToText: (sort) => sort.toText(),
       sortToIcon: (sort) => sort.toIcon(),
-      currentSorts: currentSorts,
-      currentReverse: sorting.isReverse,
+      currentSorting: currentSorting,
       allowCustom: false,
       withSortKeyOptions: true,
       prefixFiltersOf: isPlaylists ? null : SortOptionsCards.prefixFiltersOfGroups,
-      onSortChange: (activeSorters) => newSorts = activeSorters,
-      onSortReverseChange: (reverse) => newReverse = reverse,
+      onSortChange: (activeSorters) => newSorting = newSorting.copyWith(entries: activeSorters),
+      onSortReverseChange: (reverse) => newSorting = newSorting.copyWith(reverse: reverse),
       onDone: () {
-        final didChange = newReverse != sorting.isReverse || newSorts.didChangeFrom(sorting.sorts, ordered: true);
-        if (didChange) SearchSortController.inst.sortMedia(media, groupSorts: newSorts, reverse: newReverse);
+        if (newSorting != sorting) SearchSortController.inst.sortMedia(media, groupSorting: newSorting);
       },
     );
   }
 
-  void onPlaylistSubPageTracksSortIconTap<T extends PlaylistItemWithDate, E, S>(
+  void onPlaylistSubPageTracksSortIconTap<T extends PlaylistItemWithDate, E, S extends Enum>(
     String playlistName,
-    PlaylistManager<T, E, S> playlistManager,
+    PlaylistManager<T, E, SortEntry<S>> playlistManager,
     List<S> allSorts,
     String Function(S sort) sortToText,
     IconData Function(S sort) sortToIcon,
   ) {
     final initialpl = playlistManager.getPlaylist(playlistName);
-    List<S>? newSorts;
+    final initialSorts = initialpl?.sortsType ?? <SortEntry<S>>[];
+    final initialReverse = initialpl?.sortReverse ?? false;
+    List<SortEntry<S>>? newSorts;
     bool? newSortReverse;
 
-    void onFinalUpdatePropertySort(List<S> sorts, bool? reverse, {bool restoreCustomOrder = false}) {
+    void onFinalUpdatePropertySort(List<SortEntry<S>> sorts, bool? reverse, {bool restoreCustomOrder = false}) {
       playlistManager.updatePropertyInPlaylist(playlistName, itemsSortType: sorts, itemsSortReverse: reverse, restoreCustomOrder: restoreCustomOrder);
       playlistManager.resetCanReorder();
     }
@@ -412,8 +415,7 @@ class NamidaOnTaps {
       allSortsList: List<S>.from(allSorts),
       sortToText: sortToText,
       sortToIcon: sortToIcon,
-      currentSorts: initialpl?.sortsType ?? [],
-      currentReverse: initialpl?.sortReverse ?? false,
+      currentSorting: SortChain(initialSorts, reverse: initialReverse),
       allowCustom: false,
       onSortChange: (activeSorters) {
         newSorts = activeSorters;
@@ -467,13 +469,11 @@ class NamidaOnTaps {
   }
 
   void onTracksSortIconTap({
-    required List<SortType> currentSorts,
-    required bool currentReverse,
+    required SortChain<SortType> currentSorting,
     List<SortType>? allSorts,
-    required void Function(List<SortType> sorts, bool reverse) onChanged,
+    required void Function(SortChain<SortType> sorting) onChanged,
   }) {
-    List<SortType> newSorts = currentSorts;
-    bool newReverse = currentReverse;
+    SortChain<SortType> newSorting = currentSorting;
 
     return _onSubPageSortIconTap<SortType>(
       minimumItems: 0,
@@ -481,43 +481,42 @@ class NamidaOnTaps {
       allSortsList: List<SortType>.from(allSorts ?? SortType.values),
       sortToText: (sort) => sort.toText(),
       sortToIcon: (sort) => sort.toIcon(),
-      currentSorts: currentSorts,
-      currentReverse: currentReverse,
+      currentSorting: currentSorting,
       allowCustom: false,
-      onSortChange: (activeSorters) => newSorts = activeSorters,
-      onSortReverseChange: (reverse) => newReverse = reverse,
+      onSortChange: (activeSorters) => newSorting = newSorting.copyWith(entries: activeSorters),
+      onSortReverseChange: (reverse) => newSorting = newSorting.copyWith(reverse: reverse),
       onDone: () {
-        final didChange = newReverse != currentReverse || !listEquals(newSorts, currentSorts);
-        if (didChange) onChanged(newSorts, newReverse);
+        if (newSorting != currentSorting) onChanged(newSorting);
       },
     );
   }
 
-  void _onSubPageSortIconTap<S>({
+  void _onSubPageSortIconTap<S extends Enum>({
     Widget? header,
-    required List<S> currentSorts,
+    required SortChain<S> currentSorting,
     required List<S> allSortsList,
-    required bool currentReverse,
     required List<S> defaultSorts,
     required int minimumItems,
     required String Function(S sort) sortToText,
     required IconData Function(S sort) sortToIcon,
     required bool allowCustom,
     bool withSortKeyOptions = false,
-    Set<TrackSearchFilter> Function(List<S> sorts)? prefixFiltersOf,
-    required void Function(List<S> activeSorters) onSortChange,
+    Set<TrackSearchFilter> Function(Iterable<S> sorts)? prefixFiltersOf,
+    required void Function(List<SortEntry<S>> activeSorters) onSortChange,
     required void Function(bool reverse) onSortReverseChange,
     required void Function() onDone,
-    Widget Function(VoidCallback onBeforeChange, void Function(List<S> sorts, bool reverse) onChanged)? leftActionBuilder,
+    Widget Function(VoidCallback onBeforeChange, void Function(SortChain<S> sorting) onChanged)? leftActionBuilder,
   }) {
-    final sorters = List<S>.from(currentSorts).obs;
-    final isReverse = currentReverse.obs;
+    final sorters = currentSorting.entries.toList().obs;
+    final isReverse = currentSorting.reverse.obs;
 
     final allSorts = allSortsList.obs;
 
     void resortVisualItems() => allSorts.sortByReverse((e) {
-      final active = sorters.contains(e);
-      return active ? sorters.length - sorters.value.indexOf(e) : sorters.value.indexOf(e);
+      final sortersList = sorters.value;
+      final index = sortersList.indexWhere((sorter) => sorter.type == e);
+      final isActive = index != -1;
+      return isActive ? sortersList.length - index : index;
     });
 
     resortVisualItems();
@@ -532,18 +531,19 @@ class NamidaOnTaps {
       onDone();
     }
 
-    void loadSorts(List<S> sorts, bool reverse) {
-      sorters.value = sorts.toList();
-      isReverse.value = reverse;
+    void loadSorting(SortChain<S> sorting) {
+      sorters.value = sorting.entries.toList();
+      isReverse.value = sorting.reverse;
       resortVisualItems();
     }
 
-    final leftAction = leftActionBuilder?.call(saveSorts, loadSorts);
+    final leftAction = leftActionBuilder?.call(saveSorts, loadSorting);
 
     NamidaNavigator.inst.navigateDialog(
       scale: 1.0,
       onDisposing: () {
         sorters.close();
+        isReverse.close();
         allSorts.close();
       },
       onDismissing: resortMedia,
@@ -555,8 +555,9 @@ class NamidaOnTaps {
             icon: const Icon(Broken.refresh),
             tooltip: lang.restoreDefaults,
             onPressed: () {
-              sorters.value = defaultSorts.toList();
-              onSortChange(defaultSorts);
+              final defaultEntries = defaultSorts.map((e) => SortEntry(e)).toList();
+              sorters.value = defaultEntries;
+              onSortChange(defaultEntries);
             },
           ),
           DoneButton(additional: resortMedia),
@@ -570,7 +571,8 @@ class NamidaOnTaps {
               Obx(
                 (context) {
                   final reverse = isReverse.valueR;
-                  final prefixFilters = prefixFiltersOf?.call(sorters.valueR);
+                  final activeTypes = sorters.valueR.map((e) => e.type);
+                  final prefixFilters = prefixFiltersOf?.call(activeTypes);
                   return SortOptionsCards(
                     isReversed: reverse,
                     onReverseTap: () {
@@ -595,7 +597,8 @@ class NamidaOnTaps {
                       allSorts.value.move(oldIndex, newIndex);
                       allSorts.refresh();
 
-                      final activeSorts = allSorts.where((element) => sorters.contains(element)).toList();
+                      final sortersList = sorters.value;
+                      final activeSorts = allSorts.value.map((sort) => sortersList.firstWhereEff((e) => e.type == sort)).nonNulls.toList();
                       sorters.value = activeSorts.toList();
                       onSortChange(activeSorts);
                     },
@@ -606,20 +609,28 @@ class NamidaOnTaps {
                         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
                         child: Obx(
                           (context) {
-                            final isActive = sorters.contains(sorting);
+                            final entry = sorters.valueR.firstWhereEff((e) => e.type == sorting);
+                            final isActive = entry != null;
+                            final reverseButton = entry == null
+                                ? null
+                                : _SortEntryReverseButton(
+                                    isReversed: entry.reverse,
+                                    onTap: () => sorters.replaceSingleWhere((e) => e.type == sorting, (e) => e.toggled()),
+                                  );
                             return ListTileWithCheckMark(
                               icon: sortToIcon(sorting),
                               title: "${i + 1}. ${sortToText(sorting)}",
                               active: isActive,
+                              trailing: reverseButton,
                               onTap: () {
                                 if (isActive && sorters.length <= minimumItems) {
                                   showMinimumItemsSnack(minimumItems);
                                   return;
                                 }
-                                if (sorters.contains(sorting)) {
-                                  sorters.remove(sorting);
+                                if (isActive) {
+                                  sorters.removeWhere((e) => e.type == sorting);
                                 } else {
-                                  sorters.insertSafe(i, sorting);
+                                  sorters.insertSafe(i, SortEntry(sorting));
                                 }
                               },
                             );
@@ -2303,7 +2314,7 @@ bool replaceFunctionForUpdatedPaths(
 class _TrackSortPresetsButton extends StatelessWidget {
   final MediaType media;
   final VoidCallback onBeforeChange;
-  final void Function(List<SortType> sorts, bool reverse) onChanged;
+  final void Function(SortChain<SortType> sorting) onChanged;
 
   const _TrackSortPresetsButton({
     required this.media,
@@ -2312,9 +2323,8 @@ class _TrackSortPresetsButton extends StatelessWidget {
   });
 
   void _reloadSorts() {
-    final sorts = settings.mediaItemsTrackSorting.value[media] ?? const <SortType>[];
-    final reverse = settings.mediaItemsTrackSortingReverse.value[media] ?? false;
-    onChanged(sorts, reverse);
+    final sorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    onChanged(sorting);
   }
 
   void _select(int? index) {
@@ -2327,8 +2337,8 @@ class _TrackSortPresetsButton extends StatelessWidget {
 
   void _add() {
     onBeforeChange();
-    final sorts = settings.mediaItemsTrackSorting.value[media] ?? const <SortType>[];
-    final initialName = sorts.map((e) => e.toText()).joinText(separator: ', ');
+    final sorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    final initialName = sorting.types().map((e) => e.toText()).joinText(separator: ', ');
     _TrackSortPresetNameDialog.show(
       title: lang.saveAsPreset,
       initialName: initialName,
@@ -2424,6 +2434,30 @@ class _TrackSortPresetsButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _SortEntryReverseButton extends StatelessWidget {
+  final bool isReversed;
+  final VoidCallback onTap;
+
+  const _SortEntryReverseButton({
+    required this.isReversed,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final iconColor = isReversed ? theme.colorScheme.secondary : theme.iconTheme.color?.withOpacityExt(0.5);
+    return NamidaIconButton(
+      horizontalPadding: 8.0,
+      icon: isReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
+      iconSize: 18.0,
+      iconColor: iconColor,
+      tooltip: () => lang.reverseOrder,
+      onPressed: onTap,
     );
   }
 }

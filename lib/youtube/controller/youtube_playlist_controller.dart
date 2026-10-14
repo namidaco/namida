@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -22,9 +23,9 @@ import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 
-typedef YoutubePlaylist = GeneralPlaylist<YoutubeID, YTSortType>;
+typedef YoutubePlaylist = GeneralPlaylist<YoutubeID, SortEntry<YTSortType>>;
 
-class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSortType> {
+class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, SortEntry<YTSortType>> {
   static YoutubePlaylistController get inst => _instance;
   static final YoutubePlaylistController _instance = YoutubePlaylistController._internal();
   YoutubePlaylistController._internal();
@@ -264,7 +265,7 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   Map<String, dynamic> itemToJson(YoutubeID item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<YTSortType> items) => YTSortType.sortsToJson(items);
+  dynamic sortToJson(List<SortEntry<YTSortType>> items) => YTSortType.sortsToJson(items);
 
   @override
   String get favouritePlaylistPath => AppPaths.YT_LIKES_PLAYLIST;
@@ -334,19 +335,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
   void sortPlaylists() => sortYTPlaylists();
 
   @override
-  Future<void> onPlaylistItemsSort(List<YTSortType> sorts, bool reverse, List<YoutubeID> items) async {
-    await _ensureItemsHasDataForSorting(sorts, items);
-    final comparables = <Comparable<dynamic> Function(YoutubeID vid)>[];
-    for (final s in sorts) {
-      final comparable = _mediaTracksSortingComparables(s);
-      if (comparable != null) comparables.add(comparable);
-    }
-
-    if (reverse) {
-      items.sortByReverseAlts(comparables);
-    } else {
-      items.sortByAlts(comparables);
-    }
+  Future<void> onPlaylistItemsSort(List<SortEntry<YTSortType>> sorts, bool reverse, List<YoutubeID> items) async {
+    final sorting = SortChain(sorts, reverse: reverse);
+    await _ensureItemsHasDataForSorting(sorting, items);
+    final comparables = SortChainComparables.of(sorting, _mediaTracksSortingComparables);
+    items.sortByChain(comparables);
   }
 
   String Function(YoutubePlaylist playlist)? getGroupSortExtraTextResolverPlaylist(GroupSortType sort) => switch (sort) {
@@ -383,11 +376,11 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, YTSor
     // ----
   };
 
-  Future<void> _ensureItemsHasDataForSorting(List<YTSortType> sorts, List<YoutubeID> items) async {
-    if (sorts.contains(YTSortType.title)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoName(e.id)));
-    if (sorts.contains(YTSortType.channelTitle)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoChannelName(e.id)));
-    if (sorts.contains(YTSortType.duration)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoDurationSeconds(e.id)));
-    if (sorts.contains(YTSortType.date)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoReleaseDate(e.id)));
+  Future<void> _ensureItemsHasDataForSorting(SortChain<YTSortType> sorting, List<YoutubeID> items) async {
+    if (sorting.hasType(YTSortType.title)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoName(e.id)));
+    if (sorting.hasType(YTSortType.channelTitle)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoChannelName(e.id)));
+    if (sorting.hasType(YTSortType.duration)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoDurationSeconds(e.id)));
+    if (sorting.hasType(YTSortType.date)) await Future.wait(items.map((e) => YoutubeInfoController.utils.getVideoReleaseDate(e.id)));
   }
 
   Comparable Function(YoutubeID e)? _mediaTracksSortingComparables(YTSortType type) {

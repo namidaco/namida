@@ -139,7 +139,7 @@ int _addTheseTracksToAlbumGenreArtistEtc(Map<TrackExtended, TrackExtended?> trac
   final changes = group.updateTracksSync(tracksMap, settings.albumIdentifiers.value);
   final changedMedias = changes.changedMedias;
   final mediaSorters = {for (final e in changedMedias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
-  group.sortChangedSync(changes, mediaSorters, settings.mediaItemsTrackSortingReverse.value);
+  group.sortChangedSync(changes, mediaSorters);
   for (final e in changedMedias) {
     SearchSortController.inst.sortMedia(e);
   }

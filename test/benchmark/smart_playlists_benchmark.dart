@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -74,8 +75,7 @@ void main() {
       name: 'bench',
       creationDate: DateTime(2026),
       joiner: SmartJoiner.and,
-      sorts: const [],
-      sortReverse: false,
+      sorting: const SortChain([]),
       moods: const [],
       ruleGroups: [
         SmartPlaylistRuleGroup.create(rules: [rule]),

@@ -1,3 +1,4 @@
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -13,8 +14,7 @@ class QueueInsertion {
   final int? sample;
   final int? sampleDays;
   final bool shuffle;
-  final List<SortType> sorts;
-  final bool sortReverse;
+  final SortChain<SortType> sorting;
   final SortType? filterSort;
   final Map<SortType, int> filterMinimums;
   final List<SimilarTracksSource> similarSources;
@@ -25,15 +25,14 @@ class QueueInsertion {
     this.sample,
     this.sampleDays,
     this.shuffle = false,
-    this.sorts = const [],
-    this.sortReverse = false,
+    this.sorting = const SortChain([]),
     this.filterSort,
     this.filterMinimums = const {},
     this.similarSources = const [],
   });
 
   int? get maxCount => numberOfTracks == 0 ? null : numberOfTracks;
-  bool get isUnsorted => !shuffle && sorts.isEmpty;
+  bool get isUnsorted => !shuffle && sorting.isEmpty;
 
   int filterValueOf(SortType sort, TrackMinimum minimum) => filterMinimums[sort] ?? minimum.defaultValue;
 
@@ -43,8 +42,7 @@ class QueueInsertion {
     int? sample,
     int? sampleDays,
     bool? shuffle,
-    List<SortType>? sorts,
-    bool? sortReverse,
+    SortChain<SortType>? sorting,
     Map<SortType, int>? filterMinimums,
     List<SimilarTracksSource>? similarSources,
   }) {
@@ -54,8 +52,7 @@ class QueueInsertion {
       sample: sample ?? this.sample,
       sampleDays: sampleDays ?? this.sampleDays,
       shuffle: shuffle ?? this.shuffle,
-      sorts: sorts ?? this.sorts,
-      sortReverse: sortReverse ?? this.sortReverse,
+      sorting: sorting ?? this.sorting,
       filterSort: filterSort,
       filterMinimums: filterMinimums ?? this.filterMinimums,
       similarSources: similarSources ?? this.similarSources,
@@ -69,8 +66,7 @@ class QueueInsertion {
       sample: sample,
       sampleDays: sampleDays,
       shuffle: shuffle,
-      sorts: sorts,
-      sortReverse: sortReverse,
+      sorting: sorting,
       filterSort: filterSort,
       filterMinimums: filterMinimums,
       similarSources: similarSources,
@@ -81,9 +77,10 @@ class QueueInsertion {
   List<Selectable> apply(List<Selectable> tracks) {
     tracks = filtered(tracks);
     if (shuffle) return _shuffled(tracks);
-    if (sorts.isNotEmpty) {
-      final comparables = sorts.map(_selectableSortingComparable).toFixedList();
-      tracks.sortByAltsPrecomputed(comparables, reverse: sortReverse);
+    if (sorting.isNotEmpty) {
+      final tracksComparables = SearchSortController.inst.getTracksChainComparables(sorting);
+      final comparables = tracksComparables.mapKeys<Selectable>((e) => e.track);
+      tracks.sortByChain(comparables);
     }
     return _limited(tracks);
   }
@@ -101,9 +98,11 @@ class QueueInsertion {
   /// same as [apply] for videos, which only support shuffling and listens count ordering.
   List<YoutubeID> applyYoutube(List<YoutubeID> videos) {
     if (shuffle) return _shuffled(videos);
-    if (sorts.contains(SortType.mostPlayed)) {
+    final mostPlayedEntry = sorting.entries.firstWhereEff((e) => e.type == SortType.mostPlayed);
+    if (mostPlayedEntry != null) {
       final listensMap = YoutubeHistoryController.inst.topTracksMapListens.value;
-      videos.sortByAltsPrecomputed([(e) => -(listensMap[e.id]?.length ?? 0)], reverse: sortReverse);
+      final reverse = sorting.reverse != mostPlayedEntry.reverse;
+      videos.sortByAltsPrecomputed([(e) => -(listensMap[e.id]?.length ?? 0)], reverse: reverse);
     }
     return _limited(videos);
   }
@@ -125,11 +124,6 @@ class QueueInsertion {
     return items;
   }
 
-  static Comparable Function(Selectable e) _selectableSortingComparable(SortType sort) {
-    final trackComparable = SearchSortController.inst.getTracksSortingComparables(sort);
-    return (e) => trackComparable(e.track);
-  }
-
   factory QueueInsertion.fromJson(Map<String, dynamic> map) {
     final legacySortBy = map['sortBy'];
     final filterMinimumsJson = map['filterMinimums'];
@@ -141,8 +135,8 @@ class QueueInsertion {
         if (sort != null && value is int) filterMinimums[sort] = value;
       }
     }
-    final sortsJson = map['sorts'];
-    final sorts = sortsJson is List ? sortsJson.map((e) => SortType.values.getEnum(e)).nonNulls.toFixedList() : _legacySorts(legacySortBy);
+    final sortingJson = map['sorts_v2'];
+    final sorting = sortingJson is Map ? SortChain.fromMap(sortingJson, SortType.values) : _legacySorting(map);
     final similarSourcesJson = map['similarSources'];
     final similarSources = similarSourcesJson is List ? similarSourcesJson.map((e) => SimilarTracksSource.values.getEnum(e)).nonNulls.toFixedList() : const <SimilarTracksSource>[];
     return QueueInsertion(
@@ -151,17 +145,25 @@ class QueueInsertion {
       sample: map['sample'],
       sampleDays: map['sampleDays'],
       shuffle: map['shuffle'] ?? legacySortBy == 'random',
-      sorts: sorts,
-      sortReverse: map['sortReverse'] ?? legacySortBy == 'rating',
+      sorting: sorting,
       filterSort: SortType.values.getEnum(map['filterSort']),
       filterMinimums: filterMinimums,
       similarSources: similarSources,
     );
   }
 
-  static List<SortType> _legacySorts(dynamic legacySortBy) => switch (legacySortBy) {
-    'listenCount' => const [SortType.mostPlayed],
-    'rating' => const [SortType.rating],
+  /// from before each sort could be reversed, `sortBy` is older than `sorts`.
+  static SortChain<SortType> _legacySorting(Map<String, dynamic> map) {
+    final legacySortBy = map['sortBy'];
+    final sortsJson = map['sorts'];
+    final entries = sortsJson is List ? SortEntry.listFromJson(sortsJson, SortType.values) : _legacySortByEntries(legacySortBy);
+    final reverse = map['sortReverse'] ?? legacySortBy == 'rating';
+    return SortChain(entries, reverse: reverse);
+  }
+
+  static List<SortEntry<SortType>> _legacySortByEntries(dynamic legacySortBy) => switch (legacySortBy) {
+    'listenCount' => const [SortEntry(SortType.mostPlayed)],
+    'rating' => const [SortEntry(SortType.rating)],
     _ => const [],
   };
 
@@ -173,8 +175,7 @@ class QueueInsertion {
       if (sample != null) 'sample': sample,
       if (sampleDays != null) 'sampleDays': sampleDays,
       'shuffle': shuffle,
-      'sorts': [for (final sort in sorts) sort.name],
-      'sortReverse': sortReverse,
+      'sorts_v2': sorting.toJson(),
       if (filterSort != null) 'filterSort': filterSort.name,
       'filterMinimums': {for (final e in filterMinimums.entries) e.key.name: e.value},
       if (similarSources.isNotEmpty) 'similarSources': [for (final source in similarSources) source.name],

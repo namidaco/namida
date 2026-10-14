@@ -61,8 +61,9 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
         child: AnimationLimiter(
           child: Obx(
             (context) {
-              final sort = settings.languageSorts.valueR.first;
-              final sortReverse = settings.languageSortReversed.valueR;
+              final sorting = settings.groupSortingOfR(MediaType.language);
+              final sort = sorting.entries.first.type;
+              final sortReverse = sorting.reverse;
 
               final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
               final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getLanguagesExtraTextResolver(sort);
@@ -88,7 +89,7 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                     title: sort.toText(),
                     popupMenuChild: const SortByMenuLanguages(),
                     isCurrentlyReversed: sortReverse,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !settings.languageSortReversed.value),
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !sortReverse),
                   ),
                   textField: CustomTextField(
                     textFieldController: libraryTab.textSearchControllerR,

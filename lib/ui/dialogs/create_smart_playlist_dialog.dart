@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/text_suggestions_provider.dart';
@@ -79,8 +80,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
 
   final _nameController = TextEditingController();
   SmartJoiner _joiner = SmartJoiner.defaultForGroups;
-  List<SortType> _sorts = const [];
-  bool _sortReverse = false;
+  SortChain<SortType> _sorting = const SortChain([]);
   final _moods = <String>[];
   final _ruleGroups = <SmartPlaylistRuleGroup>[];
   SmartPlaylistLimit? _limit;
@@ -91,8 +91,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     if (sp != null) {
       _nameController.text = sp.name;
       _joiner = sp.joiner;
-      _sorts = sp.sorts;
-      _sortReverse = sp.sortReverse;
+      _sorting = sp.sorting;
       _moods.addAll(sp.moods);
       _ruleGroups.addAll(sp.ruleGroups.map((e) => e.copy()));
       _limit = sp.limit;
@@ -117,8 +116,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   void _resetEverything() {
     _nameController.text = '';
     _joiner = SmartJoiner.defaultForGroups;
-    _sorts = const [];
-    _sortReverse = false;
+    _sorting = const SortChain([]);
     _moods.clear();
     _ruleGroups.clear();
     _limit = null;
@@ -135,8 +133,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
       name: _nameController.text,
       creationDate: DateTime.now(),
       joiner: _joiner,
-      sorts: _sorts,
-      sortReverse: _sortReverse,
+      sorting: _sorting,
       moods: _moods,
       ruleGroups: _ruleGroups,
       limit: _limit,
@@ -181,16 +178,13 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     });
   }
 
-  void _setSorts(List<SortType> sorts, bool sortReverse) {
-    setState(() {
-      _sorts = sorts;
-      _sortReverse = sortReverse;
-    });
+  void _setSorting(SortChain<SortType> sorting) {
+    setState(() => _sorting = sorting);
   }
 
   void _setSortReverse(bool sortReverse) {
-    if (_sortReverse == sortReverse) return;
-    setState(() => _sortReverse = sortReverse);
+    if (_sorting.reverse == sortReverse) return;
+    setState(() => _sorting = _sorting.copyWith(reverse: sortReverse));
   }
 
   void _setLimit(SmartPlaylistLimit? limit) {
@@ -358,19 +352,18 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                       minHeight: NamidaTextButton.kDefaultMinHeight * 0.5,
                       colors: NamidaButtonColors.dimmed,
                       icon: Broken.sort,
-                      text: _sorts.firstOrNull?.toText() ?? lang.auto,
+                      text: _sorting.firstType?.toText() ?? lang.auto,
                       fontSizeMultiplier: 0.95,
                       onTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
-                        currentSorts: _sorts,
-                        currentReverse: _sortReverse,
-                        onChanged: _setSorts,
+                        currentSorting: _sorting,
+                        onChanged: _setSorting,
                       ),
                     ),
                     NamidaIconButton(
                       horizontalPadding: 8.0,
-                      icon: _sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                      icon: _sorting.reverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                       iconSize: 20.0,
-                      onPressed: () => _setSortReverse(!_sortReverse),
+                      onPressed: () => _setSortReverse(!_sorting.reverse),
                     ),
                   ],
                 ),
@@ -2050,10 +2043,9 @@ class _LimitDialogState extends State<_LimitDialog> {
 
   void _pickSorts() {
     NamidaOnTaps.inst.onTracksSortIconTap(
-      currentSorts: _limit.sorts,
-      currentReverse: _limit.sortReverse,
-      onChanged: (sorts, reverse) {
-        setState(() => _limit = _limit.copyWith(sorts: sorts, sortReverse: reverse));
+      currentSorting: _limit.sorting,
+      onChanged: (sorting) {
+        setState(() => _limit = _limit.copyWith(sorting: sorting));
       },
     );
   }
@@ -2073,7 +2065,7 @@ class _LimitDialogState extends State<_LimitDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final sortText = _limit.sorts.firstOrNull?.toText() ?? lang.auto;
+    final sortText = _limit.sorting.firstType?.toText() ?? lang.auto;
     return Form(
       key: _formKey,
       child: CustomBlurryDialog(
@@ -2134,7 +2126,7 @@ class _LimitDialogState extends State<_LimitDialog> {
                   ),
                   const SizedBox(width: 4.0),
                   Icon(
-                    _limit.sortReverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                    _limit.sorting.reverse ? Broken.arrow_up_3 : Broken.arrow_down_2,
                     size: 18.0,
                   ),
                 ],

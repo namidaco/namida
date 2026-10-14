@@ -14,6 +14,7 @@ import 'package:youtipie/youtipie.dart' show CodecInfoUtils;
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_output_controller.dart';
@@ -187,8 +188,8 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       },
       textBuilder: (item) {
         return item is Selectable
-            ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track, SortType>
-            : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String, YTSortType>;
+            ? trackConfig.textBuilder(item) as MiniplayerInfoData<Track, SortEntry<SortType>>
+            : ytConfig.textBuilder(item as YoutubeID) as MiniplayerInfoData<String, SortEntry<YTSortType>>;
       },
       textRefreshRx: ytConfig.textRefreshRx,
       canShowBuffering: (item) => item is Selectable ? trackConfig.canShowBuffering(item) : ytConfig.canShowBuffering(item),
@@ -210,7 +211,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     heroTag: TrackTile.obtainHeroTag(trackWithDate, track, -1, true),
   );
 
-  static MiniplayerInfoData<Track, SortType> textBuilder(Playable playable) {
+  static MiniplayerInfoData<Track, SortEntry<SortType>> textBuilder(Playable playable) {
     String firstLine = '';
     String secondLine = '';
 
@@ -489,7 +490,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 
   static NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
-    return NamidaMiniPlayerBase<Track, SortType>(
+    return NamidaMiniPlayerBase<Track, SortEntry<SortType>>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
       trackTileConfigs: const TrackTilePropertiesConfigs(
         displayRightDragHandler: true,
@@ -596,7 +597,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
     return Player.inst.currentCachedVideo.valueR?.path == cacheFile.path;
   }
 
-  static MiniplayerInfoData<String, YTSortType> textBuilder(BuildContext context, Playable playbale) {
+  static MiniplayerInfoData<String, SortEntry<YTSortType>> textBuilder(BuildContext context, Playable playbale) {
     final video = playbale as YoutubeID;
     String firstLine = '';
     String secondLine = '';
@@ -758,7 +759,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
   }
 
   static NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
-    return NamidaMiniPlayerBase<String, YTSortType>(
+    return NamidaMiniPlayerBase<String, SortEntry<YTSortType>>(
       queueItemExtent: Dimensions.youtubeCardItemExtent,
       videoTileConfigs: const VideoTilePropertiesConfigs(
         openMenuOnLongPress: false,

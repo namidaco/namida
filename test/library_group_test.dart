@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:namida/class/library_group.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -242,9 +243,9 @@ void main() {
 
     Comparable<dynamic> byPath(Track tr) => tr.path;
     final sorters = {
-      for (final e in changes.changedMedias) e: [byPath],
+      for (final e in changes.changedMedias) e: SortChainComparables<Track>([byPath], const [false], reverse: e == MediaType.albumArtist),
     };
-    group.sortChangedSync(changes, sorters, const {MediaType.albumArtist: true});
+    group.sortChangedSync(changes, sorters);
 
     List<String> namesOf(List<Track> list) => list.map((e) => e.path.split(sep).last).toList();
     expect(namesOf(group.mainMapAlbums.value.values.single), ['a.mp3', 'b.mp3', 'c.mp3', 'd.mp3']);

@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/class/queue.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -87,12 +88,9 @@ enum SortType {
     SortType.shuffleDaily,
   ];
 
-  static List<SortType> sortListFromJsonList(dynamic value) {
-    if (value is! List) return const [];
-    return value.whereType<String>().map(SortType.values.getEnum).nonNulls.toFixedList();
-  }
+  static List<SortEntry<SortType>> sortListFromJsonList(dynamic value) => SortEntry.listFromJson(value, SortType.values);
 
-  static dynamic sortsToJson(List<SortType> items) => items.map((e) => e.name).toFixedList();
+  static dynamic sortsToJson(List<SortEntry<SortType>> items) => SortEntry.listToJson(items);
 }
 
 enum GroupSortType {
@@ -1257,12 +1255,9 @@ enum YTSortType {
   firstListen,
   ;
 
-  static List<YTSortType> sortListFromJsonList(dynamic value) {
-    if (value is! List) return const [];
-    return value.whereType<String>().map(YTSortType.values.getEnum).nonNulls.toFixedList();
-  }
+  static List<SortEntry<YTSortType>> sortListFromJsonList(dynamic value) => SortEntry.listFromJson(value, YTSortType.values);
 
-  static dynamic sortsToJson(List<YTSortType> items) => items.map((e) => e.name).toFixedList();
+  static dynamic sortsToJson(List<SortEntry<YTSortType>> items) => SortEntry.listToJson(items);
 }
 
 enum DownloadNotifications {

@@ -77,8 +77,9 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
               tab: libraryTab,
               header: Obx(
                 (context) {
-                  final sort = settings.albumSorts.valueR.first;
-                  final sortReverse = settings.albumSortReversed.valueR;
+                  final sorting = settings.groupSortingOfR(MediaType.album);
+                  final sort = sorting.entries.first.type;
+                  final sortReverse = sorting.reverse;
 
                   final finalAlbumsLength = finalAlbums.length;
                   final totalAlbumsLength = Indexer.inst.mainMapAlbums.valueR.length;
@@ -126,7 +127,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       title: sort.toText(),
                       popupMenuChild: const SortByMenuAlbums(),
                       isCurrentlyReversed: sortReverse,
-                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !settings.albumSortReversed.value),
+                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !sortReverse),
                     ),
                     textField: CustomTextField(
                       textFieldController: libraryTab.textSearchControllerR,
@@ -144,7 +145,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                     (context) {
                       final albumTileExtent = settings.albumListTileHeight.valueR + 4.0 * 5;
 
-                      final sort = settings.albumSorts.valueR.first;
+                      final sort = settings.groupSortingOfR(MediaType.album).entries.first.type;
                       final sortTextIsUseless =
                           sort == GroupSortType.album ||
                           sort == GroupSortType.year ||

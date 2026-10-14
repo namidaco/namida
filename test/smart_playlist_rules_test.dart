@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:namida/class/lang.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -107,8 +108,7 @@ void main() {
     name: 'test',
     creationDate: DateTime.now(),
     joiner: joiner,
-    sorts: const [],
-    sortReverse: false,
+    sorting: const SortChain([]),
     moods: const [],
     ruleGroups: groups,
     limit: limit,
@@ -254,13 +254,13 @@ void main() {
     final everything = numberRule(SmartPlaylistRuleFilterNumberSource.durationMS, SmartPlaylistRuleFilterNumber.isGreaterThan, 0);
 
     test('top tracks by most played', () {
-      final limit = const SmartPlaylistLimit(amount: 2, unit: SmartPlaylistLimitUnit.tracks, sorts: [SortType.mostPlayed], sortReverse: false);
+      final limit = const SmartPlaylistLimit(amount: 2, unit: SmartPlaylistLimitUnit.tracks, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
       final pl = playlistOf(everything, limit: limit);
       expect(pl.resolve().map((tr) => namesByTrack[tr]).toList(), ['t1', 't3']);
       expect(pl.resolveCount(), 2);
     });
     test('duration budget skips tracks that dont fit', () {
-      final limit = const SmartPlaylistLimit(amount: 5, unit: SmartPlaylistLimitUnit.minutes, sorts: [SortType.mostPlayed], sortReverse: false);
+      final limit = const SmartPlaylistLimit(amount: 5, unit: SmartPlaylistLimitUnit.minutes, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
       final pl = playlistOf(everything, limit: limit);
       expect(namesOf(pl.resolve()), {'t1', 't3'});
       expect(SmartPlaylist.fromMap(pl.toMap()).limit?.toMap(), limit.toMap());
@@ -572,7 +572,7 @@ void main() {
           },
         ],
       });
-      expect(pl.sorts, [SortType.title]);
+      expect(pl.sorting, SortChain.of(const [SortType.title]));
       expect(pl.modifiedDate, 0);
       final rules = pl.ruleGroups.single.rules.cast<SmartPlaylistRuleText>();
       expect(rules[0].data, [const SmartPlaylistTextDataTokenLiteral('abba')]);
@@ -604,10 +604,12 @@ void main() {
           'sorts': ['futureSort', 'mostPlayed'],
         },
       });
-      expect(pl.sorts, [SortType.title]);
-      expect(pl.limit?.sorts, [SortType.mostPlayed]);
+      expect(pl.sorting, SortChain.of(const [SortType.title]));
+      expect(pl.limit?.sorting, SortChain.of(const [SortType.mostPlayed]));
       expect(pl.ruleGroups.single.rules, hasLength(1));
-      expect(pl.toMap()['sorts'], ['title']);
+      expect(pl.toMap()['sorts_v2'], {
+        'sorts': ['title'],
+      });
     });
   });
 }

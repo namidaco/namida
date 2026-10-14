@@ -894,8 +894,8 @@ class _LatestPlayedForSourceManager {
   }
 
   void _markMediaSortDirty(MediaType media) {
-    final sorts = settings.groupSortingOf(media)?.sorts;
-    if (sorts == null || !sorts.contains(GroupSortType.lastPlayed)) return;
+    final sorting = settings.groupSortingOf(media);
+    if (!sorting.hasType(GroupSortType.lastPlayed)) return;
     _listenToPageChangeIfIdle();
     _dirtyMedias.add(media);
   }

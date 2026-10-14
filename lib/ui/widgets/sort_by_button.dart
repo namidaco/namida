@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
@@ -27,9 +28,9 @@ class SortByMenuTracks with SortByMenuBase {
       ),
       Obx(
         (context) {
-          final sorts = settings.mediaItemsTrackSorting.valueR[MediaType.track] ?? const <SortType>[];
-          final isReversed = settings.mediaItemsTrackSortingReverse.valueR[MediaType.track] == true;
-          final prefixFilters = SortOptionsCards.prefixFiltersOfTracks(sorts);
+          final sorting = settings.mediaItemsTrackSorting.valueR[MediaType.track] ?? const SortChain<SortType>([]);
+          final isReversed = sorting.reverse;
+          final prefixFilters = SortOptionsCards.prefixFiltersOfTracks(sorting.types());
           return SortOptionsCards(
             isReversed: isReversed,
             onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !isReversed),
@@ -46,7 +47,7 @@ class SortByMenuTracks with SortByMenuBase {
             visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
             title: e.toText(),
             trailingIcon: e.toIcon(),
-            active: mediaItemsTrackSorting[MediaType.track]?.firstOrNull == e,
+            active: mediaItemsTrackSorting[MediaType.track]?.firstType == e,
             onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
           ),
         ),
@@ -68,7 +69,7 @@ class SortByMenuTracksSearch extends StatelessWidget {
             final tracksSortSearch = settings.tracksSortSearch.valueR;
             final reversed = settings.tracksSortSearchReversed.valueR;
             final isAuto = settings.tracksSortSearchIsAuto.valueR;
-            final activeSortType = isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstOrNull : tracksSortSearch;
+            final activeSortType = isAuto ? settings.mediaItemsTrackSorting.valueR[MediaType.track]?.firstType : tracksSortSearch;
             final prefixFilters = SortOptionsCards.prefixFiltersOfTracks([?activeSortType]);
             return Column(
               children: [
@@ -143,8 +144,9 @@ class SortByMenuAlbums with SortByMenuBase {
     ),
     Obx(
       (context) {
-        final isReversed = settings.albumSortReversed.valueR;
-        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(settings.albumSorts.valueR);
+        final sorting = settings.groupSortingOfR(MediaType.album);
+        final isReversed = sorting.reverse;
+        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
         return SortOptionsCards(
           isReversed: isReversed,
           onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.album, reverse: !isReversed),
@@ -154,16 +156,18 @@ class SortByMenuAlbums with SortByMenuBase {
       },
     ),
     ...GroupSortType.forAlbums().map(
-      (e) => ObxO(
-        rx: settings.albumSorts,
-        builder: (context, albumSorts) => SmallListTile(
-          borderRadius: 12.0,
-          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-          title: e.toText(),
-          trailingIcon: e.toIcon(),
-          active: albumSorts.first == e,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSorts: [e]),
-        ),
+      (e) => Obx(
+        (context) {
+          final sorting = settings.groupSortingOfR(MediaType.album);
+          return SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            trailingIcon: e.toIcon(),
+            active: sorting.firstType == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.album, groupSorting: sorting.withSingle(e)),
+          );
+        },
       ),
     ),
   ];
@@ -181,8 +185,9 @@ class SortByMenuArtists with SortByMenuBase {
       ),
       Obx(
         (context) {
-          final isReversed = settings.artistSortReversed.valueR;
-          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(settings.artistSorts.valueR);
+          final sorting = settings.groupSortingOfR(MediaType.artist);
+          final isReversed = sorting.reverse;
+          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
           return SortOptionsCards(
             isReversed: isReversed,
             onReverseTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !isReversed),
@@ -192,16 +197,18 @@ class SortByMenuArtists with SortByMenuBase {
         },
       ),
       ...GroupSortType.forArtists(artistType).map(
-        (e) => ObxO(
-          rx: settings.artistSorts,
-          builder: (context, artistSorts) => SmallListTile(
-            borderRadius: 12.0,
-            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-            title: e.toText(),
-            trailingIcon: e.toIcon(),
-            active: artistSorts.first == e,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSorts: [e]),
-          ),
+        (e) => Obx(
+          (context) {
+            final sorting = settings.groupSortingOfR(MediaType.artist);
+            return SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+              title: e.toText(),
+              trailingIcon: e.toIcon(),
+              active: sorting.firstType == e,
+              onTap: () => SearchSortController.inst.sortMedia(MediaType.artist, groupSorting: sorting.withSingle(e)),
+            );
+          },
         ),
       ),
     ];
@@ -218,8 +225,9 @@ class SortByMenuGenres with SortByMenuBase {
     ),
     Obx(
       (context) {
-        final isReversed = settings.genreSortReversed.valueR;
-        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(settings.genreSorts.valueR);
+        final sorting = settings.groupSortingOfR(MediaType.genre);
+        final isReversed = sorting.reverse;
+        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
         return SortOptionsCards(
           isReversed: isReversed,
           onReverseTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !isReversed),
@@ -229,16 +237,18 @@ class SortByMenuGenres with SortByMenuBase {
       },
     ),
     ...GroupSortType.forGenres().map(
-      (e) => ObxO(
-        rx: settings.genreSorts,
-        builder: (context, genreSorts) => SmallListTile(
-          borderRadius: 12.0,
-          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-          title: e.toText(),
-          trailingIcon: e.toIcon(),
-          active: genreSorts.first == e,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSorts: [e]),
-        ),
+      (e) => Obx(
+        (context) {
+          final sorting = settings.groupSortingOfR(MediaType.genre);
+          return SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            trailingIcon: e.toIcon(),
+            active: sorting.firstType == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.genre, groupSorting: sorting.withSingle(e)),
+          );
+        },
       ),
     ),
   ];
@@ -254,8 +264,9 @@ class SortByMenuLanguages with SortByMenuBase {
     ),
     Obx(
       (context) {
-        final isReversed = settings.languageSortReversed.valueR;
-        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(settings.languageSorts.valueR);
+        final sorting = settings.groupSortingOfR(MediaType.language);
+        final isReversed = sorting.reverse;
+        final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
         return SortOptionsCards(
           isReversed: isReversed,
           onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !isReversed),
@@ -265,16 +276,18 @@ class SortByMenuLanguages with SortByMenuBase {
       },
     ),
     ...GroupSortType.forLanguages().map(
-      (e) => ObxO(
-        rx: settings.languageSorts,
-        builder: (context, languageSorts) => SmallListTile(
-          borderRadius: 12.0,
-          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-          title: e.toText(),
-          trailingIcon: e.toIcon(),
-          active: languageSorts.first == e,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.language, groupSorts: [e]),
-        ),
+      (e) => Obx(
+        (context) {
+          final sorting = settings.groupSortingOfR(MediaType.language);
+          return SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            trailingIcon: e.toIcon(),
+            active: sorting.firstType == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.language, groupSorting: sorting.withSingle(e)),
+          );
+        },
       ),
     ),
   ];
@@ -288,17 +301,15 @@ class SortByMenuMoodsTags with SortByMenuBase {
   @override
   List<Widget> children(BuildContext context) {
     final type = this.type;
-    final sortingRx = settings.groupSortingRxOf(type);
-    if (sortingRx == null) return [];
-    final (sortsRx, reverseRx) = sortingRx;
     return [
       _SortAdvancedHeader(
         onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(type),
       ),
       Obx(
         (context) {
-          final isReversed = reverseRx.valueR;
-          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sortsRx.valueR);
+          final sorting = settings.groupSortingOfR(type);
+          final isReversed = sorting.reverse;
+          final prefixFilters = SortOptionsCards.prefixFiltersOfGroups(sorting.types());
           return SortOptionsCards(
             isReversed: isReversed,
             onReverseTap: () => SearchSortController.inst.sortMedia(type, reverse: !isReversed),
@@ -308,16 +319,18 @@ class SortByMenuMoodsTags with SortByMenuBase {
         },
       ),
       ...GroupSortType.forMoodsTags().map(
-        (e) => ObxO(
-          rx: sortsRx,
-          builder: (context, sorts) => SmallListTile(
-            borderRadius: 12.0,
-            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-            title: e.toText(),
-            trailingIcon: e.toIcon(),
-            active: sorts.first == e,
-            onTap: () => SearchSortController.inst.sortMedia(type, groupSorts: [e]),
-          ),
+        (e) => Obx(
+          (context) {
+            final sorting = settings.groupSortingOfR(type);
+            return SmallListTile(
+              borderRadius: 12.0,
+              visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+              title: e.toText(),
+              trailingIcon: e.toIcon(),
+              active: sorting.firstType == e,
+              onTap: () => SearchSortController.inst.sortMedia(type, groupSorting: sorting.withSingle(e)),
+            );
+          },
         ),
       ),
     ];
@@ -332,26 +345,31 @@ class SortByMenuPlaylist with SortByMenuBase {
     _SortAdvancedHeader(
       onTap: () => NamidaOnTaps.inst.onGroupSortIconTap(MediaType.playlist),
     ),
-    ObxO(
-      rx: settings.playlistSortReversed,
-      builder: (context, isReversed) => SortOptionsCards(
-        isReversed: isReversed,
-        onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !isReversed),
-        withSortKeyOptions: true,
-        prefixFilters: null,
-      ),
+    Obx(
+      (context) {
+        final sorting = settings.groupSortingOfR(MediaType.playlist);
+        final isReversed = sorting.reverse;
+        return SortOptionsCards(
+          isReversed: isReversed,
+          onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !isReversed),
+          withSortKeyOptions: true,
+          prefixFilters: null,
+        );
+      },
     ),
     ...GroupSortType.forPlaylists().map(
-      (e) => ObxO(
-        rx: settings.playlistSorts,
-        builder: (context, playlistSorts) => SmallListTile(
-          borderRadius: 12.0,
-          visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
-          title: e.toText(),
-          trailingIcon: e.toIcon(),
-          active: playlistSorts.first == e,
-          onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSorts: [e]),
-        ),
+      (e) => Obx(
+        (context) {
+          final sorting = settings.groupSortingOfR(MediaType.playlist);
+          return SmallListTile(
+            borderRadius: 12.0,
+            visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
+            title: e.toText(),
+            trailingIcon: e.toIcon(),
+            active: sorting.firstType == e,
+            onTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, groupSorting: sorting.withSingle(e)),
+          );
+        },
       ),
     ),
   ];

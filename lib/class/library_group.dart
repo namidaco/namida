@@ -1,5 +1,6 @@
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_item_map.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/core/enums.dart';
@@ -126,14 +127,12 @@ class LibraryGroup<T extends Track> {
   }
 
   void sortAllSync(
-    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
-    Map<MediaType, bool> mediaItemsTrackSortingReverse,
+    Map<MediaType, SortChainComparables<Track>> mediasWithSorts,
     List<T> allTracks,
   ) {
     final allTracksSorter = mediasWithSorts[MediaType.track];
     if (allTracksSorter != null) {
-      final reverse = mediaItemsTrackSortingReverse[MediaType.track] ?? false;
-      allTracks.sortByAltsPrecomputed(allTracksSorter, reverse: reverse);
+      allTracks.sortByAltsPrecomputed(allTracksSorter.keys, reverse: allTracksSorter.reverse, alternativesReverse: allTracksSorter.keysReverse);
     }
 
     final allTracksLength = allTracks.length;
@@ -145,7 +144,6 @@ class LibraryGroup<T extends Track> {
     for (final entry in mediasWithSorts.entries) {
       final type = entry.key;
       final sorters = entry.value;
-      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
 
       if (type == MediaType.track) {
         // -- already sorted early
@@ -155,9 +153,9 @@ class LibraryGroup<T extends Track> {
       final lists = _mediaTypeToLists(type, allTracks);
       if (lists == null) continue;
 
-      final precomputedKeys = _precomputeSortKeys(sorters, allTracks);
+      final precomputedKeys = _precomputeSortKeys(sorters.keys, allTracks);
       for (final list in lists) {
-        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, reverse);
+        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, sorters);
       }
     }
   }
@@ -215,15 +213,13 @@ class LibraryGroup<T extends Track> {
 
   void sortChangedSync(
     LibraryGroupChanges changes,
-    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
-    Map<MediaType, bool> mediaItemsTrackSortingReverse,
+    Map<MediaType, SortChainComparables<Track>> mediasWithSorts,
   ) {
     for (final entry in changes._modifiedKeys.entries) {
       final type = entry.key;
       final sorters = mediasWithSorts[type];
       final map = _mediaTypeToMap(type);
       if (sorters == null || map == null) continue;
-      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
 
       final lists = <List<Track>>[];
       final affectedTracks = <Track>[];
@@ -239,9 +235,9 @@ class LibraryGroup<T extends Track> {
         }
       }
 
-      final precomputedKeys = _precomputeSortKeys(sorters, affectedTracks);
+      final precomputedKeys = _precomputeSortKeys(sorters.keys, affectedTracks);
       for (final list in lists) {
-        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, reverse);
+        _sortByPrecomputedKeys(list, trackIndex, precomputedKeys, sorters);
       }
     }
   }
@@ -259,36 +255,33 @@ class LibraryGroup<T extends Track> {
     );
   }
 
-  static void _sortByPrecomputedKeys<E extends Track>(List<E> list, Map<Track, int> trackIndex, List<List<Comparable<dynamic>>> precomputedKeys, bool reverse) {
-    if (reverse) {
-      list.sort((a, b) {
-        final aIndex = trackIndex[a]!;
-        final bIndex = trackIndex[b]!;
-        for (final key in precomputedKeys) {
-          final cmp = key[bIndex].compareTo(key[aIndex]);
-          if (cmp != 0) return cmp;
-        }
-        return 0;
-      });
-    } else {
-      list.sort((a, b) {
-        final aIndex = trackIndex[a]!;
-        final bIndex = trackIndex[b]!;
-        for (final key in precomputedKeys) {
-          final cmp = key[aIndex].compareTo(key[bIndex]);
-          if (cmp != 0) return cmp;
-        }
-        return 0;
-      });
-    }
+  /// [sorters] gives the direction of each of [precomputedKeys].
+  static void _sortByPrecomputedKeys<E extends Track>(
+    List<E> list,
+    Map<Track, int> trackIndex,
+    List<List<Comparable<dynamic>>> precomputedKeys,
+    SortChainComparables<Track> sorters,
+  ) {
+    final keysLength = precomputedKeys.length;
+    final keysReverse = sorters.keysReverse;
+    final reverse = sorters.reverse;
+    list.sort((a, b) {
+      final aIndex = trackIndex[a]!;
+      final bIndex = trackIndex[b]!;
+      for (int i = 0; i < keysLength; i++) {
+        final key = precomputedKeys[i];
+        final cmp = key[aIndex].compareTo(key[bIndex]);
+        if (cmp != 0) return keysReverse[i] != reverse ? -cmp : cmp;
+      }
+      return 0;
+    });
   }
 
   /// moves [tracks] to where [mediasWithSorts] place them now, for when only their own sort keys changed.
   /// returns the medias that had a list changed.
   Set<MediaType> repositionTracksSync(
     Iterable<T> tracks,
-    Map<MediaType, List<Comparable<dynamic> Function(Track)>> mediasWithSorts,
-    Map<MediaType, bool> mediaItemsTrackSortingReverse,
+    Map<MediaType, SortChainComparables<Track>> mediasWithSorts,
     List<T> allTracks,
     TrackExtended Function(T tr) trackToExtended,
     List<AlbumIdentifier> albumIdentifier,
@@ -297,9 +290,10 @@ class LibraryGroup<T extends Track> {
 
     for (final entry in mediasWithSorts.entries) {
       final type = entry.key;
-      final sorters = entry.value;
+      final sorters = entry.value.keys;
+      final sortersReverse = entry.value.keysReverse;
       final sortersLength = sorters.length;
-      final reverse = mediaItemsTrackSortingReverse[type] ?? false;
+      final reverse = entry.value.reverse;
 
       // -- all are taken out before any goes back, the binary search needs the rest of the list sorted
       final insertions = <void Function()>[];
@@ -311,7 +305,7 @@ class LibraryGroup<T extends Track> {
         int compareWithTrack(Track other) {
           for (int i = 0; i < sortersLength; i++) {
             final compare = sorters[i](other).compareTo(trackKeys[i]);
-            if (compare != 0) return reverse ? -compare : compare;
+            if (compare != 0) return sortersReverse[i] != reverse ? -compare : compare;
           }
           return 0;
         }

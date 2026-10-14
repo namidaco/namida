@@ -75,141 +75,171 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
           ),
           builder: (properties) {
             return ObxO(
-              rx: settings.mediaItemsTrackSortingReverse,
-              builder: (context, sortingModesReverse) {
-                final sortIsReverse = sortingModesReverse[MediaType.album] == true;
-                return ObxO(
-                  rx: settings.mediaItemsTrackSorting,
-                  builder: (context, sortingModes) {
-                    final firstSort = sortingModes[MediaType.album]?.firstOrNull;
-                    final shouldSplitToDiscSections = firstSort == SortType.discNo && searchResults == null;
-                    Map<int, List<Track>>? tracksMappedWithDisc;
-                    Map<int, int>? tracksIndicesIncrement;
-                    if (shouldSplitToDiscSections) {
-                      tracksMappedWithDisc = <int, List<Track>>{};
-                      tracksIndicesIncrement = <int, int>{};
-                      for (final tr in tracks) {
-                        tracksMappedWithDisc.addForce(tr.discNo, tr);
-                      }
-                      if (sortIsReverse) {
-                        tracksMappedWithDisc.sortByReverse((e) => e.key);
-                      } else {
-                        tracksMappedWithDisc.sortBy((e) => e.key);
-                      }
-                      int countTillNow = 0;
-                      for (final e in tracksMappedWithDisc.entries) {
-                        tracksIndicesIncrement[e.key] = countTillNow;
-                        countTillNow += e.value.length;
-                      }
-                    }
-                    return Obx(
-                      (context) {
-                        Indexer.inst.mainMapAlbums.valueR; // to update after sorting
-                        return NamidaListViewRaw(
-                          infoBox: (maxWidth) => SubpageInfoContainer(
-                            maxWidth: maxWidth,
-                            type: MediaType.album,
-                            onOpenMenu: () => NamidaDialogs.inst.showAlbumDialog(widget.albumIdentifier),
-                            customArtworkManager: NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier).toManager(),
-                            title: name,
-                            source: queueSource,
-                            subtitle: tracks.albumArtist,
-                            thirdLineText: tracks.yearOldest.yearFormatted,
-                            heroTag: 'album_${widget.albumIdentifier}',
-                            imageBuilder: (size) {
-                              final squared = Dimensions.inst.shouldAlbumBeSquared(context);
-                              final info = NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier);
-                              final tracksPathToImage = tracks.pathToImage;
-                              final artworkPre = NetworkArtwork.orLocal(
-                                key: Key(tracksPathToImage),
-                                path: tracksPathToImage,
-                                track: tracks.trackOfImage,
-                                info: info,
-                                thumbnailSize: size,
-                                forceSquared: squared,
-                                compressed: false,
-                                borderRadius: 12.0,
-                                staggered: false, // -- keep false
-                              );
-                              final artwork = NamidaArtworkExpandableToFullscreen(
-                                artwork: artworkPre,
-                                heroTag: heroTag,
-                                imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
-                                fetchImage: () => null,
-                                onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
-                                themeColor: null,
-                              );
-                              return squared
-                                  ? MultiArtworkContainer(
-                                      size: size,
-                                      heroTag: heroTag,
-                                      child: artwork,
-                                    )
-                                  : Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                                      padding: const EdgeInsets.all(3.0),
-                                      child: NamidaHero(
-                                        tag: heroTag,
-                                        child: artwork,
-                                      ),
-                                    );
-                            },
-                            tracksFn: () => tracks,
-                            bannerBuilder: (width, height) {
-                              final info = NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier);
-                              final tracksPathToImage = tracks.pathToImage;
-                              final banner = NetworkArtwork.orLocal(
-                                key: Key(tracksPathToImage),
-                                path: tracksPathToImage,
-                                track: tracks.trackOfImage,
-                                info: info,
-                                thumbnailSize: height,
-                                width: width,
-                                height: height,
-                                forceSquared: true,
-                                compressed: true,
-                                borderRadius: 0.0,
-                                blur: 0.0,
-                              );
-                              return NamidaArtworkExpandableToFullscreen(
-                                artwork: banner,
-                                heroTag: null,
-                                imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
-                                fetchImage: () => null,
-                                onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
-                                themeColor: null,
-                              );
-                            },
-                          ),
-                          stickyHeader: TracksSearchWidgetBox(
-                            state: this,
-                            leftText: [
-                              tracks.displayTrackKeyword,
-                              tracks.totalDurationFormatted,
-                            ].join(' - '),
-                            type: MediaType.album,
-                            pageTitle: widget.albumIdentifier.album,
-                          ),
-                          slivers: [
-                            if (tracksMappedWithDisc != null && tracksMappedWithDisc.keys.any((n) => n > 1))
-                              ...tracksMappedWithDisc.entries
-                                  .map(
-                                    (discEntry) {
-                                      final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
-                                      return SliverMainAxisGroup(
-                                        slivers: [
-                                          PinnedHeaderSliver(
-                                            child: Padding(
-                                              padding: EdgeInsets.only(bottom: 4.0),
-                                              child: Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  DecoratedBox(
+              rx: settings.mediaItemsTrackSorting,
+              builder: (context, sortingModes) {
+                final sorting = sortingModes[MediaType.album];
+                final sortIsReverse = sorting?.reverse == true;
+                final firstSort = sorting?.firstType;
+                final shouldSplitToDiscSections = firstSort == SortType.discNo && searchResults == null;
+                Map<int, List<Track>>? tracksMappedWithDisc;
+                Map<int, int>? tracksIndicesIncrement;
+                if (shouldSplitToDiscSections) {
+                  tracksMappedWithDisc = <int, List<Track>>{};
+                  tracksIndicesIncrement = <int, int>{};
+                  for (final tr in tracks) {
+                    tracksMappedWithDisc.addForce(tr.discNo, tr);
+                  }
+                  if (sortIsReverse) {
+                    tracksMappedWithDisc.sortByReverse((e) => e.key);
+                  } else {
+                    tracksMappedWithDisc.sortBy((e) => e.key);
+                  }
+                  int countTillNow = 0;
+                  for (final e in tracksMappedWithDisc.entries) {
+                    tracksIndicesIncrement[e.key] = countTillNow;
+                    countTillNow += e.value.length;
+                  }
+                }
+                return Obx(
+                  (context) {
+                    Indexer.inst.mainMapAlbums.valueR; // to update after sorting
+                    return NamidaListViewRaw(
+                      infoBox: (maxWidth) => SubpageInfoContainer(
+                        maxWidth: maxWidth,
+                        type: MediaType.album,
+                        onOpenMenu: () => NamidaDialogs.inst.showAlbumDialog(widget.albumIdentifier),
+                        customArtworkManager: NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier).toManager(),
+                        title: name,
+                        source: queueSource,
+                        subtitle: tracks.albumArtist,
+                        thirdLineText: tracks.yearOldest.yearFormatted,
+                        heroTag: 'album_${widget.albumIdentifier}',
+                        imageBuilder: (size) {
+                          final squared = Dimensions.inst.shouldAlbumBeSquared(context);
+                          final info = NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier);
+                          final tracksPathToImage = tracks.pathToImage;
+                          final artworkPre = NetworkArtwork.orLocal(
+                            key: Key(tracksPathToImage),
+                            path: tracksPathToImage,
+                            track: tracks.trackOfImage,
+                            info: info,
+                            thumbnailSize: size,
+                            forceSquared: squared,
+                            compressed: false,
+                            borderRadius: 12.0,
+                            staggered: false, // -- keep false
+                          );
+                          final artwork = NamidaArtworkExpandableToFullscreen(
+                            artwork: artworkPre,
+                            heroTag: heroTag,
+                            imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
+                            fetchImage: () => null,
+                            onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
+                            themeColor: null,
+                          );
+                          return squared
+                              ? MultiArtworkContainer(
+                                  size: size,
+                                  heroTag: heroTag,
+                                  child: artwork,
+                                )
+                              : Container(
+                                  margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                                  padding: const EdgeInsets.all(3.0),
+                                  child: NamidaHero(
+                                    tag: heroTag,
+                                    child: artwork,
+                                  ),
+                                );
+                        },
+                        tracksFn: () => tracks,
+                        bannerBuilder: (width, height) {
+                          final info = NetworkArtworkInfo.albumAutoArtist(widget.albumIdentifier);
+                          final tracksPathToImage = tracks.pathToImage;
+                          final banner = NetworkArtwork.orLocal(
+                            key: Key(tracksPathToImage),
+                            path: tracksPathToImage,
+                            track: tracks.trackOfImage,
+                            info: info,
+                            thumbnailSize: height,
+                            width: width,
+                            height: height,
+                            forceSquared: true,
+                            compressed: true,
+                            borderRadius: 0.0,
+                            blur: 0.0,
+                          );
+                          return NamidaArtworkExpandableToFullscreen(
+                            artwork: banner,
+                            heroTag: null,
+                            imageFile: () => info.toArtworkIfExistsAndValidAndEnabled() ?? File(tracksPathToImage),
+                            fetchImage: () => null,
+                            onSave: (imgFile, _) => imgFile == null ? null : EditDeleteController.inst.saveImageToStorage(imgFile),
+                            themeColor: null,
+                          );
+                        },
+                      ),
+                      stickyHeader: TracksSearchWidgetBox(
+                        state: this,
+                        leftText: [
+                          tracks.displayTrackKeyword,
+                          tracks.totalDurationFormatted,
+                        ].join(' - '),
+                        type: MediaType.album,
+                        pageTitle: widget.albumIdentifier.album,
+                      ),
+                      slivers: [
+                        if (tracksMappedWithDisc != null && tracksMappedWithDisc.keys.any((n) => n > 1))
+                          ...tracksMappedWithDisc.entries
+                              .map(
+                                (discEntry) {
+                                  final indicesToIncrement = tracksIndicesIncrement?[discEntry.key] ?? 0;
+                                  return SliverMainAxisGroup(
+                                    slivers: [
+                                      PinnedHeaderSliver(
+                                        child: Padding(
+                                          padding: EdgeInsets.only(bottom: 4.0),
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              DecoratedBox(
+                                                decoration: BoxDecoration(
+                                                  color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
+                                                  borderRadius: BorderRadius.horizontal(
+                                                    right: Radius.circular(6.0.multipliedRadius),
+                                                  ),
+                                                ),
+                                                child: Padding(
+                                                  padding: EdgeInsets.symmetric(vertical: 6.0),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      SizedBox(width: 8.0),
+                                                      Icon(
+                                                        Broken.cd,
+                                                        size: 20.0,
+                                                      ),
+                                                      SizedBox(width: 4.0),
+                                                      Flexible(
+                                                        child: Text(
+                                                          " ${discEntry.key}",
+                                                          style: textTheme.displayMedium,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 12.0),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              Flexible(
+                                                child: FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  child: DecoratedBox(
                                                     decoration: BoxDecoration(
-                                                      color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
-                                                      borderRadius: BorderRadius.horizontal(
-                                                        right: Radius.circular(6.0.multipliedRadius),
+                                                      color: theme.scaffoldBackgroundColor,
+                                                      borderRadius: BorderRadius.only(
+                                                        bottomLeft: Radius.circular(6.0.multipliedRadius),
                                                       ),
                                                     ),
                                                     child: Padding(
@@ -218,105 +248,71 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                                         mainAxisSize: MainAxisSize.min,
                                                         children: [
                                                           SizedBox(width: 8.0),
-                                                          Icon(
-                                                            Broken.cd,
-                                                            size: 20.0,
-                                                          ),
-                                                          SizedBox(width: 4.0),
-                                                          Flexible(
-                                                            child: Text(
-                                                              " ${discEntry.key}",
-                                                              style: textTheme.displayMedium,
-                                                            ),
+                                                          Text(
+                                                            [
+                                                              discEntry.value.displayTrackKeyword,
+                                                              discEntry.value.totalDurationFormatted,
+                                                            ].join(' • '),
+                                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
                                                           ),
                                                           SizedBox(width: 12.0),
                                                         ],
                                                       ),
                                                     ),
                                                   ),
-                                                  Flexible(
-                                                    child: FittedBox(
-                                                      fit: BoxFit.scaleDown,
-                                                      child: DecoratedBox(
-                                                        decoration: BoxDecoration(
-                                                          color: theme.scaffoldBackgroundColor,
-                                                          borderRadius: BorderRadius.only(
-                                                            bottomLeft: Radius.circular(6.0.multipliedRadius),
-                                                          ),
-                                                        ),
-                                                        child: Padding(
-                                                          padding: EdgeInsets.symmetric(vertical: 6.0),
-                                                          child: Row(
-                                                            mainAxisSize: MainAxisSize.min,
-                                                            children: [
-                                                              SizedBox(width: 8.0),
-                                                              Text(
-                                                                [
-                                                                  discEntry.value.displayTrackKeyword,
-                                                                  discEntry.value.totalDurationFormatted,
-                                                                ].join(' • '),
-                                                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
-                                                              ),
-                                                              SizedBox(width: 12.0),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          SliverFixedExtentList.builder(
-                                            itemCount: discEntry.value.length,
-                                            itemExtent: Dimensions.inst.trackTileItemExtent,
-                                            itemBuilder: (context, i) {
-                                              final track = discEntry.value[i];
-                                              final trackEffectiveIndex = i + indicesToIncrement;
-                                              return AnimatingTile(
-                                                key: ValueKey(i),
-                                                position: trackEffectiveIndex,
-                                                child: TrackTile(
-                                                  properties: properties,
-                                                  index: trackEffectiveIndex,
-                                                  trackOrTwd: track,
-                                                  tracks: tracks, // all tracks not just disc section
                                                 ),
-                                              );
-                                            },
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      );
-                                    },
-                                  )
-                                  .addSeparators(
-                                    separator: SliverPadding(
-                                      padding: EdgeInsets.symmetric(vertical: 12.0),
-                                    ),
-                                  )
-                            else
-                              SliverFixedExtentList.builder(
-                                itemCount: searchResults?.length ?? tracks.length,
-                                itemExtent: Dimensions.inst.trackTileItemExtent,
-                                itemBuilder: (context, i) {
-                                  final index = searchResults == null ? i : searchResults[i];
-                                  final track = tracks[index];
-                                  return AnimatingTile(
-                                    key: ValueKey(index),
-                                    position: i,
-                                    child: TrackTile(
-                                      properties: properties,
-                                      index: index,
-                                      trackOrTwd: track,
-                                      tracks: tracks, // all tracks even if in disc section
-                                    ),
+                                        ),
+                                      ),
+                                      SliverFixedExtentList.builder(
+                                        itemCount: discEntry.value.length,
+                                        itemExtent: Dimensions.inst.trackTileItemExtent,
+                                        itemBuilder: (context, i) {
+                                          final track = discEntry.value[i];
+                                          final trackEffectiveIndex = i + indicesToIncrement;
+                                          return AnimatingTile(
+                                            key: ValueKey(i),
+                                            position: trackEffectiveIndex,
+                                            child: TrackTile(
+                                              properties: properties,
+                                              index: trackEffectiveIndex,
+                                              trackOrTwd: track,
+                                              tracks: tracks, // all tracks not just disc section
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
                                   );
                                 },
-                              ),
-                          ],
-                        );
-                      },
+                              )
+                              .addSeparators(
+                                separator: SliverPadding(
+                                  padding: EdgeInsets.symmetric(vertical: 12.0),
+                                ),
+                              )
+                        else
+                          SliverFixedExtentList.builder(
+                            itemCount: searchResults?.length ?? tracks.length,
+                            itemExtent: Dimensions.inst.trackTileItemExtent,
+                            itemBuilder: (context, i) {
+                              final index = searchResults == null ? i : searchResults[i];
+                              final track = tracks[index];
+                              return AnimatingTile(
+                                key: ValueKey(index),
+                                position: i,
+                                child: TrackTile(
+                                  properties: properties,
+                                  index: index,
+                                  trackOrTwd: track,
+                                  tracks: tracks, // all tracks even if in disc section
+                                ),
+                              );
+                            },
+                          ),
+                      ],
                     );
                   },
                 );

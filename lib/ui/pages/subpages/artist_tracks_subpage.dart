@@ -8,6 +8,7 @@ import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -231,8 +232,7 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
     _sortAll();
     settings.artistAlbumsSort.addListener(_onSortingChanged);
     settings.artistAlbumsSortReversed.addListener(_onSortingChanged);
-    settings.albumSorts.addListener(_onSortingChanged);
-    settings.albumSortReversed.addListener(_onSortingChanged);
+    settings.mediaGroupSorting.addListener(_onSortingChanged);
     super.initState();
   }
 
@@ -240,16 +240,15 @@ class _ArtistAlbumsHeaderState extends State<_ArtistAlbumsHeader> {
   void dispose() {
     settings.artistAlbumsSort.removeListener(_onSortingChanged);
     settings.artistAlbumsSortReversed.removeListener(_onSortingChanged);
-    settings.albumSorts.removeListener(_onSortingChanged);
-    settings.albumSortReversed.removeListener(_onSortingChanged);
+    settings.mediaGroupSorting.removeListener(_onSortingChanged);
     super.dispose();
   }
 
   void _sortAll() {
     final sort = settings.artistAlbumsSort.value;
-    final (sorts, reverse) = sort == null ? _artistAlbumsAutoSorting() : ([sort], settings.artistAlbumsSortReversed.value);
+    final sorting = sort == null ? _artistAlbumsAutoSorting() : SortChain.of([sort], reverse: settings.artistAlbumsSortReversed.value);
     for (final list in [widget.albums, widget.eps, widget.singles, widget.extras]) {
-      if (list.length > 1) SearchSortController.inst.sortAlbumsListRaw(list, sorts, reverse);
+      if (list.length > 1) SearchSortController.inst.sortAlbumsListRaw(list, sorting);
     }
   }
 
@@ -441,10 +440,10 @@ class _ArtistAlbumsSortMenu extends StatelessWidget {
       (context) {
         final sort = settings.artistAlbumsSort.valueR;
         final sortReversed = settings.artistAlbumsSortReversed.valueR;
-        final (autoSorts, autoReversed) = _artistAlbumsAutoSorting();
-        final autoSort = autoSorts.first;
+        final autoSorting = _artistAlbumsAutoSorting();
+        final autoSort = autoSorting.entries.first.type;
         final effectiveSort = sort ?? autoSort;
-        final effectiveReversed = sort == null ? autoReversed : sortReversed;
+        final effectiveReversed = sort == null ? autoSorting.reverse : sortReversed;
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -480,10 +479,10 @@ class _ArtistAlbumsSortMenu extends StatelessWidget {
   }
 }
 
-(List<GroupSortType>, bool) _artistAlbumsAutoSorting() {
-  final albumSorts = settings.albumSorts.value;
-  if (albumSorts.first.suitsDiscography()) return (albumSorts, settings.albumSortReversed.value);
-  return (const [GroupSortType.year], true);
+SortChain<GroupSortType> _artistAlbumsAutoSorting() {
+  final albumSorting = settings.groupSortingOf(MediaType.album);
+  if (albumSorting.entries.first.type.suitsDiscography()) return albumSorting;
+  return SortChain.of(const [GroupSortType.year], reverse: true);
 }
 
 extension _TracksYearsRange on List<Track> {

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/base/tracks_search_wrapper.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
@@ -27,7 +28,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   Iterable<TrackExtended> getTracksExtended();
 
   /// example: sort, sortReverse
-  List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting, settings.mediaItemsTrackSortingReverse];
+  List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting];
 
   /// example: main list or map that gets updated
   RxBaseCore? listChangesListenerRx();
@@ -249,8 +250,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
 
   SmartPlaylistWrapper? createSmartPlaylist({
     required MediaType type,
-    required List<SortType> sorts,
-    required bool sortReverse,
+    required SortChain<SortType> sorting,
     required String pageTitle,
   }) {
     final rule = _getRuleForType(type, pageTitle);
@@ -260,8 +260,7 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
         name: lang.search,
         creationDate: DateTime.now(),
         joiner: SmartJoiner.defaultForGroups,
-        sorts: sorts,
-        sortReverse: sortReverse,
+        sorting: sorting,
         moods: [],
         ruleGroups: [
           SmartPlaylistRuleGroup.create(rules: [rule]),
@@ -273,14 +272,12 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
 
   void _onFilterIconLongPress({
     required MediaType type,
-    required List<SortType> sorts,
-    required bool sortReverse,
+    required SortChain<SortType> sorting,
     required String pageTitle,
   }) async {
     final initialSmartPlaylist = _cachedInitialSmartPlaylist ??= createSmartPlaylist(
       type: type,
-      sorts: sorts,
-      sortReverse: sortReverse,
+      sorting: sorting,
       pageTitle: pageTitle,
     );
 
@@ -314,25 +311,24 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
     final type = widget.type;
     return Obx(
       (context) {
-        final sortIsReverse = settings.mediaItemsTrackSortingReverse.valueR[type] == true;
-        final sorts = settings.mediaItemsTrackSorting.valueR[type] ?? const <SortType>[];
+        final sorting = settings.mediaItemsTrackSorting.valueR[type] ?? const SortChain<SortType>([]);
         final presetName = settings.mediaItemsTrackSortingPresets.valueR[type]?.activePreset?.name;
         return TracksSearchWidgetBoxBase(
           state: widget.state,
           leftText: widget.leftText,
-          sort: sorts.firstOrNull,
+          sort: sorting.firstType,
           presetName: presetName,
-          sortReverse: sortIsReverse,
+          sortReverse: sorting.reverse,
           disableSort: widget.disableSort,
           onFilterIconLongPress: () => _onFilterIconLongPress(
             type: type,
-            sorts: sorts,
-            sortReverse: sortIsReverse,
+            sorting: sorting,
             pageTitle: widget.pageTitle,
           ),
           onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
           onReverseIconTap: (newSortReverse) {
-            settings.updateMediaItemsTrackSortingAll(type, null, newSortReverse);
+            final newSorting = sorting.copyWith(reverse: newSortReverse);
+            settings.updateMediaItemsTrackSorting(type, newSorting);
             Indexer.inst.sortMediaTracksSubLists([type]);
           },
         );

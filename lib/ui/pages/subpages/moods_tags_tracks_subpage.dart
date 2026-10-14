@@ -7,6 +7,7 @@ import 'package:nampack/reactive/class/rx_base.dart';
 import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -88,22 +89,19 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
   void initState() {
     _sortTracks();
     settings.mediaItemsTrackSorting.addListener(_onSortingChanged);
-    settings.mediaItemsTrackSortingReverse.addListener(_onSortingChanged);
     super.initState();
   }
 
   @override
   void dispose() {
     settings.mediaItemsTrackSorting.removeListener(_onSortingChanged);
-    settings.mediaItemsTrackSortingReverse.removeListener(_onSortingChanged);
     super.dispose();
   }
 
   void _sortTracks() {
     final mediaType = widget.mediaType;
     final comparables = SearchSortController.inst.getMediaTracksSortingComparables(mediaType);
-    final reverse = settings.mediaItemsTrackSortingReverse.value[mediaType] ?? false;
-    widget.tracks.sortByAltsPrecomputed(comparables, reverse: reverse);
+    widget.tracks.sortByChain(comparables);
   }
 
   void _onSortingChanged() {

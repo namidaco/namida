@@ -1,4 +1,5 @@
 // by claude
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -37,10 +38,10 @@ class TrackSortPresets {
   }
 
   /// unchanged when no preset is active.
-  TrackSortPresets withActiveChain({List<SortType>? sorts, bool? reverse}) {
+  TrackSortPresets withActiveSorting(SortChain<SortType> sorting) {
     final activeIndex = this.activeIndex;
     if (activeIndex == null) return this;
-    final newPreset = presets[activeIndex].copyWith(sorts: sorts, reverse: reverse);
+    final newPreset = presets[activeIndex].copyWith(sorting: sorting);
     return withReplaced(activeIndex, newPreset);
   }
 
@@ -75,40 +76,32 @@ class TrackSortPresets {
 
 class TrackSortPreset {
   final String name;
-  final List<SortType> sorts;
-  final bool reverse;
+  final SortChain<SortType> sorting;
 
   const TrackSortPreset({
     required this.name,
-    required this.sorts,
-    required this.reverse,
+    required this.sorting,
   });
 
   TrackSortPreset copyWith({
     String? name,
-    List<SortType>? sorts,
-    bool? reverse,
+    SortChain<SortType>? sorting,
   }) {
     return TrackSortPreset(
       name: name ?? this.name,
-      sorts: sorts ?? this.sorts,
-      reverse: reverse ?? this.reverse,
+      sorting: sorting ?? this.sorting,
     );
   }
 
   factory TrackSortPreset.fromJson(Map<String, dynamic> json) {
-    final List sortsJson = json['sorts'];
-    final sorts = sortsJson.map((e) => SortType.values.getEnum(e)).nonNulls.toFixedList();
     return TrackSortPreset(
       name: json['name'],
-      sorts: sorts,
-      reverse: json['reverse'] == true,
+      sorting: SortChain.fromMap(json, SortType.values),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'name': name,
-    'sorts': [for (final sort in sorts) sort.name],
-    'reverse': reverse,
+    ...sorting.toJson(),
   };
 }

@@ -386,10 +386,14 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
     _applySortedOrder(_sortedIndicesOf(length, (a, b) => keys[a].compareTo(keys[b]), reverse));
   }
 
-  void sortByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false}) {
+  /// [alternativesReverse] flips each alternative on its own, [reverse] flips the whole order on top.
+  void sortByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false, List<bool>? alternativesReverse}) {
     final alternativesLength = alternatives.length;
     if (alternativesLength == 0) return;
-    if (alternativesLength == 1) return sortByPrecomputed(alternatives[0], reverse: reverse);
+    if (alternativesLength == 1) {
+      final isFirstReversed = alternativesReverse != null && alternativesReverse[0];
+      return sortByPrecomputed(alternatives[0], reverse: reverse != isFirstReversed);
+    }
 
     final length = this.length;
     if (length < 2) return;
@@ -397,7 +401,7 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
       int compareItems(E a, E b) {
         for (int i = 0; i < alternativesLength; i++) {
           final compare = alternatives[i](a).compareTo(alternatives[i](b));
-          if (compare != 0) return compare;
+          if (compare != 0) return alternativesReverse != null && alternativesReverse[i] ? -compare : compare;
         }
         return 0;
       }
@@ -420,7 +424,7 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
         for (int i = 0; i < alternativesLength; i++) {
           final key = keys[i];
           final compare = key[a].compareTo(key[b]);
-          if (compare != 0) return compare;
+          if (compare != 0) return alternativesReverse != null && alternativesReverse[i] ? -compare : compare;
         }
         return 0;
       }, reverse),
@@ -454,8 +458,8 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
   /// Yields items in sorted order through a binary heap, `O(n)` to build and `O(log n)` per yielded item,
   /// so taking the first `k` items costs `O(n + k log n)` instead of a full sort.
   ///
-  /// items that compare equal keep their original order, [reverse] flips the whole order.
-  Iterable<E> lazySortedByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false}) sync* {
+  /// items that compare equal keep their original order, [alternativesReverse] flips each alternative on its own, [reverse] flips the whole order.
+  Iterable<E> lazySortedByAltsPrecomputed(List<Comparable Function(E e)> alternatives, {bool reverse = false, List<bool>? alternativesReverse}) sync* {
     final length = this.length;
     if (length == 0) return;
 
@@ -474,7 +478,9 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
       for (int i = 0; i < alternativesLength; i++) {
         final key = keys[i];
         final compare = key[a].compareTo(key[b]);
-        if (compare != 0) return compare * direction < 0;
+        if (compare == 0) continue;
+        final keyDirection = alternativesReverse != null && alternativesReverse[i] ? -direction : direction;
+        return compare * keyDirection < 0;
       }
       return (a - b) * direction < 0;
     }

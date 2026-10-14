@@ -14,6 +14,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/http_manager.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
@@ -37,9 +38,9 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
 
-typedef LocalPlaylist = GeneralPlaylist<TrackWithDate, SortType>;
+typedef LocalPlaylist = GeneralPlaylist<TrackWithDate, SortEntry<SortType>>;
 
-class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType> {
+class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry<SortType>> {
   static PlaylistController get inst => _instance;
   static final PlaylistController _instance = PlaylistController._internal();
   PlaylistController._internal();
@@ -50,7 +51,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   @override
   Track identifyBy(TrackWithDate item) => item.track;
 
-  Future<GeneralPlaylist<TrackWithDate, SortType>?> addNewPlaylist(
+  Future<GeneralPlaylist<TrackWithDate, SortEntry<SortType>>?> addNewPlaylist(
     String name, {
     List<Track> tracks = const <Track>[],
     int? creationDate,
@@ -1293,7 +1294,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   Map<String, dynamic> itemToJson(TrackWithDate item) => item.toJson();
 
   @override
-  dynamic sortToJson(List<SortType> items) => SortType.sortsToJson(items);
+  dynamic sortToJson(List<SortEntry<SortType>> items) => SortType.sortsToJson(items);
 
   @override
   bool canRemovePlaylist(LocalPlaylist playlist) {
@@ -1327,24 +1328,16 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortType>
   void onFavouritesChanged(Iterable<Track>? items) => Indexer.inst.onFavouritesChanged(items);
 
   @override
-  void onPlaylistItemsSort(List<SortType> sorts, bool reverse, List<TrackWithDate> items) {
-    final comparables = <Comparable<dynamic> Function(TrackWithDate tr)>[];
-    for (final s in sorts) {
-      if (s == SortType.dateAdded) {
-        Comparable<dynamic> comparable(TrackWithDate e) => e.dateAddedMS;
-        comparables.add(comparable);
-      } else {
-        final comparable = SearchSortController.inst.getTracksSortingComparables(s);
-        Comparable<dynamic> comparabletwd(TrackWithDate twd) => comparable(twd.track);
-        comparables.add(comparabletwd);
-      }
+  void onPlaylistItemsSort(List<SortEntry<SortType>> sorts, bool reverse, List<TrackWithDate> items) {
+    Comparable<dynamic> Function(TrackWithDate twd) comparableOf(SortType s) {
+      if (s == SortType.dateAdded) return (twd) => twd.dateAddedMS;
+      final comparable = SearchSortController.inst.getTracksSortingComparables(s);
+      return (twd) => comparable(twd.track);
     }
 
-    if (reverse) {
-      items.sortByReverseAlts(comparables);
-    } else {
-      items.sortByAlts(comparables);
-    }
+    final sorting = SortChain(sorts, reverse: reverse);
+    final comparables = SortChainComparables.of(sorting, comparableOf);
+    items.sortByChain(comparables);
   }
 
   @override

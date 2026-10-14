@@ -629,18 +629,6 @@ class _ListCodec<T> extends _SettingsCodec<_ProtectedList<T>> {
   Object? encode(_ProtectedList<T> value) => _encodeItems(value._source, item);
 }
 
-/// for lists nested inside another key's value, which are mutated through the outer key.
-class _PlainListCodec<T> extends _SettingsCodec<List<T>> {
-  final _SettingsCodec<T>? item;
-  const _PlainListCodec(this.item);
-
-  @override
-  List<T>? decode(dynamic json) => json is List ? _decodeItems(json, item).toList() : null;
-
-  @override
-  Object? encode(List<T> value) => _encodeItems(value, item);
-}
-
 class _SetCodec<T> extends _SettingsCodec<_ProtectedSet<T>> {
   final _SettingsCodec<T>? item;
   const _SetCodec(this.item);

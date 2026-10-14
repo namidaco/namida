@@ -14,6 +14,7 @@ import 'package:namida/class/folder.dart';
 import 'package:namida/class/library_group.dart';
 import 'package:namida/class/library_item_map.dart';
 import 'package:namida/class/progress_percentage.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -385,7 +386,7 @@ class Indexer<T extends Track> {
     final mediaSorters = {for (final e in MediaType.values) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
     this.mainMapsGroup.fillAll(tracksInfoList.value, (tr) => tr.toTrackExt(), settings.albumIdentifiers.value);
     QueueController.latestPlayedForSourceManager.migrateLegacyAlbumSources();
-    this.mainMapsGroup.sortAllSync(mediaSorters, settings.mediaItemsTrackSortingReverse.value, tracksInfoList.value);
+    this.mainMapsGroup.sortAllSync(mediaSorters, tracksInfoList.value);
     this.mainMapsGroup.refreshAll();
     FoldersController.tracksAndVideos.onMapChanged(mainMapFoldersTracksAndVideos.value);
     FoldersController.tracks.onMapChanged(mainMapFoldersTracks.value);
@@ -397,8 +398,7 @@ class Indexer<T extends Track> {
 
   Future<void> sortMediaTracksSubLists(List<MediaType> medias) async {
     final sorters = {for (final e in medias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
-    final mediaItemsTrackSortingReverse = settings.mediaItemsTrackSortingReverse.value;
-    this.mainMapsGroup.sortAllSync(sorters, mediaItemsTrackSortingReverse, tracksInfoList.value);
+    this.mainMapsGroup.sortAllSync(sorters, tracksInfoList.value);
     _refreshMediaTracksSubListsAfterSort(sorters.keys); // -- vip vro
     this.mainMapsGroup.refreshAll(); // to refresh sublists as well
   }
@@ -426,7 +426,7 @@ class Indexer<T extends Track> {
   List<MediaType> _getMediaTypeSortThatDependOnHistory() {
     final requiredToSort = <MediaType>[];
     for (final e in settings.mediaItemsTrackSorting.value.entries) {
-      for (final sort in e.value) {
+      for (final sort in e.value.types()) {
         if (sort.requiresHistory) {
           requiredToSort.add(e.key);
           break;
@@ -452,15 +452,18 @@ class Indexer<T extends Track> {
 
       for (final e in MediaType.values) {
         final sortRequiresHistory = switch (e) {
-          MediaType.track => settings.mediaItemsTrackSorting.value[MediaType.track]?.firstOrNull?.requiresHistory ?? false,
-          MediaType.album => settings.albumSorts.value.any((e) => e.requiresHistory),
-          MediaType.artist || MediaType.albumArtist || MediaType.composer => settings.artistSorts.value.any((e) => e.requiresHistory),
-          MediaType.genre || MediaType.style => settings.genreSorts.value.any((e) => e.requiresHistory),
-          MediaType.language => settings.languageSorts.value.any((e) => e.requiresHistory),
-          MediaType.playlist => settings.playlistSorts.value.any((e) => e.requiresHistory),
-          MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstOrNull?.requiresHistory ?? false,
-          MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstOrNull?.requiresHistory ?? false,
-          MediaType.folderVideo => settings.mediaItemsTrackSorting.value[MediaType.folderVideo]?.firstOrNull?.requiresHistory ?? false,
+          MediaType.track => settings.mediaItemsTrackSorting.value[MediaType.track]?.firstType?.requiresHistory ?? false,
+          MediaType.album ||
+          MediaType.artist ||
+          MediaType.albumArtist ||
+          MediaType.composer ||
+          MediaType.genre ||
+          MediaType.style ||
+          MediaType.language ||
+          MediaType.playlist => settings.groupSortingOf(e).types().any((sort) => sort.requiresHistory),
+          MediaType.folder => settings.mediaItemsTrackSorting.value[MediaType.folder]?.firstType?.requiresHistory ?? false,
+          MediaType.folderMusic => settings.mediaItemsTrackSorting.value[MediaType.folderMusic]?.firstType?.requiresHistory ?? false,
+          MediaType.folderVideo => settings.mediaItemsTrackSorting.value[MediaType.folderVideo]?.firstType?.requiresHistory ?? false,
           MediaType.mood => false,
           MediaType.tag => false,
           MediaType.rating => false,
@@ -517,7 +520,7 @@ class Indexer<T extends Track> {
     final changes = mainMapsGroup.updateTracksSync(tracksMap, settings.albumIdentifiers.value);
     final changedMedias = changes.changedMedias;
     final mediaSorters = {for (final e in changedMedias) e: SearchSortController.inst.getMediaTracksSortingComparables(e)};
-    mainMapsGroup.sortChangedSync(changes, mediaSorters, settings.mediaItemsTrackSortingReverse.value);
+    mainMapsGroup.sortChangedSync(changes, mediaSorters);
     for (final e in changedMedias) {
       SearchSortController.inst.sortMedia(e); // main list sorting
     }
@@ -1805,8 +1808,7 @@ class Indexer<T extends Track> {
     tracksInfoList.clear(); // clearing for cases which refreshing library is required (like after changing separators)
     networkTracksCount.value = 0;
 
-    final mediaSorters = <MediaType, List<Comparable<dynamic> Function(Track)>>{};
-    final mediaSortersReverse = settings.mediaItemsTrackSortingReverse.value;
+    final mediaSorters = <MediaType, SortChainComparables<Track>>{};
 
     for (final e in MediaType.values) {
       mediaSorters[e] = SearchSortController.inst.getMediaTracksSortingComparables(e);
@@ -1848,7 +1850,6 @@ class Indexer<T extends Track> {
 
               mainMapsGroup.sortAllSync(
                 mediaSorters,
-                mediaSortersReverse,
                 tracksInfoList.value,
               );
 

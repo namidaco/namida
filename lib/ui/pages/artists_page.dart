@@ -5,6 +5,7 @@ import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
@@ -51,9 +52,10 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
   List<NamidaPopupItem> _getTypeChooserChildren() {
     void onTap(MediaType type) {
       GroupSortType? newArtistSort;
-      final currentArtistSorts = settings.artistSorts.value;
+      final currentSorting = settings.groupSortingOf(MediaType.artist);
+      final firstEntry = currentSorting.entries.first;
       // -- automatically resorting by the new type
-      switch (currentArtistSorts.first) {
+      switch (firstEntry.type) {
         case GroupSortType.artistsList:
         case GroupSortType.albumArtist:
         case GroupSortType.composer:
@@ -66,12 +68,14 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
         default:
           null;
       }
-      List<GroupSortType>? newArtistSorts;
+      SortChain<GroupSortType>? newSorting;
       if (newArtistSort != null) {
-        newArtistSorts = [newArtistSort, ...currentArtistSorts.skip(1).where((e) => e != newArtistSort)];
+        final otherEntries = currentSorting.entries.skip(1).where((e) => e.type != newArtistSort);
+        final newFirstEntry = SortEntry(newArtistSort, reverse: firstEntry.reverse);
+        newSorting = currentSorting.copyWith(entries: [newFirstEntry, ...otherEntries]);
       }
       settings.activeArtistType.save(type);
-      SearchSortController.inst.sortMedia(type, groupSorts: newArtistSorts, reverse: null);
+      SearchSortController.inst.sortMedia(type, groupSorting: newSorting);
     }
 
     return [
@@ -137,8 +141,9 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                     ? '$finalArtistsLength/${countToText(count: totalArtistsLength)}'
                     : countToText(count: finalArtistsLength);
 
-                final sort = settings.artistSorts.valueR.first;
-                final sortReverse = settings.artistSortReversed.valueR;
+                final sorting = settings.groupSortingOfR(artistType);
+                final sort = sorting.entries.first.type;
+                final sortReverse = sorting.reverse;
 
                 final sortTextIsUseless =
                     sort == GroupSortType.artistsList ||
@@ -201,7 +206,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       title: sort.toText(),
                       popupMenuChild: const SortByMenuArtists(),
                       isCurrentlyReversed: sortReverse,
-                      onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !settings.artistSortReversed.value),
+                      onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !sortReverse),
                     ),
                     textField: CustomTextField(
                       textFieldController: libraryTab.textSearchControllerR,

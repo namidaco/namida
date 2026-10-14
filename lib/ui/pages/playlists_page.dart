@@ -11,6 +11,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -288,9 +289,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     if (_isReordering) {
       await PlaylistController.inst.waitForPlaylistsLoad;
       PlaylistController.inst.ensureCustomOrderValid(removeNonExistent: true);
-      if (settings.playlistSorts.value.first != GroupSortType.custom || settings.playlistSortReversed.value) {
+      final sorting = settings.groupSortingOf(MediaType.playlist);
+      if (sorting.firstType != GroupSortType.custom || sorting.reverse) {
         // -- for consistent order while enabling/disabling
-        settings.updateGroupSortingAll(MediaType.playlist, const [GroupSortType.custom], false);
+        final customSorting = SortChain.of(const [GroupSortType.custom]);
+        settings.updateGroupSorting(MediaType.playlist, customSorting);
         PlaylistController.inst.sortPlaylists();
       }
     }
@@ -409,6 +412,8 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                   String leftText = finalPlaylistsLength != totalPlaylistsLength
                       ? '$finalPlaylistsLength/${totalPlaylistsLength.displayPlaylistKeyword}'
                       : finalPlaylistsLength.displayPlaylistKeyword;
+                  final sorting = settings.groupSortingOfR(MediaType.playlist);
+                  final sortReverse = sorting.reverse;
 
                   return ExpandableBox(
                     enableHero: widget.enableHero && enableHero,
@@ -423,10 +428,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
                     disableSorting: tracksToAdd != null && tracksToAdd.isNotEmpty,
                     sortByMenuWidget: SortByMenu(
-                      title: settings.playlistSorts.valueR.first.toText(),
+                      title: sorting.entries.first.type.toText(),
                       popupMenuChild: const SortByMenuPlaylist(),
-                      isCurrentlyReversed: settings.playlistSortReversed.valueR,
-                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !settings.playlistSortReversed.value),
+                      isCurrentlyReversed: sortReverse,
+                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !sortReverse),
                     ),
                     textField: CustomTextField(
                       textFieldController: libraryTab.textSearchControllerR,
@@ -751,8 +756,10 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 onReorderStart: (index) => super.enablePullToRefresh = false,
                                 onReorderEnd: (index) => super.enablePullToRefresh = true,
                                 onReorder: (oldIndex, newIndex) async {
-                                  if (settings.playlistSorts.value.first != GroupSortType.custom) {
-                                    settings.playlistSorts.replace(const [GroupSortType.custom]);
+                                  final sorting = settings.groupSortingOf(MediaType.playlist);
+                                  if (sorting.firstType != GroupSortType.custom) {
+                                    final customSorting = sorting.withSingle(GroupSortType.custom);
+                                    settings.updateGroupSorting(MediaType.playlist, customSorting);
                                   }
                                   PlaylistController.inst.onPlaylistReorder(oldIndex, newIndex);
                                 },
@@ -787,10 +794,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                 },
                               ),
                             )
-                          : ObxO(
-                              rx: settings.playlistSorts,
-                              builder: (context, sorts) {
-                                final sort = sorts.first;
+                          : Obx(
+                              (context) {
+                                final sort = settings.groupSortingOfR(MediaType.playlist).entries.first.type;
                                 final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
                                 final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolverPlaylist(sort);
 

@@ -54,7 +54,6 @@ class _FavouritesSorting<T extends Track> {
     final changedMedias = _indexer.mainMapsGroup.repositionTracksSync(
       tracks,
       sorters,
-      settings.mediaItemsTrackSortingReverse.value,
       _indexer.tracksInfoList.value,
       (tr) => tr.toTrackExt(),
       settings.albumIdentifiers.value,
@@ -71,7 +70,7 @@ class _FavouritesSorting<T extends Track> {
   List<MediaType> _getMediasSortedByFavourites() {
     final medias = <MediaType>[];
     for (final e in settings.mediaItemsTrackSorting.value.entries) {
-      for (final sort in e.value) {
+      for (final sort in e.value.types()) {
         if (sort == SortType.shuffle) break;
         if (sort == SortType.favourite) {
           medias.add(e.key);

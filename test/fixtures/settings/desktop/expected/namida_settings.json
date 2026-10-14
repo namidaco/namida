@@ -99,22 +99,43 @@
   "tracksSortSearch": "mostPlayed",
   "tracksSortSearchReversed": false,
   "tracksSortSearchIsAuto_v2": true,
-  "albumSorts": [
-    "numberOfTracks"
-  ],
-  "albumSortReversed": false,
-  "artistSorts": [
-    "numberOfTracks"
-  ],
-  "artistSortReversed": false,
-  "genreSorts": [
-    "genresList"
-  ],
-  "genreSortReversed": false,
-  "playlistSorts": [
-    "custom"
-  ],
-  "playlistSortReversed": false,
+  "mediaGroupSorting": {
+    "album": {
+      "sorts": [
+        "numberOfTracks"
+      ]
+    },
+    "artist": {
+      "sorts": [
+        "numberOfTracks"
+      ]
+    },
+    "genre": {
+      "sorts": [
+        "genresList"
+      ]
+    },
+    "language": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "mood": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "tag": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "playlist": {
+      "sorts": [
+        "custom"
+      ]
+    }
+  },
   "ytPlaylistSort": "dateModified",
   "ytPlaylistSortReversed": true,
   "indexMinDurationInSec": 5,
@@ -311,104 +332,117 @@
       "numberOfTracks": 10,
       "insertNext": false,
       "shuffle": true,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "moreArtist": {
       "numberOfTracks": 10,
       "insertNext": false,
       "shuffle": true,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "moreFolder": {
       "numberOfTracks": 10,
       "insertNext": false,
       "shuffle": true,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "random": {
       "numberOfTracks": 10,
       "insertNext": false,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "listenTimeRange": {
       "numberOfTracks": 0,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "mood": {
       "numberOfTracks": 20,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [
-        "mostPlayed"
-      ],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": [
+          "mostPlayed"
+        ]
+      },
       "filterMinimums": {}
     },
     "rating": {
       "numberOfTracks": 20,
       "insertNext": false,
       "shuffle": false,
-      "sorts": [
-        "rating"
-      ],
-      "sortReverse": true,
+      "sorts_v2": {
+        "sorts": [
+          "rating"
+        ],
+        "reverse": true
+      },
       "filterMinimums": {}
     },
     "sameReleaseDate": {
       "numberOfTracks": 30,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [
-        "mostPlayed"
-      ],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": [
+          "mostPlayed"
+        ]
+      },
       "filterMinimums": {}
     },
     "algorithm": {
       "numberOfTracks": 20,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "algorithmDiscoverDate": {
       "numberOfTracks": 20,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [
-        "mostPlayed"
-      ],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": [
+          "mostPlayed"
+        ]
+      },
       "filterMinimums": {}
     },
     "algorithmTimeRange": {
       "numberOfTracks": 20,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "similar": {
       "numberOfTracks": 20,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {},
       "similarSources": [
         "genre",
@@ -429,93 +463,110 @@
       "numberOfTracks": 0,
       "insertNext": true,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "advancedPlay": {
       "numberOfTracks": 0,
       "insertNext": false,
       "shuffle": false,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     },
     "advancedShuffle": {
       "numberOfTracks": 0,
       "insertNext": false,
       "shuffle": true,
-      "sorts": [],
-      "sortReverse": false,
+      "sorts_v2": {
+        "sorts": []
+      },
       "filterMinimums": {}
     }
   },
-  "mediaItemsTrackSorting": {
-    "track": [
-      "title"
-    ],
-    "album": [
-      "discNo",
-      "trackNo",
-      "year",
-      "title"
-    ],
-    "artist": [
-      "year",
-      "title"
-    ],
-    "albumArtist": [
-      "year",
-      "title"
-    ],
-    "composer": [
-      "year",
-      "title"
-    ],
-    "genre": [
-      "year",
-      "title"
-    ],
-    "style": [
-      "year",
-      "title"
-    ],
-    "language": [
-      "year",
-      "title"
-    ],
-    "mood": [
-      "title"
-    ],
-    "tag": [
-      "title"
-    ],
-    "rating": [
-      "title"
-    ],
-    "folder": [
-      "filename"
-    ],
-    "folderMusic": [
-      "filename"
-    ],
-    "folderVideo": [
-      "filename"
-    ]
-  },
-  "mediaItemsTrackSortingReverse": {
-    "track": false,
-    "album": false,
-    "artist": false,
-    "genre": false,
-    "style": false,
-    "language": false,
-    "mood": false,
-    "tag": false,
-    "rating": false,
-    "folder": false,
-    "folderMusic": false,
-    "folderVideo": false
+  "mediaItemsTrackSorting_v2": {
+    "track": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "album": {
+      "sorts": [
+        "discNo",
+        "trackNo",
+        "year",
+        "title"
+      ]
+    },
+    "artist": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "albumArtist": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "composer": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "genre": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "style": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "language": {
+      "sorts": [
+        "year",
+        "title"
+      ]
+    },
+    "mood": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "tag": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "rating": {
+      "sorts": [
+        "title"
+      ]
+    },
+    "folder": {
+      "sorts": [
+        "filename"
+      ]
+    },
+    "folderMusic": {
+      "sorts": [
+        "filename"
+      ]
+    },
+    "folderVideo": {
+      "sorts": [
+        "filename"
+      ]
+    }
   },
   "imageSourceAlbum": [
     "local"

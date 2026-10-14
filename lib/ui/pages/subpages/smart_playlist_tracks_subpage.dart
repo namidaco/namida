@@ -133,20 +133,22 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         _tracks.displayTrackKeyword,
                         _tracks.totalDurationFormatted,
                       ].join(' - '),
-                      sort: smartPlaylist.sorts.firstOrNull,
-                      sortReverse: smartPlaylist.sortReverse,
+                      sort: smartPlaylist.sorting.firstType,
+                      sortReverse: smartPlaylist.sorting.reverse,
                       onSortTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
-                        currentSorts: smartPlaylist.sorts,
-                        currentReverse: smartPlaylist.sortReverse,
-                        onChanged: (sorts, reverse) => _editAndRefresh(
+                        currentSorting: smartPlaylist.sorting,
+                        onChanged: (sorting) => _editAndRefresh(
                           smartPlaylist,
-                          smartPlaylist.copyWith(sorts: sorts, sortReverse: reverse),
+                          smartPlaylist.copyWith(sorting: sorting),
                         ),
                       ),
-                      onReverseIconTap: (newSortReverse) => _editAndRefresh(
-                        smartPlaylist,
-                        smartPlaylist.copyWith(sortReverse: newSortReverse),
-                      ),
+                      onReverseIconTap: (newSortReverse) {
+                        final sorting = smartPlaylist.sorting.copyWith(reverse: newSortReverse);
+                        _editAndRefresh(
+                          smartPlaylist,
+                          smartPlaylist.copyWith(sorting: sorting),
+                        );
+                      },
                     ),
                     itemCount: searchResults?.length ?? _tracks.length,
                     itemExtent: Dimensions.inst.trackTileItemExtent,

@@ -10,6 +10,7 @@ import 'package:nampack/nampack.dart';
 import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/player_config_preset.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -634,76 +635,93 @@ void main() {
       expect(settings.equalizer.buildJson()['parametricEqualizer'], settings.equalizer.equalizer.value.toMap());
     });
 
-    test('track sorting of a media type updates both maps once, unchanged input does nothing', () async {
+    test('track sorting of a media type is stored as one chain, unchanged input does nothing', () async {
       await loadFile(settings, {'_v': 2});
-      final albumSorts = settings.mediaItemsTrackSorting.value[MediaType.album]!.toList();
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, null, null);
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, albumSorts, false);
-      expect(settings.buildJson().containsKey('mediaItemsTrackSorting'), false);
-      expect(settings.buildJson().containsKey('mediaItemsTrackSortingReverse'), false);
+      final albumSorting = settings.mediaItemsTrackSorting.value[MediaType.album]!;
+      settings.updateMediaItemsTrackSorting(MediaType.album, albumSorting);
+      expect(settings.buildJson().containsKey('mediaItemsTrackSorting_v2'), false);
 
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, [SortType.title], true);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], [SortType.title]);
+      const titleSorting = SortChain([SortEntry(SortType.title, reverse: true), SortEntry(SortType.year)], reverse: true);
+      settings.updateMediaItemsTrackSorting(MediaType.album, titleSorting);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], titleSorting);
       expect(settings.mediaItemsTrackSorting.value[MediaType.artist], settings.mediaItemsTrackSortingDefault.fallback[MediaType.artist]);
-      expect(settings.buildJson()['mediaItemsTrackSorting'], {
-        'album': ['title'],
+      expect(settings.buildJson()['mediaItemsTrackSorting_v2'], {
+        'album': {
+          'sorts': ['-title', 'year'],
+          'reverse': true,
+        },
       });
-      expect(settings.buildJson()['mediaItemsTrackSortingReverse'], {'album': true});
 
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, albumSorts, null);
-      expect(settings.buildJson().containsKey('mediaItemsTrackSorting'), false);
+      settings.updateMediaItemsTrackSorting(MediaType.album, albumSorting);
+      expect(settings.buildJson().containsKey('mediaItemsTrackSorting_v2'), false);
+    });
+
+    test('group sorting: variants share one entry, an empty chain falls back to the default', () async {
+      await loadFile(settings, {
+        '_v': 2,
+        'mediaGroupSorting': {
+          'genre': {'sorts': []},
+        },
+      });
+      expect(settings.groupSortingOf(MediaType.genre), settings.mediaGroupSorting.fallback[MediaType.genre]);
+
+      final yearSorting = SortChain.of(const [GroupSortType.year], reverse: true);
+      settings.updateGroupSorting(MediaType.composer, yearSorting);
+      expect(settings.groupSortingOf(MediaType.artist), yearSorting);
+      expect(settings.groupSortingOf(MediaType.albumArtist), yearSorting);
+      expect(settings.buildJson()['mediaGroupSorting'], {
+        'artist': {
+          'sorts': ['year'],
+          'reverse': true,
+        },
+      });
+      expect(settings.hasGroupSorting(MediaType.track), false);
     });
 
     test('track sort presets: the active one is sorted by and edited, the default chain stays', () async {
       await loadFile(settings, {'_v': 2});
-      final albumSorts = settings.mediaItemsTrackSorting.value[MediaType.album]!.toList();
+      final albumSorting = settings.mediaItemsTrackSorting.value[MediaType.album]!;
       settings.addTrackSortPreset(MediaType.album, 'a');
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activeIndex, 0);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], albumSorts);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], albumSorting);
 
       int sortsNotified = 0;
-      bool? reverseSeenBySorts;
-      void onSorts() {
-        sortsNotified++;
-        reverseSeenBySorts = settings.mediaItemsTrackSortingReverse.value[MediaType.album];
-      }
+      void onSorts() => sortsNotified++;
 
       settings.mediaItemsTrackSorting.addListener(onSorts);
       addTearDown(() => settings.mediaItemsTrackSorting.removeListener(onSorts));
 
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, [SortType.duration], true);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], [SortType.duration]);
-      expect(settings.mediaItemsTrackSortingReverse.value[MediaType.album], true);
+      const durationSorting = SortChain([SortEntry(SortType.duration, reverse: true)], reverse: true);
+      settings.updateMediaItemsTrackSorting(MediaType.album, durationSorting);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], durationSorting);
       expect(sortsNotified, 1);
-      expect(reverseSeenBySorts, true);
-      expect(settings.buildJson().containsKey('mediaItemsTrackSorting'), false);
+      expect(settings.buildJson().containsKey('mediaItemsTrackSorting_v2'), false);
 
       settings.renameTrackSortPreset(MediaType.album, 0, 'b');
       expect(sortsNotified, 1);
 
       settings.selectTrackSortPreset(MediaType.album, null);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], albumSorts);
-      expect(settings.mediaItemsTrackSortingReverse.value[MediaType.album], false);
-      expect(reverseSeenBySorts, false);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], albumSorting);
 
       settings.selectTrackSortPreset(MediaType.album, 0);
-      settings.updateMediaItemsTrackSortingAll(MediaType.album, [SortType.title], null, toDefault: true);
+      const titleSorting = SortChain([SortEntry(SortType.title)]);
+      settings.updateMediaItemsTrackSorting(MediaType.album, titleSorting, toDefault: true);
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activeIndex, null);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], [SortType.title]);
-      expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.sorts, [SortType.duration]);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], titleSorting);
+      expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.sorting, durationSorting);
 
       await loadFile(settings, settings.buildJson());
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.name, 'b');
       settings.selectTrackSortPreset(MediaType.album, 0);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], [SortType.duration]);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], durationSorting);
 
       settings.addTrackSortPreset(MediaType.album, 'c');
       settings.selectTrackSortPreset(MediaType.album, 0);
       settings.removeTrackSortPreset(MediaType.album, 0);
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activeIndex, null);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.album], [SortType.title]);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.album], titleSorting);
       settings.removeTrackSortPreset(MediaType.album, 0);
-      expect(settings.buildJson().containsKey('mediaItemsTrackSortingPresets'), false);
+      expect(settings.buildJson().containsKey('mediaItemsTrackSortingPresets_v2'), false);
     });
 
     test('grid counts fall back to auto', () async {
@@ -813,15 +831,48 @@ void main() {
       expect(settings.staticColorDark.value, 0xFF112233);
       expect(settings.useMediaStore.userValue, null);
       expect(settings.tracksSortSearchIsAuto.userValue, null);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.track], [SortType.album, SortType.title, SortType.year]);
-      expect(settings.mediaItemsTrackSortingReverse.value[MediaType.track], true);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.track], SortChain.of(const [SortType.album, SortType.title, SortType.year], reverse: true));
       expect(settings.fontScaleLRC.value, 1.4);
       expect(settings.fontScaleLRCFull.value, 1.0);
       final raw = settings.buildJson();
       for (final name in ['selectedLanguage', 'staticColor', 'staticColorDark', 'useMediaStore', 'tracksSort', 'tracksSortReversed', 'backupItemslist', '_legacy']) {
         expect(raw.containsKey(name), false, reason: name);
       }
-      expect(raw['_m'], containsPair('mediaItemsTrackSorting', 1));
+      expect(raw['_m'], containsPair('mediaItemsTrackSorting_v2', 1));
+    });
+
+    test('main: sorts and their reverse merge into one chain per media', () async {
+      await loadFile(settings, {
+        '_v': 2,
+        'mediaItemsTrackSorting': {
+          'album': ['title', 'year'],
+        },
+        'mediaItemsTrackSortingReverse': {'album': true, 'artist': true},
+        'mediaItemsTrackSortingPresets': {
+          'track': {
+            'presets': [
+              {
+                'name': 'p',
+                'sorts': ['rating'],
+                'reverse': false,
+              },
+            ],
+            'active': 0,
+          },
+        },
+        'albumSorts': ['year'],
+        'genreSortReversed': true,
+      });
+      expect(settings.mediaItemsTrackSortingDefault.value[MediaType.album], SortChain.of(const [SortType.title, SortType.year], reverse: true));
+      expect(settings.mediaItemsTrackSortingDefault.value[MediaType.artist], SortChain.of(const [SortType.year, SortType.title], reverse: true));
+      expect(settings.mediaItemsTrackSorting.value[MediaType.track], SortChain.of(const [SortType.rating]));
+      expect(settings.groupSortingOf(MediaType.album), SortChain.of(const [GroupSortType.year]));
+      expect(settings.groupSortingOf(MediaType.genre), SortChain.of(const [GroupSortType.genresList], reverse: true));
+      expect(settings.groupSortingOf(MediaType.style), settings.groupSortingOf(MediaType.genre));
+      final raw = settings.buildJson();
+      for (final name in ['mediaItemsTrackSorting', 'mediaItemsTrackSortingReverse', 'mediaItemsTrackSortingPresets', 'albumSorts', 'genreSortReversed']) {
+        expect(raw.containsKey(name), false, reason: name);
+      }
     });
 
     test('main: english and broken languages are dropped, a set language wins', () async {
@@ -835,7 +886,7 @@ void main() {
       });
       expect(settings.language.value, null);
       expect(settings.staticColor.value, 0xFF445566);
-      expect(settings.mediaItemsTrackSorting.value[MediaType.track], [SortType.year, SortType.title]);
+      expect(settings.mediaItemsTrackSorting.value[MediaType.track], SortChain.of(const [SortType.year, SortType.title]));
 
       await loadFile(settings, {
         'selectedLanguage': {'name': 5},

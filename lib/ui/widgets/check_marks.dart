@@ -24,6 +24,9 @@ class ListTileWithCheckMark extends StatelessWidget {
   final Color? tileColor;
   final Widget? titleWidget;
   final Widget? leading;
+
+  /// placed before the check mark.
+  final Widget? trailing;
   final double? iconSize;
   final bool dense;
   final bool expanded;
@@ -43,6 +46,7 @@ class ListTileWithCheckMark extends StatelessWidget {
     this.tileColor,
     this.titleWidget,
     this.leading,
+    this.trailing,
     this.iconSize,
     this.dense = false,
     this.expanded = true,
@@ -329,6 +333,7 @@ class _CheckTileFrame extends StatelessWidget {
               : Flexible(
                   child: title,
                 ),
+          ?tile.trailing,
           check,
         ],
       ),
