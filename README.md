@@ -48,6 +48,7 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
   - [Look \& Feel](#look--feel)
   - [Sound](#sound)
   - [Streaming & Youtube](#streaming--youtube)
+  - [System Integration](#system-integration)
   - [Others](#others)
   - [Some additional cool features](#some-additional-cool-features)
 - [Video Integration](#video-integration)
@@ -69,47 +70,44 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 
 ## Library & Indexing
 
-- Powerful Indexer & Tag Editor, powered by ~~@jaudiotagger~~ `taglib` <sub><code>since v6.4.0</code></sub>.
-- Artists and Genres Separators.
-- Prevent Duplicated Tracks.
-- Set Minimum File Size & Duration.
-- Folders-based Library system, with the ability to exclude folders as well.
-- Sort by almost any property of the track or the album.. etc.
+- Powerful Indexer & Tag Editor, powered by `taglib`.
+- Artists & Genres Separators.
+- Prevent Duplicated Tracks, Minimum File Size & Duration.
+- Folders-based Library, with excluded folders.
+- Sort by almost any track or album property.
 
 ## Look & Feel
 
-- Material3-like Theme.
-- Dynamic Theming, Player Colors are picked from the current album artwork.
-- Home, Tracks, Albums, Artists, Genres, Playlists, Queues and Folders Pages.
-- Waveform Seekbar.
+- Material3-like Theme with Dynamic Colors from the current artwork.
+- Home, Tracks, Albums, Artists, Genres, Playlists, Folders & Queues Pages, plus cool ones like Most Played, Moods, Tags, Ratings, Languages, Stats & more.
+- Waveform Seekbar & Widescreen Player Layout.
+- Visualizers, Animated Backgrounds & Custom Wallpapers. <sub><code>new</code></sub>
 - Lots of customizations (check out [customization section](#customization-settings)).
 
 ## Sound
 
 - Parametric Equalizer with AutoEQ import. <sub><code>new</code></sub>
-- Bit-perfect Playback & USB DAC Direct Access. <sub><code>new</code></sub>
-- High precision 32-bit float audio. <sub><code>new</code></sub>
+- Bit-perfect Playback, USB DAC Direct Access, Exclusive Mode (desktop) & 32-bit float audio. <sub><code>new</code></sub>
 - Audio Path, see every step from the file to your device. <sub><code>new</code></sub>
 - Output Device Selection & Mono Audio. <sub><code>new</code></sub>
-- Crossfade, Gapless Playback, Play/Pause Fade Effect & Skip Silence.
+- Sound Effects like Bass Enhancer, Reverb, Virtual Surround, 8D Audio & Vocal Remover (Android). <sub><code>new</code></sub>
+- Smart Crossfade with Beat Matching <sub><code>new</code></sub>, Gapless Playback, Play/Pause Fade & Skip Silence.
 - Speed & Pitch Control (semitones & 432Hz) & Loudness Enhancer.
-- Per-track Sound Settings.
-- Replay Gain (Normalize Audio)
+- Per-track Speed, Pitch, Volume & Equalizer, and Sound Presets to switch them all at once. <sub><code>new</code></sub>
+- Replay Gain support (Normalize loudness between tracks)
 
 ## Streaming & Youtube
 
-- Best Video & Audio Quality
-- Audio Only & Data Saver Mode
-- Support Downloads, Caching & Offline Playback
-- Video View with gestures support (swipe to control volume, double tap to seek, swipe up/pinch in to enter fullscreen, swipe to seek, long press for 1.5x speed, etc)
-- SponsorBlock & Return Youtube Dislike Integration
-- Segments and Heatmap for videos
-- Data Saver Mode
-- Cache Priority System to keep important stuff
-- Tags config for downloads
-- Optional Auto title/artist/album extraction for downloads and scrobbling
-- Downloads output filename builder (similar to yt-dlp)
-- Multi Library Support (Local/YT/Subsonic/Jellyfin/WebDAV/SMB)
+- Best Video & Audio Quality, Audio Only & Data Saver Mode.
+- Sign in with Multiple Profiles, get your Feed, Subscriptions, Playlists & Notifications.
+- Multi Library (Local/YT/Subsonic/Jellyfin/WebDAV/SMB) & Offline Caching for Servers. <sub><code>new</code></sub>
+- Video View with [gestures](https://docs.namida.app/features/youtube/#video-view) for volume, brightness, seeking, fullscreen, speed up & more.
+- SponsorBlock, Return Youtube Dislike, Segments & Heatmap.
+- Subtitles & Captions.
+- Downloads, Caching & Offline Playback, with a Cache Priority System.
+- Split Downloads by Chapters & Remove Sponsor Segments. <sub><code>new</code></sub>
+- Downloads Tags config & Filename builder (similar to yt-dlp).
+- Auto title/artist/album extraction from video titles, for downloads & scrobbling.
 
 <details>
 
@@ -155,55 +153,45 @@ New to Namida or want to discover more? **[Checkout the docs here](https://docs.
 
 </details>
 
+## System Integration
+
+- Home Screen Widget & Quick Settings Tiles.
+- Android Auto & Wear OS. <sub><code>new</code></sub>
+- Status Bar Lyrics. <sub><code>new</code></sub>
+- Desktop: System Tray, Keyboard Shortcuts, System Wide Hotkeys & Floating Lyrics Window.
+- Now Playing Broadcasts & Webhook for Tasker, scripts & scrobblers. <sub><code>new</code></sub>
+
 ## Others:
 
-- Lyrics auto fetching & displaying (Synced & Plain) + Support for Word Synced lrc/ttml.
-- Sleep Timer (Tracks or Minutes)
-- Control pausing scenarios (calls, notifications, volume 0, etc..)
-- Search tracks by title, artist, album, filename, even lyrics and more.
-- Global Tracks Selection
-  - allows u to select from multiple places into the same list.
-- Never miss your sessions!
-  - persistent and reliable queue system, your sessions are saved for later usage.
-- Reliable History System
-  - despite being a flexible system (easily modified, manipulated, imported), it lets u specifiy minimum seconds/percentage to count a listen.
-- Most Played Playlist
-  - find out your top tracks based on your history record.
-- Custom Playlists Order & Ability to set custom artworks
-- Auto Import Playlists from M3U files & Music Web Servers (Jellyfin, Subsonic/Navidrome, etc)
-- Left & Right swipe actions for tracks and videos
-- Artwork Gestures (tap and long press)
-- Support for `cover.jpg` etc images for folders, & `.info.txt` for displaying small info
-- Sync between devices <sub><code>new</code></sub>
-  - sync your history, playlists, favourites, queues, lyrics, caches & more over local network.
+- Lyrics fetching & displaying (Synced, Plain & Word Synced lrc/ttml), and an Editor to sync them yourself. <sub><code>new</code></sub>
+- Smart Playlists with flexible rules, usable in search too.
+- Listening Party, listen to the same queue with friends in sync, online or on the same network. <sub><code>new</code></sub>
+- Sync app data between your devices over local network (history, playlists, favourites, queues, lyrics, etc). <sub><code>new</code></sub>
+- Bookmarks & Chapters for tracks and videos. <sub><code>new</code></sub>
+- Stats Charts & Your Year Page.
+- Search by title, artist, album, filename, lyrics & more, even with typos.
+- Persistent Queues, your sessions are saved for later.
+- Flexible History (editable, importable) with minimum seconds/percentage to count a listen.
+- Most Played, your top tracks in any time range.
+- Custom Playlists Order & Artworks, Auto Import from M3U files & Music Servers.
+- Global Tracks Selection, select from multiple places into the same list.
+- Swipe Actions for tracks & videos, Artwork Gestures (tap & long press).
+- Folder images (`cover.jpg` etc) & `.info.txt` for small info.
+- Sleep Timer (Tracks or Minutes) & Pausing Scenarios (calls, notifications, volume 0, etc).
 
 ## Some additional cool features:
 
-- Smort Tracks Generation:
-  - uuh.. with dis advanced algorithm brought for you, u can generate tracks related to one you currently listening to, typically the ones that you often listened to in the same period. based on your history.
-  - also u can generate tracks released around the same time, or from specific range of time, from ratings, from available moods, or randomly.
-- Animating Thumbnail:
-  - A thumbnail that animates with the current audio peak, looks cool.
-- Miniplayer Party Mode:
-  - Applies an edge breathing effect, colors can be static or dynamic (all the colors extracted from the artwork)
-- Particles Effect
-  - they speed up with the audio peak too
-- Track Play Mode
-  - when playing from search, you can selected whether to play: selected track only, search results, album, first artist or first genre.
-- Insert after latest inserted
-  - Want to insert multiple tracks one after each other? this will get your back.
-- Repeat for N times
-  - in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
-- Extract feat. & ft. artist
-  - u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
-- Dive into your memories
-  - Find out ur long partners u forgot about, "lost memories" allows u to meet tracks you listened to around this time, but n years ago
-  - The "Most Played" page also allows you to specify time range, showing ur most beloved tracks at that time
-  - The "Recommended" tracks addition in queue lets you add tracks you usually listened to with the current one
-  - The "Similar Release Date" tracks addition in queue lets you add tracks released around the same time as the current one
-- <p>CAN IMPORT YOUTUBE HISTORY <img src="some stuff/ong.png" width=16 height=16/></p>
+- Smort Tracks Generation: uuh.. with dis advanced algorithm brought for you, generate tracks u often listened to alongside the current one. also by release date, time range, ratings, moods, or randomly.
+- Lost Memories: meet tracks you listened to around this time, but n years ago.
+- Animating Thumbnail & Particles, moving with the audio peak.
+- Miniplayer Party Mode, edge breathing effect with static or artwork colors.
+- Track Play Mode, when playing from search: selected track only, search results, album, first artist or first genre.
+- Insert after latest inserted, want to insert multiple tracks one after each other? this will get your back.
+- Repeat for N times, in addition to normal repeat modes (all, none, one), this one lets you repeat the track for number of times before playing the next track.
+- Extract feat. & ft. artists, u won't miss the featured artists in the title, they'll have their own entry inside artists tab.
+- <p>CAN IMPORT YOUTUBE HISTORY & DATA <img src="some stuff/ong.png" width=16 height=16/></p>
 - <p>LASTFM, SPOTIFY & LISTENBRAINZ TOO AND MAYBE MORE IN FUTURE <img src="some stuff/yoowhat.gif" width=16 height=16/></p>
-- you gonna find decent amount of options/customizations in the settings and inside dialogs so make sure to check them out.
+- decent amount of options/customizations in settings & dialogs, make sure to check them out ^^
 
 # Video Integration
 
@@ -275,8 +263,8 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 ### Usage Preview
 
-| Animating Thumbnail                                                                                       | Recommends & Listens                                                                                      |
-| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Animating Thumbnail | Recommends & Listens |
+| --- | --- |
 | <video src="https://github.com/namidaco/namida/assets/85245079/da47c270-9f45-4ff5-a08e-e99e4b7ebb7c.mp4"> | <video src="https://github.com/namidaco/namida/assets/85245079/72e978b3-6e15-4b4e-948a-03b470802b30.mp4"> |
 
 # Installation
