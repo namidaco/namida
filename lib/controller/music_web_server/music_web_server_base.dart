@@ -13,6 +13,7 @@ import 'package:dartssh2/dartssh2.dart';
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
 import 'package:ftpconnect/ftpconnect.dart';
+import 'package:lrc/lrc.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
 import 'package:path/path.dart' as p;
@@ -84,6 +85,9 @@ abstract class MusicWebServer {
   FutureOr<WebStreamUriDetails?> getStreamUrl(String id, {void Function(File cachedFile)? onFetchedIfLocal});
   Future<Uint8List?> getImage(String id);
 
+  /// for servers that can't give lyrics while indexing. '' when the track has none, null when unsupported or failed.
+  Future<String?> _fetchLyricsOnPlay(String id) async => null;
+
   Future<void> _reportPlayback(String id, _PlaybackReport report, int positionMS) async {}
   Duration? get _playbackProgressInterval => null;
   Future<_ListensReportResult> _reportListens(List<_ServerListen> listens) async => _ListensReportResult.rejected;
@@ -130,6 +134,14 @@ abstract class MusicWebServer {
     );
   }
 
+  static Future<String?>? baseUrlToLyrics(String baseUrl) {
+    return _executeIfHasServer(
+      baseUrl,
+      (s, id) => s._fetchLyricsOnPlay(id),
+      (_, _) => null,
+    );
+  }
+
   static DirectoryIndexType? baseUrlToType(String baseUrl) {
     final baseUri = Uri.parse(baseUrl);
     return DirectoryIndexType.values.getEnum(baseUri.queryParameters['namida_t']);
@@ -153,6 +165,17 @@ abstract class MusicWebServer {
     }
     return fallback(server, dir);
   }
+}
+
+/// the id goes in `d` instead of the path, the yt id matcher would catch it there.
+String _serverTrackPath(Uri serverUriParsed, String id) {
+  final uri = serverUriParsed.replace(
+    queryParameters: {
+      ...serverUriParsed.queryParameters,
+      'd': id,
+    },
+  );
+  return uri.toString();
 }
 
 final _remotePathSeparatorRegex = RegExp(r'[/\\]');
@@ -330,6 +353,25 @@ class _ServerDiffManager {
 
     return false;
   }
+}
+
+// by claude
+class _ServerLyricsWriter {
+  final _buffer = StringBuffer();
+
+  _ServerLyricsWriter({required int? offsetMS}) {
+    if (offsetMS != null && offsetMS != 0) _buffer.writeln('[offset:$offsetMS]');
+  }
+
+  void writeLine(int? startMS, String text) {
+    if (startMS != null) {
+      final timestamp = LrcLine.formatTimestamp(Duration(milliseconds: startMS));
+      _buffer.write('[$timestamp]');
+    }
+    _buffer.writeln(text);
+  }
+
+  String toText() => _buffer.toString();
 }
 
 class MusicWebServerError {

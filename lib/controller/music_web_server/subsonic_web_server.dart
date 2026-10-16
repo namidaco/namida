@@ -159,6 +159,67 @@ class _SubsonicWebServer extends MusicWebServer {
     return null;
   }
 
+  Future<bool>? _supportsSongLyrics;
+
+  @override
+  Future<String?> _fetchLyricsOnPlay(String id) async {
+    final api = _api;
+    if (api == null) return null;
+    final supportsSongLyricsFuture = _supportsSongLyrics ??= _checkSupportsSongLyrics();
+    final supportsSongLyrics = await supportsSongLyricsFuture;
+    if (!supportsSongLyrics) return null;
+    try {
+      final res = await api.api.getLyricsBySongId(id);
+      if (res.response.error != null) return null;
+      final lyricsList = res.response.data?.lyrics ?? const [];
+      final lyrics = _pickMainLyrics(lyricsList);
+      if (lyrics == null) return '';
+      return _lyricsModelToText(lyrics);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> _checkSupportsSongLyrics() async {
+    final client = _client;
+    if (client == null) return false;
+    try {
+      final res = await client.get<Map<String, dynamic>>('/rest/getOpenSubsonicExtensions');
+      final body = res.data?['subsonic-response'] as Map?;
+      final extensions = body?['openSubsonicExtensions'] as List?;
+      if (extensions == null) return false;
+      return extensions.any((e) => (e as Map)['name'] == _kSubsonicSongLyricsExtension);
+    } on DioException catch (e) {
+      // -- unreachable server, check again next time
+      if (e.response == null) _supportsSongLyrics = null;
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// synced main lyrics first, translations & pronunciations only when there is nothing else.
+  static LyricsModel? _pickMainLyrics(List<LyricsModel> lyricsList) {
+    LyricsModel? plainLyrics;
+    for (final lyrics in lyricsList) {
+      final kind = lyrics.kind;
+      final isMain = kind == null || kind == _kSubsonicMainLyricsKind;
+      if (!isMain) continue;
+      if (lyrics.synced) return lyrics;
+      plainLyrics ??= lyrics;
+    }
+    return plainLyrics ?? lyricsList.firstOrNull;
+  }
+
+  static String _lyricsModelToText(LyricsModel lyrics) {
+    final isSynced = lyrics.synced;
+    final writer = _ServerLyricsWriter(offsetMS: isSynced ? lyrics.offset : null);
+    for (final line in lyrics.line) {
+      writer.writeLine(isSynced ? line.start : null, line.value);
+    }
+    return writer.toText();
+  }
+
   int? _checkIfBytesActuallyJsonErrorReturnCode(Uint8List bytes) {
     final errorMap = _checkIfBytesActuallyJsonError(bytes);
     try {
@@ -224,12 +285,16 @@ class _SubsonicWebServer extends MusicWebServer {
     _albumsForNextFetch = null;
     final albums = await albumsFuture;
 
+    // -- lyrics are only fetched on play, a refresh keeps them
+    final indexedTracks = forceReIndex ? null : Indexer.inst.allTracksMappedByPath;
+
     final stream = _fetchSongsForAlbumsBatch(
       api: api,
       server: server,
       serverUriParsed: serverUriParsed,
       albums: albums,
       splitConfig: splitConfig,
+      indexedTracks: indexedTracks,
     );
 
     await for (final trExt in stream) {
@@ -289,9 +354,10 @@ class _SubsonicWebServer extends MusicWebServer {
               (s) => _mediaModelToTrackExtended(
                 s,
                 album: null,
+                path: _serverTrackPath(serverUriParsed, s.id),
+                lyrics: '',
                 splitConfig: splitConfig,
                 server: server,
-                serverUriParsed: serverUriParsed,
               ),
             );
           }
@@ -332,6 +398,7 @@ class _SubsonicWebServer extends MusicWebServer {
     required Uri serverUriParsed,
     required List<AlbumModel> albums,
     required SplitArtistGenreConfigsWrapper splitConfig,
+    required Map<String, TrackExtended>? indexedTracks,
   }) async* {
     const subBatchSize = 10;
     for (var i = 0; i < albums.length; i += subBatchSize) {
@@ -343,12 +410,15 @@ class _SubsonicWebServer extends MusicWebServer {
         final album = albumDetail.response.data;
         final songs = album?.song ?? [];
         for (final s in songs) {
+          final path = _serverTrackPath(serverUriParsed, s.id);
+          final lyrics = indexedTracks?[path]?.lyrics ?? '';
           yield _mediaModelToTrackExtended(
             s,
             album: album,
+            path: path,
+            lyrics: lyrics,
             splitConfig: splitConfig,
             server: server,
-            serverUriParsed: serverUriParsed,
           );
         }
       }
@@ -359,18 +429,11 @@ class _SubsonicWebServer extends MusicWebServer {
   static TrackExtended _mediaModelToTrackExtended(
     MediaModel media, {
     required AlbumModel? album,
+    required String path,
+    required String lyrics,
     required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
-    required Uri serverUriParsed,
   }) {
-    // -- dont use id cuz yt id matcher would catch it
-    final newUri = serverUriParsed.replace(
-      queryParameters: {
-        ...serverUriParsed.queryParameters,
-        'd': media.id,
-      },
-    );
-    final path = newUri.toString();
     final year = media.year;
     final yearFallbackText = year?.toString() ?? '';
     final yearString = _releaseDateText(album, year) ?? yearFallbackText;
@@ -452,7 +515,7 @@ class _SubsonicWebServer extends MusicWebServer {
       discNo: media.discNumber ?? 0,
       discTo: 0,
       language: '',
-      lyrics: '',
+      lyrics: lyrics,
       label: label,
       releaseType: releaseType,
       bpm: validBpm,
@@ -493,9 +556,20 @@ String? _releaseDateText(AlbumModel? album, int? songYear) {
 }
 
 const _kSubsonicComposerRole = 'composer';
+const _kSubsonicSongLyricsExtension = 'songLyrics';
+const _kSubsonicMainLyricsKind = 'main';
 
 @visibleForTesting
 TrackExtended debugSubsonicMediaToTrack(MediaModel media, {AlbumModel? album, required SplitArtistGenreConfigsWrapper splitConfig, required String server}) {
   final serverUriParsed = Uri.parse(server);
-  return _SubsonicWebServer._mediaModelToTrackExtended(media, album: album, splitConfig: splitConfig, server: server, serverUriParsed: serverUriParsed);
+  final path = _serverTrackPath(serverUriParsed, media.id);
+  return _SubsonicWebServer._mediaModelToTrackExtended(media, album: album, path: path, lyrics: '', splitConfig: splitConfig, server: server);
+}
+
+@visibleForTesting
+String debugSubsonicLyricsToText(Map<String, dynamic> lyricsListJson) {
+  final lyricsList = StructuredLyricsModel.fromJson(lyricsListJson).lyrics;
+  final lyrics = _SubsonicWebServer._pickMainLyrics(lyricsList);
+  if (lyrics == null) return '';
+  return _SubsonicWebServer._lyricsModelToText(lyrics);
 }

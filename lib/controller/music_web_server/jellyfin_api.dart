@@ -174,6 +174,7 @@ class _JellyfinItem {
   final DateTime? premiereDate;
   final int? runTimeTicks; // 100-nanosecond units
   final double? normalizationGainDB;
+  final bool hasLyrics;
 
   final String? container;
   final _JellyfinUserItemData? userData;
@@ -205,6 +206,7 @@ class _JellyfinItem {
     this.premiereDate,
     this.runTimeTicks,
     this.normalizationGainDB,
+    this.hasLyrics = false,
     this.container,
     this.userData,
     this.videoType,
@@ -267,6 +269,7 @@ class _JellyfinItem {
     premiereDate: j['PremiereDate'] != null ? DateTime.tryParse(j['PremiereDate'] as String) : null,
     runTimeTicks: j['RunTimeTicks'] as int?,
     normalizationGainDB: (j['NormalizationGain'] as num?)?.toDouble(),
+    hasLyrics: j['HasLyrics'] as bool? ?? false,
     container: j['Container'] as String?,
     userData: j['UserData'] != null ? _JellyfinUserItemData.fromJson(j['UserData'] as Map<String, dynamic>) : null,
     videoType: _JellyfinVideoType.fromJson(j['VideoType'] as String?),
@@ -316,6 +319,11 @@ class _JellyfinApi {
   }
 
   Future<void> getSystemInfo() => dio.get<void>('/System/Info');
+
+  Future<Map<String, dynamic>?> getLyrics(String itemId) async {
+    final res = await dio.get<Map<String, dynamic>>('/Audio/$itemId/Lyrics');
+    return res.data;
+  }
 
   Future<Uint8List?> getItemImage({
     required String itemId,

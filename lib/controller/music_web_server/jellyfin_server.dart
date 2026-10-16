@@ -36,6 +36,8 @@ class _JellyfinServer extends MusicWebServer {
   @override
   Future<int?> prepareTracksCount() => _wrapper.fetchAllMediaCount();
 
+  static const _kLyricsFetchConcurrency = 8;
+
   @override
   Future<void> fetchAllMusicAndProcess(Map<String, int> serverTracksInLibrary, void Function(TrackExtended trExt) callback, {required bool forceReIndex}) async {
     final wrapper = _wrapper;
@@ -45,20 +47,53 @@ class _JellyfinServer extends MusicWebServer {
 
     final splitConfig = SplitArtistGenreConfigsWrapper.settings();
 
+    // -- a refresh keeps lyrics fetched before
+    final indexedTracks = forceReIndex ? null : Indexer.inst.allTracksMappedByPath;
+
     final stream = wrapper.fetchAllMedia(
       batchSize: 400,
       checkResError: (res) => _checkResError(authDetails.dir, res),
     );
 
-    await for (final item in stream) {
+    void processItem(_JellyfinItem item, String path, String lyrics) {
       final trExt = _baseItemDtoToTrackExtended(
         item,
+        path: path,
+        lyrics: lyrics,
         splitConfig: splitConfig,
         server: server,
-        serverUriParsed: serverUriParsed,
       );
       callback(trExt);
     }
+
+    final itemsMissingLyrics = <({_JellyfinItem item, String path})>[];
+    await for (final item in stream) {
+      final path = _serverTrackPath(serverUriParsed, item.id ?? '');
+      if (!item.hasLyrics) {
+        processItem(item, path, '');
+        continue;
+      }
+      final indexedLyrics = indexedTracks?[path]?.lyrics ?? '';
+      if (indexedLyrics.isNotEmpty) {
+        processItem(item, path, indexedLyrics);
+        continue;
+      }
+      itemsMissingLyrics.add((item: item, path: path));
+    }
+
+    // -- a sliding window, a new fetch starts as soon as any finishes
+    final total = itemsMissingLyrics.length;
+    int nextIndex = 0;
+    Future<void> worker() async {
+      while (nextIndex < total) {
+        final (:item, :path) = itemsMissingLyrics[nextIndex++];
+        final lyrics = await wrapper.fetchLyrics(item.id ?? '');
+        processItem(item, path, lyrics ?? '');
+      }
+    }
+
+    final workersCount = _kLyricsFetchConcurrency.withMaximum(total);
+    await Future.wait(List.generate(workersCount, (_) => worker()));
   }
 
   @override
@@ -85,9 +120,10 @@ class _JellyfinServer extends MusicWebServer {
       final tracks = items?.map(
         (item) => _baseItemDtoToTrackExtended(
           item,
+          path: _serverTrackPath(serverUriParsed, item.id ?? ''),
+          lyrics: '',
           splitConfig: splitConfig,
           server: server,
-          serverUriParsed: serverUriParsed,
         ),
       );
 
@@ -168,20 +204,12 @@ class _JellyfinServer extends MusicWebServer {
 
   static TrackExtended _baseItemDtoToTrackExtended(
     _JellyfinItem item, {
+    required String path,
+    required String lyrics,
     required SplitArtistGenreConfigsWrapper splitConfig,
     required String server,
-    required Uri serverUriParsed,
   }) {
     final id = item.id ?? '';
-
-    final newUri = serverUriParsed.replace(
-      queryParameters: {
-        ...serverUriParsed.queryParameters,
-        'd': id,
-      },
-    );
-    final path = newUri.toString();
-
     final title = item.name ?? '';
     final album = item.album ?? '';
     final albumArtists = item.albumArtists;
@@ -266,7 +294,7 @@ class _JellyfinServer extends MusicWebServer {
       discNo: item.parentIndexNumber ?? 0,
       discTo: 0,
       language: audioStream?.language ?? '',
-      lyrics: '',
+      lyrics: lyrics,
       label: item.studios.join(FTagsMultiValues.kJoiner),
       releaseType: '',
       bpm: null,
@@ -302,8 +330,12 @@ String? _premiereDateText(DateTime? premiereDate, int year) {
 TrackExtended debugJellyfinItemToTrack(Map<String, dynamic> itemJson, {required SplitArtistGenreConfigsWrapper splitConfig, required String server}) {
   final item = _JellyfinItem.fromJson(itemJson);
   final serverUriParsed = Uri.parse(server);
-  return _JellyfinServer._baseItemDtoToTrackExtended(item, splitConfig: splitConfig, server: server, serverUriParsed: serverUriParsed);
+  final path = _serverTrackPath(serverUriParsed, item.id ?? '');
+  return _JellyfinServer._baseItemDtoToTrackExtended(item, path: path, lyrics: '', splitConfig: splitConfig, server: server);
 }
+
+@visibleForTesting
+String debugJellyfinLyricsToText(Map<String, dynamic> lyricDtoJson) => _JellyfinClientWrapper._lyricsDtoToText(lyricDtoJson);
 
 class JellyfinAuth {
   final String username;
@@ -531,6 +563,42 @@ class _JellyfinClientWrapper {
     } on DioException catch (_) {
       return null;
     }
+  }
+
+  static const _kTicksPerMS = 10000;
+
+  /// '' when the item has none, null when it failed.
+  Future<String?> fetchLyrics(String itemId) async {
+    if (!await ensureAuthenticated()) return null;
+    try {
+      final data = await _api.getLyrics(itemId);
+      if (data == null) return null;
+      return _lyricsDtoToText(data);
+    } on DioException catch (e) {
+      final hasNoLyrics = e.response?.statusCode == 404;
+      return hasNoLyrics ? '' : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String _lyricsDtoToText(Map<String, dynamic> data) {
+    final lines = data['Lyrics'] as List<dynamic>? ?? const [];
+    if (lines.isEmpty) return '';
+    final firstLine = lines.first as Map<String, dynamic>;
+    final isSynced = firstLine['Start'] != null;
+    final metadata = data['Metadata'] as Map<String, dynamic>?;
+    final offsetTicks = metadata?['Offset'] as int?;
+    final offsetMS = isSynced && offsetTicks != null ? offsetTicks ~/ _kTicksPerMS : null;
+    final writer = _ServerLyricsWriter(offsetMS: offsetMS);
+    for (final e in lines) {
+      final line = e as Map<String, dynamic>;
+      final startTicks = line['Start'] as int?;
+      final startMS = isSynced && startTicks != null ? startTicks ~/ _kTicksPerMS : null;
+      final text = line['Text'] as String? ?? '';
+      writer.writeLine(startMS, text);
+    }
+    return writer.toText();
   }
 
   Future<void> reportPlayback(String endpoint, Map<String, Object> info) async {

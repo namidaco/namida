@@ -17,9 +17,11 @@ import 'package:namida/class/fuzzy_matcher.dart';
 import 'package:namida/class/http_response_wrapper.dart';
 import 'package:namida/class/lyrics.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
+import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -182,6 +184,27 @@ class Lyrics {
     _updateWidgets(lrc, txt);
   }
 
+  final _serverTracksWithoutLyrics = <String>{};
+
+  /// a server track missing them asks its server once, then keeps them as its embedded lyrics.
+  Future<String> _getEmbeddedLyrics(Playable item, LrcSearchUtils lrcUtils) async {
+    final embedded = lrcUtils.embeddedLyrics;
+    if (embedded.isNotEmpty) return embedded;
+    if (item is! Selectable) return embedded;
+    final track = item.track;
+    if (!track.isNetwork) return embedded;
+    final path = track.path;
+    if (_serverTracksWithoutLyrics.contains(path)) return embedded;
+    final serverLyrics = await MusicWebServer.baseUrlToLyrics(path);
+    if (serverLyrics == null) return embedded;
+    if (serverLyrics.isEmpty) {
+      _serverTracksWithoutLyrics.add(path);
+    } else {
+      Indexer.inst.updateTrackLyrics(track, serverLyrics);
+    }
+    return serverLyrics;
+  }
+
   static const _LyricsResolveResult _noLyrics = (lrc: null, txt: null, canBeAvailable: true);
   static const _LyricsResolveResult _unavailableLyrics = (lrc: null, txt: null, canBeAvailable: false);
 
@@ -194,7 +217,8 @@ class Lyrics {
     if (lrcUtils == null) return _noLyrics;
     if (checkInterrupted()) return null;
 
-    final embedded = lrcUtils.embeddedLyrics;
+    final embedded = await _getEmbeddedLyrics(item, lrcUtils);
+    if (checkInterrupted()) return null;
     if (LrcSearchUtils.isIgnoreMarker(embedded)) return _noLyrics;
 
     final local = await pickLocalLyrics(lrcUtils, embedded);

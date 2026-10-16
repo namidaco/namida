@@ -1512,6 +1512,15 @@ class Indexer<T extends Track> {
     }
   }
 
+  void updateTrackLyrics(Track track, String lyrics) {
+    final path = track.path;
+    final trx = allTracksMappedByPath[path];
+    if (trx == null) return;
+    final newTrExt = trx.copyWith(lyrics: lyrics, generatePathHash: false);
+    allTracksMappedByPath[path] = newTrExt;
+    unawaited(_tracksDBManager.put(path, newTrExt.toJsonWithoutPath()));
+  }
+
   static List<String> splitByCommaList(String listText) {
     final moodsFinalLookup = <String, bool>{};
     final moodsFinal = <String>[];

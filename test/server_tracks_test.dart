@@ -9,6 +9,7 @@ import 'package:namida/class/split_config.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/core/constants.dart';
+import 'package:namida/core/extensions.dart';
 
 void main() {
   late Directory dir;
@@ -135,6 +136,32 @@ void main() {
       expect(fresh.artistsList, [UnknownTags.ARTIST]);
       expect(fresh.genresList, [UnknownTags.GENRE]);
       expect(everythingOf(reload(fresh)), everythingOf(fresh));
+    });
+
+    test('synced lyrics become lrc with their offset', () {
+      final text = debugJellyfinLyricsToText({
+        'Metadata': {'Offset': 1500000, 'IsSynced': true},
+        'Lyrics': [
+          {'Text': 'first', 'Start': 13200000},
+          {'Text': 'second', 'Start': 34900000},
+        ],
+      });
+      expect(text, '[offset:150]\n[00:01.32]first\n[00:03.49]second\n');
+      final lrc = text.parseLRC();
+      expect(lrc?.offset, 150);
+      expect(lrc?.lyrics.map((e) => e.timestamp.inMilliseconds), [1320, 3490]);
+    });
+
+    test('plain lyrics stay plain, no lyrics is empty', () {
+      final text = debugJellyfinLyricsToText({
+        'Metadata': <String, dynamic>{},
+        'Lyrics': [
+          {'Text': 'first'},
+          {'Text': 'second'},
+        ],
+      });
+      expect(text, 'first\nsecond\n');
+      expect(debugJellyfinLyricsToText({'Lyrics': <dynamic>[]}), '');
     });
   });
 
@@ -281,6 +308,63 @@ void main() {
       expect(fresh.artistsList, [UnknownTags.ARTIST]);
       expect(fresh.genresList, [UnknownTags.GENRE]);
       expect(everythingOf(reload(fresh)), everythingOf(fresh));
+    });
+
+    test('main synced lyrics win over translations and plain ones, offset kept', () {
+      final text = debugSubsonicLyricsToText({
+        'structuredLyrics': [
+          {
+            'kind': 'translation',
+            'lang': 'pt',
+            'synced': true,
+            'line': [
+              {'start': 0, 'value': 'traduzido'},
+            ],
+          },
+          {
+            'lang': 'eng',
+            'synced': false,
+            'line': [
+              {'value': 'plain'},
+            ],
+          },
+          {
+            'displayArtist': 'Joseph Reign',
+            'lang': 'eng',
+            'synced': true,
+            'offset': -200,
+            'line': [
+              {'start': 1320, 'value': 'Hey this your boy'},
+              {'start': 63490, 'value': 'I had to make a change'},
+            ],
+          },
+        ],
+      });
+      expect(text, '[offset:-200]\n[00:01.32]Hey this your boy\n[01:03.49]I had to make a change\n');
+      final lrc = text.parseLRC();
+      expect(lrc?.offset, -200);
+      expect(lrc?.lyrics.map((e) => e.timestamp.inMilliseconds), [1320, 63490]);
+    });
+
+    test('plain lyrics without start times or display names stay plain', () {
+      final text = debugSubsonicLyricsToText({
+        'structuredLyrics': [
+          {
+            'lang': 'xxx',
+            'synced': false,
+            'line': [
+              {'value': 'first'},
+              {'value': 'second'},
+            ],
+          },
+        ],
+      });
+      expect(text, 'first\nsecond\n');
+    });
+
+    test('a song without lyrics is empty', () {
+      expect(debugSubsonicLyricsToText({}), '');
+      expect(debugSubsonicLyricsToText({'structuredLyrics': <dynamic>[]}), '');
     });
   });
 }
