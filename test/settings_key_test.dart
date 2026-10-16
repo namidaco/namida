@@ -875,6 +875,26 @@ void main() {
       }
     });
 
+    test('main: playlists sorted by the albums date modified move to their own', () async {
+      await loadFile(settings, {
+        '_v': 2,
+        'mediaGroupSorting': {
+          'album': {
+            'sorts': ['dateModified'],
+          },
+          'playlist': {
+            'sorts': ['-dateModified', 'title'],
+            'reverse': true,
+          },
+        },
+        'ytPlaylistSort': 'dateModified',
+      });
+      expect(settings.groupSortingOf(MediaType.album), SortChain.of(const [GroupSortType.dateModified]));
+      final playlistSorting = SortChain(const [SortEntry(GroupSortType.modifiedDate, reverse: true), SortEntry(GroupSortType.title)], reverse: true);
+      expect(settings.groupSortingOf(MediaType.playlist), playlistSorting);
+      expect(settings.ytPlaylistSort.value, GroupSortType.modifiedDate);
+    });
+
     test('main: english and broken languages are dropped, a set language wins', () async {
       await loadFile(settings, {
         'selectedLanguage': {'code': 'en_US', 'name': 'English', 'country': 'United States'},

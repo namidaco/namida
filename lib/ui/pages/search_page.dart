@@ -730,7 +730,7 @@ class _SearchResultsView extends StatelessWidget {
                   text: lang.viewAll,
                   onTap: const AlbumSearchResultsPage().navigate,
                 ),
-                height: 138.0,
+                height: 142.0,
                 itemExtent: 108.0,
                 itemBuilder: (albumId) => Padding(
                   padding: const EdgeInsets.only(left: 2.0),
@@ -739,7 +739,7 @@ class _SearchResultsView extends StatelessWidget {
                     album: albumId.getAlbumTracks(),
                     staggered: false,
                     width: 106.0,
-                    height: 138.0,
+                    height: 142.0,
                   ),
                 ),
               ),

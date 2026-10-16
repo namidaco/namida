@@ -23,9 +23,12 @@ NAME_OVERRIDES = {
 # -- only languages with a 639-2 code are kept, plus these 639-3 only ones common in music tags
 EXTRA_CODES = {
     'cmn', 'yue', 'wuu', 'hak', 'nan',  # chinese
-    'arb', 'arz', 'apc',  # arabic
+    'arb', 'arz', 'apc', 'ary', 'arq', 'aeb', 'acm', 'afb',  # arabic
     'pes', 'prs',  # persian
-    'fil', 'zsm', 'pnb', 'ckb', 'kmr',
+    'pcm', 'jam', 'kea', 'gcf', 'mfe', 'rcf', 'lou',  # creoles
+    'tzm', 'shi', 'rif', 'ses',  # amazigh, songhai
+    'fil', 'zsm', 'pnb', 'ckb', 'kmr', 'mnk', 'taq', 'sju',
+    'bar', 'ksh', 'vec', 'ryu', 'tts', 'bgc',
 }
 
 

@@ -351,8 +351,10 @@ Future<void> showGeneralPopupDialog(
     final pl = PlaylistController.inst.getPlaylist(playlistName!);
     if (pl == null) return;
     final removed = pl.tracks.removeDuplicates((element) => element.track);
-    await PlaylistController.inst.updatePropertyInPlaylist(pl.name, modifiedDate: currentTimeMS);
-    await PlaylistController.inst.onPlaylistTracksChanged(pl); // to write m3u
+    if (removed > 0) {
+      await PlaylistController.inst.updatePropertyInPlaylist(pl.name, modifiedDate: currentTimeMS);
+      await PlaylistController.inst.onPlaylistTracksChanged(pl); // to write m3u
+    }
     snackyy(
       icon: Broken.filter_remove,
       message: "${lang.removed}: ${removed.displayTrackKeyword}",

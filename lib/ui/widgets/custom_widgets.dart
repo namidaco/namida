@@ -1653,9 +1653,8 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
       children: [
         header,
         if (_isBodyBuilt)
-          SizeTransition(
-            sizeFactor: _sizeAnimation,
-            alignment: AlignmentDirectional.topStart,
+          _ExpansionSizeReveal(
+            animation: _sizeAnimation,
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: _ExpansionSlideIn(
@@ -1760,6 +1759,27 @@ class _ExpansionTint extends AnimatedWidget {
         borderRadius: borderRadius,
       ),
       child: child,
+    );
+  }
+}
+
+// -- unlike [SizeTransition], no clip once fully expanded, it would cut children shadows/glows.
+class _ExpansionSizeReveal extends AnimatedWidget {
+  final Animation<double> animation;
+  final Widget child;
+
+  const _ExpansionSizeReveal({required this.animation, required this.child}) : super(listenable: animation);
+
+  @override
+  Widget build(BuildContext context) {
+    final sizeFactor = animation.value.withMinimum(0.0);
+    return ClipRect(
+      clipBehavior: sizeFactor < 1.0 ? Clip.hardEdge : Clip.none,
+      child: Align(
+        alignment: AlignmentDirectional.topStart,
+        heightFactor: sizeFactor,
+        child: child,
+      ),
     );
   }
 }

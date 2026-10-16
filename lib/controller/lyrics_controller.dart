@@ -372,6 +372,12 @@ class Lyrics {
   }
 
   Future<bool> embedLyricsByUser(Track track, String lyrics) async {
+    final embeddedLyrics = track.lyrics;
+    final isReplacingEmbedded = embeddedLyrics.isNotEmpty && embeddedLyrics != lyrics;
+    if (isReplacingEmbedded) {
+      final confirmed = await _confirmReplacingEmbeddedLyrics(embeddedLyrics);
+      if (!confirmed) return false;
+    }
     final hasPermission = await requestManageStoragePermission(directoryToCreate: AppDirs.INTERNAL_STORAGE);
     if (!hasPermission) return false;
     bool didEmbed = false;
@@ -388,6 +394,37 @@ class Lyrics {
         )
         .ignoreError();
     return didEmbed;
+  }
+
+  Future<bool> _confirmReplacingEmbeddedLyrics(String embeddedLyrics) async {
+    var confirmed = false;
+    await NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        isWarning: true,
+        normalTitleStyle: true,
+        title: lang.alreadyExists,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            text: lang.embed,
+            onTap: () {
+              confirmed = true;
+              NamidaNavigator.inst.closeDialog();
+            },
+          ),
+        ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12.0),
+          child: Text(
+            embeddedLyrics,
+            style: namida.textTheme.displaySmall,
+            maxLines: 8,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+    );
+    return confirmed;
   }
 
   /// with [LyricsSource.internet] nothing local was looked up, a lyrics file that is already there must not get replaced.

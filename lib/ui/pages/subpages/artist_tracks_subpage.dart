@@ -367,9 +367,10 @@ class _AlbumsRow extends StatelessWidget {
               ? const []
               : [
                   SizedBox(
-                    height: 130.0 + 28.0,
+                    height: 134.0 + 6.0,
                     child: SuperSmoothListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 14.0),
+                      padding: const EdgeInsets.only(top: 6.0),
+                      clipBehavior: Clip.none,
                       scrollDirection: Axis.horizontal,
                       itemExtent: 100.0,
                       itemCount: albums.length,
@@ -383,7 +384,7 @@ class _AlbumsRow extends StatelessWidget {
                             staggered: false,
                             compact: true,
                             width: 98.0,
-                            height: 130.0,
+                            height: 134.0,
                           ),
                         );
                       },

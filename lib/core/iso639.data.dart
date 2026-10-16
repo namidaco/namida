@@ -3,55 +3,59 @@ part of 'iso639.dart';
 
 /// 639-3 code to english name.
 const _kNames = <String, String>{
-  'aar': 'Afar', 'abk': 'Abkhazian', 'ace': 'Achinese', 'ach': 'Acoli', 'ada': 'Adangme', 'ady': 'Adyghe', 'afh': 'Afrihili', 'afr': 'Afrikaans', 'ain': 'Ainu (Japan)', //
-  'aka': 'Akan', 'akk': 'Akkadian', 'ale': 'Aleut', 'alt': 'Southern Altai', 'amh': 'Amharic', 'ang': 'Old English (ca. 450-1100)', 'anp': 'Angika', 'apc': 'Levantine Arabic', //
-  'ara': 'Arabic', 'arb': 'Standard Arabic', 'arc': 'Official Aramaic (700-300 BCE)', 'arg': 'Aragonese', 'arn': 'Mapudungun', 'arp': 'Arapaho', 'arw': 'Arawak', //
+  'aar': 'Afar', 'abk': 'Abkhazian', 'ace': 'Achinese', 'ach': 'Acoli', 'acm': 'Mesopotamian Arabic', 'ada': 'Adangme', 'ady': 'Adyghe', 'aeb': 'Tunisian Arabic', //
+  'afb': 'Gulf Arabic', 'afh': 'Afrihili', 'afr': 'Afrikaans', 'ain': 'Ainu (Japan)', 'aka': 'Akan', 'akk': 'Akkadian', 'ale': 'Aleut', 'alt': 'Southern Altai', //
+  'amh': 'Amharic', 'ang': 'Old English (ca. 450-1100)', 'anp': 'Angika', 'apc': 'Levantine Arabic', 'ara': 'Arabic', 'arb': 'Standard Arabic', //
+  'arc': 'Official Aramaic (700-300 BCE)', 'arg': 'Aragonese', 'arn': 'Mapudungun', 'arp': 'Arapaho', 'arq': 'Algerian Arabic', 'arw': 'Arawak', 'ary': 'Moroccan Arabic', //
   'arz': 'Egyptian Arabic', 'asm': 'Assamese', 'ast': 'Asturian', 'ava': 'Avaric', 'ave': 'Avestan', 'awa': 'Awadhi', 'aym': 'Aymara', 'aze': 'Azerbaijani', 'bak': 'Bashkir', //
-  'bal': 'Baluchi', 'bam': 'Bambara', 'ban': 'Balinese', 'bas': 'Basa (Cameroon)', 'bej': 'Beja', 'bel': 'Belarusian', 'bem': 'Bemba (Zambia)', 'ben': 'Bengali', //
-  'bho': 'Bhojpuri', 'bik': 'Bikol', 'bin': 'Bini', 'bis': 'Bislama', 'bla': 'Siksika', 'bod': 'Tibetan', 'bos': 'Bosnian', 'bra': 'Braj', 'bre': 'Breton', 'bua': 'Buriat', //
-  'bug': 'Buginese', 'bul': 'Bulgarian', 'byn': 'Bilin', 'cad': 'Caddo', 'car': 'Galibi Carib', 'cat': 'Catalan', 'ceb': 'Cebuano', 'ces': 'Czech', 'cha': 'Chamorro', //
-  'chb': 'Chibcha', 'che': 'Chechen', 'chg': 'Chagatai', 'chk': 'Chuukese', 'chm': 'Mari (Russia)', 'chn': 'Chinook jargon', 'cho': 'Choctaw', 'chp': 'Chipewyan', //
-  'chr': 'Cherokee', 'chu': 'Church Slavic', 'chv': 'Chuvash', 'chy': 'Cheyenne', 'ckb': 'Central Kurdish', 'cmn': 'Mandarin Chinese', 'cnr': 'Montenegrin', 'cop': 'Coptic', //
-  'cor': 'Cornish', 'cos': 'Corsican', 'cre': 'Cree', 'crh': 'Crimean Tatar', 'csb': 'Kashubian', 'cym': 'Welsh', 'dak': 'Dakota', 'dan': 'Danish', 'dar': 'Dargwa', //
-  'del': 'Delaware', 'den': 'Slavey', 'deu': 'German', 'dgr': 'Tlicho', 'din': 'Dinka', 'div': 'Dhivehi', 'doi': 'Dogri (macrolanguage)', 'dsb': 'Lower Sorbian', 'dua': 'Duala', //
-  'dum': 'Middle Dutch (ca. 1050-1350)', 'dyu': 'Dyula', 'dzo': 'Dzongkha', 'efi': 'Efik', 'egy': 'Egyptian (Ancient)', 'eka': 'Ekajuk', 'ell': 'Greek', 'elx': 'Elamite', //
-  'eng': 'English', 'enm': 'Middle English (1100-1500)', 'epo': 'Esperanto', 'est': 'Estonian', 'eus': 'Basque', 'ewe': 'Ewe', 'ewo': 'Ewondo', //
+  'bal': 'Baluchi', 'bam': 'Bambara', 'ban': 'Balinese', 'bar': 'Bavarian', 'bas': 'Basa (Cameroon)', 'bej': 'Beja', 'bel': 'Belarusian', 'bem': 'Bemba (Zambia)', //
+  'ben': 'Bengali', 'bgc': 'Haryanvi', 'bho': 'Bhojpuri', 'bik': 'Bikol', 'bin': 'Bini', 'bis': 'Bislama', 'bla': 'Siksika', 'bod': 'Tibetan', 'bos': 'Bosnian', 'bra': 'Braj', //
+  'bre': 'Breton', 'bua': 'Buriat', 'bug': 'Buginese', 'bul': 'Bulgarian', 'byn': 'Bilin', 'cad': 'Caddo', 'car': 'Galibi Carib', 'cat': 'Catalan', 'ceb': 'Cebuano', //
+  'ces': 'Czech', 'cha': 'Chamorro', 'chb': 'Chibcha', 'che': 'Chechen', 'chg': 'Chagatai', 'chk': 'Chuukese', 'chm': 'Mari (Russia)', 'chn': 'Chinook jargon', 'cho': 'Choctaw', //
+  'chp': 'Chipewyan', 'chr': 'Cherokee', 'chu': 'Church Slavic', 'chv': 'Chuvash', 'chy': 'Cheyenne', 'ckb': 'Central Kurdish', 'cmn': 'Mandarin Chinese', 'cnr': 'Montenegrin', //
+  'cop': 'Coptic', 'cor': 'Cornish', 'cos': 'Corsican', 'cre': 'Cree', 'crh': 'Crimean Tatar', 'csb': 'Kashubian', 'cym': 'Welsh', 'dak': 'Dakota', 'dan': 'Danish', //
+  'dar': 'Dargwa', 'del': 'Delaware', 'den': 'Slavey', 'deu': 'German', 'dgr': 'Tlicho', 'din': 'Dinka', 'div': 'Dhivehi', 'doi': 'Dogri (macrolanguage)', //
+  'dsb': 'Lower Sorbian', 'dua': 'Duala', 'dum': 'Middle Dutch (ca. 1050-1350)', 'dyu': 'Dyula', 'dzo': 'Dzongkha', 'efi': 'Efik', 'egy': 'Egyptian (Ancient)', 'eka': 'Ekajuk', //
+  'ell': 'Greek', 'elx': 'Elamite', 'eng': 'English', 'enm': 'Middle English (1100-1500)', 'epo': 'Esperanto', 'est': 'Estonian', 'eus': 'Basque', 'ewe': 'Ewe', 'ewo': 'Ewondo', //
   'fan': 'Fang (Equatorial Guinea)', 'fao': 'Faroese', 'fas': 'Persian', 'fat': 'Fanti', 'fij': 'Fijian', 'fil': 'Filipino', 'fin': 'Finnish', 'fon': 'Fon', 'fra': 'French', //
   'frm': 'Middle French (ca. 1400-1600)', 'fro': 'Old French (842-ca. 1400)', 'frr': 'Northern Frisian', 'frs': 'Eastern Frisian', 'fry': 'Western Frisian', 'ful': 'Fulah', //
-  'fur': 'Friulian', 'gaa': 'Ga', 'gay': 'Gayo', 'gba': 'Gbaya (Central African Republic)', 'gez': 'Geez', 'gil': 'Gilbertese', 'gla': 'Scottish Gaelic', 'gle': 'Irish', //
-  'glg': 'Galician', 'glv': 'Manx', 'gmh': 'Middle High German (ca. 1050-1500)', 'goh': 'Old High German (ca. 750-1050)', 'gon': 'Gondi', 'gor': 'Gorontalo', 'got': 'Gothic', //
-  'grb': 'Grebo', 'grc': 'Ancient Greek (to 1453)', 'grn': 'Guarani', 'gsw': 'Swiss German', 'guj': 'Gujarati', 'gwi': 'Gwichʼin', 'hai': 'Haida', 'hak': 'Hakka Chinese', //
-  'hat': 'Haitian', 'hau': 'Hausa', 'haw': 'Hawaiian', 'heb': 'Hebrew', 'her': 'Herero', 'hil': 'Hiligaynon', 'hin': 'Hindi', 'hit': 'Hittite', 'hmn': 'Hmong', //
-  'hmo': 'Hiri Motu', 'hrv': 'Croatian', 'hsb': 'Upper Sorbian', 'hun': 'Hungarian', 'hup': 'Hupa', 'hye': 'Armenian', 'iba': 'Iban', 'ibo': 'Igbo', 'ido': 'Ido', //
-  'iii': 'Sichuan Yi', 'iku': 'Inuktitut', 'ile': 'Interlingue', 'ilo': 'Iloko', 'ina': 'Interlingua (IALA)', 'ind': 'Indonesian', 'inh': 'Ingush', 'ipk': 'Inupiaq', //
-  'isl': 'Icelandic', 'ita': 'Italian', 'jav': 'Javanese', 'jbo': 'Lojban', 'jpn': 'Japanese', 'jpr': 'Judeo-Persian', 'jrb': 'Judeo-Arabic', 'kaa': 'Kara-Kalpak', //
-  'kab': 'Kabyle', 'kac': 'Kachin', 'kal': 'Kalaallisut', 'kam': 'Kamba (Kenya)', 'kan': 'Kannada', 'kas': 'Kashmiri', 'kat': 'Georgian', 'kau': 'Kanuri', 'kaw': 'Kawi', //
-  'kaz': 'Kazakh', 'kbd': 'Kabardian', 'kha': 'Khasi', 'khm': 'Khmer', 'kho': 'Khotanese', 'kik': 'Kikuyu', 'kin': 'Kinyarwanda', 'kir': 'Kirghiz', 'kmb': 'Kimbundu', //
-  'kmr': 'Northern Kurdish', 'kok': 'Konkani (macrolanguage)', 'kom': 'Komi', 'kon': 'Kongo', 'kor': 'Korean', 'kos': 'Kosraean', 'kpe': 'Kpelle', 'krc': 'Karachay-Balkar', //
-  'krl': 'Karelian', 'kru': 'Kurukh', 'kua': 'Kuanyama', 'kum': 'Kumyk', 'kur': 'Kurdish', 'kut': 'Ktunaxa', 'lad': 'Ladino', 'lah': 'Lahnda', 'lam': 'Lamba', 'lao': 'Lao', //
-  'lat': 'Latin', 'lav': 'Latvian', 'lez': 'Lezghian', 'lim': 'Limburgan', 'lin': 'Lingala', 'lit': 'Lithuanian', 'lol': 'Mongo', 'loz': 'Lozi', 'ltz': 'Luxembourgish', //
-  'lua': 'Luba-Lulua', 'lub': 'Luba-Katanga', 'lug': 'Ganda', 'lui': 'Luiseño', 'lun': 'Lunda', 'luo': 'Luo (Kenya and Tanzania)', 'lus': 'Lushai', 'mad': 'Madurese', //
-  'mag': 'Magahi', 'mah': 'Marshallese', 'mai': 'Maithili', 'mak': 'Makasar', 'mal': 'Malayalam', 'man': 'Mandingo', 'mar': 'Marathi', 'mas': 'Masai', 'mdf': 'Moksha', //
-  'mdr': 'Mandar', 'men': 'Mende (Sierra Leone)', 'mga': 'Middle Irish (900-1200)', 'mic': 'Mi\'kmaq', 'min': 'Minangkabau', 'mis': 'Uncoded languages', 'mkd': 'Macedonian', //
-  'mlg': 'Malagasy', 'mlt': 'Maltese', 'mnc': 'Manchu', 'mni': 'Manipuri', 'moh': 'Mohawk', 'mon': 'Mongolian', 'mos': 'Mossi', 'mri': 'Maori', 'msa': 'Malay (macrolanguage)', //
-  'mul': 'Multiple languages', 'mus': 'Creek', 'mwl': 'Mirandese', 'mwr': 'Marwari', 'mya': 'Burmese', 'myv': 'Erzya', 'nan': 'Min Nan Chinese', 'nap': 'Neapolitan', //
-  'nau': 'Nauru', 'nav': 'Navajo', 'nbl': 'South Ndebele', 'nde': 'North Ndebele', 'ndo': 'Ndonga', 'nds': 'Low German', 'nep': 'Nepali (macrolanguage)', 'new': 'Nepal Bhasa', //
-  'nia': 'Nias', 'niu': 'Niuean', 'nld': 'Dutch', 'nno': 'Norwegian Nynorsk', 'nob': 'Norwegian Bokmål', 'nog': 'Nogai', 'non': 'Old Norse', 'nor': 'Norwegian', 'nqo': 'N\'Ko', //
-  'nso': 'Pedi', 'nwc': 'Classical Newari', 'nya': 'Chichewa', 'nym': 'Nyamwezi', 'nyn': 'Nyankole', 'nyo': 'Nyoro', 'nzi': 'Nzima', 'oci': 'Occitan (post 1500)', //
-  'oji': 'Ojibwa', 'ori': 'Oriya (macrolanguage)', 'orm': 'Oromo', 'osa': 'Osage', 'oss': 'Iron Ossetic', 'ota': 'Ottoman Turkish (1500-1928)', 'pag': 'Pangasinan', //
-  'pal': 'Pahlavi', 'pam': 'Pampanga', 'pan': 'Panjabi', 'pap': 'Papiamento', 'pau': 'Palauan', 'peo': 'Old Persian (ca. 600-400 B.C.)', 'pes': 'Iranian Persian', //
-  'phn': 'Phoenician', 'pli': 'Pali', 'pnb': 'Western Panjabi', 'pol': 'Polish', 'pon': 'Pohnpeian', 'por': 'Portuguese', 'pro': 'Old Provençal (to 1500)', 'prs': 'Dari', //
-  'pus': 'Pushto', 'que': 'Quechua', 'raj': 'Rajasthani', 'rap': 'Rapanui', 'rar': 'Rarotongan', 'roh': 'Romansh', 'rom': 'Romany', 'ron': 'Romanian', 'run': 'Rundi', //
-  'rup': 'Macedo-Romanian', 'rus': 'Russian', 'sad': 'Sandawe', 'sag': 'Sango', 'sah': 'Yakut', 'sam': 'Samaritan Aramaic', 'san': 'Sanskrit', 'sas': 'Sasak', 'sat': 'Santali', //
-  'scn': 'Sicilian', 'sco': 'Scots', 'sel': 'Selkup', 'sga': 'Old Irish (to 900)', 'shn': 'Shan', 'sid': 'Sidamo', 'sin': 'Sinhala', 'slk': 'Slovak', 'slv': 'Slovenian', //
-  'sma': 'Southern Sami', 'sme': 'Northern Sami', 'smj': 'Lule Sami', 'smn': 'Inari Sami', 'smo': 'Samoan', 'sms': 'Skolt Sami', 'sna': 'Shona', 'snd': 'Sindhi', //
-  'snk': 'Soninke', 'sog': 'Sogdian', 'som': 'Somali', 'sot': 'Southern Sotho', 'spa': 'Spanish', 'sqi': 'Albanian', 'srd': 'Sardinian', 'srn': 'Sranan Tongo', 'srp': 'Serbian', //
-  'srr': 'Serer', 'ssw': 'Swati', 'suk': 'Sukuma', 'sun': 'Sundanese', 'sus': 'Susu', 'sux': 'Sumerian', 'swa': 'Swahili (macrolanguage)', 'swe': 'Swedish', //
-  'syc': 'Classical Syriac', 'syr': 'Syriac', 'tah': 'Tahitian', 'tam': 'Tamil', 'tat': 'Tatar', 'tel': 'Telugu', 'tem': 'Timne', 'ter': 'Tereno', 'tet': 'Tetum', //
-  'tgk': 'Tajik', 'tgl': 'Tagalog', 'tha': 'Thai', 'tig': 'Tigre', 'tir': 'Tigrinya', 'tiv': 'Tiv', 'tkl': 'Tokelau', 'tlh': 'Klingon', 'tli': 'Tlingit', 'tmh': 'Tamashek', //
-  'tog': 'Tonga (Nyasa)', 'ton': 'Tonga (Tonga Islands)', 'tpi': 'Tok Pisin', 'tsi': 'Tsimshian', 'tsn': 'Tswana', 'tso': 'Tsonga', 'tuk': 'Turkmen', 'tum': 'Tumbuka', //
-  'tur': 'Turkish', 'tvl': 'Tuvalu', 'twi': 'Twi', 'tyv': 'Tuvinian', 'udm': 'Udmurt', 'uga': 'Ugaritic', 'uig': 'Uighur', 'ukr': 'Ukrainian', 'umb': 'Umbundu', //
-  'und': 'Undetermined', 'urd': 'Urdu', 'uzb': 'Uzbek', 'vai': 'Vai', 'ven': 'Venda', 'vie': 'Vietnamese', 'vol': 'Volapük', 'vot': 'Votic', 'wal': 'Wolaytta', //
+  'fur': 'Friulian', 'gaa': 'Ga', 'gay': 'Gayo', 'gba': 'Gbaya (Central African Republic)', 'gcf': 'Guadeloupean Creole French', 'gez': 'Geez', 'gil': 'Gilbertese', //
+  'gla': 'Scottish Gaelic', 'gle': 'Irish', 'glg': 'Galician', 'glv': 'Manx', 'gmh': 'Middle High German (ca. 1050-1500)', 'goh': 'Old High German (ca. 750-1050)', //
+  'gon': 'Gondi', 'gor': 'Gorontalo', 'got': 'Gothic', 'grb': 'Grebo', 'grc': 'Ancient Greek (to 1453)', 'grn': 'Guarani', 'gsw': 'Swiss German', 'guj': 'Gujarati', //
+  'gwi': 'Gwichʼin', 'hai': 'Haida', 'hak': 'Hakka Chinese', 'hat': 'Haitian', 'hau': 'Hausa', 'haw': 'Hawaiian', 'heb': 'Hebrew', 'her': 'Herero', 'hil': 'Hiligaynon', //
+  'hin': 'Hindi', 'hit': 'Hittite', 'hmn': 'Hmong', 'hmo': 'Hiri Motu', 'hrv': 'Croatian', 'hsb': 'Upper Sorbian', 'hun': 'Hungarian', 'hup': 'Hupa', 'hye': 'Armenian', //
+  'iba': 'Iban', 'ibo': 'Igbo', 'ido': 'Ido', 'iii': 'Sichuan Yi', 'iku': 'Inuktitut', 'ile': 'Interlingue', 'ilo': 'Iloko', 'ina': 'Interlingua (IALA)', 'ind': 'Indonesian', //
+  'inh': 'Ingush', 'ipk': 'Inupiaq', 'isl': 'Icelandic', 'ita': 'Italian', 'jam': 'Jamaican Creole English', 'jav': 'Javanese', 'jbo': 'Lojban', 'jpn': 'Japanese', //
+  'jpr': 'Judeo-Persian', 'jrb': 'Judeo-Arabic', 'kaa': 'Kara-Kalpak', 'kab': 'Kabyle', 'kac': 'Kachin', 'kal': 'Kalaallisut', 'kam': 'Kamba (Kenya)', 'kan': 'Kannada', //
+  'kas': 'Kashmiri', 'kat': 'Georgian', 'kau': 'Kanuri', 'kaw': 'Kawi', 'kaz': 'Kazakh', 'kbd': 'Kabardian', 'kea': 'Kabuverdianu', 'kha': 'Khasi', 'khm': 'Khmer', //
+  'kho': 'Khotanese', 'kik': 'Kikuyu', 'kin': 'Kinyarwanda', 'kir': 'Kirghiz', 'kmb': 'Kimbundu', 'kmr': 'Northern Kurdish', 'kok': 'Konkani (macrolanguage)', 'kom': 'Komi', //
+  'kon': 'Kongo', 'kor': 'Korean', 'kos': 'Kosraean', 'kpe': 'Kpelle', 'krc': 'Karachay-Balkar', 'krl': 'Karelian', 'kru': 'Kurukh', 'ksh': 'Kölsch', 'kua': 'Kuanyama', //
+  'kum': 'Kumyk', 'kur': 'Kurdish', 'kut': 'Ktunaxa', 'lad': 'Ladino', 'lah': 'Lahnda', 'lam': 'Lamba', 'lao': 'Lao', 'lat': 'Latin', 'lav': 'Latvian', 'lez': 'Lezghian', //
+  'lim': 'Limburgan', 'lin': 'Lingala', 'lit': 'Lithuanian', 'lol': 'Mongo', 'lou': 'Louisiana Creole', 'loz': 'Lozi', 'ltz': 'Luxembourgish', 'lua': 'Luba-Lulua', //
+  'lub': 'Luba-Katanga', 'lug': 'Ganda', 'lui': 'Luiseño', 'lun': 'Lunda', 'luo': 'Luo (Kenya and Tanzania)', 'lus': 'Lushai', 'mad': 'Madurese', 'mag': 'Magahi', //
+  'mah': 'Marshallese', 'mai': 'Maithili', 'mak': 'Makasar', 'mal': 'Malayalam', 'man': 'Mandingo', 'mar': 'Marathi', 'mas': 'Masai', 'mdf': 'Moksha', 'mdr': 'Mandar', //
+  'men': 'Mende (Sierra Leone)', 'mfe': 'Morisyen', 'mga': 'Middle Irish (900-1200)', 'mic': 'Mi\'kmaq', 'min': 'Minangkabau', 'mis': 'Uncoded languages', 'mkd': 'Macedonian', //
+  'mlg': 'Malagasy', 'mlt': 'Maltese', 'mnc': 'Manchu', 'mni': 'Manipuri', 'mnk': 'Mandinka', 'moh': 'Mohawk', 'mon': 'Mongolian', 'mos': 'Mossi', 'mri': 'Maori', //
+  'msa': 'Malay (macrolanguage)', 'mul': 'Multiple languages', 'mus': 'Creek', 'mwl': 'Mirandese', 'mwr': 'Marwari', 'mya': 'Burmese', 'myv': 'Erzya', 'nan': 'Min Nan Chinese', //
+  'nap': 'Neapolitan', 'nau': 'Nauru', 'nav': 'Navajo', 'nbl': 'South Ndebele', 'nde': 'North Ndebele', 'ndo': 'Ndonga', 'nds': 'Low German', 'nep': 'Nepali (macrolanguage)', //
+  'new': 'Nepal Bhasa', 'nia': 'Nias', 'niu': 'Niuean', 'nld': 'Dutch', 'nno': 'Norwegian Nynorsk', 'nob': 'Norwegian Bokmål', 'nog': 'Nogai', 'non': 'Old Norse', //
+  'nor': 'Norwegian', 'nqo': 'N\'Ko', 'nso': 'Pedi', 'nwc': 'Classical Newari', 'nya': 'Chichewa', 'nym': 'Nyamwezi', 'nyn': 'Nyankole', 'nyo': 'Nyoro', 'nzi': 'Nzima', //
+  'oci': 'Occitan (post 1500)', 'oji': 'Ojibwa', 'ori': 'Oriya (macrolanguage)', 'orm': 'Oromo', 'osa': 'Osage', 'oss': 'Iron Ossetic', 'ota': 'Ottoman Turkish (1500-1928)', //
+  'pag': 'Pangasinan', 'pal': 'Pahlavi', 'pam': 'Pampanga', 'pan': 'Panjabi', 'pap': 'Papiamento', 'pau': 'Palauan', 'pcm': 'Nigerian Pidgin', //
+  'peo': 'Old Persian (ca. 600-400 B.C.)', 'pes': 'Iranian Persian', 'phn': 'Phoenician', 'pli': 'Pali', 'pnb': 'Western Panjabi', 'pol': 'Polish', 'pon': 'Pohnpeian', //
+  'por': 'Portuguese', 'pro': 'Old Provençal (to 1500)', 'prs': 'Dari', 'pus': 'Pushto', 'que': 'Quechua', 'raj': 'Rajasthani', 'rap': 'Rapanui', 'rar': 'Rarotongan', //
+  'rcf': 'Réunion Creole French', 'rif': 'Tarifit', 'roh': 'Romansh', 'rom': 'Romany', 'ron': 'Romanian', 'run': 'Rundi', 'rup': 'Macedo-Romanian', 'rus': 'Russian', //
+  'ryu': 'Central Okinawan', 'sad': 'Sandawe', 'sag': 'Sango', 'sah': 'Yakut', 'sam': 'Samaritan Aramaic', 'san': 'Sanskrit', 'sas': 'Sasak', 'sat': 'Santali', //
+  'scn': 'Sicilian', 'sco': 'Scots', 'sel': 'Selkup', 'ses': 'Koyraboro Senni Songhai', 'sga': 'Old Irish (to 900)', 'shi': 'Tachelhit', 'shn': 'Shan', 'sid': 'Sidamo', //
+  'sin': 'Sinhala', 'sju': 'Ume Sami', 'slk': 'Slovak', 'slv': 'Slovenian', 'sma': 'Southern Sami', 'sme': 'Northern Sami', 'smj': 'Lule Sami', 'smn': 'Inari Sami', //
+  'smo': 'Samoan', 'sms': 'Skolt Sami', 'sna': 'Shona', 'snd': 'Sindhi', 'snk': 'Soninke', 'sog': 'Sogdian', 'som': 'Somali', 'sot': 'Southern Sotho', 'spa': 'Spanish', //
+  'sqi': 'Albanian', 'srd': 'Sardinian', 'srn': 'Sranan Tongo', 'srp': 'Serbian', 'srr': 'Serer', 'ssw': 'Swati', 'suk': 'Sukuma', 'sun': 'Sundanese', 'sus': 'Susu', //
+  'sux': 'Sumerian', 'swa': 'Swahili (macrolanguage)', 'swe': 'Swedish', 'syc': 'Classical Syriac', 'syr': 'Syriac', 'tah': 'Tahitian', 'tam': 'Tamil', 'taq': 'Tamasheq', //
+  'tat': 'Tatar', 'tel': 'Telugu', 'tem': 'Timne', 'ter': 'Tereno', 'tet': 'Tetum', 'tgk': 'Tajik', 'tgl': 'Tagalog', 'tha': 'Thai', 'tig': 'Tigre', 'tir': 'Tigrinya', //
+  'tiv': 'Tiv', 'tkl': 'Tokelau', 'tlh': 'Klingon', 'tli': 'Tlingit', 'tmh': 'Tamashek', 'tog': 'Tonga (Nyasa)', 'ton': 'Tonga (Tonga Islands)', 'tpi': 'Tok Pisin', //
+  'tsi': 'Tsimshian', 'tsn': 'Tswana', 'tso': 'Tsonga', 'tts': 'Northeastern Thai', 'tuk': 'Turkmen', 'tum': 'Tumbuka', 'tur': 'Turkish', 'tvl': 'Tuvalu', 'twi': 'Twi', //
+  'tyv': 'Tuvinian', 'tzm': 'Central Atlas Tamazight', 'udm': 'Udmurt', 'uga': 'Ugaritic', 'uig': 'Uighur', 'ukr': 'Ukrainian', 'umb': 'Umbundu', 'und': 'Undetermined', //
+  'urd': 'Urdu', 'uzb': 'Uzbek', 'vai': 'Vai', 'vec': 'Venetian', 'ven': 'Venda', 'vie': 'Vietnamese', 'vol': 'Volapük', 'vot': 'Votic', 'wal': 'Wolaytta', //
   'war': 'Waray (Philippines)', 'was': 'Washo', 'wln': 'Walloon', 'wol': 'Wolof', 'wuu': 'Wu Chinese', 'xal': 'Kalmyk', 'xho': 'Xhosa', 'yao': 'Yao', 'yap': 'Yapese', //
   'yid': 'Yiddish', 'yor': 'Yoruba', 'yue': 'Yue Chinese', 'zap': 'Zapotec', 'zbl': 'Blissymbols', 'zen': 'Zenaga', 'zgh': 'Standard Moroccan Tamazight', 'zha': 'Zhuang', //
   'zho': 'Chinese', 'zsm': 'Standard Malay', 'zul': 'Zulu', 'zun': 'Zuni', 'zxx': 'Instrumental', 'zza': 'Zaza', //

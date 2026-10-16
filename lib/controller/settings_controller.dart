@@ -181,7 +181,7 @@ class _SettingsController extends _SettingsKeysWriter {
     MediaType.language: SortChain.of(const [GroupSortType.title]),
     MediaType.mood: SortChain.of(const [GroupSortType.title]),
     MediaType.tag: SortChain.of(const [GroupSortType.title]),
-    MediaType.playlist: SortChain.of(const [GroupSortType.dateModified]),
+    MediaType.playlist: SortChain.of(const [GroupSortType.modifiedDate]),
   };
 
   /// artist and genre variants share one entry, read through [groupSortingOf].
@@ -194,7 +194,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final artistAlbumsSort = _key<GroupSortType?>('artistAlbumsSort', null, codec: GroupSortType.values.asCodec());
   late final artistAlbumsSortReversed = _key('artistAlbumsSortReversed', false);
   late final playlistsGroupByTags = _key('playlistsGroupByTags', false);
-  late final ytPlaylistSort = _keyEnum('ytPlaylistSort', GroupSortType.dateModified, GroupSortType.values);
+  late final ytPlaylistSort = _keyEnum('ytPlaylistSort', GroupSortType.modifiedDate, GroupSortType.values);
   late final ytPlaylistSortReversed = _key('ytPlaylistSortReversed', true);
   late final indexMinDurationInSec = _key('indexMinDurationInSec', 5, sync: false);
   late final indexMinFileSizeInB = _key('indexMinFileSizeInB', 100 * 1024, sync: false);
@@ -604,6 +604,9 @@ class _SettingsController extends _SettingsKeysWriter {
     }
     if (groupSorting.isNotEmpty && _raw['mediaGroupSorting'] == null) _raw['mediaGroupSorting'] = groupSorting;
 
+    _migratePlaylistModifiedDate(_raw['mediaGroupSorting']);
+    if (_raw['ytPlaylistSort'] == GroupSortType.dateModified.name) _raw['ytPlaylistSort'] = GroupSortType.modifiedDate.name;
+
     final isFavouriteInNotification = _dropKey('displayFavouriteButtonInNotification') == true;
     final isStopInNotification = _dropKey('displayStopButtonInNotification') != false;
     final didCustomizeNotification = isFavouriteInNotification || !isStopInNotification;
@@ -639,6 +642,21 @@ class _SettingsController extends _SettingsKeysWriter {
       'sorts': sortsJson,
       if (isReversed) 'reverse': isReversed,
     };
+  }
+
+  /// playlists defaulted to [GroupSortType.dateModified], which only albums and artists sort by.
+  static void _migratePlaylistModifiedDate(dynamic groupSortingJson) {
+    if (groupSortingJson is! Map) return;
+    final playlistSortingJson = groupSortingJson[MediaType.playlist.name];
+    if (playlistSortingJson is! Map) return;
+    final sorts = playlistSortingJson['sorts'];
+    if (sorts is! List) return;
+    for (int i = 0; i < sorts.length; i++) {
+      final entry = SortEntry.fromJson(sorts[i], GroupSortType.values);
+      if (entry == null || entry.type != GroupSortType.dateModified) continue;
+      final fixedEntry = SortEntry(GroupSortType.modifiedDate, reverse: entry.reverse);
+      sorts[i] = fixedEntry.toJson();
+    }
   }
 
   /// writes to the active preset, [toDefault] writes to the default chain and deselects the preset.

@@ -205,6 +205,28 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     );
   }
 
+  void showIgnoreLyricsDialog() {
+    final cachedPaths = availableLyrics.value.where((l) => l.isInCache).map((l) => '"${l.file?.path}"').join('\n');
+    NamidaNavigator.inst.navigateDialog(
+      colorScheme: colorScheme,
+      dialogBuilder: (theme) => CustomBlurryDialog(
+        title: lang.confirm,
+        actions: [
+          const CancelButton(),
+          NamidaButton(
+            colorScheme: Colors.red,
+            text: lang.ignore.toUpperCase(),
+            onTap: () {
+              NamidaNavigator.inst.closeDialog();
+              setIgnored(true);
+            },
+          ),
+        ],
+        bodyText: '${lang.ignore}: $cachedPaths?',
+      ),
+    );
+  }
+
   void showEditCachedSyncedTimeOffsetDialog(LyricsModel l) async {
     Lrc? lrc;
     int offsetMS = 0;
@@ -448,7 +470,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         NamidaPopupItem(
           icon: Broken.eye_slash,
           title: lang.ignore,
-          onTap: () => setIgnored(true),
+          onTap: showIgnoreLyricsDialog,
         ),
     ];
   }

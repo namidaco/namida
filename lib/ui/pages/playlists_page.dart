@@ -246,7 +246,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
     );
   }
 
+  late final _addingOrder = _AddingOrder({...?widget.tracksToAdd});
+
   void _onAddToPlaylist({required LocalPlaylist playlist, required bool allTracksExist, required bool allowAddingEverything}) {
+    final sorting = settings.groupSortingOf(MediaType.playlist);
+    _addingOrder.freeze(sorting);
     if (allTracksExist == true) {
       final indexes = <int>[];
       playlist.tracks.loopAdv((e, index) {
@@ -426,7 +430,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                     leftText: leftText,
                     onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                     onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                    disableSorting: tracksToAdd != null && tracksToAdd.isNotEmpty,
                     sortByMenuWidget: SortByMenu(
                       title: sorting.entries.first.type.toText(),
                       popupMenuChild: const SortByMenuPlaylist(),
@@ -796,12 +799,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                             )
                           : Obx(
                               (context) {
-                                final sort = settings.groupSortingOfR(MediaType.playlist).entries.first.type;
+                                final sorting = settings.groupSortingOfR(MediaType.playlist);
+                                final sort = sorting.entries.first.type;
                                 final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
                                 final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGroupSortExtraTextResolverPlaylist(sort);
-
-                                late final existingStatus = <String, bool>{};
-                                late final sortedIndices = <String, int>{};
+                                final existingStatus = _addingOrder.existingStatus;
 
                                 return ObxPrefer(
                                   enabled: sort.requiresHistory,
@@ -813,33 +815,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                       builder: (context, playlistsMap) => ObxO(
                                         rx: SearchSortController.inst.playlistSearchList,
                                         builder: (context, playlistSearchListPre) {
-                                          List<String> playlistSearchList;
-                                          if (tracksToAdd != null && tracksToAdd.isNotEmpty) {
-                                            // -- put playlists having the tracks at first
-                                            final playlistSearchListWritable = <String>[];
-                                            final shouldReSort = existingStatus.isEmpty; // sort only once, so that refresh won't make them jump around
-
-                                            for (final key in playlistSearchListPre) {
-                                              final playlist = playlistsMap[key]!;
-                                              if (playlist.isReadOnly) continue; // -- can't add tracks to read-only playlists
-                                              playlistSearchListWritable.add(key);
-                                              final allTracksExist = tracksToAdd.every((trackToAdd) => playlist.tracks.firstWhereEff((e) => e.track == trackToAdd) != null);
-                                              existingStatus[key] = allTracksExist;
-                                            }
-                                            final playlistSearchListSorted = playlistSearchListWritable.sortedByPrecomputed(
-                                              (key) => sortedIndices[key] ?? (existingStatus[key] == true ? -2 : -1),
-                                            );
-                                            if (shouldReSort) {
-                                              int index = 0;
-                                              for (final p in playlistSearchListSorted) {
-                                                sortedIndices[p] = index;
-                                                index++;
-                                              }
-                                            }
-                                            playlistSearchList = playlistSearchListSorted;
-                                          } else {
-                                            playlistSearchList = playlistSearchListPre;
-                                          }
+                                          final playlistSearchList = tracksToAdd != null && tracksToAdd.isNotEmpty
+                                              ? _addingOrder.sort(playlistSearchListPre, playlistsMap, sorting)
+                                              : playlistSearchListPre;
 
                                           final onAddTap = tracksToAdd == null
                                               ? null
@@ -929,6 +907,52 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
       onClose: _toggleSelecting,
       child: page,
     );
+  }
+}
+
+/// playlists having the tracks go first, the first add/remove freezes the order so edited playlists don't jump around, until the sorting changes.
+class _AddingOrder {
+  final Set<Track> tracksToAdd;
+  _AddingOrder(this.tracksToAdd);
+
+  final existingStatus = <String, bool>{};
+
+  List<String> _shownNames = const [];
+  Map<String, int>? _frozenIndices;
+  SortChain<GroupSortType>? _frozenSorting;
+
+  List<String> sort(List<String> names, Map<String, LocalPlaylist> playlistsMap, SortChain<GroupSortType> sorting) {
+    final writableNames = <String>[];
+    for (final key in names) {
+      final playlist = playlistsMap[key]!;
+      if (playlist.isReadOnly) continue;
+      writableNames.add(key);
+      existingStatus[key] = _hasAllTracks(playlist);
+    }
+    final frozenIndices = sorting == _frozenSorting ? _frozenIndices : null;
+    final shownNames = writableNames.sortedByPrecomputed((key) => frozenIndices?[key] ?? (existingStatus[key] == true ? -2 : -1));
+    _shownNames = shownNames;
+    return shownNames;
+  }
+
+  bool _hasAllTracks(LocalPlaylist playlist) {
+    final missingTracks = Set<Track>.of(tracksToAdd);
+    for (final e in playlist.tracks) {
+      if (missingTracks.remove(e.track) && missingTracks.isEmpty) return true;
+    }
+    return false;
+  }
+
+  void freeze(SortChain<GroupSortType> sorting) {
+    if (sorting == _frozenSorting) return;
+    final indices = <String, int>{};
+    int index = 0;
+    for (final name in _shownNames) {
+      indices[name] = index;
+      index++;
+    }
+    _frozenIndices = indices;
+    _frozenSorting = sorting;
   }
 }
 

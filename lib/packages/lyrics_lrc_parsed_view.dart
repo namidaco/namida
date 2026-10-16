@@ -324,7 +324,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
               if (butIsItWorth) {
                 Timer(Duration(milliseconds: timeToWaitMS), () {
-                  if (line == _currentLine && _isCurrentLineEmpty != emptyLine) {
+                  if (mounted && line == _currentLine && _isCurrentLineEmpty != emptyLine) {
                     _updateIsCurrentLineEmpty(emptyLine);
                   }
                 });

@@ -136,7 +136,7 @@
       ]
     }
   },
-  "ytPlaylistSort": "dateModified",
+  "ytPlaylistSort": "modifiedDate",
   "ytPlaylistSortReversed": true,
   "indexMinDurationInSec": 5,
   "indexMinFileSizeInB": 102400,

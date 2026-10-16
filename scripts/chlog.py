@@ -804,7 +804,8 @@ def cmd_beta(args):
     lines, closed, referenced = [], {}, {}
     for c in shown:
         prefix = "%s(%s)" % (c.prefix, c.platform) if c.platform else c.prefix
-        lines.append("- %s%s %s: %s" % (COMMIT_URL, c.hash, prefix, c.override or c.text))
+        commit_link = "[%s](%s%s)" % (c.hash[:7], COMMIT_URL, c.hash)
+        lines.append("- %s: %s | %s" % (prefix, c.override or c.text, commit_link))
     for c in commits:
         closed.update(dict.fromkeys(c.closes))
         referenced.update(dict.fromkeys(c.refs))

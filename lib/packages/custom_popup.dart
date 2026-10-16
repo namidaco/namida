@@ -264,12 +264,6 @@ class _PopupRoute extends PopupRoute<void> {
   final Curve animationCurve;
 
   static const double _margin = 10;
-  static Rect get _viewportRect => Rect.fromLTWH(
-    _margin,
-    Screen.statusBar + _margin,
-    Screen.width - _margin * 2,
-    Screen.height - Screen.statusBar - Screen.bottomBar - _margin * 2,
-  );
 
   final GlobalKey _childKey = GlobalKey();
   final GlobalKey _arrowKey = GlobalKey();
@@ -283,8 +277,11 @@ class _PopupRoute extends PopupRoute<void> {
   final Listenable? refreshListenable;
   final void Function() reOpenMenuCallback;
 
-  double _maxHeight = _viewportRect.height;
-  double _maxWidth = _viewportRect.width;
+  // -- overlay space, global positions are off by the desktop titlebar and the ui scale.
+  RenderBox? _overlayBox;
+  Rect _target = Rect.zero;
+  Size _overlaySize = Size.zero;
+  Rect _viewportRect = Rect.zero;
   _ArrowDirection? _arrowDirection;
   double _arrowHorizontal = 0;
   double _scaleAlignDx = 0.5;
@@ -325,6 +322,7 @@ class _PopupRoute extends PopupRoute<void> {
   TickerFuture didPush() {
     super.offstage = true;
     SchedulerBinding.instance.addPostFrameCallback((_) {
+      _measureOverlay();
       final childRect = _getRect(_childKey);
       final arrowRect = _getRect(_arrowKey);
       _calculateArrowOffset(arrowRect, childRect);
@@ -337,6 +335,7 @@ class _PopupRoute extends PopupRoute<void> {
   @override
   void install() {
     super.install();
+    _measureOverlay();
 
     menuController?._instance = this;
 
@@ -372,11 +371,24 @@ class _PopupRoute extends PopupRoute<void> {
     listenable.removeListener(reOpenMenuCallback);
   }
 
+  void _measureOverlay() {
+    final overlay = navigator?.overlay;
+    final overlayBox = overlay?.context.findRenderObject() as RenderBox?;
+    if (overlay == null || overlayBox == null || !overlayBox.hasSize) return;
+    _overlayBox = overlayBox;
+    final size = _overlaySize = overlayBox.size;
+    final padding = MediaQuery.paddingOf(overlay.context);
+    _viewportRect = Rect.fromLTRB(_margin, padding.top + _margin, size.width - _margin, size.height - padding.bottom - _margin);
+    final targetTopLeft = overlayBox.globalToLocal(targetRect.topLeft);
+    final targetBottomRight = overlayBox.globalToLocal(targetRect.bottomRight);
+    _target = Rect.fromPoints(targetTopLeft, targetBottomRight);
+  }
+
   Rect? _getRect(GlobalKey key) {
     final currentContext = key.currentContext;
     final renderBox = currentContext?.findRenderObject() as RenderBox?;
     if (renderBox == null || currentContext == null) return null;
-    final offset = renderBox.localToGlobal(renderBox.paintBounds.topLeft);
+    final offset = renderBox.localToGlobal(renderBox.paintBounds.topLeft, ancestor: _overlayBox);
     var rect = offset & renderBox.paintBounds.size;
 
     if (Directionality.of(currentContext) == TextDirection.rtl) {
@@ -390,14 +402,14 @@ class _PopupRoute extends PopupRoute<void> {
   void _calculateArrowOffset(Rect? arrowRect, Rect? childRect) {
     if (childRect == null || arrowRect == null) return;
     // Calculate the distance from the left side of the screen based on the middle position of the target and the popover layer
-    var leftEdge = targetRect.center.dx - childRect.center.dx;
+    var leftEdge = _target.center.dx - childRect.center.dx;
     final rightEdge = leftEdge + childRect.width;
     leftEdge = leftEdge < _viewportRect.left ? _viewportRect.left : leftEdge;
     // If it exceeds the screen, subtract the excess part
     if (rightEdge > _viewportRect.right) {
       leftEdge -= rightEdge - _viewportRect.right;
     }
-    final center = targetRect.center.dx - leftEdge - arrowRect.center.dx;
+    final center = _target.center.dx - leftEdge - arrowRect.center.dx;
 
     final leftSafeZone = (contentRadius ?? 0) + 15.0;
     final rightSafeZone = (contentRadius ?? 0) + 15.0;
@@ -414,26 +426,23 @@ class _PopupRoute extends PopupRoute<void> {
   void _calculateChildOffset(Rect? childRect) {
     if (childRect == null) return;
 
-    // final topHeight = targetRect.top - _viewportRect.top;
-    final bottomHeight = _viewportRect.bottom - targetRect.bottom;
+    // final topHeight = _target.top - _viewportRect.top;
+    final bottomHeight = _viewportRect.bottom - _target.bottom;
     // final maximum = max(topHeight, bottomHeight);
-    _maxHeight = childRect.height;
 
-    if (position == PopupPosition.top || (position == PopupPosition.auto && _maxHeight > bottomHeight)) {
-      _bottom = Screen.height - targetRect.top;
+    if (position == PopupPosition.top || (position == PopupPosition.auto && childRect.height > bottomHeight)) {
+      _bottom = _overlaySize.height - _target.top;
       _arrowDirection = _ArrowDirection.bottom;
       _scaleAlignDy = 1;
     } else {
-      // Simple check: if child would go below viewport, adjust _top upwards
-      _top = targetRect.bottom - Screen.bottomBar - 42.0;
-      _top = _top! + _viewportRect.top;
+      _top = _target.bottom;
 
       // Check if bottom of child would be outside viewport
       final childBottom = _top! + childRect.height;
       if (childBottom > _viewportRect.bottom) {
         // Move _top up by the overflow amount
         _scaleAlignDy = 2 * ((childBottom / _viewportRect.height) - 1.0);
-        _top = _top! - (childBottom - _viewportRect.bottom + 32.0);
+        _top = _top! - (childBottom - _viewportRect.bottom);
         _arrowDirection = null; // inaccurate arrow
       } else {
         _arrowDirection = _ArrowDirection.top;
@@ -442,7 +451,7 @@ class _PopupRoute extends PopupRoute<void> {
     }
 
     // Horizontal positioning
-    final left = targetRect.center.dx - childRect.center.dx;
+    final left = _target.center.dx - childRect.center.dx;
     final right = left + childRect.width;
 
     if (right > _viewportRect.right) {
@@ -470,8 +479,6 @@ class _PopupRoute extends PopupRoute<void> {
     Animation<double> secondaryAnimation,
     Widget child,
   ) {
-    _maxHeight = _viewportRect.height;
-    _maxWidth = _viewportRect.width;
     child = _PopupContent(
       childKey: _childKey,
       arrowKey: _arrowKey,
@@ -508,8 +515,8 @@ class _PopupRoute extends PopupRoute<void> {
           bottom: _bottom,
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              maxWidth: _maxWidth,
-              maxHeight: _maxHeight,
+              maxWidth: _viewportRect.width,
+              maxHeight: _viewportRect.height,
             ),
             child: child,
           ),
@@ -520,25 +527,4 @@ class _PopupRoute extends PopupRoute<void> {
 
   @override
   Duration get transitionDuration => animationDuration;
-}
-
-abstract class Screen {
-  static MediaQueryData get mediaQuery => MediaQueryData.fromView(
-    PlatformDispatcher.instance.views.first,
-  ).scaledForUI(NamidaUIScale.value);
-
-  /// screen width
-  static double get width => mediaQuery.size.width;
-
-  // /screen height
-  static double get height => mediaQuery.size.height;
-
-  /// dp
-  static double get scale => mediaQuery.devicePixelRatio;
-
-  /// top
-  static double get statusBar => mediaQuery.padding.top;
-
-  /// bottom
-  static double get bottomBar => mediaQuery.padding.bottom;
 }

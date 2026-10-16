@@ -296,11 +296,10 @@ Future<bool> _mainAppInitialization() async {
       NamidaDeviceInfo.packageInfoCompleter.future,
     ].executeAllAndSilentReportErrors();
 
-    LyricsIntegrations.init();
-
     // -- best to initialize last, so that tracks are prepared (for info/colors) and rhttp is initialized (for network), etc.
+    // -- lyrics integrations require the player, and must be active before the latest queue loads lyrics
     try {
-      await Player.inst.initializePlayer().whenComplete(prepareLatestQueue);
+      await Player.inst.initializePlayer().then((_) => LyricsIntegrations.init()).whenComplete(prepareLatestQueue);
     } catch (e, st) {
       logger.error('', e: e, st: st);
     }

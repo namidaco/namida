@@ -1200,7 +1200,7 @@ class SearchSortController extends SearchPortsProvider {
       }
       p as SearchRequest;
       final text = p.text;
-      final results = searchWrapper.filter(text).map((pl) => pl.name).toFixedList();
+      final results = searchWrapper.filter(text).map((pl) => pl.name).toList();
       sendPort.send((results, p.temp, text));
     });
 

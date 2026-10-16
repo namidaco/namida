@@ -327,10 +327,15 @@
 
         <!-- SPLASH_AUTO_GENERATED END -->
 
+        <!-- launchMode must stay singleTask: one instance, always in namida's own task, every external intent (open with, share, links) arrives via onNewIntent.
+             standard/singleTop: other apps' VIEW/SEND create a 2nd activity inside their task, both share audio_service's cached engine, the 2nd steals it and namida's own window goes stale (#1310).
+             singleInstance: forces every activity namida starts (pickers, settings) into separate tasks.
+             singleInstancePerTask: android 12+ only, and still allows extra instances via NEW_DOCUMENT/MULTIPLE_TASK.
+             cost: the launcher icon closes external activities left on top (ex: an abandoned picker), acceptable. -->
         <activity
             android:name=".NamidaMainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
@@ -416,6 +421,7 @@
                 <data android:mimeType="video/*" />
             </intent-filter>
             <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="audio/*" />

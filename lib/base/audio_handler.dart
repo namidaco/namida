@@ -2217,6 +2217,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
           if (_willPlayWhenReady) skipItem();
           return;
         }
+        if (ConnectivityController.inst.hasConnection) fetchFullVideoPage();
       }
     }
 

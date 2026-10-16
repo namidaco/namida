@@ -653,7 +653,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
 
   Future<void> _fetchNewInfo() async {
     final userChannelsResult = await YoutubeInfoController.userchannel.fetchUserChannels(details: ExecuteDetails.kForceRequest);
-    if (!mounted) return;
+    if (userChannelsResult == null || !mounted) return;
     setState(() {
       _userChannelsResult = userChannelsResult;
     });
