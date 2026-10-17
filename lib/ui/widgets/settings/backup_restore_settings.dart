@@ -95,7 +95,7 @@ class BackupAndRestore extends SettingSubpageProvider {
   static const _importSources = [TrackSource.youtube, TrackSource.lastfm, TrackSource.spotify, TrackSource.listenbrainz];
 
   static List<DataImportType> _importTypesOf(TrackSource source) => switch (source) {
-    TrackSource.youtube || TrackSource.youtubeMusic => const [DataImportType.history, DataImportType.favourites, DataImportType.playlists],
+    TrackSource.youtube || TrackSource.youtubeMusic => const [DataImportType.history, DataImportType.favourites, DataImportType.playlists, DataImportType.subscriptions],
     TrackSource.spotify || TrackSource.listenbrainz => const [DataImportType.history, DataImportType.favourites],
     TrackSource.lastfm => const [DataImportType.history],
     TrackSource.local => const [],

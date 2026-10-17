@@ -28,6 +28,7 @@ class YoutubeSubscriptionsController {
       title: valInMap?.title,
       channelID: channelID,
       subscribed: newSubscribed,
+      groups: valInMap?.groups ?? const [],
       lastFetched: valInMap?.lastFetched,
     );
     if (valInMap?.lastFetched == null) _sortByLastFetched();
@@ -37,9 +38,71 @@ class YoutubeSubscriptionsController {
     return newSubscribed;
   }
 
-  List<String> getGroupsForChannel(String channelId) {
-    final sub = availableChannels.value[channelId] ??= YoutubeSubscription(channelID: channelId, subscribed: false);
-    return sub.groups;
+  RxBaseCore<List<String>> get allGroups => _allGroups;
+  final _allGroups = <String>[].obs;
+
+  /// favourite or not, groups are their own lists.
+  Iterable<String> channelsInGroup(String group) => _availableChannels.entries.where((e) => e.value.groups.contains(group)).map((e) => e.key);
+
+  Map<String, int> getGroupsCounts() {
+    final counts = <String, int>{};
+    for (final sub in _availableChannels.values) {
+      for (final group in sub.groups) {
+        counts.update(group, (count) => count + 1, ifAbsent: () => 1);
+      }
+    }
+    return counts;
+  }
+
+  /// not saved, call [saveFile] when done editing. [title] is kept for channels the map has no title for.
+  void toggleChannelGroup(String channelID, String group, {String? title}) {
+    final valInMap = _availableChannels.value[channelID];
+    final groups = valInMap?.groups ?? const <String>[];
+    final wasInGroup = groups.contains(group);
+    final newGroups = wasInGroup ? groups.where((g) => g != group).toFixedList() : [...groups, group];
+    final channelTitle = valInMap?.title.nullifyEmpty() ?? title;
+    _availableChannels.value[channelID] = YoutubeSubscription(
+      title: channelTitle,
+      channelID: channelID,
+      subscribed: valInMap?.subscribed,
+      groups: newGroups,
+      lastFetched: valInMap?.lastFetched,
+    );
+    if (valInMap == null) _sortByLastFetched();
+    _availableChannels.refresh();
+  }
+
+  Future<void> createGroup(String group) async {
+    if (_allGroups.value.contains(group)) return;
+    _allGroups.add(group);
+    await _saveGroupsFile();
+  }
+
+  Future<void> renameGroup(String oldName, String newName) async {
+    final groups = _allGroups.value;
+    final index = groups.indexOf(oldName);
+    if (index == -1 || groups.contains(newName)) return;
+    groups[index] = newName;
+    _allGroups.refresh();
+    _availableChannels.value.updateAll((_, sub) {
+      if (!sub.groups.contains(oldName)) return sub;
+      final newGroups = sub.groups.map((g) => g == oldName ? newName : g).toFixedList();
+      return sub.copyWith(groups: newGroups);
+    });
+    _availableChannels.refresh();
+    await Future.wait([saveFile(), _saveGroupsFile()]);
+  }
+
+  Future<void> removeGroup(String group) async {
+    final didRemove = _allGroups.remove(group);
+    if (!didRemove) return;
+    _availableChannels.value.updateAll((_, sub) {
+      if (!sub.groups.contains(group)) return sub;
+      final newGroups = sub.groups.where((g) => g != group).toFixedList();
+      return sub.copyWith(groups: newGroups);
+    });
+    _availableChannels.refresh();
+    await Future.wait([saveFile(), _saveGroupsFile()]);
   }
 
   Future<void> sortByLastFetched() async {
@@ -57,8 +120,22 @@ class YoutubeSubscriptionsController {
 
   final _didLoadCompleter = Completer();
   Future<void> loadSubscriptionsFileAsync() async {
-    await _loadSubscriptionsFileAsync();
+    await Future.wait([
+      _loadSubscriptionsFileAsync(),
+      _loadGroupsFileAsync(),
+    ]);
     _didLoadCompleter.completeIfWasnt();
+  }
+
+  Future<void> _loadGroupsFileAsync() async {
+    final file = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
+    _allGroups.value = await readGroupsFile(file);
+  }
+
+  Future<void> _saveGroupsFile() async {
+    await _didLoadCompleter.future;
+    final file = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
+    await file.writeAsJson(_allGroups.value);
   }
 
   Future<void> _loadSubscriptionsFileAsync() async {
@@ -135,7 +212,10 @@ class YoutubeSubscriptionsController {
     }
   }
 
-  Future<List<String>> readAllGroups() => readGroupsFile(File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL));
+  Future<List<String>> readAllGroups() async {
+    await _didLoadCompleter.future;
+    return _allGroups.value;
+  }
 
   Future<List<String>> readGroupsFile(File file) async {
     try {
@@ -155,7 +235,8 @@ class YoutubeSubscriptionsController {
       }
     }
     if (changed) {
-      await File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL).writeAsJson(current);
+      _allGroups.refresh();
+      await _saveGroupsFile();
     }
   }
 }

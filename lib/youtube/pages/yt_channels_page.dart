@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:history_manager/history_manager.dart';
 import 'package:youtipie/class/channels/channel_info.dart';
 import 'package:youtipie/class/channels/channel_page_result.dart';
 import 'package:youtipie/class/channels/channel_tab.dart';
@@ -20,6 +21,7 @@ import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/file_browser.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -28,6 +30,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -81,6 +84,13 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   final _allChannelsStreamsLoading = false.obs;
 
   late final Rx<DateTime> allChannelFetchOldestDate;
+  final _fetchRange = MostPlayedTimeRange.month.obs;
+
+  static const _kFetchRanges = [
+    MostPlayedTimeRange.day3, MostPlayedTimeRange.week, MostPlayedTimeRange.month, //
+    MostPlayedTimeRange.month3, MostPlayedTimeRange.month6, MostPlayedTimeRange.year, //
+    MostPlayedTimeRange.custom, //
+  ];
 
   YoutiPieChannelPageResult? currentChannelInfo;
 
@@ -90,27 +100,53 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     _uploadsScrollController = NamidaScrollController.create();
     _horizontalListController = NamidaScrollController.create();
-    final subCh = YoutubeSubscriptionsController.inst.subscribedChannels.lastOrNull;
+    final allGroups = YoutubeSubscriptionsController.inst.allGroups.value;
+    final activeGroup = _activeGroup(allGroups);
+    final subCh = _filteredChannelIDs(activeGroup).lastOrNull;
     if (subCh != null) {
       final sub = YoutubeSubscriptionsController.inst.availableChannels.value[subCh];
       onRefresh(() => _updateChannel(sub, forceRequest: true), forceProceed: true);
     }
 
-    final now = DateTime.now();
-    allChannelFetchOldestDate = DateTime(now.year, now.month, now.day - 32).obs;
+    final oldestDate = _resolveFetchRangeDate(_fetchRange.value);
+    allChannelFetchOldestDate = oldestDate.obs;
   }
 
   @override
   void dispose() {
+    if (_didFetchChannels) YoutubeSubscriptionsController.inst.sortByLastFetched();
     _allChannelsFetchRun++;
     _horizontalListController.dispose();
     _uploadsScrollController.dispose();
     _allChannelsStreamsProgress.close();
     _allChannelsStreamsLoading.close();
+    _fetchRange.close();
     super.dispose();
   }
 
+  static String? _selectedGroup;
+
+  String? _activeGroup(List<String> allGroups) {
+    final group = _selectedGroup;
+    return group != null && allGroups.contains(group) ? group : null;
+  }
+
+  Iterable<String> _filteredChannelIDs(String? group) {
+    final controller = YoutubeSubscriptionsController.inst;
+    return group == null ? controller.subscribedChannels : controller.channelsInGroup(group);
+  }
+
+  void _onGroupTap(String? group) {
+    if (group == _selectedGroup && channel == null) return;
+    _selectedGroup = group;
+    _updateChannel(null, forceRequest: false);
+  }
+
+  /// the strip is sorted by last fetch once the page is left, so it doesn't reorder under the finger.
+  bool _didFetchChannels = false;
+
   Future<void> _updateChannel(YoutubeSubscription? sub, {required bool forceRequest}) async {
+    _didFetchChannels = true;
     if (_uploadsScrollController.hasClients) _uploadsScrollController.jumpTo(0);
     setState(() {
       isLoadingInitialStreams = true;
@@ -149,6 +185,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
   }
 
   static const _kAllChannelsConcurrentFetches = 6;
+  static const _kHeaderHeight = 40.0;
 
   static final _lastChannelsWindowStreams = <String, _ChannelWindowStreams>{};
 
@@ -167,7 +204,9 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     });
     _allChannelsStreamsLoading.value = true;
 
-    final ids = YoutubeSubscriptionsController.inst.subscribedChannels.toFixedList();
+    final allGroups = YoutubeSubscriptionsController.inst.allGroups.value;
+    final activeGroup = _activeGroup(allGroups);
+    final ids = _filteredChannelIDs(activeGroup).toFixedList();
     final idsLength = ids.length;
     final channelsStreams = List<List<StreamInfoItem>?>.filled(idsLength, null);
 
@@ -222,7 +261,6 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final workers = List.generate(_kAllChannelsConcurrentFetches, (_) => fetchChannelsInOrder());
     await Future.wait(workers);
 
-    YoutubeSubscriptionsController.inst.sortByLastFetched();
     if (run != _allChannelsFetchRun) return; // -- a newer run or dispose owns the state now
     _allChannelsStreamsProgress.value = 0.0;
     _allChannelsStreamsLoading.value = false;
@@ -284,6 +322,55 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     return publishedMS != null && publishedMS < dateMS;
   }
 
+  /// rolling ranges, the same as most played ones.
+  static DateTime _resolveFetchRangeDate(MostPlayedTimeRange range) {
+    final now = DateTime.now();
+    return HistoryController.inst.resolveOldDate(range, now, false, null) ?? now;
+  }
+
+  void _applyFetchRange(MostPlayedTimeRange range, DateTime oldestDate) {
+    _fetchRange.value = range;
+    allChannelFetchOldestDate.value = oldestDate;
+    _fetchAllChannelsStreams(forceRequest: true);
+  }
+
+  void _onFetchRangeSelected(MostPlayedTimeRange range) {
+    if (range == MostPlayedTimeRange.custom) {
+      _pickCustomFetchDate();
+      return;
+    }
+    final oldestDate = _resolveFetchRangeDate(range);
+    _applyFetchRange(range, oldestDate);
+  }
+
+  void _pickCustomFetchDate() {
+    showCalendarDialog(
+      title: lang.isAfter,
+      buttonText: lang.confirm,
+      useHistoryDates: false,
+      calendarType: NamidaCalendarDatePickerType.single,
+      lastDate: DateTime.now(),
+      onGenerate: (dates) {
+        final oldestDate = dates.firstOrNull;
+        if (oldestDate != null) _applyFetchRange(MostPlayedTimeRange.custom, oldestDate);
+        NamidaNavigator.inst.closeDialog();
+      },
+    );
+  }
+
+  List<NamidaPopupItem> _fetchRangeMenuItems(MostPlayedTimeRange activeRange) {
+    return _kFetchRanges
+        .map(
+          (range) => NamidaPopupItem(
+            icon: range.toIcon(),
+            title: range == MostPlayedTimeRange.custom ? '${lang.isAfter}...' : range.toText(),
+            selected: range == activeRange,
+            onTap: () => _onFetchRangeSelected(range),
+          ),
+        )
+        .toFixedList();
+  }
+
   Future<void> _onSubscriptionFileImportTap() async {
     final file = await NamidaFileBrowser.pickFile(
       note: 'Choose a "subscriptions.csv" file from a google takeout',
@@ -312,152 +399,133 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     final selectedChannel = channel;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
+    final currentChannelSubscribersText = currentChannelInfo?.subscribersCountText ?? currentChannelInfo?.subscribersCount?.displaySubscribersKeywordShort;
 
     final selectedChannelBgColor = theme.colorScheme.secondary.withOpacityExt(0.1);
+
+    final groupsButton = _ChannelGroupsButton(
+      selectedGroup: _selectedGroup,
+      activeBgColor: sortChipBGColor,
+      onSelect: _onGroupTap,
+    );
+    final importButton = Padding(
+      padding: const EdgeInsets.only(left: 6.0),
+      child: NamidaTooltip(
+        message: () => lang.import,
+        child: Obx(
+          (context) => NamidaInkWellButton(
+            sizeMultiplier: 0.95,
+            borderRadius: 8.0,
+            icon: Broken.import_2,
+            text: '',
+            enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
+            onTap: _onSubscriptionFileImportTap,
+          ),
+        ),
+      ),
+    );
 
     return Column(
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          child: selectedChannel == null
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: sortWidget,
-                          ),
-                        ),
-                        NamidaIconButton(
-                          icon: Broken.calendar,
-                          onPressed: () {
-                            showCalendarDialog(
-                              title: lang.date,
-                              buttonText: lang.confirm,
-                              useHistoryDates: false,
-                              calendarType: NamidaCalendarDatePickerType.single,
-                              lastDate: DateTime.now(),
-                              onGenerate: (dates) {
-                                if (dates.isNotEmpty) {
-                                  allChannelFetchOldestDate.value = dates.first;
-                                  _fetchAllChannelsStreams(forceRequest: true);
-                                }
-                                NamidaNavigator.inst.closeDialog();
-                              },
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12.0),
-                    Row(
-                      children: [
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                            border: Border.all(
-                              width: 1.2,
-                              color: theme.colorScheme.secondary.withOpacityExt(0.6),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-                            child: Text(
-                              streamsList?.length.displayVideoKeyword ?? '?',
-                              style: textTheme.displayMedium,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4.0),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.cardColor,
-                            borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                            border: Border.all(
-                              width: 1.2,
-                              color: theme.colorScheme.secondary.withOpacityExt(0.6),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
-                            child: Obx(
-                              (context) {
-                                final oldestDate = allChannelFetchOldestDate.valueR;
-                                return Text(
-                                  "${oldestDate.dateFormattedOriginal} - ${TimeAgoController.dateFromNow(oldestDate)}",
-                                  style: textTheme.displayMedium,
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    Expanded(
-                      child: SmoothSingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: NamidaInkWell(
-                          borderRadius: 24.0,
-                          bgColor: theme.cardColor,
-                          padding: const EdgeInsets.symmetric(vertical: 4.0),
-                          onTap: YTChannelSubpage(channelID: selectedChannel.channelID, sub: selectedChannel).navigate,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 4.0),
-                              YoutubeThumbnail(
-                                type: ThumbnailType.channel,
-                                key: Key(currentChannelThumbnail ?? ''),
-                                width: 32.0,
-                                isImportantInCache: true,
-                                customUrl: currentChannelThumbnail,
-                                urlSymLinkId: selectedChannel.channelID,
-                                isCircle: true,
-                              ),
-                              const SizedBox(width: 8.0),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    selectedChannel.title != '' ? selectedChannel.title : currentChannelInfo?.title ?? '',
-                                    style: textTheme.displayMedium,
-                                    overflow: TextOverflow.ellipsis,
+          child: SizedBox(
+            height: _kHeaderHeight,
+            child: selectedChannel == null
+                ? Row(
+                    children: [
+                      sortWidget,
+                      const SizedBox(width: 6.0),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Obx(
+                            (context) {
+                              final range = _fetchRange.valueR;
+                              final oldestDate = allChannelFetchOldestDate.valueR;
+                              final videosText = streamsList?.length.displayVideoKeyword ?? '?';
+                              final rangeText = range == MostPlayedTimeRange.custom ? '${lang.isAfter} ${oldestDate.dateFormattedOriginal}' : range.toText();
+                              final timeAgoFullText = TimeAgoController.dateFromNow(oldestDate);
+                              final fullText = '$videosText · ${oldestDate.dateFormattedOriginal} - $timeAgoFullText';
+                              return NamidaTooltip(
+                                message: () => fullText,
+                                child: NamidaPopupWrapper(
+                                  openOnLongPress: false,
+                                  childrenDefault: () => _fetchRangeMenuItems(range),
+                                  child: NamidaInkWellButton(
+                                    sizeMultiplier: 0.95,
+                                    borderRadius: 8.0,
+                                    icon: range.toIcon(),
+                                    text: '$rangeText · $videosText',
+                                    maxLines: 1,
                                   ),
-                                  if (selectedChannel.subscribed ?? false)
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      importButton,
+                      groupsButton,
+                    ],
+                  )
+                : Row(
+                    children: [
+                      Expanded(
+                        child: SmoothSingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: NamidaInkWell(
+                            borderRadius: 24.0,
+                            bgColor: theme.cardColor,
+                            padding: const EdgeInsets.symmetric(vertical: 4.0),
+                            onTap: YTChannelSubpage(channelID: selectedChannel.channelID, sub: selectedChannel).navigate,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(width: 4.0),
+                                YoutubeThumbnail(
+                                  type: ThumbnailType.channel,
+                                  key: Key(currentChannelThumbnail ?? ''),
+                                  width: 32.0,
+                                  isImportantInCache: true,
+                                  customUrl: currentChannelThumbnail,
+                                  urlSymLinkId: selectedChannel.channelID,
+                                  isCircle: true,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                                     Text(
-                                      lang.subscribed,
-                                      style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                      selectedChannel.title != '' ? selectedChannel.title : currentChannelInfo?.title ?? '',
+                                      style: textTheme.displayMedium,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                ],
-                              ),
-                              const SizedBox(width: 8.0),
-                              const SizedBox(width: 4.0),
-                              const SizedBox(width: 4.0),
-                            ],
+                                    if (currentChannelSubscribersText != null)
+                                      Text(
+                                        currentChannelSubscribersText,
+                                        style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8.0),
+                                const Icon(
+                                  Broken.arrow_right_3,
+                                  size: 14.0,
+                                ),
+                                const SizedBox(width: 12.0),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 4.0),
-                    Obx(
-                      (context) => NamidaInkWellButton(
-                        icon: Broken.import_2,
-                        text: lang.import,
-                        enabled: !YoutubeImportController.inst.isImportingSubscriptions.valueR,
-                        onTap: _onSubscriptionFileImportTap,
-                      ),
-                    ),
-                  ],
-                ),
+                      importButton,
+                      groupsButton,
+                    ],
+                  ),
+          ),
         ),
         Expanded(
           child: YoutubeSubscriptionsController.inst.subscribedChannels.isEmpty
@@ -557,7 +625,9 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
         const NamidaContainerDivider(margin: EdgeInsets.only(left: 8.0, right: 8.0)),
         Obx(
           (context) {
-            final channelIDS = YoutubeSubscriptionsController.inst.subscribedChannels.toList();
+            final allGroups = YoutubeSubscriptionsController.inst.allGroups.valueR;
+            final activeGroup = _activeGroup(allGroups);
+            final channelIDS = _filteredChannelIDs(activeGroup).toList();
             final totalIDsLength = channelIDS.length;
             return _ChannelsRowSlider<String>(
               controller: _horizontalListController,
@@ -578,6 +648,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                 final key = channelIDS[index];
                 final sub = YoutubeSubscriptionsController.inst.availableChannels.valueR[key]!;
                 return _ChannelSmallCard(
+                  key: ValueKey(sub.channelID),
                   sub: sub,
                   bgColor: channel?.channelID == sub.channelID ? selectedChannelBgColor : null,
                   width: thumbSize,
@@ -990,6 +1061,93 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
   }
 }
 
+class _ChannelGroupsButton extends StatelessWidget {
+  final String? selectedGroup;
+  final Color? activeBgColor;
+  final void Function(String? group) onSelect;
+
+  const _ChannelGroupsButton({
+    required this.selectedGroup,
+    required this.activeBgColor,
+    required this.onSelect,
+  });
+
+  static const _kMaxWidth = 160.0;
+
+  List<NamidaPopupItem> _menuItems(List<String> allGroups, String? activeGroup, TextStyle? countStyle) {
+    final controller = YoutubeSubscriptionsController.inst;
+    final counts = controller.getGroupsCounts();
+    final allCount = controller.subscribedChannels.length;
+    return [
+      NamidaPopupItem(
+        icon: Broken.people,
+        title: lang.all,
+        trailing: Text(
+          allCount.formatDecimal(),
+          style: countStyle,
+        ),
+        selected: activeGroup == null,
+        onTap: () => onSelect(null),
+      ),
+      ...allGroups.map(
+        (group) => NamidaPopupItem(
+          icon: Broken.people,
+          title: group,
+          trailing: Text(
+            (counts[group] ?? 0).formatDecimal(),
+            style: countStyle,
+          ),
+          selected: group == activeGroup,
+          onTap: () => onSelect(group),
+        ),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final countStyle = context.textTheme.displaySmall;
+    return ObxO(
+      rx: YoutubeSubscriptionsController.inst.allGroups,
+      builder: (context, allGroups) {
+        if (allGroups.isEmpty) return const SizedBox();
+        final activeGroup = allGroups.contains(selectedGroup) ? selectedGroup : null;
+        final isActive = activeGroup != null;
+        final bgColor = isActive ? activeBgColor : null;
+        final itemsColor = isActive ? Colors.white.withOpacityExt(0.8) : null;
+        final arrowPadding = isActive ? 0.0 : 4.0;
+        return Padding(
+          padding: const EdgeInsets.only(left: 6.0),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: _kMaxWidth),
+            child: NamidaPopupWrapper(
+              childrenDefault: () => _menuItems(allGroups, activeGroup, countStyle),
+              child: NamidaInkWellButton(
+                animationDurationMS: 200,
+                sizeMultiplier: 0.95,
+                borderRadius: 8.0,
+                bgColor: bgColor,
+                itemsColor: itemsColor,
+                icon: Broken.people,
+                text: activeGroup ?? '',
+                maxLines: 1,
+                trailing: Padding(
+                  padding: EdgeInsets.only(left: arrowPadding),
+                  child: Icon(
+                    Broken.arrow_down_2,
+                    size: 14.0,
+                    color: itemsColor,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _ChannelSmallCard extends StatefulWidget {
   final YoutubeSubscription sub;
   final Color? bgColor;
@@ -998,6 +1156,7 @@ class _ChannelSmallCard extends StatefulWidget {
   final void Function() onTap;
 
   const _ChannelSmallCard({
+    super.key,
     required this.sub,
     this.bgColor,
     required this.width,

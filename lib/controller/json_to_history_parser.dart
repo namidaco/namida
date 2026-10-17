@@ -148,6 +148,11 @@ class JsonToHistoryParser {
                           step: _HistoryImportStep.playlists,
                           title: lang.playlists,
                         ),
+                      if (types.contains(DataImportType.subscriptions))
+                        _ImportStepTile(
+                          step: _HistoryImportStep.subscriptions,
+                          title: lang.subscriptions,
+                        ),
                       _ImportStepTile(
                         step: _HistoryImportStep.saving,
                         title: lang.saving,
@@ -446,6 +451,7 @@ class JsonToHistoryParser {
     final importHistory = types.contains(DataImportType.history);
     final importFavourites = types.contains(DataImportType.favourites);
     final importPlaylists = types.contains(DataImportType.playlists);
+    final importSubscriptions = types.contains(DataImportType.subscriptions);
 
     _resetValues();
     isParsing.value = true;
@@ -463,6 +469,7 @@ class JsonToHistoryParser {
         if (isYT) _ImportTarget.favouritesYT,
       ],
       if (importPlaylists) _ImportTarget.playlists,
+      if (importSubscriptions) _ImportTarget.subscriptions,
     ];
     final importTitle = getImportTitle(currentParsingSource.value);
     _includesHistoryBackupStep = backupFirst;
@@ -483,7 +490,8 @@ class JsonToHistoryParser {
       final hasHistoryFiles = importHistory && sourceFiles.history.isNotEmpty;
       final hasFavouritesFiles = importFavourites && (sourceFiles.favourites.isNotEmpty || playlistsDirectories.isNotEmpty);
       final hasPlaylistsFiles = importPlaylists && playlistsDirectories.isNotEmpty;
-      if (!hasHistoryFiles && !hasFavouritesFiles && !hasPlaylistsFiles) {
+      final subscriptionsFile = importSubscriptions ? sourceFiles.subscriptions.firstOrNull : null;
+      if (!hasHistoryFiles && !hasFavouritesFiles && !hasPlaylistsFiles && subscriptionsFile == null) {
         snackyy(message: 'No related files were found in this directory.', isError: true);
         _closeParsingDialog();
         _resetValues();
@@ -505,6 +513,7 @@ class JsonToHistoryParser {
             if (isYT) AppPathsBackupEnum.YT_LIKES_PLAYLIST,
           ],
           if (importPlaylists) ...AppPathsBackupEnumCategories.playlists_yt,
+          if (importSubscriptions) AppPathsBackupEnum.YT_SUBSCRIPTIONS,
         };
         final backupFile = await BackupController.inst.createBackupFile(
           backupItems.map((e) => e.resolve()).toList(),
@@ -617,6 +626,12 @@ class JsonToHistoryParser {
         newPlaylistsCount = await YoutubeImportController.inst.addPlaylists(ytPlaylists, PlaylistAddDuplicateAction.mergeAndSortByAddedDate);
       }
 
+      if (subscriptionsFile != null) {
+        _importStep.value = _HistoryImportStep.subscriptions;
+        final subscriptionsCount = await YoutubeImportController.inst.importSubscriptions(subscriptionsFile.path);
+        _addMatched(_ImportTarget.subscriptions, subscriptionsCount);
+      }
+
       _importStep.value = _HistoryImportStep.saving;
 
       // -- local history --
@@ -699,7 +714,8 @@ class JsonToHistoryParser {
     final files = <File>[];
     final favouriteFiles = <File>[];
     final playlistsDirectories = <String>{};
-    final sourceFiles = (history: files, favourites: favouriteFiles, playlistsDirectories: playlistsDirectories);
+    final subscriptionsFiles = <File>[];
+    final sourceFiles = (history: files, favourites: favouriteFiles, playlistsDirectories: playlistsDirectories, subscriptions: subscriptionsFiles);
 
     late final zipManager = ZipManager.platform();
 
@@ -739,6 +755,10 @@ class JsonToHistoryParser {
               file,
               (file) {
                 if (NamidaFileExtensionsWrapper.csv.isPathValid(file.path)) {
+                  if (file.path.getFilename == 'subscriptions.csv') {
+                    subscriptionsFiles.add(file);
+                    return;
+                  }
                   final dirPath = file.path.getDirectoryPath;
                   if (YoutubeImportController.isTakeoutPlaylistsDirectory(dirPath)) playlistsDirectories.add(dirPath);
                   return;
@@ -2166,18 +2186,21 @@ enum DataImportType {
   history,
   favourites,
   playlists,
+  subscriptions,
   ;
 
   String toText() => switch (this) {
     DataImportType.history => lang.history,
     DataImportType.favourites => lang.favourites,
     DataImportType.playlists => lang.playlists,
+    DataImportType.subscriptions => lang.subscriptions,
   };
 
   IconData toIcon() => switch (this) {
     DataImportType.history => Broken.refresh,
     DataImportType.favourites => Broken.heart,
     DataImportType.playlists => Broken.music_library_2,
+    DataImportType.subscriptions => Broken.profile_2user,
   };
 }
 
@@ -2458,7 +2481,7 @@ class _GeneralSourceResult {
   });
 }
 
-typedef _SourceFiles = ({List<File> history, List<File> favourites, Set<String> playlistsDirectories});
+typedef _SourceFiles = ({List<File> history, List<File> favourites, Set<String> playlistsDirectories, List<File> subscriptions});
 
 typedef _TakeoutLikedVideo = ({String id, int dateMS});
 
@@ -2539,6 +2562,7 @@ enum _ImportTarget {
   favourites,
   favouritesYT,
   playlists,
+  subscriptions,
   ;
 
   String toText() => switch (this) {
@@ -2547,6 +2571,7 @@ enum _ImportTarget {
     _ImportTarget.favourites => lang.favourites,
     _ImportTarget.favouritesYT => '${lang.favourites} (${lang.youtube})',
     _ImportTarget.playlists => lang.playlists,
+    _ImportTarget.subscriptions => lang.subscriptions,
   };
 }
 
@@ -2556,6 +2581,7 @@ enum _HistoryImportStep {
   parsing,
   updatingStats,
   playlists,
+  subscriptions,
   saving,
 }
 

@@ -13,6 +13,16 @@ class YoutubeSubscription {
     this.lastFetched,
   }) : title = title ?? '';
 
+  YoutubeSubscription copyWith({List<String>? groups}) {
+    return YoutubeSubscription(
+      title: title,
+      channelID: channelID,
+      subscribed: subscribed,
+      groups: groups ?? this.groups,
+      lastFetched: lastFetched,
+    );
+  }
+
   factory YoutubeSubscription.fromJson(Map<String, dynamic> json) {
     return YoutubeSubscription(
       title: json['title'] ?? '',

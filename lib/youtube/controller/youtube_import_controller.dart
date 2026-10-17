@@ -207,6 +207,7 @@ class YoutubeImportController {
           title: valInMap != null && valInMap.title == '' ? e.title : valInMap?.title ?? e.title,
           channelID: e.id,
           subscribed: true,
+          groups: valInMap?.groups ?? const [],
           lastFetched: valInMap?.lastFetched,
         ),
       );

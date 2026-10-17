@@ -869,6 +869,7 @@ void main() {
 
       expect(filtered.playlistsDirectories, {playlistsDir.path});
       expect(filtered.history.map((e) => e.path), [history.path]);
+      expect(filtered.subscriptions.map((e) => e.path), [other.path]);
     });
 
     test('the likes playlist is kept out of the takeout playlists, by its id or its name', () async {

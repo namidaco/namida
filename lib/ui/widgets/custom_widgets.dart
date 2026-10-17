@@ -2610,6 +2610,9 @@ class NamidaRawLikeButton extends StatelessWidget {
   final IconData normalIcon;
   final bool enableGradient;
 
+  /// lets a bigger tap target run the like animation through [LikeButtonState.onTap].
+  final GlobalKey<LikeButtonState>? likeButtonKey;
+
   const NamidaRawLikeButton({
     super.key,
     this.size = 24.0,
@@ -2622,6 +2625,7 @@ class NamidaRawLikeButton extends StatelessWidget {
     this.likedIcon = Broken.heart_filled,
     this.normalIcon = Broken.heart,
     this.enableGradient = false,
+    this.likeButtonKey,
   });
 
   Future<bool> _confirmRemoval(String action) async {
@@ -2666,6 +2670,7 @@ class NamidaRawLikeButton extends StatelessWidget {
     return NamidaMouseRegion(
       enabled: onTap != null,
       child: LikeButton(
+        key: likeButtonKey,
         size: size,
         padding: padding,
         likeCountPadding: EdgeInsets.zero,
@@ -5528,6 +5533,7 @@ class NamidaInkWellButton extends StatelessWidget {
   final Color? itemsColor;
   final AlignmentGeometry? alignment;
   final bool centered;
+  final int? maxLines;
 
   const NamidaInkWellButton({
     super.key,
@@ -5549,6 +5555,7 @@ class NamidaInkWellButton extends StatelessWidget {
     this.decoration = const BoxDecoration(),
     this.alignment,
     this.centered = false,
+    this.maxLines,
   });
 
   @override
@@ -5591,6 +5598,8 @@ class NamidaInkWellButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
+                    maxLines: maxLines,
+                    overflow: maxLines == null ? null : TextOverflow.ellipsis,
                     style: textTheme.displayMedium?.copyWith(
                       color: itemsColor,
                       fontSize: (15.0 * sizeMultiplier),
