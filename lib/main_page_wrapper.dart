@@ -22,6 +22,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
@@ -92,18 +93,20 @@ class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderSt
   Widget build(BuildContext context) {
     final width = context.width;
     final drawerScale = (width / _drawerReferenceWidth).clampDouble(0.7, 1.0);
-    return NamidaInnerDrawer(
-      key: NamidaNavigator.inst.innerDrawerKey,
-      borderRadius: 42.0.multipliedRadius,
-      drawerChild: NamidaUiScaleBox(
-        scale: drawerScale,
-        child: const NamidaDrawer(),
-      ),
-      maxPercentage: _drawerWidth * drawerScale / width,
-      initiallySwipeable: settings.swipeableDrawer.value,
-      isEdgeSwipeOnly: () => NamidaNavigator.inst.currentRoute?.route.isDrawerEdgeSwipeOnly == true,
-      child: MainScreenStack(
-        animation: animation,
+    return AppThemeFrozenWhileHidden(
+      child: NamidaInnerDrawer(
+        key: NamidaNavigator.inst.innerDrawerKey,
+        borderRadius: 42.0.multipliedRadius,
+        drawerChild: NamidaUiScaleBox(
+          scale: drawerScale,
+          child: const NamidaDrawer(),
+        ),
+        maxPercentage: _drawerWidth * drawerScale / width,
+        initiallySwipeable: settings.swipeableDrawer.value,
+        isEdgeSwipeOnly: () => NamidaNavigator.inst.currentRoute?.route.isDrawerEdgeSwipeOnly == true,
+        child: MainScreenStack(
+          animation: animation,
+        ),
       ),
     );
   }

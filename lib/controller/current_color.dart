@@ -26,6 +26,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -298,7 +299,10 @@ class CurrentColor {
 
       final trColors = await getColorPalette();
       if (trColors == null || !stillPlaying()) return; // -- check current item
-      if (trColors != _namidaColorMiniplayer.value) _namidaColorMiniplayer.value = trColors;
+      if (trColors != _namidaColorMiniplayer.value) {
+        if (settings.forceMiniplayerTrackColor.value) _prebuildAppTheme(trColors.color);
+        _namidaColorMiniplayer.value = trColors;
+      }
 
       if (settings.autoColor.value) {
         if (_shouldUpdateFromDeviceWallpaper) {
@@ -307,6 +311,7 @@ class CurrentColor {
           namidaColor = trColors;
         }
         if (namidaColor != null && namidaColor != _namidaColor.value) {
+          _prebuildAppTheme(namidaColor.color);
           _namidaColor.value = namidaColor;
           _updateCurrentPartyPalette(
             settings.forceMiniplayerTrackColor.value ? trColors : namidaColor,
@@ -456,8 +461,11 @@ class CurrentColor {
 
   void updateCurrentColorSchemeOfSubPages([Color? color, bool customAlpha = true]) async {
     final colorWithAlpha = customAlpha ? color?.withAlpha(colorAlpha) : color;
+    if (colorWithAlpha != null) _prebuildAppTheme(colorWithAlpha);
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }
+
+  void _prebuildAppTheme(Color color) => AppThemes.inst.getAppTheme(color);
 
   File _getPaletteFile(String filename, {required Directory? paletteSaveDirectory}) {
     paletteSaveDirectory ??= this._defaultPaletteDirectory;

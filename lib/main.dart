@@ -605,7 +605,7 @@ class _NamidaState extends State<Namida> {
             child: NamidaEffectsLayer.overlay(),
           );
 
-          return Theme(
+          return AppThemeProvider(
             data: theme,
             child: WindowController.instance == null
                 ? Stack(

@@ -295,4 +295,71 @@ class AppThemes {
   }
 }
 
+/// Provides [data] as the app [Theme] and lets [AppThemeFrozenWhileHidden] re-provide it without nesting localized themes.
+class AppThemeProvider extends StatelessWidget {
+  final ThemeData data;
+  final Widget child;
+
+  const AppThemeProvider({
+    super.key,
+    required this.data,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _AppThemeScope(
+      data: data,
+      child: Theme(
+        data: data,
+        child: child,
+      ),
+    );
+  }
+}
+
+// by claude
+/// Holds the last visible app theme while [TickerMode] is disabled (covered routes, hidden pages).
+class AppThemeFrozenWhileHidden extends StatefulWidget {
+  final Widget child;
+
+  const AppThemeFrozenWhileHidden({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  State<AppThemeFrozenWhileHidden> createState() => _AppThemeFrozenWhileHiddenState();
+}
+
+class _AppThemeFrozenWhileHiddenState extends State<AppThemeFrozenWhileHidden> {
+  ThemeData? _visibleTheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final appTheme = _AppThemeScope.of(context);
+    final isVisible = TickerMode.valuesOf(context).enabled;
+    var visibleTheme = _visibleTheme;
+    if (visibleTheme == null || isVisible) visibleTheme = _visibleTheme = appTheme;
+    return Theme(
+      data: visibleTheme,
+      child: widget.child,
+    );
+  }
+}
+
+class _AppThemeScope extends InheritedWidget {
+  final ThemeData data;
+
+  const _AppThemeScope({
+    required this.data,
+    required super.child,
+  });
+
+  static ThemeData of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<_AppThemeScope>()!.data;
+
+  @override
+  bool updateShouldNotify(_AppThemeScope oldWidget) => !identical(data, oldWidget.data);
+}
+
 typedef _ThemeCacheKey = (Color color, bool light, bool lighterDialog, bool pitchBlack, double borderRadiusMultiplier);

@@ -320,8 +320,11 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
+    final themedPage = AppThemeFrozenWhileHidden(
+      child: page,
+    );
     await navKey.currentState?.pushPage(
-      page,
+      themedPage,
       params: NamPackPushPageParams(
         durationInMs: durationInMs,
         transition: transition,
@@ -552,8 +555,11 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
+    final themedPage = AppThemeFrozenWhileHidden(
+      child: page,
+    );
     await navKey.currentState?.pushPageReplacement(
-      page,
+      themedPage,
       params: NamPackPushPageParams(
         durationInMs: durationInMs,
         transition: transition,
@@ -572,9 +578,12 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
+    final themedPage = AppThemeFrozenWhileHidden(
+      child: page,
+    );
     try {
       await navKey.currentState?.pushPageReplacementAll(
-        page,
+        themedPage,
         params: NamPackPushPageParams(
           durationInMs: durationMs,
           transition: transition,
@@ -584,7 +593,7 @@ class NamidaNavigator {
     } on StateError catch (_) {
       // -- no route was there yet, simple push now
       await navKey.currentState?.pushPage(
-        page,
+        themedPage,
         params: NamPackPushPageParams(
           durationInMs: durationMs,
           transition: transition,

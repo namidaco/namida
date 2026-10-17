@@ -50,6 +50,9 @@ import 'package:namida/youtube/controller/youtube_local_search_controller.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 class MainPage extends StatelessWidget {
+  /// lerping rebuilds every theme dependent on each frame of the animation.
+  static const _kLerpThemeData = false;
+
   final Animation<double> animation;
   final bool isMiniplayerAlwaysVisible;
 
@@ -70,7 +73,6 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
     final main = RepaintBoundary(
       child: NamidaPopScope(
@@ -249,6 +251,7 @@ class MainPage extends StatelessWidget {
               if (!isMiniplayerAlwaysVisible)
                 Obx(
                   (context) {
+                    final theme = context.theme;
                     final currentItem = Player.inst.currentItem.valueR;
                     return CustomAnimatedSwitcher(
                       duration: const Duration(milliseconds: 600),
@@ -293,42 +296,63 @@ class MainPage extends StatelessWidget {
       ],
     );
 
-    return ObxO(
-      rx: settings.animatedTheme,
-      builder: (context, animatedTheme) {
-        if (!animatedTheme) {
-          return Builder(
-            builder: (context) => Theme(
+    if (_kLerpThemeData) {
+      final theme = context.theme;
+      return ObxO(
+        rx: settings.animatedTheme,
+        builder: (context, animatedTheme) {
+          if (!animatedTheme) {
+            return Builder(
+              builder: (context) => Theme(
+                data: theme,
+                child: mainChild,
+              ),
+            );
+          }
+
+          final animatedThemeWidget = Builder(
+            builder: (context) => _AnimatedTheme(
+              key: _animatedThemeGlobalKey,
+              duration: const Duration(milliseconds: kThemeAnimationDurationMS),
               data: theme,
               child: mainChild,
             ),
           );
-        }
+          final animatedThemeState = _animatedThemeGlobalKey.currentState;
+          animatedThemeState?.setAnimated(animation.value < 1);
 
-        final animatedThemeWidget = Builder(
-          builder: (context) => _AnimatedTheme(
-            key: _animatedThemeGlobalKey,
-            duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-            data: theme,
-            child: mainChild,
-          ),
-        );
-        final animatedThemeState = _animatedThemeGlobalKey.currentState;
-        animatedThemeState?.setAnimated(animation.value < 1);
+          if (isMiniplayerAlwaysVisible) return animatedThemeWidget;
 
-        if (isMiniplayerAlwaysVisible) return animatedThemeWidget;
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (context, _) {
+              final mainPlayerVisible = animation.value < 1;
+              animatedThemeState?.setAnimated(mainPlayerVisible);
+              return Visibility(
+                maintainState: true,
+                visible: mainPlayerVisible,
+                child: animatedThemeWidget,
+              );
+            },
+          );
+        },
+      );
+    }
 
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (context, _) {
-            final mainPlayerVisible = animation.value < 1;
-            animatedThemeState?.setAnimated(mainPlayerVisible);
-            return Visibility(
-              maintainState: true,
-              visible: mainPlayerVisible,
-              child: animatedThemeWidget,
-            );
-          },
+    final themedMainChild = AppThemeFrozenWhileHidden(
+      child: mainChild,
+    );
+
+    if (isMiniplayerAlwaysVisible) return themedMainChild;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, _) {
+        final mainPlayerVisible = animation.value < 1;
+        return Visibility(
+          maintainState: true,
+          visible: mainPlayerVisible,
+          child: themedMainChild,
         );
       },
     );
