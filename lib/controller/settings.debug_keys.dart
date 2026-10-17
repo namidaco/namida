@@ -420,6 +420,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     canAskForBatteryOptimizations,
     mediaBrowserQueue,
     nowPlayingBroadcast,
+    discordPresence,
     webhookUrl,
     webhookEvents,
     lyricsIntegrations,

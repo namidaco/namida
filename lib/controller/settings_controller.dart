@@ -520,6 +520,7 @@ class _SettingsController extends _SettingsKeysWriter {
   /// queue published to media browser clients (android auto, wear).
   late final mediaBrowserQueue = _key('mediaBrowserQueue', true, sync: false);
   late final nowPlayingBroadcast = _key('nowPlayingBroadcast', false, sync: false);
+  late final discordPresence = _key('discordPresence', false, sync: false);
   late final webhookUrl = _key('webhookUrl', '', sync: false);
   late final webhookEvents = _keySet<WebhookEvent>('webhookEvents', _kDefaultWebhookEvents, item: WebhookEvent.values.asCodec(), sync: false);
   late final lyricsIntegrations = _keySet<LyricsIntegration>('lyricsIntegrations', const {}, item: LyricsIntegration.values.asCodec(), sync: false);

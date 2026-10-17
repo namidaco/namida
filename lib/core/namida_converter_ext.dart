@@ -84,6 +84,7 @@ import 'package:namida/ui/pages/tracks_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
+import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/sponsorblock.dart';
@@ -1829,9 +1830,11 @@ extension RouteUtils on NamidaRoute {
           child: NamidaAppBarIcon(
             icon: Broken.setting_2,
             onPressed: const SettingsPage().navigate,
-            child: const SyncStatusIconWrapper(
-              icon: Broken.setting_2,
-              showDisconnectedDot: false,
+            child: const DiscordSharingDotWrapper(
+              child: SyncStatusIconWrapper(
+                icon: Broken.setting_2,
+                showDisconnectedDot: false,
+              ),
             ),
           ),
         ),
@@ -3283,6 +3286,15 @@ extension WebhookEventUtils on WebhookEvent {
     WebhookEvent.trackChanged => Broken.music,
     WebhookEvent.play => Broken.play,
     WebhookEvent.pause => Broken.pause,
+  };
+}
+
+extension DiscordPresenceStatusL10n on DiscordPresenceStatus {
+  String? toText() => switch (this) {
+    DiscordPresenceStatus.idle => null,
+    DiscordPresenceStatus.connecting => lang.partyStatusConnecting,
+    DiscordPresenceStatus.connected => lang.partyStatusConnected,
+    DiscordPresenceStatus.unreachable => lang.couldNotConnectToName(name: 'Discord'),
   };
 }
 

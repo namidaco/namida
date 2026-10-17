@@ -8,9 +8,11 @@ import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
@@ -32,6 +34,7 @@ import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/lyrics_karaoke_text.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
+import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
 part 'extra_settings.lyrics_effects.dart';
 
@@ -55,13 +58,43 @@ class ExtrasSettings extends SettingSubpageProvider {
 
   static final _sections = <List<SettingEntry>>[
     [
-      SettingCustom(
-        title: () => lang.useCollapsedSettingTiles,
-        keys: [settings.useSettingCollapsedTiles],
-        tile: (args) => CollapsedSettingTileWidget(
-          bgColor: args.bgColor,
+      SettingExpansion(
+        icon: Broken.link_21,
+        title: () => lang.integrations,
+        aliases: () => ['Webhook', 'Tasker', 'Subsonic', 'Jellyfin', 'Android Auto', 'Wear OS', 'Status bar lyrics'],
+        initiallyExpandedWhen: () => true,
+        trailingBuilder: (arrow) => _IntegrationsTrailing(
+          arrow: arrow,
         ),
+        children: [
+          SettingToggleGroup(
+            settings.discordPresence,
+            availability: const NamidaFeaturesAvailablityGroup(
+              items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux],
+            ),
+            icon: Broken.game,
+            title: () => lang.discordRichPresence,
+            onChanged: (isEnabled) => _DiscordAccountTile.onPresenceToggled(isEnabled),
+            children: [
+              SettingCustom(
+                title: () => lang.signOut,
+                tile: (args) => _DiscordAccountTile(
+                  bgColor: args.bgColor,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+    ],
+    [
+      // SettingCustom(
+      //   title: () => lang.useCollapsedSettingTiles,
+      //   keys: [settings.useSettingCollapsedTiles],
+      //   tile: (args) => CollapsedSettingTileWidget(
+      //     bgColor: args.bgColor,
+      //   ),
+      // ),
       SettingToggle(
         settings.enableBottomNavBar,
         icon: Broken.direct,
@@ -1838,4 +1871,369 @@ Future<bool> _addLyricsFolder() async {
   if (path == null) return false;
   settings.lyricsFolders.update((list) => list.addNoDuplicates(path));
   return true;
+}
+
+class _DiscordAccountTile extends StatefulWidget {
+  final Color? bgColor;
+
+  const _DiscordAccountTile({required this.bgColor});
+
+  static Future<void> onPresenceToggled(bool isEnabled) async {
+    if (!isEnabled) return;
+    try {
+      final isLoggedIn = await NowPlayingBroadcaster.inst.ensureDiscordLogin();
+      if (isLoggedIn) return;
+      settings.discordPresence.save(false);
+      snackyy(message: lang.signInCanceled);
+    } catch (e, st) {
+      settings.discordPresence.save(false);
+      logger.error('discord sign in failed', e: e, st: st);
+      snackyy(title: lang.signInFailed, message: e.toString(), isError: true);
+    }
+  }
+
+  @override
+  State<_DiscordAccountTile> createState() => _DiscordAccountTileState();
+}
+
+class _DiscordAccountTileState extends State<_DiscordAccountTile> {
+  @override
+  void initState() {
+    super.initState();
+    NowPlayingBroadcaster.inst.refreshDiscordStatus();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final broadcaster = NowPlayingBroadcaster.inst;
+    final signOutButton = Platform.isAndroid
+        ? NamidaIconButton(
+            icon: Broken.logout,
+            tooltip: () => lang.signOut,
+            onPressed: broadcaster.logOutOfDiscord,
+          )
+        : null;
+    return Obx(
+      (context) {
+        final account = broadcaster.discordAccount.valueR;
+        final status = broadcaster.discordStatus.valueR;
+        final avatarWidget = account == null
+            ? null
+            : YoutubeThumbnail(
+                key: ValueKey(account.avatarUrl),
+                type: ThumbnailType.channel,
+                width: 28.0,
+                customUrl: account.avatarUrl,
+                isImportantInCache: true,
+                isCircle: true,
+              );
+        return CustomListTile(
+          bgColor: widget.bgColor,
+          icon: avatarWidget == null ? Broken.profile_circle : null,
+          leading: avatarWidget,
+          title: account?.name ?? 'Discord',
+          subtitle: status.toText(),
+          trailing: signOutButton,
+        );
+      },
+    );
+  }
+}
+
+/// reminds that the playing track is visible on the discord profile.
+class DiscordSharingDotWrapper extends StatelessWidget {
+  final Widget child;
+
+  const DiscordSharingDotWrapper({super.key, required this.child});
+
+  static const _kDiscordColor = Color(0xFF5865F2);
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: NowPlayingBroadcaster.inst.isDiscordSharing,
+      builder: (context, isSharing) => Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child,
+          if (isSharing)
+            Positioned(
+              bottom: 0.0,
+              right: 0.0,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _kDiscordColor,
+                  border: Border.all(
+                    color: context.theme.scaffoldBackgroundColor,
+                    width: 1.0,
+                  ),
+                ),
+                child: const SizedBox(
+                  width: 7.0,
+                  height: 7.0,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _IntegrationsTrailing extends StatelessWidget {
+  final Widget arrow;
+
+  const _IntegrationsTrailing({required this.arrow});
+
+  void _showFlagsDialog() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        icon: Broken.flag,
+        title: lang.integrations,
+        normalTitleStyle: true,
+        horizontalInset: 32.0,
+        actions: const [
+          DoneButton(),
+        ],
+        child: const _IntegrationsFlagsOptions(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NamidaIconButton(
+          icon: Broken.flag,
+          tooltip: () => lang.configure,
+          iconSize: 20.0,
+          iconColor: context.defaultIconColor(),
+          onPressed: _showFlagsDialog,
+        ),
+        const SizedBox(
+          width: 4.0,
+        ),
+        arrow,
+        const SizedBox(
+          width: 12.0,
+        ),
+      ],
+    );
+  }
+}
+
+class _IntegrationsFlagsOptions extends StatelessWidget {
+  const _IntegrationsFlagsOptions();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: context.width,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (NamidaFeaturesVisibility.showAndroidIntegrations) ...[
+            ObxO(
+              rx: settings.mediaBrowserQueue,
+              builder: (context, enabled) => CustomSwitchListTile(
+                icon: Broken.car,
+                title: 'android_auto_and_wear'.toUpperCase(),
+                value: enabled,
+                onChanged: (isTrue) => settings.mediaBrowserQueue.save(!isTrue),
+              ),
+            ),
+            ObxO(
+              rx: settings.nowPlayingBroadcast,
+              builder: (context, enabled) => CustomSwitchListTile(
+                icon: Broken.radar_2,
+                title: 'now_playing_broadcast'.toUpperCase(),
+                subtitle: 'Intents for Tasker & automation apps',
+                value: enabled,
+                onChanged: (isTrue) => settings.nowPlayingBroadcast.save(!isTrue),
+              ),
+            ),
+            const _LyricsIntegrationsListTile(),
+          ],
+          const _WebhookListTile(),
+          ObxO(
+            rx: settings.reportPlaybackToServers,
+            builder: (context, enabled) => CustomSwitchListTile(
+              icon: Broken.cloud_change,
+              title: 'server_playback_reports'.toUpperCase(),
+              subtitle: 'Subsonic & Jellyfin: now playing, play counts',
+              value: enabled,
+              onChanged: (isTrue) => settings.reportPlaybackToServers.save(!isTrue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LyricsIntegrationsListTile extends StatelessWidget {
+  const _LyricsIntegrationsListTile();
+
+  void _toggle(LyricsIntegration integration) {
+    settings.lyricsIntegrations.update((value) {
+      if (!value.remove(integration)) value.add(integration);
+    });
+  }
+
+  List<NamidaPopupItem> _items() {
+    final enabled = settings.lyricsIntegrations.value;
+    return LyricsIntegration.values
+        .map(
+          (e) => NamidaPopupItem(
+            selected: enabled.contains(e),
+            icon: e.toIcon(),
+            title: e.toText(),
+            subtitle: e.sendsPerLine ? lang.performanceNote : '',
+            onTap: () => _toggle(e),
+          ),
+        )
+        .toFixedList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: _items,
+      refreshListenable: settings.lyricsIntegrations,
+      child: ObxO(
+        rx: settings.lyricsIntegrations,
+        builder: (context, enabled) => CustomListTile(
+          icon: Broken.message_text,
+          title: 'status_bar_lyrics'.toUpperCase(),
+          trailing: Text(
+            '${enabled.length}/${LyricsIntegration.values.length}',
+            style: context.textTheme.displayMedium,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WebhookListTile extends StatelessWidget {
+  const _WebhookListTile();
+
+  void _openDialog() {
+    final urlController = TextEditingController(text: settings.webhookUrl.value);
+    final formKey = GlobalKey<FormState>();
+    final savedEvents = settings.webhookEvents.value;
+    final draftEvents = {for (final e in WebhookEvent.values) e: savedEvents.contains(e).obs};
+
+    void onSave() {
+      final isValid = formKey.currentState?.validate() ?? false;
+      if (!isValid) return;
+      final url = urlController.text.trim();
+      final events = <WebhookEvent>{
+        for (final e in WebhookEvent.values)
+          if (draftEvents[e]!.value) e,
+      };
+      settings.transaction(() {
+        settings.webhookUrl.save(url);
+        settings.webhookEvents.replace(events);
+      });
+      NamidaNavigator.inst.closeDialog();
+    }
+
+    final eventsListenable = Listenable.merge(draftEvents.values.toList());
+
+    List<NamidaPopupItem> eventItems() {
+      return WebhookEvent.values.map(
+        (e) {
+          final rx = draftEvents[e]!;
+          return NamidaPopupItem(
+            selected: rx.value,
+            icon: e.toIcon(),
+            title: e.toText(),
+            onTap: () => rx.value = !rx.value,
+          );
+        },
+      ).toFixedList();
+    }
+
+    String? validateUrl(String? value) {
+      value ??= '';
+      if (value.trim().isEmpty) return null;
+      final uri = NowPlayingBroadcaster.parseWebhookUrl(value);
+      return uri == null ? 'Invalid URL' : null;
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDisposing: () {
+        urlController.dispose();
+        for (final rx in draftEvents.values) {
+          rx.close();
+        }
+      },
+      dialog: Form(
+        key: formKey,
+        child: CustomBlurryDialog(
+          title: 'webhook'.toUpperCase(),
+          normalTitleStyle: true,
+          icon: Broken.link_2,
+          actions: [
+            const CancelButton(),
+            NamidaButton(
+              text: lang.save,
+              onTap: onSave,
+            ),
+          ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12.0),
+              CustomTagTextField(
+                controller: urlController,
+                hintText: 'https://',
+                labelText: 'URL',
+                keyboardType: TextInputType.url,
+                validator: validateUrl,
+              ),
+              const SizedBox(height: 12.0),
+              NamidaPopupWrapper(
+                childrenDefault: eventItems,
+                refreshListenable: eventsListenable,
+                child: CustomListTile(
+                  icon: Broken.notification_status,
+                  title: 'Events',
+                  trailing: Obx(
+                    (context) {
+                      int activeCount = 0;
+                      for (final rx in draftEvents.values) {
+                        if (rx.valueR) activeCount++;
+                      }
+                      return Text(
+                        '$activeCount/${WebhookEvent.values.length}',
+                        style: context.textTheme.displayMedium,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.webhookUrl,
+      builder: (context, url) => CustomListTile(
+        icon: Broken.link_2,
+        title: 'webhook'.toUpperCase(),
+        subtitle: url.isEmpty ? null : url,
+        onTap: _openDialog,
+      ),
+    );
+  }
 }

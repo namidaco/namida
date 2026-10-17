@@ -34,6 +34,11 @@ abstract class SettingEntry {
     }
   }
 
+  bool endsWithGroup() {
+    final lastChild = children.lastOrNull;
+    return lastChild != null && lastChild.children.isNotEmpty;
+  }
+
   bool containsDeep(SettingEntry key) {
     for (final child in children) {
       if (child == key || child.containsDeep(key)) return true;
@@ -271,6 +276,7 @@ class SettingExpansion extends SettingEntry {
   final IconData? icon;
   final Widget? leading;
   final bool Function()? initiallyExpandedWhen;
+  final Widget Function(Widget arrow)? trailingBuilder;
 
   @override
   final List<SettingEntry> children;
@@ -281,6 +287,7 @@ class SettingExpansion extends SettingEntry {
     this.icon,
     this.leading,
     this.initiallyExpandedWhen,
+    this.trailingBuilder,
     required this.children,
     super.aliases,
     super.availability,
@@ -530,6 +537,8 @@ class _SettingExpansionTile extends StatelessWidget {
       titleText: entry.title(),
       subtitleText: subtitle,
       initiallyExpanded: isInitiallyExpanded || isTargetWithin,
+      trailingBuilder: entry.trailingBuilder,
+      endsWithGroup: entry.endsWithGroup(),
       children: children,
     );
   }
@@ -555,6 +564,7 @@ class _SettingToggleGroupTile extends StatelessWidget {
           ),
         )
         .toFixedList();
+    final endsWithGroup = entry.endsWithGroup();
     return Obx(
       (context) {
         final isEnabled = entry.enabledWhen?.call() ?? true;
@@ -574,6 +584,7 @@ class _SettingToggleGroupTile extends StatelessWidget {
             trailingBuilder: (_) => CustomSwitch(
               active: isOn,
             ),
+            endsWithGroup: endsWithGroup,
             children: children,
           ),
         );

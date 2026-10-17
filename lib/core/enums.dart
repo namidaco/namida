@@ -1462,6 +1462,13 @@ enum WebhookEvent {
   pause,
 }
 
+enum DiscordPresenceStatus {
+  idle,
+  connecting,
+  connected,
+  unreachable,
+}
+
 enum LyricsIntegration {
   lyricInfo,
   superLyric(sendsPerLine: true),

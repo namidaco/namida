@@ -1036,6 +1036,7 @@ class AppPaths {
 
   static final TOTAL_LISTEN_TIME = _join(_USER_DATA, 'total_listen.txt');
   static final SERVERS_PENDING_LISTENS = _join(_USER_DATA, 'servers_pending_listens.json');
+  static final DISCORD_AUTH = _join(_USER_DATA, 'discord_auth.json');
   static final LISTEN_TIME_DAILY_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'listen_time_daily');
   static final FAVOURITES_PLAYLIST = _join(_USER_DATA, 'favs.json');
   static final NAMIDA_LOGO = '${AppDirs.ARTWORKS}.ARTWORKS.NAMIDA_DEFAULT_ARTWORK.PNG';
@@ -1571,6 +1572,7 @@ class NamidaFeaturesVisibility {
   static final soundEffectsAvailable = _isAndroid;
 
   static final showDownloadNotifications = _isWindows || _isLinux;
+  static final showDiscordPresence = _isAndroid || _isWindows || _isLinux;
   static final showVideoControlsOnHover = _isWindows || _isLinux;
   static final tiltingCardsEffect = _isWindows || _isLinux;
   static final smoothScrolling = _isWindows || _isLinux;

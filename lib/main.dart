@@ -40,6 +40,7 @@ import 'package:namida/controller/lyrics_integrations.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/platform/app_single_instance/app_single_instance.dart';
 import 'package:namida/controller/platform/base.dart';
@@ -934,6 +935,7 @@ class NamidaReceiveIntentManager {
           YoutubeAccountController.membership.redirectUrlCompleter?.completeIfWasnt(link);
           return;
         }
+        if (NowPlayingBroadcaster.inst.handleDiscordAuthRedirect(link)) return;
         if (PartyController.parseInvite(link) != null) {
           PartyController.inst.pendingInvite.value = link;
           WidgetsBinding.instance.addPostFrameCallback((_) => const NamidaPartyPage().navigate());

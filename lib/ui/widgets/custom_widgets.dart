@@ -1486,6 +1486,9 @@ class NamidaExpansionTile extends StatefulWidget {
 
   /// inside the rail.
   final EdgeInsetsGeometry childrenPadding;
+
+  /// the last child is a group with its own bottom gap, so the rail adds none.
+  final bool endsWithGroup;
   final bool showRail;
   final bool initiallyExpanded;
   final Widget Function(Widget arrow)? trailingBuilder;
@@ -1509,6 +1512,7 @@ class NamidaExpansionTile extends StatefulWidget {
     this.textColorScheme,
     this.children = const <Widget>[],
     this.childrenPadding = EdgeInsets.zero,
+    this.endsWithGroup = false,
     this.showRail = true,
     this.initiallyExpanded = false,
     this.trailingBuilder,
@@ -1660,6 +1664,7 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
                 animation: _sizeAnimation,
                 child: _ExpansionChildrenRail(
                   padding: widget.childrenPadding,
+                  endsWithGroup: widget.endsWithGroup,
                   showRail: widget.showRail,
                   children: widget.children,
                 ),
@@ -1803,10 +1808,11 @@ class _ExpansionSlideIn extends AnimatedWidget {
 
 class _ExpansionChildrenRail extends StatelessWidget {
   final EdgeInsetsGeometry padding;
+  final bool endsWithGroup;
   final bool showRail;
   final List<Widget> children;
 
-  const _ExpansionChildrenRail({required this.padding, required this.showRail, required this.children});
+  const _ExpansionChildrenRail({required this.padding, required this.endsWithGroup, required this.showRail, required this.children});
 
   static const _kRailLeft = 20.0;
   static const _kChildrenIndent = 12.0;
@@ -1841,8 +1847,9 @@ class _ExpansionChildrenRail extends StatelessWidget {
         ],
       );
     }
+    final bottomSpacing = endsWithGroup ? 0.0 : 18.0;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18.0),
+      padding: EdgeInsets.only(bottom: bottomSpacing),
       child: body,
     );
   }

@@ -44,6 +44,9 @@ finish-args:
   - --talk-name=org.kde.StatusNotifierWatcher
   # MPRIS (anni_mpris_service registers org.mpris.MediaPlayer2.namida)
   - --own-name=org.mpris.MediaPlayer2.namida
+  # discord rich presence, ipc socket of native and flatpak discord
+  - --filesystem=xdg-run/discord-ipc-0
+  - --filesystem=xdg-run/app/com.discordapp.Discord:create
   # connectivity_plus queries NetworkManager on the system bus, without it the app stays offline
   - --system-talk-name=org.freedesktop.NetworkManager
   # mpv needs the C locale for number parsing

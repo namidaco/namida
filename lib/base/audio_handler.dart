@@ -2694,6 +2694,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   Future<void> seek(Duration position) async {
     seekCount++;
     lastSeekPositionMS = position.inMilliseconds;
+    NowPlayingBroadcaster.inst.onSeek(lastSeekPositionMS);
     Future<void> plsSeek() => super.seek(position);
 
     await currentItem.value?.execute(
