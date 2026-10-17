@@ -55,49 +55,49 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
 
     return BackgroundWrapper(
-      child: NamidaScrollbar(
-        controller: scrollController,
-        thumbLabel: _createThumbLabel,
-        child: AnimationLimiter(
-          child: Obx(
-            (context) {
-              final sorting = settings.groupSortingOfR(MediaType.language);
-              final sort = sorting.entries.first.type;
-              final sortReverse = sorting.reverse;
+      child: AnimationLimiter(
+        child: Obx(
+          (context) {
+            final sorting = settings.groupSortingOfR(MediaType.language);
+            final sort = sorting.entries.first.type;
+            final sortReverse = sorting.reverse;
 
-              final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
-              final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getLanguagesExtraTextResolver(sort);
+            final sortTextIsUseless = sort == GroupSortType.title || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
+            final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getLanguagesExtraTextResolver(sort);
 
-              final finalLanguagesLength = SearchSortController.inst.languageSearchList.valueR.length;
-              final totalLanguagesLength = Indexer.inst.mainMapLanguages.valueR.length;
-              final leftText = finalLanguagesLength != totalLanguagesLength
-                  ? '$finalLanguagesLength/${lang.countLanguages(count: totalLanguagesLength)}'
-                  : lang.countLanguages(count: finalLanguagesLength);
+            final finalLanguagesLength = SearchSortController.inst.languageSearchList.valueR.length;
+            final totalLanguagesLength = Indexer.inst.mainMapLanguages.valueR.length;
+            final leftText = finalLanguagesLength != totalLanguagesLength
+                ? '$finalLanguagesLength/${lang.countLanguages(count: totalLanguagesLength)}'
+                : lang.countLanguages(count: finalLanguagesLength);
 
-              return ExpandableBoxColumn(
-                tab: libraryTab,
-                header: ExpandableBox(
-                  enableHero: enableHero,
-                  gridWidget: const ChangeGridCountWidget(
-                    tab: libraryTab,
-                  ),
-                  isBarVisible: libraryTab.isBarVisible.valueR,
-                  leftText: leftText,
-                  onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                  sortByMenuWidget: SortByMenu(
-                    title: sort.toText(),
-                    popupMenuChild: const SortByMenuLanguages(),
-                    isCurrentlyReversed: sortReverse,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !sortReverse),
-                  ),
-                  textField: CustomTextField(
-                    textFieldController: libraryTab.textSearchControllerR,
-                    textFieldHintText: lang.filterLanguages,
-                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.language),
-                  ),
+            return ExpandableBoxColumn(
+              tab: libraryTab,
+              header: ExpandableBox(
+                enableHero: enableHero,
+                gridWidget: const ChangeGridCountWidget(
+                  tab: libraryTab,
                 ),
-                page: SmoothCustomScrollView(
+                isBarVisible: libraryTab.isBarVisible.valueR,
+                leftText: leftText,
+                onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
+                sortByMenuWidget: SortByMenu(
+                  title: sort.toText(),
+                  popupMenuChild: const SortByMenuLanguages(),
+                  isCurrentlyReversed: sortReverse,
+                  onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.language, reverse: !sortReverse),
+                ),
+                textField: CustomTextField(
+                  textFieldController: libraryTab.textSearchControllerR,
+                  textFieldHintText: lang.filterLanguages,
+                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.language),
+                ),
+              ),
+              page: NamidaScrollbar(
+                controller: scrollController,
+                thumbLabel: _createThumbLabel,
+                child: SmoothCustomScrollView(
                   controller: scrollController,
                   slivers: [
                     SliverToBoxAdapter(child: listHeader),
@@ -145,9 +145,9 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                     kBottomPaddingWidgetSliver,
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

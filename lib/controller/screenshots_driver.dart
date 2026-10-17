@@ -10,9 +10,11 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import 'package:history_manager/history_manager.dart';
+import 'package:playlist_manager/playlist_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/base/setting_subpage_provider.dart';
+import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
@@ -76,9 +78,13 @@ import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/settings_search_bar.dart';
 import 'package:namida/ui/widgets/stats.dart';
+import 'package:namida/ui/widgets/stats_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
+import 'package:namida/youtube/functions/add_to_playlist_sheet.dart';
+import 'package:namida/youtube/functions/download_sheet.dart';
 import 'package:namida/youtube/pages/user/youtube_account_manage_page.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
 import 'package:namida/youtube/pages/yt_history_page.dart';
@@ -162,8 +168,7 @@ class ScreenshotsDriver {
           final id = scene['id'] as String;
           final sceneThemes = (scene['themes'] as List?)?.cast<String>() ?? defaultSceneThemes;
           if (!sceneThemes.contains(themeName)) continue;
-          final scenePlatforms = (scene['platforms'] as List?)?.cast<String>();
-          if (scenePlatforms != null && !scenePlatforms.contains(Platform.operatingSystem)) continue;
+          if (!_isForThisPlatform(scene)) continue;
           try {
             final window = scene['window'] as Map<String, dynamic>? ?? defaultWindow;
             await _applyWindow(window);
@@ -447,7 +452,14 @@ class ScreenshotsDriver {
     }
   }
 
+  /// scenes and steps can be limited to some platforms with `platforms`.
+  static bool _isForThisPlatform(Map<String, dynamic> json) {
+    final platforms = (json['platforms'] as List?)?.cast<String>();
+    return platforms == null || platforms.contains(Platform.operatingSystem);
+  }
+
   Future<void> _runStep(Map<String, dynamic> step) async {
+    if (!_isForThisPlatform(step)) return;
     final action = step['do'] as String;
     final name = step['name'] as String?;
     switch (action) {
@@ -576,6 +588,8 @@ class ScreenshotsDriver {
         position.jumpTo(target);
       case 'bookmark':
         await BookmarksController.inst.addAtCurrentPosition();
+      case 'hideKeyboard':
+        await _hideKeyboard();
       case 'wait':
         final waitMS = step['ms'] as int? ?? 500;
         await Future.delayed(Duration(milliseconds: waitMS));
@@ -721,6 +735,51 @@ class ScreenshotsDriver {
         YTNormalPlaylistSubpage(playlistName: playlistName, queueSource: QueueSourceYoutubeID.ytPlaylist(playlistName)).navigate();
       case 'videoFullscreen':
         VideoController.inst.toggleFullScreenVideoView(isLocal: true);
+      case 'advancedShuffle':
+        showAdvancedShuffleDialog(() => allTracksInLibrary, QueueSource.allTracks);
+      case 'renamePlaylist':
+        final playlistName = step['playlist'] as String? ?? k_PLAYLIST_NAME_FAV;
+        showRenamePlaylistDialog(manager: PlaylistController.inst, playlistName: playlistName);
+      case 'playlistTagsMoods':
+        final playlistName = step['playlist'] as String? ?? k_PLAYLIST_NAME_FAV;
+        showSetPlaylistsTagsDialog(manager: PlaylistController.inst, playlistsNames: [playlistName]);
+      case 'ratingSimple':
+        final track = _resolveTrack(step);
+        showSetTrackStatsDialogSimple(track: track, stats: track.statsRaw);
+      case 'goToArtist':
+        final track = _findTrack(step['track'] as String?) ?? allTracksInLibrary.firstWhereEff((e) => e.artistsList.length > 1);
+        if (track != null) NamidaOnTaps.inst.onArtistsTap(track.artistsList);
+      case 'duplicates':
+        NamidaOnTaps.inst.showDuplicatedDialogAction(PlaylistAddDuplicateAction.valuesForAdd);
+      case 'tracksStats':
+        final albumIdentifier = _resolveAlbum(step['album'] as String?, step['track'] as String?);
+        final tracks = Indexer.inst.mainMapAlbums.value[albumIdentifier] ?? allTracksInLibrary;
+        final title = albumIdentifier?.album ?? lang.tracks;
+        final subtitle = tracks.length.displayTrackKeyword;
+        showTracksStatsCardDialog(tracks: tracks, title: title, subtitle: subtitle);
+      case 'eggsUnlock':
+        NamidaNavigator.inst.navigateDialog(
+          dialog: UwuDialog(
+            unlockable: EggUnlockable.crossfade,
+            newEggs: const [],
+            onEnable: () {},
+          ),
+        );
+      case 'ytStats':
+        const StatsPage(isYoutube: true).navigate();
+      case 'ytVideoInfo':
+        final videoId = step['id'] as String;
+        final video = YoutubeID(id: videoId, playlistID: null);
+        NamidaMiniPlayerYoutubeID.openInfoMenu(rootContext, video);
+      case 'ytClearVideo':
+        final videoId = step['id'] as String;
+        const YTUtils().showVideoClearDialog(videoId);
+      case 'ytDownload':
+        final videoId = step['id'] as String;
+        showDownloadVideoBottomSheet(videoId: videoId, playlistId: null, originalIndex: null, totalLength: null, streamInfoItem: null);
+      case 'ytAddToPlaylist':
+        final videoId = step['id'] as String;
+        showAddToPlaylistSheet(ids: [videoId], idsNamesLookup: const {});
       default:
         throw ArgumentError.value(name, 'name', 'unknown page or dialog');
     }

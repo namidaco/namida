@@ -77,4 +77,17 @@ void main() {
     const lrc = '[00:01.00]さくら\n[00:01.00]sakura\n[00:02.00]あした\n[00:02.00]tomorrow\n[00:03.00]そら\n[00:03.00]sky';
     expect(displayedLines(lrc), ['さくら', 'sakura', 'あした', 'ashita', 'tomorrow', 'そら', 'sora', 'sky']);
   });
+
+  test('a romanization written inside the line itself counts', () {
+    expect(displayedLines('[00:01.00]かたくさいかいを (kataku saikai o)\n[00:05.00]さくら'), ['かたくさいかいを (kataku saikai o)', 'さくら', 'sakura']);
+  });
+
+  test('latin words of a line never count as its own romanization', () {
+    expect(displayedLines('[00:01.00]oh yeah ぼくは'), ['oh yeah ぼくは', 'oh yeah bokuha']);
+  });
+
+  test('a sibling mixing japanese with the romanization still counts', () {
+    const sibling = 'いturururu (kataku saikai o)';
+    expect(displayedLines('[00:01.00]かたくさいかいを\n[00:01.00]$sibling\n[00:05.00]さくら'), ['かたくさいかいを', sibling, 'iturururu (kataku saikai o)', 'さくら', 'sakura']);
+  });
 }

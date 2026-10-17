@@ -611,12 +611,15 @@ class NamidaOnTaps {
                           (context) {
                             final entry = sorters.valueR.firstWhereEff((e) => e.type == sorting);
                             final isActive = entry != null;
-                            final reverseButton = entry == null
-                                ? null
-                                : _SortEntryReverseButton(
-                                    isReversed: entry.reverse,
-                                    onTap: () => sorters.replaceSingleWhere((e) => e.type == sorting, (e) => e.toggled()),
-                                  );
+                            final isReversed = entry?.reverse ?? false;
+                            final reverseButton = AnimatedShow(
+                              show: isActive,
+                              isHorizontal: true,
+                              child: _SortEntryReverseButton(
+                                isReversed: isReversed,
+                                onTap: () => sorters.replaceSingleWhere((e) => e.type == sorting, (e) => e.toggled()),
+                              ),
+                            );
                             return ListTileWithCheckMark(
                               icon: sortToIcon(sorting),
                               title: "${i + 1}. ${sortToText(sorting)}",

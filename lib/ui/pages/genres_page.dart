@@ -82,74 +82,74 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
 
     return BackgroundWrapper(
-      child: NamidaScrollbar(
-        controller: scrollController,
-        thumbLabel: _createThumbLabel,
-        child: AnimationLimiter(
-          child: Obx(
-            (context) {
-              final genreType = settings.activeGenreType.valueR;
-              final sorting = settings.groupSortingOfR(genreType);
-              final sort = sorting.entries.first.type;
-              final sortReverse = sorting.reverse;
+      child: AnimationLimiter(
+        child: Obx(
+          (context) {
+            final genreType = settings.activeGenreType.valueR;
+            final sorting = settings.groupSortingOfR(genreType);
+            final sort = sorting.entries.first.type;
+            final sortReverse = sorting.reverse;
 
-              final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
-              final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGenresExtraTextResolver(genreType, sort);
+            final sortTextIsUseless = sort == GroupSortType.genresList || sort == GroupSortType.numberOfTracks || sort == GroupSortType.duration;
+            final extraTextResolver = sortTextIsUseless ? null : SearchSortController.inst.getGenresExtraTextResolver(genreType, sort);
 
-              final String Function({required int count}) countToText = switch (genreType) {
-                MediaType.style => lang.countStyles,
-                _ => lang.countGenres,
-              };
-              final finalGenresLength = SearchSortController.inst.genreSearchList.valueR.length;
-              final totalGenresLength = Indexer.inst.getGenreMapFor(genreType).valueR.length;
-              String leftText = finalGenresLength != totalGenresLength ? '$finalGenresLength/${countToText(count: totalGenresLength)}' : countToText(count: finalGenresLength);
+            final String Function({required int count}) countToText = switch (genreType) {
+              MediaType.style => lang.countStyles,
+              _ => lang.countGenres,
+            };
+            final finalGenresLength = SearchSortController.inst.genreSearchList.valueR.length;
+            final totalGenresLength = Indexer.inst.getGenreMapFor(genreType).valueR.length;
+            String leftText = finalGenresLength != totalGenresLength ? '$finalGenresLength/${countToText(count: totalGenresLength)}' : countToText(count: finalGenresLength);
 
-              return ExpandableBoxColumn(
-                tab: libraryTab,
-                header: ExpandableBox(
-                  enableHero: enableHero,
-                  gridWidget: const ChangeGridCountWidget(
-                    tab: libraryTab,
-                  ),
-                  isBarVisible: libraryTab.isBarVisible.valueR,
-                  leftText: '',
-                  leftWidgets: [
-                    NamidaPopupWrapper(
-                      childrenDefault: _getTypeChooserChildren,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Broken.arrange_circle,
-                            size: 14.0,
+            return ExpandableBoxColumn(
+              tab: libraryTab,
+              header: ExpandableBox(
+                enableHero: enableHero,
+                gridWidget: const ChangeGridCountWidget(
+                  tab: libraryTab,
+                ),
+                isBarVisible: libraryTab.isBarVisible.valueR,
+                leftText: '',
+                leftWidgets: [
+                  NamidaPopupWrapper(
+                    childrenDefault: _getTypeChooserChildren,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Broken.arrange_circle,
+                          size: 14.0,
+                          color: genreTypeColor,
+                        ),
+                        const SizedBox(width: 4.0),
+                        Text(
+                          leftText,
+                          style: textTheme.displayMedium?.copyWith(
                             color: genreTypeColor,
                           ),
-                          const SizedBox(width: 4.0),
-                          Text(
-                            leftText,
-                            style: textTheme.displayMedium?.copyWith(
-                              color: genreTypeColor,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                  onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
-                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                  sortByMenuWidget: SortByMenu(
-                    title: sort.toText(),
-                    popupMenuChild: const SortByMenuGenres(),
-                    isCurrentlyReversed: sortReverse,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !sortReverse),
                   ),
-                  textField: CustomTextField(
-                    textFieldController: libraryTab.textSearchControllerR,
-                    textFieldHintText: lang.filterGenres,
-                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeGenreType.value),
-                  ),
+                ],
+                onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
+                onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
+                sortByMenuWidget: SortByMenu(
+                  title: sort.toText(),
+                  popupMenuChild: const SortByMenuGenres(),
+                  isCurrentlyReversed: sortReverse,
+                  onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeGenreType.value, reverse: !sortReverse),
                 ),
-                page: SmoothCustomScrollView(
+                textField: CustomTextField(
+                  textFieldController: libraryTab.textSearchControllerR,
+                  textFieldHintText: lang.filterGenres,
+                  onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, settings.activeGenreType.value),
+                ),
+              ),
+              page: NamidaScrollbar(
+                controller: scrollController,
+                thumbLabel: _createThumbLabel,
+                child: SmoothCustomScrollView(
                   controller: scrollController,
                   slivers: [
                     SliverToBoxAdapter(child: listHeader),
@@ -197,9 +197,9 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     kBottomPaddingWidgetSliver,
                   ],
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

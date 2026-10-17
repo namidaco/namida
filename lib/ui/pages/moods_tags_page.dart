@@ -317,16 +317,16 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
     );
 
     return BackgroundWrapper(
-      child: NamidaScrollbar(
-        controller: scrollController,
-        child: Column(
-          children: [
-            ?header,
-            Expanded(
+      child: Column(
+        children: [
+          ?header,
+          Expanded(
+            child: NamidaScrollbar(
+              controller: scrollController,
               child: listWidget,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

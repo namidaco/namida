@@ -13,9 +13,9 @@ class YoutubeSubscription {
     this.lastFetched,
   }) : title = title ?? '';
 
-  YoutubeSubscription copyWith({List<String>? groups}) {
+  YoutubeSubscription copyWith({String? title, List<String>? groups}) {
     return YoutubeSubscription(
-      title: title,
+      title: title ?? this.title,
       channelID: channelID,
       subscribed: subscribed,
       groups: groups ?? this.groups,

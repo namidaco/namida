@@ -18,6 +18,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/youtube/class/youtube_subscription.dart';
 import 'package:namida/youtube/controller/youtube_subscriptions_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
@@ -319,8 +320,11 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (widget.subscribeTextOnLeft) subscribeTextWidget,
-              Opacity(
-                opacity: subscribed && notificationIcon != null ? 1.0 : 0.0, // keep visible to maintain stable space for text
+              Visibility(
+                visible: subscribed && notificationIcon != null,
+                maintainState: true,
+                maintainAnimation: true,
+                maintainSize: true, // keeps a stable space for the text
                 child: NamidaIconButton(
                   horizontalPadding: 8.0,
                   onPressed: () {
@@ -375,8 +379,12 @@ class _ChannelGroupsSheetState extends State<_ChannelGroupsSheet> {
   @override
   void initState() {
     super.initState();
-    final sub = YoutubeSubscriptionsController.inst.availableChannels.value[widget.channelID];
+    final controller = YoutubeSubscriptionsController.inst;
+    final sub = controller.availableChannels.value[widget.channelID];
     _leadingGroups = {...?sub?.groups};
+    final title = widget.title;
+    if (title != null && controller.fillMissingTitle(widget.channelID, title)) _didChangeGroups = true;
+    controller.fillMissingGroupsTitlesFromCache();
   }
 
   @override
@@ -539,7 +547,7 @@ class _ChannelGroupsSheetState extends State<_ChannelGroupsSheet> {
                   final allGroups = controller.allGroups.valueR;
                   final channels = controller.availableChannels.valueR;
                   final channelGroups = channels[widget.channelID]?.groups ?? const <String>[];
-                  final counts = controller.getGroupsCounts();
+                  final groupsChannels = controller.getGroupsChannels();
                   final queryLower = _query.toLowerCase();
                   final groups = <String>[];
                   final otherGroups = <String>[];
@@ -570,7 +578,7 @@ class _ChannelGroupsSheetState extends State<_ChannelGroupsSheet> {
                               final group = groups[index];
                               return _ChannelGroupTile(
                                 group: group,
-                                count: counts[group] ?? 0,
+                                channels: groupsChannels[group] ?? const [],
                                 isActive: channelGroups.contains(group),
                                 isDimmed: index >= matchedCount,
                                 onTap: () => _onGroupTap(group),
@@ -639,6 +647,7 @@ class _ChannelGroupsSheetHeader extends StatelessWidget {
           ),
           _ChannelFavouriteButton(
             channelID: channelID,
+            title: title,
           ),
         ],
       ),
@@ -648,9 +657,11 @@ class _ChannelGroupsSheetHeader extends StatelessWidget {
 
 class _ChannelFavouriteButton extends StatefulWidget {
   final String channelID;
+  final String? title;
 
   const _ChannelFavouriteButton({
     required this.channelID,
+    required this.title,
   });
 
   @override
@@ -678,7 +689,7 @@ class _ChannelFavouriteButtonState extends State<_ChannelFavouriteButton> {
             size: 18.0,
             isLiked: isFavourite,
             removeConfirmationAction: lang.removeFromFavourites,
-            onTap: (isLiked) => controller.toggleChannelSubscription(widget.channelID),
+            onTap: (isLiked) => controller.toggleChannelSubscription(widget.channelID, title: widget.title),
           ),
           text: lang.favourite,
           bgColor: bgColor,
@@ -691,7 +702,7 @@ class _ChannelFavouriteButtonState extends State<_ChannelFavouriteButton> {
 
 class _ChannelGroupTile extends StatelessWidget {
   final String group;
-  final int count;
+  final List<YoutubeSubscription> channels;
   final bool isActive;
   final bool isDimmed;
   final VoidCallback onTap;
@@ -699,7 +710,7 @@ class _ChannelGroupTile extends StatelessWidget {
 
   const _ChannelGroupTile({
     required this.group,
-    required this.count,
+    required this.channels,
     required this.isActive,
     required this.isDimmed,
     required this.onTap,
@@ -709,6 +720,7 @@ class _ChannelGroupTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = context.textTheme;
+    final channelsTitles = channels.map((e) => e.title).where((title) => title.isNotEmpty).join(', ');
     return NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: menuItems,
@@ -719,12 +731,28 @@ class _ChannelGroupTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 3.0),
           child: ListTileWithCheckMark(
             icon: Broken.people,
-            title: group,
+            titleWidget: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  group,
+                  style: textTheme.displayMedium,
+                ),
+                if (channelsTitles.isNotEmpty)
+                  Text(
+                    channelsTitles,
+                    style: textTheme.displaySmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
+            ),
             active: isActive,
             trailing: Padding(
               padding: const EdgeInsets.only(right: 12.0),
               child: Text(
-                count.formatDecimal(),
+                channels.length.formatDecimal(),
                 style: textTheme.displaySmall,
               ),
             ),

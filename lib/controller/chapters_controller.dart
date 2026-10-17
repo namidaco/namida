@@ -23,6 +23,7 @@ class ChaptersController {
   }
 
   static const _kSeekbarReachPx = 12.0;
+  static const _kSeekbarMinSegmentPx = 10.0;
   static const _kRestartChapterThresholdMS = 1000;
 
   RxBaseCore<List<MediaChapter>> get currentChapters => _currentChapters;
@@ -105,15 +106,30 @@ class ChaptersController {
     Player.inst.seekOrPlayAt(item, Duration(milliseconds: chapter.startMS));
   }
 
-  /// skips the first chapter, the seek start magnet already covers it.
-  int? snapTapToChapterMS(int positionMS, int durationMS, double widthPx) {
-    final chapters = _currentChapters.value;
-    if (chapters.isEmpty || durationMS <= 0 || widthPx <= 0) return null;
-    int nearestDistanceMS = (_kSeekbarReachPx / widthPx * durationMS).round();
-    int? nearestMS;
+  /// close starts are merged, none when chapters are too dense to read.
+  static List<int> seekbarStartsMS(List<MediaChapter> chapters, int durationMS, double widthPx) {
+    if (chapters.isEmpty || durationMS <= 0 || widthPx <= 0) return const [];
+    if (widthPx / chapters.length < _kSeekbarMinSegmentPx) return const [];
+    final minSegmentMS = _kSeekbarMinSegmentPx / widthPx * durationMS;
+    final startsMS = <int>[];
+    int previousMS = 0;
     for (final chapter in chapters) {
       final startMS = chapter.startMS;
-      if (startMS <= 0) continue;
+      if (startMS - previousMS < minSegmentMS) continue;
+      if (durationMS - startMS < minSegmentMS) break;
+      startsMS.add(startMS);
+      previousMS = startMS;
+    }
+    return startsMS;
+  }
+
+  /// skips the first chapter, the seek start magnet already covers it.
+  int? snapTapToChapterMS(int positionMS, int durationMS, double widthPx) {
+    final startsMS = seekbarStartsMS(_currentChapters.value, durationMS, widthPx);
+    if (startsMS.isEmpty) return null;
+    int nearestDistanceMS = (_kSeekbarReachPx / widthPx * durationMS).round();
+    int? nearestMS;
+    for (final startMS in startsMS) {
       final distanceMS = (startMS - positionMS).abs();
       if (distanceMS > nearestDistanceMS) continue;
       nearestDistanceMS = distanceMS;

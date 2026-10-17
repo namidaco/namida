@@ -226,6 +226,7 @@ class Player {
   }
 
   bool get isModifyingQueue => _audioHandler.isModifyingQueue;
+  bool get isAutoSkipping => _audioHandler.isAutoSkipping;
 
   void refreshPlatformIcons() => _audioHandler.refreshPlatformIcons();
 

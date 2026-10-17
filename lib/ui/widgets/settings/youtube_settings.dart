@@ -447,7 +447,7 @@ class YoutubeSettings extends SettingSubpageProvider {
       icon: Broken.video,
       trailing: NamidaIconButton(
         icon: Broken.flag,
-        tooltip: () => lang.refreshLibrary,
+        tooltip: () => lang.configure,
         iconColor: context.defaultIconColor(),
         onPressed: _showYTFlagsDialog,
       ),

@@ -2,7 +2,7 @@
 
 usage:
   python scripts/screenshots/seed.py pick [--source ~/.namida] [--count 150]
-  python scripts/screenshots/seed.py music [--playlist <namida playlist json>] [--source ~/.namida] [--music-dir <dir>]
+  python scripts/screenshots/seed.py music [--playlist <namida playlist json>] [--source ~/.namida] [--music-dir <dir>] [--drive E:=/mnt/Media]
   python scripts/screenshots/seed.py data --data-dir <app user data dir> --music-dir <music dir as the app sees it>
 
 every command takes --work (default build/screenshots). `pick` writes work/playlist.json, `music` copies into
@@ -120,6 +120,7 @@ LIBRARY_TABS = ['home', 'tracks', 'history', 'genres', 'playlists', 'folders', '
 RECENT_LISTENS_TITLES = ['Nightfall', "Everybody's Scared", 'One & Only', 'Zombie Step']
 RECENT_LISTENS_GAP_MINUTES = 4
 ANDROID_STORAGE_REGEX = re.compile(r'^/storage/[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}/')
+WINDOWS_DRIVE_REGEX = re.compile(r'^([A-Za-z]:)[\\/]')
 PLAYLIST_TAG_COLORS = {'gym': 0xFFE57373, 'night': 0xFF7986CB, 'study': 0xFF4DB6AC}
 TRACK_TAGS = ['night drive', 'gym', 'study', 'road trip', 'rainy', 'party']
 LANGUAGES = ['eng', 'eng', 'eng', 'eng', 'eng', 'jpn', 'kor', 'spa']
@@ -462,8 +463,26 @@ def prune_dir(directory: Path, kept: set):
             folder.rmdir()
 
 
-def resolve_source_path(track_path: str, android_root: str | None) -> Path | None:
-    path = Path(track_path)
+def parse_drives(values: list | None) -> dict:
+    # -- `E:=/mnt/Media`, where a windows drive of the source's paths is mounted on this machine
+    drives = {}
+    for value in values or []:
+        drive, _, root = value.partition('=')
+        drives[drive.upper()] = root
+    return drives
+
+
+def to_local_path(track_path: str, drives: dict) -> str:
+    match = WINDOWS_DRIVE_REGEX.match(track_path)
+    root = drives.get(match.group(1).upper()) if match else None
+    if root is None:
+        return track_path
+    relative = track_path[match.end():].replace('\\', '/')
+    return f"{root.rstrip('/')}/{relative}"
+
+
+def resolve_source_path(track_path: str, android_root: str | None, drives: dict) -> Path | None:
+    path = Path(to_local_path(track_path, drives))
     if path.exists():
         return path
     if android_root is None or not ANDROID_STORAGE_REGEX.match(track_path):
@@ -538,8 +557,10 @@ def cmd_music(args):
     playlist_path = Path(args.playlist) if args.playlist else work / 'playlist.json'
     playlist = read_json(playlist_path)
     source = Path(args.source)
-    tracks_db = read_tracks_db(source)
-    plays = count_plays(source)
+    drives = parse_drives(args.drive)
+    # -- keyed by the source's own paths, a windows source read elsewhere needs them mapped like the playlists
+    tracks_db = {to_local_path(key, drives): info for key, info in read_tracks_db(source).items()}
+    plays = collections.Counter({to_local_path(key, drives): count for key, count in count_plays(source).items()})
     rng = random.Random(RNG_SEED)
 
     items = []
@@ -563,7 +584,7 @@ def cmd_music(args):
         return info
 
     for entry in playlist['tracks']:
-        path = resolve_source_path(entry['track'], args.android_root)
+        path = resolve_source_path(entry['track'], args.android_root, drives)
         if path is None:
             print(f"missing, skipped: {entry['track']}", file=sys.stderr)
             continue
@@ -572,11 +593,11 @@ def cmd_music(args):
     placement_items = {}
     for key, name in PLACEMENT_PLAYLISTS.items():
         entries = read_playlist_entries(source, name)['tracks']
-        paths = (resolve_source_path(entry['track'], args.android_root) for entry in entries)
+        paths = (resolve_source_path(entry['track'], args.android_root, drives) for entry in entries)
         placement_items[key] = [add_item(path) for path in paths if path is not None]
 
     visual_entries = read_playlist_entries(source, VISUALS_PLAYLIST)['tracks']
-    visual_paths = (resolve_source_path(entry['track'], args.android_root) for entry in visual_entries)
+    visual_paths = (resolve_source_path(entry['track'], args.android_root, drives) for entry in visual_entries)
     visual_ranks = {}
     for path in visual_paths:
         if path is not None:
@@ -596,7 +617,7 @@ def cmd_music(args):
         is_bringing_tracks = name in PLAYLISTS_WITH_TRACKS
         playlist_items = []
         for entry in user_playlist['tracks']:
-            path = resolve_source_path(entry['track'], args.android_root)
+            path = resolve_source_path(entry['track'], args.android_root, drives)
             if path is None:
                 continue
             info = read_source_info(path, tracks_db)
@@ -983,6 +1004,7 @@ def main():
     music.add_argument('--source', default=str(DEFAULT_SOURCE))
     music.add_argument('--music-dir')
     music.add_argument('--android-root', help='where an android sd card path (/storage/XXXX-XXXX/...) lives on this machine')
+    music.add_argument('--drive', action='append', help='X:=<dir>, where a windows drive of the source lives on this machine (repeatable)')
 
     data = commands.add_parser('data')
     data.add_argument('--data-dir', required=True)

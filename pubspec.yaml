@@ -25,6 +25,10 @@ dependency_overrides:
     git:
       url: https://github.com/media-kit/media-kit
       path: media_kit
+  android_libcpp_shared: # 0.2.x with the 0.3.1 fix, until mecab_for_dart allows ^0.3.1
+    git:
+      url: https://github.com/MSOB7YY/android_libcpp_shared
+      ref: copy-libcpp-to-output
 
 dependencies:
   flutter:

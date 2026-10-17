@@ -50,11 +50,13 @@ ffmpeg (LGPL config) and links `/app/namida/bin/ffmpeg{,probe}` to it.
 
 ## Flathub
 
-Submission prepared in a clone of the flathub fork (`C:\Programming\flathub`, branch
-`add-app.namida.Namida` off `new-pr`). Steps:
+Submission prepared in a clone of the flathub fork (`C:\Programming\flathub`, `/mnt/System/Programming/flathub`
+on linux, branch `add-app.namida.Namida` off `new-pr`). Steps:
 
 1. Release, then fill `url` + `sha256` in that clone's `namida-source.json`
    (`sha256sum Namida-x86_64-<ver>-flatpak-payload.tar.gz`), and copy `app.namida.Namida.yml` from here.
+   Flathub takes the metainfo (screenshots included) from that payload, so the release must come after the
+   metainfo change, and the namida-assets push before it (Flathub mirrors the screenshot urls at build time).
 2. Push the branch to the fork, open a PR against `flathub/flathub:new-pr` titled `Add app.namida.Namida`,
    with the text below. Answer the review, then comment `bot, build`.
 3. After the merge, accept the invite to `flathub/app.namida.Namida` (2FA required, within a week).

@@ -6,7 +6,7 @@
 # The same ffmpeg build also provides the ffmpeg + ffprobe binaries the app shells out to
 # (the ones bundled in the tarball are replaced - they are built against a newer glibc than the runtime).
 #
-# Local build (needs flatpak-builder + org.gnome.Sdk//49):
+# Local build (needs flatpak-builder + org.gnome.Sdk//51):
 #   cp <namida tarball> linux/packaging/flatpak/namida-linux.tar.gz
 #   flatpak-builder --user --install-deps-from=flathub --force-clean --repo=repo build-dir linux/packaging/flatpak/app.namida.Namida.yml
 #   flatpak build-bundle repo Namida-x86_64.flatpak app.namida.Namida
@@ -18,7 +18,7 @@ app-id: app.namida.Namida
 # gnome's runtime is the freedesktop one plus webkit2gtk-4.1, which the sign-in
 # window and the poToken webview need.
 runtime: org.gnome.Platform
-runtime-version: '49'
+runtime-version: '51'
 sdk: org.gnome.Sdk
 command: namida
 # the bundle keeps the com.msob7y.namida names the other linux packages use
@@ -92,7 +92,7 @@ modules:
           tag-pattern: ^v([\d.]+)$
 
   # LGPL build (no --enable-gpl): shared libs for libmpv + the ffmpeg/ffprobe CLIs used by the app.
-  # The external codec libs below all ship in org.freedesktop.Sdk 25.08 (io.mpv.Mpv relies on the same).
+  # The external codec libs below all ship in org.freedesktop.Sdk 26.08 (io.mpv.Mpv relies on the same).
   - name: ffmpeg
     config-opts:
       - --enable-shared

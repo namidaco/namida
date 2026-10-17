@@ -718,7 +718,7 @@ class TrackTile extends StatelessWidget {
                         if (properties.configs.displayRightDragHandler) ...[
                           const SizedBox(width: 8.0),
                           NamidaReordererableListener(
-                            durationMs: 20,
+                            durationMs: 40,
                             index: index,
                             child: FittedBox(
                               child: Icon(

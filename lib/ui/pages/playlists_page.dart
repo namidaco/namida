@@ -403,50 +403,50 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
           ]),
         ),
         onPointerCancel: (event) => onVerticalDragFinish(),
-        child: NamidaScrollbar(
-          controller: scrollController,
-          thumbLabel: _createThumbLabel,
-          child: AnimationLimiter(
-            child: ExpandableBoxColumn(
-              tab: libraryTab,
-              header: Obx(
-                (context) {
-                  final finalPlaylistsLength = SearchSortController.inst.playlistSearchList.valueR.length;
-                  final totalPlaylistsLength = PlaylistController.inst.playlistsMap.valueR.length;
-                  String leftText = finalPlaylistsLength != totalPlaylistsLength
-                      ? '$finalPlaylistsLength/${totalPlaylistsLength.displayPlaylistKeyword}'
-                      : finalPlaylistsLength.displayPlaylistKeyword;
-                  final sorting = settings.groupSortingOfR(MediaType.playlist);
-                  final sortReverse = sorting.reverse;
+        child: AnimationLimiter(
+          child: ExpandableBoxColumn(
+            tab: libraryTab,
+            header: Obx(
+              (context) {
+                final finalPlaylistsLength = SearchSortController.inst.playlistSearchList.valueR.length;
+                final totalPlaylistsLength = PlaylistController.inst.playlistsMap.valueR.length;
+                String leftText = finalPlaylistsLength != totalPlaylistsLength
+                    ? '$finalPlaylistsLength/${totalPlaylistsLength.displayPlaylistKeyword}'
+                    : finalPlaylistsLength.displayPlaylistKeyword;
+                final sorting = settings.groupSortingOfR(MediaType.playlist);
+                final sortReverse = sorting.reverse;
 
-                  return ExpandableBox(
-                    enableHero: widget.enableHero && enableHero,
-                    gridWidget: isInsideDialog
-                        ? null
-                        : const ChangeGridCountWidget(
-                            tab: libraryTab,
-                          ),
-                    isBarVisible: libraryTab.isBarVisible.valueR,
-                    leftText: leftText,
-                    onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
-                    onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                    sortByMenuWidget: SortByMenu(
-                      title: sorting.entries.first.type.toText(),
-                      popupMenuChild: const SortByMenuPlaylist(),
-                      isCurrentlyReversed: sortReverse,
-                      onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !sortReverse),
-                    ),
-                    textField: CustomTextField(
-                      textFieldController: libraryTab.textSearchControllerR,
-                      textFieldHintText: lang.filterPlaylists,
-                      onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
-                    ),
-                  );
-                },
-              ),
-              page: Stack(
-                children: [
-                  SmoothCustomScrollView(
+                return ExpandableBox(
+                  enableHero: widget.enableHero && enableHero,
+                  gridWidget: isInsideDialog
+                      ? null
+                      : const ChangeGridCountWidget(
+                          tab: libraryTab,
+                        ),
+                  isBarVisible: libraryTab.isBarVisible.valueR,
+                  leftText: leftText,
+                  onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
+                  onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
+                  sortByMenuWidget: SortByMenu(
+                    title: sorting.entries.first.type.toText(),
+                    popupMenuChild: const SortByMenuPlaylist(),
+                    isCurrentlyReversed: sortReverse,
+                    onReverseIconTap: () => SearchSortController.inst.sortMedia(MediaType.playlist, reverse: !sortReverse),
+                  ),
+                  textField: CustomTextField(
+                    textFieldController: libraryTab.textSearchControllerR,
+                    textFieldHintText: lang.filterPlaylists,
+                    onTextFieldValueChanged: (value) => SearchSortController.inst.searchMedia(value, MediaType.playlist),
+                  ),
+                );
+              },
+            ),
+            page: Stack(
+              children: [
+                NamidaScrollbar(
+                  controller: scrollController,
+                  thumbLabel: _createThumbLabel,
+                  child: SmoothCustomScrollView(
                     controller: scrollController,
                     slivers: [
                       SliverToBoxAdapter(child: listHeader),
@@ -891,9 +891,9 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                       if (!isInsideDialog) kBottomPaddingWidgetSliver,
                     ],
                   ),
-                  pullToRefreshWidget,
-                ],
-              ),
+                ),
+                pullToRefreshWidget,
+              ],
             ),
           ),
         ),

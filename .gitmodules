@@ -10,3 +10,7 @@
 	path = external/party_relay
 	url = https://github.com/namidaco/party_relay.git
 	ignore = all
+[submodule "external/namida-assets"]
+	path = external/namida-assets
+	url = https://github.com/namidaco/namida-assets.git
+	ignore = all

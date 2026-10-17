@@ -50,17 +50,14 @@ class _ChapterGapsClipper extends CustomClipper<Path> {
     final path = Path();
     final width = size.width;
     final height = size.height;
+    final startsMS = ChaptersController.seekbarStartsMS(chapters, durationMS, width);
     double previousEnd = 0.0;
-    for (final chapter in chapters) {
-      final startMS = chapter.startMS;
-      if (startMS <= 0) continue;
-      final x = startMS / durationMS * width;
-      if (x >= width) break;
-      final gapStart = x - _kGapWidth / 2;
-      if (gapStart > previousEnd) path.addRect(Rect.fromLTRB(previousEnd, 0.0, gapStart, height));
+    for (final startMS in startsMS) {
+      final gapStart = startMS / durationMS * width - _kGapWidth / 2;
+      path.addRect(Rect.fromLTRB(previousEnd, 0.0, gapStart, height));
       previousEnd = gapStart + _kGapWidth;
     }
-    if (previousEnd < width) path.addRect(Rect.fromLTRB(previousEnd, 0.0, width, height));
+    path.addRect(Rect.fromLTRB(previousEnd, 0.0, width, height));
     return path;
   }
 

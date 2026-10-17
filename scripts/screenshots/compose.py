@@ -1,6 +1,6 @@
 """Turns the raw shots into the readme collections, docs webp files, flathub pngs and a few designs.
 
-usage: python scripts/screenshots/compose.py [--publish]
+usage: python scripts/screenshots/compose.py [--publish] [--only readme designs docs flathub]
 
 reads work/out/<platform>/<theme>/<id>.png and writes work/compose/{readme,docs,flathub,designs}, every folder rewritten
 whole. designs are html templates rendered by a headless chromium (edge on windows) at twice their size and scaled down
@@ -51,17 +51,18 @@ README_WEBP_QUALITY = 90
 DESIGNS_WEBP_QUALITY = 90
 MOSAIC_COUNT = 48
 # -- the flathub listing in order, the first is its default. flathub's quality guidelines: plain app windows (no frames
-# -- or text), 1000x700 or smaller, mostly default (light) theme, at most ~10, a caption each (one sentence, no full stop)
+# -- or text), 1000x700 or smaller (2000x1400 hidpi), mostly default (light) theme, some dark is fine, at most ~10,
+# -- a caption each (one sentence, no full stop)
 FLATHUB_SHOTS = [
     ('wide_home', 'light', 'Home with mixes and recent listens, next to the player'),
-    ('wide_player', 'light', 'Player with video and synced lyrics'),
+    ('wide_player', 'dark', 'Player with video and synced lyrics'),
     ('portrait_home', 'light', 'Phone layout in a narrow window'),
     ('wide_album', 'light', 'Album page'),
     ('wide_artist', 'light', 'Artist page with albums and singles'),
     ('wide_playlists', 'light', 'Playlists with tags'),
     ('portrait_lyrics', 'dark', 'Synced lyrics in dark mode'),
-    ('wide_lyrics_editor', 'light', 'Lyrics editor'),
-    ('wide_stats', 'light', 'Listening statistics'),
+    ('wide_lyrics_editor', 'dark', 'Lyrics editor'),
+    ('wide_stats', 'dark', 'Listening statistics'),
     ('wide_settings', 'light', 'Customization settings'),
 ]
 # -- flathub wants shots taken on linux, windows ones only stand in until a linux run exists
@@ -442,7 +443,10 @@ def export_flathub(out_dir: Path, flathub_dir: Path):
     reset_dir(flathub_dir)
     platform = next(platform for platform in FLATHUB_PLATFORMS if (out_dir / platform).exists())
     for shot_id, theme, _ in FLATHUB_SHOTS:
-        shutil.copy2(shot_path(out_dir / platform, theme, shot_id), flathub_dir / f'{shot_id}_{theme}.png')
+        # -- linux has spectacle's window shot next to the in-app one, with the native shadow flathub asks for
+        in_app_shot = shot_path(out_dir / platform, theme, shot_id)
+        window_shot = in_app_shot.with_suffix('.device.png')
+        shutil.copy2(window_shot if window_shot.exists() else in_app_shot, flathub_dir / f'{shot_id}_{theme}.png')
     print(f'flathub ({platform}) -> {flathub_dir}')
 
 
@@ -480,8 +484,8 @@ def export_designs(browser: str, browser_dir: Path, desktop_shots_dir: Path, art
     save_webp(split, designs_dir / 'split_album.webp', DESIGNS_WEBP_QUALITY)
 
 
-def publish(compose_dir: Path):
-    for folder in PUBLISHED_FOLDERS:
+def publish(compose_dir: Path, folders: list):
+    for folder in folders:
         target = ASSETS_DIR / folder
         if target.exists():
             shutil.rmtree(target)
@@ -493,25 +497,34 @@ def main():
     parser = argparse.ArgumentParser(description='composes the screenshots')
     parser.add_argument('--work', default=str(DEFAULT_WORK))
     parser.add_argument('--publish', action='store_true')
+    # -- readme and designs render in a chromium, `--only flathub` works without one (linux has no edge)
+    parser.add_argument('--only', nargs='+', choices=PUBLISHED_FOLDERS, default=PUBLISHED_FOLDERS)
     args = parser.parse_args()
 
     work = Path(args.work)
     out_dir = work / 'out'
     compose_dir = work / 'compose'
-    browser = find_browser()
-    browser_dir = work / 'browser'
-    reset_dir(browser_dir)
+    folders = args.only
 
     android_shots_dir = out_dir / 'android'
     desktop_shots_dir = out_dir / 'windows'
     artworks_dir = work / 'windows' / 'app' / 'files' / 'Artworks'
-    export_readme(browser, browser_dir, android_shots_dir, compose_dir / 'readme')
-    export_designs(browser, browser_dir, desktop_shots_dir, artworks_dir, compose_dir / 'designs')
-    export_docs(out_dir, compose_dir / 'docs')
-    export_flathub(out_dir, compose_dir / 'flathub')
+    if 'readme' in folders or 'designs' in folders:
+        browser = find_browser()
+        browser_dir = work / 'browser'
+        reset_dir(browser_dir)
+        if 'readme' in folders:
+            export_readme(browser, browser_dir, android_shots_dir, compose_dir / 'readme')
+        if 'designs' in folders:
+            export_designs(browser, browser_dir, desktop_shots_dir, artworks_dir, compose_dir / 'designs')
+    if 'docs' in folders:
+        export_docs(out_dir, compose_dir / 'docs')
+    if 'flathub' in folders:
+        export_flathub(out_dir, compose_dir / 'flathub')
     if args.publish:
-        publish(compose_dir)
-        write_metainfo_screenshots()
+        publish(compose_dir, folders)
+        if 'flathub' in folders:
+            write_metainfo_screenshots()
 
 
 if __name__ == '__main__':

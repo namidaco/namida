@@ -23,12 +23,15 @@ NAME_OVERRIDES = {
 # -- only languages with a 639-2 code are kept, plus these 639-3 only ones common in music tags
 EXTRA_CODES = {
     'cmn', 'yue', 'wuu', 'hak', 'nan',  # chinese
-    'arb', 'arz', 'apc', 'ary', 'arq', 'aeb', 'acm', 'afb',  # arabic
-    'pes', 'prs',  # persian
-    'pcm', 'jam', 'kea', 'gcf', 'mfe', 'rcf', 'lou',  # creoles
+    'arb', 'arz', 'apc', 'ary', 'arq', 'aeb', 'acm', 'afb', 'apd', 'ayl', 'ayn', 'ars', 'acw', 'mey',  # arabic
+    'pes', 'prs', 'azb', 'lrc', 'mzn', 'glk',  # iran, afghanistan
+    'ckb', 'kmr', 'sdh',  # kurdish
+    'pnb', 'skr', 'bgc', 'hne', 'gbm', 'kfy', 'tcy', 'gom', 'syl', 'ctg', 'hif',  # south asia
+    'fil', 'zsm', 'tts', 'nod', 'bjn', 'bbc',  # southeast asia
+    'vec', 'egl', 'rgn', 'lmo', 'lij', 'pms',  # italy
+    'pcm', 'jam', 'kea', 'gcf', 'mfe', 'rcf', 'lou', 'kri',  # creoles
     'tzm', 'shi', 'rif', 'ses',  # amazigh, songhai
-    'fil', 'zsm', 'pnb', 'ckb', 'kmr', 'mnk', 'taq', 'sju',
-    'bar', 'ksh', 'vec', 'ryu', 'tts', 'bgc',
+    'hbs', 'szl', 'rue', 'aii', 'bar', 'ksh', 'ryu', 'mnk', 'taq', 'sju',
 }
 
 

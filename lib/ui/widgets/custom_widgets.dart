@@ -4376,12 +4376,11 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   double _dragged = 0;
 
   bool _draggable = true;
-  bool _inDismissRange = true;
   bool? _canSwipeInternal; // calculate for direction once to allow swiping back.
 
-  void calculateInDismissRange(double positionDx, double maxWidth) {
-    final percentage = positionDx / maxWidth;
-    _inDismissRange = percentage >= widget.dismissRangeStart && percentage <= widget.dismissRangeEnd;
+  bool _isInDismissRange(double localDx) {
+    final percentage = localDx / Dimensions.inst.availableAppContentWidth;
+    return percentage >= widget.dismissRangeStart && percentage <= widget.dismissRangeEnd;
   }
 
   Future<void> _animateDismiss(double to, {required bool faster}) async {
@@ -4418,21 +4417,20 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
   }
 
   Widget buildChild(bool draggable, Widget child, double maxWidth, Animation<double> fadeAnimation) {
-    return HorizontalDragDetector(
+    return _FadeDismissibleDragDetector(
+      isInDismissRange: _isInDismissRange,
       onStart: !draggable
           ? null
           : (d) {
               if (PullToRefreshMixin.isPulling) return;
               FadeDismissible.isDismissing = true;
               if (widget.onDismissStart != null) widget.onDismissStart!(d);
-              calculateInDismissRange(d.localPosition.dx, maxWidth);
               if (widget.draggable != null) _draggable = widget.draggable!();
             },
       onUpdate: !draggable
           ? null
           : (d) {
               if (!_draggable) return;
-              if (!_inDismissRange) return;
               if (PullToRefreshMixin.isPulling) return;
               if (_canSwipeInternal == null) {
                 bool canSwipe = true;
@@ -4562,6 +4560,61 @@ class _FadeDismissibleState extends State<FadeDismissible> with SingleTickerProv
       );
     }
     return dismissibleChild;
+  }
+}
+
+class _FadeDismissibleDragDetector extends _LinearDragDetector<_FadeDismissibleDragRecognizer> {
+  final bool Function(double localDx) isInDismissRange;
+
+  @override
+  _FadeDismissibleDragRecognizer create() => _FadeDismissibleDragRecognizer(isInDismissRange: isInDismissRange, debugOwner: this);
+
+  const _FadeDismissibleDragDetector({
+    required this.isInDismissRange,
+    super.child,
+    super.onStart,
+    super.onUpdate,
+    super.onEnd,
+    super.onCancel,
+  });
+}
+
+// by claude
+/// leaves edge starts and diagonal moves to the scrollable underneath.
+class _FadeDismissibleDragRecognizer extends HorizontalDragGestureRecognizer {
+  static const _kMinHorizontalRatio = 2.0;
+
+  final bool Function(double localDx) isInDismissRange;
+
+  _FadeDismissibleDragRecognizer({
+    required this.isInDismissRange,
+    super.debugOwner,
+  });
+
+  double _verticalDistanceMoved = 0.0;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) {
+    if (!isInDismissRange(event.localPosition.dx)) return false;
+    return super.isPointerAllowed(event);
+  }
+
+  @override
+  void handleEvent(PointerEvent event) {
+    if (event is PointerMoveEvent) _verticalDistanceMoved += event.delta.dy;
+    super.handleEvent(event);
+  }
+
+  @override
+  bool hasSufficientGlobalDistanceToAccept(PointerDeviceKind pointerDeviceKind, double? deviceTouchSlop) {
+    if (!super.hasSufficientGlobalDistanceToAccept(pointerDeviceKind, deviceTouchSlop)) return false;
+    return globalDistanceMoved.abs() > _verticalDistanceMoved.abs() * _kMinHorizontalRatio;
+  }
+
+  @override
+  void didStopTrackingLastPointer(int pointer) {
+    super.didStopTrackingLastPointer(pointer);
+    _verticalDistanceMoved = 0.0;
   }
 }
 
@@ -5533,7 +5586,6 @@ class NamidaInkWellButton extends StatelessWidget {
   final Color? itemsColor;
   final AlignmentGeometry? alignment;
   final bool centered;
-  final int? maxLines;
 
   const NamidaInkWellButton({
     super.key,
@@ -5555,7 +5607,6 @@ class NamidaInkWellButton extends StatelessWidget {
     this.decoration = const BoxDecoration(),
     this.alignment,
     this.centered = false,
-    this.maxLines,
   });
 
   @override
@@ -5598,8 +5649,6 @@ class NamidaInkWellButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    maxLines: maxLines,
-                    overflow: maxLines == null ? null : TextOverflow.ellipsis,
                     style: textTheme.displayMedium?.copyWith(
                       color: itemsColor,
                       fontSize: (15.0 * sizeMultiplier),

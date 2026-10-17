@@ -62,17 +62,20 @@ class Romanizer {
         break;
       }
     }
-    final groupedLinesRomanized = _romanizeLinesGroupedWithLatin(lines, chinese);
-    if (groupedLinesRomanized == null) return (index, text) => _engine.romanize(text, chinese: chinese);
-    return (index, text) => groupedLinesRomanized[index] ?? _engine.romanize(text, chinese: chinese);
+    final shipped = _findShippedRomanization(lines, chinese);
+    if (shipped.isMostlyRomanized) return null;
+    final romanizedLines = shipped.romanizedLines;
+    if (romanizedLines == null) return (index, text) => _engine.romanize(text, chinese: chinese);
+    return (index, text) => romanizedLines[index] ?? _engine.romanize(text, chinese: chinese);
   }
 
-  /// the line itself where a latin line sharing its timestamp already romanizes it.
-  List<String?>? _romanizeLinesGroupedWithLatin(List<LrcLine> lines, bool chinese) {
+  /// [_ShippedRomanization.romanizedLines] holds the line itself where a latin line sharing its timestamp, or its own latin part, already romanizes it.
+  _ShippedRomanization _findShippedRomanization(List<LrcLine> lines, bool chinese) {
     List<String?>? romanizedLines;
     final normalizedLatinLines = <String>[];
+    final normalizedLatinParts = <String>[];
     final romanizableIndices = <int>[];
-    final unmatchedIndices = <int>[];
+    var romanizableCount = 0;
     var matchedCount = 0;
     final length = lines.length;
     var groupEnd = 0;
@@ -82,55 +85,51 @@ class Romanizer {
       while (groupEnd < length && lines[groupEnd].timestamp == timestamp) {
         groupEnd++;
       }
-      if (groupEnd - groupStart == 1) continue;
+      final isGroup = groupEnd - groupStart > 1;
 
       normalizedLatinLines.clear();
+      normalizedLatinParts.clear();
       romanizableIndices.clear();
       for (var i = groupStart; i < groupEnd; i++) {
         final text = lines[i].readableText;
         if (RomanizerEngine.needsRomanization(text)) {
           romanizableIndices.add(i);
-        } else {
-          final normalized = _RomanizationMatcher.normalize(text);
+          final latinPart = _RomanizationMatcher.normalize(text, scriptsAsWildcards: false);
+          if (latinPart.isNotEmpty) normalizedLatinParts.add(latinPart);
+        } else if (isGroup) {
+          final normalized = _RomanizationMatcher.normalize(text, scriptsAsWildcards: false);
           if (normalized.isNotEmpty) normalizedLatinLines.add(normalized);
         }
       }
-      if (normalizedLatinLines.isEmpty || romanizableIndices.isEmpty) continue;
+      romanizableCount += romanizableIndices.length;
+      if (romanizableIndices.isEmpty || (normalizedLatinLines.isEmpty && normalizedLatinParts.isEmpty)) continue;
 
       romanizedLines ??= List<String?>.filled(length, null);
       for (final i in romanizableIndices) {
         final text = lines[i].readableText;
         final romanized = _engine.romanize(text, chinese: chinese);
         var isAlreadyRomanized = _RomanizationMatcher.matchesAny(romanized, normalizedLatinLines);
-        if (!isAlreadyRomanized) isAlreadyRomanized = _isRomanizedWithoutOwnLatin(text, chinese, normalizedLatinLines);
-        if (isAlreadyRomanized) {
-          romanizedLines[i] = text;
-          matchedCount++;
-        } else {
-          romanizedLines[i] = romanized;
-          unmatchedIndices.add(i);
-        }
+        if (!isAlreadyRomanized) isAlreadyRomanized = _isRomanizedByLatinPart(text, romanized, chinese, normalizedLatinLines, normalizedLatinParts);
+        if (isAlreadyRomanized) matchedCount++;
+        romanizedLines[i] = isAlreadyRomanized ? text : romanized;
       }
     }
 
     // -- the rest ship it too, the generated one just misread them (unknown kanji, other readings)
-    final isMostlyRomanized = matchedCount > unmatchedIndices.length;
-    if (romanizedLines != null && isMostlyRomanized) {
-      for (final i in unmatchedIndices) {
-        romanizedLines[i] = lines[i].readableText;
-      }
-    }
-    return romanizedLines;
+    final isMostlyRomanized = matchedCount * 2 > romanizableCount;
+    return (romanizedLines: romanizedLines, isMostlyRomanized: isMostlyRomanized);
   }
 
   static final _latinLettersRegex = RegExp(r'[A-Za-z]+');
 
-  /// latin words of the line itself (`緋色に染まって (of destiny)`) are often left out of its romanized sibling.
-  bool _isRomanizedWithoutOwnLatin(String text, bool chinese, List<String> normalizedLatinLines) {
+  /// only the non-latin text is compared, a latin part can't romanize itself (`oh yeah 僕は`).
+  /// latin words of the line (`緋色に染まって (of destiny)`) are often left out of its romanized sibling.
+  bool _isRomanizedByLatinPart(String text, String romanized, bool chinese, List<String> normalizedLatinLines, List<String> normalizedLatinParts) {
     final textWithoutLatin = text.replaceAll(_latinLettersRegex, '');
-    if (textWithoutLatin.length == text.length) return false;
-    final romanized = _engine.romanize(textWithoutLatin, chinese: chinese);
-    return _RomanizationMatcher.matchesAny(romanized, normalizedLatinLines);
+    final hasOwnLatin = textWithoutLatin.length != text.length;
+    if (!hasOwnLatin) return _RomanizationMatcher.matchesAny(romanized, normalizedLatinParts);
+    final romanizedWithoutLatin = _engine.romanize(textWithoutLatin, chinese: chinese);
+    return _RomanizationMatcher.matchesAny(romanizedWithoutLatin, normalizedLatinLines) || _RomanizationMatcher.matchesAny(romanizedWithoutLatin, normalizedLatinParts);
   }
 
   void setLyricsEnabled(bool enabled) {
@@ -246,7 +245,7 @@ class _RomanizationMatcher {
 
   /// lower case a-z only, long vowels collapsed (`ou`, `oo` & `ō` => `o`).
   /// each run of characters left unromanized becomes one wildcard, [_wildcard] + the letters it can stand for.
-  static String normalize(String text) {
+  static String normalize(String text, {required bool scriptsAsWildcards}) {
     final length = text.length;
     if (_normalizeBuffer.length < length) _normalizeBuffer = Uint16List(length * 2);
     final buffer = _normalizeBuffer;
@@ -255,6 +254,7 @@ class _RomanizationMatcher {
     for (var i = 0; i < length; i++) {
       final codeUnit = text.codeUnitAt(i);
       if (RomanizerEngine.scriptOf(codeUnit) != 0) {
+        if (!scriptsAsWildcards) continue;
         if (previous >= _wildcard) {
           previous += _wildcardLettersPerChar;
           buffer[outputLength - 1] = previous;
@@ -278,7 +278,7 @@ class _RomanizationMatcher {
   static bool _isVowel(int c) => c == 0x61 || c == 0x65 || c == 0x69 || c == 0x6F || c == 0x75;
 
   static bool matchesAny(String romanized, List<String> normalizedLines) {
-    final pattern = normalize(romanized);
+    final pattern = normalize(romanized, scriptsAsWildcards: true);
     var letters = 0;
     var wildcardLetters = 0;
     for (var i = 0; i < pattern.length; i++) {
@@ -367,3 +367,5 @@ class _RomanizationMatcher {
     return minDistance;
   }
 }
+
+typedef _ShippedRomanization = ({List<String?>? romanizedLines, bool isMostlyRomanized});

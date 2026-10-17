@@ -2174,6 +2174,9 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final fontSize = isDense ? 13.0 : 14.5;
     final contentPadding = isDense ? const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0) : const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0);
     final suffixIconConstraints = isDense ? BoxConstraints(minWidth: 34.0, minHeight: height) : null;
+    final icon = widget.icon;
+    final hasIconSlot = icon != null || isDense; // -- dense fields take their height from the slot
+    final suffixIcon = widget.suffixIcon ?? (hasIconSlot ? Icon(icon, size: 18.0) : null);
     return TextFormField(
       obscureText: widget.obscureText,
       onTap: widget.onTap,
@@ -2197,7 +2200,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
         isDense: isDense,
         contentPadding: contentPadding,
         errorMaxLines: 3,
-        suffixIcon: widget.suffixIcon ?? Icon(widget.icon, size: 18.0),
+        suffixIcon: suffixIcon,
         suffixIconConstraints: suffixIconConstraints,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRS),

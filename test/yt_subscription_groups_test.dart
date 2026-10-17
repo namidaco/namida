@@ -17,7 +17,13 @@ void main() {
     AppDirs.INTERNAL_STORAGE = root.path;
     Directory(AppDirs.YOUTUBE_MAIN_DIRECTORY).createSync(recursive: true);
     File(AppPaths.YT_SUBSCRIPTIONS).writeAsJsonSync({
-      'a': {'title': 'A', 'channelID': 'a', 'subscribed': true, 'groups': ['g1'], 'lastFetched': 1000},
+      'a': {
+        'title': 'A',
+        'channelID': 'a',
+        'subscribed': true,
+        'groups': ['g1'],
+        'lastFetched': 1000,
+      },
       'b': {'title': 'B', 'channelID': 'b', 'subscribed': false, 'lastFetched': 2000},
     });
     File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL).writeAsJsonSync(['g1', 'g2']);
@@ -65,13 +71,33 @@ void main() {
     expect(controller.availableChannels.value['a']?.groups, ['g1']);
   });
 
+  test('missing titles are filled once, known ones are kept', () async {
+    controller.toggleChannelGroup('d', 'g2');
+    expect(controller.availableChannels.value['d']?.title, '');
+    expect(controller.fillMissingTitle('d', 'D'), true);
+    expect(controller.availableChannels.value['d']?.title, 'D');
+    expect(controller.fillMissingTitle('d', 'Other'), false);
+    expect(controller.availableChannels.value['d']?.title, 'D');
+    controller.toggleChannelGroup('d', 'g2');
+
+    await controller.toggleChannelSubscription('e', title: 'E');
+    expect(controller.availableChannels.value['e']?.title, 'E');
+    await controller.toggleChannelSubscription('e', title: 'Other');
+    expect(controller.availableChannels.value['e']?.title, 'E');
+  });
+
   test('filter and counts include non favourites', () async {
+    Map<String, Set<String>> groupsChannelsIds() => controller.getGroupsChannels().map((group, subs) => MapEntry(group, subs.map((e) => e.channelID).toSet()));
     expect(controller.channelsInGroup('g1').toSet(), {'a', 'c'});
-    expect(controller.getGroupsCounts(), {'g1': 2});
+    expect(groupsChannelsIds(), {
+      'g1': {'a', 'c'},
+    });
 
     await controller.toggleChannelSubscription('a');
     expect(controller.channelsInGroup('g1').toSet(), {'a', 'c'});
-    expect(controller.getGroupsCounts(), {'g1': 2});
+    expect(groupsChannelsIds(), {
+      'g1': {'a', 'c'},
+    });
     await controller.toggleChannelSubscription('a');
   });
 

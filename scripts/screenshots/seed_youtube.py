@@ -39,6 +39,7 @@ DOWNLOAD_TEMPLATE_GROUP = 'deep'
 DOWNLOAD_BYTES_PER_SECOND = 16000
 CHANNELS_ALL_VIDEOS_SIZE = 60
 CHANNELS_ALL_VIDEOS_MAX_PER_CHANNEL = 8
+LOCAL_CHANNEL_GROUPS = ['Nightcore', 'Remixes', 'Chill']
 INVALID_FILENAME_REGEX = re.compile(r'[<>:"/\\|?*]')
 
 
@@ -166,6 +167,20 @@ def pick_channels_all_videos(candidates: list, channel_ids: set) -> list:
         if len(picked) >= CHANNELS_ALL_VIDEOS_SIZE:
             break
     return picked
+
+
+def write_local_channels(keep_youtube: Path, channel_items: list):
+    # -- the account's channels as local favourites spread over a few groups, for the channels page group chips
+    subscriptions = {}
+    groups_count = len(LOCAL_CHANNEL_GROUPS)
+    for index, item in enumerate(channel_items):
+        channel_id = item['id']
+        groups = [LOCAL_CHANNEL_GROUPS[index % groups_count]]
+        if index % 3 == 0:
+            groups.append(LOCAL_CHANNEL_GROUPS[(index + 1) % groups_count])
+        subscriptions[channel_id] = {'title': item.get('title') or '', 'channelID': channel_id, 'subscribed': True, 'groups': groups}
+    write_json(keep_youtube / 'yt_subs.json', subscriptions)
+    write_json(keep_youtube / 'yt_sub_groups.json', LOCAL_CHANNEL_GROUPS)
 
 
 def write_downloads(source_youtube: Path, keep_youtube: Path, candidates: list, kept_ids: set):
@@ -325,6 +340,7 @@ def main():
         put_all(keep_youtipie / f'channelTab_{account}.db', channel_tab_rows)
     for row in [*channel_rows.values(), *channel_tab_rows.values()]:
         collect_urls(row, kept_urls)
+    write_local_channels(keep_youtube, channel_items)
 
     write_downloads(source_youtube, keep_youtube, candidates, kept_ids)
 

@@ -17,8 +17,12 @@ class QueueScrollFollower {
   final scrollController = NamidaScrollController.create();
   final arrowIcon = Broken.cd.obso;
 
+  static const _kComfortZoneStart = 0.1;
+  static const _kComfortZoneEnd = 0.7;
+
   bool _isFollowing = true;
   bool _isFollowScheduled = false;
+  bool _isAutoSkipScheduled = false;
   int _runningAnimations = 0;
 
   void dispose() {
@@ -34,13 +38,28 @@ class QueueScrollFollower {
       _updateArrowIcon();
       return;
     }
+    if (Player.inst.isAutoSkipping) _isAutoSkipScheduled = true;
     if (_isFollowScheduled) return;
     _isFollowScheduled = true;
     // -- after layout, so a replaced queue has its new extents
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final wasAutoSkip = _isAutoSkipScheduled;
       _isFollowScheduled = false;
-      animateToCurrentItem();
+      _isAutoSkipScheduled = false;
+      if (wasAutoSkip || !_isCurrentItemInComfortZone()) {
+        animateToCurrentItem();
+      } else {
+        _updateArrowIcon();
+      }
     });
+  }
+
+  bool _isCurrentItemInComfortZone() {
+    final position = scrollController.positions.lastOrNull;
+    if (position == null || !position.hasContentDimensions) return false;
+    final viewport = position.viewportDimension;
+    final itemOffsetInViewport = currentItemStart() - position.pixels;
+    return itemOffsetInViewport >= viewport * _kComfortZoneStart && itemOffsetInViewport <= viewport * _kComfortZoneEnd;
   }
 
   void jumpToCurrentItem() {
