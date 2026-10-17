@@ -24,16 +24,16 @@ class AudioCacheController {
     }
   }
 
-  Future<AudioCacheDetails?> getCachedAudioForId(String videoId) async {
+  Future<AudioCacheDetails?> getCachedAudioForId(String videoId, {bool includeLocalTracks = true}) async {
     await _audioCacheMapLoadedCompleter.future;
 
     final audioFiles = audioCacheMap[videoId] ?? [];
-    final possibleLocalFiles = Indexer.inst.allTracksMappedByYTID[videoId] ?? [];
 
     audioFiles.sortByAltsPrecomputed([(e) => e.bitrate ?? 0, (e) => e.file.fileSizeSync() ?? 0], reverse: true);
     AudioCacheDetails? cachedAudio = await audioFiles.firstWhereEffAsync((e) => e.file.exists());
 
-    if (cachedAudio == null) {
+    if (cachedAudio == null && includeLocalTracks) {
+      final possibleLocalFiles = Indexer.inst.allTracksMappedByYTID[videoId] ?? [];
       final localTrack = await possibleLocalFiles.firstWhereEffAsync((e) => File(e.path).exists());
       if (localTrack != null) {
         cachedAudio = AudioCacheDetails(

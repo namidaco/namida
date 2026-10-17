@@ -1185,6 +1185,7 @@ class Player {
     int? sourceDurationMS,
     required bool isFile,
     bool videoOnly = false,
+    int? startOffsetMS,
   }) async {
     await _audioHandler.setVideoSource(
       source: source,
@@ -1192,6 +1193,7 @@ class Player {
       sourceDurationMS: sourceDurationMS,
       isFile: isFile,
       videoOnly: videoOnly,
+      startOffsetMS: startOffsetMS,
     );
   }
 

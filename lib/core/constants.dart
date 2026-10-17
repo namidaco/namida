@@ -328,6 +328,112 @@ class NamidaLinkUtils {
     return null;
   }
 
+  /// youtube's own `t` param (`t=5`, `t=5.235`, `t=1m30s`), null when missing or zero.
+  static int? extractYoutubeStartMS(String link) {
+    final paramIndex = _findStartParamIndex(link);
+    if (paramIndex < 0) return null;
+    return _parseStartParamMS(link, paramIndex + 2);
+  }
+
+  /// [link] with its `t` param set to [startMS], or removed when [startMS] isn't positive.
+  static String withYoutubeStartMS(String link, int startMS) {
+    final paramIndex = _findStartParamIndex(link);
+    if (paramIndex < 0) {
+      if (startMS <= 0) return link;
+      final hashIndex = link.indexOf('#');
+      final insertIndex = hashIndex < 0 ? link.length : hashIndex;
+      final hasQuery = link.lastIndexOf('?', insertIndex) >= 0;
+      final separator = hasQuery ? '&' : '?';
+      return link.replaceRange(insertIndex, insertIndex, '${separator}t=${_startMSToParam(startMS)}');
+    }
+
+    final valueStart = paramIndex + 2;
+    int valueEnd = valueStart;
+    while (valueEnd < link.length) {
+      final char = link.codeUnitAt(valueEnd);
+      if (char == _kCharAmpersand || char == _kCharHash) break;
+      valueEnd++;
+    }
+    if (startMS > 0) return link.replaceRange(valueStart, valueEnd, _startMSToParam(startMS));
+
+    final separatorIndex = paramIndex - 1;
+    final isFirstQueryParam = link.codeUnitAt(separatorIndex) == _kCharQuestionMark;
+    final hasNextParam = valueEnd < link.length && link.codeUnitAt(valueEnd) == _kCharAmpersand;
+    if (isFirstQueryParam && hasNextParam) return link.replaceRange(paramIndex, valueEnd + 1, '');
+    return link.replaceRange(separatorIndex, valueEnd, '');
+  }
+
+  static const _kCharQuestionMark = 0x3F;
+  static const _kCharAmpersand = 0x26;
+  static const _kCharHash = 0x23;
+  static const _kCharZero = 0x30;
+  static const _kCharNine = 0x39;
+  static const _kCharDot = 0x2E;
+  static const _kCharH = 0x68;
+  static const _kCharM = 0x6D;
+  static const _kCharS = 0x73;
+
+  /// index of the `t` in a `t=` that follows `?`, `&` or `#`, so `list=` isn't taken.
+  static int _findStartParamIndex(String link) {
+    int index = link.indexOf('t=');
+    while (index > 0) {
+      final previousChar = link.codeUnitAt(index - 1);
+      if (previousChar == _kCharQuestionMark || previousChar == _kCharAmpersand || previousChar == _kCharHash) return index;
+      index = link.indexOf('t=', index + 2);
+    }
+    return -1;
+  }
+
+  static int? _parseStartParamMS(String link, int start) {
+    int totalMS = 0;
+    int valueMS = 0;
+    bool isFraction = false;
+    int fractionDigitMS = 0;
+    bool hasDigits = false;
+    for (int i = start; i < link.length; i++) {
+      final char = link.codeUnitAt(i);
+      if (char >= _kCharZero && char <= _kCharNine) {
+        hasDigits = true;
+        final digit = char - _kCharZero;
+        if (isFraction) {
+          valueMS += digit * fractionDigitMS;
+          fractionDigitMS = fractionDigitMS ~/ 10;
+        } else {
+          valueMS = valueMS * 10 + digit * 1000;
+        }
+      } else if (char == _kCharDot) {
+        isFraction = true;
+        fractionDigitMS = 100;
+      } else {
+        final unitMS = switch (char) {
+          _kCharH => 3600,
+          _kCharM => 60,
+          _kCharS => 1,
+          _ => 0,
+        };
+        if (unitMS == 0) break;
+        totalMS += valueMS * unitMS;
+        valueMS = 0;
+        isFraction = false;
+      }
+    }
+    if (!hasDigits) return null;
+    totalMS += valueMS;
+    return totalMS > 0 ? totalMS : null;
+  }
+
+  /// `8370` -> `8.37`, `8000` -> `8`.
+  static String _startMSToParam(int startMS) {
+    final seconds = startMS ~/ 1000;
+    final millis = startMS % 1000;
+    if (millis == 0) return '$seconds';
+    var fraction = millis.toString().padLeft(3, '0');
+    while (fraction.endsWith('0')) {
+      fraction = fraction.substring(0, fraction.length - 1);
+    }
+    return '$seconds.$fraction';
+  }
+
   /// the 11th char of a youtube id holds only 4 bits.
   static final _youtubeIdInBracketsRegex = RegExp(r'\[([\w-]{10}[AEIMQUYcgkosw048])\]');
   static const _kYoutubeIdInBracketsLength = 13;

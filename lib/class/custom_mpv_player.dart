@@ -442,7 +442,8 @@ class CustomMPVPlayer implements AVPlayer {
 
   static const _kMaxLoopingVideoRepeats = 3000;
 
-  /// Returns the source to add as a video track, an `edl://` looping timeline when the animation asks for it.
+  /// Returns the source to add as a video track, an `edl://` looping timeline when the animation asks for it,
+  /// or an `edl://` segment starting at [VideoSourceOptions.startOffsetMS].
   Future<String> _resolveVideoTrackSource(VideoSourceOptions videoOptions, Future<Duration?> audioDurationFuture) async {
     final source = videoOptions.source as UriSource;
     final sourceDurationMS = videoOptions.durationMS;
@@ -453,7 +454,16 @@ class CustomMPVPlayer implements AVPlayer {
       if (audioDuration != null) loopingSource = _buildLoopingVideoSource(source, sourceDurationMS, audioDuration.inMilliseconds);
     }
     _loopingVideoApplied = loopingSource != null;
-    return loopingSource ?? source.uri.toString();
+    if (loopingSource != null) return loopingSource;
+
+    final startOffsetMS = videoOptions.startOffsetMS;
+    if (!videoOptions.loop && startOffsetMS != null && startOffsetMS > 0) {
+      final segmentPath = _edlSegmentPath(source);
+      final startSeconds = _edlSeconds(startOffsetMS);
+      return 'edl://$segmentPath,start=$startSeconds';
+    }
+
+    return source.uri.toString();
   }
 
   String? _buildLoopingVideoSource(UriSource source, int sourceDurationMS, int targetMS) {
@@ -464,10 +474,8 @@ class CustomMPVPlayer implements AVPlayer {
     final fullRepeats = isCapped ? _kMaxLoopingVideoRepeats : neededRepeats;
     final remainderMS = isCapped ? 0 : targetMS - fullRepeats * sourceDurationMS;
 
-    // -- byte length prefixed, that way the path needs no escaping at all.
     // -- explicit lengths keep the total exact even if the file's own duration differs slightly.
-    final path = source.uri.isScheme('file') ? source.uri.toFilePath() : source.uri.toString();
-    final segmentPath = '%${utf8.encode(path).length}%$path';
+    final segmentPath = _edlSegmentPath(source);
     final segmentSeconds = _edlSeconds(sourceDurationMS);
     final segment = '$segmentPath,length=$segmentSeconds;';
     final buffer = StringBuffer('edl://');
@@ -479,6 +487,12 @@ class CustomMPVPlayer implements AVPlayer {
       buffer.write('$segmentPath,length=$remainderSeconds;');
     }
     return buffer.toString();
+  }
+
+  /// byte length prefixed, that way the path needs no escaping at all.
+  static String _edlSegmentPath(UriSource source) {
+    final path = source.uri.isScheme('file') ? source.uri.toFilePath() : source.uri.toString();
+    return '%${utf8.encode(path).length}%$path';
   }
 
   static String _edlSeconds(int ms) => (ms / 1000).toStringAsFixed(3);

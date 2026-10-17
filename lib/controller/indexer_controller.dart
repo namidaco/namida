@@ -35,6 +35,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/controller/tagger_controller.dart';
+import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
@@ -888,10 +889,14 @@ class Indexer<T extends Track> {
 
     final finalNewOldTracks = <TrackExtended, TrackExtended?>{};
 
+    final currentTrack = Player.inst.currentTrack?.track;
+    Track? linkChangedCurrentTrack;
+
     for (final e in tracksMap.entries) {
       final ot = e.key;
       final nt = e.value.asTrack() as T;
       newTracks.add(nt);
+      if (ot == currentTrack && ot.youtubeLink != e.value.youtubeLink) linkChangedCurrentTrack = currentTrack;
       if (externalTracksMappedByPath.containsKey(ot.path)) {
         _addExternalTrack(e.value, null);
       } else {
@@ -912,6 +917,8 @@ class Indexer<T extends Track> {
     _addTheseTracksToAlbumGenreArtistEtc(finalNewOldTracks);
     _sortAndRefreshTracks();
     tracksInfoList.refresh();
+
+    if (linkChangedCurrentTrack != null) VideoController.inst.updateCurrentVideo(linkChangedCurrentTrack);
 
     SearchSortController.inst.refreshPortsIfNecessary();
     final globalSearchText = ScrollSearchController.inst.searchTextEditingController.text;

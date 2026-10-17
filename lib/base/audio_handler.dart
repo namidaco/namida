@@ -1051,6 +1051,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
             loop: VideoController.inst.canLoopVideo(initialVideo, duration.inMilliseconds),
             videoOnly: isVideo,
             durationMS: initialVideo.durationMS,
+            startOffsetMS: VideoController.inst.getVideoStartOffsetMS(tr),
           );
     return ItemPrepareConfigSelectable(
       await tr.toAudioSource(currentIndex.value, currentQueue.value.length, duration),
@@ -2954,6 +2955,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     int? sourceDurationMS,
     bool isFile = false,
     bool videoOnly = false,
+    int? startOffsetMS,
   }) async {
     if (isFile) _setLastAccessedForSourceIfFileTry(source);
     final videoOptions = VideoSourceOptions(
@@ -2961,6 +2963,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       loop: loopingAnimation,
       videoOnly: videoOnly,
       durationMS: sourceDurationMS,
+      startOffsetMS: startOffsetMS,
     );
     _latestVideoOptions = videoOptions;
     await super.setVideo(videoOptions);

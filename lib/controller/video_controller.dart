@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:isolate';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
 import 'package:just_audio/just_audio.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:namida_waveform/namida_waveform.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 
@@ -17,8 +19,10 @@ import 'package:namida/class/progress_percentage.dart';
 import 'package:namida/class/search_matcher.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
+import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/ffmpeg_controller.dart';
+import 'package:namida/controller/files_download_manager.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -33,6 +37,7 @@ import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+part 'video_controller.offset.dart';
 part 'video_controller.priority.dart';
 
 class NamidaVideoWidget extends StatefulWidget {
@@ -506,6 +511,7 @@ class VideoController {
         sourceDurationMS: v.durationMS,
         isFile: true,
         videoOnly: track is Video,
+        startOffsetMS: getVideoStartOffsetMS(track),
       );
     }
   }
@@ -551,6 +557,18 @@ class VideoController {
   bool canLoopVideo(NamidaVideo video, int trackDurationMS, {double p = 0.6}) {
     if (video.durationMS <= 0 || trackDurationMS <= 0) return false;
     return video.durationMS < trackDurationMS * p;
+  }
+
+  /// youtube's own `t` param in the track's link, the point of the video where the audio starts.
+  int? getVideoStartOffsetMS(Track track) {
+    if (track is Video) return null;
+    return NamidaLinkUtils.extractYoutubeStartMS(track.youtubeLink);
+  }
+
+  /// where [track] starts inside the audio of [videoId], negative when the track has extra audio before it.
+  /// null when no confident match was found.
+  Future<int?> detectVideoStartOffsetMS({required Track track, required String videoId}) {
+    return _VideoOffsetDetector.detect(trackPath: track.path, videoId: videoId);
   }
 
   void _ensureVideoPlaybackEnabled() {

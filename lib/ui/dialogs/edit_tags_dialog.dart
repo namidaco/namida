@@ -13,7 +13,6 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
-import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -79,6 +78,8 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
   controller.text = ytlink;
 
   final canEditComment = false.obs;
+  final isDetectingOffset = false.obs;
+  bool isDialogOpen = true;
 
   Future<void> confirmEdit() async {
     if (formKey.currentState!.validate()) {
@@ -107,11 +108,30 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
 
       _editingInProgress[singleTrack.path] = false;
       NamidaNavigator.inst.closeDialog();
+    }
+  }
 
-      final currentItem = Player.inst.currentItem.value;
-      if (currentItem is Selectable && singleTrackPre == currentItem.track) {
-        VideoController.inst.updateCurrentVideo(singleTrackPre);
+  Future<void> detectOffset() async {
+    if (!formKey.currentState!.validate()) return;
+    final videoId = NamidaLinkUtils.extractYoutubeId(controller.text);
+    if (videoId == null) return;
+
+    isDetectingOffset.value = true;
+    try {
+      final offsetMS = await VideoController.inst.detectVideoStartOffsetMS(track: singleTrack, videoId: videoId);
+      if (!isDialogOpen) return;
+      if (offsetMS == null) {
+        snackyy(title: lang.failed, message: lang.noResults, top: false);
+      } else if (offsetMS < 0) {
+        snackyy(title: lang.failed, message: '${lang.offset}: ${offsetMS.milliSecondsLabelWithCentiSeconds} (${lang.minimum}: ${0.milliSecondsLabel})', top: false);
+      } else {
+        controller.text = NamidaLinkUtils.withYoutubeStartMS(controller.text, offsetMS);
+        canEditComment.value = true;
       }
+    } catch (e) {
+      snackyy(title: lang.error, message: e.toString(), isError: true, top: false);
+    } finally {
+      isDetectingOffset.value = false;
     }
   }
 
@@ -185,9 +205,11 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
+      isDialogOpen = false;
       controller.dispose();
       ytSearchController.dispose();
       canEditComment.close();
+      isDetectingOffset.close();
     },
     colorScheme: colorScheme,
     dialogBuilder: (theme) => Form(
@@ -215,23 +237,34 @@ Future<void> showSetYTLinkCommentDialog(Track singleTrackPre, Color colorScheme,
             ),
           ),
         ],
-        child: CustomTagTextField(
-          controller: controller,
-          hintText: ytlink,
-          labelText: lang.link,
-          keyboardType: TextInputType.url,
-          onChanged: (value) {
-            canEditComment.value = true;
-          },
-          validator: (value) {
-            if (value!.isEmpty) {
-              return lang.pleaseEnterAName;
-            }
-            if ((NamidaLinkRegex.youtubeLinkRegex.firstMatch(value) ?? '') == '') {
-              return lang.pleaseEnterALinkSubtitle;
-            }
-            return null;
-          },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomTagTextField(
+              controller: controller,
+              hintText: ytlink,
+              labelText: lang.link,
+              keyboardType: TextInputType.url,
+              onChanged: (value) {
+                canEditComment.value = true;
+              },
+              validator: (value) {
+                if (value!.isEmpty) {
+                  return lang.pleaseEnterAName;
+                }
+                if ((NamidaLinkRegex.youtubeLinkRegex.firstMatch(value) ?? '') == '') {
+                  return lang.pleaseEnterALinkSubtitle;
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12.0),
+            _YTLinkOffsetRow(
+              controller: controller,
+              isDetecting: isDetectingOffset,
+              onDetectTap: detectOffset,
+            ),
+          ],
         ),
       ),
     ),
@@ -1604,6 +1637,62 @@ class _MultiTracksEditSummaryEntry {
     required this.subtitle,
     this.tracksCount,
   });
+}
+
+class _YTLinkOffsetRow extends StatelessWidget {
+  final TextEditingController controller;
+  final RxBaseCore<bool> isDetecting;
+  final void Function() onDetectTap;
+
+  const _YTLinkOffsetRow({
+    required this.controller,
+    required this.isDetecting,
+    required this.onDetectTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final textTheme = theme.textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Row(
+        children: [
+          const Icon(
+            Broken.timer_1,
+            size: 18.0,
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: ValueListenableBuilder(
+              valueListenable: controller,
+              builder: (context, value, _) {
+                final startMS = NamidaLinkUtils.extractYoutubeStartMS(value.text) ?? 0;
+                return Text(
+                  '${lang.offset}: +${startMS.milliSecondsLabelWithCentiSeconds}',
+                  style: textTheme.displaySmall,
+                );
+              },
+            ),
+          ),
+          ObxO(
+            rx: isDetecting,
+            builder: (context, isDetecting) => NamidaButton(
+              dense: true,
+              minHeight: NamidaButton.kDefaultMinHeight * 0.5,
+              iconSize: 16.0,
+              fontSizeMultiplier: 0.9,
+              enabled: !isDetecting,
+              icon: Broken.magic_star,
+              text: lang.auto,
+              isLoading: isDetecting,
+              onTap: onDetectTap,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _KeepDatesToggleWidget extends StatelessWidget {
