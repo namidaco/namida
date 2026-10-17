@@ -8,7 +8,10 @@ import 'package:youtipie/class/result_wrapper/list_wrapper_base.dart';
 import 'package:youtipie/class/result_wrapper/playlist_mix_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result.dart';
 import 'package:youtipie/class/result_wrapper/playlist_result_base.dart';
+import 'package:youtipie/class/music/music_browse_endpoint.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/channel_info_item.dart';
+import 'package:youtipie/class/youtipie_feed/music_album_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_info_item_user.dart';
@@ -37,6 +40,7 @@ import 'package:namida/youtube/controller/youtube_history_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
+import 'package:namida/youtube/pages/yt_music_page.dart';
 import 'package:namida/youtube/pages/yt_playlist_download_subpage.dart';
 import 'package:namida/youtube/widgets/yt_history_video_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -427,7 +431,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
 
 class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   @override
-  String? get name => playlist.basicInfo.title;
+  String? get name => album?.title ?? playlist.basicInfo.title;
   @override
   RouteType get route => RouteType.YOUTUBE_PLAYLIST_SUBPAGE_HOSTED;
 
@@ -435,16 +439,21 @@ class YTHostedPlaylistSubpage extends StatefulWidget with NamidaRouteWidget {
   final PlaylistInfoItemUser? userPlaylist;
   final bool isMixPlaylist;
 
+  /// set when opened from youtube music, [playlist] is then the album's tracks.
+  final MusicAlbumInfoItem? album;
+
   const YTHostedPlaylistSubpage({
     super.key,
     required this.playlist,
     required this.userPlaylist,
+    this.album,
   }) : isMixPlaylist = playlist is YoutiPieMixPlaylistResult;
 
   YTHostedPlaylistSubpage.fromId({
     super.key,
     required String playlistId,
     required this.userPlaylist,
+    this.album,
   }) : playlist = _EmptyPlaylistResult(playlistId: playlistId),
        isMixPlaylist = PlaylistInfoItem.isMixPlaylist(playlistId);
 
@@ -582,6 +591,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
     final playlist = _playlist;
+    final album = widget.album;
+    final title = album?.title ?? playlist.basicInfo.title;
+    final albumArtUrl = album?.thumbnails.pick()?.url;
     final displayedStreams = _displayedStreams;
 
     const itemsThumbnailHeight = Dimensions.youtubeThumbnailHeight;
@@ -640,6 +652,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                 scrollController: controller,
                 infoBox: (maxWidth) {
                   final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
+                  final bigThumbHeight = bigThumbWidth * 9 / 16;
                   return Align(
                     alignment: Alignment.topCenter,
                     child: Stack(
@@ -678,19 +691,33 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              YoutubeThumbnail(
-                                type: ThumbnailType.playlist,
-                                key: Key("$firstID"),
-                                width: bigThumbWidth,
-                                height: (bigThumbWidth * 9 / 16),
-                                forceSquared: true,
-                                compressed: false,
-                                isImportantInCache: true,
-                                preferLowerRes: false,
-                                customUrl: thumbnailUrl,
-                                videoId: firstID,
-                                blur: 0.0,
-                              ),
+                              album != null
+                                  ? Center(
+                                      child: YoutubeThumbnail(
+                                        type: ThumbnailType.playlist,
+                                        key: Key(album.id),
+                                        width: bigThumbHeight,
+                                        height: bigThumbHeight,
+                                        compressed: false,
+                                        isImportantInCache: true,
+                                        preferLowerRes: false,
+                                        customUrl: albumArtUrl,
+                                        blur: 0.0,
+                                      ),
+                                    )
+                                  : YoutubeThumbnail(
+                                      type: ThumbnailType.playlist,
+                                      key: Key("$firstID"),
+                                      width: bigThumbWidth,
+                                      height: bigThumbHeight,
+                                      forceSquared: true,
+                                      compressed: false,
+                                      isImportantInCache: true,
+                                      preferLowerRes: false,
+                                      customUrl: thumbnailUrl,
+                                      videoId: firstID,
+                                      blur: 0.0,
+                                    ),
                               const SizedBox(height: 24.0),
                               FlexList(
                                 verticalSpacing: 8.0,
@@ -699,7 +726,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        playlist.basicInfo.title,
+                                        title,
                                         style: theme.textTheme.displayLarge,
                                       ),
                                       const SizedBox(height: 6.0),
@@ -707,7 +734,13 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         videosCountTextFinal ?? '',
                                         style: theme.textTheme.displaySmall,
                                       ),
-                                      if (uploaderTitleAndViews.isNotEmpty == true) ...[
+                                      if (album != null) ...[
+                                        const SizedBox(height: 2.0),
+                                        _AlbumSubtitle(
+                                          album: album,
+                                          style: theme.textTheme.displaySmall,
+                                        ),
+                                      ] else if (uploaderTitleAndViews.isNotEmpty == true) ...[
                                         const SizedBox(height: 2.0),
                                         Text(
                                           uploaderTitleAndViews,
@@ -760,7 +793,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                           }
                                           YTPlaylistDownloadPage(
                                             ids: videos,
-                                            playlistName: playlist.basicInfo.title,
+                                            playlistName: title,
                                             infoLookup: infoLookup,
                                             playlistInfo: playlist.basicInfo,
                                           ).navigate();
@@ -883,6 +916,48 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AlbumSubtitle extends StatelessWidget {
+  final MusicAlbumInfoItem album;
+  final TextStyle? style;
+
+  const _AlbumSubtitle({required this.album, required this.style});
+
+  static void _openArtist(ChannelInfoItem artist) {
+    final artistTitle = artist.title ?? '';
+    YTMusicBrowseSubpage(
+      endpoint: YoutiPieMusicBrowseEndpoint(artist.id),
+      title: artistTitle,
+    ).navigate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final artists = album.artists;
+    final text = Text(
+      album.subtitle,
+      style: style,
+    );
+    if (artists.isEmpty) return text;
+    if (artists.length == 1) {
+      return NamidaInkWell(
+        borderRadius: 4.0,
+        onTap: () => _openArtist(artists.first),
+        child: text,
+      );
+    }
+    return NamidaPopupWrapper(
+      childrenDefault: () => artists.map(
+        (artist) => NamidaPopupItem(
+          icon: Broken.user,
+          title: artist.title ?? '',
+          onTap: () => _openArtist(artist),
+        ),
+      ),
+      child: text,
     );
   }
 }

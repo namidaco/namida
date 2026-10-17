@@ -188,6 +188,7 @@ extension YoutubeSettingsDebugKeys on _YoutubeSettings {
     allowExperimentalCodecs,
     preferOpusFormat,
     enableGifThumbnails,
+    musicChartsCountry,
     maxPageCacheDurationMin,
     sponsorBlockSettings,
     ryd,

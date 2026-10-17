@@ -19,6 +19,7 @@ import 'package:namida/youtube/pages/youtube_notifications_page.dart';
 import 'package:namida/youtube/pages/youtube_user_playlists_page.dart';
 import 'package:namida/youtube/pages/yt_channels_page.dart';
 import 'package:namida/youtube/pages/yt_downloads_page.dart';
+import 'package:namida/youtube/pages/yt_music_page.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 
 class YouTubeHomeView extends StatefulWidget with NamidaRouteWidget {
@@ -503,6 +504,7 @@ class _SourcePage extends StatelessWidget {
     final Widget page = switch ((section, source)) {
       (YTHomePages.home, YTHomeSource.local) => const YTHomePageLocal(),
       (YTHomePages.home, YTHomeSource.youtube) => const YoutubeHomeFeedPage(),
+      (YTHomePages.music, _) || (_, YTHomeSource.youtubeMusic) => const YoutubeMusicHomePage(),
       (YTHomePages.notifications, _) => const YoutubeNotificationsPage(),
       (YTHomePages.channels, YTHomeSource.local) => const YoutubeChannelsPage(),
       (YTHomePages.channels, YTHomeSource.youtube) => const YoutubeChannelsHostedPage(),

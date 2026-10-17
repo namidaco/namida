@@ -366,6 +366,7 @@ enum LibraryTab {
   search,
   youtube(hasSectionsMenu: true),
   ytHome(isInDrawerOnlyWhenActive: true),
+  ytMusic(isInDrawerOnlyWhenActive: true),
   ytNotifications(isInDrawerOnlyWhenActive: true),
   ytChannels(isInDrawerOnlyWhenActive: true),
   ytPlaylists(isInDrawerOnlyWhenActive: true),
@@ -479,6 +480,7 @@ enum QueueSourceYoutubeIDEnum {
   ytHomeFeed(false),
   ytHomePageItem(false),
   ytHashtag(false),
+  ytMusic(false),
   ytNotificationsHosted(false),
   ytRelatedVideos(false),
   ytHistoryFilteredHosted(false),
@@ -638,6 +640,7 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
   static const ytHomeFeed = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomeFeed);
   static const ytHomePageItem = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHomePageItem);
   static QueueSourceYoutubeID ytHashtag(String? hashtag) => QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHashtag, title: hashtag);
+  static QueueSourceYoutubeID ytMusic(String? shelfTitle) => QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytMusic, title: shelfTitle);
   static const ytNotificationsHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytNotificationsHosted);
   static const ytRelatedVideos = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytRelatedVideos);
   static const ytHistoryFilteredHosted = QueueSourceYoutubeID._(QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted);
@@ -811,6 +814,7 @@ enum RouteType {
   YOUTUBE_MOST_PLAYED_SUBPAGE,
   YOUTUBE_CHANNEL_SUBPAGE,
   YOUTUBE_HASHTAG_SUBPAGE,
+  YOUTUBE_MUSIC_BROWSE_SUBPAGE,
   YOUTUBE_USER_CHANNELS_PAGE_HOSTED,
 
   YOUTUBE_USER_MANAGE_ACCOUNT_SUBPAGE(isOpenableFromSettings: true),
@@ -1130,6 +1134,7 @@ enum FABType {
 enum YTHomeSource {
   local,
   youtube(requiresAccount: true),
+  youtubeMusic,
   ;
 
   final bool requiresAccount;
@@ -1139,6 +1144,7 @@ enum YTHomeSource {
 
 enum YTHomePages {
   home([YTHomeSource.local, YTHomeSource.youtube]),
+  music([YTHomeSource.youtubeMusic], showsSource: false),
   notifications([YTHomeSource.youtube]),
   channels([YTHomeSource.local, YTHomeSource.youtube]),
   playlists([YTHomeSource.local, YTHomeSource.youtube]),

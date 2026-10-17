@@ -208,7 +208,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   void _onAccChanged() {
     final isSignedIn = YoutubeAccountController.current.activeAccountChannel.value != null;
-    if (isSignedIn) {
+    if (isSignedIn || !widget.operation.requiresAccount) {
       _onInit(forceRequest: true);
     } else {
       _currentFeed.value = null;

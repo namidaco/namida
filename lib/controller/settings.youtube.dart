@@ -74,6 +74,7 @@ class _YoutubeSettings extends _SettingsKeysWriter {
   late final allowExperimentalCodecs = _key('allowExperimentalCodecs', false);
   late final preferOpusFormat = _key('preferOpusFormat', false);
   late final enableGifThumbnails = _key('enableGifThumbnails', false);
+  late final musicChartsCountry = _key('musicChartsCountry', 'ZZ');
   late final maxPageCacheDurationMin = _key('maxPageCacheDurationMin_v2', kDefaultMinutesInMaxDaysForPageCache, sync: false);
 
   late final sponsorBlockSettings = _keyObject('sponsorBlockSettings', SponsorBlockSettings(), SponsorBlockSettings.fromJson, (v) => v.toJson());

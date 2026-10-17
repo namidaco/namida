@@ -168,6 +168,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.search => null,
       LibraryTab.youtube => null,
       LibraryTab.ytHome => null,
+      LibraryTab.ytMusic => null,
       LibraryTab.ytNotifications => null,
       LibraryTab.ytChannels => null,
       LibraryTab.ytPlaylists => null,
@@ -223,6 +224,7 @@ extension LibraryTabUtils on LibraryTab {
       LibraryTab.home => const HomePageLocal(),
       LibraryTab.youtube => const YouTubeHomeView(),
       LibraryTab.ytHome => const YouTubeHomeSectionView(section: YTHomePages.home),
+      LibraryTab.ytMusic => const YouTubeHomeSectionView(section: YTHomePages.music),
       LibraryTab.ytNotifications => const YouTubeHomeSectionView(section: YTHomePages.notifications),
       LibraryTab.ytChannels => const YouTubeHomeSectionView(section: YTHomePages.channels),
       LibraryTab.ytPlaylists => const YouTubeHomeSectionView(section: YTHomePages.playlists),
@@ -1346,6 +1348,7 @@ extension RouteUtils on NamidaRoute {
       RouteType.YOUTUBE_MOST_PLAYED_SUBPAGE => QueueSourceYoutubeID.ytMostPlayed,
       RouteType.YOUTUBE_CHANNEL_SUBPAGE => QueueSourceYoutubeID.ytChannel(name),
       RouteType.YOUTUBE_HASHTAG_SUBPAGE => QueueSourceYoutubeID.ytHashtag(name),
+      RouteType.YOUTUBE_MUSIC_BROWSE_SUBPAGE => QueueSourceYoutubeID.ytMusic(name),
       RouteType.YOUTUBE_USER_CHANNELS_PAGE_HOSTED => QueueSourceYoutubeID.ytChannelHosted,
       RouteType.YOUTUBE_HISTORY_HOSTED_SUBPAGE => QueueSourceYoutubeID.ytHistoryHosted,
       // -----------
@@ -2032,6 +2035,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.search => lang.search,
     LibraryTab.youtube => lang.youtube,
     LibraryTab.ytHome => YTHomePages.home._toLibraryTabText(),
+    LibraryTab.ytMusic => YTHomePages.music._toLibraryTabText(),
     LibraryTab.ytNotifications => YTHomePages.notifications._toLibraryTabText(),
     LibraryTab.ytChannels => YTHomePages.channels._toLibraryTabText(),
     LibraryTab.ytPlaylists => YTHomePages.playlists._toLibraryTabText(),
@@ -2075,6 +2079,7 @@ extension LibraryTabL10n on LibraryTab {
     LibraryTab.search => Broken.search_normal_1,
     LibraryTab.youtube => Broken.video_square,
     LibraryTab.ytHome => YTHomePages.home.toIcon(),
+    LibraryTab.ytMusic => YTHomePages.music.toIcon(),
     LibraryTab.ytNotifications => YTHomePages.notifications.toIcon(),
     LibraryTab.ytChannels => YTHomePages.channels.toIcon(),
     LibraryTab.ytPlaylists => YTHomePages.playlists.toIcon(),
@@ -2481,6 +2486,7 @@ extension QueueSourceYoutubeIDL10n on QueueSourceYoutubeIDEnum {
     QueueSourceYoutubeIDEnum.ytHomeFeed => lang.home,
     QueueSourceYoutubeIDEnum.ytHomePageItem => lang.home,
     QueueSourceYoutubeIDEnum.ytHashtag => lang.hashtag,
+    QueueSourceYoutubeIDEnum.ytMusic => lang.music,
     QueueSourceYoutubeIDEnum.ytRelatedVideos => lang.relatedVideos,
     QueueSourceYoutubeIDEnum.ytHistoryFilteredHosted => lang.history,
     QueueSourceYoutubeIDEnum.ytSearchHosted => lang.search,
@@ -2920,17 +2926,20 @@ extension YTHomeSourceL10n on YTHomeSource {
   String toText() => switch (this) {
     YTHomeSource.local => lang.local,
     YTHomeSource.youtube => lang.youtube,
+    YTHomeSource.youtubeMusic => lang.youtubeMusic,
   };
 
   IconData toIcon() => switch (this) {
     YTHomeSource.local => Broken.driver,
     YTHomeSource.youtube => Broken.video_square,
+    YTHomeSource.youtubeMusic => Broken.music_circle,
   };
 }
 
 extension YTHomePagesL10n on YTHomePages {
   String toText() => switch (this) {
     YTHomePages.home => lang.home,
+    YTHomePages.music => lang.music,
     YTHomePages.notifications => lang.notifications,
     YTHomePages.channels => lang.channels,
     YTHomePages.playlists => lang.playlists,
@@ -2941,6 +2950,7 @@ extension YTHomePagesL10n on YTHomePages {
 
   IconData toIcon() => switch (this) {
     YTHomePages.home => Broken.home_1,
+    YTHomePages.music => Broken.music_dashboard,
     YTHomePages.notifications => Broken.notification_bing,
     YTHomePages.channels => Broken.profile_2user,
     YTHomePages.playlists => Broken.music_library_2,
