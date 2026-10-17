@@ -18,8 +18,14 @@ class _PartyBrowseCard extends StatefulWidget {
 }
 
 class _PartyBrowseCardState extends State<_PartyBrowseCard> {
-  List<PartyPublicRoom> _rooms = const [];
-  _BrowseState _state = _BrowseState.loading;
+  List<PartyPublicRoom> _serverRooms = const [];
+  List<PartyPublicRoom> _lanRooms = const [];
+
+  /// shown while there are no rooms, never [_BrowseState.rooms].
+  _BrowseState _serverState = _BrowseState.loading;
+  bool _isScanningLan = true;
+
+  bool get _isLoading => _serverState == _BrowseState.loading || _isScanningLan;
 
   @override
   void initState() {
@@ -28,7 +34,16 @@ class _PartyBrowseCardState extends State<_PartyBrowseCard> {
   }
 
   Future<void> _refresh() async {
-    if (_state != _BrowseState.loading) setState(() => _state = _BrowseState.loading);
+    if (!_isLoading) {
+      setState(() {
+        _serverState = _BrowseState.loading;
+        _isScanningLan = true;
+      });
+    }
+    await Future.wait([_refreshServer(), _refreshLan()]);
+  }
+
+  Future<void> _refreshServer() async {
     final server = PartyController.preferredServer;
     final supported = await PartyController.supportsDirectory(server);
     final page = supported == true ? await PartyController.listRooms(server: server) : null;
@@ -40,26 +55,47 @@ class _PartyBrowseCardState extends State<_PartyBrowseCard> {
     } else if (supported == null || page == null) {
       state = _BrowseState.unreachable;
     } else {
-      state = rooms.isEmpty ? _BrowseState.empty : _BrowseState.rooms;
+      state = _BrowseState.empty;
     }
     setState(() {
-      _rooms = rooms;
-      _state = state;
+      _serverRooms = rooms;
+      _serverState = state;
+    });
+  }
+
+  Future<void> _refreshLan() async {
+    final rooms = await PartyController.discoverLanRooms();
+    if (!mounted) return;
+    setState(() {
+      _lanRooms = rooms;
+      _isScanningLan = false;
     });
   }
 
   void _hideOwner(PartyPublicRoom room) {
     if (room.ownerId.isEmpty) return;
     settings.party.toggleHiddenOwner(room.ownerId);
-    final remaining = _rooms.where((e) => e.ownerId != room.ownerId).toList();
+    final remainingServerRooms = _serverRooms.where((e) => e.ownerId != room.ownerId).toFixedList();
+    final remainingLanRooms = _lanRooms.where((e) => e.ownerId != room.ownerId).toFixedList();
     setState(() {
-      _rooms = remaining;
-      if (remaining.isEmpty) _state = _BrowseState.empty;
+      _serverRooms = remainingServerRooms;
+      _lanRooms = remainingLanRooms;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasRooms = _lanRooms.isNotEmpty || _serverRooms.isNotEmpty;
+    final state = hasRooms
+        ? _BrowseState.rooms
+        : _isScanningLan
+        ? _BrowseState.loading
+        : _serverState;
+    Widget roomTile(PartyPublicRoom room) => _RoomTile(
+      room: room,
+      onTap: () => widget.onJoin(room),
+      onHideOwner: () => _hideOwner(room),
+    );
     return SettingsCard(
       icon: Broken.global_search,
       title: lang.partyBrowse,
@@ -68,23 +104,18 @@ class _PartyBrowseCardState extends State<_PartyBrowseCard> {
         icon: Broken.refresh,
         iconSize: 20.0,
         tooltip: () => lang.refresh,
-        onPressed: _state == _BrowseState.loading ? null : _refresh,
+        onPressed: _isLoading ? null : _refresh,
       ),
-      child: switch (_state) {
+      child: switch (state) {
         _BrowseState.loading => _BrowseInfo.loading(text: lang.fetching),
         _BrowseState.unsupported => _BrowseInfo(icon: Broken.global_refresh, text: lang.partyBrowseUnsupported),
         _BrowseState.unreachable => _BrowseInfo(icon: Broken.danger, text: lang.partyUnreachable),
         _BrowseState.empty => _BrowseInfo(icon: Broken.moon, text: lang.partyNoPublicRooms),
         _BrowseState.rooms => Column(
-          children: _rooms
-              .map(
-                (room) => _RoomTile(
-                  room: room,
-                  onTap: () => widget.onJoin(room),
-                  onHideOwner: () => _hideOwner(room),
-                ),
-              )
-              .toList(),
+          children: [
+            ..._lanRooms.map(roomTile),
+            ..._serverRooms.map(roomTile),
+          ],
         ),
       },
     );
@@ -146,8 +177,13 @@ class _RoomTile extends StatelessWidget {
     final title = room.title;
     final artist = room.artist;
     final nowPlaying = title == null || title.isEmpty ? null : (artist == null || artist.isEmpty ? title : '$title • $artist');
+    final icon = room.hasPassword
+        ? Broken.lock_1
+        : room.isLocal
+        ? Broken.wifi
+        : Broken.people;
     return CustomListTile(
-      icon: room.hasPassword ? Broken.lock_1 : Broken.people,
+      icon: icon,
       title: room.name,
       subtitle: nowPlaying,
       onTap: room.isFull ? null : onTap,

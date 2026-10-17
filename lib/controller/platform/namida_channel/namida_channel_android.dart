@@ -63,7 +63,7 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
-  Future<void> setMulticastLock(bool enabled) async {
+  Future<void> _setMulticastLockNative(bool enabled) async {
     await _channel.invokeMethod('setMulticastLock', {'enabled': enabled});
   }
 

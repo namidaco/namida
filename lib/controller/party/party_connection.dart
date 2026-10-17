@@ -50,6 +50,10 @@ class PartyPublicRoom {
   final String? title;
   final String? artist;
 
+  /// the relay serving the room, a device on the local network when [isLocal].
+  final Uri server;
+  final bool isLocal;
+
   const PartyPublicRoom({
     required this.code,
     required this.name,
@@ -61,11 +65,13 @@ class PartyPublicRoom {
     required this.hasPassword,
     required this.title,
     required this.artist,
+    required this.server,
+    required this.isLocal,
   });
 
   bool get isFull => maxMembers > 0 && members >= maxMembers;
 
-  static PartyPublicRoom? fromMap(Object? value) {
+  static PartyPublicRoom? fromMap(Object? value, {required Uri server, required bool isLocal}) {
     if (value is! Map) return null;
     final code = value['code'];
     final name = value['name'];
@@ -81,6 +87,8 @@ class PartyPublicRoom {
       hasPassword: value['password'] == true,
       title: value['title'] as String?,
       artist: value['artist'] as String?,
+      server: server,
+      isLocal: isLocal,
     );
   }
 }

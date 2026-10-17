@@ -187,7 +187,7 @@ class NamidaMainActivity : FlutterActivity() {
             if (enabled) {
               if (multicastLock == null) {
                 val wifi = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-                multicastLock = wifi.createMulticastLock("namida_sync").apply { setReferenceCounted(false) }
+                multicastLock = wifi.createMulticastLock("namida_mdns").apply { setReferenceCounted(false) }
               }
               multicastLock?.acquire()
             } else {

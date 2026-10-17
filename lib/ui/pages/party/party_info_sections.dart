@@ -798,11 +798,9 @@ class _HostSettingsCard extends StatelessWidget {
                   value: opts.approval,
                   onChanged: (isTrue) => controller.setRoomOpts(approval: !isTrue),
                 ),
-                CustomSwitchListTile(
-                  icon: Broken.global,
-                  title: lang.partyPublicRoom,
-                  subtitle: lang.partyPublicRoomSubtitle,
+                _PublicRoomTile(
                   value: opts.isPublic,
+                  isLan: controller.isLanParty,
                   onChanged: (isTrue) => controller.setRoomOpts(isPublic: !isTrue),
                 ),
                 if (opts.isPublic)

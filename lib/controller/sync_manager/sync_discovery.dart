@@ -32,7 +32,7 @@ class SyncDiscovery {
   /// android drops multicast packets unless a lock is held, needed while advertising or discovering.
   static void _updateMulticastLock() {
     final needed = serverRunning.value || client._isDiscovering || client._allowAutoRetryDiscovery;
-    NamidaChannel.inst.setMulticastLock(needed);
+    NamidaChannel.inst.setMulticastLock(.sync, needed);
   }
 
   static void autoRestoreOnStartup() async {

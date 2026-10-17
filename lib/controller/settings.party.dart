@@ -6,6 +6,9 @@ class _PartySettings extends _SettingsKeysWriter {
   /// relay the user last created a room on, null means the default one.
   late final serverUrl = _key<String?>('serverUrl', null);
   late final createPublic = _key('createPublic', false);
+  late final createApproval = _key('createApproval', false);
+  late final createWithQueue = _key('createWithQueue', true);
+  late final hostOnThisDevice = _key('hostOnThisDevice', false);
 
   /// public rooms also show the current title & artist. off keeps the listing to room level info only.
   late final sharePlaying = _key('sharePlaying', false);

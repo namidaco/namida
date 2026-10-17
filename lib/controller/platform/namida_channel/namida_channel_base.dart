@@ -59,7 +59,21 @@ abstract class NamidaChannel {
 
   Future<bool> openHomeWidgetSettings() async => false;
 
-  Future<void> setMulticastLock(bool enabled) async {}
+  final _multicastLockOwners = <MulticastLockOwner>{};
+
+  /// android drops multicast packets unless a lock is held, it stays held while any owner needs it.
+  void setMulticastLock(MulticastLockOwner owner, bool enabled) {
+    final wasHeld = _multicastLockOwners.isNotEmpty;
+    if (enabled) {
+      _multicastLockOwners.add(owner);
+    } else {
+      _multicastLockOwners.remove(owner);
+    }
+    final isHeld = _multicastLockOwners.isNotEmpty;
+    if (isHeld != wasHeld) _setMulticastLockNative(isHeld);
+  }
+
+  Future<void> _setMulticastLockNative(bool enabled) async {}
 
   Future<void> sendBroadcast(String action, Map<String, Object?> extras) async {}
 
@@ -107,6 +121,12 @@ abstract class NamidaChannel {
   void removeOnSuspending(FutureOr<void> Function() fn) {
     _onSuspending.remove(fn);
   }
+}
+
+enum MulticastLockOwner {
+  sync,
+  partyHost,
+  partyScan,
 }
 
 extension NamidaAppIconsUtils on NamidaAppIcons {

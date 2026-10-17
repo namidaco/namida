@@ -239,6 +239,38 @@ class _SubmitButton extends StatelessWidget {
   }
 }
 
+class _PublicRoomTile extends StatelessWidget {
+  final bool value;
+  final bool isLan;
+  final void Function(bool isTrue) onChanged;
+
+  const _PublicRoomTile({
+    required this.value,
+    required this.isLan,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final subtitle = isLan ? '${lang.partyPublicRoomSubtitle}\n${lang.performanceNote}' : lang.partyPublicRoomSubtitle;
+    final warningWidget = isLan
+        ? Icon(
+            Broken.danger,
+            size: 18.0,
+            color: context.defaultIconColor(),
+          )
+        : null;
+    return CustomSwitchListTile(
+      icon: Broken.global,
+      title: lang.partyPublicRoom,
+      subtitle: subtitle,
+      value: value,
+      onChanged: onChanged,
+      trailingBeforeSwitch: warningWidget,
+    );
+  }
+}
+
 class _CreateCard extends StatefulWidget {
   const _CreateCard();
 
@@ -253,9 +285,9 @@ class _CreateCardState extends State<_CreateCard> {
   final _serverPasswordController = TextEditingController();
 
   bool _listening = settings.party.listenOnThisDevice.value;
-  bool _approval = false;
-  bool _seedQueue = true;
-  bool _hostOnThisDevice = false;
+  bool _approval = settings.party.createApproval.value;
+  bool _seedQueue = settings.party.createWithQueue.value;
+  bool _hostOnThisDevice = settings.party.hostOnThisDevice.value;
   bool _isPublic = settings.party.createPublic.value;
   bool _sharePlaying = settings.party.sharePlaying.value;
   bool _isLoading = false;
@@ -396,19 +428,23 @@ class _CreateCardState extends State<_CreateCard> {
             icon: Broken.shield_tick,
             title: lang.partyRequireApproval,
             value: _approval,
-            onChanged: (isTrue) => setState(() => _approval = !isTrue),
+            onChanged: (isTrue) {
+              settings.party.createApproval.save(!isTrue);
+              setState(() => _approval = !isTrue);
+            },
           ),
           CustomSwitchListTile(
             icon: Broken.music_playlist,
             title: lang.partyStartWithCurrentQueue,
             value: _seedQueue,
-            onChanged: (isTrue) => setState(() => _seedQueue = !isTrue),
+            onChanged: (isTrue) {
+              settings.party.createWithQueue.save(!isTrue);
+              setState(() => _seedQueue = !isTrue);
+            },
           ),
-          CustomSwitchListTile(
-            icon: Broken.global,
-            title: lang.partyPublicRoom,
-            subtitle: lang.partyPublicRoomSubtitle,
+          _PublicRoomTile(
             value: _isPublic,
+            isLan: _hostOnThisDevice,
             onChanged: (isTrue) {
               settings.party.createPublic.save(!isTrue);
               setState(() => _isPublic = !isTrue);
@@ -430,7 +466,10 @@ class _CreateCardState extends State<_CreateCard> {
             title: lang.partyHostOnThisDevice,
             subtitle: lang.partyHostOnThisDeviceSubtitle,
             value: _hostOnThisDevice,
-            onChanged: (isTrue) => setState(() => _hostOnThisDevice = !isTrue),
+            onChanged: (isTrue) {
+              settings.party.hostOnThisDevice.save(!isTrue);
+              setState(() => _hostOnThisDevice = !isTrue);
+            },
           ),
           if (!_hostOnThisDevice)
             NamidaExpansionTile(
@@ -608,7 +647,7 @@ class _BrowseSectionState extends State<_BrowseSection> {
     }
     setState(() => _isLoading = true);
     await PartyController.inst.joinRoom(
-      server: PartyController.preferredServer,
+      server: room.server,
       code: room.code,
       password: password,
       listening: settings.party.listenOnThisDevice.value,

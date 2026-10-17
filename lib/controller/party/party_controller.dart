@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart' show Colors;
 
+import 'package:mdns_dart/mdns_dart.dart';
 import 'package:namico_subscription_manager/core/enum.dart';
 import 'package:namico_subscription_manager/namico_subscription_manager.dart';
 import 'package:namida_party_relay/namida_party_relay.dart' show PartyRelayServer, PartyRelayConfig;
@@ -20,6 +21,7 @@ import 'package:namida/controller/party/party_host.dart';
 import 'package:namida/controller/party/party_player_binder.dart';
 import 'package:namida/controller/party/party_protocol.dart';
 import 'package:namida/controller/party/party_state.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -32,6 +34,8 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
+
+part 'party_lan_discovery.dart';
 
 class PartyController implements PartyConnectionListener, PartyHostDelegate, PartyBinderDelegate, PartyStateListener {
   static final inst = PartyController._();
@@ -52,6 +56,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   static const _inviteScheme = 'namida';
   static const _lanRelayPort = 62311;
   static const _inviteSchemeHost = 'party';
+
+  /// the listing is only built when a device on the network asks for it, so it can always be fresh.
+  static const _lanRelayConfig = PartyRelayConfig(maxRoomsTotal: 1, directoryRefreshInterval: Duration.zero);
 
   /// an invite opened from outside the app, waiting for the party page to pick it up.
   final pendingInvite = Rxn<String>();
@@ -108,6 +115,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   Uri? _inviteServer;
 
   bool get isLanParty => _lanRelay != null;
+  _PartyLanAdvertiser? _lanAdvertiser;
   PartyHost? _host;
   PartyPlayerBinder? _binder;
 
@@ -286,8 +294,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     try {
       relay = await PartyRelayServer.start(
         port: _lanRelayPort,
-        config: const PartyRelayConfig(maxRoomsTotal: 1),
-      ).catchError((_) => PartyRelayServer.start(config: const PartyRelayConfig(maxRoomsTotal: 1)));
+        config: _lanRelayConfig,
+      ).catchError((_) => PartyRelayServer.start(config: _lanRelayConfig));
     } catch (e, st) {
       logger.error('party lan relay failed to start', e: e, st: st);
       return 'unreachable';
@@ -374,6 +382,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     isActive.value = false;
     status.value = .closed;
     await binder?.unbind(restoreQueue: true);
+    _lanAdvertiser?.stop();
+    _lanAdvertiser = null;
     final lanRelay = _lanRelay;
     _lanRelay = null;
     _resetSession();
@@ -429,8 +439,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     return {'kind': 'supabase', 'id': id, 'email': email, 'deviceId': deviceId, 'os': Platform.operatingSystem};
   }
 
-  static Future<Map<String, dynamic>?> _getJson(Uri uri) async {
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+  static Future<Map<String, dynamic>?> _getJson(Uri uri, {Duration connectionTimeout = const Duration(seconds: 15)}) async {
+    final client = HttpClient()..connectionTimeout = connectionTimeout;
     try {
       final request = await client.getUrl(uri);
       final response = await request.close().timeout(const Duration(seconds: 20));
@@ -494,8 +504,21 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   static bool isMembershipError(String code) => code == 'membership_required' || code == 'membership_invalid';
 
   /// null when the listing could not be fetched.
-  static Future<PartyRoomsPage?> listRooms({Uri? server, String? after, int limit = 25}) async {
-    server ??= defaultServer;
+  static Future<PartyRoomsPage?> listRooms({Uri? server, String? after, int limit = 25}) {
+    final listServer = server ?? defaultServer;
+    return _fetchRooms(listServer, isLocal: false, after: after, limit: limit);
+  }
+
+  /// public rooms hosted by devices on the local network.
+  static Future<List<PartyPublicRoom>> discoverLanRooms() => _PartyLanScanner.scan();
+
+  static Future<PartyRoomsPage?> _fetchRooms(
+    Uri server, {
+    required bool isLocal,
+    String? after,
+    int limit = 25,
+    Duration connectionTimeout = const Duration(seconds: 15),
+  }) async {
     try {
       final uri = server
           .resolve('/v1/rooms')
@@ -505,13 +528,13 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
               'after': ?after,
             },
           );
-      final map = await _getJson(uri);
+      final map = await _getJson(uri, connectionTimeout: connectionTimeout);
       final rooms = map?['rooms'];
       if (rooms is! List) return null;
       final hidden = settings.party.hiddenOwners.value;
       final parsed = <PartyPublicRoom>[];
       for (final raw in rooms) {
-        final room = PartyPublicRoom.fromMap(raw);
+        final room = PartyPublicRoom.fromMap(raw, server: server, isLocal: isLocal);
         if (room != null && room.partyVersion == kPartyVersion && !hidden.contains(room.ownerId)) parsed.add(room);
       }
       return PartyRoomsPage(parsed, map!['next'] as String?);
@@ -597,6 +620,19 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _sentSummaryTitle = title;
     _sentSummaryArtist = artist;
     _connection?.sendSummary(name: name, title: title, artist: artist);
+  }
+
+  /// devices on the local network can find a public room on our own relay, only while it stays public.
+  void _updateLanAdvertising() {
+    final lanRelay = _lanRelay;
+    final code = _code;
+    final shouldAdvertise = lanRelay != null && code != null && _opts?.isPublic == true;
+    if (shouldAdvertise) {
+      _lanAdvertiser ??= _PartyLanAdvertiser.start(port: lanRelay.port, code: code);
+    } else {
+      _lanAdvertiser?.stop();
+      _lanAdvertiser = null;
+    }
   }
 
   // ------------------------------------------------------------ member actions
@@ -689,6 +725,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _hostOnline = welcome.hostOnline;
     _maxMembers = welcome.maxMembers;
     _opts = welcome.opts;
+    _updateLanAdvertising();
     _relayMembers
       ..clear()
       ..addAll(welcome.members);
@@ -802,6 +839,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   void onOpts(PartyRoomOpts opts) {
     final wasPublic = _opts?.isPublic;
     _opts = opts;
+    _updateLanAdvertising();
     infoTick.value++;
     if (opts.isPublic && wasPublic != true) _pushSummary(force: true);
   }

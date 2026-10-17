@@ -52,6 +52,9 @@ extension PartySettingsDebugKeys on _PartySettings {
   List<RxBase<Object?>> get allKeys => [
     serverUrl,
     createPublic,
+    createApproval,
+    createWithQueue,
+    hostOnThisDevice,
     sharePlaying,
     listenOnThisDevice,
     reactions,
