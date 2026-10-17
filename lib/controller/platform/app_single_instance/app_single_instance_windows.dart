@@ -6,7 +6,7 @@ class AppSingleInstanceWindows extends AppSingleInstanceBase {
     // -- will terminate internally automatically
     await WindowsSingleInstance.ensureSingleInstance(
       args,
-      "namida_instance",
+      kScreenshotsMode ? "namida_screenshots_instance" : "namida_instance",
       bringWindowToFront: true,
       onSecondWindow: _onSecondWindow,
       exitFunction: () async => Namida.terminateProcessWindows(),

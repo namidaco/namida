@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  ${fonts_css}
+  html, body { margin: 0; width: ${width}px; height: ${height}px; overflow: hidden; background: #f4f1fa; }
+  .glow { position: absolute; width: 900px; height: 900px; border-radius: 50%; filter: blur(140px); opacity: 0.75; }
+  .g1 { left: -220px; top: 180px; background: ${color1}; }
+  .g2 { left: 560px; top: -260px; background: ${color2}; }
+  .g3 { left: 1280px; top: 420px; background: ${color3}; }
+  .shot { position: absolute; border-radius: 44px; border: 10px solid rgba(255, 255, 255, 0.95); background: #fff; box-shadow: 0 40px 90px rgba(40, 30, 70, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.05); }
+  .shot .screen { border-radius: 34px; }
+  .back { width: 470px; top: 250px; }
+  .left { left: 330px; }
+  .right { left: 1200px; }
+  .front { width: 560px; left: 720px; top: 120px; z-index: 2; }
+  ${status_css}
+</style>
+</head>
+<body>
+  <div class="glow g1"></div>
+  <div class="glow g2"></div>
+  <div class="glow g3"></div>
+  <div class="shot back left"><div class="screen">${status1}<img src="${shot1}"></div></div>
+  <div class="shot back right"><div class="screen">${status3}<img src="${shot3}"></div></div>
+  <div class="shot front"><div class="screen">${status2}<img src="${shot2}"></div></div>
+</body>
+</html>

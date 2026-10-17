@@ -7,6 +7,7 @@ abstract class NamidaTrayManager {
   const NamidaTrayManager(this.iconPath);
 
   static NamidaTrayManager? platform() {
+    if (kScreenshotsMode) return null;
     return NamidaPlatformBuilder.init(
       android: () => null,
       ios: () => null,

@@ -7,6 +7,7 @@ import 'package:windows_single_instance/windows_single_instance.dart';
 
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/main.dart';
 
 part 'app_single_instance_base.dart';

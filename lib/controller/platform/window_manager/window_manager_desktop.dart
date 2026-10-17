@@ -53,6 +53,9 @@ class _WindowManagerDesktop extends NamidaWindowManager {
 
   @override
   Future<void> ensurePositionRestored({required bool restoreBounds}) async {
+    // -- screenshots render offscreen, the window never shows
+    if (kScreenshotsMode && !ScreenshotsDriver.inst.isInteractive) return;
+
     if (NamidaWindowManager.isMiniLyricsMode.value) {
       await windowManager.show();
       await windowManager.focus();

@@ -24,10 +24,14 @@ EXCLUDED_FILES = {
     'assets/js/init-mermaid.js', 'assets/js/docmd-ai.js', 'assets/css/docmd-ai.css', 'assets/js/goatcounter.js',
     'assets/css/docmd-theme-retro.css', 'assets/css/docmd-theme-ruby.css', 'assets/css/docmd-theme-sky.css',
     'assets/favicon.ico', 'assets/css/index.ts', 'llms.txt', 'llms-full.txt', 'llms.json', 'sitemap.xml', 'robots.txt', '.nojekyll',
+    # -- previews and the screens map show cdn shots, like the screenshots below
+    'docs-shots-previews.json', 'docs-shots-screens.json',
 }
 EXCLUDED_REF_REGEX = re.compile(r'<script\b[^>]*(?:docmd-ai|goatcounter)\.js[^>]*>\s*</script>|<link\b[^>]*(?:docmd-ai\.css|favicon\.ico)[^>]*>')
 
 ONLINE_DOCS_URL = 'https://docs.namida.app'
+# -- docs screenshots load from a cdn, the offline copy links to them instead of having the app reach out
+SCREENSHOTS_REGEX = re.compile(r'<(figure|details) class="docs-shots[^"]*" data-href="([^"]*)">.*?</\1>', re.DOTALL)
 NOT_FOUND_PAGE = '404.html'
 BANNER_ANCHOR = '<header class="summer-topbar"'
 BODY_CLASS_PREFIX = '<body class="'
@@ -76,11 +80,17 @@ def add_offline_banner(html: str, relative_path: str, offline_banner: str) -> st
     return with_body_class.replace(BANNER_ANCHOR, offline_banner + BANNER_ANCHOR, 1)
 
 
+def link_screenshots_online(match: re.Match) -> str:
+    online_href = f'{ONLINE_DOCS_URL}{match.group(2)}'
+    return f'<p class="docs-shots-offline"><a href="{online_href}" target="_blank" rel="noopener">Screenshots in the online docs ↗</a></p>'
+
+
 def read_content(path: Path, relative_path: str, offline_banner: str) -> bytes:
     if not relative_path.endswith('.html'):
         return path.read_bytes()
     html = path.read_text(encoding='utf-8')
     html = EXCLUDED_REF_REGEX.sub('', html)
+    html = SCREENSHOTS_REGEX.sub(link_screenshots_online, html)
     if relative_path != NOT_FOUND_PAGE:
         html = add_offline_banner(html, relative_path, offline_banner)
     return html.encode('utf-8')

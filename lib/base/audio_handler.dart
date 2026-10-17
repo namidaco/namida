@@ -876,6 +876,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   @override
   FutureOr<void> onItemMarkedListened(Q item, int listenedSeconds, double listenedPercentage) async {
+    // -- screenshots play tracks, the seeded history must stay as is
+    if (kScreenshotsMode) return;
     await item.execute(
       selectable: (finalItem) async {
         final newTrackWithDate = TrackWithDate(

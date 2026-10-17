@@ -237,10 +237,12 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 
 # Screenshots
 
-<img src="screens/collection_light_1.jpg" class="imgbr"/>
-<img src="screens/collection_light_2.jpg" class="imgbr"/>
-<img src="screens/collection_dark_1.jpg" class="imgbr"/>
-<img src="screens/collection_dark_2.jpg" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_light_1.webp" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_light_2.webp" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_light_3.webp" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_light_4.webp" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_dark_1.webp" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/collection_dark_2.webp" class="imgbr"/>
 
 <details>
   <summary>
@@ -248,7 +250,22 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### Customization Settings
 
   </summary>
-    <img src="screens/customization_settings.jpg" class="imgbr" width="50%">
+    <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_customization.webp" class="imgbr" width="50%">
+</details>
+
+<details>
+  <summary>
+
+### All Settings
+
+  </summary>
+
+<table>
+  <tr><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_theme.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_indexer.webp" class="imgbr"/></td></tr>
+  <tr><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_playback.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_youtube.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_extras.webp" class="imgbr"/></td></tr>
+  <tr><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_backup.webp" class="imgbr"/></td><td valign="top"><img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/readme/settings/settings_advanced.webp" class="imgbr"/></td></tr>
+</table>
+
 </details>
 
 <details>
@@ -257,7 +274,23 @@ note: some cleanup is made to improve the matching, all symbols & whitespaces ar
 ### YouTube Miniplayer
 
   </summary>
-    <img src="screens/yt_miniplayer.png" class="imgbr" width="50%">
+    <img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/manual/yt_miniplayer.jpg" class="imgbr" width="50%">
+</details>
+
+<details>
+  <summary>
+
+### 2023 Screenshots
+
+  </summary>
+
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_1.jpg" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_light_2.jpg" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_dark_1.jpg" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/collection_dark_2.jpg" class="imgbr"/>
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/customization_settings.jpg" class="imgbr" width="50%">
+<img src="https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots_2023/yt_miniplayer.png" class="imgbr" width="50%">
+
 </details>
 <br>
 

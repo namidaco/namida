@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: ${width}px; height: ${height}px; overflow: hidden; }
+  body { background: linear-gradient(90deg, #ece6fb 0%, #ece6fb 35%, #1a1622 65%, #1a1622 100%); display: flex; align-items: center; justify-content: center; }
+  .frame { position: relative; width: 760px; border-radius: 48px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(127, 127, 127, 0.25); }
+  .frame img { display: block; width: 100%; }
+  .dark { position: absolute; inset: 0; clip-path: polygon(62% 0, 100% 0, 100% 100%, 38% 100%); }
+  .seam { position: absolute; inset: 0; width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <img src="${light}">
+    <img class="dark" src="${dark}">
+    <svg class="seam" viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="62" y1="0" x2="38" y2="100" stroke="rgba(255,255,255,0.75)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+  </div>
+</body>
+</html>

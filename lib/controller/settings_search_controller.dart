@@ -256,24 +256,28 @@ class SettingsSearchController {
   }) async {
     onSearchTap(isOpen: false);
 
-    final details = subpagesDetails[settingPage];
-    final page = settingPage?.toSettingSubPageDetails(initialItem: key)?.page;
     if (NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_subpage) {
       // -- navigate back if inside subpage.
       // -- we can skip and just jump, but we
       // -- need the blink animation & bgColor to update.
       await NamidaNavigator.inst.popPage(waitForAnimation: true);
     }
-    if (page != null) {
-      SettingsSubPage(
-        title: () => details?.title() ?? '',
-        child: page(),
-      ).navigate();
-    }
+    if (settingPage != null) openSubpage(settingPage, initialItem: key);
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       final c = _targetKeys[key]?.currentContext;
       if (c != null) Scrollable.ensureVisible(c, alignment: 0.3);
     });
+  }
+
+  void openSubpage(SettingSubpageEnum settingPage, {SettingEntry? initialItem}) {
+    final details = settingPage.toSettingSubPageDetails(initialItem: initialItem);
+    if (details == null) return;
+    final page = details.page;
+    if (page == null) return;
+    SettingsSubPage(
+      title: details.title,
+      child: page(),
+    ).navigate();
   }
 }
 

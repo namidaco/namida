@@ -37,6 +37,8 @@ sealed class BaseMessage {
 
   /// calls [executeOnReceived]. if [type] is a manifest response, it adds [executeOnReceived] to a queue first.
   Future<void> executeOnReceivedWithQueue() async {
+    // -- screenshots connect for the devices list only, the seeded data must not change or leave
+    if (kScreenshotsMode && (type.isDataTransfer || type.isManifestRequest || type == MessageType.syncItemsRequest)) return;
     if (type.isManifestResponse) {
       return _queue.add(() async => executeOnReceived());
     }

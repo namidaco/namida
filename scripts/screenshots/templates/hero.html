@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: ${width}px; height: ${height}px; overflow: hidden; background: #f3f0fa; }
+  .mosaic { position: absolute; inset: -120px; display: grid; grid-template-columns: repeat(8, 1fr); filter: blur(60px) saturate(1.4) brightness(1.1); }
+  .mosaic img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; }
+  .shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 40%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.7) 80%); }
+  .shot { position: absolute; display: block; border-radius: 22px; box-shadow: 0 30px 80px rgba(60, 40, 90, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.06); }
+  .desktop { left: 110px; top: 175px; width: 1560px; }
+  .phone { width: 430px; border-radius: 30px; }
+  .p1 { left: 1530px; top: 110px; transform: rotate(-1.5deg); }
+  .p2 { left: 1890px; top: 250px; transform: rotate(2deg); }
+</style>
+</head>
+<body>
+  <div class="mosaic">${mosaic}</div>
+  <div class="shade"></div>
+  <img class="shot desktop" src="${desktop}">
+  <img class="shot phone p1" src="${phone1}">
+  <img class="shot phone p2" src="${phone2}">
+</body>
+</html>

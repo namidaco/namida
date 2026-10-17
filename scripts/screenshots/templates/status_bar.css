@@ -1,0 +1,7 @@
+.screen { overflow: hidden; container-type: inline-size; }
+.screen img { display: block; width: 100%; }
+.status { display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; height: 9cqw; padding: 1.4cqw 7cqw 0; font: 600 4.3cqw 'Lexend Deca', sans-serif; letter-spacing: 0.02em; }
+.status .icons { display: flex; align-items: center; gap: 1.8cqw; }
+.status svg { fill: currentColor; }
+.status svg.square { width: 3.7cqw; height: 3.7cqw; }
+.status svg.battery { width: 7cqw; height: 3.5cqw; }

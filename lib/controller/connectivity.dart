@@ -7,6 +7,7 @@ import 'package:dbus/dbus.dart';
 
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/utils.dart';
@@ -68,7 +69,19 @@ class ConnectivityController {
   /// last resort, staying offline would stall everything network-gated.
   void _assumeConnected() => _onConnectionsChanged(const [ConnectivityResult.other]);
 
-  void _onConnectionsChanged(List<ConnectivityResult> connections) {
+  List<ConnectivityResult> _latestConnections = const [];
+  bool _isForcedOffline = false;
+
+  /// screenshots only, youtube pages then read what their cache holds.
+  void setForcedOffline(bool isOffline) {
+    if (!kScreenshotsMode) return;
+    _isForcedOffline = isOffline;
+    _onConnectionsChanged(_latestConnections);
+  }
+
+  void _onConnectionsChanged(List<ConnectivityResult> connectionsPre) {
+    _latestConnections = connectionsPre;
+    final connections = _isForcedOffline ? const [ConnectivityResult.none] : connectionsPre;
     if (connections.contains(ConnectivityResult.none)) {
       _hasConnection.value = false;
       _hasHighConnection.value = false;

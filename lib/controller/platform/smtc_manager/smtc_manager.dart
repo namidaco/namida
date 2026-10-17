@@ -13,6 +13,7 @@ import 'package:namida/controller/platform/tray_manager/tray_manager.dart';
 import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';

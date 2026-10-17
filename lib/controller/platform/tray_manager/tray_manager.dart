@@ -14,6 +14,7 @@ import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/controller/window_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';

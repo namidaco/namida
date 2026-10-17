@@ -49,20 +49,44 @@
 
   <screenshots>
     <screenshot type="default">
-      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_light_1.jpg</image>
-      <caption>Home, genres and playlists</caption>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_home_light.png</image>
+      <caption>Home with mixes and recent listens, next to the player</caption>
     </screenshot>
     <screenshot>
-      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_light_2.jpg</image>
-      <caption>Sorting, most played and generated mixes</caption>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_player_light.png</image>
+      <caption>Player with video and synced lyrics</caption>
     </screenshot>
     <screenshot>
-      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_dark_1.jpg</image>
-      <caption>Settings, player with lyrics and track options</caption>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/portrait_home_light.png</image>
+      <caption>Phone layout in a narrow window</caption>
     </screenshot>
     <screenshot>
-      <image>https://github.com/namidaco/namida/raw/c60cd841ffde9c83e0070a1419c4b266d773aaf6/screens/collection_dark_2.jpg</image>
-      <caption>Queues, search and artist separators</caption>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_album_light.png</image>
+      <caption>Album page</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_artist_light.png</image>
+      <caption>Artist page with albums and singles</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_playlists_light.png</image>
+      <caption>Playlists with tags</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/portrait_lyrics_dark.png</image>
+      <caption>Synced lyrics in dark mode</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_lyrics_editor_light.png</image>
+      <caption>Lyrics editor</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_stats_light.png</image>
+      <caption>Listening statistics</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/namidaco/namida-assets/main/screenshots/flathub/wide_settings_light.png</image>
+      <caption>Customization settings</caption>
     </screenshot>
   </screenshots>
 

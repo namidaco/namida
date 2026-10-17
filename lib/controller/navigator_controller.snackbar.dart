@@ -248,6 +248,8 @@ SnackbarController snackyy({
   );
 
   snackbarController = SnackbarController(snackbar);
+  // -- screenshots never show one, they cover the page and errors carry stream urls
+  if (kScreenshotsMode) return snackbarController;
   _snackbarsStackManager.add(type, snackbarController);
   if (mergedSnackbar != null) {
     mergedSnackbar.controller = snackbarController;

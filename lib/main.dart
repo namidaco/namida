@@ -50,6 +50,7 @@ import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/screenshots_driver.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -107,7 +108,13 @@ void main(List<String> args) {
         await singleInstance.acquireSingleInstanceOrExit(args);
       }
 
-      runApp(const Namida());
+      const app = Namida();
+      final rootWidget = kScreenshotsMode
+          ? const ScreenshotsRoot(
+              child: app,
+            )
+          : app;
+      runApp(rootWidget);
     },
     (error, stack) => logger.error(error.runtimeType, e: error, st: stack),
     zoneValues: {
@@ -362,6 +369,8 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
   } catch (e, st) {
     logger.error('_secondaryAppInitialization', e: e, st: st);
   }
+
+  if (kScreenshotsMode) ScreenshotsDriver.inst.run();
 }
 
 void _recheckTimeAwareEssentials() async {

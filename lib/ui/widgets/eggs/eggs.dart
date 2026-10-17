@@ -51,6 +51,7 @@ abstract class EggHunt {
   }
 
   static void _announce(NamidaEgg egg, {String? message}) {
+    if (kScreenshotsMode) return;
     final collectedCount = settings.eggs.value.collectedCount();
     final title = message ?? egg.toText();
     VibratorController.medium();

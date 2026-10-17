@@ -2,6 +2,7 @@ part of 'smtc_manager.dart';
 
 abstract class NamidaSMTCManager {
   static NamidaSMTCManager? platform() {
+    if (kScreenshotsMode) return null;
     return NamidaPlatformBuilder.init(
       android: () => null,
       ios: () => null,

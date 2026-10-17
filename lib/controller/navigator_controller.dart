@@ -13,6 +13,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/screenshots_driver.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/settings_search_controller.dart';
@@ -172,13 +173,14 @@ class NamidaNavigator {
 
   /// Raw access to system UI mode. For more accurate results, use [MiniPlayerController.setImmersiveMode].
   static Future<void> setSystemUIImmersiveMode(bool immersive, {List<SystemUiOverlay> overlays = SystemUiOverlay.values}) async {
-    if (_latestSystemUIImmersive == immersive && !overlays.didChangeFrom(_latestSystemUIOverlays)) {
+    final isImmersive = immersive || (kScreenshotsMode && ScreenshotsDriver.inst.hidesSystemBars);
+    if (_latestSystemUIImmersive == isImmersive && !overlays.didChangeFrom(_latestSystemUIOverlays)) {
       return;
     }
-    _latestSystemUIImmersive = immersive;
+    _latestSystemUIImmersive = isImmersive;
     _latestSystemUIOverlays = overlays;
 
-    final mode = immersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
+    final mode = isImmersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
     return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
 
