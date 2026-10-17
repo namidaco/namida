@@ -122,7 +122,6 @@ dependencies:
     git:
       url: https://github.com/MSOB7YY/smb_connect
   dartssh2: ^2.14.0
-  ftpconnect: ^2.0.10
 
   # ---- Audio Indexing & Playback ----
   just_audio:

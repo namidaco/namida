@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:dartssh2/dartssh2.dart';
 // ignore: depend_on_referenced_packages
 import 'package:dio/dio.dart';
-import 'package:ftpconnect/ftpconnect.dart';
 import 'package:lrc/lrc.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:opensubsonic_api/opensubsonic_api.dart';
@@ -53,6 +52,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 
 part 'file_transfer_server.dart';
+part 'ftp_client.dart';
 part 'ftp_server.dart';
 part 'jellyfin_api.dart';
 part 'jellyfin_server.dart';

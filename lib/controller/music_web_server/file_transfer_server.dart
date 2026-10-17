@@ -86,7 +86,8 @@ abstract class _FileTransferServer extends MusicWebServer {
       await for (final trExt in _walk(_basePath, scan, isRoot: true)) {
         callback(trExt);
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('${authDetails.dir.type.name} indexing failed', e: e, st: st);
       _onFetchError(e);
     }
   }
