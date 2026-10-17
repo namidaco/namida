@@ -32,6 +32,7 @@ import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/dialogs/shortcuts_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
@@ -51,19 +52,8 @@ class AboutPage extends StatefulWidget with NamidaRouteWidget {
 
   static void showShortcutsDialog(BuildContext context) {
     NamidaNavigator.inst.navigateDialog(
-      dialog: CustomBlurryDialog(
-        icon: Broken.flash_1,
-        title: lang.shortcuts,
-        normalTitleStyle: true,
-        actions: [
-          const DoneButton(),
-        ],
-        child: SizedBox(
-          height: context.height * 0.6,
-          child: ShortcutsInfoWidget(
-            manager: ShortcutsController.instance!,
-          ),
-        ),
+      dialog: ShortcutsDialog(
+        manager: ShortcutsController.instance!,
       ),
     );
   }

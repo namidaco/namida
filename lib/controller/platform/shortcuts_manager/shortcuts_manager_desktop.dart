@@ -10,6 +10,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     // ------------------- playback -------------------
     ShortcutKeyActivator(
       action: HotkeyAction.play_pause,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.space,
       skipInTextFields: true,
       callback: Player.inst.togglePlayPause,
@@ -17,18 +18,21 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.seek_backwards,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowLeft,
       callback: Player.inst.seekSecondsBackward,
       title: () => "<- ${lang.seekbar}",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.seek_forwards,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowRight,
       callback: Player.inst.seekSecondsForward,
       title: () => "${lang.seekbar} ->",
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.volume_up,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowUp,
       control: true,
       includeRepeats: true,
@@ -40,6 +44,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.volume_down,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowDown,
       control: true,
       includeRepeats: true,
@@ -51,6 +56,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.previous,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowLeft,
       control: true,
       callback: Player.inst.previous,
@@ -58,6 +64,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.next,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowRight,
       control: true,
       callback: Player.inst.next,
@@ -65,6 +72,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     ),
     ShortcutKeyActivator(
       action: HotkeyAction.stop_after_current,
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.space,
       control: true,
       callback: () {
@@ -74,12 +82,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.stopAfterThisTrack,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowLeft,
       shift: true,
       callback: () => ChaptersController.inst.seekToAdjacent(forward: false),
       title: () => lang.previousChapter,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.arrowRight,
       shift: true,
       callback: () => ChaptersController.inst.seekToAdjacent(forward: true),
@@ -88,6 +98,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
 
     // -------------------
     ShortcutKeyActivator(
+      category: ShortcutCategory.track,
       key: LogicalKeyboardKey.keyH,
       control: true,
       callback: () async {
@@ -137,12 +148,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => "${lang.favourites}/${lang.like}: ${lang.add}/${lang.remove}",
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.track,
       key: LogicalKeyboardKey.keyB,
       control: true,
       callback: BookmarksController.inst.addAtCurrentPosition,
       title: () => lang.addBookmark,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyF,
       control: true,
       callback: () {
@@ -158,12 +171,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.search,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyR,
       control: true,
       callback: Indexer.inst.refreshLibraryAndCheckForDiff,
       title: () => lang.refreshLibrary,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyE,
       control: true,
       callback: () {
@@ -188,12 +203,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.openMiniplayer,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyQ,
       control: true,
       callback: openPlayerQueue,
       title: () => lang.openQueue,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.lyrics,
       key: LogicalKeyboardKey.keyL,
       control: true,
       callback: () {
@@ -206,6 +223,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.lyrics,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.lyrics,
       key: LogicalKeyboardKey.keyL,
       control: true,
       shift: true,
@@ -220,6 +238,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => "${lang.lyrics} (${lang.fullscreen})",
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyP,
       control: true,
       shift: true,
@@ -236,6 +255,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.settings,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.keyS,
       control: true,
       shift: true,
@@ -254,6 +274,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.shuffle,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.tab,
       control: true,
       callback: () {
@@ -267,6 +288,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     // -----------------
     for (final key in const [LogicalKeyboardKey.equal, LogicalKeyboardKey.numpadAdd])
       ShortcutKeyActivator(
+        category: ShortcutCategory.others,
         key: key,
         control: true,
         includeRepeats: true,
@@ -275,6 +297,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       ),
     for (final key in const [LogicalKeyboardKey.minus, LogicalKeyboardKey.numpadSubtract])
       ShortcutKeyActivator(
+        category: ShortcutCategory.others,
         key: key,
         control: true,
         includeRepeats: true,
@@ -282,6 +305,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         title: () => lang.zoom,
       ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.digit0,
       control: true,
       callback: () => ScaleDetectorState.topmost?.reset(),
@@ -290,6 +314,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     // -----------------
     for (int i = 1; i <= 9; i++)
       ShortcutKeyActivator(
+        category: ShortcutCategory.track,
         key: LogicalKeyboardKey(0x00000000030 + i),
         control: true,
         alt: true,
@@ -327,6 +352,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     // -----------------
     for (int i = 1; i <= 9; i++)
       ShortcutKeyActivator(
+        category: ShortcutCategory.others,
         key: LogicalKeyboardKey(0x00000000030 + i),
         control: true,
         callback: () {
@@ -342,6 +368,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
 
     // ================
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.f11,
       callback: () async {
         final isFullscreen = await windowManager.isFullScreen();
@@ -350,6 +377,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.fullscreen,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.lyrics,
       key: LogicalKeyboardKey.keyL,
       control: true,
       alt: true,
@@ -357,6 +385,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.miniLyricsWindow,
     ),
     ShortcutKeyActivator(
+      category: ShortcutCategory.others,
       key: LogicalKeyboardKey.escape,
       callback: () {
         if (NamidaWindowManager.isMiniLyricsMode.value) {

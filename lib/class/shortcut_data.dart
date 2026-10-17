@@ -90,24 +90,25 @@ class ShortcutKeyData {
     );
   }
 
-  String buildKeyLabel() {
-    String label = key?.keyLabel ?? '';
-    if (label == LogicalKeyboardKey.space.keyLabel) {
-      label = 'Space';
-    }
-    if (alt) {
-      label = 'Alt + $label';
-    }
-    if (meta) {
-      label = '⌘ + $label';
-    }
-    if (shift) {
-      label = 'Shift + $label';
-    }
-    if (ctrl) {
-      label = 'Ctrl + $label';
-    }
-    return label;
+  static final _shortKeyLabels = <LogicalKeyboardKey, String>{
+    LogicalKeyboardKey.space: 'Space', LogicalKeyboardKey.escape: 'Esc', //
+    LogicalKeyboardKey.arrowLeft: '←', LogicalKeyboardKey.arrowRight: '→', LogicalKeyboardKey.arrowUp: '↑', LogicalKeyboardKey.arrowDown: '↓', //
+    LogicalKeyboardKey.numpadAdd: '+', LogicalKeyboardKey.numpadSubtract: '-', //
+  };
+
+  List<String> buildModifierLabels() {
+    return [
+      if (ctrl) 'Ctrl',
+      if (shift) 'Shift',
+      if (meta) '⌘',
+      if (alt) 'Alt',
+    ];
+  }
+
+  String? buildKeyText() {
+    final key = this.key;
+    if (key == null) return null;
+    return _shortKeyLabels[key] ?? key.keyLabel;
   }
 
   @override
@@ -126,6 +127,7 @@ class ShortcutKeyData {
 
 class ShortcutKeyActivator extends SingleActivator {
   final HotkeyAction? action;
+  final ShortcutCategory category;
   final String Function() title;
   final LogicalKeyboardKey key;
   final void Function() callback;
@@ -133,6 +135,7 @@ class ShortcutKeyActivator extends SingleActivator {
 
   const ShortcutKeyActivator({
     this.action,
+    required this.category,
     required this.title,
     required this.key,
     super.control = false,
@@ -149,4 +152,11 @@ class ShortcutKeyActivator extends SingleActivator {
     if (event is! KeyDownEvent && !(includeRepeats && event is KeyRepeatEvent)) return false;
     return control == state.isControlPressed && shift == state.isShiftPressed && alt == state.isAltPressed && meta == state.isMetaPressed;
   }
+}
+
+enum ShortcutCategory {
+  playback,
+  track,
+  others,
+  lyrics,
 }

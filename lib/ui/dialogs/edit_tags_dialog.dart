@@ -2009,6 +2009,7 @@ class CustomTagTextField extends StatefulWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final bool markChanged;
+  final double? height;
 
   const CustomTagTextField({
     super.key,
@@ -2017,6 +2018,7 @@ class CustomTagTextField extends StatefulWidget {
     this.icon,
     this.suffixIcon,
     this.markChanged = false,
+    this.height,
     this.hintMaxLines = 3,
     this.maxLines,
     this.maxLength,
@@ -2078,6 +2080,11 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final textTheme = theme.textTheme;
     final borderR = widget.borderRadius.multipliedRadius;
     final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
+    final height = widget.height;
+    final isDense = height != null;
+    final fontSize = isDense ? 13.0 : 14.5;
+    final contentPadding = isDense ? const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0) : const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0);
+    final suffixIconConstraints = isDense ? BoxConstraints(minWidth: 34.0, minHeight: height) : null;
     return TextFormField(
       obscureText: widget.obscureText,
       onTap: widget.onTap,
@@ -2090,7 +2097,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
       maxLines: widget.maxLines,
       autovalidateMode: widget.validatorMode,
       keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
-      style: textTheme.displaySmall?.copyWith(fontSize: 14.5, fontWeight: FontWeight.w600),
+      style: textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.w600),
       // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onFieldSubmitted,
@@ -2098,9 +2105,11 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
         label: widget.labelText != '' ? Text('${widget.labelText} ${didChange || widget.markChanged ? '(${lang.changed})' : ''}') : null,
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintMaxLines: widget.hintMaxLines,
-        contentPadding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        isDense: isDense,
+        contentPadding: contentPadding,
         errorMaxLines: 3,
         suffixIcon: widget.suffixIcon ?? Icon(widget.icon, size: 18.0),
+        suffixIconConstraints: suffixIconConstraints,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(borderRS),
           borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
@@ -2118,7 +2127,7 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
           borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
         ),
         hintText: widget.hintText,
-        hintStyle: textTheme.displaySmall?.copyWith(fontSize: 14.5, color: textTheme.displaySmall?.color?.withAlpha(120)),
+        hintStyle: textTheme.displaySmall?.copyWith(fontSize: fontSize, color: textTheme.displaySmall?.color?.withAlpha(120)),
       ),
     );
   }

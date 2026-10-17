@@ -27,7 +27,6 @@ import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
@@ -35,11 +34,9 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
-import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/controller/shortcuts_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
 import 'package:namida/controller/video_controller.dart';
@@ -660,6 +657,7 @@ class CustomBlurryDialog extends StatelessWidget {
   final bool scrollable;
   final double horizontalInset;
   final double verticalInset;
+  final double maxWidth;
   final EdgeInsetsGeometry contentPadding;
   final ThemeData? theme;
   final Widget? frame;
@@ -678,6 +676,7 @@ class CustomBlurryDialog extends StatelessWidget {
     this.isWarning = false,
     this.horizontalInset = 42.0,
     this.verticalInset = 32.0,
+    this.maxWidth = kDialogMaxWidth,
     this.scrollable = true,
     this.contentPadding = const EdgeInsets.all(14.0),
     this.leftAction,
@@ -698,7 +697,7 @@ class CustomBlurryDialog extends StatelessWidget {
           insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
           clipBehavior: Clip.antiAlias,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+            constraints: BoxConstraints(maxWidth: maxWidth),
             child: TapDetector(
               onTap: () {},
               child: _DialogFrame(
@@ -8416,354 +8415,6 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                 );
               },
             ),
-    );
-  }
-}
-
-class ShortcutsInfoWidget extends StatefulWidget {
-  final ShortcutsManager manager;
-  const ShortcutsInfoWidget({super.key, required this.manager});
-
-  @override
-  State<ShortcutsInfoWidget> createState() => _ShortcutsInfoWidgetState();
-}
-
-class _ShortcutsInfoWidgetState extends State<ShortcutsInfoWidget> {
-  final organizedMap = <String, List<ShortcutKeyActivator>>{};
-
-  @override
-  void initState() {
-    for (final k in widget.manager.bindings.keys) {
-      organizedMap.addForce(k.title(), k);
-    }
-
-    super.initState();
-  }
-
-  void _onAddOrEditTap(String title, HotkeyAction action) {
-    NamidaNavigator.inst.navigateDialog(
-      dialog: _HotKeyRecorderDialog(
-        title: title,
-        initalHotKey: settings.shortcuts.shortcuts.value[action],
-        onDelete: () {
-          ShortcutsController.instance?.setUserShortcut(action: action, data: null);
-        },
-        onHotKeyRecorded: (data) {
-          if (data != null) {
-            final conflictTitle = _findConflictingShortcutTitle(data, action);
-            if (conflictTitle != null) return '${lang.alreadyExists}: $conflictTitle';
-          }
-
-          ShortcutsController.instance?.setUserShortcut(action: action, data: data);
-          return null;
-        },
-      ),
-    );
-  }
-
-  String? _findConflictingShortcutTitle(ShortcutKeyData data, HotkeyAction action) {
-    final defaultKeys = widget.manager.bindings.keys;
-
-    // -- its not likely for already registered system hotkeys to be caught again here, but anyways
-    for (final MapEntry(key: userAction, value: userKey) in settings.shortcuts.shortcuts.value.entries) {
-      if (userAction == action || userKey == null) continue;
-      if (data.isSimilarTo(userKey)) {
-        final userActionDefaultKey = defaultKeys.firstWhereEff((k) => k.action == userAction);
-        return userActionDefaultKey?.title() ?? userAction.name;
-      }
-    }
-
-    for (final defaultKey in defaultKeys) {
-      final defaultKeyData = ShortcutKeyData.fromShortcutKeyActivator(defaultKey);
-      if (data.isSimilarTo(defaultKeyData)) return defaultKey.title();
-    }
-
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return ObxO(
-      rx: settings.shortcuts.shortcuts,
-      builder: (context, userShortcuts) => SuperSmoothListView(
-        shrinkWrap: true,
-        children: organizedMap.entries
-            .map(
-              (e) {
-                var shortcutsTexts = <String>[];
-                String title = e.key;
-                if (title == lang.libraryTabs) {
-                  shortcutsTexts = ['Ctrl + 1..9'];
-                } else if (title == lang.setRating) {
-                  shortcutsTexts = ['Ctrl + alt + 1..9'];
-                } else {
-                  shortcutsTexts = e.value.map((e) {
-                    return ShortcutKeyData.fromShortcutKeyActivator(e).buildKeyLabel();
-                  }).toList();
-                }
-                final action = e.value[0].action;
-                final data = action == null ? null : userShortcuts[action];
-                void addOrEditTapLocal() => action == null ? null : _onAddOrEditTap(title, action);
-                return Wrap(
-                  runSpacing: 2.0,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    ...shortcutsTexts
-                        .map(
-                          (shortcut) => NamidaInkWell(
-                            borderRadius: 4.0,
-                            padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                            bgColor: theme.cardColor,
-                            child: RichText(
-                              text: TextSpan(
-                                text: shortcut,
-                                style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ),
-                        )
-                        .addSeparators(separator: const SizedBox(width: 2.0)),
-                    if (data != null)
-                      NamidaContainerDivider(
-                        height: 16.0,
-                        width: 2.0,
-                        margin: EdgeInsets.symmetric(horizontal: 3.0),
-                      ),
-                    if (data != null)
-                      NamidaInkWell(
-                        borderRadius: 4.0,
-                        padding: EdgeInsets.symmetric(vertical: 2.0),
-                        bgColor: theme.cardColor,
-                        onTap: addOrEditTapLocal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(width: 4.0),
-                            Icon(
-                              Broken.cpu,
-                              size: 14.0,
-                            ),
-                            SizedBox(width: 4.0),
-                            RichText(
-                              text: TextSpan(
-                                text: data.buildKeyLabel(),
-                                style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            SizedBox(width: 4.0),
-                            if (action != null)
-                              NamidaInkWell(
-                                onTap: addOrEditTapLocal,
-                                borderRadius: 4.0,
-                                padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.6),
-                                child: Icon(
-                                  Broken.edit_2,
-                                  size: 13.0,
-                                ),
-                              ),
-                            SizedBox(width: 2.0),
-                          ],
-                        ),
-                      ),
-                    if (action != null && data == null) ...[
-                      SizedBox(width: 4.0),
-                      NamidaInkWell(
-                        onTap: addOrEditTapLocal,
-                        borderRadius: 4.0,
-                        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                        bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.6),
-                        child: Icon(
-                          Broken.add_circle,
-                          size: 14.0,
-                        ),
-                      ),
-                    ],
-                    SizedBox(width: 4.0),
-                    RichText(
-                      text: TextSpan(
-                        text: title,
-                        style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
-                      ),
-                    ),
-                  ],
-                );
-              },
-            )
-            .addSeparators(
-              separator: const NamidaContainerDivider(
-                margin: EdgeInsets.symmetric(vertical: 3.0),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-}
-
-class _HotKeyRecorderDialog extends StatefulWidget {
-  final String? title;
-  final ShortcutKeyData? initalHotKey;
-  final String? Function(ShortcutKeyData? data) onHotKeyRecorded;
-  final void Function() onDelete;
-
-  const _HotKeyRecorderDialog({
-    required this.title,
-    this.initalHotKey,
-    required this.onHotKeyRecorded,
-    required this.onDelete,
-  });
-
-  @override
-  State<_HotKeyRecorderDialog> createState() => _HotKeyRecorderDialogState();
-}
-
-class _HotKeyRecorderDialogState extends State<_HotKeyRecorderDialog> {
-  ShortcutKeyData? _hotKey;
-  String? _errorMsg;
-
-  @override
-  void initState() {
-    _hotKey = widget.initalHotKey;
-    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
-    super.dispose();
-  }
-
-  bool _handleKeyEvent(KeyEvent keyEvent) {
-    if (keyEvent is! KeyDownEvent) return false;
-    if (keyEvent.physicalKey == PhysicalKeyboardKey.enter || keyEvent.physicalKey == PhysicalKeyboardKey.numpadEnter) {
-      _confirmHotkey();
-      return true;
-    }
-
-    bool ctrl = false;
-    bool shift = false;
-    bool alt = false;
-    bool meta = false;
-
-    void investigateForModifiers(Set<PhysicalKeyboardKey> keys) {
-      for (final k in keys) {
-        if (k == PhysicalKeyboardKey.controlLeft || k == PhysicalKeyboardKey.controlRight) {
-          ctrl = true;
-          continue;
-        }
-        if (k == PhysicalKeyboardKey.shiftLeft || k == PhysicalKeyboardKey.shiftRight) {
-          shift = true;
-          continue;
-        }
-        if (k == PhysicalKeyboardKey.altLeft || k == PhysicalKeyboardKey.altRight) {
-          alt = true;
-          continue;
-        }
-        if (k == PhysicalKeyboardKey.metaLeft || k == PhysicalKeyboardKey.metaRight) {
-          meta = true;
-          continue;
-        }
-      }
-    }
-
-    investigateForModifiers({keyEvent.physicalKey});
-    final isKeyModifier = ctrl || shift || alt || meta; // check after pressed key is investigated
-    investigateForModifiers(HardwareKeyboard.instance.physicalKeysPressed);
-
-    setState(() {
-      _hotKey = ShortcutKeyData(
-        key: isKeyModifier ? null : keyEvent.logicalKey,
-        ctrl: ctrl,
-        shift: shift,
-        alt: alt,
-        meta: meta,
-      );
-      _errorMsg = null;
-    });
-
-    return true;
-  }
-
-  void _confirmHotkey() {
-    final error = widget.onHotKeyRecorded(_hotKey);
-    if (error != null) {
-      setState(() => _errorMsg = error);
-    } else {
-      NamidaNavigator.inst.closeDialog();
-    }
-  }
-
-  void _confirmDelete() {
-    widget.onDelete();
-    NamidaNavigator.inst.closeDialog();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final keyLabelNormalized = _hotKey?.buildKeyLabel() ?? '';
-    final isKeyGood = keyLabelNormalized.isNotEmpty;
-    final isEdit = widget.initalHotKey != null;
-    return CustomBlurryDialog(
-      icon: isEdit ? Broken.edit : Broken.add_circle,
-      title: widget.title ?? (isEdit ? lang.edit : lang.add),
-      normalTitleStyle: true,
-      trailingWidgets: [
-        if (isEdit)
-          NamidaIconButton(
-            icon: Broken.trash,
-            tooltip: () => lang.delete,
-            onPressed: _confirmDelete,
-          ),
-        if (isKeyGood)
-          NamidaIconButton(
-            icon: Broken.refresh,
-            tooltip: () => lang.clear,
-            onPressed: () {
-              setState(() {
-                _hotKey = null;
-                _errorMsg = null;
-              });
-            },
-          ),
-      ],
-      actions: [
-        const CancelButton(),
-        NamidaButton(
-          text: lang.save,
-          onTap: _confirmHotkey,
-        ),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: NamidaInkWell(
-              borderRadius: 8.0,
-              bgColor: context.theme.cardColor,
-              padding: EdgeInsetsGeometry.symmetric(
-                horizontal: 12.0,
-                vertical: 12.0,
-              ),
-              child: Text(
-                isKeyGood ? keyLabelNormalized : '?',
-                style: context.textTheme.displayMedium,
-              ),
-            ),
-          ),
-          if (_errorMsg != null) ...[
-            SizedBox(height: 8.0),
-            Text(
-              _errorMsg!,
-              style: context.textTheme.displayMedium?.copyWith(color: context.theme.colorScheme.error),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }
