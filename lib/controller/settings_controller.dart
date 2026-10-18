@@ -363,6 +363,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final scrollbarThumbLabel = _key<bool?>('scrollbarThumbLabel', null, sync: false);
   late final tapToScroll = _key<bool?>('tapToScroll', null, sync: false);
   late final enhancedDragToScroll = _key<bool?>('enhancedDragToScroll', null, sync: false);
+  late final easyScrollbarGrab = _key<bool?>('easyScrollbarGrab', null, sync: false);
   late final smoothScrolling = _key<bool?>('smoothScrolling', null, sync: false);
   late final mediaWaveHaptic = _key<bool?>('mediaWaveHaptic', null, sync: false);
   late final backgroundImages = _key<bool?>('backgroundImages', null, sync: false);
@@ -505,6 +506,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   late final fontScaleLRC = _key('fontScaleLRC', 1.0);
   late final fontScaleLRCFull = _key<double?>('fontScaleLRCFull', null);
+  late final fontScaleLRCWidescreen = _key('fontScaleLRCWidescreen', 1.6);
 
   static const _kDefaultLyricsEffects = [
     LyricsEffect.focalScale, LyricsEffect.depthBlur, LyricsEffect.springPop, LyricsEffect.interludeDots, LyricsEffect.seekGlide, //

@@ -605,6 +605,20 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 ),
               ),
               ObxO(
+                rx: settings.easyScrollbarGrab,
+                builder: (context, easyScrollbarGrab) => CustomSwitchListTile(
+                  leading: const StackedIcon(
+                    baseIcon: Broken.row_vertical,
+                    secondaryIcon: Broken.flash,
+                    secondaryIconSize: 12.0,
+                  ),
+                  value: easyScrollbarGrab ?? false,
+                  onChanged: (isTrue) => settings.easyScrollbarGrab.save(!isTrue),
+                  title: 'easy_scrollbar_grab'.toUpperCase(),
+                  subtitle: 'drag the scrollbar thumb instantly and from a wider area',
+                ),
+              ),
+              ObxO(
                 rx: settings.tapToScroll,
                 builder: (context, tapToScroll) => CustomSwitchListTile(
                   leading: const StackedIcon(

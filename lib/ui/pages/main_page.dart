@@ -1,5 +1,6 @@
 import 'dart:ui' as ui;
 
+import 'package:flutter/gestures.dart' show DragStartBehavior;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show PaintingContextCallback;
 import 'package:flutter/services.dart';
@@ -455,6 +456,7 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
         final isSettingsFab = Dimensions.inst.shouldShowSettingsFABR;
         if (!isSettingsFab && ScrollSearchController.inst.isGlobalSearchMenuShown.valueR) {
           return VerticalDragDetector(
+            dragStartBehavior: DragStartBehavior.down,
             onUpdate: (details) {
               _dragValue += details.delta.dy * 0.02;
             },

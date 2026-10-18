@@ -52,7 +52,7 @@ class LyricsLRCParsedView extends StatefulWidget {
   final double? maxHeight;
   final double? verticalPadding;
   final Widget? bottomPadding;
-  final bool largeText;
+  final SettingsKey<double>? fontScaleKey;
   final bool insideMiniplayerCard;
   final bool fadeOnEmptyLine;
   final bool showJumpButton;
@@ -73,7 +73,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.allowOverflow = true,
     this.useSafeArea = true,
     this.blurColorMaskOpacity = 0.6,
-    this.largeText = false,
+    this.fontScaleKey,
     this.insideMiniplayerCard = false,
     this.fadeOnEmptyLine = true,
     this.showJumpButton = false,
@@ -154,8 +154,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     super.initState();
     _mountedViews.add(this);
     if (widget.visibilityNotifier != null) _visibility.addListener(_reportVisibility);
-    settings.fontScaleLRC.addListener(_onFontScaleSettingChanged);
-    if (_largeText) settings.fontScaleLRCFull.addListener(_onFontScaleSettingChanged);
+    _fontScaleListenable.addListener(_onFontScaleSettingChanged);
     _effectsKey.addListener(_onEffectsSettingChanged);
     final lrc = Lyrics.inst.currentLyricsLRC.value;
     final txt = Lyrics.inst.currentLyricsText.value;
@@ -375,8 +374,6 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   /// position at which an earlier, still highlighted line ends and needs the highlight recomputed
   int _overlapEndMS = _kNoOverlapEndMS;
 
-  late final bool _largeText = widget.isFullScreenView || widget.largeText;
-
   late final _effectsKey = widget.isFullScreenView ? settings.lyricsEffectsExpanded : settings.lyricsEffectsNormal;
   late LyricsEffects _effects = LyricsEffects.of(_effectsKey.value);
 
@@ -384,9 +381,20 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   late double _previousFontMultiplier = _fontMultiplier;
   late double _fontMultiplier = _getFontMultiplierSetting();
 
+  late final Listenable _fontScaleListenable = _createFontScaleListenable();
+
+  Listenable _createFontScaleListenable() {
+    final fontScaleKey = widget.fontScaleKey;
+    if (fontScaleKey != null) return fontScaleKey;
+    if (widget.isFullScreenView) return Listenable.merge([settings.fontScaleLRC, settings.fontScaleLRCFull]);
+    return settings.fontScaleLRC;
+  }
+
   double _getFontMultiplierSetting() {
+    final fontScaleKey = widget.fontScaleKey;
+    if (fontScaleKey != null) return fontScaleKey.value;
     final normalMultiplier = settings.fontScaleLRC.value;
-    if (!_largeText) return normalMultiplier;
+    if (!widget.isFullScreenView) return normalMultiplier;
     return settings.fontScaleLRCFull.value ?? normalMultiplier;
   }
 
@@ -399,14 +407,20 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   }
 
   void _saveFontMultiplier() {
-    _largeText ? settings.fontScaleLRCFull.save(_fontMultiplier) : settings.fontScaleLRC.save(_fontMultiplier);
+    final fontScaleKey = widget.fontScaleKey;
+    if (fontScaleKey != null) {
+      fontScaleKey.save(_fontMultiplier);
+    } else if (widget.isFullScreenView) {
+      settings.fontScaleLRCFull.save(_fontMultiplier);
+    } else {
+      settings.fontScaleLRC.save(_fontMultiplier);
+    }
   }
 
   @override
   void dispose() {
     _mountedViews.remove(this);
-    settings.fontScaleLRC.removeListener(_onFontScaleSettingChanged);
-    if (_largeText) settings.fontScaleLRCFull.removeListener(_onFontScaleSettingChanged);
+    _fontScaleListenable.removeListener(_onFontScaleSettingChanged);
     _effectsKey.removeListener(_onEffectsSettingChanged);
     _cardSlide.removeListener(_onCardSlideTick);
     widget.visibilityNotifier?.value = 0.0;
@@ -460,24 +474,23 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
     final fullscreen = widget.isFullScreenView;
     const maxLyricsWidth = 864.0;
     final alignAtStart = fullscreen && context.width < maxLyricsWidth; // -- align at center if screen got too wide
-    final initialFontSize = widget.baseFontSize ?? (_largeText ? 26.0 : 15.0);
-    final normalTextStyle = textTheme.displayMedium!.copyWith(fontSize: _fontMultiplier * initialFontSize);
+    final initialFontSize = widget.baseFontSize ?? (fullscreen ? 26.0 : 15.0);
+    final normalTextStyle = NText.medium.of(context).copyWith(fontSize: _fontMultiplier * initialFontSize);
     final plainLyricsTextStyle = normalTextStyle.copyWith(height: 1.8);
     final fullscreenIconButton = fullscreen && widget.canShowToggleFullscreenButton
-        ? Container(
+        ? NContainer(
             clipBehavior: Clip.antiAlias,
             padding: const EdgeInsets.all(4.0),
-            decoration: BoxDecoration(
+            decoration: (colors) => BoxDecoration(
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   blurRadius: 8.0,
-                  color: theme.scaffoldBackgroundColor.withOpacityExt(0.7),
+                  color: colors.scaffold.withOpacityExt(0.7),
                 ),
               ],
             ),
@@ -1206,7 +1219,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
             onScaleUpdate: (details) => _setFontMultiplier(details.scale * _previousFontMultiplier),
             onScaleEnd: (details) => _saveFontMultiplier(),
             onScaleReset: () {
-              _setFontMultiplier(1.0);
+              final defaultMultiplier = widget.fontScaleKey?.fallback ?? 1.0;
+              _setFontMultiplier(defaultMultiplier);
               _saveFontMultiplier();
             },
           ),

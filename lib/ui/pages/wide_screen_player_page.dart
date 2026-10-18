@@ -448,7 +448,7 @@ class _RightPane extends StatelessWidget {
                       canSwipeToSkip: true,
                       useSafeArea: false,
                       allowOverflow: false,
-                      largeText: true,
+                      fontScaleKey: settings.fontScaleLRCWidescreen,
                       fadeOnEmptyLine: false,
                       showJumpButton: true,
                       baseFontSize: (constraints.maxWidth * 0.03).clampDouble(15.0, 26.0),

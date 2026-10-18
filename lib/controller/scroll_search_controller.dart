@@ -217,13 +217,12 @@ class ScrollSearchController {
     globalFocusNode?.unfocus();
   }
 
+  // -- requestFocus alone is a no-op on a focused field whose keyboard was dismissed
   void focusKeyboard() {
     final globalSearchState = searchBarKey.currentState;
-    if (globalSearchState != null && isGlobalSearchMenuShown.value) {
-      globalSearchState.focusNode.requestFocus();
-    } else {
-      _searchFocusNodes.lastOrNull?.requestFocus();
-    }
+    final focusNode = globalSearchState != null && isGlobalSearchMenuShown.value ? globalSearchState.focusNode : _searchFocusNodes.lastOrNull;
+    final editableTextState = focusNode?.context?.findAncestorStateOfType<EditableTextState>();
+    editableTextState?.requestKeyboard();
   }
 
   /// per-field nodes, a shared one gets detached once any field is disposed.

@@ -968,10 +968,12 @@ class _LyricsFontScaleButton extends StatelessWidget {
   const _LyricsFontScaleButton();
 
   void _showPopup(BuildContext context) {
+    final isInWideScreenPlayerPage = NamidaNavigator.inst.isInWideScreenPlayerPage;
     final popup = NamidaPopupWrapper(
-      children: () => const [
-        _LyricsFontScaleStepper(isFullscreen: false),
-        _LyricsFontScaleStepper(isFullscreen: true),
+      children: () => [
+        const _LyricsFontScaleStepper(view: .normal),
+        const _LyricsFontScaleStepper(view: .fullscreen),
+        if (isInWideScreenPlayerPage) const _LyricsFontScaleStepper(view: .widescreen),
       ],
     );
     popup.showPopupMenu(context);
@@ -988,10 +990,10 @@ class _LyricsFontScaleButton extends StatelessWidget {
 }
 
 class _LyricsFontScaleStepper extends StatelessWidget {
-  final bool isFullscreen;
+  final _LyricsFontScaleView view;
 
   const _LyricsFontScaleStepper({
-    required this.isFullscreen,
+    required this.view,
   });
 
   static const _kStepPercent = 5;
@@ -1009,24 +1011,43 @@ class _LyricsFontScaleStepper extends StatelessWidget {
   void _savePercent(int percent) {
     final scale = percent / 100;
     final clampedScale = scale.clampDouble(LyricsLRCParsedView.minFontScale, LyricsLRCParsedView.maxFontScale);
-    if (isFullscreen) {
-      settings.fontScaleLRCFull.save(clampedScale);
-    } else {
-      settings.fontScaleLRC.save(clampedScale);
+    switch (view) {
+      case .normal:
+        settings.fontScaleLRC.save(clampedScale);
+      case .fullscreen:
+        settings.fontScaleLRCFull.save(clampedScale);
+      case .widescreen:
+        settings.fontScaleLRCWidescreen.save(clampedScale);
     }
+  }
+
+  void _resetScale() {
+    switch (view) {
+      case .normal || .fullscreen:
+        _savePercent(100);
+      case .widescreen:
+        settings.fontScaleLRCWidescreen.reset();
+    }
+  }
+
+  double _getScaleR() {
+    return switch (view) {
+      .normal => settings.fontScaleLRC.valueR,
+      .fullscreen => settings.fontScaleLRCFull.valueR ?? settings.fontScaleLRC.valueR,
+      .widescreen => settings.fontScaleLRCWidescreen.valueR,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
       child: Row(
         children: [
           NamidaTooltip(
-            message: () => isFullscreen ? '${lang.fontScale} (${lang.fullscreen})' : lang.fontScale,
+            message: view.toTooltip,
             child: Icon(
-              isFullscreen ? Broken.maximize_3 : Broken.text,
+              view.toIcon(),
               size: 20.0,
             ),
           ),
@@ -1034,8 +1055,7 @@ class _LyricsFontScaleStepper extends StatelessWidget {
           const Spacer(),
           Obx(
             (context) {
-              final fullscreenScale = isFullscreen ? settings.fontScaleLRCFull.valueR : null;
-              final scale = fullscreenScale ?? settings.fontScaleLRC.valueR;
+              final scale = _getScaleR();
               final percent = (scale * 100).round();
               return Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1051,10 +1071,10 @@ class _LyricsFontScaleStepper extends StatelessWidget {
                     width: 44.0,
                     borderRadius: 6.0,
                     padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    onTap: () => _savePercent(100),
-                    child: Text(
+                    onTap: _resetScale,
+                    child: NamidaText(
                       '$percent%',
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -1175,4 +1195,22 @@ class _LyricsInUseChip extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _LyricsFontScaleView {
+  normal,
+  fullscreen,
+  widescreen,
+  ;
+
+  IconData toIcon() => switch (this) {
+    .normal => Broken.text,
+    .fullscreen => Broken.maximize_3,
+    .widescreen => Broken.monitor,
+  };
+
+  String toTooltip() => switch (this) {
+    .normal || .widescreen => lang.fontScale,
+    .fullscreen => '${lang.fontScale} (${lang.fullscreen})',
+  };
 }

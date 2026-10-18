@@ -6453,19 +6453,23 @@ class NamidaScrollbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (controller == null) return child;
-    return CupertinoScrollbar(
-      controller: controller,
-      showOnStart: showOnStart,
-      scrollStep: scrollStep,
-      thicknessWhileDragging: 8.5,
-      minInteractiveSize: 60.0,
-      pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
-      tapToScroll: () => settings.tapToScroll.value ?? false,
-      enhancedDragToScroll: () => settings.enhancedDragToScroll.value ?? true,
-      onThumbLongPressStart: () => isScrollbarThumbDragging = true,
-      onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
-      thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,
-      child: child,
+    return ObxO(
+      rx: settings.easyScrollbarGrab,
+      builder: (context, easyScrollbarGrab) => CupertinoScrollbar(
+        controller: controller,
+        showOnStart: showOnStart,
+        scrollStep: scrollStep,
+        thicknessWhileDragging: 8.5,
+        minInteractiveSize: easyScrollbarGrab == true ? 96.0 : 60.0,
+        pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
+        tapToScroll: () => settings.tapToScroll.value ?? false,
+        enhancedDragToScroll: () => settings.enhancedDragToScroll.value ?? true,
+        instantThumbGrab: () => settings.easyScrollbarGrab.value ?? false,
+        onThumbLongPressStart: () => isScrollbarThumbDragging = true,
+        onThumbLongPressEnd: () => isScrollbarThumbDragging = false,
+        thumbLabel: thumbLabel == null ? null : _createThumbLabelIfEnabled,
+        child: child,
+      ),
     );
   }
 }
@@ -7580,6 +7584,7 @@ class VerticalDragDetector extends _LinearDragDetector<VerticalDragGestureRecogn
     super.onUpdate,
     super.onEnd,
     super.onCancel,
+    super.dragStartBehavior,
   });
 }
 
@@ -7594,6 +7599,7 @@ abstract class _LinearDragDetector<T extends DragGestureRecognizer> extends Stat
   final void Function(T instance)? initializer;
   final Widget? child;
   final HitTestBehavior? behavior;
+  final DragStartBehavior dragStartBehavior;
 
   const _LinearDragDetector({
     super.key,
@@ -7605,6 +7611,7 @@ abstract class _LinearDragDetector<T extends DragGestureRecognizer> extends Stat
     this.onUpdate,
     this.onEnd,
     this.onCancel,
+    this.dragStartBehavior = DragStartBehavior.start,
   });
 
   @override
@@ -7620,6 +7627,7 @@ abstract class _LinearDragDetector<T extends DragGestureRecognizer> extends Stat
               ..onUpdate = onUpdate
               ..onEnd = onEnd
               ..onCancel = onCancel
+              ..dragStartBehavior = dragStartBehavior
               ..gestureSettings = MediaQuery.maybeGestureSettingsOf(context);
           },
     );
