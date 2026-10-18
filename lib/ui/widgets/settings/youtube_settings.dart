@@ -15,6 +15,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/settings_page.dart';
@@ -387,9 +388,10 @@ class YoutubeSettings extends SettingSubpageProvider {
                             childrenDefault: _YTFlagsOptions._dataSaverChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverMode,
-                              builder: (context, dataSaverMode) => Text(
+                              builder: (context, dataSaverMode) => NamidaText(
                                 dataSaverMode.toText(),
-                                style: CustomListTile.getTrailingTextStyle(context.theme),
+                                style: NText.medium,
+                                color: const NColors(.onSurface, opacity: 0.78),
                               ),
                             ),
                           ),
@@ -406,9 +408,10 @@ class YoutubeSettings extends SettingSubpageProvider {
                             childrenDefault: _YTFlagsOptions._dataSaverMobileChildren,
                             child: ObxO(
                               rx: settings.youtube.dataSaverModeMobile,
-                              builder: (context, dataSaverModeMobile) => Text(
+                              builder: (context, dataSaverModeMobile) => NamidaText(
                                 dataSaverModeMobile.toText(),
-                                style: CustomListTile.getTrailingTextStyle(context.theme),
+                                style: NText.medium,
+                                color: const NColors(.onSurface, opacity: 0.78),
                               ),
                             ),
                           ),
@@ -448,7 +451,7 @@ class YoutubeSettings extends SettingSubpageProvider {
       trailing: NamidaIconButton(
         icon: Broken.flag,
         tooltip: () => lang.configure,
-        iconColor: context.defaultIconColor(),
+        iconColor: NColors.defaultIcon(),
         onPressed: _showYTFlagsDialog,
       ),
       child: SettingSectionsColumn(
@@ -646,23 +649,23 @@ class _DimIntensityIcon extends StatelessWidget {
     const minus = multiplier / 2;
     const height = 7.0;
     const origin = height / 2;
-    final iconColor = context.defaultIconColor();
+    final iconColor = NColors.defaultIcon();
     return Stack(
       alignment: Alignment.center,
       children: [
-        Icon(
+        NIcon(
           Broken.devices,
           size: 24.0,
           color: iconColor,
         ),
         // -- hide middle part
-        Container(
+        NContainer(
           width: 7.0,
           height: 7.0,
-          decoration: BoxDecoration(
+          decoration: (colors) => BoxDecoration(
             boxShadow: [
               BoxShadow(
-                color: context.theme.scaffoldBackgroundColor,
+                color: colors.scaffold,
                 blurRadius: 1.0,
                 offset: const Offset(0, 2.0),
               ),
@@ -677,11 +680,11 @@ class _DimIntensityIcon extends StatelessWidget {
             return Transform.rotate(
               origin: const Offset(0, origin),
               angle: angle,
-              child: Container(
+              child: NContainer(
                 width: 2.0,
                 height: height,
-                decoration: BoxDecoration(
-                  color: iconColor,
+                decoration: (colors) => BoxDecoration(
+                  color: iconColor.resolve(colors),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
@@ -731,9 +734,10 @@ class _SeekModeTile<E extends Enum> extends StatelessWidget {
         childrenDefault: _getMenuItems,
         child: ObxO(
           rx: setting,
-          builder: (context, value) => Text(
+          builder: (context, value) => NamidaText(
             valueToText(value),
-            style: CustomListTile.getTrailingTextStyle(context.theme),
+            style: NText.medium,
+            color: const NColors(.onSurface, opacity: 0.78),
             textAlign: TextAlign.end,
           ),
         ),
@@ -880,9 +884,9 @@ class _YTFlagsOptions extends StatelessWidget {
                       childrenDefault: _innertubeChildren,
                       child: ObxO(
                         rx: settings.youtube.innertubeClient,
-                        builder: (context, innertubeClient) => Text(
+                        builder: (context, innertubeClient) => NamidaText(
                           innertubeClient?.name ?? lang.defaultLabel,
-                          style: context.textTheme.displayMedium,
+                          style: NText.medium,
                         ),
                       ),
                     ),
@@ -1210,9 +1214,9 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                const NamidaText(
                   'Days',
-                  style: context.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 const SizedBox(width: 12.0),
                 ObxO(
@@ -1231,9 +1235,9 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                const NamidaText(
                   'Hours',
-                  style: context.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 const SizedBox(width: 12.0),
                 ObxO(
@@ -1252,9 +1256,9 @@ class _MaxPageCacheDurationDialogState extends State<_MaxPageCacheDurationDialog
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                const NamidaText(
                   'Minutes',
-                  style: context.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 const SizedBox(width: 12.0),
                 ObxO(

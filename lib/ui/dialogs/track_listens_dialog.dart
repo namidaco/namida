@@ -15,6 +15,7 @@ import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -103,7 +104,7 @@ void showListensDialog({
       rx: color,
       builder: (context, dialogColor) {
         final theme = AppThemes.inst.getAppTheme(dialogColor, null, false);
-        return AnimatedThemeOrTheme(
+        return NTheme(
           data: theme,
           child: CustomBlurryDialog(
             theme: theme,
@@ -113,16 +114,17 @@ void showListensDialog({
               children: [
                 ConstrainedBox(
                   constraints: const BoxConstraints(minWidth: 24.0),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
+                  child: NDecoratedBox(
+                    decoration: (colors) => BoxDecoration(
                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                      color: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                      color: colors.secondaryContainer.withOpacityExt(0.4),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                      child: Text(
+                      child: NamidaText(
                         '${datesOfListen.length}',
-                        style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                        style: const NText(.small, weight: FontWeight.w600),
+                        color: NColors.primary,
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -134,14 +136,14 @@ void showListensDialog({
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      NamidaText(
                         lang.totalListens,
-                        style: theme.textTheme.displayLarge,
+                        style: NText.large,
                       ),
                       if (subtitle != null && subtitle.isNotEmpty)
-                        Text(
+                        NamidaText(
                           subtitle,
-                          style: theme.textTheme.displaySmall,
+                          style: NText.small,
                         ),
                     ],
                   ),
@@ -223,9 +225,9 @@ void showListensDialog({
                                     monthsDateFormatted,
                                     style: theme.textTheme.titleLarge,
                                   ),
-                                  Text(
+                                  NamidaText(
                                     '$monthsAgo$monthListensText',
-                                    style: theme.textTheme.displaySmall,
+                                    style: NText.small,
                                   ),
                                 ],
                               ),
@@ -237,16 +239,22 @@ void showListensDialog({
                             return NamidaInkWell(
                               decoration: BoxDecoration(border: isToday ? Border.all(color: dialogColor) : null),
                               margin: const EdgeInsets.all(2.0),
-                              bgColor: dialogColor.withAlpha((listens * 5).clampInt(0, 255)), // *5 since 50 listens a days is already a lot
+                              bgColor: NColors.fixed(dialogColor.withOpacityExt((listens * 0.02).clampDouble(0.0, 1.0))), // *0.02 since 50 listens a days is already a lot
                               borderRadius: 6.0,
                               onTap: datesMapByDay[date] == null ? null : () => onListenTap(date.millisecondsSinceEpoch),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text("${date.day}", style: theme.textTheme.displaySmall),
+                                  NamidaText(
+                                    "${date.day}",
+                                    style: NText.small,
+                                  ),
                                   if (listens > 0) ...[
                                     const SizedBox(height: 2.0),
-                                    Text("$listens", style: theme.textTheme.displaySmall?.copyWith(fontSize: 9.0)),
+                                    NamidaText(
+                                      "$listens",
+                                      style: const NText(.small, size: .s9),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -266,10 +274,10 @@ void showListensDialog({
                             title: t.dateAndClockFormattedOriginal,
                             subtitle: TimeAgoController.dateMSSEFromNow(t),
                             onTap: () => onListenTap(t),
-                            leading: DecoratedBox(
-                              decoration: BoxDecoration(
+                            leading: NDecoratedBox(
+                              decoration: (colors) => BoxDecoration(
                                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                color: theme.cardColor,
+                                color: colors.card,
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
@@ -284,7 +292,7 @@ void showListensDialog({
                             ),
                             trailing: NamidaIconButton(
                               icon: null,
-                              child: StackedIcon(
+                              child: const StackedIcon(
                                 baseIcon: Broken.award,
                                 secondaryIcon: Broken.export_2,
                                 secondaryIconSize: 13.0,

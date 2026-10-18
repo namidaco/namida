@@ -17,9 +17,8 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
@@ -75,33 +74,37 @@ class StatsPeriodChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final textColor = isActive ? const Color.fromARGB(200, 255, 255, 255) : null;
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[
+          Icon(icon, size: 16.0, color: textColor),
+          if (text.isNotEmpty) const SizedBox(width: 4.0),
+        ],
+        if (text.isNotEmpty)
+          NamidaText(
+            text,
+            style: const NText(.small, weight: FontWeight.w600),
+            color: NColors.fixed(textColor),
+            softWrap: false,
+          ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
       child: TapDetector(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          padding: EdgeInsets.symmetric(horizontal: dense ? 8.0 : 12.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-            borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 16.0, color: textColor),
-                if (text.isNotEmpty) const SizedBox(width: 4.0),
-              ],
-              if (text.isNotEmpty)
-                Text(
-                  text,
-                  style: theme.textTheme.displaySmall?.copyWith(color: textColor, fontWeight: FontWeight.w600),
-                  softWrap: false,
-                ),
-            ],
+        child: NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) => AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: EdgeInsets.symmetric(horizontal: dense ? 8.0 : 12.0, vertical: 6.0),
+            decoration: BoxDecoration(
+              color: isActive ? CurrentColor.inst.currentColorScheme.withOpacityExt(0.63) : colors.card,
+              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+            ),
+            child: content,
           ),
         ),
       ),
@@ -142,8 +145,6 @@ class StatsTopTrackTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final trExt = track.toTrackExt();
     return NamidaInkWell(
       borderRadius: 10.0,
@@ -155,9 +156,10 @@ class StatsTopTrackTile extends StatelessWidget {
           if (showIndex)
             SizedBox(
               width: 22.0,
-              child: Text(
+              child: NamidaText(
                 '${index + 1}',
-                style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withOpacityExt(0.5)),
+                style: const NText(.small, size: .s11, weight: FontWeight.w700),
+                color: const NColors(.onSurface, opacity: 0.5),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -176,15 +178,15 @@ class StatsTopTrackTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   trExt.title,
-                  style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                  style: const NText(.medium, size: .s13, weight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
+                NamidaText(
                   trExt.displayArtist(),
-                  style: textTheme.displaySmall?.copyWith(fontSize: 11.5),
+                  style: const NText(.small, size: .s11p5),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -200,14 +202,14 @@ class StatsTopTrackTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   count.formatDecimal(),
-                  style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
+                  style: const NText(.medium, size: .s13, weight: FontWeight.w700),
                 ),
                 if (trailingText != null)
-                  Text(
+                  NamidaText(
                     trailingText!,
-                    style: textTheme.displaySmall?.copyWith(fontSize: 10.5),
+                    style: const NText(.small, size: .s10p5),
                   ),
               ],
             ),
@@ -291,28 +293,26 @@ class StatsMiniTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return NamidaInkWell(
       onTap: onTap,
       borderRadius: 10.0,
       margin: const EdgeInsets.only(right: 6.0, bottom: 6.0),
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 7.0),
-      bgColor: theme.colorScheme.onSurface.withOpacityExt(0.05),
+      bgColor: const NColors(.onSurface, opacity: 0.05),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          leading ?? Icon(icon, size: 16.0, color: context.defaultIconColor()),
+          leading ?? NIcon(icon, size: 16.0, color: NColors.defaultIcon()),
           const SizedBox(width: 8.0),
           if (valueWidget != null) ...[
             DefaultTextStyle(
-              style: textTheme.displayMedium!.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
+              style: NText.medium.of(context).copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
               child: valueWidget!,
             ),
             Flexible(
-              child: Text(
+              child: NamidaText(
                 '  $label',
-                style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                style: const NText(.small, size: .s11),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -324,11 +324,11 @@ class StatsMiniTile extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: value,
-                      style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
+                      style: NText.medium.of(context).copyWith(fontSize: 13.0, fontWeight: FontWeight.w700),
                     ),
                     TextSpan(
                       text: '  $label',
-                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                      style: NText.small.of(context).copyWith(fontSize: 11.0),
                     ),
                   ],
                 ),
@@ -359,9 +359,10 @@ class StatsDelta extends StatelessWidget {
     final up = now > previous;
     final pct = ((now - previous) * 100 / previous).round().abs();
     final color = up ? Colors.green : Colors.red;
-    return Text(
+    return NamidaText(
       '${up ? '▲' : '▼'} $pct%',
-      style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 10.0, fontWeight: FontWeight.w700, color: color.withOpacityExt(0.85)),
+      style: const NText(.small, size: .s10, weight: FontWeight.w700),
+      color: NColors.fixed(color.withOpacityExt(0.85)),
     );
   }
 }
@@ -506,10 +507,10 @@ class StatsPlaylistMenu extends StatelessWidget {
       ],
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: verticalPadding),
-        child: Icon(
+        child: NIcon(
           Broken.more_2,
           size: iconSize,
-          color: context.theme.colorScheme.secondary,
+          color: NColors.secondary,
         ),
       ),
     );
@@ -538,11 +539,11 @@ class StatsEmptyHint extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Broken.chart_2, size: 36.0, color: context.theme.colorScheme.onSurface.withOpacityExt(0.4)),
+            const NIcon(Broken.chart_2, size: 36.0, color: NColors(.onSurface, opacity: 0.4)),
             const SizedBox(height: 8.0),
-            Text(
+            NamidaText(
               lang.history,
-              style: context.theme.textTheme.displaySmall,
+              style: NText.small,
             ),
           ],
         ),

@@ -321,9 +321,9 @@ class _YTUtilsCommentActions {
                     isCircle: true,
                   ),
                   const SizedBox(width: 12.0),
-                  Text(
+                  NamidaText(
                     author,
-                    style: namida.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                 ],
               ),
@@ -332,9 +332,9 @@ class _YTUtilsCommentActions {
               const SizedBox(height: 6.0),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
+                child: NamidaText(
                   content,
-                  style: namida.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
               ),
             ],

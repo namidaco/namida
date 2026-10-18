@@ -30,7 +30,6 @@ class _PartyChatSectionState extends State<_PartyChatSection> {
   @override
   Widget build(BuildContext context) {
     final controller = PartyController.inst;
-    final textTheme = context.theme.textTheme;
     return Column(
       children: [
         Expanded(
@@ -68,9 +67,9 @@ class _PartyChatSectionState extends State<_PartyChatSection> {
               builder: (context, _) {
                 final me = controller.me;
                 if (me == null || !controller.state.canChat(me)) {
-                  return Text(
+                  return NamidaText(
                     lang.partyChatDisabled,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                     textAlign: TextAlign.center,
                   );
                 }
@@ -117,30 +116,29 @@ class _ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Align(
       alignment: isMine ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
-      child: Container(
+      child: NContainer(
         constraints: BoxConstraints(maxWidth: context.width * 0.7),
         margin: const EdgeInsets.symmetric(vertical: 3.0),
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-        decoration: BoxDecoration(
+        decoration: (colors) => BoxDecoration(
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-          color: isMine ? theme.colorScheme.primary.withOpacityExt(0.2) : theme.cardColor.withOpacityExt(0.6),
+          color: isMine ? colors.primary.withOpacityExt(0.2) : colors.card.withOpacityExt(0.6),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (!isMine)
-              Text(
+              NamidaText(
                 message.name,
-                style: textTheme.displaySmall?.copyWith(fontSize: 11.0, color: theme.colorScheme.primary),
+                style: const NText(.small, size: .s11),
+                color: NColors.primary,
               ),
-            Text(
+            NamidaText(
               message.text,
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
           ],
         ),

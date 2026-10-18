@@ -30,11 +30,11 @@ void _showPartyPrivacyNote() {
           onTap: NamidaNavigator.inst.closeDialog,
         ),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-        child: Text(
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+        child: NamidaText(
           _kPartyPrivacyNote,
-          style: namida.context?.theme.textTheme.displaySmall,
+          style: NText.small,
         ),
       ),
     ),

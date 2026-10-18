@@ -71,8 +71,8 @@ class YoutubeInfoController {
   static const music = YoutiPie.music;
   static const channel = _ChannelInfoController();
   static final missingInfo = _MissingInfoController();
-  static final sponsorblock = YoutiPie.sponsorblock;
-  static final returnyoutubedislike = YoutiPie.returnyoutubedislike;
+  static const sponsorblock = YoutiPie.sponsorblock;
+  static const returnyoutubedislike = YoutiPie.returnyoutubedislike;
   static final potoken = YoutiPie.potoken;
 
   static final memoryCache = YoutiPie.memoryCache;

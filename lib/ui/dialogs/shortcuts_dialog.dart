@@ -9,6 +9,7 @@ import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.d
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -211,13 +212,11 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final category = section.category;
-    return Container(
+    return NContainer(
       padding: const EdgeInsets.fromLTRB(14.0, 8.0, 12.0, 10.0),
-      decoration: BoxDecoration(
-        color: theme.cardColor.withOpacityExt(0.4),
+      decoration: (colors) => BoxDecoration(
+        color: colors.card.withOpacityExt(0.4),
         borderRadius: BorderRadius.circular(16.0.multipliedRadius),
       ),
       child: Column(
@@ -234,9 +233,9 @@ class _SectionCard extends StatelessWidget {
                 const SizedBox(
                   width: 8.0,
                 ),
-                Text(
+                NamidaText(
                   category.toText(),
-                  style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+                  style: const NText(.medium, weight: FontWeight.w600),
                 ),
               ],
             ),
@@ -277,8 +276,6 @@ class _ShortcutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final action = row.action;
     final globalShortcut = this.globalShortcut;
     final globalKeysGroup = globalShortcut == null ? null : _KeysGroup.fromData(globalShortcut);
@@ -288,9 +285,9 @@ class _ShortcutRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
+            child: NamidaText(
               row.title,
-              style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+              style: const NText(.medium, size: .s13),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -426,13 +423,10 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
     final data = _data;
     final conflictTitle = _conflictTitle;
     final hasConflict = conflictTitle != null;
-    final accentColor = hasConflict ? colorScheme.error : colorScheme.primary;
+    final accentRole = hasConflict ? NColorRole.error : NColorRole.primary;
     final canSave = data?.key != null && !hasConflict;
     final keysGroup = data == null ? null : _KeysGroup.fromData(data);
     final onDelete = widget.onDelete;
@@ -443,18 +437,19 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
             padding: const EdgeInsets.only(top: 4.0, left: 2.0),
             child: Row(
               children: [
-                Icon(
+                const NIcon(
                   Broken.warning_2,
                   size: 14.0,
-                  color: colorScheme.error,
+                  color: NColors.error,
                 ),
                 const SizedBox(
                   width: 6.0,
                 ),
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     '${lang.alreadyExists}: $conflictTitle',
-                    style: textTheme.displaySmall?.copyWith(color: colorScheme.error),
+                    style: NText.small,
+                    color: NColors.error,
                   ),
                 ),
               ],
@@ -469,21 +464,21 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
+          NContainer(
             height: 34.0,
             padding: const EdgeInsets.only(left: 10.0, right: 2.0),
-            decoration: BoxDecoration(
-              color: theme.scaffoldBackgroundColor.withOpacityExt(0.5),
+            decoration: (colors) => BoxDecoration(
+              color: colors.scaffold.withOpacityExt(0.5),
               borderRadius: BorderRadius.circular(9.0.multipliedRadius),
-              border: Border.all(color: accentColor),
+              border: Border.all(color: colors.get(accentRole)),
             ),
             child: Row(
               children: [
-                Container(
+                NContainer(
                   width: 7.0,
                   height: 7.0,
-                  decoration: BoxDecoration(
-                    color: accentColor,
+                  decoration: (colors) => BoxDecoration(
+                    color: colors.get(accentRole),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -493,7 +488,7 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
                 if (keysGroup != null)
                   _KeysCombo(
                     group: keysGroup,
-                    bgColor: accentColor.withOpacityExt(0.2),
+                    bgColor: NColors(accentRole, opacity: 0.2),
                   ),
                 const Spacer(),
                 if (onDelete != null)
@@ -504,13 +499,15 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
                     tooltip: () => lang.delete,
                     onPressed: onDelete,
                   ),
-                NamidaIconButton(
-                  icon: Broken.tick_circle,
-                  iconSize: 18.0,
-                  horizontalPadding: 4.0,
-                  iconColor: canSave ? null : theme.disabledColor,
-                  tooltip: () => lang.save,
-                  onPressed: canSave ? _save : null,
+                NBuilder(
+                  builder: (context, colors) => NamidaIconButton(
+                    icon: Broken.tick_circle,
+                    iconSize: 18.0,
+                    horizontalPadding: 4.0,
+                    iconColor: NColors.fixed(canSave ? null : colors.disabled),
+                    tooltip: () => lang.save,
+                    onPressed: canSave ? _save : null,
+                  ),
                 ),
               ],
             ),
@@ -537,22 +534,20 @@ class _GlobalButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colorScheme = theme.colorScheme;
     final keysGroup = this.keysGroup;
-    final Color? bgColor;
-    final Color? iconColor;
+    final NColors? bgColor;
+    final NColors? iconColor;
     if (isRecording) {
-      bgColor = colorScheme.primary;
-      iconColor = colorScheme.onPrimary;
+      bgColor = NColors.primary;
+      iconColor = NColors.onPrimary;
     } else if (keysGroup != null) {
-      bgColor = colorScheme.secondaryContainer.withOpacityExt(0.6);
+      bgColor = const NColors(.secondaryContainer, opacity: 0.6);
       iconColor = null;
     } else {
       bgColor = null;
-      iconColor = theme.iconTheme.color?.withOpacityExt(0.4);
+      iconColor = const NColors(.icon, opacity: 0.4);
     }
-    final iconWidget = Icon(
+    final iconWidget = NIcon(
       Broken.global,
       size: 15.0,
       color: iconColor,
@@ -592,9 +587,7 @@ class _KeysGroupsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final separatorStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final separatorStyle = NText.small.of(context).copyWith(fontSize: 12.0);
     return Row(
       mainAxisSize: MainAxisSize.min,
       spacing: 5.0,
@@ -617,14 +610,12 @@ class _KeysGroupsRow extends StatelessWidget {
 
 class _KeysCombo extends StatelessWidget {
   final _KeysGroup group;
-  final Color? bgColor;
+  final NColors? bgColor;
   const _KeysCombo({required this.group, this.bgColor});
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final separatorStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final separatorStyle = NText.small.of(context).copyWith(fontSize: 12.0);
     final keysCaps = group.keys
         .map(
           (e) => _KeyCap(
@@ -656,24 +647,22 @@ class _KeysCombo extends StatelessWidget {
 
 class _KeyCap extends StatelessWidget {
   final String text;
-  final Color? bgColor;
+  final NColors? bgColor;
   const _KeyCap({required this.text, this.bgColor});
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return Container(
+    return NContainer(
       constraints: const BoxConstraints(minWidth: 22.0),
       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-      decoration: BoxDecoration(
-        color: bgColor ?? theme.cardColor,
+      decoration: (colors) => BoxDecoration(
+        color: bgColor?.resolve(colors) ?? colors.card,
         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
       ),
-      child: Text(
+      child: NamidaText(
         text,
         textAlign: TextAlign.center,
-        style: textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w600),
+        style: const NText(.small, size: .s12, weight: FontWeight.w600),
       ),
     );
   }

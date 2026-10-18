@@ -177,11 +177,9 @@ class _Backdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final blurFraction = _unitsToFraction(blurUnits, kind.minBlurFraction);
     final dimFraction = _unitsToFraction(dimUnits, kind.minDimFraction);
-    final backgroundColor = context.theme.scaffoldBackgroundColor;
-    final scrimColor = backgroundColor.withOpacityExt(dimFraction);
     final vignetteWidget = hasVignette
-        ? DecoratedBox(
-            decoration: _createVignette(backgroundColor),
+        ? NDecoratedBox(
+            decoration: (colors) => _createVignette(colors.scaffold),
           )
         : null;
     return LayoutBuilder(
@@ -217,8 +215,8 @@ class _Backdrop extends StatelessWidget {
             ClipRect(
               child: picture,
             ),
-            ColoredBox(
-              color: scrimColor,
+            NColoredBox(
+              color: NColors(.scaffold, opacity: dimFraction),
             ),
             ?vignetteWidget,
           ],

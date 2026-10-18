@@ -54,7 +54,7 @@ class ReturnYoutubeDislikeSettingsPage extends StatelessWidget {
             icon: Broken.info_circle,
             title: lang.about,
             subtitle: "${lang.dataIsProvidedByName(name: _currentConfigValue.defaultWebsiteUrl.replaceFirst('https://', '').addDQuotation())}. ${lang.learnMore}",
-            trailing: Icon(
+            trailing: const Icon(
               Broken.export_1,
               size: 18.0,
             ),

@@ -8,6 +8,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
@@ -29,7 +30,6 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final boxHeightMinimized = 80.0.withMaximum(0.2 * context.height);
     final boxHeightMaximized = 425.0.withMaximum(0.8 * context.height);
     final boxWidth = 375.0.withMaximum(context.width);
@@ -82,60 +82,64 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
                                             ? 5.0
                                             : -5.0
                                       : 0.0;
-                                  return AnimatedSizedBox(
-                                    duration: const Duration(seconds: 1),
-                                    curve: Curves.fastLinearToSlowEaseIn,
-                                    height: isMenuMinimized ? boxHeightMinimized + extra : boxHeightMaximized + extra,
-                                    width: boxWidth + extra,
-                                    decoration: BoxDecoration(
-                                      color: Color.alphaBlend(theme.colorScheme.surface.withAlpha(160), theme.scaffoldBackgroundColor),
-                                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: theme.shadowColor.withAlpha(30),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: isMenuMinimized
-                                          ? const FittedBox(child: SelectedTracksRow())
-                                          : Column(
-                                              mainAxisSize: MainAxisSize.max,
-                                              mainAxisAlignment: MainAxisAlignment.end,
-                                              children: [
-                                                const FittedBox(child: SelectedTracksRow()),
-                                                const SizedBox(
-                                                  height: 20,
-                                                ),
-                                                Expanded(
-                                                  child: Container(
-                                                    clipBehavior: Clip.antiAlias,
-                                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
-                                                    child: NamidaListView(
-                                                      itemExtent: Dimensions.inst.trackTileItemExtent,
-                                                      itemCount: selectedTracks.length,
-                                                      onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
-                                                      listBottomPadding: 0,
-                                                      itemBuilder: (context, i) {
-                                                        return FadeDismissible(
-                                                          key: ValueKey(selectedTracks[i]),
-                                                          onDismissed: (direction) => stc.removeTrack(i),
-                                                          child: TrackTile(
-                                                            properties: properties,
-                                                            index: i,
-                                                            trackOrTwd: selectedTracks[i],
-                                                            tracks: selectedTracks,
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
+                                  final content = Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: isMenuMinimized
+                                        ? const FittedBox(child: SelectedTracksRow())
+                                        : Column(
+                                            mainAxisSize: MainAxisSize.max,
+                                            mainAxisAlignment: MainAxisAlignment.end,
+                                            children: [
+                                              const FittedBox(child: SelectedTracksRow()),
+                                              const SizedBox(
+                                                height: 20,
+                                              ),
+                                              Expanded(
+                                                child: Container(
+                                                  clipBehavior: Clip.antiAlias,
+                                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+                                                  child: NamidaListView(
+                                                    itemExtent: Dimensions.inst.trackTileItemExtent,
+                                                    itemCount: selectedTracks.length,
+                                                    onReorder: (oldIndex, newIndex) => stc.reorderTracks(oldIndex, newIndex),
+                                                    listBottomPadding: 0,
+                                                    itemBuilder: (context, i) {
+                                                      return FadeDismissible(
+                                                        key: ValueKey(selectedTracks[i]),
+                                                        onDismissed: (direction) => stc.removeTrack(i),
+                                                        child: TrackTile(
+                                                          properties: properties,
+                                                          index: i,
+                                                          trackOrTwd: selectedTracks[i],
+                                                          tracks: selectedTracks,
+                                                        ),
+                                                      );
+                                                    },
                                                   ),
                                                 ),
-                                              ],
-                                            ),
+                                              ),
+                                            ],
+                                          ),
+                                  );
+                                  return NBuilder(
+                                    selfAnimated: true,
+                                    builder: (context, colors) => AnimatedSizedBox(
+                                      duration: const Duration(seconds: 1),
+                                      curve: Curves.fastLinearToSlowEaseIn,
+                                      height: isMenuMinimized ? boxHeightMinimized + extra : boxHeightMaximized + extra,
+                                      width: boxWidth + extra,
+                                      decoration: BoxDecoration(
+                                        color: Color.alphaBlend(colors.surface.withOpacityExt(0.63), colors.scaffold),
+                                        borderRadius: const BorderRadius.all(Radius.circular(20)),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colors.shadow.withOpacityExt(0.12),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: content,
                                     ),
                                   );
                                 },
@@ -157,7 +161,7 @@ class SelectedTracksPreviewContainer extends StatelessWidget {
           final boxLeftMargin = !isMiniplayerAlwaysVisible ? 8.0 : 12.0;
           final boxRightMargin = !isMiniplayerAlwaysVisible ? 8.0 : (Dimensions.inst.shouldHideFABR ? 0.0 : kFABSize) + 12.0 * 2;
           return AnimatedPadding(
-            duration: Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.fastEaseInToSlowEaseOut,
             padding: EdgeInsets.only(left: boxLeftMargin, right: boxRightMargin),
             child: child,
@@ -210,7 +214,6 @@ class SelectedTracksRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -219,7 +222,7 @@ class SelectedTracksRow extends StatelessWidget {
           onPressed: () => SelectedTracksController.inst.clearEverything(),
           icon: const Icon(Broken.close_circle),
         ),
-        SizedBox(
+        const SizedBox(
           width: 6.0,
         ),
         SizedBox(
@@ -230,14 +233,14 @@ class SelectedTracksRow extends StatelessWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  NamidaText(
                     selectedTracks.displayTrackKeyword,
-                    style: theme.textTheme.displayLarge!.copyWith(fontSize: 21.0),
+                    style: const NText(.large, size: .s21),
                   ),
                   if (!SelectedTracksController.inst.isMenuMinimized.valueR)
-                    Text(
+                    NamidaText(
                       selectedTracks.totalDurationFormatted,
-                      style: theme.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                 ],
               );

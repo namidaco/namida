@@ -393,7 +393,7 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
   void cleanResources() {
     _cancelDisposingTimer();
     searchResults.value = const [];
-    _disposingTimer = Timer(Duration(minutes: 1), () {
+    _disposingTimer = Timer(const Duration(minutes: 1), () {
       fillingCompleter?.completeIfWasnt();
       fillingCompleter = null;
       disposePort();

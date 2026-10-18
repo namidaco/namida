@@ -257,16 +257,13 @@ class _EggSlot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final questionMark = isCollected
         ? null
         : Center(
-            child: Text(
+            child: NamidaText(
               '?',
-              style: textTheme.displaySmall?.copyWith(
-                fontSize: 10.0,
-                color: color.withOpacityExt(0.7),
-              ),
+              style: const NText(.small, size: .s10),
+              color: NColors.fixed(color.withOpacityExt(0.7)),
             ),
           );
     Widget eggWidget = SizedBox.fromSize(
@@ -334,11 +331,12 @@ class _EggBalance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-    final gainStyle = textTheme.displaySmall?.copyWith(
-      color: color,
-      fontWeight: FontWeight.w800,
-    );
+    final gainStyle = NText.small
+        .of(context)
+        .copyWith(
+          color: color,
+          fontWeight: FontWeight.w800,
+        );
     return NamidaTooltip(
       message: () => 'eggs to spend',
       child: Row(
@@ -356,7 +354,7 @@ class _EggBalance extends StatelessWidget {
             children: [
               _RollingCount(
                 count: count,
-                style: textTheme.displayMedium,
+                style: NText.medium.of(context),
               ),
               Positioned(
                 left: 0.0,
@@ -421,8 +419,8 @@ class _FloatingEgg extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final color = isActive ? theme.colorScheme.primary : theme.disabledColor;
+    final colors = NColorsData.of(context);
+    final color = isActive ? colors.primary : colors.disabled;
     final egg = SizedBox(
       width: 14.0,
       height: 18.0,

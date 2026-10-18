@@ -46,6 +46,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -696,9 +697,9 @@ class _MusicWebServerAuthManager {
           children: [
             Padding(
               padding: const EdgeInsets.only(bottom: 12.0, left: 6.0, right: 6.0),
-              child: Text(
+              child: NamidaText(
                 warningText,
-                style: theme.textTheme.displayMedium,
+                style: NText.medium,
               ),
             ),
             ...missingAuthDir

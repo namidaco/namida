@@ -61,7 +61,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
             ),
           ),
           CustomListTile(
-            leading: StackedIcon(
+            leading: const StackedIcon(
               baseIcon: Broken.forward,
               secondaryIcon: Broken.close_circle,
               secondaryIconSize: 12.0,
@@ -98,7 +98,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               },
             ),
           ),
-          NamidaContainerDivider(
+          const NamidaContainerDivider(
             margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           ),
           ...SponsorBlockCategory.values.map((category) {
@@ -118,7 +118,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
               },
             );
           }),
-          NamidaContainerDivider(
+          const NamidaContainerDivider(
             margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           ),
           Obx(
@@ -172,7 +172,7 @@ class SponsorBlockSettingsPage extends StatelessWidget {
             icon: Broken.info_circle,
             title: lang.about,
             subtitle: "${lang.dataIsProvidedByName(name: _currentConfigValue.defaultServerAddress.replaceFirst('https://', '').addDQuotation())}. ${lang.learnMore}",
-            trailing: Icon(
+            trailing: const Icon(
               Broken.export_1,
               size: 18.0,
             ),
@@ -211,7 +211,7 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
               );
             },
           ),
-          SizedBox(width: 4.0),
+          const SizedBox(width: 4.0),
         ],
         actions: const [
           DoneButton(),
@@ -246,7 +246,7 @@ class _SponsorBlockCategoryTile extends StatelessWidget {
               );
             }),
             if (category.canBeRemovedFromDownloads) ...[
-              NamidaContainerDivider(
+              const NamidaContainerDivider(
                 margin: EdgeInsets.symmetric(vertical: 8.0),
               ),
               Obx(
@@ -312,7 +312,7 @@ class _ColorCircle extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 29.0,
             height: 29.0,
             child: DecoratedBox(

@@ -186,7 +186,7 @@ class _SMBServer extends _FileTransferServer {
 
       final host = _serverInfo.host;
       if (host.isEmpty) {
-        return MusicWebServerError(code: 0, message: 'Host is empty');
+        return const MusicWebServerError(code: 0, message: 'Host is empty');
       }
 
       final result = await SmbConnect.pingConnection(
@@ -197,7 +197,7 @@ class _SMBServer extends _FileTransferServer {
         configBuilder: _configBuilder,
       );
 
-      return result ? null : MusicWebServerError(code: 0, message: 'Connection failed');
+      return result ? null : const MusicWebServerError(code: 0, message: 'Connection failed');
     } catch (e) {
       return MusicWebServerError(code: 0, message: e.toString());
     }

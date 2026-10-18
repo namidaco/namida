@@ -59,7 +59,7 @@ class BenchmarkExecutionTime {
   void showResultsSheet() {
     NamidaNavigator.inst.showSheet(
       builder: (context, bottomPadding, maxWidth, maxHeight) => Padding(
-        padding: EdgeInsetsGeometry.all(32.0),
+        padding: const EdgeInsetsGeometry.all(32.0),
         child: Text(getResults()),
       ),
     );

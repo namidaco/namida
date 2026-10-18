@@ -9,6 +9,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -62,7 +63,6 @@ Future<void> showVideoDownloadOptionsSheet({
     isScrollControlled: true,
     heightPercentage: 0.65,
     builder: (context, bottomPadding, maxWidth, maxHeight) {
-      final textTheme = context.textTheme;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18.0),
         child: Column(
@@ -75,9 +75,9 @@ Future<void> showVideoDownloadOptionsSheet({
                 const Icon(Broken.edit),
                 const SizedBox(width: 8.0),
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     lang.editTags,
-                    style: textTheme.displayLarge,
+                    style: NText.large,
                   ),
                 ),
                 const SizedBox(width: 12.0),
@@ -161,9 +161,9 @@ Future<void> showVideoDownloadOptionsSheet({
                             rx: settings.youtube.downloadFilenameBuilder,
                             builder: (context, value) {
                               if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
-                              return Text(
+                              return NamidaText(
                                 value,
-                                style: textTheme.displaySmall,
+                                style: NText.small,
                               );
                             },
                           ),
@@ -253,10 +253,12 @@ Future<void> showVideoDownloadOptionsSheet({
                       },
                       child: Text(
                         lang.autoExtractTagsFromFilename,
-                        style: namida.textTheme.displaySmall?.copyWith(
-                          decoration: TextDecoration.underline,
-                          decorationStyle: TextDecorationStyle.dashed,
-                        ),
+                        style: NText.small
+                            .of(context)
+                            .copyWith(
+                              decoration: TextDecoration.underline,
+                              decorationStyle: TextDecorationStyle.dashed,
+                            ),
                       ),
                     ),
                   ),
@@ -407,8 +409,6 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final subtitle = widget.subtitle?.call(groupName.value);
     return LayoutWidthProvider(
       builder: (context, maxWidth) => Padding(
@@ -417,34 +417,34 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
           children: [
             NamidaIconButton(
               icon: Broken.add_circle,
-              iconColor: context.defaultIconColor(),
+              iconColor: NColors.defaultIcon(),
               horizontalPadding: 0.0,
               iconSize: widget.iconSize,
               onPressed: _onFolderAddTap,
             ),
-            SizedBox(width: 12.0),
+            const SizedBox(width: 12.0),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  NamidaText(
                     lang.folder,
-                    style: theme.textTheme.displayMedium,
+                    style: NText.medium,
                     maxLines: subtitle != null ? 4 : 5,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (subtitle?.isNotEmpty == true)
-                    Text(
+                    NamidaText(
                       subtitle!,
-                      style: theme.textTheme.displaySmall,
+                      style: NText.small,
                       maxLines: 20,
                       overflow: TextOverflow.ellipsis,
                     ),
                 ],
               ),
             ),
-            SizedBox(width: 6.0),
+            const SizedBox(width: 6.0),
             NamidaPopupWrapper(
               childrenDefault: () => [
                 NamidaPopupItem(
@@ -493,9 +493,9 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
                       Flexible(
                         child: ConstrainedBox(
                           constraints: BoxConstraints(minWidth: 0, maxWidth: maxWidth * 0.34),
-                          child: Text(
+                          child: NamidaText(
                             "$title$countText",
-                            style: textTheme.displayMedium,
+                            style: NText.medium,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                           ),

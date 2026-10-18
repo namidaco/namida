@@ -78,10 +78,9 @@ class _SoundEffectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.targetOf(context);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final color = theme.colorScheme.secondaryContainer;
+    final color = colors.secondaryContainer;
     final fill = isEnabled ? intensity : 0.0;
     final fillColor = color.withOpacityExt(0.5);
     final baseColor = color.withOpacityExt(isEnabled ? 0.2 : 0.08);
@@ -111,18 +110,18 @@ class _SoundEffectCard extends StatelessWidget {
             ),
             const SizedBox(width: 8.0),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 type.toText(),
-                style: textTheme.displayMedium,
+                style: NText.medium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             if (isEnabled) ...[
               const SizedBox(width: 4.0),
-              Text(
+              NamidaText(
                 '$percentage%',
-                style: textTheme.displaySmall,
+                style: NText.small,
               ),
             ],
           ],

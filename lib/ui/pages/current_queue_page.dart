@@ -11,6 +11,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -76,15 +77,15 @@ class _EmptyQueue extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
+          const NIcon(
             Broken.menu_board,
             size: 48.0,
-            color: context.theme.disabledColor,
+            color: NColors.disabled,
           ),
           const SizedBox(height: 12.0),
-          Text(
+          NamidaText(
             lang.noTracksFound,
-            style: context.textTheme.displayMedium,
+            style: NText.medium,
           ),
         ],
       ),
@@ -256,7 +257,7 @@ class _FloatingJumpButton extends StatelessWidget {
         borderRadius: 10.0,
         onTap: onTap,
         padding: const EdgeInsets.symmetric(vertical: 8.0),
-        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.3),
+        bgColor: const NColors(.secondary, opacity: 0.3),
         child: Row(
           mainAxisSize: .min,
           children: [
@@ -266,9 +267,9 @@ class _FloatingJumpButton extends StatelessWidget {
               size: 18.0,
             ),
             const SizedBox(width: 6.0),
-            Text(
+            NamidaText(
               lang.jump,
-              style: context.textTheme.displayMedium,
+              style: NText.medium,
             ),
             const SizedBox(width: 12.0),
           ],

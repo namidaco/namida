@@ -40,7 +40,7 @@ class _FestivalState extends State<_Festival> {
 
   @override
   Widget build(BuildContext context) {
-    final eggColor = context.theme.colorScheme.primary;
+    final eggColor = NColorsData.of(context).primary;
     return RepaintBoundary(
       child: CustomPaint(
         painter: _FestivalPainter(
@@ -60,13 +60,13 @@ class _FestiveFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
+    final colors = NColorsData.of(context);
     return CustomPaint(
       painter: _FestiveFramePainter(
         clock: NamidaFloatClock.instance,
         radius: 24.0.multipliedRadius,
-        accent: colorScheme.primary,
-        ink: colorScheme.onSurface,
+        accent: colors.primary,
+        ink: colors.onSurface,
       ),
     );
   }
@@ -79,7 +79,7 @@ class _Glittering extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = context.theme.colorScheme.primary;
+    final primary = NColorsData.of(context).primary;
     final glitterColor = Color.alphaBlend(Colors.white.withOpacityExt(0.6), primary);
     return Stack(
       children: [

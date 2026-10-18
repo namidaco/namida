@@ -23,6 +23,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -209,7 +210,7 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   static const _imageTimeout = Duration(seconds: 30);
 
   _NetworkArtworkRequest? _joinedRequest;
-  static final _defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
+  static const _defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
 
   static final _mountedStates = <_NetworkArtworkState>{};
 
@@ -381,33 +382,35 @@ class _NetworkArtworkState extends State<NetworkArtwork> with LoadingItemsDelayM
   Widget build(BuildContext context) {
     return Padding(
       padding: widget.margin ?? EdgeInsets.zero,
-      child: ArtworkWidget(
-        key: thumbKey,
-        isCircle: widget.isCircle,
-        bgcolor: context.theme.cardColor.withAlpha(60),
-        compressed: widget.compressed,
-        blur: widget.blur,
-        disableBlurBgSizeShrink: widget.disableBlurBgSizeShrink,
-        borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
-        fadeMilliSeconds: widget.fadeMilliSeconds,
-        path: imagePath,
-        track: widget.fallbackTrack,
-        height: widget.height,
-        width: widget.width,
-        thumbnailSize: widget.thumbnailSize,
-        boxShadow: widget.boxShadow,
-        icon: widget.info.icon ?? Broken.musicnote,
-        iconSize: widget.iconSize ?? widget.thumbnailSize * 0.3,
-        forceSquared: widget.forceSquared,
-        staggered: widget.staggered,
-        staggeredCacheKey: widget.info,
-        // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
-        onTopWidgets: widget.onTopWidgets,
+      child: NBuilder(
+        builder: (context, colors) => ArtworkWidget(
+          key: thumbKey,
+          isCircle: widget.isCircle,
+          bgcolor: colors.card.withOpacityExt(0.24),
+          compressed: widget.compressed,
+          blur: widget.blur,
+          disableBlurBgSizeShrink: widget.disableBlurBgSizeShrink,
+          borderRadius: widget.isCircle ? 0.0 : widget.borderRadius,
+          fadeMilliSeconds: widget.fadeMilliSeconds,
+          path: imagePath,
+          track: widget.fallbackTrack,
+          height: widget.height,
+          width: widget.width,
+          thumbnailSize: widget.thumbnailSize,
+          boxShadow: widget.boxShadow,
+          icon: widget.info.icon ?? Broken.musicnote,
+          iconSize: widget.iconSize ?? widget.thumbnailSize * 0.3,
+          forceSquared: widget.forceSquared,
+          staggered: widget.staggered,
+          staggeredCacheKey: widget.info,
+          // cacheHeight: (widget.height?.round() ?? widget.width.round()) ~/ 1.2,
+          onTopWidgets: widget.onTopWidgets,
 
-        displayIcon: widget.displayIcon,
-        fit: widget.fit,
-        alignment: widget.alignment,
-        extractInternally: false,
+          displayIcon: widget.displayIcon,
+          fit: widget.fit,
+          alignment: widget.alignment,
+          extractInternally: false,
+        ),
       ),
     );
   }
@@ -548,7 +551,7 @@ sealed class NetworkArtworkInfo {
         final url = toLastfmUrl();
         if (url == null) return null;
 
-        final defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
+        const defaultHeaders = HttpHeaders.map({HttpHeaderName.userAgent: 'namida'});
         HttpTextResponse response;
         try {
           response = await Rhttp.get(url, headers: defaultHeaders, cancelToken: cancelToken);

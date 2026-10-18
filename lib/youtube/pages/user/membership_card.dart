@@ -4,6 +4,7 @@ import 'package:namico_subscription_manager/core/enum.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 
@@ -13,24 +14,21 @@ class MembershipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final containerColor = theme.colorScheme.secondaryContainer;
     final brL = 10.0.multipliedRadius;
     final brM = 8.0.multipliedRadius;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: containerColor.withOpacityExt(0.2),
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
+        color: colors.secondaryContainer.withOpacityExt(0.2),
         borderRadius: BorderRadius.circular(brL),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-        child: Container(
+        child: NContainer(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-          decoration: BoxDecoration(
-            color: containerColor.withOpacityExt(0.5),
+          decoration: (colors) => BoxDecoration(
+            color: colors.secondaryContainer.withOpacityExt(0.5),
             border: Border.all(
-              color: containerColor,
+              color: colors.secondaryContainer,
             ),
             borderRadius: BorderRadius.circular(brM),
           ),
@@ -48,9 +46,9 @@ class MembershipCard extends StatelessWidget {
                     if (username != null && username.isNotEmpty) text += ' - $username';
                   }
 
-                  Widget child = Text(
+                  Widget child = NamidaText(
                     text,
-                    style: textTheme.displayLarge,
+                    style: NText.large,
                   );
 
                   if (userMembershipType == MembershipType.owner) {

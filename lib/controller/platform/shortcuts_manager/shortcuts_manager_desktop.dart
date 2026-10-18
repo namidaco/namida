@@ -248,7 +248,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         }
 
         Timer(
-          Duration(milliseconds: 100),
+          const Duration(milliseconds: 100),
           NamidaSettingSearchBar.open,
         );
       },

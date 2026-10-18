@@ -203,6 +203,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     language,
     themeMode,
     pitchBlack,
+    pitchBlackAdv,
     autoColor,
     animatedTheme,
     staticColor,

@@ -46,7 +46,7 @@ class _YoutubeDescriptionWidgetState extends State<YoutubeDescriptionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final linkColor = widget.linkColor ?? context.theme.colorScheme.primary.withAlpha(210);
+    final linkColor = widget.linkColor ?? context.theme.colorScheme.primary.withOpacityExt(0.82);
     final parts = widget.content.parts;
     final TextSpan mainSpan;
     if (parts != null && parts.isNotEmpty) {

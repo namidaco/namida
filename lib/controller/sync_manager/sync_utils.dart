@@ -15,7 +15,7 @@ class SyncUtils {
   /// if enabled, db-backed items sync by diffing manifests & sending only the
   /// missing/newer entries, see [DbManifestRequestMessage]. otherwise the whole
   /// db file gets sent & merged on the receiver, see [DbFileMessage].
-  static final kUseDbEntriesSync = true;
+  static const kUseDbEntriesSync = true;
 
   static final fallbackDeviceName = _fetchDeviceName();
 
@@ -85,7 +85,7 @@ class SyncUtils {
   static String _getUniqueIDSync() {
     var id = settings.sync.uniqueId.value;
     if (id == null) {
-      id = Uuid().v4();
+      id = const Uuid().v4();
       settings.sync.uniqueId.save(id);
     }
     return id;

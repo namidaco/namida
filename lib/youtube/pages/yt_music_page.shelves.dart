@@ -111,7 +111,6 @@ class _MusicShelfHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final strapline = shelf.strapline;
     final avatarUrl = shelf.thumbnails.pick()?.url;
     final moreEndpoint = shelf.moreEndpoint;
@@ -139,15 +138,15 @@ class _MusicShelfHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (strapline != null)
-                    Text(
+                    NamidaText(
                       strapline,
-                      style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                      style: const NText(.small, size: .s10),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                  Text(
+                  NamidaText(
                     shelf.title,
-                    style: textTheme.displayLarge,
+                    style: NText.large,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -159,9 +158,9 @@ class _MusicShelfHeader extends StatelessWidget {
                 borderRadius: 10.0,
                 padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
                 onTap: () => _MusicItemActions.openEndpoint(moreEndpoint, shelf.title),
-                child: Text(
+                child: NamidaText(
                   lang.more,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ),
           ],

@@ -254,13 +254,13 @@ void main() {
     final everything = numberRule(SmartPlaylistRuleFilterNumberSource.durationMS, SmartPlaylistRuleFilterNumber.isGreaterThan, 0);
 
     test('top tracks by most played', () {
-      final limit = const SmartPlaylistLimit(amount: 2, unit: SmartPlaylistLimitUnit.tracks, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
+      const limit = SmartPlaylistLimit(amount: 2, unit: SmartPlaylistLimitUnit.tracks, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
       final pl = playlistOf(everything, limit: limit);
       expect(pl.resolve().map((tr) => namesByTrack[tr]).toList(), ['t1', 't3']);
       expect(pl.resolveCount(), 2);
     });
     test('duration budget skips tracks that dont fit', () {
-      final limit = const SmartPlaylistLimit(amount: 5, unit: SmartPlaylistLimitUnit.minutes, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
+      const limit = SmartPlaylistLimit(amount: 5, unit: SmartPlaylistLimitUnit.minutes, sorting: SortChain([SortEntry(SortType.mostPlayed)]));
       final pl = playlistOf(everything, limit: limit);
       expect(namesOf(pl.resolve()), {'t1', 't3'});
       expect(SmartPlaylist.fromMap(pl.toMap()).limit?.toMap(), limit.toMap());

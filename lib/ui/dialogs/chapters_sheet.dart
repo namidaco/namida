@@ -9,6 +9,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -144,13 +145,11 @@ class _CurrentChapterBadgeContentState extends State<_CurrentChapterBadgeContent
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final color = theme.colorScheme.primary;
     return Padding(
       padding: const EdgeInsets.only(left: 4.0),
       child: NamidaInkWell(
         borderRadius: 4.0,
-        bgColor: theme.cardColor.withAlpha(60),
+        bgColor: const NColors(.card, opacity: 0.24),
         padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 1.0),
         onTap: () => showChaptersSheet(widget.item),
         child: Row(
@@ -169,14 +168,16 @@ class _CurrentChapterBadgeContentState extends State<_CurrentChapterBadgeContent
                   final chapters = widget.chapters;
                   final title = currentIndex < 0 ? '' : chapters[currentIndex].title;
                   final label = title.isEmpty ? '${currentIndex + 1}/${chapters.length}' : title;
-                  return Text(
-                    label,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: 10.0,
+                  return NBuilder(
+                    builder: (context, colors) => Text(
+                      label,
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontSize: 10.0,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   );
                 },
               ),
@@ -232,7 +233,6 @@ class _ChaptersSheetState extends State<_ChaptersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final chapters = widget.chapters;
     _itemExtent = _ChapterRowContent.extentFor(MediaQuery.textScalerOf(context));
 
@@ -247,11 +247,11 @@ class _ChaptersSheetState extends State<_ChaptersSheet> {
               children: [
                 TextSpan(
                   text: '  •  ${chapters.length}',
-                  style: textTheme.displayMedium,
+                  style: NText.medium.of(context),
                 ),
               ],
             ),
-            style: textTheme.displayLarge,
+            style: NText.large.of(context),
           ),
         ),
         Expanded(
@@ -367,8 +367,6 @@ class _ChapterRowContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final rangeMS = this.rangeMS;
     final isCurrent = status == ChapterStatus.current;
     final isPlayed = status == ChapterStatus.played;
@@ -381,7 +379,7 @@ class _ChapterRowContent extends StatelessWidget {
       borderRadius: 10.0,
       margin: _kMargin,
       padding: _kPadding,
-      bgColor: isCurrent ? theme.colorScheme.secondaryContainer : theme.cardColor.withOpacityExt(0.4),
+      bgColor: isCurrent ? NColors.secondaryContainer : const NColors(.card, opacity: 0.4),
       onTap: onTap,
       child: Row(
         children: [
@@ -392,10 +390,10 @@ class _ChapterRowContent extends StatelessWidget {
                     Broken.play,
                     size: 16.0,
                   )
-                : Text(
+                : NamidaText(
                     '${index + 1}',
                     textAlign: TextAlign.center,
-                    style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                    style: const NText(.small, weight: FontWeight.w700),
                   ),
           ),
           const SizedBox(width: 10.0),
@@ -406,10 +404,12 @@ class _ChapterRowContent extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: textTheme.displayMedium?.copyWith(
-                    fontSize: _kTitleFontSize,
-                    color: isPlayed ? textTheme.displayMedium?.color?.withOpacityExt(0.5) : null,
-                  ),
+                  style: NText.medium
+                      .of(context)
+                      .copyWith(
+                        fontSize: _kTitleFontSize,
+                        color: isPlayed ? NText.medium.of(context).color?.withOpacityExt(0.5) : null,
+                      ),
                   strutStyle: _kTitleStrut,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -417,7 +417,7 @@ class _ChapterRowContent extends StatelessWidget {
                 const SizedBox(height: _kSubtitleGap),
                 Text(
                   subtitle,
-                  style: textTheme.displaySmall?.copyWith(fontSize: _kSubtitleFontSize),
+                  style: NText.small.of(context).copyWith(fontSize: _kSubtitleFontSize),
                   strutStyle: _kSubtitleStrut,
                   maxLines: 1,
                 ),
@@ -450,12 +450,11 @@ class _ChapterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final title = chapter.title;
     return NamidaInkWell(
       borderRadius: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      bgColor: theme.cardColor.withOpacityExt(0.6),
+      bgColor: const NColors(.card, opacity: 0.6),
       onTap: onTap,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 160.0),
@@ -469,7 +468,7 @@ class _ChapterChip extends StatelessWidget {
               if (title.isNotEmpty) TextSpan(text: '  $title'),
             ],
           ),
-          style: theme.textTheme.displaySmall,
+          style: NText.small.of(context),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),

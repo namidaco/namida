@@ -1,11 +1,10 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
-import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
-import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -116,13 +115,13 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final drawerChild = RepaintBoundary(child: widget.drawerChild);
     final scaffoldBody = RepaintBoundary(child: widget.child);
     return AnimatedBuilder(
       animation: controller,
       builder: (context, _) {
         double animationValue = controller.value;
+        final shadowOpacity = context.isDarkMode ? 0.02 : 0.1;
         final child = Stack(
           children: [
             scaffoldBody,
@@ -152,20 +151,19 @@ class NamidaInnerDrawerState extends State<NamidaInnerDrawer> with SingleTickerP
           children: [
             // -- bg
             if (animationValue > 0) ...[
-              Positioned.fill(
-                child: AnimatedColor(
-                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                  color: theme.scaffoldBackgroundColor,
+              const Positioned.fill(
+                child: NColoredBox(
+                  color: NColors.scaffold,
                 ),
               ),
               Positioned.fill(
                 child: Transform.translate(
                   offset: Offset(context.width * animationValue * 0.6, 0),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
+                  child: NDecoratedBox(
+                    decoration: (colors) => BoxDecoration(
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.primary.withAlpha(context.isDarkMode ? 5 : 25),
+                          color: colors.primary.withOpacityExt(shadowOpacity),
                           blurRadius: 58.0,
                           spreadRadius: 12.0,
                           offset: const Offset(-2.0, 0),

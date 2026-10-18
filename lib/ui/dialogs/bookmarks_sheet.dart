@@ -8,6 +8,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -104,7 +105,6 @@ class _BookmarksSheetState extends State<_BookmarksSheet> with _ItemBookmarksMix
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final isCurrent = Player.inst.isCurrentItem(widget.item);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,11 +122,11 @@ class _BookmarksSheetState extends State<_BookmarksSheet> with _ItemBookmarksMix
                       children: [
                         TextSpan(
                           text: '  •  ${bookmarks.length}',
-                          style: textTheme.displayMedium,
+                          style: NText.medium.of(context),
                         ),
                       ],
                     ),
-                    style: textTheme.displayLarge,
+                    style: NText.large.of(context),
                   ),
                 ),
               ),
@@ -268,8 +268,6 @@ class _BookmarkTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final title = bookmark.title;
     return NamidaPopupWrapper(
       openOnTap: false,
@@ -278,27 +276,27 @@ class _BookmarkTile extends StatelessWidget {
         borderRadius: 10.0,
         margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        bgColor: theme.cardColor.withOpacityExt(0.4),
+        bgColor: const NColors(.card, opacity: 0.4),
         onTap: onTap,
         child: Row(
           children: [
-            Icon(
+            const NIcon(
               Broken.book_saved,
               size: 18.0,
-              color: theme.colorScheme.primary,
+              color: NColors.primary,
             ),
             const SizedBox(width: 10.0),
-            Text(
+            NamidaText(
               bookmark.positionMS.milliSecondsLabel,
-              style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: const NText(.medium, weight: FontWeight.w700),
             ),
             const SizedBox(width: 10.0),
             Expanded(
               child: title == null
                   ? const SizedBox()
-                  : Text(
+                  : NamidaText(
                       title,
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -330,7 +328,6 @@ class _BookmarkChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final title = bookmark.title;
     return NamidaPopupWrapper(
       openOnTap: false,
@@ -338,7 +335,7 @@ class _BookmarkChip extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 8.0,
         padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-        bgColor: theme.cardColor.withOpacityExt(0.6),
+        bgColor: const NColors(.card, opacity: 0.6),
         onTap: onTap,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 160.0),
@@ -352,7 +349,7 @@ class _BookmarkChip extends StatelessWidget {
                 if (title != null) TextSpan(text: '  $title'),
               ],
             ),
-            style: theme.textTheme.displaySmall,
+            style: NText.small.of(context),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

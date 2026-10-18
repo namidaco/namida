@@ -20,6 +20,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -240,7 +241,7 @@ class StorageCacheManager {
       return NamidaInkWell(
         animationDurationMS: 100,
         borderRadius: 8.0,
-        bgColor: namida.theme.cardTheme.color,
+        bgColor: NColors.fixed(namida.theme.cardTheme.color),
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           border: enabled(sort) ? Border.all(color: namida.theme.colorScheme.primary) : null,
@@ -251,9 +252,9 @@ class StorageCacheManager {
           children: [
             Icon(icon, size: 18.0),
             const SizedBox(width: 4.0),
-            Text(
+            NamidaText(
               title,
-              style: namida.textTheme.displayMedium,
+              style: NText.medium,
             ),
             const SizedBox(width: 4.0),
             const Icon(Broken.arrow_down_2, size: 14.0),
@@ -400,8 +401,6 @@ class StorageCacheManager {
                     builder: (context, allFiles) => ObxO(
                       rx: itemsToDelete,
                       builder: (context, toDelete) {
-                        final theme = context.theme;
-                        final textTheme = theme.textTheme;
                         return SuperSmoothListView.builder(
                           controller: sc,
                           padding: EdgeInsets.zero,
@@ -417,77 +416,81 @@ class StorageCacheManager {
                               if (accessTime != null) lastPlayedTimeText = TimeAgoController.dateMSSEFromNow(accessTime);
                             }
                             final isSelected = toDelete.contains(item);
-                            return NamidaInkWell(
-                              animationDurationMS: 200,
-                              margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-                              decoration: BoxDecoration(
-                                border: isSelected
-                                    ? Border.all(
-                                        color: theme.colorScheme.secondary.withOpacityExt(0.5),
-                                        width: 2.0,
-                                      )
-                                    : null,
-                              ),
-                              onTap: () {
-                                final didRemove = itemsToDelete.value.remove(item);
-                                if (didRemove) {
-                                  itemsToDeleteSize.value -= itemSize;
-                                } else {
-                                  itemsToDelete.value.add(item);
-                                  itemsToDeleteSize.value += itemSize;
-                                }
-                                itemsToDelete.refresh();
-                              },
-                              child: Row(
-                                children: [
-                                  YoutubeThumbnail(
-                                    key: Key(id ?? ''),
-                                    type: ThumbnailType.video,
-                                    videoId: id,
-                                    borderRadius: 8.0,
-                                    iconSize: 24.0,
-                                    width: 92.0,
-                                    height: 92 * 9 / 16,
-                                    forceSquared: true,
-                                    isImportantInCache: false,
+                            final itemChild = Row(
+                              children: [
+                                YoutubeThumbnail(
+                                  key: Key(id ?? ''),
+                                  type: ThumbnailType.video,
+                                  videoId: id,
+                                  borderRadius: 8.0,
+                                  iconSize: 24.0,
+                                  width: 92.0,
+                                  height: 92 * 9 / 16,
+                                  forceSquared: true,
+                                  isImportantInCache: false,
+                                ),
+                                const SizedBox(width: 8.0),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      _VideoIdToTitleWidget(
+                                        id: id ?? '',
+                                        style: NText.medium.of(context),
+                                      ),
+                                      NamidaText(
+                                        itemToSubtitle(item, itemSize),
+                                        style: NText.small,
+                                      ),
+                                      if (lastPlayedTimeText != null)
+                                        NamidaText(
+                                          lastPlayedTimeText,
+                                          style: NText.small,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8.0),
+                                if (listens != null && listens > 0) ...[
+                                  NamidaText(
+                                    listens.toString(),
+                                    style: NText.small,
                                   ),
                                   const SizedBox(width: 8.0),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        _VideoIdToTitleWidget(
-                                          id: id ?? '',
-                                          style: textTheme.displayMedium,
-                                        ),
-                                        Text(
-                                          itemToSubtitle(item, itemSize),
-                                          style: textTheme.displaySmall,
-                                        ),
-                                        if (lastPlayedTimeText != null)
-                                          Text(
-                                            lastPlayedTimeText,
-                                            style: textTheme.displaySmall,
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8.0),
-                                  if (listens != null && listens > 0) ...[
-                                    Text(
-                                      listens.toString(),
-                                      style: textTheme.displaySmall,
-                                    ),
-                                    const SizedBox(width: 8.0),
-                                  ],
-                                  IgnorePointer(
-                                    child: NamidaCheckMark(
-                                      size: 16.0,
-                                      active: isSelected,
-                                    ),
-                                  ),
                                 ],
+                                IgnorePointer(
+                                  child: NamidaCheckMark(
+                                    size: 16.0,
+                                    active: isSelected,
+                                  ),
+                                ),
+                              ],
+                            );
+                            return NBuilder(
+                              selfAnimated: true,
+                              builder: (context, colors) => NamidaInkWell(
+                                animationDurationMS: 200,
+                                margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                                decoration: BoxDecoration(
+                                  border: isSelected
+                                      ? Border.all(
+                                          color: colors.secondary.withOpacityExt(0.5),
+                                          width: 2.0,
+                                        )
+                                      : null,
+                                ),
+                                onTap: () {
+                                  final didRemove = itemsToDelete.value.remove(item);
+                                  if (didRemove) {
+                                    itemsToDeleteSize.value -= itemSize;
+                                  } else {
+                                    itemsToDelete.value.add(item);
+                                    itemsToDeleteSize.value += itemSize;
+                                  }
+                                  itemsToDelete.refresh();
+                                },
+                                child: itemChild,
                               ),
                             );
                           },
@@ -507,9 +510,9 @@ class StorageCacheManager {
                       builder: (context, selected) => Row(
                         children: [
                           const SizedBox(width: 8.0),
-                          Text(
+                          NamidaText(
                             '${lang.priority}:',
-                            style: namida.textTheme.displaySmall,
+                            style: NText.small,
                           ),
                           const SizedBox(width: 8.0),
                           ...prioritiesWithItems.map(
@@ -540,7 +543,7 @@ class StorageCacheManager {
                             opacity: deleteTempf ? 1.0 : 0.6,
                             child: NamidaInkWell(
                               borderRadius: 6.0,
-                              bgColor: namida.theme.cardColor,
+                              bgColor: NColors.fixed(namida.theme.cardColor),
                               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
                               onTap: () {
                                 deleteTempFiles.toggle();
@@ -558,9 +561,9 @@ class StorageCacheManager {
                                     active: deleteTempf,
                                   ),
                                   const SizedBox(width: 8.0),
-                                  Text(
+                                  NamidaText(
                                     '${lang.deleteTempFiles} (${tempfs.fileSizeFormatted})',
-                                    style: namida.textTheme.displaySmall,
+                                    style: NText.small,
                                   ),
                                 ],
                               ),
@@ -582,7 +585,7 @@ class StorageCacheManager {
                             opacity: deleteAlrInLocalLib ? 1.0 : 0.6,
                             child: NamidaInkWell(
                               borderRadius: 6.0,
-                              bgColor: namida.theme.cardColor,
+                              bgColor: NColors.fixed(namida.theme.cardColor),
                               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 6.0),
                               onTap: () {
                                 deleteAlreadyInLocalLibraryFiles.toggle();
@@ -629,9 +632,9 @@ class StorageCacheManager {
                                     active: deleteAlrInLocalLib,
                                   ),
                                   const SizedBox(width: 8.0),
-                                  Text(
+                                  NamidaText(
                                     '${lang.selectFilesAlreadyInLocalLibrary} [${alrInLocalLib.$1.length}] (${alrInLocalLib.$2.fileSizeFormatted})',
-                                    style: namida.textTheme.displaySmall,
+                                    style: NText.small,
                                   ),
                                 ],
                               ),
@@ -664,30 +667,33 @@ class _CachePriorityChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return NamidaInkWell(
-      animationDurationMS: 100,
-      borderRadius: 4.0,
-      bgColor: theme.cardTheme.color,
-      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
-      decoration: BoxDecoration(
-        border: selected ? Border.all(color: theme.colorScheme.primary) : null,
-        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-      ),
-      onTap: onTap,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          NamidaCheckMark(
-            size: 10.0,
-            active: selected,
-          ),
-          const SizedBox(width: 6.0),
-          Text(
-            '$title ($count)',
-            style: theme.textTheme.displaySmall,
-          ),
-        ],
+    final chipChild = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NamidaCheckMark(
+          size: 10.0,
+          active: selected,
+        ),
+        const SizedBox(width: 6.0),
+        NamidaText(
+          '$title ($count)',
+          style: NText.small,
+        ),
+      ],
+    );
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) => NamidaInkWell(
+        animationDurationMS: 100,
+        borderRadius: 4.0,
+        bgColor: NColors.cardTheme,
+        padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 8.0),
+        decoration: BoxDecoration(
+          border: selected ? Border.all(color: colors.primary) : null,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        onTap: onTap,
+        child: chipChild,
       ),
     );
   }

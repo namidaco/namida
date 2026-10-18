@@ -14,6 +14,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -234,29 +235,32 @@ class _YTSubscribeButtonState extends State<YTSubscribeButton> {
   }
 
   Widget? _notificationsToIcon(ChannelNotifications? noti, double iconSize) {
-    final colorScheme = context.theme.colorScheme.secondary;
-    final foregroundColor = context.defaultIconColor(colorScheme).withOpacityExt(0.75);
-    return switch (noti) {
-      ChannelNotifications.all => Icon(
-        Broken.notification_bing,
-        size: iconSize,
-        color: foregroundColor,
-      ),
-      ChannelNotifications.personalized => Icon(
-        Broken.notification_1,
-        size: iconSize,
-        color: foregroundColor,
-      ),
-      ChannelNotifications.none => StackedIcon(
-        baseIcon: Broken.notification_1,
-        secondaryIcon: Broken.slash,
-        iconSize: iconSize,
-        secondaryIconSize: 11.0,
-        baseIconColor: foregroundColor,
-        secondaryIconColor: foregroundColor,
-      ),
-      null => null,
-    };
+    if (noti == null) return null;
+    return NBuilder(
+      builder: (context, colors) {
+        final foregroundColor = NColors.defaultIcon(mainColor: colors.secondary, opacity: 0.75).resolve(colors);
+        return switch (noti) {
+          ChannelNotifications.all => Icon(
+            Broken.notification_bing,
+            size: iconSize,
+            color: foregroundColor,
+          ),
+          ChannelNotifications.personalized => Icon(
+            Broken.notification_1,
+            size: iconSize,
+            color: foregroundColor,
+          ),
+          ChannelNotifications.none => StackedIcon(
+            baseIcon: Broken.notification_1,
+            secondaryIcon: Broken.slash,
+            iconSize: iconSize,
+            secondaryIconSize: 11.0,
+            baseIconColor: NColors.fixed(foregroundColor),
+            secondaryIconColor: NColors.fixed(foregroundColor),
+          ),
+        };
+      },
+    );
   }
 
   void _showChannelGroupsSheet(String channelID) {
@@ -613,8 +617,6 @@ class _ChannelGroupsSheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final controller = YoutubeSubscriptionsController.inst;
     final sub = controller.availableChannels.value[channelID];
     final channelTitle = title ?? sub?.title ?? '';
@@ -635,9 +637,9 @@ class _ChannelGroupsSheetHeader extends StatelessWidget {
             width: 12.0,
           ),
           Expanded(
-            child: Text(
+            child: NamidaText(
               channelTitle,
-              style: textTheme.displayLarge,
+              style: NText.large,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
@@ -675,25 +677,30 @@ class _ChannelFavouriteButtonState extends State<_ChannelFavouriteButton> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
     final controller = YoutubeSubscriptionsController.inst;
     return ObxO(
       rx: controller.availableChannels,
       builder: (context, channels) {
         final isFavourite = channels[widget.channelID]?.subscribed == true;
-        final bgColor = isFavourite ? colorScheme.secondaryContainer : colorScheme.secondaryContainer.withOpacityExt(0.2);
-        return NamidaInkWellButton(
-          icon: null,
-          leading: NamidaRawLikeButton(
-            likeButtonKey: _likeButtonKey,
-            size: 18.0,
-            isLiked: isFavourite,
-            removeConfirmationAction: lang.removeFromFavourites,
-            onTap: (isLiked) => controller.toggleChannelSubscription(widget.channelID, title: widget.title),
-          ),
-          text: lang.favourite,
-          bgColor: bgColor,
-          onTap: _onTap,
+        final likeButton = NamidaRawLikeButton(
+          likeButtonKey: _likeButtonKey,
+          size: 18.0,
+          isLiked: isFavourite,
+          removeConfirmationAction: lang.removeFromFavourites,
+          onTap: (isLiked) => controller.toggleChannelSubscription(widget.channelID, title: widget.title),
+        );
+        return NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) {
+            final bgColor = isFavourite ? colors.secondaryContainer : colors.secondaryContainer.withOpacityExt(0.2);
+            return NamidaInkWellButton(
+              icon: null,
+              leading: likeButton,
+              text: lang.favourite,
+              bgColor: bgColor,
+              onTap: _onTap,
+            );
+          },
         );
       },
     );
@@ -719,7 +726,6 @@ class _ChannelGroupTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final channelsTitles = channels.map((e) => e.title).where((title) => title.isNotEmpty).join(', ');
     return NamidaPopupWrapper(
       openOnTap: false,
@@ -735,14 +741,14 @@ class _ChannelGroupTile extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                NamidaText(
                   group,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 if (channelsTitles.isNotEmpty)
-                  Text(
+                  NamidaText(
                     channelsTitles,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -751,9 +757,9 @@ class _ChannelGroupTile extends StatelessWidget {
             active: isActive,
             trailing: Padding(
               padding: const EdgeInsets.only(right: 12.0),
-              child: Text(
+              child: NamidaText(
                 channels.length.formatDecimal(),
-                style: textTheme.displaySmall,
+                style: NText.small,
               ),
             ),
             onTap: onTap,

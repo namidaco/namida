@@ -7,6 +7,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -136,7 +137,6 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
   Widget build(BuildContext context) {
     final segment = _currentSegment;
     final config = segment == null ? null : SponsorBlockController.inst.getConfigForSegment(segment.category);
-    final textTheme = context.textTheme;
     final itemsColor = widget.itemsColor;
     return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 150),
@@ -146,7 +146,7 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
               key: ValueKey('button_hidden'),
             )
           : NamidaBgBlurClipped(
-              key: ValueKey('button_shown'),
+              key: const ValueKey('button_shown'),
               blur: 3.0,
               decoration: BoxDecoration(
                 color: Colors.black.withOpacityExt(0.2),
@@ -177,25 +177,21 @@ class __SkipSponsorButtonState extends State<SkipSponsorButton> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            NamidaText(
                               segment.segmentStartMS == segment.segmentEndMS ? lang.jump : lang.skip,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: textTheme.displayMedium?.copyWith(
-                                fontSize: 14.0,
-                                color: itemsColor,
-                              ),
+                              style: const NText(.medium, size: .s14),
+                              color: NColors.fixed(itemsColor),
                             ),
                             FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
+                              child: NamidaText(
                                 segment.category.sponsorCategoryToText(),
                                 softWrap: false,
                                 overflow: TextOverflow.fade,
-                                style: textTheme.displaySmall?.copyWith(
-                                  fontSize: 11.0,
-                                  color: itemsColor,
-                                ),
+                                style: const NText(.small, size: .s11),
+                                color: NColors.fixed(itemsColor),
                               ),
                             ),
                           ],

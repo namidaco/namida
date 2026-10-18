@@ -31,6 +31,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -181,7 +182,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
               subtitle: lang.createNewPlaylist,
               onTap: () {
                 _closeDialog();
-                CreatePlaylistButton().promptCreate();
+                const CreatePlaylistButton().promptCreate();
               },
             ),
             CustomListTile(
@@ -372,7 +373,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final tracksToAdd = widget.tracksToAdd;
     final isInsideDialog = tracksToAdd != null;
     final enableHero = !isInsideDialog;
@@ -449,7 +449,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                   child: SmoothCustomScrollView(
                     controller: scrollController,
                     slivers: [
-                      SliverToBoxAdapter(child: listHeader),
+                      const SliverToBoxAdapter(child: listHeader),
 
                       if (!isInsideDialog)
                         SliverToBoxAdapter(
@@ -496,21 +496,25 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                   const SizedBox(width: 8.0),
                                   ObxO(
                                     rx: _isSelecting,
-                                    builder: (context, isSelecting) => NamidaButton(
-                                      icon: Broken.task_square,
-                                      iconSize: 20.0,
-                                      tooltip: () => lang.selectPlaylists,
-                                      onTap: _toggleSelecting,
-                                      colorScheme: isSelecting ? context.theme.colorScheme.secondaryContainer : null,
+                                    builder: (context, isSelecting) => NBuilder(
+                                      builder: (context, colors) => NamidaButton(
+                                        icon: Broken.task_square,
+                                        iconSize: 20.0,
+                                        tooltip: () => lang.selectPlaylists,
+                                        onTap: _toggleSelecting,
+                                        colorScheme: isSelecting ? colors.secondaryContainer : null,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 8.0),
-                                  NamidaButton(
-                                    icon: Broken.edit_2,
-                                    iconSize: 20.0,
-                                    tooltip: () => _isReordering ? lang.disableReordering : lang.enableReordering,
-                                    onTap: _toggleReordering,
-                                    colorScheme: _isReordering ? context.theme.colorScheme.secondaryContainer : null,
+                                  NBuilder(
+                                    builder: (context, colors) => NamidaButton(
+                                      icon: Broken.edit_2,
+                                      iconSize: 20.0,
+                                      tooltip: () => _isReordering ? lang.disableReordering : lang.enableReordering,
+                                      onTap: _toggleReordering,
+                                      colorScheme: _isReordering ? colors.secondaryContainer : null,
+                                    ),
                                   ),
                                   const SizedBox(width: 8.0),
                                   NamidaButton(
@@ -575,7 +579,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                     SizedBox(width: defaultCardHorizontalPadding),
                                   ],
                                 ),
-                                SizedBox(height: 12.0),
+                                const SizedBox(height: 12.0),
                                 Row(
                                   children: [
                                     SizedBox(width: defaultCardHorizontalPadding),
@@ -652,7 +656,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 },
                                                 onLongPress: () => NamidaDialogs.inst.showSmartPlaylistDialog(smplWrapper),
                                                 borderRadius: 8.0,
-                                                bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.12),
+                                                bgColor: const NColors(.secondary, opacity: 0.12),
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
@@ -667,11 +671,11 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                     ),
                                                     const SizedBox(width: 6.0),
                                                     Flexible(
-                                                      child: Text(
+                                                      child: NamidaText(
                                                         smplWrapper.value.name,
                                                         softWrap: false,
                                                         overflow: TextOverflow.fade,
-                                                        style: textTheme.displayMedium,
+                                                        style: NText.medium,
                                                       ),
                                                     ),
                                                     const SizedBox(width: 12.0),
@@ -1209,9 +1213,9 @@ class _PlaylistsSelection {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
+              NamidaText(
                 '${lang.delete}: ${names.length.displayPlaylistKeyword}?',
-                style: namida.textTheme.displayMedium,
+                style: NText.medium,
               ),
               if (m3uCount > 0) ...[
                 const SizedBox(
@@ -1498,8 +1502,6 @@ class _PlaylistSourceBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = context.theme.cardColor;
-    final cardColorTransparent = cardColor.withAlpha(0);
     final fadeWidth = iconSize * 0.8;
     final topPadding = iconSize * 0.2;
     final rightPadding = iconSize * 0.45;
@@ -1508,10 +1510,10 @@ class _PlaylistSourceBadge extends StatelessWidget {
       children: [
         Positioned.fill(
           child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [cardColorTransparent, cardColor],
+                  colors: [colors.card.withOpacityExt(0.0), colors.card],
                   stops: const [0.0, 0.4],
                 ),
               ),
@@ -1603,16 +1605,15 @@ class _PlaylistSelectionHighlight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = context.theme.colorScheme.secondary;
     return IgnorePointer(
       child: AnimatedOpacity(
         opacity: isSelected ? 1.0 : 0.0,
         duration: const Duration(milliseconds: 200),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: secondary.withOpacityExt(0.12),
+        child: NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
+            color: colors.secondary.withOpacityExt(0.12),
             border: Border.all(
-              color: secondary.withOpacityExt(0.8),
+              color: colors.secondary.withOpacityExt(0.8),
               width: 2.0,
             ),
             borderRadius: BorderRadius.circular(12.0.multipliedRadius),
@@ -1640,15 +1641,13 @@ class _TagSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final key = section.key;
     final color = section.color;
     final selection = this.selection;
     return NamidaInkWell(
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
-      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.15),
+      bgColor: const NColors(.secondaryContainer, opacity: 0.15),
       onTap: onTap,
       onLongPress: onLongPress,
       enableSecondaryTap: true,
@@ -1670,9 +1669,9 @@ class _TagSectionHeader extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 10.0),
-              child: Text(
+              child: NamidaText(
                 key.toText(),
-                style: textTheme.displayMedium,
+                style: NText.medium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1683,9 +1682,9 @@ class _TagSectionHeader extends StatelessWidget {
               selection: selection,
               names: section.names,
             ),
-          Text(
+          NamidaText(
             section.names.length.displayPlaylistKeyword,
-            style: textTheme.displaySmall,
+            style: NText.small,
           ),
           const SizedBox(
             width: 6.0,
@@ -1743,16 +1742,13 @@ class _PlaylistsSelectionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final barColor = Color.alphaBlend(theme.colorScheme.secondaryContainer.withOpacityExt(0.3), theme.scaffoldBackgroundColor);
-    return ColoredBox(
-      color: theme.scaffoldBackgroundColor,
-      child: Container(
+    return NColoredBox(
+      color: NColors.scaffold,
+      child: NContainer(
         margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
         padding: const EdgeInsets.all(6.0),
-        decoration: BoxDecoration(
-          color: barColor,
+        decoration: (colors) => BoxDecoration(
+          color: Color.alphaBlend(colors.secondaryContainer.withOpacityExt(0.3), colors.scaffold),
           borderRadius: BorderRadius.circular(16.0.multipliedRadius),
         ),
         child: ObxO(
@@ -1776,15 +1772,15 @@ class _PlaylistsSelectionBar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      NamidaText(
                         selectedCount.displayPlaylistKeyword,
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      Text(
+                      NamidaText(
                         tracksCount.displayTrackKeyword,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1876,7 +1872,7 @@ class _SelectionBarButton extends StatelessWidget {
       height: 32.0,
       margin: const EdgeInsetsDirectional.only(start: 4.0),
       borderRadius: 11.0,
-      bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.45),
+      bgColor: const NColors(.secondaryContainer, opacity: 0.45),
       alignment: Alignment.center,
       onTap: onTap,
       child: Icon(

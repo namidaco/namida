@@ -67,19 +67,19 @@ class AppThemes {
       displayLarge: TextStyle(
         fontWeight: FontWeight.w700,
         fontSize: 17.0,
-        color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
+        color: light ? Colors.black.withOpacityExt(0.63) : Colors.white.withOpacityExt(0.82),
         fontFamilyFallback: fontFamilyFallback,
       ),
       displayMedium: TextStyle(
         fontWeight: FontWeight.w600,
         fontSize: 15.0,
-        color: light ? Colors.black.withAlpha(150) : Colors.white.withAlpha(180),
+        color: light ? Colors.black.withOpacityExt(0.59) : Colors.white.withOpacityExt(0.71),
         fontFamilyFallback: fontFamilyFallback,
       ),
       displaySmall: TextStyle(
         fontWeight: FontWeight.w400,
         fontSize: 13.0,
-        color: light ? Colors.black.withAlpha(120) : Colors.white.withAlpha(170),
+        color: light ? Colors.black.withOpacityExt(0.47) : Colors.white.withOpacityExt(0.67),
         fontFamilyFallback: fontFamilyFallback,
       ),
       headlineMedium: const TextStyle(
@@ -98,33 +98,37 @@ class AppThemes {
   static const _cacheMaxLength = 20;
   final _cache = <_ThemeCacheKey, ThemeData>{};
 
+  static const pitchBlackMaxLevel = 5;
+
+  int get _pitchBlackLevel => settings.pitchBlackAdv.value?.clampInt(0, pitchBlackMaxLevel) ?? (settings.pitchBlack.value ? pitchBlackMaxLevel : 0);
+
   ThemeData getAppTheme([Color? color, bool? light, bool lighterDialog = true]) {
     color ??= CurrentColor.inst.color;
     light ??= namida.brightness == Brightness.light;
 
-    final key = (color, light, lighterDialog, settings.pitchBlack.value, settings.borderRadiusMultiplier.value);
+    final pitchBlackLevel = _pitchBlackLevel;
+    final key = (color, light, lighterDialog, pitchBlackLevel, settings.borderRadiusMultiplier.value);
     final cached = _cache.remove(key);
     if (cached != null) return _cache[key] = cached; // -- re-insert to keep it as most recently used
 
     if (_cache.length >= _cacheMaxLength) _cache.remove(_cache.keys.first);
-    return _cache[key] = _buildAppTheme(color, light, lighterDialog);
+    return _cache[key] = _buildAppTheme(color, light, lighterDialog, pitchBlackLevel);
   }
 
-  ThemeData _buildAppTheme(Color color, bool light, bool lighterDialog) {
-    final shouldUseAMOLED = !light && settings.pitchBlack.value;
-    final pitchBlack = shouldUseAMOLED ? const Color.fromARGB(255, 0, 0, 0) : null;
-    final mainColorMultiplier = pitchBlack == null ? 0.8 : 0.1; // makes colors that rely on mainColor, a bit darker.
-    final pitchGrey = pitchBlack == null ? const Color.fromARGB(255, 35, 35, 35) : const Color.fromARGB(255, 20, 20, 20);
+  ThemeData _buildAppTheme(Color color, bool light, bool lighterDialog, int pitchBlackLevel) {
+    const pitchBlack = Color.fromARGB(255, 0, 0, 0);
+    final pitchBlend = _PitchBlackBlend(light ? 0.0 : pitchBlackLevel / pitchBlackMaxLevel);
+    final mainColorMultiplier = pitchBlend.ofTint(0.8, 0.1); // makes colors that rely on mainColor, a bit darker.
+    final pitchGrey = pitchBlend.of(const Color.fromARGB(255, 35, 35, 35), const Color.fromARGB(255, 20, 20, 20));
 
     final useDesktopDecoration = isDesktop;
 
-    int getColorAlpha(int a) => (a * mainColorMultiplier).round();
-    Color getMainColorWithAlpha(int a) => color.withAlpha(getColorAlpha(a));
+    Color getMainColorWithOpacity(double opacity) => color.withOpacityExt(opacity * mainColorMultiplier);
 
     final cardTheme = CardThemeData(
       elevation: 12.0,
       color: Color.alphaBlend(
-        getMainColorWithAlpha(45),
+        getMainColorWithOpacity(0.18),
         light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
       ),
       shape: RoundedRectangleBorder(
@@ -133,7 +137,7 @@ class AppThemes {
     );
 
     final cardColor = Color.alphaBlend(
-      getMainColorWithAlpha(35),
+      getMainColorWithOpacity(0.14),
       light ? const Color.fromARGB(255, 255, 255, 255) : pitchGrey,
     );
 
@@ -150,32 +154,32 @@ class AppThemes {
       colorScheme: colorScheme,
       fontFamily: fontFamily,
       fontFamilyFallback: fontFamilyFallback,
-      scaffoldBackgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(60), Colors.white) : null),
+      scaffoldBackgroundColor: pitchBlend.ofMaterialDefault(light ? Color.alphaBlend(color.withOpacityExt(0.24), Colors.white) : null, colorScheme.surface, pitchBlack),
       splashColor: Colors.transparent,
       splashFactory: InkRipple.splashFactory,
-      highlightColor: light ? Colors.black.withAlpha(20) : Colors.white.withAlpha(pitchBlack == null ? 10 : 25),
+      highlightColor: light ? Colors.black.withOpacityExt(0.08) : Colors.white.withOpacityExt(pitchBlend.ofOpacity(0.04, 0.1)),
       disabledColor: light ? const Color.fromARGB(200, 160, 160, 160) : const Color.fromARGB(200, 60, 60, 60),
       applyElevationOverlayColor: false,
       appBarTheme: AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
-        backgroundColor: pitchBlack ?? (light ? Color.alphaBlend(color.withAlpha(25), Colors.white) : null),
+        backgroundColor: pitchBlend.ofMaterialDefault(light ? Color.alphaBlend(color.withOpacityExt(0.1), Colors.white) : null, colorScheme.surface, pitchBlack),
         actionsIconTheme: light ? _iconThemeLight : _iconThemeDark,
       ),
       secondaryHeaderColor: light ? const Color.fromARGB(200, 240, 240, 240) : const Color.fromARGB(222, 10, 10, 10),
-      navigationBarTheme: pitchBlack == null
+      navigationBarTheme: pitchBlend.isNone
           ? null
           : NavigationBarThemeData(
-              backgroundColor: pitchBlack,
-              surfaceTintColor: pitchBlack,
-              indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
+              backgroundColor: pitchBlend.of(colorScheme.surfaceContainer, pitchBlack),
+              surfaceTintColor: pitchBlend.of(Colors.transparent, pitchBlack),
+              indicatorColor: pitchBlend.of(colorScheme.secondaryContainer, Color.alphaBlend(color.withOpacityExt(0.47), pitchBlack)),
             ),
-      navigationRailTheme: pitchBlack == null
+      navigationRailTheme: pitchBlend.isNone
           ? null
           : NavigationRailThemeData(
-              backgroundColor: pitchBlack,
-              indicatorColor: Color.alphaBlend(color.withAlpha(120), pitchBlack),
+              backgroundColor: pitchBlend.of(colorScheme.surface, pitchBlack),
+              indicatorColor: pitchBlend.of(colorScheme.secondaryContainer, Color.alphaBlend(color.withOpacityExt(0.47), pitchBlack)),
             ),
       iconTheme: light ? _iconThemeLight : _iconThemeDark,
       shadowColor: light ? const Color.fromARGB(180, 100, 100, 100) : const Color.fromARGB(222, 10, 10, 10),
@@ -196,7 +200,7 @@ class AppThemes {
         valueIndicatorTextStyle: TextStyle(
           fontSize: 14.0,
           fontWeight: FontWeight.normal,
-          color: light ? Colors.black.withAlpha(160) : Colors.white.withAlpha(210),
+          color: light ? Colors.black.withOpacityExt(0.63) : Colors.white.withOpacityExt(0.82),
           fontFamily: fontFamily,
           fontFamilyFallback: fontFamilyFallback,
         ),
@@ -204,7 +208,7 @@ class AppThemes {
         secondaryActiveTrackColor: colorScheme.primary.withOpacityExt(0.4),
         inactiveTrackColor: colorScheme.secondary.withOpacityExt(0.2),
         thumbColor: colorScheme.primary.withOpacityExt(0.85),
-        thumbSize: WidgetStatePropertyAll(const Size(5.0, 24.0)),
+        thumbSize: const WidgetStatePropertyAll(Size(5.0, 24.0)),
         // thumbSize: WidgetStateProperty.resolveWith((states) {
         //   if (states.contains(WidgetState.focused) || states.contains(WidgetState.pressed)) {
         //     return const Size(3.0, 24.0);
@@ -224,10 +228,8 @@ class AppThemes {
           iconSize: const WidgetStatePropertyAll(21.0),
           backgroundColor: WidgetStatePropertyAll(
             light
-                ? Color.alphaBlend(color.withAlpha(30), Colors.white)
-                : pitchBlack != null
-                ? Color.alphaBlend(color.withAlpha(60), pitchBlack)
-                : null,
+                ? Color.alphaBlend(color.withOpacityExt(0.12), Colors.white)
+                : pitchBlend.ofMaterialDefault(null, colorScheme.surfaceContainerLow, Color.alphaBlend(color.withOpacityExt(0.24), pitchBlack)),
           ),
         ),
       ),
@@ -237,23 +239,23 @@ class AppThemes {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24.0.multipliedRadius)),
         backgroundColor: lighterDialog
             ? light
-                  ? Color.alphaBlend(getMainColorWithAlpha(60), Colors.white)
-                  : Color.alphaBlend(getMainColorWithAlpha(20), pitchBlack ?? const Color.fromARGB(255, 12, 12, 12))
+                  ? Color.alphaBlend(getMainColorWithOpacity(0.24), Colors.white)
+                  : Color.alphaBlend(getMainColorWithOpacity(0.08), pitchBlend.of(const Color.fromARGB(255, 12, 12, 12), pitchBlack))
             : light
-            ? Color.alphaBlend(getMainColorWithAlpha(35), Colors.white)
-            : Color.alphaBlend(getMainColorWithAlpha(12), pitchBlack ?? const Color.fromARGB(255, 16, 16, 16)),
+            ? Color.alphaBlend(getMainColorWithOpacity(0.14), Colors.white)
+            : Color.alphaBlend(getMainColorWithOpacity(0.05), pitchBlend.of(const Color.fromARGB(255, 16, 16, 16), pitchBlack)),
       ),
       listTileTheme: ListTileThemeData(
         horizontalTitleGap: 16.0,
         selectedColor: light
-            ? Color.alphaBlend(getMainColorWithAlpha(40), const Color.fromARGB(255, 182, 182, 182))
-            : Color.alphaBlend(getMainColorWithAlpha(40), pitchBlack ?? const Color.fromARGB(255, 55, 55, 55)),
+            ? Color.alphaBlend(getMainColorWithOpacity(0.16), const Color.fromARGB(255, 182, 182, 182))
+            : Color.alphaBlend(getMainColorWithOpacity(0.16), pitchBlend.of(const Color.fromARGB(255, 55, 55, 55), pitchBlack)),
         iconColor: Color.alphaBlend(
-          getMainColorWithAlpha(80),
+          getMainColorWithOpacity(0.31),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
         textColor: Color.alphaBlend(
-          getMainColorWithAlpha(80),
+          getMainColorWithOpacity(0.31),
           light ? const Color.fromARGB(200, 55, 55, 55) : const Color.fromARGB(255, 228, 228, 228),
         ),
       ),
@@ -261,11 +263,11 @@ class AppThemes {
       textButtonTheme: useDesktopDecoration ? _textButtonThemeDesktop : _textButtonThemeMobile,
       dividerColor: light ? const Color.fromARGB(100, 100, 100, 100) : const Color.fromARGB(200, 50, 50, 50),
       tooltipTheme: TooltipThemeData(
-        margin: EdgeInsets.symmetric(horizontal: 24.0),
+        margin: const EdgeInsets.symmetric(horizontal: 24.0),
         decoration: BoxDecoration(
           color: light
-              ? Color.alphaBlend(getMainColorWithAlpha(30), const Color.fromARGB(255, 242, 242, 242))
-              : Color.alphaBlend(getMainColorWithAlpha(80), const Color.fromARGB(255, 12, 12, 12)),
+              ? Color.alphaBlend(getMainColorWithOpacity(0.12), const Color.fromARGB(255, 242, 242, 242))
+              : Color.alphaBlend(getMainColorWithOpacity(0.31), const Color.fromARGB(255, 12, 12, 12)),
           borderRadius: BorderRadius.circular(10.0.multipliedRadius),
           boxShadow: const [
             BoxShadow(
@@ -288,78 +290,41 @@ class AppThemes {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.0.multipliedRadius),
         ),
-        color: light ? Color.alphaBlend(cardColor.withAlpha(180), Colors.white) : Color.alphaBlend(cardColor.withAlpha(180), Colors.black),
+        color: light ? Color.alphaBlend(cardColor.withOpacityExt(0.71), Colors.white) : Color.alphaBlend(cardColor.withOpacityExt(0.71), Colors.black),
       ),
       textTheme: light ? _textThemeLight : _textThemeDark,
     );
   }
 }
 
-/// Provides [data] as the app [Theme] and lets [AppThemeFrozenWhileHidden] re-provide it without nesting localized themes.
-class AppThemeProvider extends StatelessWidget {
-  final ThemeData data;
-  final Widget child;
+class _PitchBlackBlend {
+  final double fraction;
 
-  const AppThemeProvider({
-    super.key,
-    required this.data,
-    required this.child,
-  });
+  const _PitchBlackBlend(this.fraction);
 
-  @override
-  Widget build(BuildContext context) {
-    return _AppThemeScope(
-      data: data,
-      child: Theme(
-        data: data,
-        child: child,
-      ),
-    );
-  }
+  static const _tintCurve = Curves.easeIn;
+
+  bool get isNone => fraction == 0.0;
+
+  Color of(Color dark, Color pitch) => switch (fraction) {
+    0.0 => dark,
+    1.0 => pitch,
+    _ => Color.lerp(dark, pitch, fraction)!,
+  };
+
+  Color? ofMaterialDefault(Color? dark, Color darkMaterialDefault, Color pitch) => isNone ? dark : of(dark ?? darkMaterialDefault, pitch);
+
+  double ofOpacity(double dark, double pitch) => switch (fraction) {
+    0.0 => dark,
+    1.0 => pitch,
+    _ => dark + (pitch - dark) * fraction,
+  };
+
+  double ofTint(double dark, double pitch) => switch (fraction) {
+    0.0 => dark,
+    1.0 => pitch,
+    _ => dark + (pitch - dark) * _tintCurve.transform(fraction),
+  };
 }
 
-// by claude
-/// Holds the last visible app theme while [TickerMode] is disabled (covered routes, hidden pages).
-class AppThemeFrozenWhileHidden extends StatefulWidget {
-  final Widget child;
-
-  const AppThemeFrozenWhileHidden({
-    super.key,
-    required this.child,
-  });
-
-  @override
-  State<AppThemeFrozenWhileHidden> createState() => _AppThemeFrozenWhileHiddenState();
-}
-
-class _AppThemeFrozenWhileHiddenState extends State<AppThemeFrozenWhileHidden> {
-  ThemeData? _visibleTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final appTheme = _AppThemeScope.of(context);
-    final isVisible = TickerMode.valuesOf(context).enabled;
-    var visibleTheme = _visibleTheme;
-    if (visibleTheme == null || isVisible) visibleTheme = _visibleTheme = appTheme;
-    return Theme(
-      data: visibleTheme,
-      child: widget.child,
-    );
-  }
-}
-
-class _AppThemeScope extends InheritedWidget {
-  final ThemeData data;
-
-  const _AppThemeScope({
-    required this.data,
-    required super.child,
-  });
-
-  static ThemeData of(BuildContext context) => context.dependOnInheritedWidgetOfExactType<_AppThemeScope>()!.data;
-
-  @override
-  bool updateShouldNotify(_AppThemeScope oldWidget) => !identical(data, oldWidget.data);
-}
-
-typedef _ThemeCacheKey = (Color color, bool light, bool lighterDialog, bool pitchBlack, double borderRadiusMultiplier);
+typedef _ThemeCacheKey = (Color color, bool light, bool lighterDialog, int pitchBlackLevel, double borderRadiusMultiplier);

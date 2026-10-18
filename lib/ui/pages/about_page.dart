@@ -28,7 +28,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -86,8 +86,6 @@ class _AboutPageState extends State<AboutPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final imageSize = Dimensions.inst.availableAppContentWidth * 0.25;
     final topPadding = imageSize / 2;
     const textTopPadding = 28.0 * 2;
@@ -124,10 +122,10 @@ class _AboutPageState extends State<AboutPage> {
         padding: kBottomPaddingInsets.add(EdgeInsets.symmetric(horizontal: horizontalMargin)),
         children: [
           SizedBox(height: topPadding),
-          Container(
+          NContainer(
             margin: const EdgeInsets.symmetric(horizontal: 24.0),
-            decoration: BoxDecoration(
-              color: theme.cardColor.withOpacityExt(0.6),
+            decoration: (colors) => BoxDecoration(
+              color: colors.card.withOpacityExt(0.6),
               borderRadius: BorderRadius.circular(20.0.multipliedRadius),
             ),
             child: Stack(
@@ -187,18 +185,18 @@ class _AboutPageState extends State<AboutPage> {
                         ),
                       ),
                       const SizedBox(height: 4.0),
-                      Text(
+                      const NamidaText(
                         "Namida",
-                        style: textTheme.displayLarge,
+                        style: NText.large,
                       ),
                       if (currentVersionText != '')
                         latestVersion?.isUpdate() ?? false
                             ? Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
+                                  NamidaText(
                                     currentVersionText,
-                                    style: textTheme.displaySmall,
+                                    style: NText.small,
                                   ),
                                   const SizedBox(width: 4.0),
                                   const Icon(
@@ -207,14 +205,14 @@ class _AboutPageState extends State<AboutPage> {
                                   ),
                                 ],
                               )
-                            : Text(
+                            : NamidaText(
                                 currentVersionText,
-                                style: textTheme.displaySmall,
+                                style: NText.small,
                               ),
                       if (buildDateDiff != '')
-                        Text(
+                        NamidaText(
                           buildDateDiff,
-                          style: textTheme.displaySmall,
+                          style: NText.small,
                         ),
                     ],
                   ),
@@ -234,10 +232,12 @@ class _AboutPageState extends State<AboutPage> {
                   link: 'https://t.me/namida_official',
                 ),
                 NamidaAboutListTile(
-                  leading: Image.asset(
-                    'assets/icons/discord.png',
-                    color: context.defaultIconColor(),
-                    height: 24.0,
+                  leading: NBuilder(
+                    builder: (context, colors) => Image.asset(
+                      'assets/icons/discord.png',
+                      color: NColors.defaultIcon().resolve(colors),
+                      height: 24.0,
+                    ),
                   ),
                   title: 'Discord',
                   link: 'https://discord.gg/WeY7DTVChT',
@@ -338,7 +338,7 @@ class _AboutPageState extends State<AboutPage> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 8.0),
+                  const SizedBox(width: 8.0),
                   Expanded(
                     child: InkWell(
                       onTap: () => NamidaLinkUtils.openLink(AppSocial.DONATE_BUY_ME_A_COFFEE),
@@ -383,22 +383,22 @@ class _AboutPageState extends State<AboutPage> {
                   link: isBeta ? AppSocial.GITHUB_RELEASES_BETA : AppSocial.GITHUB_RELEASES,
                   trailing: NamidaInkWell(
                     borderRadius: 8.0,
-                    bgColor: theme.cardColor,
+                    bgColor: NColors.card,
                     padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: latestVersion == null
                           ? [
-                              Text(
+                              const NamidaText(
                                 '?',
-                                style: textTheme.displaySmall,
+                                style: NText.small,
                               ),
                             ]
                           : latestVersion.isUpdate() ?? false
                           ? [
-                              Text(
+                              NamidaText(
                                 latestVersion.prettyVersion,
-                                style: textTheme.displaySmall,
+                                style: NText.small,
                               ),
                               const SizedBox(width: 4.0),
                               const Icon(
@@ -419,7 +419,7 @@ class _AboutPageState extends State<AboutPage> {
                   icon: Broken.clipboard_text,
                   title: lang.shareLogs,
                   trailing: NamidaIconButton(
-                    iconColor: context.defaultIconColor(),
+                    iconColor: NColors.defaultIcon(),
                     icon: Broken.direct_send,
                     tooltip: () => AppSocial.EMAIL,
                     onPressed: () async {
@@ -747,7 +747,7 @@ class __KuruKuruActivatorState extends State<_KuruKuruActivator> with SingleTick
   void _play({bool longerVer = false}) async {
     (_AboutAsset, Duration) randomSample;
     if (longerVer) {
-      randomSample = (_AboutAsset.kuruKuruLong, Duration(milliseconds: 0));
+      randomSample = (_AboutAsset.kuruKuruLong, const Duration(milliseconds: 0));
     } else {
       const sounds = [
         (_AboutAsset.kuruKuru, Duration(milliseconds: 200)),
@@ -1065,7 +1065,6 @@ class _JellydaBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.scaffoldBackgroundColor;
     // -- artwork is oversized & the parallax clamped by the same amount, so its bottom edge never scrolls into view
     final maxParallax = height * 0.5;
     return SizedBox(
@@ -1098,15 +1097,15 @@ class _JellydaBanner extends StatelessWidget {
             right: 0.0,
             bottom: 0.0,
             height: height * 0.55,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    bgColor.withValues(alpha: 0.0),
-                    bgColor.withValues(alpha: 0.75),
-                    bgColor,
+                    colors.scaffold.withValues(alpha: 0.0),
+                    colors.scaffold.withValues(alpha: 0.75),
+                    colors.scaffold,
                   ],
                   stops: const [0.0, 0.6, 1.0],
                 ),

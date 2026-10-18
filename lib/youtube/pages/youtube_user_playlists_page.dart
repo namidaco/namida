@@ -9,6 +9,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -114,7 +115,6 @@ class _AccountHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return ObxO(
       rx: YoutubeAccountController.current.activeAccountChannel,
       builder: (context, acc) {
@@ -144,15 +144,15 @@ class _AccountHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (showTitle)
-                      Text(
+                      NamidaText(
                         title,
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                       ),
                     if (showTitle || showHandler) const SizedBox(height: 2.0),
                     if (showHandler)
-                      Text(
+                      NamidaText(
                         acc.handler,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                   ],
                 ),

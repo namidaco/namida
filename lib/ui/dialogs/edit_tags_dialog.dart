@@ -23,6 +23,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -427,7 +428,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
       rx: color,
       builder: (context, color) {
         final theme = AppThemes.inst.getAppTheme(color, null, false);
-        return AnimatedThemeOrTheme(
+        return NTheme(
           data: theme,
           child: Form(
             key: formKey,
@@ -438,14 +439,14 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
               icon: Broken.edit,
               title: lang.editTags,
               trailingWidgets: [
-                _KeepDatesToggleWidget(
-                  colorScheme: theme.colorScheme.secondary,
+                const _KeepDatesToggleWidget(
+                  iconColor: NColors.secondary,
                 ),
                 NamidaIconButton(
                   icon: Broken.edit_2,
                   onPressed: () => NamidaNavigator.inst.navigateDialog(
                     scale: 1.0,
-                    dialog: Theme(
+                    dialog: NTheme(
                       data: theme,
                       child: CustomBlurryDialog(
                         theme: theme,
@@ -588,16 +589,16 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                     const SizedBox(
                       height: 12.0,
                     ),
-                    Text(
+                    NamidaText(
                       track.path,
-                      style: namida.textTheme.displaySmall,
+                      style: NText.small,
                     ),
                     const SizedBox(
                       height: 4.0,
                     ),
-                    Text(
+                    NamidaText(
                       audioInfoFormatted,
-                      style: namida.textTheme.displaySmall,
+                      style: NText.small,
                     ),
                     const SizedBox(height: 4.0),
                     NamidaInkWell(
@@ -627,10 +628,12 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                             const SizedBox(width: 4.0),
                             Text(
                               "${lang.autoExtractTagsFromFilename} ${didAutoExtractFromFilenameValue ? '✓' : ''}",
-                              style: namida.textTheme.displaySmall?.copyWith(
-                                decoration: TextDecoration.underline,
-                                decorationStyle: TextDecorationStyle.dashed,
-                              ),
+                              style: NText.small
+                                  .of(context)
+                                  .copyWith(
+                                    decoration: TextDecoration.underline,
+                                    decorationStyle: TextDecorationStyle.dashed,
+                                  ),
                             ),
                           ],
                         ),
@@ -658,9 +661,9 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
       const SizedBox(height: 12.0),
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: Text(
+        child: NamidaText(
           lang.multipleTracksTagsEditNote,
-          style: namida.textTheme.displayMedium,
+          style: NText.medium,
         ),
       ),
       const SizedBox(height: 12.0),
@@ -687,7 +690,7 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                     trackOrTwd: tr,
                     tracks: list,
                     onTap: () => tracksGoingToBeEditedRx[tr] = !isSelected,
-                    bgColor: isSelected ? null : Colors.black.withAlpha(0),
+                    bgColor: isSelected ? null : NColors.fixed(Colors.black.withOpacityExt(0.0)),
                     trailingWidget: IconButton(
                       icon: const Icon(Broken.close_circle),
                       visualDensity: VisualDensity.compact,
@@ -788,8 +791,8 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
         scrollable: false,
         icon: Broken.edit,
         title: lang.editTags,
-        trailingWidgets: [
-          const _KeepDatesToggleWidget(),
+        trailingWidgets: const [
+          _KeepDatesToggleWidget(),
         ],
         actions: [
           Obx(
@@ -914,11 +917,13 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                                                   onTap: showFailedTracksDialogs,
                                                   child: getText(
                                                     lang.checkList,
-                                                    style: namida.textTheme.displaySmall?.copyWith(
-                                                      color: namida.theme.colorScheme.secondary,
-                                                      decoration: TextDecoration.underline,
-                                                      decorationStyle: TextDecorationStyle.solid,
-                                                    ),
+                                                    style: NText.small
+                                                        .of(context)
+                                                        .copyWith(
+                                                          color: namida.theme.colorScheme.secondary,
+                                                          decoration: TextDecoration.underline,
+                                                          decorationStyle: TextDecorationStyle.solid,
+                                                        ),
                                                   ),
                                                 ),
                                             ],
@@ -1056,9 +1061,9 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                                                             height: innerImageWidth,
                                                             borderRadius: BorderRadius.zero,
                                                             child: Center(
-                                                              child: Text(
+                                                              child: NamidaText(
                                                                 "+${tracksGoingToBeEdited.length - 3}",
-                                                                style: namida.textTheme.displayLarge,
+                                                                style: NText.large,
                                                               ),
                                                             ),
                                                           ),
@@ -1168,13 +1173,13 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                       const SizedBox(
                         height: 12.0,
                       ),
-                      Text(
+                      NamidaText(
                         [
                           tracksGoingToBeEdited.displayTrackKeyword,
                           tracksGoingToBeEdited.totalSizeFormatted,
                           tracksGoingToBeEdited.totalDurationFormatted,
                         ].join(' • '),
-                        style: namida.textTheme.displaySmall,
+                        style: NText.small,
                       ),
                       const SizedBox(
                         height: 8.0,
@@ -1184,10 +1189,10 @@ Future<void> _editMultipleTracksTags(List<PhysicalMedia> tracksPre, {required bo
                             ? Text.rich(
                                 TextSpan(
                                   children: [
-                                    TextSpan(text: "${lang.warning}: ", style: namida.textTheme.displayMedium),
+                                    TextSpan(text: "${lang.warning}: ", style: NText.medium.of(context)),
                                     TextSpan(
                                       text: lang.emptyNonMeaningfulTagFields,
-                                      style: namida.textTheme.displaySmall,
+                                      style: NText.small.of(context),
                                     ),
                                   ],
                                 ),
@@ -1652,8 +1657,6 @@ class _YTLinkOffsetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0),
       child: Row(
@@ -1668,9 +1671,9 @@ class _YTLinkOffsetRow extends StatelessWidget {
               valueListenable: controller,
               builder: (context, value, _) {
                 final startMS = NamidaLinkUtils.extractYoutubeStartMS(value.text) ?? 0;
-                return Text(
+                return NamidaText(
                   '${lang.offset}: +${startMS.milliSecondsLabelWithCentiSeconds}',
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 );
               },
             ),
@@ -1696,8 +1699,8 @@ class _YTLinkOffsetRow extends StatelessWidget {
 }
 
 class _KeepDatesToggleWidget extends StatelessWidget {
-  final Color? colorScheme;
-  const _KeepDatesToggleWidget({this.colorScheme});
+  final NColors? iconColor;
+  const _KeepDatesToggleWidget({this.iconColor});
 
   @override
   Widget build(BuildContext context) {
@@ -1709,11 +1712,16 @@ class _KeepDatesToggleWidget extends StatelessWidget {
         onPressed: () {
           settings.editTagsKeepFileDates.save(!settings.editTagsKeepFileDates.value);
         },
-        child: StackedIcon(
-          baseIcon: Broken.document_code_2,
-          secondaryIcon: editTagsKeepFileDates ? Broken.tick_circle : Broken.close_circle,
-          baseIconColor: colorScheme,
-          secondaryIconColor: colorScheme,
+        child: NBuilder(
+          builder: (context, colors) {
+            final resolvedIconColor = iconColor?.resolve(colors);
+            return StackedIcon(
+              baseIcon: Broken.document_code_2,
+              secondaryIcon: editTagsKeepFileDates ? Broken.tick_circle : Broken.close_circle,
+              baseIconColor: NColors.fixed(resolvedIconColor),
+              secondaryIconColor: NColors.fixed(resolvedIconColor),
+            );
+          },
         ),
       ),
     );
@@ -1837,9 +1845,9 @@ class _MultiTagMoreFields extends StatelessWidget {
                   width: 8.0,
                 ),
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     '${lang.more} (${fields.length})',
-                    style: context.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                 ),
               ],
@@ -1876,7 +1884,6 @@ class _FindReplacePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return ListenableBuilder(
       listenable: listenable,
       builder: (context, _) {
@@ -1885,9 +1892,9 @@ class _FindReplacePreview extends StatelessWidget {
           if (rule.find.isEmpty) return const SizedBox();
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text(
+            child: NamidaText(
               '${lang.error}: Regex',
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
           );
         }
@@ -1906,14 +1913,14 @@ class _FindReplacePreview extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              NamidaText(
                 changedCount.displayTrackKeyword,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
               ...examples.map(
-                (e) => Text(
+                (e) => NamidaText(
                   e,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1944,7 +1951,7 @@ class _FindReplaceFilterItem extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 8.0,
         padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-        bgColor: selected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
+        bgColor: selected ? const NColors(.secondary, opacity: 0.1) : null,
         onTap: onTap,
         child: SmartPlaylistFilterInfoRow(
           filter: filter,
@@ -1997,7 +2004,7 @@ class _MultiTagFieldMenuButton extends StatelessWidget {
       openOnLongPress: false,
       childrenDefault: () {
         final currentText = field.controller.text;
-        final countStyle = context.textTheme.displaySmall;
+        final countStyle = NText.small.of(context);
         final values = field.hasMultipleValues ? field.nonEmptyValuesByCount : const <MapEntry<String, int>>[];
         return [
           NamidaPopupItem(
@@ -2165,8 +2172,6 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final borderR = widget.borderRadius.multipliedRadius;
     final borderRS = (widget.borderRadius - 2.0).withMinimum(0).multipliedRadius;
     final height = widget.height;
@@ -2177,49 +2182,51 @@ class _CustomTagTextFieldState extends State<CustomTagTextField> {
     final icon = widget.icon;
     final hasIconSlot = icon != null || isDense; // -- dense fields take their height from the slot
     final suffixIcon = widget.suffixIcon ?? (hasIconSlot ? Icon(icon, size: 18.0) : null);
-    return TextFormField(
-      obscureText: widget.obscureText,
-      onTap: widget.onTap,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      validator: widget.validator,
-      maxLength: widget.maxLength,
-      controller: widget.controller,
-      textAlign: TextAlign.left,
-      maxLines: widget.maxLines,
-      autovalidateMode: widget.validatorMode,
-      keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
-      style: textTheme.displaySmall?.copyWith(fontSize: fontSize, fontWeight: FontWeight.w600),
-      // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
-      onChanged: widget.onChanged,
-      onFieldSubmitted: widget.onFieldSubmitted,
-      decoration: InputDecoration(
-        label: widget.labelText != '' ? Text('${widget.labelText} ${didChange || widget.markChanged ? '(${lang.changed})' : ''}') : null,
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        hintMaxLines: widget.hintMaxLines,
-        isDense: isDense,
-        contentPadding: contentPadding,
-        errorMaxLines: 3,
-        suffixIcon: suffixIcon,
-        suffixIconConstraints: suffixIconConstraints,
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderRS),
-          borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 2.0),
+    return NBuilder(
+      builder: (context, colors) => TextFormField(
+        obscureText: widget.obscureText,
+        onTap: widget.onTap,
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        validator: widget.validator,
+        maxLength: widget.maxLength,
+        controller: widget.controller,
+        textAlign: TextAlign.left,
+        maxLines: widget.maxLines,
+        autovalidateMode: widget.validatorMode,
+        keyboardType: widget.keyboardType ?? (widget.isNumeric ? TextInputType.number : null),
+        style: NText.small.of(context).copyWith(fontSize: fontSize, fontWeight: FontWeight.w600),
+        // onTapOutside: (event) => FocusScope.of(context).unfocus(), // inconvenient
+        onChanged: widget.onChanged,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        decoration: InputDecoration(
+          label: widget.labelText != '' ? Text('${widget.labelText} ${didChange || widget.markChanged ? '(${lang.changed})' : ''}') : null,
+          floatingLabelBehavior: FloatingLabelBehavior.always,
+          hintMaxLines: widget.hintMaxLines,
+          isDense: isDense,
+          contentPadding: contentPadding,
+          errorMaxLines: 3,
+          suffixIcon: suffixIcon,
+          suffixIconConstraints: suffixIconConstraints,
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(borderRS),
+            borderSide: BorderSide(color: colors.onSurface.withOpacityExt(0.39), width: 2.0),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(borderR),
+            borderSide: BorderSide(color: colors.onSurface.withOpacityExt(0.39), width: 1.0),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(borderR),
+            borderSide: BorderSide(color: Colors.brown.withOpacityExt(0.78), width: 2.0),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(borderR),
+            borderSide: BorderSide(color: Colors.brown.withOpacityExt(0.78), width: 2.0),
+          ),
+          hintText: widget.hintText,
+          hintStyle: NText.small.of(context).copyWith(fontSize: fontSize, color: NText.small.of(context).color?.withOpacityExt(0.47)),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderR),
-          borderSide: BorderSide(color: theme.colorScheme.onSurface.withAlpha(100), width: 1.0),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderR),
-          borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(borderR),
-          borderSide: BorderSide(color: Colors.brown.withAlpha(200), width: 2.0),
-        ),
-        hintText: widget.hintText,
-        hintStyle: textTheme.displaySmall?.copyWith(fontSize: fontSize, color: textTheme.displaySmall?.color?.withAlpha(120)),
       ),
     );
   }

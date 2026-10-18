@@ -27,6 +27,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -242,8 +243,6 @@ class _MusicNavPills extends StatelessWidget {
       (icon: Broken.happyemoji, title: lang.moods, endpoint: YoutiPieMusicBrowseEndpoint.moodsAndGenres),
       (icon: Broken.magic_star, title: lang.newReleases, endpoint: YoutiPieMusicBrowseEndpoint.newReleases),
     ];
-    final textTheme = context.textTheme;
-    final bgColor = context.theme.cardColor;
     return SizedBox(
       height: 36.0,
       child: ListView(
@@ -251,7 +250,7 @@ class _MusicNavPills extends StatelessWidget {
         children: pills
             .map(
               (pill) => NamidaInkWell(
-                bgColor: bgColor,
+                bgColor: NColors.card,
                 borderRadius: 10.0,
                 margin: const EdgeInsets.only(right: 6.0),
                 padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -267,9 +266,9 @@ class _MusicNavPills extends StatelessWidget {
                       size: 16.0,
                     ),
                     const SizedBox(width: 6.0),
-                    Text(
+                    NamidaText(
                       pill.title,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ],
                 ),
@@ -289,16 +288,14 @@ class _MusicTopResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final item = topResult.item;
     final items = topResult.items;
     final siblings = [item];
     return Padding(
       padding: const EdgeInsets.fromLTRB(12.0, 4.0, 12.0, 8.0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.card,
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
         ),
         child: Padding(
@@ -324,16 +321,16 @@ class _MusicTopResultCard extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            NamidaText(
                               item.getMusicTitle(),
-                              style: textTheme.displayLarge,
+                              style: NText.large,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 2.0),
-                            Text(
+                            NamidaText(
                               topResult.subtitle,
-                              style: textTheme.displaySmall,
+                              style: NText.small,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -367,7 +364,6 @@ class _MusicFormOptionsChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final selectedTitle = options.firstWhereEff((e) => e.isSelected)?.title ?? '';
     return Padding(
       padding: const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 8.0),
@@ -383,7 +379,7 @@ class _MusicFormOptionsChip extends StatelessWidget {
             ),
           ),
           child: NamidaInkWell(
-            bgColor: theme.cardColor,
+            bgColor: NColors.card,
             borderRadius: 10.0,
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
             child: Row(
@@ -394,9 +390,9 @@ class _MusicFormOptionsChip extends StatelessWidget {
                   size: 16.0,
                 ),
                 const SizedBox(width: 6.0),
-                Text(
+                NamidaText(
                   selectedTitle,
-                  style: theme.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 const SizedBox(width: 4.0),
                 const Icon(
@@ -420,10 +416,8 @@ class _MusicChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final selectedColor = theme.colorScheme.secondaryContainer;
-    final bgColor = theme.cardColor.withOpacityExt(0.5);
+    const selectedColor = NColors.secondaryContainer;
+    const bgColor = NColors(.card, opacity: 0.5);
     return SizedBox(
       height: 34.0,
       child: ListView.builder(
@@ -439,9 +433,9 @@ class _MusicChipsRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             alignment: Alignment.center,
             onTap: () => onTap(chip),
-            child: Text(
+            child: NamidaText(
               chip.title,
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
           );
         },
@@ -457,7 +451,6 @@ class _MusicArtistHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final bannerUrl = result.thumbnails.pick()?.url;
     final subtitle = result.subtitle;
     final channelId = result.channelId;
@@ -487,15 +480,15 @@ class _MusicArtistHeader extends StatelessWidget {
             children: [
               if (subtitle != null)
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     subtitle,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                   ),
                 ),
               if (channelId != null)
                 NamidaInkWell(
                   borderRadius: 10.0,
-                  bgColor: context.theme.cardColor,
+                  bgColor: NColors.card,
                   padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                   onTap: () => YTChannelSubpage(
                     channelID: channelId,
@@ -508,9 +501,9 @@ class _MusicArtistHeader extends StatelessWidget {
                         size: 16.0,
                       ),
                       const SizedBox(width: 6.0),
-                      Text(
+                      NamidaText(
                         lang.goToChannel,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                     ],
                   ),

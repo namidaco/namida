@@ -216,7 +216,7 @@ class _SmoothScrollPositionWithSingleContext extends ScrollPositionWithSingleCon
   Timer? _triggerTouchTimer;
 
   void _addTriggerTouchTimer() {
-    _triggerTouchTimer = Timer(Duration(milliseconds: 100), () {
+    _triggerTouchTimer = Timer(const Duration(milliseconds: 100), () {
       triggerTouch = null;
       _triggerTouchTimer = null;
     });

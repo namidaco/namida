@@ -8,8 +8,8 @@ import 'package:namida/core/enums.dart';
 class VibratorController {
   const VibratorController._();
 
-  static final _intNormal = _VibratorInterfaceNormal._();
-  static final _intHaptic = VibratorInterfaceHapticFeedback._();
+  static const _intNormal = _VibratorInterfaceNormal._();
+  static const _intHaptic = VibratorInterfaceHapticFeedback._();
 
   static _VibratorInterface? get _interface {
     return switch (settings.vibrationType.value) {

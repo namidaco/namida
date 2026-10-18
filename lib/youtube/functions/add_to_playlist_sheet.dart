@@ -20,6 +20,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -51,8 +52,6 @@ void showAddToPlaylistSheet({
       color: context.theme.scaffoldBackgroundColor,
     ),
     builder: (context, bottomPadding, maxWidth, maxHeight) {
-      final theme = context.theme;
-      final textTheme = theme.textTheme;
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: Column(
@@ -61,27 +60,27 @@ void showAddToPlaylistSheet({
             const SizedBox(height: 24.0),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
+              child: NamidaText(
                 lang.addToPlaylist,
-                style: textTheme.displayLarge,
+                style: NText.large,
               ),
             ),
             const SizedBox(height: 6.0),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: playlistNameToAdd == ''
-                  ? Text(
+                  ? NamidaText(
                       videoNamesSubtitle,
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     )
                   : Text.rich(
                       TextSpan(
                         text: playlistNameToAdd,
-                        style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: NText.medium.of(context).copyWith(fontWeight: FontWeight.w600),
                         children: [
                           TextSpan(
                             text: " ($videoNamesSubtitle)",
-                            style: textTheme.displaySmall,
+                            style: NText.small.of(context),
                           ),
                         ],
                       ),
@@ -122,7 +121,7 @@ void showAddToPlaylistSheet({
                           const SizedBox(width: 18.0),
                           Expanded(
                             child: NamidaInkWell(
-                              bgColor: CurrentColor.inst.color.withAlpha(40),
+                              bgColor: NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.16)),
                               height: 48.0,
                               borderRadius: 12.0,
                               onTap: YTUtils.showCreateLocalYTPlaylistSheet,
@@ -131,9 +130,9 @@ void showAddToPlaylistSheet({
                                 children: [
                                   const Icon(Broken.add),
                                   const SizedBox(width: 8.0),
-                                  Text(
+                                  NamidaText(
                                     lang.create,
-                                    style: textTheme.displayMedium,
+                                    style: NText.medium,
                                   ),
                                 ],
                               ),
@@ -344,8 +343,6 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
   }
 
   Widget? _itemBuilder(BuildContext context, PlaylistForVideoItem pl) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final title = pl.playlistTitle ?? '?';
     final subtitle = pl.privacy?.toText();
     final info = _playlistsLookup[pl.playlistId];
@@ -356,26 +353,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
     } else {
       showBorder = _newContainsVideo[pl.playlistId] == true;
     }
-    late final borderSide = BorderSide(
-      width: 2.0,
-      color: theme.colorScheme.secondary.withOpacityExt(0.5),
-    );
     return NamidaLoadingSwitcher(
-      builder: (loadingController) => NamidaInkWell(
-        animationDurationMS: 200,
-        margin: const EdgeInsets.symmetric(vertical: 4.0),
-        width: widget.maxWidth,
-        bgColor: theme.cardColor,
-        decoration: BoxDecoration(
-          border: showBorder
-              ? Border(
-                  left: borderSide,
-                  bottom: borderSide,
-                )
-              : null,
-        ),
-        onTap: loadingController.isLoading ? null : () => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
-        child: Padding(
+      builder: (loadingController) {
+        final tileChild = Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: Row(
             children: [
@@ -396,14 +376,14 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       title,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                     if (subtitle != null && subtitle.isNotEmpty)
-                      Text(
+                      NamidaText(
                         subtitle,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                   ],
                 ),
@@ -411,9 +391,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               if (info?.videosCount != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text(
+                  child: NamidaText(
                     info!.videosCount!.formatDecimal(),
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                   ),
                 ),
               SizedBox(
@@ -441,15 +421,38 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
               const SizedBox(width: 12.0),
             ],
           ),
-        ),
-      ),
+        );
+        return NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) {
+            late final borderSide = BorderSide(
+              width: 2.0,
+              color: colors.secondary.withOpacityExt(0.5),
+            );
+            return NamidaInkWell(
+              animationDurationMS: 200,
+              margin: const EdgeInsets.symmetric(vertical: 4.0),
+              width: widget.maxWidth,
+              bgColor: NColors.card,
+              decoration: BoxDecoration(
+                border: showBorder
+                    ? Border(
+                        left: borderSide,
+                        bottom: borderSide,
+                      )
+                    : null,
+              ),
+              onTap: loadingController.isLoading ? null : () => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
+              child: tileChild,
+            );
+          },
+        );
+      },
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final allPlaylists = _allPlaylists;
     final createdPlaylists = _createdPlaylists;
 
@@ -487,11 +490,11 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                                 itemCount: 10,
                                 shrinkWrap: true,
                                 itemBuilder: (context, index) {
-                                  return NamidaInkWell(
+                                  return const NamidaInkWell(
                                     animationDurationMS: 200,
-                                    margin: const EdgeInsets.symmetric(vertical: 4.0),
+                                    margin: EdgeInsets.symmetric(vertical: 4.0),
                                     height: 52.0,
-                                    bgColor: theme.cardColor,
+                                    bgColor: NColors.card,
                                   );
                                 },
                               ),
@@ -516,7 +519,7 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
             const SizedBox(width: 18.0),
             Expanded(
               child: NamidaInkWell(
-                bgColor: CurrentColor.inst.color.withAlpha(40),
+                bgColor: NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.16)),
                 height: 48.0,
                 borderRadius: 12.0,
                 child: Row(
@@ -524,9 +527,9 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
                   children: [
                     const Icon(Broken.add),
                     const SizedBox(width: 8.0),
-                    Text(
+                    NamidaText(
                       lang.create,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ],
                 ),

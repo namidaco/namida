@@ -57,7 +57,6 @@ class ListTileWithCheckMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.theme.textTheme;
     final titleWidgetFinal = Padding(
       padding: EdgeInsets.symmetric(horizontal: dense ? 10.0 : 14.0),
       child: Column(
@@ -65,14 +64,14 @@ class ListTileWithCheckMark extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           titleWidget ??
-              Text(
+              NamidaText(
                 title ?? lang.reverseOrder,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
           if (subtitle != '')
-            Text(
+            NamidaText(
               subtitle,
-              style: textTheme.displaySmall,
+              style: NText.small,
             ),
         ],
       ),
@@ -161,8 +160,8 @@ class _NamidaCheckMarkState extends State<NamidaCheckMark> with TickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
-    final color = colorScheme.secondary;
+    final colors = NColorsData.of(context);
+    final color = colors.secondary;
     final ringColor = color.withOpacityExt(0.3);
     return CustomPaint(
       size: Size.square(widget.size),
@@ -172,7 +171,7 @@ class _NamidaCheckMarkState extends State<NamidaCheckMark> with TickerProviderSt
         active: widget._isShownActive,
         burst: widget.burst,
         color: color,
-        checkColor: colorScheme.onSecondary,
+        checkColor: colors.onSecondary,
         ringColor: ringColor,
       ),
     );
@@ -231,8 +230,8 @@ class _NamidaTristateCheckMarkState extends State<NamidaTristateCheckMark> with 
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
-    final color = colorScheme.secondary;
+    final colors = NColorsData.of(context);
+    final color = colors.secondary;
     final boxColor = color.withOpacityExt(0.3);
     return CustomPaint(
       size: Size.square(widget.size),
@@ -242,7 +241,7 @@ class _NamidaTristateCheckMarkState extends State<NamidaTristateCheckMark> with 
         to: _to,
         spring: _spring,
         color: color,
-        checkColor: colorScheme.onSecondary,
+        checkColor: colors.onSecondary,
         boxColor: boxColor,
       ),
     );
@@ -262,46 +261,24 @@ class _CheckTileFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colorScheme = theme.colorScheme;
     final halfActive = tile.halfActive;
     final isHalf = halfActive == true;
     final isSelected = active || isHalf;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final tileTint = colorScheme.onSurface.withAlpha(tileAlpha);
-    final baseColor = tile.tileColor ?? Color.alphaBlend(tileTint, theme.cardTheme.color!);
-    final inactiveColor = baseColor.withOpacityExt(0.65);
-    final activeTint = colorScheme.secondary.withOpacityExt(tile.outlined ? 0.1 : 0.12);
-    final activeColor = Color.alphaBlend(activeTint, baseColor);
-    final halfTint = activeColor.withOpacityExt(0.45);
-    final halfColor = Color.alphaBlend(halfTint, inactiveColor);
-    final bgColor = isHalf
-        ? halfColor
-        : active
-        ? activeColor
-        : inactiveColor;
+    final tileOpacity = context.isDarkMode ? 0.02 : 0.08;
     final borderOpacity = isHalf
         ? 0.5
         : active
         ? 1.0
         : 0.0;
-    final borderColor = colorScheme.secondary.withOpacityExt(borderOpacity);
-    final decoration = tile.outlined
-        ? BoxDecoration(
-            border: Border.all(
-              color: borderColor,
-              width: 1.5,
-            ),
-          )
-        : const BoxDecoration();
     final icon = tile.icon;
-    final iconColor = isSelected ? colorScheme.secondary : IconTheme.of(context).color;
     Widget? leading = tile.leading;
     if (leading == null && icon != null) {
+      final unselectedIconColor = IconTheme.of(context).color;
       leading = _CheckTileIcon(
         icon: icon,
         size: tile.iconSize,
-        color: iconColor,
+        isSelected: isSelected,
+        unselectedColor: unselectedIconColor,
       );
     }
     final check = halfActive == null
@@ -315,28 +292,55 @@ class _CheckTileFrame extends StatelessWidget {
             active: active,
             halfActive: halfActive,
           );
-    return NamidaInkWell(
-      animationDurationMS: 200,
-      borderRadius: tile.borderRadius,
-      bgColor: bgColor,
-      decoration: decoration,
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      onTap: tile.onTap,
-      child: Row(
-        mainAxisSize: tile.expanded ? MainAxisSize.max : MainAxisSize.min,
-        children: [
-          ?leading,
-          tile.expanded
-              ? Expanded(
-                  child: title,
-                )
-              : Flexible(
-                  child: title,
+    final row = Row(
+      mainAxisSize: tile.expanded ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        ?leading,
+        tile.expanded
+            ? Expanded(
+                child: title,
+              )
+            : Flexible(
+                child: title,
+              ),
+        ?tile.trailing,
+        check,
+      ],
+    );
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) {
+        final tileTint = colors.onSurface.withOpacityExt(tileOpacity);
+        final baseColor = tile.tileColor ?? Color.alphaBlend(tileTint, colors.cardTheme);
+        final inactiveColor = baseColor.withOpacityExt(0.65);
+        final activeTint = colors.secondary.withOpacityExt(tile.outlined ? 0.1 : 0.12);
+        final activeColor = Color.alphaBlend(activeTint, baseColor);
+        final halfTint = activeColor.withOpacityExt(0.45);
+        final halfColor = Color.alphaBlend(halfTint, inactiveColor);
+        final bgColor = isHalf
+            ? halfColor
+            : active
+            ? activeColor
+            : inactiveColor;
+        final borderColor = colors.secondary.withOpacityExt(borderOpacity);
+        final decoration = tile.outlined
+            ? BoxDecoration(
+                border: Border.all(
+                  color: borderColor,
+                  width: 1.5,
                 ),
-          ?tile.trailing,
-          check,
-        ],
-      ),
+              )
+            : const BoxDecoration();
+        return NamidaInkWell(
+          animationDurationMS: 200,
+          borderRadius: tile.borderRadius,
+          bgColor: NColors.fixed(bgColor),
+          decoration: decoration,
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          onTap: tile.onTap,
+          child: row,
+        );
+      },
     );
   }
 }
@@ -344,16 +348,20 @@ class _CheckTileFrame extends StatelessWidget {
 class _CheckTileIcon extends StatelessWidget {
   final IconData icon;
   final double? size;
-  final Color? color;
+  final bool isSelected;
+  final Color? unselectedColor;
 
   const _CheckTileIcon({
     required this.icon,
     required this.size,
-    required this.color,
+    required this.isSelected,
+    required this.unselectedColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.targetOf(context);
+    final color = isSelected ? colors.secondary : unselectedColor;
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(end: color),
       duration: const Duration(milliseconds: 200),

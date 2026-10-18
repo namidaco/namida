@@ -13,7 +13,7 @@ abstract class NamidaTrayManager {
       ios: () => null,
       windows: () => _TrayManagerDesktop(TrayIcons.windows.appIcon),
       linux: _TrayManagerLinuxDBus.new,
-      macos: () => _TrayManagerDesktop(''),
+      macos: () => const _TrayManagerDesktop(''),
     );
   }
 

@@ -20,6 +20,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -184,19 +185,15 @@ class _YoutubeNotificationCommentsPageState extends State<YoutubeNotificationCom
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final commentsIconColor = theme.iconTheme.color;
-
     return BackgroundWrapper(
       child: Column(
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
+          NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
               boxShadow: [
                 BoxShadow(
                   blurRadius: 12.0,
-                  color: theme.secondaryHeaderColor.withOpacityExt(0.5),
+                  color: colors.secondaryHeader.withOpacityExt(0.5),
                 ),
               ],
             ),
@@ -209,13 +206,15 @@ class _YoutubeNotificationCommentsPageState extends State<YoutubeNotificationCom
                     ObxO(
                       rx: _lastFetchWasCached,
                       builder: (context, isFromCache) => (isFromCache ?? false)
-                          ? StackedIcon(
-                              baseIcon: Broken.document,
-                              secondaryIcon: Broken.global,
-                              iconSize: 22.0,
-                              secondaryIconSize: 12.0,
-                              baseIconColor: commentsIconColor,
-                              secondaryIconColor: commentsIconColor,
+                          ? NBuilder(
+                              builder: (context, colors) => StackedIcon(
+                                baseIcon: Broken.document,
+                                secondaryIcon: Broken.global,
+                                iconSize: 22.0,
+                                secondaryIconSize: 12.0,
+                                baseIconColor: NColors.fixed(colors.icon),
+                                secondaryIconColor: NColors.fixed(colors.icon),
+                              ),
                             )
                           : const Icon(
                               Broken.document,
@@ -224,9 +223,9 @@ class _YoutubeNotificationCommentsPageState extends State<YoutubeNotificationCom
                     ),
                     const SizedBox(width: 8.0),
                     Expanded(
-                      child: Text(
+                      child: NamidaText(
                         lang.comments,
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                       ),
                     ),
                     const SizedBox(width: 8.0),

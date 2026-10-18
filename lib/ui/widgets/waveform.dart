@@ -12,6 +12,7 @@ import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
@@ -110,14 +111,14 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = NColorsData.of(context);
     final barRadius = Radius.circular(5.0.multipliedRadius);
-    const frontAlpha = 110;
-    final barColorBehind = theme.colorScheme.onSurface.withAlpha(40);
-    final barColorFront = theme.colorScheme.onSurface.withAlpha(frontAlpha);
+    const frontOpacity = 0.43;
+    final barColorBehind = colors.onSurface.withOpacityExt(0.16);
+    final barColorFront = colors.onSurface.withOpacityExt(frontOpacity);
     final playedColors = [
-      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(180), theme.colorScheme.onSurface).withAlpha(frontAlpha),
-      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(140), theme.colorScheme.onSurface).withAlpha(frontAlpha),
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withOpacityExt(0.71), colors.onSurface).withOpacityExt(frontOpacity),
+      Color.alphaBlend(CurrentColor.inst.miniplayerColor.withOpacityExt(0.55), colors.onSurface).withOpacityExt(frontOpacity),
     ];
     final jelly = _jelly;
     return LayoutWidthProvider(

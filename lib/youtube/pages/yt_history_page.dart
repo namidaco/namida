@@ -14,6 +14,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -47,20 +48,14 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const cardExtent = Dimensions.youtubeCardItemExtent;
     const dayHeaderExtent = kYoutubeHistoryDayHeaderHeightWithPadding;
 
     const dayHeaderHeight = kYoutubeHistoryDayHeaderHeight;
-    final dayHeaderBgColor = Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor);
-    final dayHeaderSideColor = CurrentColor.inst.color;
-    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(160), theme.scaffoldBackgroundColor).withOpacityExt(0.4);
 
     final daysLength = historyDays.length;
 
-    final highlightColor = theme.colorScheme.onSurface.withAlpha(40);
-    final smallTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    final smallTextStyle = NText.small.of(context).copyWith(fontSize: 12.0);
 
     final yearsRow = getYearsRowWidget(context, _onYearTap);
 
@@ -73,7 +68,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
               configs: VideoTilePropertiesConfigs(
                 queueSource: QueueSourceYoutubeID.ytHistory,
                 playlistName: k_PLAYLIST_NAME_HISTORY,
-                playlistID: PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
+                playlistID: const PlaylistID(id: k_PLAYLIST_NAME_HISTORY),
                 playlistInfo: () => PlaylistBasicInfo(
                   id: '',
                   title: lang.history,
@@ -100,34 +95,42 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                           final day = historyDays[index];
                           final dayInMs = super.dayToMillis(day);
                           final videos = history[day] ?? [];
+                          final dayTitle = [
+                            dayInMs.dateFormattedOriginal,
+                            videos.length.displayVideoKeyword,
+                          ].join('  •  ');
+                          final dayMenu = NamidaPopupWrapper(
+                            openOnLongPress: false,
+                            childrenDefault: () => YTUtils.getVideosMenuItems(
+                              queueSource: QueueSourceYoutubeID.ytHistory,
+                              context: context,
+                              playlistName: k_PLAYLIST_NAME_HISTORY,
+                              videos: videos,
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Icon(
+                                Broken.more,
+                                size: 22.0,
+                              ),
+                            ),
+                          );
 
                           return StickyHeader(
                             key: ValueKey(index),
-                            header: NamidaHistoryDayHeaderBox(
-                              height: dayHeaderHeight,
-                              title: [
-                                dayInMs.dateFormattedOriginal,
-                                videos.length.displayVideoKeyword,
-                              ].join('  •  '),
-                              sideColor: dayHeaderSideColor,
-                              bgColor: dayHeaderBgColor,
-                              shadowColor: dayHeaderShadowColor,
-                              menu: NamidaPopupWrapper(
-                                openOnLongPress: false,
-                                childrenDefault: () => YTUtils.getVideosMenuItems(
-                                  queueSource: QueueSourceYoutubeID.ytHistory,
-                                  context: context,
-                                  playlistName: k_PLAYLIST_NAME_HISTORY,
-                                  videos: videos,
-                                ),
-                                child: const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Icon(
-                                    Broken.more,
-                                    size: 22.0,
-                                  ),
-                                ),
-                              ),
+                            header: NBuilder(
+                              builder: (context, colors) {
+                                final dayHeaderBgColor = Color.alphaBlend(colors.card.withOpacityExt(0.39), colors.scaffold);
+                                final dayHeaderShadowColor = Color.alphaBlend(colors.shadow.withOpacityExt(0.63), colors.scaffold).withOpacityExt(0.4);
+                                return NamidaHistoryDayHeaderBox(
+                                  height: dayHeaderHeight,
+                                  title: dayTitle,
+                                  sideColor: CurrentColor.inst.color,
+                                  bgColor: dayHeaderBgColor,
+                                  shadowColor: dayHeaderShadowColor,
+                                  menu: dayMenu,
+                                );
+                              },
                             ),
                             content: SuperSmoothListView.builder(
                               padding: const EdgeInsets.only(bottom: kYoutubeHistoryDayListBottomPadding, top: kYoutubeHistoryDayListTopPadding),
@@ -139,12 +142,13 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                               itemBuilder: (context, i) {
                                 final watch = videos[i];
                                 final topRightWidget = listenOrderWidget(watch, watch.id, smallTextStyle, topRightRadius: YTHistoryVideoCardBase.kDefaultBorderRadius);
+                                final isHighlighted = highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList;
                                 return YTHistoryVideoCard(
                                   properties: properties,
                                   videos: videos,
                                   index: i,
                                   day: day,
-                                  bgColor: highlightedItem != null && day == highlightedItem.dayToHighLight && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                                  bgColor: isHighlighted ? const NColors(.onSurface, opacity: 0.16) : null,
 
                                   isImportantInCache: false, // long old history is lowkey useless
                                   topRightWidget: topRightWidget,

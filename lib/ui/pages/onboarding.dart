@@ -13,6 +13,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
@@ -106,7 +107,6 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final maxWidth = context.width; // use context as dimensions might not be initialized yet
 
     Dimensions.inst.availableAppContentWidth = maxWidth;
@@ -255,9 +255,9 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                             ),
                           ),
                         ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.7), theme.cardColor),
+                        NContainer(
+                          decoration: (colors) => BoxDecoration(
+                            color: Color.alphaBlend(colors.scaffold.withOpacityExt(0.7), colors.card),
                             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                           ),
                           child: AnimatedOpacity(
@@ -266,7 +266,7 @@ class _FirstRunConfigureScreenState extends State<FirstRunConfigureScreen> {
                             child: NamidaInkWell(
                               onTap: _onContinueTap,
                               borderRadius: 8.0,
-                              bgColor: theme.cardColor,
+                              bgColor: NColors.card,
                               margin: const EdgeInsets.all(12.0),
                               padding: const EdgeInsets.all(12.0),
                               child: const Icon(
@@ -301,7 +301,6 @@ class _ReturningUserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       child: Row(
@@ -309,26 +308,32 @@ class _ReturningUserRow extends StatelessWidget {
           Expanded(
             child: ObxO(
               rx: BackupController.inst.isRestoringBackup,
-              builder: (context, isRestoringBackup) => NamidaInkWellButton(
-                bgColor: bgColor,
-                centered: true,
-                paddingMultiplier: 1.65,
-                icon: Broken.back_square,
-                text: lang.restoreBackup,
-                enabled: !isRestoringBackup,
-                onTap: onRestoreBackupTap,
+              builder: (context, isRestoringBackup) => NBuilder(
+                selfAnimated: true,
+                builder: (context, colors) => NamidaInkWellButton(
+                  bgColor: colors.secondaryContainer.withOpacityExt(0.2),
+                  centered: true,
+                  paddingMultiplier: 1.65,
+                  icon: Broken.back_square,
+                  text: lang.restoreBackup,
+                  enabled: !isRestoringBackup,
+                  onTap: onRestoreBackupTap,
+                ),
               ),
             ),
           ),
           const SizedBox(width: 8.0),
           Expanded(
-            child: NamidaInkWellButton(
-              bgColor: bgColor,
-              centered: true,
-              paddingMultiplier: 1.65,
-              icon: Broken.cloud_change,
-              text: lang.sync,
-              onTap: onSyncTap,
+            child: NBuilder(
+              selfAnimated: true,
+              builder: (context, colors) => NamidaInkWellButton(
+                bgColor: colors.secondaryContainer.withOpacityExt(0.2),
+                centered: true,
+                paddingMultiplier: 1.65,
+                icon: Broken.cloud_change,
+                text: lang.sync,
+                onTap: onSyncTap,
+              ),
             ),
           ),
         ],
@@ -350,7 +355,6 @@ class _StoragePermissionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final borderColor = isGranted
         ? Colors.green.withOpacityExt(0.3)
         : isDenied
@@ -366,15 +370,15 @@ class _StoragePermissionTile extends StatelessWidget {
       ),
       onTap: onTap,
       borderRadius: isGranted ? 8.0 : 16.0,
-      bgColor: theme.cardColor,
+      bgColor: NColors.card,
       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       padding: const EdgeInsets.all(12.0),
       child: Row(
         children: [
           Expanded(
-            child: Text(
+            child: NamidaText(
               lang.grantStoragePermission,
-              style: theme.textTheme.displayMedium,
+              style: NText.medium,
             ),
           ),
           const SizedBox(width: 12.0),

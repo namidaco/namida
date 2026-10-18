@@ -475,10 +475,10 @@ class _TextDialogContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = NColorsData.of(context);
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-      borderSide: BorderSide(color: theme.colorScheme.onSurface.withOpacityExt(0.15)),
+      borderSide: BorderSide(color: colors.onSurface.withOpacityExt(0.15)),
     );
     final height = context.height * 0.55;
     return Padding(
@@ -492,7 +492,7 @@ class _TextDialogContent extends StatelessWidget {
           autofocus: true,
           keyboardType: TextInputType.multiline,
           textAlignVertical: TextAlignVertical.top,
-          style: theme.textTheme.displayMedium,
+          style: NText.medium.of(context),
           decoration: InputDecoration(
             hintText: lang.lyrics,
             border: border,
@@ -602,17 +602,16 @@ class _ChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final accentColor = theme.colorScheme.secondary;
+    final bgColor = isSelected ? const NColors(.secondary, opacity: 0.3) : NColors.card;
     return NamidaInkWell(
       onTap: onTap,
       borderRadius: 8.0,
       animationDurationMS: 150,
-      bgColor: isSelected ? accentColor.withOpacityExt(0.3) : theme.cardColor,
+      bgColor: bgColor,
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-      child: Text(
+      child: NamidaText(
         text,
-        style: theme.textTheme.displaySmall?.copyWith(fontWeight: isSelected ? FontWeight.w700 : null),
+        style: NText(.small, weight: isSelected ? FontWeight.w700 : null),
       ),
     );
   }
@@ -706,8 +705,6 @@ class _ShortcutRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
@@ -716,25 +713,25 @@ class _ShortcutRow extends StatelessWidget {
             width: 86.0,
             child: Align(
               alignment: Alignment.centerLeft,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
+                  color: colors.card,
                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  child: Text(
+                  child: NamidaText(
                     keys,
-                    style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                    style: const NText(.small, weight: FontWeight.w700),
                   ),
                 ),
               ),
             ),
           ),
           Expanded(
-            child: Text(
+            child: NamidaText(
               action,
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
           ),
         ],
@@ -754,7 +751,6 @@ class _UntimedLinesPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Column(
@@ -762,16 +758,16 @@ class _UntimedLinesPreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           for (final text in texts)
-            Text(
+            NamidaText(
               '--:--.--  $text',
-              style: textTheme.displayMedium,
+              style: NText.medium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           if (remainingCount > 0)
-            Text(
+            NamidaText(
               '+$remainingCount',
-              style: textTheme.displaySmall,
+              style: NText.small,
             ),
         ],
       ),

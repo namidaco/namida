@@ -16,7 +16,7 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/video_card_info_fetcher_wrapper.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -204,9 +204,9 @@ class _YoutubeVideoCardState extends State<YoutubeVideoCard> with YTCardLikeStat
                     right: 4.0,
                     child: NamidaInkWell(
                       borderRadius: 5.0,
-                      padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
-                      bgColor: firstBadge == 'LIVE' ? Color.fromARGB(100, 255, 20, 20) : context.theme.cardColor,
-                      child: Icon(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
+                      bgColor: firstBadge == 'LIVE' ? NColors.fixed(const Color.fromARGB(100, 255, 20, 20)) : NColors.card,
+                      child: const Icon(
                         Broken.radar_1,
                         size: 14.0,
                         color: Color.fromARGB(222, 222, 222, 222),
@@ -361,7 +361,6 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final videoId = short.id;
     final title = short.title;
     final viewsCountText = short.viewsText;
@@ -371,7 +370,7 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
       openOnTap: false,
       childrenDefault: getMenuItems,
       child: NamidaInkWell(
-        bgColor: context.theme.cardColor,
+        bgColor: NColors.card,
         borderRadius: 8.0,
         onTap: _onShortTap,
         child: YoutubeThumbnail(
@@ -400,33 +399,37 @@ class YoutubeShortVideoTallCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: textTheme.displayMedium?.copyWith(
-                            fontSize: 12.0,
-                            color: Colors.white70,
-                            shadows: [
-                              const BoxShadow(
-                                spreadRadius: 1.0,
-                                blurRadius: 12.0,
-                                color: Colors.black38,
+                          style: NText.medium
+                              .of(context)
+                              .copyWith(
+                                fontSize: 12.0,
+                                color: Colors.white70,
+                                shadows: [
+                                  const BoxShadow(
+                                    spreadRadius: 1.0,
+                                    blurRadius: 12.0,
+                                    color: Colors.black38,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           viewsCountText,
-                          style: textTheme.displaySmall?.copyWith(
-                            fontSize: 11.0,
-                            color: Colors.white60,
-                            shadows: [
-                              const BoxShadow(
-                                spreadRadius: 1.0,
-                                blurRadius: 12.0,
-                                color: Colors.black38,
+                          style: NText.small
+                              .of(context)
+                              .copyWith(
+                                fontSize: 11.0,
+                                color: Colors.white60,
+                                shadows: [
+                                  const BoxShadow(
+                                    spreadRadius: 1.0,
+                                    blurRadius: 12.0,
+                                    color: Colors.black38,
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

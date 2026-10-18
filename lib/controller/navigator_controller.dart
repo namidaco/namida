@@ -25,6 +25,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
@@ -320,7 +321,7 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
-    final themedPage = AppThemeFrozenWhileHidden(
+    final themedPage = NThemeFrozenWhileHidden(
       child: page,
     );
     await navKey.currentState?.pushPage(
@@ -421,7 +422,7 @@ class NamidaNavigator {
                 color: Colors.black.withOpacityExt(blackBg ? 1.0 : 0.45),
                 child: Transform.scale(
                   scale: scale,
-                  child: Theme(
+                  child: NTheme(
                     data: theme,
                     child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
                   ),
@@ -555,7 +556,7 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
-    final themedPage = AppThemeFrozenWhileHidden(
+    final themedPage = NThemeFrozenWhileHidden(
       child: page,
     );
     await navKey.currentState?.pushPageReplacement(
@@ -578,7 +579,7 @@ class NamidaNavigator {
 
     if (_shouldUpdateSubpagesColors) page.updateColorScheme();
 
-    final themedPage = AppThemeFrozenWhileHidden(
+    final themedPage = NThemeFrozenWhileHidden(
       child: page,
     );
     try {

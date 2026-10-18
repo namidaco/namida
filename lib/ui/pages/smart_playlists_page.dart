@@ -8,8 +8,8 @@ import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -31,7 +31,6 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return BackgroundWrapper(
       child: Column(
         children: [
@@ -76,7 +75,7 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
                                 margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 3.0),
                                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                                 borderRadius: 12.0,
-                                bgColor: context.theme.cardColor.withOpacityExt(0.6),
+                                bgColor: const NColors(.card, opacity: 0.6),
                                 onTap: () {
                                   SmartPlaylistTracksPage(
                                     smartPlaylistWrapper: smplWrapper,
@@ -108,12 +107,12 @@ class SmartPlaylistsPage extends StatelessWidget with NamidaRouteWidget {
                                     ),
                                     const SizedBox(width: 12.0),
                                     Expanded(
-                                      child: Text(
+                                      child: NamidaText(
                                         smplWrapper.value.name,
                                         maxLines: 1,
                                         softWrap: false,
                                         overflow: TextOverflow.fade,
-                                        style: textTheme.displayMedium,
+                                        style: NText.medium,
                                       ),
                                     ),
                                     const SizedBox(width: 8.0),

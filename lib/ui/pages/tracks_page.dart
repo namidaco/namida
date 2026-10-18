@@ -17,6 +17,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
@@ -189,9 +190,9 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   CAEmptyStateCTA(
-                                    header: Text(
+                                    header: NamidaText(
                                       lang.noTracksFound,
-                                      style: context.textTheme.displayLarge,
+                                      style: NText.large,
                                     ),
                                     child: NamidaButton(
                                       borderRadius: 8.0,
@@ -205,19 +206,19 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
+                                  NamidaText(
                                     lang.noTracksFound,
-                                    style: context.textTheme.displayLarge,
+                                    style: NText.large,
                                   ),
                                   const SizedBox(height: 8.0),
                                   NamidaInkWell(
                                     borderRadius: 8.0,
-                                    bgColor: context.theme.cardColor,
+                                    bgColor: NColors.card,
                                     padding: const EdgeInsetsGeometry.symmetric(horizontal: 12.0, vertical: 6.0),
                                     onTap: () => _onAddFolderTap(context),
-                                    child: Text(
+                                    child: NamidaText(
                                       lang.addFolder,
-                                      style: context.textTheme.displayLarge,
+                                      style: NText.large,
                                     ),
                                   ),
                                 ],
@@ -288,9 +289,9 @@ class _JellyTracksEmptyState extends StatelessWidget {
               opacity: 0.9,
             ),
             const SizedBox(height: 8.0),
-            Text(
+            NamidaText(
               lang.noTracksFound,
-              style: context.textTheme.displayLarge,
+              style: NText.large,
             ),
             const SizedBox(height: 12.0),
             NamidaButton(

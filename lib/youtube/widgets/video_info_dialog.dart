@@ -16,6 +16,7 @@ import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -251,7 +252,6 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
     final dateAgo = dateMS == null ? '' : TimeAgoController.dateMSSEFromNow(dateMS!);
 
     final theme = AppThemes.inst.getAppTheme(_themeColor);
-    final headerIconColor = theme.colorScheme.primary;
 
     final totalListens = YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
     final firstListenTrack = totalListens.firstOrNull;
@@ -261,7 +261,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
       ...?_playablity?.messages,
     ].joinText(separator: ' - ');
 
-    return AnimatedThemeOrTheme(
+    return NTheme(
       data: theme,
       child: CustomBlurryDialog(
         theme: theme,
@@ -276,13 +276,13 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    NamidaText(
                       lang.info,
-                      style: theme.textTheme.displayLarge,
+                      style: NText.large,
                     ),
                     if (loading) ...[
                       const SizedBox(width: 12.0),
-                      SizedBox(
+                      const SizedBox(
                         width: 12.0,
                         height: 12.0,
                         child: CircularProgressIndicator(
@@ -303,10 +303,10 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                   ],
                 ),
               ),
-              Icon(
+              const NIcon(
                 Broken.eye,
                 size: 18.0,
-                color: headerIconColor,
+                color: NColors.primary,
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),
@@ -323,9 +323,9 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                             (videoPageInfo?.videoInfo?.viewsCount)?.formatDecimalShort() ??
                             videoPageInfo?.videoInfo?.viewCountTextShort ??
                             videoPageInfo?.videoInfo?.viewCountTextLong;
-                        return Text(
+                        return NamidaText(
                           viewsCountText ?? '?',
-                          style: theme.textTheme.displaySmall,
+                          style: NText.small,
                         );
                       },
                     ),
@@ -351,31 +351,33 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             NamidaLoadingSwitcher(
-                              builder: (loadingController) => NamidaRawLikeButton(
-                                isLiked: isUserLiked,
-                                likedIcon: Broken.like_filled,
-                                normalIcon: Broken.like_1,
-                                enabledColor: headerIconColor,
-                                disabledColor: headerIconColor,
-                                size: 18.0,
-                                removeConfirmationAction: null, // manually managed
-                                onTap: (isLiked) {
-                                  return _videoLikeManager.onLikeClicked(
-                                    YTVideoLikeParamters(
-                                      isActive: isLiked,
-                                      action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
-                                      onStart: loadingController.startLoading,
-                                      onEnd: loadingController.stopLoading,
-                                    ),
-                                  );
-                                },
+                              builder: (loadingController) => NBuilder(
+                                builder: (context, colors) => NamidaRawLikeButton(
+                                  isLiked: isUserLiked,
+                                  likedIcon: Broken.like_filled,
+                                  normalIcon: Broken.like_1,
+                                  enabledColor: colors.primary,
+                                  disabledColor: colors.primary,
+                                  size: 18.0,
+                                  removeConfirmationAction: null, // manually managed
+                                  onTap: (isLiked) {
+                                    return _videoLikeManager.onLikeClicked(
+                                      YTVideoLikeParamters(
+                                        isActive: isLiked,
+                                        action: isLiked ? LikeAction.removeLike : LikeAction.addLike,
+                                        onStart: loadingController.startLoading,
+                                        onEnd: loadingController.stopLoading,
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                              child: Text(
+                              child: NamidaText(
                                 videoLikeCount?.formatDecimalShort() ?? '?',
-                                style: theme.textTheme.displaySmall,
+                                style: NText.small,
                               ),
                             ),
                           ],
@@ -388,14 +390,16 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
               const SizedBox(width: 6.0),
               ObxOClass(
                 rx: YoutubePlaylistController.inst.favouritesPlaylist,
-                builder: (context, favouritesPlaylist) => NamidaRawLikeButton(
-                  size: 18.0,
-                  likedIcon: Broken.heart_filled,
-                  normalIcon: Broken.heart,
-                  disabledColor: headerIconColor,
-                  removeConfirmationAction: lang.removeFromFavourites,
-                  isLiked: favouritesPlaylist.isSubItemFavourite(videoId),
-                  onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
+                builder: (context, favouritesPlaylist) => NBuilder(
+                  builder: (context, colors) => NamidaRawLikeButton(
+                    size: 18.0,
+                    likedIcon: Broken.heart_filled,
+                    normalIcon: Broken.heart,
+                    disabledColor: colors.primary,
+                    removeConfirmationAction: lang.removeFromFavourites,
+                    isLiked: favouritesPlaylist.isSubItemFavourite(videoId),
+                    onTap: (isLiked) async => YoutubePlaylistController.inst.favouriteButtonOnPressed(videoId),
+                  ),
                 ),
               ),
             ],
@@ -428,18 +432,18 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                 ObxO(
                   rx: _isLoadingThumbnail,
                   builder: (context, loading) => loading
-                      ? Positioned(
+                      ? const Positioned(
                           bottom: 8.0,
                           right: 8.0,
                           child: SizedBox(
                             width: 14.0,
                             height: 14.0,
-                            child: const CircularProgressIndicator(
+                            child: CircularProgressIndicator(
                               strokeWidth: 2.0,
                             ),
                           ),
                         )
-                      : SizedBox(),
+                      : const SizedBox(),
                 ),
               ],
               fetchMissingIfRequired: true,
@@ -459,7 +463,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                             [
                                   const SizedBox(height: 24.0),
                                   NamidaInkWell(
-                                    padding: EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
                                     onTap: () => showVideoListensDialog(videoId, colorScheme: _themeColor),
                                     borderRadius: 12.0,
                                     child: Row(
@@ -498,13 +502,14 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                                     child: Wrap(
                                                       crossAxisAlignment: WrapCrossAlignment.center,
                                                       children: [
-                                                        Text(
+                                                        NamidaText(
                                                           '${lang.totalListens}: ',
-                                                          style: theme.textTheme.displaySmall,
+                                                          style: NText.small,
                                                         ),
-                                                        Text(
+                                                        NamidaText(
                                                           '${totalListens.length}',
-                                                          style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                                                          style: const NText(.small, weight: FontWeight.w600),
+                                                          color: NColors.primary,
                                                         ),
                                                       ],
                                                     ),
@@ -520,9 +525,9 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                                   ),
                                                   const SizedBox(width: 4.0),
                                                   Expanded(
-                                                    child: Text(
+                                                    child: NamidaText(
                                                       firstListenTrack?.dateAndClockFormattedOriginal ?? lang.makeYourFirstListen,
-                                                      style: theme.textTheme.displaySmall,
+                                                      style: NText.small,
                                                     ),
                                                   ),
                                                 ],
@@ -540,38 +545,34 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                   ),
                                   if (_videoIsMissingOriginalInfo)
                                     Padding(
-                                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         crossAxisAlignment: CrossAxisAlignment.center,
                                         children: [
-                                          Icon(
+                                          const Icon(
                                             Broken.danger,
                                             size: 21.0,
                                           ),
-                                          SizedBox(width: 6.0),
+                                          const SizedBox(width: 6.0),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(
+                                                NamidaText(
                                                   lang.thisVideoIsLikelyDeletedOrSetToPrivate,
-                                                  style: theme.textTheme.displaySmall,
+                                                  style: NText.small,
                                                 ),
                                                 if (playabilityText.isNotEmpty && playabilityText != 'Video unavailable' && playabilityText != 'This video is unavailable')
-                                                  Text(
+                                                  NamidaText(
                                                     playabilityText.addDQuotation(),
-                                                    style: theme.textTheme.displaySmall?.copyWith(
-                                                      fontSize: 11.0,
-                                                    ),
+                                                    style: const NText(.small, size: .s11),
                                                   ),
                                                 if (sourcesText != null)
-                                                  Text(
+                                                  NamidaText(
                                                     "${lang.source}: ${sourcesText!}",
-                                                    style: theme.textTheme.displaySmall?.copyWith(
-                                                      fontSize: 11.0,
-                                                    ),
+                                                    style: const NText(.small, size: .s11),
                                                   ),
                                               ],
                                             ),
@@ -637,9 +638,11 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     ),
                                 ]
                                 .addSeparators(
-                                  separator: NamidaContainerDivider(
-                                    height: 1.5,
-                                    colorForce: theme.colorScheme.onSurface.withOpacityExt(0.2),
+                                  separator: NBuilder(
+                                    builder: (context, colors) => NamidaContainerDivider(
+                                      height: 1.5,
+                                      colorForce: colors.onSurface.withOpacityExt(0.2),
+                                    ),
                                   ),
                                   skipFirst: 4,
                                 )
@@ -649,9 +652,9 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                   ),
                   const SizedBox(height: 6.0),
                   if (extraColumnChildren != null)
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.cardColor.withOpacityExt(0.4),
+                    NDecoratedBox(
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.card.withOpacityExt(0.4),
                         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                       ),
                       child: Padding(

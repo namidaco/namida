@@ -12,6 +12,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -458,16 +459,14 @@ class _SortAdvancedHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         NamidaInkWell(
           borderRadius: 10.0,
-          margin: EdgeInsets.symmetric(horizontal: 6.0),
-          padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-          bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+          margin: const EdgeInsets.symmetric(horizontal: 6.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+          bgColor: const NColors(.secondaryContainer, opacity: 0.4),
           onTap: () {
             NamidaNavigator.inst.popMenu();
             onTap();
@@ -476,21 +475,21 @@ class _SortAdvancedHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
-                child: Text(
+                child: NamidaText(
                   lang.advanced,
-                  style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  style: const NText(.medium, size: .s14),
                   softWrap: false,
                   overflow: TextOverflow.fade,
                 ),
               ),
-              Icon(
+              const Icon(
                 Broken.sort,
                 size: 20.0,
               ),
             ],
           ),
         ),
-        NamidaContainerDivider(
+        const NamidaContainerDivider(
           margin: EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
         ),
       ],
@@ -580,8 +579,6 @@ class _SortDictionaryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return ObxO(
       rx: settings.romanizeSorting,
       builder: (context, romanizeSorting) {
@@ -594,7 +591,7 @@ class _SortDictionaryTile extends StatelessWidget {
               borderRadius: 10.0,
               margin: const EdgeInsets.only(top: 4.0),
               padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-              bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+              bgColor: const NColors(.secondaryContainer, opacity: 0.4),
               onTap: _onTap,
               child: Row(
                 children: [
@@ -606,9 +603,9 @@ class _SortDictionaryTile extends StatelessWidget {
                     width: 12.0,
                   ),
                   Expanded(
-                    child: Text(
+                    child: NamidaText(
                       lang.dictionary,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                   const SizedBox(
@@ -618,9 +615,9 @@ class _SortDictionaryTile extends StatelessWidget {
                     rx: Romanizer.inst.downloadProgress,
                     builder: (context, downloadProgress) {
                       final statusText = downloadProgress != null ? '${(downloadProgress * 100).round()}%' : lang.download;
-                      return Text(
+                      return NamidaText(
                         statusText,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       );
                     },
                   ),

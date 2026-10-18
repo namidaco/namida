@@ -16,6 +16,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -108,7 +109,6 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   @override
   Widget build(BuildContext context) {
     final ScrollController scrollController = tab.scrollController;
-    final highlighedColor = context.theme.colorScheme.onSurface.withAlpha(40);
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
 
@@ -170,7 +170,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                       index: i,
                                       trackOrTwd: folderTracks[i],
                                       tracks: folderTracks,
-                                      bgColor: i == indexToScrollTo ? highlighedColor : null,
+                                      bgColor: i == indexToScrollTo ? const NColors(.onSurface, opacity: 0.16) : null,
                                     );
                                   },
                                 ),
@@ -475,9 +475,9 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> with Tick
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _danceController,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: context.theme.scaffoldBackgroundColor,
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.scaffold,
           shape: BoxShape.circle,
         ),
         child: NamidaIconButton(
@@ -514,13 +514,13 @@ class _SkipSingleSubfolderIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
-    final iconColor = enabled ? colorScheme.secondary : colorScheme.onSurface.withOpacityExt(0.4);
+    final colors = NColorsData.of(context);
+    final iconColor = enabled ? colors.secondary : colors.onSurface.withOpacityExt(0.4);
     return NamidaIconButton(
       tooltip: () => lang.skipSingleSubfolders,
       icon: Broken.forward,
       iconSize: 20.0,
-      iconColor: iconColor,
+      iconColor: NColors.fixed(iconColor),
       onPressed: onTap,
     );
   }
@@ -537,8 +537,7 @@ class _ServerFolderSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final subtitleStyle = theme.textTheme.displaySmall;
+    final subtitleStyle = NText.small.of(context);
     final parentPathWidget = parentPath.isEmpty
         ? null
         : Text(

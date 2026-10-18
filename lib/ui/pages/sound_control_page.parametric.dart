@@ -87,7 +87,6 @@ class _ParametricEqualizerSectionState extends State<_ParametricEqualizerSection
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -178,9 +177,9 @@ class _ParametricEqualizerSectionState extends State<_ParametricEqualizerSection
                 _EqualizerActionsRow(
                   config: _config,
                 ),
-                SizedBox(
+                const SizedBox(
                   height: 4.0,
-                  child: ColoredBox(color: theme.cardColor),
+                  child: NColoredBox(color: NColors.card),
                 ),
               ],
             ),
@@ -352,7 +351,6 @@ class _EqualizerCurveState extends State<_EqualizerCurve> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return SizedBox(
       height: _kHeight,
       child: LayoutBuilder(
@@ -396,17 +394,19 @@ class _EqualizerCurveState extends State<_EqualizerCurve> {
             },
             child: Listener(
               onPointerSignal: _onScroll,
-              child: CustomPaint(
-                size: scale.size,
-                painter: _EqualizerCurvePainter(
-                  equalizer: widget.equalizer,
-                  scale: scale,
-                  selectedBandId: widget.selectedBandId,
-                  curveColor: theme.colorScheme.primary,
-                  rightCurveColor: theme.colorScheme.tertiary,
-                  gridColor: theme.colorScheme.onSurface.withOpacityExt(0.08),
-                  labelStyle: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0) ?? const TextStyle(fontSize: 10.0),
-                  nodeTextColor: theme.colorScheme.onPrimary,
+              child: NBuilder(
+                builder: (context, colors) => CustomPaint(
+                  size: scale.size,
+                  painter: _EqualizerCurvePainter(
+                    equalizer: widget.equalizer,
+                    scale: scale,
+                    selectedBandId: widget.selectedBandId,
+                    curveColor: colors.primary,
+                    rightCurveColor: colors.tertiary,
+                    gridColor: colors.onSurface.withOpacityExt(0.08),
+                    labelStyle: const NText(.small, size: .s10).of(context),
+                    nodeTextColor: colors.onPrimary,
+                  ),
                 ),
               ),
             ),
@@ -600,7 +600,6 @@ class _EqualizerGainSliders extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final bands = equalizer.bands.where((b) => b.type.hasGain).toList();
     final scale = _EqualizerScale.forEqualizer(Size.zero, equalizer);
     final range = scale.dbRange;
@@ -621,9 +620,9 @@ class _EqualizerGainSliders extends StatelessWidget {
                     child: Column(
                       children: [
                         FittedBox(
-                          child: Text(
+                          child: NamidaText(
                             _EqualizerFormat.gain(band.gain),
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                         ),
                         const SizedBox(height: 6.0),
@@ -639,9 +638,9 @@ class _EqualizerGainSliders extends StatelessWidget {
                         ),
                         const SizedBox(height: 8.0),
                         FittedBox(
-                          child: Text(
+                          child: NamidaText(
                             _EqualizerFormat.frequency(band.frequency),
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                         ),
                       ],
@@ -671,8 +670,6 @@ class _EqualizerBandsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return SmoothSingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -689,7 +686,7 @@ class _EqualizerBandsRow extends StatelessWidget {
             borderRadius: 8.0,
             margin: const EdgeInsets.symmetric(horizontal: 4.0),
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-            bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+            bgColor: const NColors(.secondaryContainer, opacity: 0.4),
             onTap: onAddTap,
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -699,9 +696,9 @@ class _EqualizerBandsRow extends StatelessWidget {
                   size: 16.0,
                 ),
                 const SizedBox(width: 4.0),
-                Text(
+                NamidaText(
                   lang.addBand,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ],
             ),
@@ -727,8 +724,6 @@ class _EqualizerBandChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final qText = 'Q ${band.q.roundDecimals(2)}';
     final placeText = [
       _EqualizerFormat.frequency(band.frequency),
@@ -746,27 +741,27 @@ class _EqualizerBandChip extends StatelessWidget {
         borderRadius: 8.0,
         margin: const EdgeInsets.symmetric(horizontal: 4.0),
         padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-        bgColor: selected ? theme.colorScheme.primary.withOpacityExt(0.3) : theme.colorScheme.secondary.withOpacityExt(0.12),
+        bgColor: selected ? const NColors(.primary, opacity: 0.3) : const NColors(.secondary, opacity: 0.12),
         onTap: onTap,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            NamidaText(
               '${index + 1}',
-              style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w800),
+              style: const NText(.medium, weight: FontWeight.w800),
             ),
             const SizedBox(width: 8.0),
             Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                NamidaText(
                   placeText,
-                  style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                  style: const NText(.medium, size: .s13),
                 ),
-                Text(
+                NamidaText(
                   shapeText,
-                  style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                  style: const NText(.small, size: .s11),
                 ),
               ],
             ),
@@ -854,12 +849,11 @@ class _EqualizerToggleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return NamidaInkWell(
       animationDurationMS: 200,
       borderRadius: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(active ? 0.6 : 0.15),
+      bgColor: NColors(.secondaryContainer, opacity: active ? 0.6 : 0.15),
       onTap: onTap,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -871,9 +865,9 @@ class _EqualizerToggleChip extends StatelessWidget {
             ),
             const SizedBox(width: 4.0),
           ],
-          Text(
+          NamidaText(
             title,
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ],
       ),
@@ -946,8 +940,6 @@ class _EqualizerPresetsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: SmoothSingleChildScrollView(
@@ -959,8 +951,9 @@ class _EqualizerPresetsRow extends StatelessWidget {
             final devicePresets = settings.equalizer.devicePresets.valueR;
             final routedDevice = AudioOutputController.inst.devices.valueR.firstWhereEff((d) => d.isRouted);
             final routedKey = AudioOutputController.inst.keyForDevicePreset(routedDevice);
-            final activeColor = Color.alphaBlend(CurrentColor.inst.color.withOpacityExt(0.9), theme.scaffoldBackgroundColor);
-            final inactiveColor = theme.colorScheme.secondary.withOpacityExt(0.15);
+            final currentColor = CurrentColor.inst.color;
+            final activeColor = NColors.custom((colors) => Color.alphaBlend(currentColor.withOpacityExt(0.9), colors.scaffold));
+            const inactiveColor = NColors(.secondary, opacity: 0.15);
             return Row(
               children: [
                 const SizedBox(width: 8.0),
@@ -971,13 +964,10 @@ class _EqualizerPresetsRow extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                   bgColor: activePreset == null ? activeColor : inactiveColor,
                   onTap: () => config.setEqualizer(config.equalizerRx.value, null),
-                  child: Text(
+                  child: NamidaText(
                     lang.custom,
-                    style: textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13.5,
-                      color: activePreset == null ? Colors.white.withOpacityExt(0.7) : null,
-                    ),
+                    style: const NText(.small, size: .s13p5, weight: FontWeight.w700),
+                    color: NColors.fixed(activePreset == null ? Colors.white.withOpacityExt(0.7) : null),
                   ),
                 ),
                 for (final preset in presets)
@@ -1001,13 +991,10 @@ class _EqualizerPresetsRow extends StatelessWidget {
                             ),
                             const SizedBox(width: 4.0),
                           ],
-                          Text(
+                          NamidaText(
                             preset.name,
-                            style: textTheme.displaySmall?.copyWith(
-                              color: activePreset?.name == preset.name ? Colors.white.withOpacityExt(0.7) : null,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13.5,
-                            ),
+                            style: const NText(.small, size: .s13p5, weight: FontWeight.w700),
+                            color: NColors.fixed(activePreset?.name == preset.name ? Colors.white.withOpacityExt(0.7) : null),
                           ),
                         ],
                       ),
@@ -1192,11 +1179,10 @@ class _EqualizerActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return NamidaInkWell(
       borderRadius: 10.0,
       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
-      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.3),
+      bgColor: const NColors(.secondaryContainer, opacity: 0.3),
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1207,9 +1193,9 @@ class _EqualizerActionButton extends StatelessWidget {
             size: 18.0,
           ),
           const SizedBox(height: 4.0),
-          Text(
+          NamidaText(
             title,
-            style: theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+            style: const NText(.small, size: .s11),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -1231,11 +1217,10 @@ class _EqualizerViewToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
+    return NContainer(
       padding: const EdgeInsets.all(2.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
+      decoration: (colors) => BoxDecoration(
+        color: colors.secondaryContainer.withOpacityExt(0.25),
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       child: Row(
@@ -1274,8 +1259,7 @@ class _EqualizerViewToggleItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final bgColor = isSelected ? theme.colorScheme.primary.withOpacityExt(0.25) : null;
+    final bgColor = isSelected ? const NColors(.primary, opacity: 0.25) : null;
     return NamidaTooltip(
       message: tooltip,
       child: NamidaInkWell(
@@ -1349,7 +1333,7 @@ class _OpenSystemEqualizerButton extends StatelessWidget {
       tooltip: () => lang.openApp,
       icon: Broken.export_2,
       iconSize: 20.0,
-      iconColor: context.defaultIconColor(),
+      iconColor: NColors.defaultIcon(),
       onPressed: _openEqualizer,
       onLongPress: _openCustomPackageDialog,
     );
@@ -1379,7 +1363,6 @@ class _EqualizerBandEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0).add(const EdgeInsets.only(bottom: 18.0)),
       child: Obx(
@@ -1396,9 +1379,9 @@ class _EqualizerBandEditor extends StatelessWidget {
                 children: [
                   const SizedBox(width: 12.0),
                   Expanded(
-                    child: Text(
+                    child: NamidaText(
                       '${index + 1} · ${band.type.toText()}',
-                      style: textTheme.displayLarge,
+                      style: NText.large,
                     ),
                   ),
                   NamidaIconButton(
@@ -1597,9 +1580,9 @@ class _AudioOutputSection extends StatelessWidget {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   lang.outputDevice,
-                  style: context.textTheme.displayLarge,
+                  style: NText.large,
                 ),
                 const SizedBox(height: 12.0),
                 AnimatedEnabled(
@@ -1777,14 +1760,12 @@ class _OutputModeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final bgOpacity = isEnabled ? 0.35 : 0.12;
     return NamidaInkWell(
       animationDurationMS: 200,
       borderRadius: 12.0,
       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(bgOpacity),
+      bgColor: NColors(.secondaryContainer, opacity: bgOpacity),
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1798,9 +1779,9 @@ class _OutputModeCard extends StatelessWidget {
               ),
               const SizedBox(width: 6.0),
               Expanded(
-                child: Text(
+                child: NamidaText(
                   title,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1815,9 +1796,9 @@ class _OutputModeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 4.0),
-          Text(
+          NamidaText(
             statusText,
-            style: textTheme.displaySmall,
+            style: NText.small,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -1846,7 +1827,6 @@ class _ForcedOffChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return SizedBox(
       height: 28.0,
       child: Row(
@@ -1863,9 +1843,9 @@ class _ForcedOffChipsRow extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 12.0),
                   children: [
                     Center(
-                      child: Text(
+                      child: NamidaText(
                         '${lang.turnsOff}:',
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                     ),
                     for (final entry in _entries)
@@ -1901,13 +1881,13 @@ class _ForcedOffChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textStyle = theme.textTheme.displaySmall;
+    final colors = NColorsData.targetOf(context);
+    final textStyle = NText.small.of(context);
     final activeCause = this.activeCause;
     final isOff = activeCause != null;
-    final baseColor = isOff ? theme.colorScheme.error : theme.colorScheme.secondaryContainer;
-    final titleStyle = isOff ? textStyle?.copyWith(decoration: TextDecoration.lineThrough) : textStyle;
-    final possibleCauseColor = theme.iconTheme.color?.withOpacityExt(0.5);
+    final baseColor = isOff ? colors.error : colors.secondaryContainer;
+    final titleStyle = isOff ? textStyle.copyWith(decoration: TextDecoration.lineThrough) : textStyle;
+    final possibleCauseColor = colors.icon.withOpacityExt(0.5);
     return Center(
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -1955,11 +1935,10 @@ class _SignalPathButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return NamidaInkWell(
       borderRadius: 8.0,
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.35),
+      bgColor: const NColors(.secondaryContainer, opacity: 0.35),
       onTap: SoundControlPage.showAudioPath,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1969,9 +1948,9 @@ class _SignalPathButton extends StatelessWidget {
             size: 14.0,
           ),
           const SizedBox(width: 4.0),
-          Text(
+          NamidaText(
             lang.signalPath,
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ],
       ),
@@ -1993,13 +1972,12 @@ class _ForcedOffBanner extends StatelessWidget {
             ? AudioOutputForcedOffCause.usbDirect
             : null;
         if (cause == null) return const SizedBox();
-        final theme = context.theme;
         final modeText = cause.toText();
-        return Container(
+        return NContainer(
           margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.error.withOpacityExt(0.1),
+          decoration: (colors) => BoxDecoration(
+            color: colors.error.withOpacityExt(0.1),
             borderRadius: BorderRadius.circular(8.0.multipliedRadius),
           ),
           child: Row(
@@ -2010,9 +1988,9 @@ class _ForcedOffBanner extends StatelessWidget {
               ),
               const SizedBox(width: 8.0),
               Expanded(
-                child: Text(
+                child: NamidaText(
                   lang.forcedOffBy(mode: modeText),
-                  style: theme.textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ),
             ],

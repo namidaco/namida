@@ -5,7 +5,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -22,10 +22,18 @@ class AlbumTile extends StatelessWidget {
     this.extraText,
   });
 
+  static BoxDecoration _shadowDecoration(NColorsData colors) => BoxDecoration(
+    boxShadow: [
+      BoxShadow(
+        color: colors.shadow.withOpacityExt(0.08),
+        blurRadius: 12.0,
+        offset: const Offset(0, 2),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final albumThumbnailSize = settings.albumThumbnailSizeinList.value;
     final albumTileHeight = settings.albumListTileHeight.value;
     final finalYear = album.yearOldest.yearFormatted;
@@ -34,99 +42,89 @@ class AlbumTile extends StatelessWidget {
 
     final secondLine = extraText ?? album.albumArtist;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: theme.shadowColor.withAlpha(20),
-            blurRadius: 12.0,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: NamidaInkWell(
-        borderRadius: 0.2 * albumTileHeight,
-        bgColor: theme.cardColor,
-        onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
-        onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
-        enableSecondaryTap: true,
-        child: SizedBox(
-          height: Dimensions.inst.albumTileItemExtent,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
-            child: Row(
-              children: [
-                const SizedBox(width: 12.0),
-                SizedBox(
-                  width: albumThumbnailSize,
-                  height: albumThumbnailSize,
-                  child: NamidaHero(
-                    tag: hero,
-                    child: NetworkArtwork.orLocal(
-                      key: Key(album.pathToImage),
-                      track: album.trackOfImage,
-                      thumbnailSize: albumThumbnailSize,
-                      path: album.pathToImage,
-                      info: NetworkArtworkInfo.albumAutoArtist(identifier),
-                      disableBlurBgSizeShrink: true,
-                      forceSquared: settings.forceSquaredAlbumThumbnail.value,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin)),
+      child: NDecoratedBox(
+        decoration: _shadowDecoration,
+        child: NamidaInkWell(
+          borderRadius: 0.2 * albumTileHeight,
+          bgColor: NColors.card,
+          onTap: () => NamidaOnTaps.inst.onAlbumTap(identifier),
+          onLongPress: () => NamidaDialogs.inst.showAlbumDialog(identifier),
+          enableSecondaryTap: true,
+          child: SizedBox(
+            height: Dimensions.inst.albumTileItemExtent,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+              child: Row(
+                children: [
+                  const SizedBox(width: 12.0),
+                  SizedBox(
+                    width: albumThumbnailSize,
+                    height: albumThumbnailSize,
+                    child: NamidaHero(
+                      tag: hero,
+                      child: NetworkArtwork.orLocal(
+                        key: Key(album.pathToImage),
+                        track: album.trackOfImage,
+                        thumbnailSize: albumThumbnailSize,
+                        path: album.pathToImage,
+                        info: NetworkArtworkInfo.albumAutoArtist(identifier),
+                        disableBlurBgSizeShrink: true,
+                        forceSquared: settings.forceSquaredAlbumThumbnail.value,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12.0),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      NamidaHero(
-                        tag: 'line1_$hero',
-                        child: Text(
-                          name,
-                          style: textTheme.displayMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (secondLine.isNotEmpty)
+                  const SizedBox(width: 12.0),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         NamidaHero(
-                          tag: 'line2_$hero',
-                          child: Text(
-                            secondLine,
-                            style: textTheme.displaySmall,
+                          tag: 'line1_$hero',
+                          child: NamidaText(
+                            name,
+                            style: NText.medium,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      NamidaHero(
-                        tag: 'line3_$hero',
-                        child: Text(
-                          [
-                            album.displayTrackKeyword,
-                            if (finalYear != '') finalYear,
-                          ].join(' • '),
-                          style: textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                        if (secondLine.isNotEmpty)
+                          NamidaHero(
+                            tag: 'line2_$hero',
+                            child: NamidaText(
+                              secondLine,
+                              style: NText.small,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          overflow: TextOverflow.ellipsis,
+                        NamidaHero(
+                          tag: 'line3_$hero',
+                          child: NamidaText(
+                            [
+                              album.displayTrackKeyword,
+                              if (finalYear != '') finalYear,
+                            ].join(' • '),
+                            style: const NText(.small, weight: FontWeight.w500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  album.totalDurationFormatted,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
+                  NamidaText(
+                    album.totalDurationFormatted,
+                    style: const NText(.small, weight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(width: 4.0),
-                MoreIcon(
-                  padding: 6.0,
-                  onPressed: () => NamidaDialogs.inst.showAlbumDialog(identifier),
-                ),
-                const SizedBox(width: 10.0),
-              ],
+                  const SizedBox(width: 4.0),
+                  MoreIcon(
+                    padding: 6.0,
+                    onPressed: () => NamidaDialogs.inst.showAlbumDialog(identifier),
+                  ),
+                  const SizedBox(width: 10.0),
+                ],
+              ),
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -60,7 +61,6 @@ class _ListensNavigationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final listens = navigation.listens;
     void onTap(int listen) => onListenTap(listen, listens);
     return Padding(
@@ -76,9 +76,9 @@ class _ListensNavigationRow extends StatelessWidget {
               listen: navigation.newerListen,
               onTap: onTap,
             ),
-            Text(
+            NamidaText(
               '${navigation.index + 1}/${listens.length}',
-              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: const NText(.small, weight: FontWeight.w600),
             ),
             _ListenJumpButton(
               icon: Broken.arrow_bottom,
@@ -112,12 +112,13 @@ class _ListenJumpButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final listen = this.listen;
+    final colors = NColorsData.of(context);
     return NamidaIconButton(
       icon: icon,
       iconSize: 20.0,
       horizontalPadding: 6.0,
       verticalPadding: 4.0,
-      iconColor: listen == null ? context.theme.disabledColor : null,
+      iconColor: NColors.fixed(listen == null ? colors.disabled : null),
       onPressed: listen == null ? null : () => onTap(listen),
     );
   }

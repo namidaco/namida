@@ -16,7 +16,7 @@ abstract class NamidaChannel {
     windows: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
     linux: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
   );
-  static final defaultLayerIconForPlatform = 'assets/namida.png';
+  static const defaultLayerIconForPlatform = 'assets/namida.png';
 
   final isInPip = false.obs;
 

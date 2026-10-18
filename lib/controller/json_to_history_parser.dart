@@ -31,6 +31,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/track_advanced_dialog.dart';
@@ -300,9 +301,9 @@ class JsonToHistoryParser {
             children: [
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Text(
+                child: NamidaText(
                   lang.historyImportMissingEntriesNote,
-                  style: namida.textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ),
               Expanded(
@@ -327,14 +328,14 @@ class JsonToHistoryParser {
                                   opacity: replacedWithTrack != null ? 0.6 : 1.0,
                                   child: NamidaInkWell(
                                     onTap: () => pickTrack(entry),
-                                    bgColor: namida.theme.cardTheme.color,
+                                    bgColor: NColors.fixed(namida.theme.cardTheme.color),
                                     borderRadius: 12.0,
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
                                     child: Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         NamidaInkWell(
-                                          bgColor: namida.theme.cardTheme.color,
+                                          bgColor: NColors.fixed(namida.theme.cardTheme.color),
                                           borderRadius: 42.0,
                                           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                                           child: isFavourite
@@ -342,9 +343,9 @@ class JsonToHistoryParser {
                                                   Broken.heart,
                                                   size: 14.0,
                                                 )
-                                              : Text(
+                                              : NamidaText(
                                                   entry.value.length.formatDecimal(),
-                                                  style: namida.textTheme.displaySmall,
+                                                  style: NText.small,
                                                 ),
                                         ),
                                         const SizedBox(width: 12.0),
@@ -353,24 +354,24 @@ class JsonToHistoryParser {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Text(
+                                              NamidaText(
                                                 entry.key.title,
-                                                style: namida.textTheme.displayMedium,
+                                                style: NText.medium,
                                               ),
-                                              Text(
+                                              NamidaText(
                                                 "${entry.key.artistOrChannel} - ${entry.key.source.name}",
                                                 maxLines: 1,
                                                 softWrap: false,
                                                 overflow: TextOverflow.ellipsis,
-                                                style: namida.textTheme.displaySmall,
+                                                style: NText.small,
                                               ),
                                               if (replacedWithTrack != null)
-                                                Text(
+                                                NamidaText(
                                                   "→ ${replacedWithTrack.originalArtist} - ${replacedWithTrack.title}",
                                                   maxLines: 2,
                                                   softWrap: false,
                                                   overflow: TextOverflow.ellipsis,
-                                                  style: namida.textTheme.displaySmall?.copyWith(fontSize: 11.5),
+                                                  style: const NText(.small, size: .s11p5),
                                                 ),
                                             ],
                                           ),
@@ -2620,7 +2621,6 @@ class _ImportStepTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final parser = JsonToHistoryParser.inst;
     return Obx(
       (context) {
@@ -2646,9 +2646,9 @@ class _ImportStepTile extends StatelessWidget {
                     width: _kCheckMarkGap,
                   ),
                   Expanded(
-                    child: Text(
+                    child: NamidaText(
                       title,
-                      style: theme.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                   ?trailing,
@@ -2676,9 +2676,9 @@ class _LoadingFilesProgressText extends StatelessWidget {
       rx: JsonToHistoryParser.inst._loadingFileProgress,
       builder: (context, progress) => progress.$2 == 0
           ? const SizedBox()
-          : Text(
+          : NamidaText(
               '${progress.$1.formatDecimal()} / ${progress.$2.formatDecimal()}',
-              style: context.textTheme.displaySmall,
+              style: NText.small,
             ),
     );
   }
@@ -2693,9 +2693,9 @@ class _HistoryBackupFilenameText extends StatelessWidget {
       rx: JsonToHistoryParser.inst._historyBackupFilename,
       builder: (context, filename) => filename.isEmpty
           ? const SizedBox()
-          : Text(
+          : NamidaText(
               filename,
-              style: context.textTheme.displaySmall,
+              style: NText.small,
             ),
     );
   }
@@ -2710,7 +2710,6 @@ class _ImportResultsText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final parser = JsonToHistoryParser.inst;
     return Obx(
       (context) {
@@ -2721,9 +2720,9 @@ class _ImportResultsText extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: targets
               .map(
-                (e) => Text(
+                (e) => NamidaText(
                   JsonToHistoryParser._importResultToText(e, matched[e] ?? 0, added[e]),
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               )
               .toFixedList(),
@@ -2742,9 +2741,9 @@ class _ParsingPercentageText extends StatelessWidget {
     return Obx(
       (context) => parser.totalJsonToParse.valueR == 0
           ? const SizedBox()
-          : Text(
+          : NamidaText(
               '${(parser._percentageR * 100).round()}%',
-              style: context.textTheme.displaySmall,
+              style: NText.small,
             ),
     );
   }
@@ -2761,7 +2760,6 @@ class _ParsingProgressDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final parser = JsonToHistoryParser.inst;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -2773,11 +2771,14 @@ class _ParsingProgressDetails extends StatelessWidget {
         Obx(
           (context) {
             final isCountingEntries = parser.totalJsonToParse.valueR == 0 && parser.isParsing.valueR && parser._importStep.valueR == _HistoryImportStep.parsing;
-            return LinearProgressIndicator(
-              borderRadius: BorderRadius.circular(99.0),
-              value: isCountingEntries ? null : parser._percentageR,
-              minHeight: 3.0,
-              backgroundColor: theme.colorScheme.onSurface.withOpacityExt(0.1),
+            final progress = isCountingEntries ? null : parser._percentageR;
+            return NBuilder(
+              builder: (context, colors) => LinearProgressIndicator(
+                borderRadius: BorderRadius.circular(99.0),
+                value: progress,
+                minHeight: 3.0,
+                backgroundColor: colors.onSurface.withOpacityExt(0.1),
+              ),
             );
           },
         ),
@@ -2785,15 +2786,15 @@ class _ParsingProgressDetails extends StatelessWidget {
           height: 6.0,
         ),
         Obx(
-          (context) => Text(
+          (context) => NamidaText(
             '${parser.parsedHistoryJson.valueR.formatDecimal()} / ${parser.totalJsonToParse.valueR.formatDecimal()} ${lang.parsed}',
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ),
         if (dateRangeText != null)
-          Text(
+          NamidaText(
             dateRangeText!,
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         const SizedBox(
           height: 6.0,
@@ -2817,9 +2818,9 @@ class _StatsProgressText extends StatelessWidget {
         final total = parser._updatingYoutubeStatsDirectoryTotal.valueR;
         return total == 0
             ? const SizedBox()
-            : Text(
+            : NamidaText(
                 '${parser._updatingYoutubeStatsDirectoryProgress.valueR.formatDecimal()} / ${total.formatDecimal()}',
-                style: context.textTheme.displaySmall,
+                style: NText.small,
               );
       },
     );

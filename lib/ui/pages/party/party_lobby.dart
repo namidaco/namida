@@ -30,7 +30,6 @@ class _MembershipTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return FutureBuilder(
       future: requiresMembership,
       builder: (context, snapshot) {
@@ -41,22 +40,27 @@ class _MembershipTile extends StatelessWidget {
             final hasMembership = userMembershipType != null && userMembershipType.index >= MembershipType.cutie.index;
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: CustomListTile(
-                borderR: 12.0,
-                dense: true,
-                titleStyle: context.theme.textTheme.displaySmall,
-                onTap: const YoutubeManageSubscriptionPage().navigate,
-                title: hasMembership ? lang.membershipManage : lang.partyMembershipRequired(name: MembershipType.cutie.name),
-                subtitle: hasMembership ? null : lang.signingInAllowsBasicUsageSubtitle,
-                icon: Broken.money_3,
-                bgColor: Color.alphaBlend(
-                  theme.cardTheme.color?.withOpacityExt(0.3) ?? Colors.transparent,
-                  theme.colorScheme.secondaryContainer,
-                ).withOpacityExt(0.35),
-                trailingRaw: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6.0),
-                  child: MembershipCard(displayName: false),
-                ),
+              child: NBuilder(
+                builder: (context, colors) {
+                  final bgColor = Color.alphaBlend(
+                    colors.cardTheme.withOpacityExt(0.3),
+                    colors.secondaryContainer,
+                  ).withOpacityExt(0.35);
+                  return CustomListTile(
+                    borderR: 12.0,
+                    dense: true,
+                    titleStyle: NText.small.of(context),
+                    onTap: const YoutubeManageSubscriptionPage().navigate,
+                    title: hasMembership ? lang.membershipManage : lang.partyMembershipRequired(name: MembershipType.cutie.name),
+                    subtitle: hasMembership ? null : lang.signingInAllowsBasicUsageSubtitle,
+                    icon: Broken.money_3,
+                    bgColor: bgColor,
+                    trailingRaw: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 6.0),
+                      child: MembershipCard(displayName: false),
+                    ),
+                  );
+                },
               ),
             );
           },
@@ -254,10 +258,10 @@ class _PublicRoomTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final subtitle = isLan ? '${lang.partyPublicRoomSubtitle}\n${lang.performanceNote}' : lang.partyPublicRoomSubtitle;
     final warningWidget = isLan
-        ? Icon(
+        ? NIcon(
             Broken.danger,
             size: 18.0,
-            color: context.defaultIconColor(),
+            color: NColors.defaultIcon(),
           )
         : null;
     return CustomSwitchListTile(
@@ -868,9 +872,9 @@ class _OpenRoomsListState extends State<_OpenRoomsList> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: Text(
+          child: NamidaText(
             '${lang.partyRoomsLimit}\n${lang.partyOpenRoomsOtherDevices}',
-            style: context.theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ),
         for (final room in _rooms)
@@ -1037,31 +1041,30 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.theme.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
       child: Row(
         children: [
-          Icon(
+          NIcon(
             entry.isLocal ? Broken.musicnote : Broken.video_square,
             size: 18.0,
-            color: context.defaultIconColor(),
+            color: NColors.defaultIcon(),
           ),
           const SizedBox(width: 12.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                NamidaText(
                   entry.title,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (entry.artist.isNotEmpty)
-                  Text(
+                  NamidaText(
                     entry.artist,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1069,9 +1072,9 @@ class _HistoryTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8.0),
-          Text(
+          NamidaText(
             entry.durationMS.milliSecondsLabel,
-            style: textTheme.displaySmall,
+            style: NText.small,
           ),
         ],
       ),

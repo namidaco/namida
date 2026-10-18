@@ -12,6 +12,7 @@ import 'package:nampack/extensions/extensions.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 
 /// Extra flavor animations, all usages are guarded by [kEnableFancyAnimations].
 ///
@@ -1145,8 +1146,9 @@ class _CAMagnitudeOdometerState extends State<CAMagnitudeOdometer> with SingleTi
     if (cells.isEmpty) return Text(widget.value, style: style);
 
     final theme = Theme.of(context);
-    final neutral = style.color ?? theme.textTheme.bodyLarge?.color ?? theme.colorScheme.onSurface;
-    final directionColor = _increased ? (widget.increaseColor ?? theme.colorScheme.primary) : (widget.decreaseColor ?? theme.colorScheme.error);
+    final colors = NColorsData.of(context);
+    final neutral = style.color ?? theme.textTheme.bodyLarge?.color ?? colors.onSurface;
+    final directionColor = _increased ? (widget.increaseColor ?? colors.primary) : (widget.decreaseColor ?? colors.error);
 
     final staggerMs = widget.staggerStep.inMilliseconds;
     final rollMs = math.max(1, (_controller.duration?.inMilliseconds ?? 1) - staggerMs * (cells.length - 1));
@@ -1396,7 +1398,6 @@ class _CAMagneticConstellationGridState extends State<CAMagneticConstellationGri
 
   @override
   Widget build(BuildContext context) {
-    final lineColor = widget.lineColor ?? Theme.of(context).colorScheme.primary;
     final step = widget.tileExtent + widget.spacing;
 
     return LayoutBuilder(
@@ -1432,16 +1433,21 @@ class _CAMagneticConstellationGridState extends State<CAMagneticConstellationGri
                     alignment: Alignment.center,
                     children: [
                       Positioned.fill(
-                        child: CustomPaint(
-                          painter: _ConstellationLinesPainter(
-                            repaint: _notifier,
-                            centers: _centers,
-                            pull: _pull,
-                            edges: widget.edges,
-                            focusedIndex: () => _focused,
-                            maxDistance: widget.maxLinkDistance,
-                            lineColor: lineColor,
-                          ),
+                        child: NBuilder(
+                          builder: (context, colors) {
+                            final lineColor = widget.lineColor ?? colors.primary;
+                            return CustomPaint(
+                              painter: _ConstellationLinesPainter(
+                                repaint: _notifier,
+                                centers: _centers,
+                                pull: _pull,
+                                edges: widget.edges,
+                                focusedIndex: () => _focused,
+                                maxDistance: widget.maxLinkDistance,
+                                lineColor: lineColor,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       for (int i = 0; i < widget.itemCount; i++)
@@ -1744,9 +1750,7 @@ class _CAEmptyStateCTAState extends State<CAEmptyStateCTA> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final reduce = _animationsDisabled(context);
-    final accent = widget.particleColor ?? theme.colorScheme.primary;
 
     return SizedBox(
       height: widget.height,
@@ -1773,12 +1777,17 @@ class _CAEmptyStateCTAState extends State<CAEmptyStateCTA> with SingleTickerProv
                   if (!reduce)
                     Positioned.fill(
                       child: RepaintBoundary(
-                        child: CustomPaint(
-                          painter: _FlowParticlePainter(
-                            repaint: _notifier,
-                            particles: _particles,
-                            accent: accent,
-                          ),
+                        child: NBuilder(
+                          builder: (context, colors) {
+                            final accent = widget.particleColor ?? colors.primary;
+                            return CustomPaint(
+                              painter: _FlowParticlePainter(
+                                repaint: _notifier,
+                                particles: _particles,
+                                accent: accent,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1795,7 +1804,6 @@ class _CAEmptyStateCTAState extends State<CAEmptyStateCTA> with SingleTickerProv
                   ),
 
                   _CAEmptyStateCTAButton(
-                    accent: accent,
                     onTap: _onTap,
                     child: widget.child,
                   ),
@@ -1811,12 +1819,10 @@ class _CAEmptyStateCTAState extends State<CAEmptyStateCTA> with SingleTickerProv
 
 class _CAEmptyStateCTAButton extends StatelessWidget {
   final Widget child;
-  final Color accent;
   final VoidCallback onTap;
 
   const _CAEmptyStateCTAButton({
     required this.child,
-    required this.accent,
     required this.onTap,
   });
 
@@ -2095,10 +2101,6 @@ class _CAKineticPathRevealState extends State<CAKineticPathReveal> with TickerPr
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final lineColor = widget.lineColor ?? theme.colorScheme.primary;
-    final ghostColor = widget.ghostColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.16);
-    final labelColor = widget.labelColor ?? theme.colorScheme.onSurface.withValues(alpha: 0.7);
     final reduce = _animationsDisabled(context);
 
     return SizedBox(
@@ -2120,30 +2122,37 @@ class _CAKineticPathRevealState extends State<CAKineticPathReveal> with TickerPr
           }
 
           return RepaintBoundary(
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: size,
-                  painter: _KineticPathPainter(
-                    repaint: _draw,
-                    path: _path ?? Path(),
-                    metric: _metric,
-                    animation: _draw,
-                    markerPositions: widget.showMarkers ? _markerPositions : const [],
-                    markerFractions: widget.showMarkers ? _markerFractions : const [],
-                    labels: widget.points,
-                    lineColor: lineColor,
-                    ghostColor: ghostColor,
-                    labelColor: labelColor,
-                  ),
-                ),
-                if (widget.showSparks && !reduce)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _SparkParticlePainter(repaint: _sparkNotifier, sparks: _sparks, color: lineColor),
+            child: NBuilder(
+              builder: (context, colors) {
+                final lineColor = widget.lineColor ?? colors.primary;
+                final ghostColor = widget.ghostColor ?? colors.onSurface.withValues(alpha: 0.16);
+                final labelColor = widget.labelColor ?? colors.onSurface.withValues(alpha: 0.7);
+                return Stack(
+                  children: [
+                    CustomPaint(
+                      size: size,
+                      painter: _KineticPathPainter(
+                        repaint: _draw,
+                        path: _path ?? Path(),
+                        metric: _metric,
+                        animation: _draw,
+                        markerPositions: widget.showMarkers ? _markerPositions : const [],
+                        markerFractions: widget.showMarkers ? _markerFractions : const [],
+                        labels: widget.points,
+                        lineColor: lineColor,
+                        ghostColor: ghostColor,
+                        labelColor: labelColor,
+                      ),
                     ),
-                  ),
-              ],
+                    if (widget.showSparks && !reduce)
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _SparkParticlePainter(repaint: _sparkNotifier, sparks: _sparks, color: lineColor),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           );
         },

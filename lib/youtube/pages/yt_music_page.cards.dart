@@ -117,7 +117,6 @@ class _MusicCard extends StatelessWidget {
         item: item,
       );
     }
-    final textTheme = context.textTheme;
     final subtitle = item.getMusicSubtitle();
     final isArtist = item is ChannelInfoItem;
     return NamidaPopupWrapper(
@@ -136,17 +135,17 @@ class _MusicCard extends StatelessWidget {
               height: artHeight,
             ),
             const SizedBox(height: 6.0),
-            Text(
+            NamidaText(
               item.getMusicTitle(),
-              style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+              style: const NText(.medium, size: .s13),
               maxLines: subtitle.isEmpty ? 2 : 1,
               overflow: TextOverflow.ellipsis,
               textAlign: isArtist ? TextAlign.center : null,
             ),
             if (subtitle.isNotEmpty)
-              Text(
+              NamidaText(
                 subtitle,
-                style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                style: const NText(.small, size: .s12),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -167,7 +166,6 @@ class _MusicListRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final item = this.item;
-    final textTheme = context.textTheme;
     final subtitle = item.getMusicSubtitle();
     return SizedBox(
       height: _MusicDims.rowHeight,
@@ -192,16 +190,16 @@ class _MusicListRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       item.getMusicTitle(),
-                      style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                      style: const NText(.medium, size: .s13p5),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (subtitle.isNotEmpty)
-                      Text(
+                      NamidaText(
                         subtitle,
-                        style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                        style: const NText(.small, size: .s12),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -223,9 +221,8 @@ class _MusicNavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final stripeColor = item.color;
-    final bgColor = stripeColor == null ? theme.cardColor : Color.alphaBlend(stripeColor.withOpacityExt(0.05), theme.cardColor);
+    final bgColor = stripeColor == null ? NColors.card : NColors.custom((c) => Color.alphaBlend(stripeColor.withOpacityExt(0.05), c.card));
     return NamidaInkWell(
       height: _MusicDims.navButtonHeight,
       bgColor: bgColor,
@@ -245,9 +242,9 @@ class _MusicNavButton extends StatelessWidget {
             ),
           const SizedBox(width: 10.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               item.title,
-              style: theme.textTheme.displayMedium,
+              style: NText.medium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

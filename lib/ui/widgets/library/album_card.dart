@@ -8,7 +8,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -45,8 +45,6 @@ class AlbumCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final finalYear = album.yearOldest.yearFormatted;
     final name = identifier?.displayAlbumName ?? '';
     final albumArtist = album.albumArtist;
@@ -59,7 +57,7 @@ class AlbumCard extends StatelessWidget {
     final remainingVerticalSpace = height == null ? 48.0 : (height - imageSize).withMinimum(0.0);
     final itemImagePercentageMultiplier = imageSize * 0.015;
     double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
-    final playIconBgColor = theme.cardColor.withOpacityExt((imageSize / 200).clampDouble(0, 1));
+    final playIconBgOpacity = (imageSize / 200).clampDouble(0, 1);
 
     String? topRightLine;
     String? secondLine;
@@ -85,13 +83,13 @@ class AlbumCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.cardColor.withOpacityExt(0.9),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.card.withOpacityExt(0.9),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withAlpha(50),
+              color: colors.shadow.withOpacityExt(0.2),
               blurRadius: 12,
               offset: const Offset(0, 2.0),
             ),
@@ -132,10 +130,12 @@ class AlbumCard extends StatelessWidget {
                                     fit: BoxFit.fitWidth,
                                     child: Text(
                                       topRightLine,
-                                      style: textTheme.displaySmall?.copyWith(
-                                        fontSize: getFontSize(0.18),
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: NText.small
+                                          .of(context)
+                                          .copyWith(
+                                            fontSize: getFontSize(0.18),
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                       softWrap: false,
                                       overflow: TextOverflow.fade,
                                     ),
@@ -147,24 +147,29 @@ class AlbumCard extends StatelessWidget {
                             Positioned(
                               bottom: 2.0 + itemImagePercentageMultiplier,
                               right: 2.0 + itemImagePercentageMultiplier,
-                              child: NamidaInkWell(
-                                decoration: BoxDecoration(
-                                  color: playIconBgColor,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      blurRadius: 6.0,
-                                      offset: const Offset(0.0, 2.0),
-                                      color: playIconBgColor.withOpacityExt(0.4),
+                              child: NBuilder(
+                                builder: (context, colors) {
+                                  final playIconBgColor = colors.card.withOpacityExt(playIconBgOpacity);
+                                  return NamidaInkWell(
+                                    decoration: BoxDecoration(
+                                      color: playIconBgColor,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          blurRadius: 6.0,
+                                          offset: const Offset(0.0, 2.0),
+                                          color: playIconBgColor.withOpacityExt(0.4),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                borderRadius: 8.0.withMaximum(imageSize * 0.07),
-                                onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
-                                padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
-                                child: Icon(
-                                  Broken.play,
-                                  size: 8.5 + 3.0 * itemImagePercentageMultiplier,
-                                ),
+                                    borderRadius: 8.0.withMaximum(imageSize * 0.07),
+                                    onTap: () => Player.inst.playOrPause(0, album, QueueSource.album(identifier, name), homePageItem: homepageItem),
+                                    padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+                                    child: Icon(
+                                      Broken.play,
+                                      size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
                         ],
@@ -186,7 +191,7 @@ class AlbumCard extends StatelessWidget {
                           tag: 'line1_$hero',
                           child: Text(
                             name,
-                            style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                            style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28)),
                             textAlign: TextAlign.start,
                             softWrap: false,
                             overflow: TextOverflow.fade,
@@ -197,7 +202,7 @@ class AlbumCard extends StatelessWidget {
                             tag: 'line2_$hero',
                             child: Text(
                               secondLine,
-                              style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                              style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
                               softWrap: false,
                               overflow: TextOverflow.fade,
                             ),
@@ -209,7 +214,7 @@ class AlbumCard extends StatelessWidget {
                               album.displayTrackKeyword,
                               album.totalDurationFormatted,
                             ].join(' • '),
-                            style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                            style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
                             softWrap: false,
                             overflow: TextOverflow.fade,
                           ),

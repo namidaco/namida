@@ -35,6 +35,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -248,8 +249,8 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       // -- Random --
       if (_randomItems.isEmpty) _randomItems.addAll(NamidaGeneratorBase.getRandomItems(_allItemsInLibrary, min: 25, max: 26));
 
-      final int mostRecentAdded7DaysMSSE = timeNow.subtract(Duration(days: 7)).millisecondsSinceEpoch;
-      final int mostRecentListened14DaysMSSE = timeNow.subtract(Duration(days: 14)).millisecondsSinceEpoch;
+      final int mostRecentAdded7DaysMSSE = timeNow.subtract(const Duration(days: 7)).millisecondsSinceEpoch;
+      final int mostRecentListened14DaysMSSE = timeNow.subtract(const Duration(days: 14)).millisecondsSinceEpoch;
       final underrated = _allItemsInLibrary.getRandomSampleWhere(100, (item) {
         if (isItemFavourite(item)) return false; // alr favourited
         final listens = topTracksMapListens[item];
@@ -268,10 +269,10 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         topListensEntries++;
       }
       final avgTopListensCount = topListensEntries == 0 ? 0 : topListensTotal ~/ topListensEntries;
-      final int within1MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 1)).millisecondsSinceEpoch;
-      final int within3MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 3)).millisecondsSinceEpoch;
-      final int within6MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 6)).millisecondsSinceEpoch;
-      final int within12MonthsDaysMSSE = timeNow.subtract(Duration(days: 30 * 12)).millisecondsSinceEpoch;
+      final int within1MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 1)).millisecondsSinceEpoch;
+      final int within3MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 3)).millisecondsSinceEpoch;
+      final int within6MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 6)).millisecondsSinceEpoch;
+      final int within12MonthsDaysMSSE = timeNow.subtract(const Duration(days: 30 * 12)).millisecondsSinceEpoch;
       await _yieldFrame();
       if (generation != _fillGeneration) return;
       final lostPartners = avgTopListensCount <= 0
@@ -337,7 +338,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
       final topRecentListenedExpanded = historyManager.getMostListensInTimeRange(
         mptr: MostPlayedTimeRange.custom,
         customDate: DateRange(
-          oldest: timeNow.subtract(Duration(days: 14)),
+          oldest: timeNow.subtract(const Duration(days: 14)),
           newest: timeNow,
         ),
         isStartOfDay: false,
@@ -475,8 +476,6 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   }
 
   Widget _buildTopRecentsDaysChips(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return SizedBox(
       height: 32.0,
       width: context.width,
@@ -495,22 +494,9 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                         _updateTopRecents(daysAgo);
                         if (mounted) setState(() {});
                       },
-                      child: AnimatedDecoration(
-                        duration: const Duration(milliseconds: 250),
-                        decoration: BoxDecoration(
-                          color: currentTopRecentsDaysAgo == daysAgo ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                          child: Text(
-                            lang.countDays(count: daysAgo),
-                            style: textTheme.displaySmall?.copyWith(
-                              color: currentTopRecentsDaysAgo == daysAgo ? Colors.white.withAlpha(240) : null,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                      child: _HomePageChip(
+                        text: lang.countDays(count: daysAgo),
+                        isSelected: currentTopRecentsDaysAgo == daysAgo,
                       ),
                     ),
                   ),
@@ -523,8 +509,6 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   }
 
   Widget _buildLostMemoriesYearsChips(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return SizedBox(
       height: 32.0,
       width: context.width,
@@ -543,22 +527,9 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                         _updateSameTimeNYearsAgo(DateTime.now(), e);
                         if (mounted) setState(() {});
                       },
-                      child: AnimatedDecoration(
-                        duration: const Duration(milliseconds: 250),
-                        decoration: BoxDecoration(
-                          color: currentYearLostMemories == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                          child: Text(
-                            '$e',
-                            style: textTheme.displaySmall?.copyWith(
-                              color: currentYearLostMemories == e ? Colors.white.withAlpha(240) : null,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                      child: _HomePageChip(
+                        text: '$e',
+                        isSelected: currentYearLostMemories == e,
                       ),
                     ),
                   ),
@@ -572,7 +543,6 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.theme.textTheme;
     return BackgroundWrapper(
       child: Listener(
         onPointerMove: (event) {
@@ -602,10 +572,10 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
                           sliver: SliverToBoxAdapter(
                             child: Row(
                               children: [
-                                Expanded(
-                                  child: Text(
+                                const Expanded(
+                                  child: NamidaText(
                                     'Namida',
-                                    style: textTheme.displayLarge?.copyWith(fontSize: 32.0),
+                                    style: NText(.large, size: .s32),
                                   ),
                                 ),
                                 NamidaIconButton(
@@ -848,7 +818,7 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
   }
 
   void _navigateToRecentsPage() {
-    QueuesPage().navigate();
+    const QueuesPage().navigate();
   }
 
   @override
@@ -946,8 +916,6 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
         );
 
       case HomePageItems.recentQueues:
-        final theme = context.theme;
-        final textTheme = theme.textTheme;
         return SliverToBoxAdapter(
           child: _HorizontalList(
             isLoading: _isLoading,
@@ -983,22 +951,9 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
                                   onTap: () {
                                     _updateCurrentRecentsSourceTypeAndSetState(sourceType);
                                   },
-                                  child: AnimatedDecoration(
-                                    duration: const Duration(milliseconds: 250),
-                                    decoration: BoxDecoration(
-                                      color: currentRecentsSourceType == sourceType ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                      child: Text(
-                                        sourceType?.toText() ?? lang.all,
-                                        style: textTheme.displaySmall?.copyWith(
-                                          color: currentRecentsSourceType == sourceType ? Colors.white.withAlpha(240) : null,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ),
+                                  child: _HomePageChip(
+                                    text: sourceType?.toText() ?? lang.all,
+                                    isSelected: currentRecentsSourceType == sourceType,
                                   ),
                                 ),
                               ),
@@ -1147,11 +1102,11 @@ class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHome
   static (String, YTWatch?) _listenEntryToYTVideoId(MapEntry<String, List<int>> e) => (e.key, null);
 
   Widget _buildDummyCard(BuildContext context) {
-    return NamidaInkWell(
+    return const NamidaInkWell(
       animationDurationMS: 200,
-      margin: const EdgeInsets.symmetric(horizontal: 2.0),
+      margin: EdgeInsets.symmetric(horizontal: 2.0),
       width: _cardThumbWidth,
-      bgColor: context.theme.cardColor,
+      bgColor: NColors.card,
     );
   }
 
@@ -1653,51 +1608,53 @@ class _PlaylistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final onPlayTap = this.onPlayTap;
     final imageSize = (width - Dimensions.gridHorizontalPadding * 2).withMinimum(0.0);
     final remainingVerticalSpace = (height - imageSize).withMinimum(0.0);
     final itemImagePercentageMultiplier = imageSize * 0.015;
     double getFontSize(double m) => (remainingVerticalSpace * m * 0.9).withMaximum(15.0);
     final playIconBgOpacity = (imageSize / 200).clampDouble(0, 1);
-    final playIconBgColor = theme.cardColor.withOpacityExt(playIconBgOpacity);
 
     final Widget? playButtonWidget = onPlayTap == null
         ? null
         : Positioned(
             bottom: 2.0 + itemImagePercentageMultiplier,
             right: 2.0 + itemImagePercentageMultiplier,
-            child: NamidaInkWell(
-              decoration: BoxDecoration(
-                color: playIconBgColor,
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 6.0,
-                    offset: const Offset(0.0, 2.0),
-                    color: playIconBgColor.withOpacityExt(0.4),
+            child: NBuilder(
+              builder: (context, colors) {
+                final playIconBgColor = colors.card.withOpacityExt(playIconBgOpacity);
+                return NamidaInkWell(
+                  decoration: BoxDecoration(
+                    color: playIconBgColor,
+                    boxShadow: [
+                      BoxShadow(
+                        blurRadius: 6.0,
+                        offset: const Offset(0.0, 2.0),
+                        color: playIconBgColor.withOpacityExt(0.4),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              borderRadius: 8.0.withMaximum(imageSize * 0.07),
-              onTap: onPlayTap,
-              padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
-              child: Icon(
-                Broken.play,
-                size: 8.5 + 3.0 * itemImagePercentageMultiplier,
-              ),
+                  borderRadius: 8.0.withMaximum(imageSize * 0.07),
+                  onTap: onPlayTap,
+                  padding: EdgeInsets.all(2.5 + itemImagePercentageMultiplier),
+                  child: Icon(
+                    Broken.play,
+                    size: 8.5 + 3.0 * itemImagePercentageMultiplier,
+                  ),
+                );
+              },
             ),
           );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.cardColor.withOpacityExt(0.9),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.card.withOpacityExt(0.9),
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
-              color: theme.shadowColor.withAlpha(50),
+              color: colors.shadow.withOpacityExt(0.2),
               blurRadius: 12,
               offset: const Offset(0, 2.0),
             ),
@@ -1730,13 +1687,13 @@ class _PlaylistCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                        style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28)),
                         softWrap: false,
                         overflow: TextOverflow.fade,
                       ),
                       Text(
                         subtitle,
-                        style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                        style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
                         softWrap: false,
                         overflow: TextOverflow.fade,
                       ),
@@ -1765,7 +1722,7 @@ class _HorizontalList extends StatelessWidget {
   final Widget? thirdWidget;
   final Widget? leading;
   final NullableIndexedWidgetBuilder itemBuilder;
-  final Color? iconColor;
+  final NColors? iconColor;
   final ScrollController? controller;
   final bool isLoading;
 
@@ -1806,8 +1763,6 @@ class _HorizontalList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Column(
       children: [
         NamidaInkWell(
@@ -1818,18 +1773,18 @@ class _HorizontalList extends StatelessWidget {
             children: [
               const SizedBox(width: 16.0),
               leading ??
-                  Icon(
+                  NIcon(
                     icon,
-                    color: iconColor ?? context.defaultIconColor(),
+                    color: iconColor ?? NColors.defaultIcon(),
                   ),
               const SizedBox(width: 8.0),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       title,
-                      style: textTheme.displayLarge,
+                      style: NText.large,
                     ),
                     if (subtitle != null)
                       kEnableFancyAnimations && homepageItem == HomePageItems.lostMemories
@@ -1837,11 +1792,11 @@ class _HorizontalList extends StatelessWidget {
                               wordDuration: const Duration(milliseconds: 400),
                               staggerStep: const Duration(milliseconds: 100),
                               text: subtitle!,
-                              style: textTheme.displaySmall,
+                              style: NText.small.of(context),
                             )
-                          : Text(
+                          : NamidaText(
                               subtitle!,
-                              style: textTheme.displaySmall,
+                              style: NText.small,
                             ),
                     ?thirdWidget,
                   ],
@@ -1870,9 +1825,9 @@ class _HorizontalList extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     child: NamidaInkWell(
                       borderRadius: 10.0,
-                      bgColor: theme.cardColor.withOpacityExt(0.5),
-                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-                      child: Text(
+                      bgColor: const NColors(.card, opacity: 0.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                      child: NamidaText(
                         switch (homepageItem) {
                           HomePageItems.mixes => '',
                           HomePageItems.recentListens || HomePageItems.topRecentListens => lang.noTracksInHistory,
@@ -1882,7 +1837,7 @@ class _HorizontalList extends StatelessWidget {
                           HomePageItems.topRecentAlbums || HomePageItems.topRecentArtists => "${lang.none}: ${lang.noTracksInHistory}",
                           HomePageItems.pinnedPlaylists => lang.none,
                         },
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                         softWrap: false,
                       ),
                     ),
@@ -1940,7 +1895,6 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   void onMixTap(Widget thumbnailWidget) {
-    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.7);
     const contentColorAlt = Color.fromRGBO(42, 42, 42, 0.8);
     NamidaNavigator.inst.navigateDialog(
@@ -1969,7 +1923,7 @@ class _MixesCardState extends State<_MixesCard> {
                     ),
                     margin: const EdgeInsets.symmetric(horizontal: 32.0).add(const EdgeInsets.only(top: 12.0)),
                     padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                    bgColor: Color.alphaBlend(_cardColor?.withOpacityExt(0.4) ?? Colors.transparent, Color.fromRGBO(80, 80, 80, 0.4)).withOpacityExt(0.9),
+                    bgColor: NColors.fixed(Color.alphaBlend(_cardColor?.withOpacityExt(0.4) ?? Colors.transparent, const Color.fromRGBO(80, 80, 80, 0.4)).withOpacityExt(0.9)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1980,12 +1934,10 @@ class _MixesCardState extends State<_MixesCard> {
                         ),
                         const SizedBox(width: 6.0),
                         Expanded(
-                          child: Text(
+                          child: NamidaText(
                             widget.title,
-                            style: textTheme.displayLarge?.copyWith(
-                              fontSize: 15.0,
-                              color: contentColor,
-                            ),
+                            style: const NText(.large, size: .s15),
+                            color: NColors.fixed(contentColor),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2002,7 +1954,7 @@ class _MixesCardState extends State<_MixesCard> {
                           },
                           borderRadius: 8.0,
                           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                          bgColor: contentColor.withOpacityExt(0.6),
+                          bgColor: NColors.fixed(contentColor.withOpacityExt(0.6)),
                           child: Row(
                             children: [
                               const Icon(
@@ -2011,12 +1963,10 @@ class _MixesCardState extends State<_MixesCard> {
                                 color: contentColorAlt,
                               ),
                               const SizedBox(width: 4.0),
-                              Text(
+                              NamidaText(
                                 "${widget.tracks.length}",
-                                style: textTheme.displayLarge?.copyWith(
-                                  fontSize: 15.0,
-                                  color: contentColorAlt,
-                                ),
+                                style: const NText(.large, size: .s15),
+                                color: NColors.fixed(contentColorAlt),
                               ),
                               const SizedBox(width: 2.0),
                             ],
@@ -2032,7 +1982,7 @@ class _MixesCardState extends State<_MixesCard> {
                           ),
                           borderRadius: 8.0,
                           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                          bgColor: contentColor.withOpacityExt(0.6),
+                          bgColor: NColors.fixed(contentColor.withOpacityExt(0.6)),
                           child: const MoreIcon(
                             iconSize: 20.0,
                             iconColor: contentColorAlt,
@@ -2104,7 +2054,7 @@ class _MixesCardState extends State<_MixesCard> {
   Widget getStackedWidget({
     required double topPadding,
     required double horizontalPadding,
-    int alpha = 255,
+    double opacity = 1.0,
     double blur = 0.0,
   }) {
     return Padding(
@@ -2112,14 +2062,17 @@ class _MixesCardState extends State<_MixesCard> {
       child: NamidaBlur(
         blur: blur,
         fixArtifacts: true,
-        child: AnimatedSizedBox(
-          duration: const Duration(milliseconds: 300),
-          width: widget.width - horizontalPadding,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: _cardColor?.withAlpha(alpha),
-            border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
-            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+        child: NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) => AnimatedSizedBox(
+            duration: const Duration(milliseconds: 300),
+            width: widget.width - horizontalPadding,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: _cardColor?.withOpacityExt(opacity),
+              border: Border.all(color: colors.scaffold.withOpacityExt(opacity)),
+              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+            ),
           ),
         ),
       ),
@@ -2127,7 +2080,6 @@ class _MixesCardState extends State<_MixesCard> {
   }
 
   Widget artworkWidget({required bool displayShimmer, required bool fullscreen}) {
-    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.1);
     const contentColorAlt = Color.fromRGBO(242, 242, 242, 0.8);
     final tag = 'mix_thumbnail_${widget.title}${widget.index}';
@@ -2151,7 +2103,7 @@ class _MixesCardState extends State<_MixesCard> {
               top: 12.0,
               left: 0.0,
               child: NamidaBgBlurClipped(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: contentColor,
                 ),
@@ -2162,7 +2114,7 @@ class _MixesCardState extends State<_MixesCard> {
                     verticalPadding: 4.0,
                     horizontalPadding: 12.0,
                     icon: Broken.arrow_left_2,
-                    iconColor: contentColorAlt,
+                    iconColor: NColors.fixed(contentColorAlt),
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ),
@@ -2184,14 +2136,14 @@ class _MixesCardState extends State<_MixesCard> {
                 borderRadius: 8.0,
                 margin: const EdgeInsets.all(6.0),
                 padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                bgColor: context.theme.cardColor.withAlpha(240),
+                bgColor: const NColors(.card, opacity: 0.94),
                 child: Row(
                   children: [
                     const Icon(Broken.play_cricle, size: 16.0),
                     const SizedBox(width: 4.0),
-                    Text(
+                    NamidaText(
                       "${widget.tracks.length}",
-                      style: textTheme.displaySmall?.copyWith(fontSize: 15.0),
+                      style: const NText(.small, size: .s15),
                     ),
                   ],
                 ),
@@ -2204,7 +2156,6 @@ class _MixesCardState extends State<_MixesCard> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final displayShimmer = _track == null;
 
     final thumbnailWidget = Stack(
@@ -2213,17 +2164,17 @@ class _MixesCardState extends State<_MixesCard> {
         getStackedWidget(
           topPadding: 0,
           horizontalPadding: 36.0,
-          alpha: 100,
+          opacity: 0.39,
         ),
         getStackedWidget(
           topPadding: 2.5,
           horizontalPadding: 22.0,
-          alpha: 180,
+          opacity: 0.71,
         ),
         getStackedWidget(
           topPadding: 6.0,
           horizontalPadding: 0.0,
-          alpha: 180,
+          opacity: 0.71,
           blur: 2.0,
         ),
         Padding(
@@ -2251,15 +2202,15 @@ class _MixesCardState extends State<_MixesCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4.0),
-                    Text(
+                    NamidaText(
                       widget.title,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
+                    NamidaText(
                       widget.tracks.take(5).map((e) => e.title).join(', '),
-                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                      style: const NText(.small, size: .s11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2316,7 +2267,6 @@ class _YTMixesCardState extends State<_YTMixesCard> {
   }
 
   void onMixTap(Widget thumbnailWidget) {
-    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.7);
     const contentColorAlt = Color.fromRGBO(42, 42, 42, 0.8);
     NamidaNavigator.inst.navigateDialog(
@@ -2345,7 +2295,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                     ),
                     margin: const EdgeInsets.symmetric(horizontal: 32.0).add(const EdgeInsets.only(top: 12.0)),
                     padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 8.0),
-                    bgColor: Color.alphaBlend(_cardColor?.withOpacityExt(0.4) ?? Colors.transparent, Color.fromRGBO(80, 80, 80, 0.4)).withOpacityExt(0.9),
+                    bgColor: NColors.fixed(Color.alphaBlend(_cardColor?.withOpacityExt(0.4) ?? Colors.transparent, const Color.fromRGBO(80, 80, 80, 0.4)).withOpacityExt(0.9)),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -2356,12 +2306,10 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                         ),
                         const SizedBox(width: 6.0),
                         Expanded(
-                          child: Text(
+                          child: NamidaText(
                             widget.title,
-                            style: textTheme.displayLarge?.copyWith(
-                              fontSize: 15.0,
-                              color: contentColor,
-                            ),
+                            style: const NText(.large, size: .s15),
+                            color: NColors.fixed(contentColor),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -2371,7 +2319,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                           onTap: _playMix,
                           borderRadius: 8.0,
                           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                          bgColor: contentColor.withOpacityExt(0.6),
+                          bgColor: NColors.fixed(contentColor.withOpacityExt(0.6)),
                           child: Row(
                             children: [
                               const Icon(
@@ -2380,12 +2328,10 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                                 color: contentColorAlt,
                               ),
                               const SizedBox(width: 4.0),
-                              Text(
+                              NamidaText(
                                 "${widget.videoIds.length}",
-                                style: textTheme.displayLarge?.copyWith(
-                                  fontSize: 15.0,
-                                  color: contentColorAlt,
-                                ),
+                                style: const NText(.large, size: .s15),
+                                color: NColors.fixed(contentColorAlt),
                               ),
                               const SizedBox(width: 2.0),
                             ],
@@ -2438,7 +2384,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
   Widget getStackedWidget({
     required double topPadding,
     required double horizontalPadding,
-    int alpha = 255,
+    double opacity = 1.0,
     double blur = 0.0,
   }) {
     return Padding(
@@ -2446,14 +2392,17 @@ class _YTMixesCardState extends State<_YTMixesCard> {
       child: NamidaBlur(
         blur: blur,
         fixArtifacts: true,
-        child: AnimatedSizedBox(
-          duration: const Duration(milliseconds: 300),
-          width: _contentWidth - horizontalPadding,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            color: _cardColor?.withAlpha(alpha),
-            border: Border.all(color: context.theme.scaffoldBackgroundColor.withAlpha(alpha)),
-            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+        child: NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) => AnimatedSizedBox(
+            duration: const Duration(milliseconds: 300),
+            width: _contentWidth - horizontalPadding,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: _cardColor?.withOpacityExt(opacity),
+              border: Border.all(color: colors.scaffold.withOpacityExt(opacity)),
+              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+            ),
           ),
         ),
       ),
@@ -2461,7 +2410,6 @@ class _YTMixesCardState extends State<_YTMixesCard> {
   }
 
   Widget artworkWidget({required bool fullscreen}) {
-    final textTheme = context.textTheme;
     const contentColor = Color.fromRGBO(242, 242, 242, 0.1);
     const contentColorAlt = Color.fromRGBO(242, 242, 242, 0.8);
     final tag = 'ytmix_thumbnail_${widget.title}${widget.index}';
@@ -2486,7 +2434,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
               top: 12.0,
               left: 0.0,
               child: NamidaBgBlurClipped(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: contentColor,
                 ),
@@ -2497,7 +2445,7 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                     verticalPadding: 4.0,
                     horizontalPadding: 12.0,
                     icon: Broken.arrow_left_2,
-                    iconColor: contentColorAlt,
+                    iconColor: NColors.fixed(contentColorAlt),
                     onPressed: NamidaNavigator.inst.closeDialog,
                   ),
                 ),
@@ -2512,14 +2460,14 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                 borderRadius: 8.0,
                 margin: const EdgeInsets.all(6.0),
                 padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 4.0),
-                bgColor: context.theme.cardColor.withAlpha(240),
+                bgColor: const NColors(.card, opacity: 0.94),
                 child: Row(
                   children: [
                     const Icon(Broken.play_cricle, size: 16.0),
                     const SizedBox(width: 4.0),
-                    Text(
+                    NamidaText(
                       "${widget.videoIds.length}",
-                      style: textTheme.displaySmall?.copyWith(fontSize: 15.0),
+                      style: const NText(.small, size: .s15),
                     ),
                   ],
                 ),
@@ -2532,8 +2480,6 @@ class _YTMixesCardState extends State<_YTMixesCard> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
-
     final thumbHeight = 6.0 + 2.0 + (_contentWidth - 2.0) * 9 / 16;
     final thumbnailWidget = SizedBox(
       width: _contentWidth,
@@ -2544,17 +2490,17 @@ class _YTMixesCardState extends State<_YTMixesCard> {
           getStackedWidget(
             topPadding: 0,
             horizontalPadding: 36.0,
-            alpha: 100,
+            opacity: 0.39,
           ),
           getStackedWidget(
             topPadding: 2.5,
             horizontalPadding: 22.0,
-            alpha: 180,
+            opacity: 0.71,
           ),
           getStackedWidget(
             topPadding: 6.0,
             horizontalPadding: 0.0,
-            alpha: 180,
+            opacity: 0.71,
             blur: 2.0,
           ),
           Padding(
@@ -2584,15 +2530,15 @@ class _YTMixesCardState extends State<_YTMixesCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4.0),
-                    Text(
+                    NamidaText(
                       widget.title,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
+                    NamidaText(
                       videoNamesJoined,
-                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                      style: const NText(.small, size: .s11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2670,152 +2616,165 @@ class _TrackCardState extends State<_TrackCard> with LoadingItemsDelayMixin {
     }
   }
 
+  Color _computeColor(NColorsData colors) {
+    final baseColor = _cardColor ?? colors.scaffold;
+    return Color.alphaBlend(baseColor.withOpacityExt(0.2), colors.card);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final track = widget.track;
-    final color = Color.alphaBlend((_cardColor ?? theme.scaffoldBackgroundColor).withAlpha(50), theme.cardColor);
-    // -- a blurred solid box drawn as a shadow, no offscreen layer
-    final bgDecoration = settings.enableBlurEffect.value
-        ? BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: color,
-                blurRadius: _kBgBlurShadowRadius,
-              ),
-            ],
-          )
-        : BoxDecoration(
-            color: color,
-          );
+    final isBlurEnabled = settings.enableBlurEffect.value;
     final dummyContainer = track == null;
     if (dummyContainer) {
       return NamidaInkWell(
         animationDurationMS: 200,
         margin: const EdgeInsets.symmetric(horizontal: 4.0),
         width: widget.width,
-        bgColor: color,
+        bgColor: NColors.custom(_computeColor),
       );
     }
-    return NamidaInkWell(
-      borderRadius: 10.0,
-      onTap: () {
-        if (mounted) setState(() => _enabledTrack = (widget.listId, widget.index));
-
-        Player.inst.playOrPause(
-          widget.index,
-          widget.queue,
-          widget.queueSource,
-          homePageItem: widget.homepageItem,
-        );
-      },
-      onLongPress: () => NamidaDialogs.inst.showTrackDialog(
-        track,
-        source: widget.queueSource,
-        index: widget.index,
-      ),
-      decoration: BoxDecoration(
-        border: _enabledTrack == (widget.listId, widget.index)
-            ? Border.all(
-                color: _cardColor ?? color,
-                width: 1.5,
-              )
-            : null,
-      ),
-      width: widget.width,
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-      animationDurationMS: 400,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: BorderRadiusClip(
-              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-              child: AnimatedDecoration(
-                duration: Duration(milliseconds: 400),
-                decoration: bgDecoration,
-              ),
+    final isEnabledTrack = _enabledTrack == (widget.listId, widget.index);
+    final cardContent = Stack(
+      children: [
+        Positioned.fill(
+          child: BorderRadiusClip(
+            borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+            child: NBuilder(
+              selfAnimated: true,
+              builder: (context, colors) {
+                final color = _computeColor(colors);
+                // -- a blurred solid box drawn as a shadow, no offscreen layer
+                final bgDecoration = isBlurEnabled
+                    ? BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: color,
+                            blurRadius: _kBgBlurShadowRadius,
+                          ),
+                        ],
+                      )
+                    : BoxDecoration(
+                        color: color,
+                      );
+                return AnimatedDecoration(
+                  duration: const Duration(milliseconds: 400),
+                  decoration: bgDecoration,
+                );
+              },
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ArtworkWidget(
-                key: Key(track.path),
-                track: track,
-                blur: 3.0,
-                forceSquared: true,
-                path: track.pathToImage,
-                thumbnailSize: widget.width,
-                onTopWidgets: [
-                  if (widget.topRightText != null)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(6.0.multipliedRadius),
-                            topRight: Radius.circular(6.0.multipliedRadius),
-                          ),
-                          color: theme.scaffoldBackgroundColor,
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ArtworkWidget(
+              key: Key(track.path),
+              track: track,
+              blur: 3.0,
+              forceSquared: true,
+              path: track.pathToImage,
+              thumbnailSize: widget.width,
+              onTopWidgets: [
+                if (widget.topRightText != null)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: NContainer(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                      decoration: (colors) => BoxDecoration(
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(6.0.multipliedRadius),
+                          topRight: Radius.circular(6.0.multipliedRadius),
                         ),
-                        child: Text(
-                          widget.topRightText!,
-                          style: textTheme.displaySmall?.copyWith(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        color: colors.scaffold,
+                      ),
+                      child: NamidaText(
+                        widget.topRightText!,
+                        style: const NText(.small, size: .s10p5, weight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                  if (widget.listens != null)
-                    Positioned(
-                      bottom: 2.0,
-                      right: 2.0,
-                      child: CircleAvatar(
+                  ),
+                if (widget.listens != null)
+                  Positioned(
+                    bottom: 2.0,
+                    right: 2.0,
+                    child: NBuilder(
+                      builder: (context, colors) => CircleAvatar(
                         radius: 10.0,
-                        backgroundColor: theme.cardColor,
+                        backgroundColor: colors.card,
                         child: FittedBox(
-                          child: Text(
+                          child: NamidaText(
                             widget.listens!.length.formatDecimal(),
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                         ),
                       ),
                     ),
+                  ),
+              ],
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  NamidaText(
+                    track.title,
+                    style: const NText(.small, size: .s12, weight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  NamidaText(
+                    track.displayArtist(),
+                    style: const NText(.small, size: .s11, weight: FontWeight.w400),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      track.title,
-                      style: textTheme.displaySmall?.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Text(
-                      track.displayArtist(),
-                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w400),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-            ],
-          ),
-        ],
+            ),
+            const Spacer(),
+          ],
+        ),
+      ],
+    );
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) => NamidaInkWell(
+        borderRadius: 10.0,
+        onTap: () {
+          if (mounted) setState(() => _enabledTrack = (widget.listId, widget.index));
+
+          Player.inst.playOrPause(
+            widget.index,
+            widget.queue,
+            widget.queueSource,
+            homePageItem: widget.homepageItem,
+          );
+        },
+        onLongPress: () => NamidaDialogs.inst.showTrackDialog(
+          track,
+          source: widget.queueSource,
+          index: widget.index,
+        ),
+        decoration: BoxDecoration(
+          border: isEnabledTrack
+              ? Border.all(
+                  color: _cardColor ?? _computeColor(colors),
+                  width: 1.5,
+                )
+              : null,
+        ),
+        width: widget.width,
+        margin: const EdgeInsets.symmetric(horizontal: 4.0),
+        animationDurationMS: 400,
+        child: cardContent,
       ),
     );
   }
@@ -2830,7 +2789,6 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return BackgroundWrapper(
       child: NamidaTracksList(
         infoBox: null,
@@ -2838,15 +2796,15 @@ class RecentlyAddedTracksPage extends StatelessWidget with NamidaRouteWidget {
           padding: const EdgeInsets.all(32.0),
           child: Row(
             children: [
-              Icon(
+              NIcon(
                 Broken.back_square,
-                color: context.defaultIconColor(),
+                color: NColors.defaultIcon(),
                 size: 32.0,
               ),
               const SizedBox(width: 12.0),
-              Text(
+              NamidaText(
                 lang.recentlyAdded,
-                style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
+                style: const NText(.large, size: .s18),
               ),
             ],
           ),
@@ -2874,32 +2832,31 @@ class _YourYearBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final color = CurrentColor.inst.color;
+    final bgColor = NColors.custom((colors) => Color.alphaBlend(color.withOpacityExt(0.14), colors.card));
     return Padding(
       padding: const EdgeInsets.fromLTRB(24.0, 0.0, 24.0, 12.0),
       child: NamidaInkWell(
         borderRadius: 14.0,
-        bgColor: Color.alphaBlend(color.withOpacityExt(0.14), theme.cardColor),
+        bgColor: bgColor,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         onTap: () => YourYearPage(year: year).navigate(),
         child: Row(
           children: [
-            Icon(Broken.magic_star, color: context.defaultIconColor()),
+            NIcon(Broken.magic_star, color: NColors.defaultIcon()),
             const SizedBox(width: 12.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  NamidaText(
                     lang.yourYear(year: year.toString()),
-                    style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: const NText(.medium, weight: FontWeight.w700),
                   ),
-                  Text(
+                  NamidaText(
                     lang.statsSubtitle,
-                    style: textTheme.displaySmall?.copyWith(fontSize: 11.5),
+                    style: const NText(.small, size: .s11p5),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2947,5 +2904,36 @@ class _CardPaletteExtractor {
       final callback = _pending.removeFirst();
       callback();
     }
+  }
+}
+
+class _HomePageChip extends StatelessWidget {
+  final String text;
+  final bool isSelected;
+
+  const _HomePageChip({
+    required this.text,
+    required this.isSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.targetOf(context);
+    final bgColor = isSelected ? CurrentColor.inst.currentColorScheme.withOpacityExt(0.63) : colors.card;
+    return AnimatedDecoration(
+      duration: const Duration(milliseconds: 250),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+        child: NamidaText(
+          text,
+          style: const NText(.small, weight: FontWeight.w600),
+          color: NColors.fixed(isSelected ? Colors.white.withOpacityExt(0.94) : null),
+        ),
+      ),
+    );
   }
 }

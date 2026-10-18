@@ -6,6 +6,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -49,7 +50,6 @@ class MultiArtworkContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final scope = ArtworkContainerScope.maybeOf(context);
     final artworkFile = this.artworkFile;
     final hasCustomArtwork = artworkFile != null && artworkFile.existsSync();
@@ -62,14 +62,14 @@ class MultiArtworkContainer extends StatelessWidget {
         final isBare = scope != null && (scope.frameless || isBareFan);
         final fanScale = isBareFan ? scope.bareFanScale : 1.0;
         final frameRadius = 18.0.multipliedRadius;
-        final frameDecoration = isBare
+        final Decoration Function(NColorsData colors)? frameDecoration = isBare
             ? null
-            : BoxDecoration(
-                color: theme.cardTheme.color?.withAlpha(180),
+            : (colors) => BoxDecoration(
+                color: colors.cardTheme.withOpacityExt(0.71),
                 borderRadius: BorderRadius.circular(frameRadius),
                 boxShadow: [
                   BoxShadow(
-                    color: theme.shadowColor.withAlpha(180),
+                    color: colors.shadow.withOpacityExt(0.71),
                     blurRadius: 8,
                     offset: const Offset(0, 2.0),
                   ),
@@ -83,7 +83,7 @@ class MultiArtworkContainer extends StatelessWidget {
             final size = this.size.withMaximum(constraints.maxWidth).withMaximum(constraints.maxHeight);
             final drawnSize = size * fanScale;
             final innerSize = drawnSize - frameInset;
-            final container = Container(
+            final container = NContainer(
               alignment: Alignment.center,
               margin: frameMargin,
               padding: framePadding,

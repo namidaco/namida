@@ -54,6 +54,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/add_to_playlist_dialog.dart';
@@ -1116,14 +1117,14 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            NamidaText(
               lang.choose,
-              style: theme.textTheme.displayLarge,
+              style: NText.large,
             ),
             if (title != null && title.isNotEmpty)
-              Text(
+              NamidaText(
                 title,
-                style: theme.textTheme.displaySmall,
+                style: NText.small,
               ),
           ],
         ),
@@ -1147,19 +1148,24 @@ extension OnYoutubeLinkOpenActionUtils on OnYoutubeLinkOpenAction {
                 String? subtitle = isPlayAfter ? playAfterVid.name : null;
                 if (subtitle == '') subtitle = null;
                 return Obx(
-                  (context) => CustomListTile(
-                    passedColor: theme.colorScheme.primaryContainer,
-                    enabled: isItemEnabled[e] ?? true,
-                    icon: e.toIcon(),
-                    title: e.toText() + extraTitle,
-                    subtitle: subtitle,
-                    onTap: () {
-                      onTap(e);
-                      if (isItemEnabled[e] != null) {
-                        isItemEnabled[e] = false; // only disable existing item
-                      }
-                    },
-                  ),
+                  (context) {
+                    final isEnabled = isItemEnabled[e] ?? true;
+                    return NBuilder(
+                      builder: (context, colors) => CustomListTile(
+                        passedColor: colors.primaryContainer,
+                        enabled: isEnabled,
+                        icon: e.toIcon(),
+                        title: e.toText() + extraTitle,
+                        subtitle: subtitle,
+                        onTap: () {
+                          onTap(e);
+                          if (isItemEnabled[e] != null) {
+                            isItemEnabled[e] = false; // only disable existing item
+                          }
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -1559,7 +1565,7 @@ extension RouteUtils on NamidaRoute {
       show: shouldShow,
       isHorizontal: true,
       curve: Curves.fastEaseInToSlowEaseOut,
-      duration: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 400),
       child: child,
     );
   }
@@ -1894,13 +1900,6 @@ extension TracksFromMaps on String {
 
 extension QueueFromMap on int {
   Queue? getQueue() => QueueController.inst.queuesMap.value[this];
-}
-
-extension ThemeDefaultColors on BuildContext {
-  Color defaultIconColor([Color? mainColor, Color? secondaryColor]) => Color.alphaBlend(
-    (mainColor ?? CurrentColor.inst.color).withAlpha(120),
-    secondaryColor ?? theme.colorScheme.onSurface,
-  );
 }
 
 void showMinimumItemsSnack([int minimum = 1]) {

@@ -455,9 +455,10 @@ class _SettingChoiceTile<E extends Enum> extends StatelessWidget {
         final valueMenu = hasMenu && !isValueInSubtitle
             ? NamidaPopupWrapper(
                 childrenDefault: _getMenuItems,
-                child: Text(
+                child: NamidaText(
                   valueText,
-                  style: CustomListTile.getTrailingTextStyle(context.theme),
+                  style: NText.medium,
+                  color: const NColors(.onSurface, opacity: 0.78),
                   maxLines: 1,
                 ),
               )

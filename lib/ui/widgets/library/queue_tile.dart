@@ -9,6 +9,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -21,8 +22,6 @@ class QueueTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final hero = 'queue_${queue.date}';
     const absorberHeight = Dimensions.queueTileItemExtent * 0.2;
     final absorberWidget = ColoredBox(
@@ -33,12 +32,12 @@ class QueueTile extends StatelessWidget {
       ),
     );
     final sourceText = queue.toSourceText();
-    return Container(
+    return NContainer(
       margin: const EdgeInsets.symmetric(horizontal: 8.0).add(const EdgeInsets.only(bottom: Dimensions.tileBottomMargin6)),
-      decoration: BoxDecoration(
+      decoration: (colors) => BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withAlpha(20),
+            color: colors.shadow.withOpacityExt(0.08),
             blurRadius: 12.0,
             offset: const Offset(0, 2),
           ),
@@ -63,7 +62,7 @@ class QueueTile extends StatelessWidget {
               );
             },
             child: NamidaInkWell(
-              bgColor: theme.cardColor,
+              bgColor: NColors.card,
               onTap: () => NamidaOnTaps.inst.onQueueTap(queue),
               onLongPress: () => NamidaDialogs.inst.showQueueDialog(queue.date),
               enableSecondaryTap: true,
@@ -88,38 +87,32 @@ class QueueTile extends StatelessWidget {
                       children: [
                         NamidaHero(
                           tag: 'line1_$hero',
-                          child: Text(
+                          child: NamidaText(
                             [
                               queue.source.toText(),
                               ?sourceText,
                             ].joinText(separator: ' - '),
-                            style: textTheme.displayMedium?.copyWith(
-                              fontSize: 14.0,
-                            ),
+                            style: const NText(.medium, size: .s14),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(height: 1.0),
                         NamidaHero(
                           tag: 'line2_$hero',
-                          child: Text(
+                          child: NamidaText(
                             [
                               queue.tracks.displayTrackKeyword,
                               queue.tracks.totalDurationFormatted,
                             ].joinText(separator: ' - '),
-                            style: textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: const NText(.small, weight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         NamidaHero(
                           tag: 'line3_$hero',
-                          child: Text(
+                          child: NamidaText(
                             queue.date.dateAndClockFormattedOriginal,
-                            style: textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: const NText(.small, weight: FontWeight.w500),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -127,12 +120,9 @@ class QueueTile extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12.0),
-                  Text(
+                  NamidaText(
                     TimeAgoController.dateMSSEFromNow(queue.date),
-                    style: textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 11.5,
-                    ),
+                    style: const NText(.small, size: .s11p5, weight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(width: 4.0),

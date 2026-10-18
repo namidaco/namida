@@ -17,6 +17,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -57,11 +58,10 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const libraryTab = LibraryTab.albums;
     final scrollController = libraryTab.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
-    final artistTypeColor = context.theme.colorScheme.onSecondaryContainer.withOpacityExt(0.8);
+    const artistTypeColor = NColors(.onSecondaryContainer, opacity: 0.8);
     final isCustomList = albumIdentifiers != null;
 
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
@@ -101,17 +101,16 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const NIcon(
                             Broken.arrange_circle,
                             size: 14.0,
                             color: artistTypeColor,
                           ),
                           const SizedBox(width: 4.0),
-                          Text(
+                          NamidaText(
                             leftText,
-                            style: textTheme.displayMedium?.copyWith(
-                              color: artistTypeColor,
-                            ),
+                            style: NText.medium,
+                            color: artistTypeColor,
                           ),
                         ],
                       ),
@@ -140,7 +139,7 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
               child: SmoothCustomScrollView(
                 controller: scrollController,
                 slivers: [
-                  SliverToBoxAdapter(child: listHeader),
+                  const SliverToBoxAdapter(child: listHeader),
                   Obx(
                     (context) {
                       final albumTileExtent = settings.albumListTileHeight.valueR + 4.0 * 5;

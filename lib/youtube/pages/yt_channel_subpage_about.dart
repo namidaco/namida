@@ -84,8 +84,6 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final aboutResult = _aboutResult;
     const dividerContainer = NamidaContainerDivider(
       margin: EdgeInsets.symmetric(horizontal: 32.0, vertical: 12.0),
@@ -95,15 +93,17 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: _isLoadingInitial
-            ? ThreeArchedCircle(
-                color: theme.colorScheme.secondaryContainer,
-                size: 64.0,
+            ? NBuilder(
+                builder: (context, colors) => ThreeArchedCircle(
+                  color: colors.secondaryContainer,
+                  size: 64.0,
+                ),
               )
             : aboutResult == null
             ? Center(
-                child: Text(
+                child: NamidaText(
                   lang.error,
-                  style: textTheme.displayLarge,
+                  style: NText.large,
                 ),
               )
             : SuperSmoothListView(
@@ -121,79 +121,80 @@ class _YTChannelSubpageAboutState extends State<YTChannelSubpageAbout> {
                   ...aboutResult.aboutLinks.map(
                     (e) {
                       final iconUrl = e.icons.pick()?.url;
-                      return NamidaInkWell(
-                        onTap: () {
-                          final url = _getWorkingUrl(e);
-                          NamidaLinkUtils.openLinkPreferNamida(url);
-                        },
-                        onLongPress: () {
-                          final url = _getWorkingUrl(e);
-                          _copyUrlToClipboard(url);
-                        },
-                        margin: const EdgeInsets.symmetric(vertical: 4.0),
-                        padding: const EdgeInsets.symmetric(vertical: 10.0),
-                        bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.01),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            width: 1.5,
-                            color: theme.colorScheme.secondary.withOpacityExt(0.2),
+                      final linkRow = Row(
+                        children: [
+                          const SizedBox(width: 12.0),
+                          YoutubeThumbnail(
+                            key: ValueKey(iconUrl),
+                            width: 24.0,
+                            height: 24.0,
+                            isCircle: true,
+                            isImportantInCache: false,
+                            type: ThumbnailType.other,
+                            customUrl: iconUrl,
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.white,
+                                blurRadius: 0,
+                                spreadRadius: 1.5,
+                              ),
+                            ],
                           ),
-                        ),
-                        borderRadius: 10.0,
-                        child: Row(
-                          children: [
-                            const SizedBox(width: 12.0),
-                            YoutubeThumbnail(
-                              key: ValueKey(iconUrl),
-                              width: 24.0,
-                              height: 24.0,
-                              isCircle: true,
-                              isImportantInCache: false,
-                              type: ThumbnailType.other,
-                              customUrl: iconUrl,
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.white,
-                                  blurRadius: 0,
-                                  spreadRadius: 1.5,
+                          const SizedBox(width: 12.0),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                NamidaText(
+                                  e.title,
+                                  style: const NText(.medium, size: .s15),
+                                  color: NColors.custom(
+                                    (c) => Color.alphaBlend(
+                                      c.onSecondaryContainer.withOpacityExt(0.5),
+                                      c.onSurface.withOpacityExt(0.5),
+                                    ),
+                                  ),
+                                ),
+                                NamidaText(
+                                  e.linkText,
+                                  style: const NText(.small, size: .s11p5),
+                                  // color: const NColors(.onSecondaryContainer, opacity: 0.7),
                                 ),
                               ],
                             ),
-                            const SizedBox(width: 12.0),
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    e.title,
-                                    style: textTheme.displayMedium?.copyWith(
-                                      fontSize: 15.0,
-                                      color: Color.alphaBlend(
-                                        theme.colorScheme.onSecondaryContainer.withOpacityExt(0.5),
-                                        theme.colorScheme.onSurface.withOpacityExt(0.5),
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    e.linkText,
-                                    style: textTheme.displaySmall?.copyWith(
-                                      fontSize: 11.5,
-                                      // color: theme.colorScheme.onSecondaryContainer.withOpacityExt(0.7),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ),
+                          const SizedBox(width: 12.0),
+                        ],
+                      );
+                      return NBuilder(
+                        builder: (context, colors) => NamidaInkWell(
+                          onTap: () {
+                            final url = _getWorkingUrl(e);
+                            NamidaLinkUtils.openLinkPreferNamida(url);
+                          },
+                          onLongPress: () {
+                            final url = _getWorkingUrl(e);
+                            _copyUrlToClipboard(url);
+                          },
+                          margin: const EdgeInsets.symmetric(vertical: 4.0),
+                          padding: const EdgeInsets.symmetric(vertical: 10.0),
+                          bgColor: const NColors(.secondaryContainer, opacity: 0.01),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              width: 1.5,
+                              color: colors.secondary.withOpacityExt(0.2),
                             ),
-                            const SizedBox(width: 12.0),
-                          ],
+                          ),
+                          borderRadius: 10.0,
+                          child: linkRow,
                         ),
                       );
                     },
                   ),
                   dividerContainer,
                   NamidaInkWell(
-                    bgColor: theme.cardColor.withOpacityExt(0.5),
+                    bgColor: const NColors(.card, opacity: 0.5),
                     padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
                     child: Column(
                       children: [
@@ -251,25 +252,23 @@ class _SmolInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (title == null) return const SizedBox();
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     Widget child = Row(
       children: [
         const SizedBox(width: 12.0),
-        Icon(
+        NIcon(
           icon,
           size: 20.0,
-          color: theme.colorScheme.onSurface.withOpacityExt(0.7),
+          color: const NColors(.onSurface, opacity: 0.7),
         ),
         const SizedBox(width: 12.0),
         Expanded(
-          child: Text(
+          child: NamidaText(
             title!,
-            style: textTheme.displayMedium?.copyWith(
-              fontSize: 15.0,
-              color: Color.alphaBlend(
-                theme.colorScheme.onSecondaryContainer.withOpacityExt(0.3),
-                theme.colorScheme.onSurface.withOpacityExt(0.6),
+            style: const NText(.medium, size: .s15),
+            color: NColors.custom(
+              (c) => Color.alphaBlend(
+                c.onSecondaryContainer.withOpacityExt(0.3),
+                c.onSurface.withOpacityExt(0.6),
               ),
             ),
           ),

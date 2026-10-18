@@ -18,6 +18,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
@@ -216,8 +217,6 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final idsToAdd = widget.idsToAdd;
     final isMinimalView = widget.minimalView ?? idsToAdd.isNotEmpty;
     final disableSortOrEdit = widget.isInsideAddSheet;
@@ -372,11 +371,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     ],
                                     child: ObxO(
                                       rx: settings.ytPlaylistSort,
-                                      builder: (context, ytPlaylistSort) => Text(
+                                      builder: (context, ytPlaylistSort) => NamidaText(
                                         ytPlaylistSort.toText(),
-                                        style: textTheme.displaySmall?.copyWith(
-                                          color: theme.colorScheme.secondary,
-                                        ),
+                                        style: NText.small,
+                                        color: NColors.secondary,
                                       ),
                                     ),
                                   ),
@@ -385,10 +383,10 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     onTap: () => YoutubePlaylistController.inst.sortYTPlaylists(reverse: !settings.ytPlaylistSortReversed.value),
                                     child: ObxO(
                                       rx: settings.ytPlaylistSortReversed,
-                                      builder: (context, ytPlaylistSortReversed) => Icon(
+                                      builder: (context, ytPlaylistSortReversed) => NIcon(
                                         ytPlaylistSortReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                         size: 16.0,
-                                        color: theme.colorScheme.secondary,
+                                        color: NColors.secondary,
                                       ),
                                     ),
                                   ),
@@ -406,21 +404,24 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                       borderRadius: 8.0,
                       onTap: _onPlaylistAddTap,
                     ),
-                    SizedBox(width: 6.0),
+                    const SizedBox(width: 6.0),
                     NamidaTooltip(
                       message: () => _isReordering ? lang.disableReordering : lang.enableReordering,
-                      child: NamidaInkWellButton(
-                        icon: Broken.edit_2,
-                        text: '',
-                        borderRadius: 8.0,
-                        decoration: _isReordering
-                            ? BoxDecoration(
-                                border: Border.all(
-                                  color: theme.iconTheme.color?.withOpacityExt(0.4) ?? theme.colorScheme.primaryContainer.withOpacityExt(0.8),
-                                ),
-                              )
-                            : const BoxDecoration(),
-                        onTap: _toggleReordering,
+                      child: NBuilder(
+                        selfAnimated: true,
+                        builder: (context, colors) => NamidaInkWellButton(
+                          icon: Broken.edit_2,
+                          text: '',
+                          borderRadius: 8.0,
+                          decoration: _isReordering
+                              ? BoxDecoration(
+                                  border: Border.all(
+                                    color: colors.icon.withOpacityExt(0.4), // colors.primaryContainer.withOpacityExt(0.8)
+                                  ),
+                                )
+                              : const BoxDecoration(),
+                          onTap: _toggleReordering,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6.0),
@@ -793,8 +794,6 @@ class _HorizontalSliverListState extends State<_HorizontalSliverList> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final finalVideos = widget.videos is List<YoutubeID> ? widget.videos as List<YoutubeID> : widget.videos.toList();
     final remainingVideosCount = widget.totalVideosCountInMainList - finalVideos.length;
 
@@ -839,11 +838,11 @@ class _HorizontalSliverListState extends State<_HorizontalSliverList> {
                         scrollDirection: Axis.horizontal,
                         itemCount: 10,
                         itemBuilder: (context, index) {
-                          return NamidaInkWell(
+                          return const NamidaInkWell(
                             animationDurationMS: 200,
-                            margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                            margin: EdgeInsets.symmetric(horizontal: 4.0),
                             width: thumbWidth,
-                            bgColor: theme.cardColor,
+                            bgColor: NColors.card,
                           );
                         },
                       ),
@@ -862,9 +861,9 @@ class _HorizontalSliverListState extends State<_HorizontalSliverList> {
                                   margin: const EdgeInsets.all(12.0),
                                   padding: const EdgeInsets.all(12.0),
                                   child: Center(
-                                    child: Text(
+                                    child: NamidaText(
                                       "+${remainingVideosCount.formatDecimalShort()}",
-                                      style: textTheme.displayMedium,
+                                      style: NText.medium,
                                     ),
                                   ),
                                 );

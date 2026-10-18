@@ -178,7 +178,7 @@ class Dimensions {
 
 const kBottomPaddingInsets = EdgeInsets.only(bottom: Dimensions.globalBottomPaddingTotal);
 const kBottomPaddingWidget = SizedBox(height: Dimensions.globalBottomPaddingTotal);
-SliverPadding get kBottomPaddingWidgetSliver => SliverPadding(padding: kBottomPaddingInsets);
+SliverPadding get kBottomPaddingWidgetSliver => const SliverPadding(padding: kBottomPaddingInsets);
 
 // ---- Constant Values ----
 const kHistoryDayHeaderHeight = 40.0;

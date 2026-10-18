@@ -35,13 +35,13 @@ class CountPerRow {
     if (this.isAuto) return null;
     final current = this;
     final maximum = CountPerRow.getRecommendedMaximum(minimum: minimum);
-    final toAdd = 1;
+    const toAdd = 1;
     final n = current._recommended;
     return CountPerRow._hardCoded(n < maximum ? (n + toAdd).withMinimum(minimum) : minimum);
   }
 
   static Iterable<CountPerRow> getAvailableOptions() sync* {
-    final start = 1;
+    const start = 1;
     final end = getRecommendedMaximum(minimum: start);
     for (int i = start; i <= end; i++) {
       yield CountPerRow._hardCoded(i);

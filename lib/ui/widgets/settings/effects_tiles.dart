@@ -8,6 +8,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -55,7 +56,6 @@ class EffectThemeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final key = _isOverlay ? settings.effectsOverlay : settings.effectsBackground;
     final subtitle = _isOverlay ? lang.overlayEffectSubtitle : lang.seasonalEffectsSubtitle;
     return NamidaPopupWrapper(
@@ -69,9 +69,9 @@ class EffectThemeTile extends StatelessWidget {
           childrenDefault: _getItems,
           child: ObxO(
             rx: key,
-            builder: (context, theme) => Text(
+            builder: (context, theme) => NamidaText(
               theme.toText(),
-              style: textTheme.displayMedium,
+              style: NText.medium,
               textAlign: TextAlign.end,
             ),
           ),
@@ -239,7 +239,6 @@ class PlayerBackgroundTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return CustomListTile(
       bgColor: bgColor,
       icon: Broken.gallery,
@@ -248,9 +247,9 @@ class PlayerBackgroundTile extends StatelessWidget {
       onTap: _openOptions,
       trailing: ObxO(
         rx: settings.playerBackground,
-        builder: (context, source) => Text(
+        builder: (context, source) => NamidaText(
           source.toText(),
-          style: textTheme.displayMedium,
+          style: NText.medium,
           textAlign: TextAlign.end,
         ),
       ),
@@ -279,7 +278,6 @@ class AppWallpaperTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return ObxO(
       rx: settings.backgroundImages,
       builder: (context, backgroundImages) {
@@ -291,9 +289,9 @@ class AppWallpaperTile extends StatelessWidget {
           onTap: _openOptions,
           trailing: ObxO(
             rx: settings.appWallpaper,
-            builder: (context, path) => Text(
+            builder: (context, path) => NamidaText(
               path == null ? lang.none : lang.custom,
-              style: textTheme.displayMedium,
+              style: NText.medium,
               textAlign: TextAlign.end,
             ),
           ),
@@ -492,7 +490,6 @@ class _EnabledVisualizersText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Obx(
       (context) {
         final hasParticles = settings.enableMiniplayerParticles.valueR;
@@ -505,9 +502,9 @@ class _EnabledVisualizersText extends StatelessWidget {
             : othersCount > 0
             ? '$firstName +$othersCount'
             : firstName;
-        return Text(
+        return NamidaText(
           text,
-          style: textTheme.displayMedium,
+          style: NText.medium,
           textAlign: TextAlign.end,
         );
       },
@@ -520,12 +517,10 @@ class _SupportersMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = context.theme.iconTheme.color;
-    final markColor = iconColor?.withOpacityExt(0.6);
-    return Icon(
+    return const NIcon(
       Broken.crown_1,
       size: 14.0,
-      color: markColor,
+      color: NColors(.icon, opacity: 0.6),
     );
   }
 }
@@ -537,14 +532,13 @@ class _SupportersTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Flexible(
-          child: Text(
+          child: NamidaText(
             title,
-            style: textTheme.displayMedium,
+            style: NText.medium,
           ),
         ),
         const SizedBox(width: 6.0),

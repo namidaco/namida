@@ -333,7 +333,7 @@ class _FestiveFramePainter extends CustomPainter {
       ..lineTo(b, 0.0)
       ..quadraticBezierTo(0.0, 5.0, -b, 0.0)
       ..close();
-    final coneBounds = Rect.fromLTRB(-b, -h, b, 5.0);
+    const coneBounds = Rect.fromLTRB(-b, -h, b, 5.0);
     final lightAccent = Color.alphaBlend(Colors.white.withOpacityExt(0.35), accent);
     final darkAccent = Color.alphaBlend(Colors.black.withOpacityExt(0.25), accent);
     final coneGradient = LinearGradient(

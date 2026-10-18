@@ -18,6 +18,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -160,18 +161,15 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
   }
 
   Widget _buildBody(BuildContext context, String currentId) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final commentsIconColor = theme.iconTheme.color;
     final repliesCount = widget.repliesCount;
     return Column(
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
+        NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
             boxShadow: [
               BoxShadow(
                 blurRadius: 12.0,
-                color: theme.secondaryHeaderColor.withOpacityExt(0.5),
+                color: colors.secondaryHeader.withOpacityExt(0.5),
               ),
             ],
           ),
@@ -193,13 +191,15 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                   ObxO(
                     rx: _lastFetchWasCached,
                     builder: (context, isRepliesFromCache) => (isRepliesFromCache ?? false)
-                        ? StackedIcon(
-                            baseIcon: Broken.note_2,
-                            secondaryIcon: Broken.global,
-                            iconSize: 22.0,
-                            secondaryIconSize: 12.0,
-                            baseIconColor: commentsIconColor,
-                            secondaryIconColor: commentsIconColor,
+                        ? NBuilder(
+                            builder: (context, colors) => StackedIcon(
+                              baseIcon: Broken.note_2,
+                              secondaryIcon: Broken.global,
+                              iconSize: 22.0,
+                              secondaryIconSize: 12.0,
+                              baseIconColor: NColors.fixed(colors.icon),
+                              secondaryIconColor: NColors.fixed(colors.icon),
+                            ),
                           )
                         : const Icon(
                             Broken.note_2,
@@ -212,12 +212,12 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                       rx: _currentReplies,
                       builder: (context, _) {
                         final currentRepliesCount = _currentMainComment.value.repliesCount;
-                        return Text(
+                        return NamidaText(
                           [
                             lang.replies,
                             if (currentRepliesCount != null) currentRepliesCount.formatDecimalShort(),
                           ].join(' • '),
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                           textAlign: TextAlign.start,
                         );
                       },
@@ -267,7 +267,7 @@ class _YTMiniplayerCommentRepliesSubpageState extends State<YTMiniplayerCommentR
                         rx: _currentMainComment,
                         builder: (context, mainComment) => YTCommentCard(
                           key: Key(mainComment.commentId),
-                          bgAlpha: 200,
+                          bgOpacity: 0.78,
                           showRepliesBox: false,
                           margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
                           comment: mainComment,

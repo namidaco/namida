@@ -44,7 +44,7 @@ class SubtitleOverlay extends StatelessWidget {
                 ? const SizedBox.shrink(key: ValueKey('no_text'))
                 : Text(
                     text,
-                    key: ValueKey('yes_text'),
+                    key: const ValueKey('yes_text'),
                     style: style,
                     textAlign: TextAlign.center,
                     maxLines: maxLines,

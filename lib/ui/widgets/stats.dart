@@ -22,6 +22,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -423,8 +424,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final years = _isYoutube ? YoutubeHistoryController.inst.getHistoryYears() : HistoryController.inst.getHistoryYears();
     final customText = _custom == null ? '' : '${_custom!.oldest.dateFormattedOriginalNoYears(_custom!.newest)} → ${_custom!.newest.dateFormattedOriginalNoYears(_custom!.oldest)}';
     return Padding(
@@ -436,12 +435,12 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: Row(
               children: [
-                Icon(Broken.chart_2, size: 22.0, color: context.defaultIconColor()),
+                NIcon(Broken.chart_2, size: 22.0, color: NColors.defaultIcon()),
                 const SizedBox(width: 10.0),
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     lang.charts,
-                    style: textTheme.displayLarge?.copyWith(fontSize: 18.0),
+                    style: const NText(.large, size: .s18),
                   ),
                 ),
                 if (_hasYoutubeHistory) ...[
@@ -464,17 +463,17 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                 if (years.isNotEmpty)
                   NamidaInkWell(
                     borderRadius: 10.0,
-                    bgColor: theme.cardColor,
+                    bgColor: NColors.card,
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     onTap: () => YourYearPage(year: years.first, isYoutube: _isYoutube).navigate(),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Broken.magic_star, size: 16.0, color: context.defaultIconColor()),
+                        NIcon(Broken.magic_star, size: 16.0, color: NColors.defaultIcon()),
                         const SizedBox(width: 6.0),
-                        Text(
+                        NamidaText(
                           lang.yourYear(year: years.first.toString()),
-                          style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                          style: const NText(.small, weight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -591,9 +590,9 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
             if (hasPrev)
               Padding(
                 padding: const EdgeInsets.only(left: 4.0, top: 2.0),
-                child: Text(
+                child: NamidaText(
                   '${lang.previous}: ${StatsFormat.rangeText(prev)}',
-                  style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 10.5),
+                  style: const NText(.small, size: .s10p5),
                 ),
               ),
           ],
@@ -755,7 +754,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     // -- habits: simple numbers combined
     cards.add(
       (context) {
-        final textTheme = context.theme.textTheme;
         final repeatPct = s.totalListens <= 1 ? 0 : (s.repeatListens * 100 / (s.totalListens - 1)).round();
         int libraryCount = 0;
         int neverPlayed = 0;
@@ -803,9 +801,9 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                 const SizedBox(height: 6.0),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(6.0, 0.0, 6.0, 6.0),
-                  child: Text(
+                  child: NamidaText(
                     '${lang.streak} • ${lang.countDays(count: streak.days)} • ${StatsFormat.day(streak.endDay - streak.days + 1)} → ${StatsFormat.day(streak.endDay)}',
-                    style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: const NText(.small, weight: FontWeight.w600),
                   ),
                 ),
                 _buildSingleItem(context, s, streak.item, s.topItems.firstWhereEff((e) => e.key == streak.item)?.count ?? streak.days, listensRangeMS: rangeMS),
@@ -823,7 +821,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
           final obsessions = s.obsessions;
           final shownObsessions = _shownItemsOf(_ExpandableStatsList.obsessions, obsessions);
           final session = s.longestSession;
-          final textTheme = context.theme.textTheme;
           return StatsChartCard(
             title: lang.obsession,
             subtitle: obsessions.isEmpty ? null : '${lang.mostPlayed} • ${lang.day}',
@@ -854,7 +851,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   const SizedBox(height: 10.0),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(6.0, 0.0, 6.0, 6.0),
-                    child: Text('${lang.longestSession} • ${session.startMS.dateFormattedOriginal}', style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600)),
+                    child: NamidaText(
+                      '${lang.longestSession} • ${session.startMS.dateFormattedOriginal}',
+                      style: const NText(.small, weight: FontWeight.w600),
+                    ),
                   ),
                   Wrap(
                     children: [
@@ -891,8 +891,7 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
         final oldest = s.oldestFavorite;
         final newItems = s.newItemsTop;
         final shownNewItems = _shownItemsOf(_ExpandableStatsList.discoveries, newItems);
-        final textTheme = context.theme.textTheme;
-        final captionStyle = textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600);
+        final captionStyle = NText.small.of(context).copyWith(fontWeight: FontWeight.w600);
         final rangeMS = (HistoryManager.daysSince1970ToMilliseconds(s.firstDay), HistoryManager.daysSince1970ToMilliseconds(s.lastDay + 1) - 1);
         final playlistRangeText = StatsFormat.rangeTextWithYears(s);
         return StatsChartCard(
@@ -1031,7 +1030,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
       if (rows.isNotEmpty) {
         cards.add(
           (context) {
-            final textTheme = context.theme.textTheme;
             return StatsChartCard(
               title: lang.mostPlayed,
               icon: Broken.cup,
@@ -1051,22 +1049,28 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                               },
                         child: Row(
                           children: [
-                            Icon(r.$1, size: 18.0, color: context.defaultIconColor()),
+                            NIcon(r.$1, size: 18.0, color: NColors.defaultIcon()),
                             const SizedBox(width: 10.0),
                             SizedBox(
                               width: 64.0,
-                              child: Text(r.$2, style: textTheme.displaySmall?.copyWith(fontSize: 11.5)),
+                              child: NamidaText(
+                                r.$2,
+                                style: const NText(.small, size: .s11p5),
+                              ),
                             ),
                             Expanded(
-                              child: Text(
+                              child: NamidaText(
                                 r.$3!.key,
-                                style: textTheme.displayMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w600),
+                                style: const NText(.medium, size: .s13p5, weight: FontWeight.w600),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             const SizedBox(width: 8.0),
-                            Text(r.$3!.count.formatDecimal(), style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700)),
+                            NamidaText(
+                              r.$3!.count.formatDecimal(),
+                              style: const NText(.medium, size: .s13, weight: FontWeight.w700),
+                            ),
                           ],
                         ),
                       ),
@@ -1135,7 +1139,6 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
     if (s.completedAlbums.isNotEmpty) {
       cards.add(
         (context) {
-          final textTheme = context.theme.textTheme;
           final shown = _shownItemsOf(_ExpandableStatsList.completedAlbums, s.completedAlbums);
           return StatsChartCard(
             title: lang.completedAlbums,
@@ -1152,20 +1155,26 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                     onTap: () => NamidaOnTaps.inst.onAlbumTap(e.key as AlbumIdentifierWrapper),
                     child: Row(
                       children: [
-                        Icon(Broken.music_dashboard, size: 18.0, color: context.defaultIconColor()),
+                        NIcon(Broken.music_dashboard, size: 18.0, color: NColors.defaultIcon()),
                         const SizedBox(width: 10.0),
                         Expanded(
-                          child: Text(
+                          child: NamidaText(
                             e.name,
-                            style: textTheme.displayMedium?.copyWith(fontSize: 13.5, fontWeight: FontWeight.w600),
+                            style: const NText(.medium, size: .s13p5, weight: FontWeight.w600),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 8.0),
-                        Text(lang.countTracks(count: e.tracks), style: textTheme.displaySmall?.copyWith(fontSize: 11.0)),
+                        NamidaText(
+                          lang.countTracks(count: e.tracks),
+                          style: const NText(.small, size: .s11),
+                        ),
                         const SizedBox(width: 8.0),
-                        Text(e.listens.formatDecimal(), style: textTheme.displayMedium?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700)),
+                        NamidaText(
+                          e.listens.formatDecimal(),
+                          style: const NText(.medium, size: .s13, weight: FontWeight.w700),
+                        ),
                       ],
                     ),
                   ),
@@ -1216,15 +1225,15 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
                   padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                   child: Row(
                     children: [
-                      Icon(
+                      NIcon(
                         Broken.category_2,
                         size: 14.0,
-                        color: context.defaultIconColor(),
+                        color: NColors.defaultIcon(),
                       ),
                       const SizedBox(width: 6.0),
-                      Text(
+                      NamidaText(
                         categoryText,
-                        style: context.theme.textTheme.displaySmall,
+                        style: NText.small,
                       ),
                     ],
                   ),
@@ -1232,7 +1241,10 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
               ),
               copyText: () => all.map((e) => '${e.key} • ${e.count}').join('\n'),
               child: data.isEmpty
-                  ? Text(lang.none, style: context.theme.textTheme.displaySmall)
+                  ? NamidaText(
+                      lang.none,
+                      style: NText.small,
+                    )
                   : DonutChart(
                       data: data,
                       otherValue: other,
@@ -1413,11 +1425,13 @@ class _StatsChartsSliversState extends State<StatsChartsSlivers> {
   Widget build(BuildContext context) {
     final cards = _loading ? const <Widget Function(BuildContext)>[] : _buildCards();
     final loadingWidget = Padding(
-      padding: EdgeInsets.all(32.0),
+      padding: const EdgeInsets.all(32.0),
       child: Center(
-        child: ThreeArchedCircle(
-          color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
-          size: 48.0,
+        child: NBuilder(
+          builder: (context, colors) => ThreeArchedCircle(
+            color: colors.secondary.withOpacityExt(0.5),
+            size: 48.0,
+          ),
         ),
       ),
     );
@@ -1455,9 +1469,9 @@ class _ShowMoreButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!isFullyShown) ...[
-              Text(
+              NamidaText(
                 lang.showMore,
-                style: context.theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                style: const NText(.small, weight: FontWeight.w600),
               ),
               const SizedBox(width: 4.0),
             ],

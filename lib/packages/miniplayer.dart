@@ -30,11 +30,13 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
+import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -71,7 +73,7 @@ class MiniPlayerParent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(
-      (context) => Theme(
+      (context) => NTheme(
         data: AppThemes.inst.getAppTheme(CurrentColor.inst.miniplayerColor, !context.isDarkMode),
         child: const _MiniPlayerParentBody(),
       ),
@@ -244,9 +246,6 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
   }
 
   static FocusedMenuOptions buildFocusedMenuOptions(BuildContext context) {
-    final theme = context.theme;
-    // ignore: unused_local_variable
-    final textTheme = theme.textTheme;
     return FocusedMenuOptions(
       onSearch: (item) {
         final tr = (item as Selectable).track;
@@ -261,8 +260,10 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         ),
       ),
       builder: (currentItem) {
-        final onSecondary = theme.colorScheme.onSecondaryContainer;
         return Obx((context) {
+          final colors = NColorsData.of(context);
+          final textTheme = context.textTheme;
+          final onSecondary = colors.onSecondaryContainer;
           if (!settings.enableVideoPlayback.valueR) {
             final trExt = (currentItem as Selectable).track.toTrackExt();
             var text = " • ${trExt.audioInfoFormattedCompact}";
@@ -274,12 +275,12 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
             return Text.rich(
               TextSpan(
                 text: lang.audio,
-                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: theme.colorScheme.onSecondaryContainer),
+                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: colors.onSecondaryContainer),
                 children: [
                   if (settings.displayAudioInfoMiniplayer.valueR)
                     TextSpan(
                       text: text,
-                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 11.0),
+                      style: TextStyle(color: colors.primary, fontSize: 11.0),
                       children: bits > 0
                           ? [
                               const WidgetSpan(
@@ -296,8 +297,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.8), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
-                                        Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
+                                        Color.alphaBlend(colors.scaffold.withOpacityExt(0.8), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
+                                        Color.alphaBlend(colors.scaffold.withOpacityExt(0.5), CurrentColor.inst.miniplayerColor).withOpacityExt(1.0),
                                       ],
                                     ),
                                   ),
@@ -314,28 +315,28 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                           ),
                                           const SizedBox(height: 12.0),
                                           if (isBitPerfect) ...[
-                                            Text(
+                                            NamidaText(
                                               lang.bitPerfect,
-                                              style: textTheme.displayLarge,
+                                              style: NText.large,
                                             ),
                                             const SizedBox(height: 6.0),
                                           ],
                                           if (bitsText.isNotEmpty) ...[
-                                            Text(
+                                            NamidaText(
                                               bitsText,
-                                              style: textTheme.displayLarge,
+                                              style: NText.large,
                                             ),
                                             const SizedBox(height: 6.0),
                                           ],
-                                          Text(
+                                          NamidaText(
                                             trExt.audioInfoFormattedAlt,
-                                            style: textTheme.displayMedium,
+                                            style: NText.medium,
                                           ),
                                           const SizedBox(height: 12.0),
                                           NamidaInkWell(
                                             borderRadius: 8.0,
                                             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                                            bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                                            bgColor: const NColors(.secondaryContainer, opacity: 0.4),
                                             onTap: () {
                                               NamidaNavigator.inst.popMenu();
                                               NamidaOnTaps.inst.openAudioPath();
@@ -348,9 +349,9 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                                   size: 16.0,
                                                 ),
                                                 const SizedBox(width: 6.0),
-                                                Text(
+                                                NamidaText(
                                                   lang.signalPath,
-                                                  style: textTheme.displaySmall,
+                                                  style: NText.small,
                                                 ),
                                               ],
                                             ),
@@ -361,7 +362,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                   ],
                                   child: NamidaInkWell(
                                     borderRadius: 4.0,
-                                    bgColor: theme.cardColor.withAlpha(60),
+                                    bgColor: const NColors(.card, opacity: 0.24),
                                     padding: const EdgeInsetsGeometry.symmetric(horizontal: 4.0, vertical: 1.0),
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
@@ -374,7 +375,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                                         Text(
                                           bitsText.isEmpty ? '$bits-bit' : '$bits-bit $bitsText',
                                           style: TextStyle(
-                                            color: theme.colorScheme.primary,
+                                            color: colors.primary,
                                             fontSize: 11.0,
                                           ),
                                         ),
@@ -423,7 +424,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
           return Text.rich(
             TextSpan(
               text: lang.video,
-              style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: theme.colorScheme.onSecondaryContainer),
+              style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: colors.onSecondaryContainer),
               children: [
                 if (videoBlockedByIcon != null) ...[
                   TextSpan(
@@ -441,7 +442,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                   TextSpan(
                     text: " • $qualityText$framerateText",
                     style: TextStyle(
-                      color: theme.colorScheme.primary,
+                      color: colors.primary,
                       fontSize: 13.0,
                     ),
                   ),
@@ -449,7 +450,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
                 if (videoTotalSize > 0) ...[
                   TextSpan(
                     text: " • ",
-                    style: TextStyle(color: theme.colorScheme.primary, fontSize: 14.0),
+                    style: TextStyle(color: colors.primary, fontSize: 14.0),
                   ),
                   TextSpan(
                     text: downloadedBytes == null ? videoTotalSize.fileSizeFormatted : "${downloadedBytes.fileSizeFormatted}/${videoTotalSize.fileSizeFormatted}",
@@ -624,9 +625,6 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
   }
 
   static FocusedMenuOptions buildFocusedMenuOptions(BuildContext context) {
-    final theme = context.theme;
-    // ignore: unused_local_variable
-    final textTheme = theme.textTheme;
     return FocusedMenuOptions(
       onSearch: null,
       onPressed: (currentItem) => Player.inst.setAudioOnlyPlayback(!settings.youtube.isAudioOnlyMode.value),
@@ -638,8 +636,10 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         ),
       ),
       builder: (currentItem) {
-        final onSecondary = theme.colorScheme.onSecondaryContainer;
         return Obx((context) {
+          final colors = NColorsData.of(context);
+          final textTheme = context.textTheme;
+          final onSecondary = colors.onSecondaryContainer;
           if (settings.youtube.isAudioOnlyMode.valueR) {
             List<TextSpan>? textChildren;
             if (settings.displayAudioInfoMiniplayer.valueR) {
@@ -662,7 +662,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
                 textChildren = <TextSpan>[
                   TextSpan(
                     text: " • ${finalText.joinText(separator: ' • ')}",
-                    style: TextStyle(color: theme.colorScheme.primary, fontSize: 11.0),
+                    style: TextStyle(color: colors.primary, fontSize: 11.0),
                   ),
                 ];
               }
@@ -670,7 +670,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
             return Text.rich(
               TextSpan(
                 text: lang.audio,
-                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: theme.colorScheme.onSecondaryContainer),
+                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: colors.onSecondaryContainer),
                 children: textChildren,
               ),
               overflow: TextOverflow.ellipsis,
@@ -688,7 +688,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
             return Text.rich(
               TextSpan(
                 text: lang.video,
-                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: theme.colorScheme.onSecondaryContainer),
+                style: textTheme.labelLarge?.copyWith(fontSize: 15.0, color: colors.onSecondaryContainer),
                 children: [
                   if (stream == null && cached == null && !ConnectivityController.inst.hasConnectionR) ...[
                     TextSpan(
@@ -706,7 +706,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
                     TextSpan(
                       text: " • ${qualityText ?? '?'}",
                       style: TextStyle(
-                        color: theme.colorScheme.primary,
+                        color: colors.primary,
                         fontSize: 13.0,
                       ),
                     ),
@@ -714,7 +714,7 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
                   if (sizeFinal > 0) ...[
                     TextSpan(
                       text: " • ",
-                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 14.0),
+                      style: TextStyle(color: colors.primary, fontSize: 14.0),
                     ),
                     TextSpan(
                       text: sizeFinal.fileSizeFormatted,
@@ -1042,9 +1042,9 @@ class _AnimatingThumnailWidgetState extends State<_AnimatingThumnailWidget> {
                           ? Align(
                               alignment: AlignmentDirectional.centerEnd,
                               child: Padding(
-                                padding: EdgeInsetsDirectional.only(bottom: 16.0),
+                                padding: const EdgeInsetsDirectional.only(bottom: 16.0),
                                 child: SkipSponsorButton(
-                                  itemsColor: Colors.white.withAlpha(200),
+                                  itemsColor: Colors.white.withOpacityExt(0.78),
                                 ),
                               ),
                             )
@@ -1578,46 +1578,48 @@ class Wallpaper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Material(
-      color: theme.scaffoldBackgroundColor,
-      child: Stack(
-        children: [
-          if (gradient)
-            Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0.95, -0.95),
-                  radius: 1.0,
-                  colors: [
-                    theme.colorScheme.onSecondary.withOpacityExt(.3),
-                    theme.colorScheme.onSecondary.withOpacityExt(.2),
-                  ],
-                ),
+    final stack = Stack(
+      children: [
+        if (gradient)
+          NContainer(
+            decoration: (nColors) => BoxDecoration(
+              gradient: RadialGradient(
+                center: const Alignment(0.95, -0.95),
+                radius: 1.0,
+                colors: [
+                  nColors.onSecondary.withOpacityExt(.3),
+                  nColors.onSecondary.withOpacityExt(.2),
+                ],
               ),
             ),
-
-          const Positioned.fill(
-            child: NamidaPlayerBackground(),
           ),
 
-          if (NamidaJellys.enabled)
-            const Positioned.fill(
-              child: NamidaJellyBackground(
-                count: 5,
-                opacity: 0.22,
-                minHeight: 140.0,
-                maxHeight: 380.0,
-                reactToPlayback: true,
-                seed: 13,
-              ),
+        const Positioned.fill(
+          child: NamidaPlayerBackground(),
+        ),
+
+        if (NamidaJellys.enabled)
+          const Positioned.fill(
+            child: NamidaJellyBackground(
+              count: 5,
+              opacity: 0.22,
+              minHeight: 140.0,
+              maxHeight: 380.0,
+              reactToPlayback: true,
+              seed: 13,
             ),
-
-          const Positioned.fill(
-            child: NamidaVisualizer.wallpaper(),
           ),
-          ?child,
-        ],
+
+        const Positioned.fill(
+          child: NamidaVisualizer.wallpaper(),
+        ),
+        ?child,
+      ],
+    );
+    return NBuilder(
+      builder: (context, colors) => Material(
+        color: colors.scaffold,
+        child: stack,
       ),
     );
   }

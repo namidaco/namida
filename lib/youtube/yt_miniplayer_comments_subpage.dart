@@ -11,6 +11,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
@@ -45,7 +46,6 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return BackgroundWrapper(
       child: ObxO(
         rx: Player.inst.currentItem,
@@ -54,12 +54,12 @@ class _YTMiniplayerCommentsSubpageState extends State<YTMiniplayerCommentsSubpag
           final currentId = currentItem.id;
           return Column(
             children: [
-              DecoratedBox(
-                decoration: BoxDecoration(
+              NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
                   boxShadow: [
                     BoxShadow(
                       blurRadius: 12.0,
-                      color: theme.secondaryHeaderColor.withOpacityExt(0.5),
+                      color: colors.secondaryHeader.withOpacityExt(0.5),
                     ),
                   ],
                 ),
@@ -178,9 +178,6 @@ class YoutubeCommentsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final commentsIconColor = theme.iconTheme.color;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -207,13 +204,15 @@ class YoutubeCommentsHeader extends StatelessWidget {
                       ObxO(
                         rx: YoutubeInfoController.current.isCurrentCommentsFromCache,
                         builder: (context, isCurrentCommentsFromCache) => (isCurrentCommentsFromCache ?? false)
-                            ? StackedIcon(
-                                baseIcon: Broken.document,
-                                secondaryIcon: Broken.global,
-                                iconSize: 22.0,
-                                secondaryIconSize: 12.0,
-                                baseIconColor: commentsIconColor,
-                                secondaryIconColor: commentsIconColor,
+                            ? NBuilder(
+                                builder: (context, colors) => StackedIcon(
+                                  baseIcon: Broken.document,
+                                  secondaryIcon: Broken.global,
+                                  iconSize: 22.0,
+                                  secondaryIconSize: 12.0,
+                                  baseIconColor: NColors.fixed(colors.icon),
+                                  secondaryIconColor: NColors.fixed(colors.icon),
+                                ),
                               )
                             : const Icon(
                                 Broken.document,
@@ -235,12 +234,12 @@ class YoutubeCommentsHeader extends StatelessWidget {
                       rx: YoutubeInfoController.current.currentComments,
                       builder: (context, comments) {
                         final count = comments?.commentsCount;
-                        return Text(
+                        return NamidaText(
                           [
                             lang.comments,
                             if (count != null) count.formatDecimalShort(),
                           ].join(' • '),
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                           textAlign: TextAlign.start,
                         );
                       },
@@ -264,7 +263,7 @@ class YoutubeCommentsHeader extends StatelessWidget {
                             borderRadius: 8.0,
                             margin: const EdgeInsets.symmetric(horizontal: 4.0),
                             padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                            bgColor: currentCommentSort == s ? theme.colorScheme.secondaryContainer : theme.cardColor,
+                            bgColor: currentCommentSort == s ? NColors.secondaryContainer : NColors.card,
                             onTap: () async {
                               final activeSort = YoutubeMiniplayerUiController.inst.currentCommentSort.value;
                               if (activeSort == s) return;
@@ -282,9 +281,9 @@ class YoutubeCommentsHeader extends StatelessWidget {
                               // -- reverting if failed.
                               if (!done) YoutubeMiniplayerUiController.inst.currentCommentSort.value = activeSort;
                             },
-                            child: Text(
+                            child: NamidaText(
                               s.toText(),
-                              style: textTheme.displayMedium,
+                              style: NText.medium,
                             ),
                           ),
                         ),
@@ -346,16 +345,16 @@ class _PausedCommentsMessage extends StatelessWidget {
           padding: const EdgeInsets.only(left: 18.0, right: 18.0, top: 6.0),
           child: Row(
             children: [
-              Icon(
+              const NIcon(
                 Broken.pause_circle,
                 size: 16.0,
-                color: context.theme.iconTheme.color,
+                color: NColors.icon,
               ),
               const SizedBox(width: 6.0),
               Expanded(
-                child: Text(
+                child: NamidaText(
                   message,
-                  style: context.textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ),
             ],

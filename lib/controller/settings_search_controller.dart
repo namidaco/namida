@@ -143,14 +143,14 @@ class SettingsSearchController {
     if (isOpen) {
       _searchIndex.clear();
       final settingsWidgets = [
-        ThemeSetting(),
-        IndexerSettings(),
-        PlaybackSettings(),
-        CustomizationSettings(),
-        YoutubeSettings(),
-        ExtrasSettings(),
-        BackupAndRestore(),
-        AdvancedSettings(),
+        const ThemeSetting(),
+        const IndexerSettings(),
+        const PlaybackSettings(),
+        const CustomizationSettings(),
+        const YoutubeSettings(),
+        const ExtrasSettings(),
+        const BackupAndRestore(),
+        const AdvancedSettings(),
       ];
       for (final p in settingsWidgets) {
         subpagesDetails[p.settingPage] = p.settingPage.toSettingSubPageDetails();

@@ -9,6 +9,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -28,7 +29,7 @@ abstract class SettingSubpageProvider extends StatelessWidget {
   AppDocsLinks get docsLink => AppDocsLinks.getForSettingsPage(settingPage);
 
   Color? getBgColor(SettingEntry entry) {
-    return entry == initialItem ? Colors.grey.withAlpha(80) : null;
+    return entry == initialItem ? Colors.grey.withOpacityExt(0.31) : null;
   }
 
   bool isTargetWithin(SettingEntry entry) {
@@ -74,7 +75,7 @@ class _SettingTargetHighlightState extends State<_SettingTargetHighlight> {
                 DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-                    color: Colors.grey.withAlpha(100),
+                    color: Colors.grey.withOpacityExt(0.39),
                   ),
                 ).animate(
                   autoPlay: true,

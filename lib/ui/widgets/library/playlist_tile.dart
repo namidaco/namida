@@ -5,6 +5,7 @@ import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -33,21 +34,8 @@ class PlaylistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final hero = 'playlist_$playlistName';
-    late final borderSide = BorderSide(
-      width: 2.0,
-      color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
-    );
-    final decoration = checkmarkStatus == true
-        ? BoxDecoration(
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            border: Border(
-              left: borderSide,
-              bottom: borderSide,
-            ),
-          )
-        : null;
+    final isChecked = checkmarkStatus == true;
     return Padding(
       padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
       child: NamidaInkWell(
@@ -62,7 +50,20 @@ class PlaylistTile extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
             child: _PreferAnimatedDecoratedBox(
               duration: checkmarkStatus != null ? const Duration(milliseconds: 200) : Duration.zero,
-              decoration: decoration ?? const BoxDecoration(),
+              decoration: (colors) {
+                if (!isChecked) return const BoxDecoration();
+                final borderSide = BorderSide(
+                  width: 2.0,
+                  color: colors.secondary.withOpacityExt(0.5),
+                );
+                return BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                  border: Border(
+                    left: borderSide,
+                    bottom: borderSide,
+                  ),
+                );
+              },
               child: Obx(
                 (context) {
                   PlaylistController.inst.playlistsMap.valueR;
@@ -90,21 +91,21 @@ class PlaylistTile extends StatelessWidget {
                             NamidaHero(
                               enabled: enableHero,
                               tag: 'line1_$hero',
-                              child: Text(
+                              child: NamidaText(
                                 playlist.name.translatePlaylistName(),
-                                style: textTheme.displayMedium,
+                                style: NText.medium,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             NamidaHero(
                               enabled: enableHero,
                               tag: 'line2_$hero',
-                              child: Text(
+                              child: NamidaText(
                                 [
                                   tracksRaw.displayTrackKeyword,
                                   if (extraText?.isNotEmpty == true) extraText,
                                 ].join(' • '),
-                                style: textTheme.displaySmall?.copyWith(fontSize: 13.7),
+                                style: const NText(.small, size: .s13p7),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -120,9 +121,9 @@ class PlaylistTile extends StatelessWidget {
                                       trailingGap: 4.0,
                                     ),
                                     Flexible(
-                                      child: Text(
+                                      child: NamidaText(
                                         tagsAndMoodsText,
-                                        style: textTheme.displaySmall,
+                                        style: NText.small,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
@@ -140,11 +141,9 @@ class PlaylistTile extends StatelessWidget {
                         ),
                         const SizedBox(width: 6.0),
                       ],
-                      Text(
+                      NamidaText(
                         tracksRaw.totalDurationFormatted,
-                        style: textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const NText(.small, weight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(width: 4.0),
@@ -200,7 +199,7 @@ class PlaylistTile extends StatelessWidget {
 
 class _PreferAnimatedDecoratedBox extends StatelessWidget {
   final Duration duration;
-  final Decoration decoration;
+  final Decoration Function(NColorsData colors) decoration;
   final Widget child;
 
   const _PreferAnimatedDecoratedBox({
@@ -212,8 +211,9 @@ class _PreferAnimatedDecoratedBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (duration == Duration.zero) return child;
+    final colors = NColorsData.targetOf(context);
     return AnimatedDecoration(
-      decoration: decoration,
+      decoration: decoration(colors),
       duration: duration,
       child: child,
     );

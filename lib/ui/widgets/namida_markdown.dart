@@ -13,6 +13,7 @@ import 'package:markdown/src/util.dart' show decodeHtmlCharacters;
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 const _kHtmlTag = '__html';
@@ -865,7 +866,7 @@ class _MdRenderer {
     return Center(
       child: NamidaInkWell(
         onTap: link == null ? null : () => NamidaLinkUtils.openLink(link),
-        bgColor: theme.cardTheme.color?.withOpacityExt(0.8),
+        bgColor: NColors.fixed(theme.cardTheme.color?.withOpacityExt(0.8)),
         borderRadius: 18.0,
         decoration: BoxDecoration(
           border: Border.all(
@@ -1324,7 +1325,7 @@ class _MdDetailsState extends State<_MdDetails> with SingleTickerProviderStateMi
       children: [
         NamidaInkWell(
           onTap: _toggle,
-          bgColor: renderer.surfaceColor,
+          bgColor: NColors.fixed(renderer.surfaceColor),
           borderRadius: 10.0,
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
           child: Row(

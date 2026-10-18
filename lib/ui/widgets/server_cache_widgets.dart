@@ -8,6 +8,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -58,9 +59,9 @@ class _NotCachedBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return Align(
       alignment: Alignment.bottomLeft,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: context.theme.cardColor.withAlpha(200),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.card.withOpacityExt(0.78),
           borderRadius: BorderRadius.only(topRight: Radius.circular(4.0.multipliedRadius)),
         ),
         child: const Padding(
@@ -102,7 +103,7 @@ class _ServerCacheTaskRing extends StatelessWidget {
             value: 0.0,
             strokeWidth: 2.0,
             color: color,
-            backgroundColor: color?.withAlpha(60),
+            backgroundColor: color?.withOpacityExt(0.24),
           ),
           ServerCacheTaskState.downloading => ObxO(
             rx: task.downloadedBytes,
@@ -112,7 +113,7 @@ class _ServerCacheTaskRing extends StatelessWidget {
                 value: total > 0 ? (downloaded / total).clampDouble(0.0, 1.0) : null,
                 strokeWidth: 2.0,
                 color: color,
-                backgroundColor: color?.withAlpha(60),
+                backgroundColor: color?.withOpacityExt(0.24),
               );
             },
           ),
@@ -141,12 +142,11 @@ class DownloadsAppBarIcon extends StatelessWidget {
         rx: ServerCacheController.inst.tasks,
         builder: (context, serverTasks) {
           final count = youtubeCount + serverTasks.length;
-          final theme = context.theme;
           return AnimatedShow(
             show: count > 0,
             isHorizontal: true,
             curve: Curves.fastEaseInToSlowEaseOut,
-            duration: Duration(milliseconds: 400),
+            duration: const Duration(milliseconds: 400),
             child: NamidaAppBarIcon(
               icon: Broken.import,
               tooltip: () => lang.downloads,
@@ -154,23 +154,23 @@ class DownloadsAppBarIcon extends StatelessWidget {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  Icon(
+                  const NIcon(
                     Broken.import,
-                    color: theme.colorScheme.secondary,
+                    color: NColors.secondary,
                   ),
                   Positioned(
                     top: -4.0,
                     right: -6.0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
+                    child: NDecoratedBox(
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.secondaryContainer,
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                        child: Text(
+                        child: NamidaText(
                           count.formatDecimal(),
-                          style: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                          style: const NText(.small, size: .s10),
                         ),
                       ),
                     ),
@@ -200,7 +200,6 @@ class _ServerCacheQueueSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = ServerCacheController.inst;
-    final textTheme = context.textTheme;
     return Column(
       children: [
         Padding(
@@ -216,9 +215,9 @@ class _ServerCacheQueueSheet extends StatelessWidget {
               Expanded(
                 child: ObxO(
                   rx: controller.tasks,
-                  builder: (context, tasks) => Text(
+                  builder: (context, tasks) => NamidaText(
                     '${lang.cache} (${tasks.length.formatDecimal()})',
-                    style: textTheme.displayLarge,
+                    style: NText.large,
                   ),
                 ),
               ),
@@ -310,7 +309,6 @@ class _ServerCacheTaskTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = ServerCacheController.inst;
-    final textTheme = context.textTheme;
     final track = task.track;
     final totalSize = track.size;
     return Padding(
@@ -331,24 +329,24 @@ class _ServerCacheTaskTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                NamidaText(
                   track.title,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 ObxO(
                   rx: task.state,
                   builder: (context, state) => state == ServerCacheTaskState.failed
-                      ? Text(
+                      ? NamidaText(
                           lang.failed,
-                          style: textTheme.displaySmall,
+                          style: NText.small,
                         )
                       : ObxO(
                           rx: task.downloadedBytes,
-                          builder: (context, downloaded) => Text(
+                          builder: (context, downloaded) => NamidaText(
                             '${downloaded.fileSizeFormatted} / ${totalSize.fileSizeFormatted}',
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                         ),
                 ),
@@ -358,10 +356,12 @@ class _ServerCacheTaskTile extends StatelessWidget {
           const SizedBox(
             width: 8.0,
           ),
-          _ServerCacheTaskRing(
-            task: task,
-            size: 18.0,
-            color: context.theme.colorScheme.secondary,
+          NBuilder(
+            builder: (context, colors) => _ServerCacheTaskRing(
+              task: task,
+              size: 18.0,
+              color: colors.secondary,
+            ),
           ),
           ObxO(
             rx: task.state,

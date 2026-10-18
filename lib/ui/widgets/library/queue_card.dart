@@ -13,7 +13,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -119,8 +119,6 @@ class QueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final queue = this.queue;
     final sourceText = queue?.toSourceText();
     File? artworkFile;
@@ -140,12 +138,12 @@ class QueueCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: Dimensions.gridHorizontalPadding),
       child: BorderRadiusClip(
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.cardColor.withOpacityExt(0.9),
+        child: NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
+            color: colors.card.withOpacityExt(0.9),
             boxShadow: [
               BoxShadow(
-                color: theme.shadowColor.withAlpha(50),
+                color: colors.shadow.withOpacityExt(0.2),
                 blurRadius: 12,
                 offset: const Offset(0, 2.0),
               ),
@@ -198,7 +196,7 @@ class QueueCard extends StatelessWidget {
                                       ?sourceText,
                                     ].joinText(separator: ' - ')
                                   : sourceText ?? queue.source.toText(),
-                              style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28)),
+                              style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28)),
                               textAlign: TextAlign.start,
                               softWrap: false,
                               overflow: TextOverflow.fade,
@@ -212,7 +210,7 @@ class QueueCard extends StatelessWidget {
                                   queue.tracks.displayTrackKeyword,
                                   queue.tracks.totalDurationFormatted,
                                 ].joinText(separator: ' - '),
-                                style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                                style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
                                 softWrap: false,
                                 overflow: TextOverflow.fade,
                               ),
@@ -221,7 +219,7 @@ class QueueCard extends StatelessWidget {
                             tag: 'line3_$hero',
                             child: Text(
                               fullInfo ? queue.date.dateAndClockFormattedOriginal : TimeAgoController.dateMSSEFromNow(queue.date),
-                              style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.23)),
+                              style: NText.small.of(context).copyWith(fontSize: getFontSize(0.23)),
                               softWrap: false,
                               overflow: TextOverflow.fade,
                             ),

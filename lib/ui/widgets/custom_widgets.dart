@@ -49,6 +49,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
@@ -127,9 +128,9 @@ class CustomSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final finalColor = passedColor ?? CurrentColor.inst.color;
-    final theme = context.theme;
+    final colors = NColorsData.targetOf(context);
     final duration = Duration(milliseconds: durationInMillisecond);
-    final curve = Curves.fastEaseInToSlowEaseOut;
+    const curve = Curves.fastEaseInToSlowEaseOut;
     return SizedBox(
       width: width,
       height: height,
@@ -138,16 +139,16 @@ class CustomSwitch extends StatelessWidget {
         curve: curve,
         decoration: BoxDecoration(
           color: (active
-              ? bgColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface).withAlpha(140)
-              // : theme.scaffoldBackgroundColor.withAlpha(34)
-              : Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(60), theme.disabledColor)),
+              ? bgColor ?? Color.alphaBlend(finalColor.withOpacityExt(0.71), colors.surface).withOpacityExt(0.55)
+              // : theme.scaffoldBackgroundColor.withOpacityExt(0.13)
+              : Color.alphaBlend(colors.scaffold.withOpacityExt(0.24), colors.disabled)),
           borderRadius: BorderRadius.circular(30.0.multipliedRadius),
           boxShadow: [
             BoxShadow(
               offset: const Offset(0, 2),
               blurRadius: active ? 8 : 2,
               spreadRadius: 0,
-              color: (shadowColor ?? Color.alphaBlend(finalColor.withAlpha(180), theme.colorScheme.surface)).withOpacityExt(active ? 0.8 : 0.3),
+              color: (shadowColor ?? Color.alphaBlend(finalColor.withOpacityExt(0.71), colors.surface)).withOpacityExt(active ? 0.8 : 0.3),
             ),
           ],
         ),
@@ -162,10 +163,10 @@ class CustomSwitch extends StatelessWidget {
               height: height / 1.5,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: circleColor ?? Colors.white.withAlpha(222),
+                  color: circleColor ?? Colors.white.withOpacityExt(0.87),
                   borderRadius: BorderRadius.circular(30.0.multipliedRadius),
                   // boxShadow: [
-                  //   BoxShadow(color: Colors.black.withAlpha(100), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
+                  //   BoxShadow(color: Colors.black.withOpacityExt(0.39), spreadRadius: 1, blurRadius: 4, offset: Offset(0, 2)),
                   // ],
                 ),
               ),
@@ -300,13 +301,9 @@ class CustomListTile extends StatelessWidget {
     this.extraDense = false,
   });
 
-  static TextStyle? getTrailingTextStyle(ThemeData theme) => theme.textTheme.displayMedium?.copyWith(color: theme.colorScheme.onSurface.withAlpha(200));
-
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final iconColor = context.defaultIconColor(passedColor);
+    final iconColor = NColors.defaultIcon(mainColor: passedColor);
     final subtitle = this.subtitle;
     final subtitleWidget = this.subtitleWidget;
     final hasSubtitleText = subtitle != null && subtitle.isNotEmpty;
@@ -329,9 +326,9 @@ class CustomListTile extends StatelessWidget {
     final subtitleText =
         subtitleWidget ??
         (hasSubtitleText
-            ? Text(
+            ? NamidaText(
                 subtitle,
-                style: theme.textTheme.displaySmall,
+                style: NText.small,
                 maxLines: maxSubtitleLines,
                 overflow: TextOverflow.ellipsis,
               )
@@ -359,13 +356,13 @@ class CustomListTile extends StatelessWidget {
                     rotateIcon != null
                         ? RotatedBox(
                             quarterTurns: rotateIcon!,
-                            child: Icon(
+                            child: NIcon(
                               icon,
                               color: iconColor,
                               size: iconSize,
                             ),
                           )
-                        : Icon(
+                        : NIcon(
                             icon,
                             color: iconColor,
                             size: iconSize,
@@ -395,11 +392,11 @@ class CustomListTile extends StatelessWidget {
                                   : [
                                       TextSpan(
                                         text: titleSuffix,
-                                        style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                                        style: NText.small.of(context).copyWith(fontSize: 11.0),
                                       ),
                                     ],
                             ),
-                            style: titleStyle ?? (largeTitle ? theme.textTheme.displayLarge : theme.textTheme.displayMedium),
+                            style: titleStyle ?? (largeTitle ? NText.large.of(context) : NText.medium.of(context)),
                             maxLines: maxTitleLines ?? (subtitle != null ? 4 : 5),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -428,9 +425,10 @@ class CustomListTile extends StatelessWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: trailingText != null
-                            ? Text(
+                            ? NamidaText(
                                 trailingText!,
-                                style: getTrailingTextStyle(theme),
+                                style: NText.medium,
+                                color: const NColors(.onSurface, opacity: 0.78),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
@@ -733,9 +731,9 @@ class CustomBlurryDialog extends StatelessWidget {
                                       ),
                                     ],
                                     Expanded(
-                                      child: Text(
+                                      child: NamidaText(
                                         isWarning ? lang.warning : title ?? '',
-                                        style: ctxth.textTheme.displayLarge,
+                                        style: NText.large,
                                       ),
                                     ),
                                     ...?trailingWidgets,
@@ -757,9 +755,9 @@ class CustomBlurryDialog extends StatelessWidget {
                                       ),
                                     ],
                                     Expanded(
-                                      child: Text(
+                                      child: NamidaText(
                                         title ?? '',
-                                        style: ctxth.textTheme.displayMedium,
+                                        style: NText.medium,
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
@@ -775,9 +773,9 @@ class CustomBlurryDialog extends StatelessWidget {
                           child: bodyText != null
                               ? Padding(
                                   padding: const EdgeInsets.all(12.0),
-                                  child: Text(
+                                  child: NamidaText(
                                     bodyText!,
-                                    style: ctxth.textTheme.displayMedium,
+                                    style: NText.medium,
                                   ),
                                 )
                               : child,
@@ -1033,6 +1031,7 @@ class NamidaButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final nColors = NColorsData.targetOf(context);
     final (double colorSchemeOpacity, double bgOpacity, double borderOpacity, double foregroundOpacity) = switch (colors) {
       NamidaButtonColors.selected => (0.8, 0.8, 0.8, 0.8),
       NamidaButtonColors.fab => (0.5, 0.2, 0.6, 0.85),
@@ -1042,7 +1041,7 @@ class NamidaButton extends StatelessWidget {
       NamidaButtonColors.dimmed => (0.1, 0.2, 0.6, 0.85),
     };
 
-    final colorScheme = (this.colorScheme ?? context.theme.colorScheme.primary).withOpacityExt(colorSchemeOpacity);
+    final colorScheme = (this.colorScheme ?? nColors.primary).withOpacityExt(colorSchemeOpacity);
 
     bool whiteForeground = switch (colors) {
       .selected => true,
@@ -1050,9 +1049,9 @@ class NamidaButton extends StatelessWidget {
     };
 
     var bgColor = colorScheme.withOpacityExt(colorScheme.a * bgOpacity);
-    if (opaqueBG) bgColor = Color.alphaBlend(bgColor, context.theme.scaffoldBackgroundColor);
+    if (opaqueBG) bgColor = Color.alphaBlend(bgColor, nColors.scaffold);
     final borderColor = colorScheme.withOpacityExt(colorScheme.a * borderOpacity);
-    final foregroundColor = (whiteForeground ? Colors.white : context.defaultIconColor(colorScheme)).withOpacityExt(foregroundOpacity);
+    final foregroundColor = (whiteForeground ? Colors.white : NColors.defaultIcon(mainColor: colorScheme).resolve(nColors)).withOpacityExt(foregroundOpacity);
 
     final text = this.text;
     final icon = this.icon;
@@ -1069,8 +1068,8 @@ class NamidaButton extends StatelessWidget {
             disableColor: true,
             baseIcon: icon,
             iconSize: iconSize,
-            baseIconColor: foregroundColor,
-            secondaryIconColor: foregroundColor,
+            baseIconColor: NColors.fixed(foregroundColor),
+            secondaryIconColor: NColors.fixed(foregroundColor),
             secondaryIcon: secondaryIcon,
             secondaryIconSize: 13.0,
           )
@@ -1081,10 +1080,12 @@ class NamidaButton extends StatelessWidget {
           ));
     final iconChild = iconWidget ?? iconOfData;
 
-    final textStyle = context.textTheme.displayMedium?.copyWith(
-      color: foregroundColor,
-      fontSize: fontSizeMultiplier * (dense ? 15.0 : 15.5),
-    );
+    final textStyle = NText.medium
+        .of(context)
+        .copyWith(
+          color: foregroundColor,
+          fontSize: fontSizeMultiplier * (dense ? 15.0 : 15.5),
+        );
 
     final textChild = (animateText || text == null || text.isEmpty
         ? null
@@ -1099,7 +1100,7 @@ class NamidaButton extends StatelessWidget {
     double minHeight = this.minHeight ?? kDefaultMinHeight;
 
     if (isCircle || isMinimumSquared) {
-      padding = EdgeInsets.symmetric(
+      padding = const EdgeInsets.symmetric(
         horizontal: 12.0,
         vertical: 12.0,
       );
@@ -1315,12 +1316,11 @@ class StatsContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
-      constraints: BoxConstraints(minHeight: 42.0),
+    return NContainer(
+      constraints: const BoxConstraints(minHeight: 42.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color?.withAlpha(200),
+      decoration: (colors) => BoxDecoration(
+        color: colors.cardTheme.withOpacityExt(0.78),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 5.0),
@@ -1330,9 +1330,9 @@ class StatsContainer extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               leading ??
-                  Icon(
+                  NIcon(
                     icon,
-                    color: context.defaultIconColor(),
+                    color: NColors.defaultIcon(),
                     size: 22.0,
                   ),
               const SizedBox(width: 8.0),
@@ -1343,7 +1343,7 @@ class StatsContainer extends StatelessWidget {
               else
                 Text(
                   '$value ${lang.ofLabel} $total',
-                  style: TextStyle(fontSize: 13.0),
+                  style: const TextStyle(fontSize: 13.0),
                 ),
             ],
           ),
@@ -1391,9 +1391,7 @@ class SmallListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final iconColor = color != null ? context.defaultIconColor(color, textTheme.displayMedium?.color) : null;
+    final iconColor = color != null ? Color.alphaBlend(color!.withOpacityExt(0.47), NText.medium.of(context).color!) : null;
     final padding = this.padding ?? (icon != null ? const EdgeInsets.only(left: 16.0, right: 12.0) : const EdgeInsets.only(left: 12.0, right: 12.0));
     return ListTile(
       contentPadding: padding,
@@ -1434,25 +1432,27 @@ class SmallListTile extends StatelessWidget {
                   ),
           ),
       visualDensity: visualDensity ?? (compact ? const VisualDensity(horizontal: -2.2, vertical: -2.2) : const VisualDensity(horizontal: -1.2, vertical: -1.2)),
-      title: Text(
+      title: NamidaText(
         title,
-        style: textTheme.displayMedium?.copyWith(
-          color: color != null
+        style: NText.medium,
+        color: NColors.fixed(
+          color != null
               ? Color.alphaBlend(
-                  color!.withAlpha(40),
-                  textTheme.displayMedium!.color!,
+                  color!.withOpacityExt(0.16),
+                  NText.medium.of(context).color!,
                 )
               : null,
         ),
       ),
       subtitle: subtitle != null
-          ? Text(
+          ? NamidaText(
               subtitle!,
-              style: textTheme.displaySmall?.copyWith(
-                color: color != null
+              style: NText.small,
+              color: NColors.fixed(
+                color != null
                     ? Color.alphaBlend(
-                        color!.withAlpha(40),
-                        textTheme.displayMedium!.color!,
+                        color!.withOpacityExt(0.16),
+                        NText.medium.of(context).color!,
                       )
                     : null,
               ),
@@ -1608,12 +1608,12 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.of(context);
     final textColorScheme = widget.textColorScheme;
-    final titleStyle = textTheme.displayMedium!;
+    final titleStyle = NText.medium.of(context);
     final normalTitleColor = titleStyle.color!;
-    final brightTitleColor = textTheme.displayLarge!.color!;
-    final schemeTint = textColorScheme?.withAlpha(40);
+    final brightTitleColor = NText.large.of(context).color!;
+    final schemeTint = textColorScheme?.withOpacityExt(0.16);
     final collapsedTitleColor = schemeTint == null ? normalTitleColor : Color.alphaBlend(schemeTint, normalTitleColor);
     final expandedTitleColor = widget.textColor ?? (schemeTint == null ? brightTitleColor : Color.alphaBlend(schemeTint, brightTitleColor));
     final arrow = Padding(
@@ -1686,7 +1686,7 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
     final isDark = theme.brightness == Brightness.dark;
     return _ExpansionTint(
       animation: _sizeAnimation,
-      color: theme.cardColor,
+      color: colors.card,
       maxOpacity: isDark ? 0.3 : 0.18,
       borderRadius: borderRadius,
       child: content,
@@ -1819,6 +1819,7 @@ class _ExpansionChildrenRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
     final content = Padding(
       padding: const EdgeInsetsDirectional.only(start: _kChildrenIndent),
       child: Padding(
@@ -1831,7 +1832,7 @@ class _ExpansionChildrenRail extends StatelessWidget {
     );
     Widget body = content;
     if (showRail) {
-      final railColor = context.theme.dividerColor.withAlpha(namida.isDarkMode ? 100 : 40);
+      final railColor = colors.divider.withOpacityExt(namida.isDarkMode ? 0.39 : 0.16);
       body = Stack(
         children: [
           PositionedDirectional(
@@ -1978,8 +1979,8 @@ class StackedIcon extends StatelessWidget {
   final IconData baseIcon;
   final IconData? secondaryIcon;
   final String? secondaryText;
-  final Color? baseIconColor;
-  final Color? secondaryIconColor;
+  final NColors? baseIconColor;
+  final NColors? secondaryIconColor;
   final Color? shadowColor;
   final double? iconSize;
   final double? secondaryIconSize;
@@ -2006,35 +2007,32 @@ class StackedIcon extends StatelessWidget {
     this.margin = -2.0,
   });
 
-  Color? _getColory(BuildContext context, Color? c) {
-    return disableColor
-        ? null
-        : delightenColors && c != null
-        ? context.defaultIconColor(c)
-        : c ?? context.defaultIconColor();
+  NColors? _iconColorOf(NColors? color) {
+    if (disableColor) return null;
+    if (color == null) return NColors.defaultIcon();
+    if (!delightenColors) return color;
+    return NColors.custom((colors) => NColors.defaultIcon(mainColor: color.resolve(colors)).resolve(colors));
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Icon(
+        NIcon(
           baseIcon,
-          color: _getColory(context, baseIconColor),
+          color: _iconColorOf(baseIconColor),
           size: iconSize,
         ),
         Positioned(
           bottom: margin,
           right: margin,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
+          child: NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
               borderRadius: BorderRadius.circular(6),
               boxShadow: [
                 BoxShadow(
-                  color: shadowColor ?? theme.scaffoldBackgroundColor,
+                  color: shadowColor ?? colors.scaffold,
                   spreadRadius: 0,
                   blurRadius: blurRadius,
                 ),
@@ -2043,14 +2041,15 @@ class StackedIcon extends StatelessWidget {
             child:
                 smallChild ??
                 (secondaryText != null
-                    ? Text(
+                    ? NamidaText(
                         secondaryText!,
-                        style: textTheme.displaySmall?.copyWith(color: _getColory(context, secondaryIconColor)),
+                        style: NText.small,
+                        color: _iconColorOf(secondaryIconColor),
                       )
-                    : Icon(
+                    : NIcon(
                         secondaryIcon,
                         size: secondaryIconSize,
-                        color: _getColory(context, secondaryIconColor),
+                        color: _iconColorOf(secondaryIconColor),
                       )),
           ),
         ),
@@ -2226,12 +2225,11 @@ class NamidaBlurryContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final blurredAlphaLight = context.isDarkMode ? 60 : 140;
+    final blurredOpacityLight = context.isDarkMode ? 0.24 : 0.55;
     final blurEnabled = settings.enableBlurEffect.value;
 
-    Widget? finalChild = ColoredBox(
-      color: theme.cardColor.withAlpha(blurEnabled ? blurredAlphaLight : 220),
+    Widget? finalChild = NColoredBox(
+      color: NColors(.card, opacity: blurEnabled ? blurredOpacityLight : 0.86),
       child: SizedBox(
         width: width,
         height: height,
@@ -2279,21 +2277,20 @@ class ContainerWithBorder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
         shape: BoxShape.circle,
-        color: borderColor ?? theme.cardColor.withAlpha(160),
+        color: borderColor ?? colors.card.withOpacityExt(0.63),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withAlpha(60),
+            color: colors.shadow.withOpacityExt(0.24),
             blurRadius: 4,
             offset: const Offset(0, 2.0),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsetsGeometry.all(3.0),
+        padding: const EdgeInsetsGeometry.all(3.0),
         child: child,
       ),
     );
@@ -2368,8 +2365,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.of(context);
     final totalCount = ((widget.max - widget.min) / widget.stepper).round() + (widget.extraValue ? 1 : 0);
 
     return SizedBox(
@@ -2377,9 +2373,9 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
       child: Column(
         children: [
           if (widget.topText != null) ...[
-            Text(
+            NamidaText(
               widget.topText!,
-              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: const NText(.small, weight: FontWeight.w600),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -2408,8 +2404,8 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                             child: SizedBox(
                               width: multipleOfFive ? 35.0 : 20.0,
                               height: 1.5,
-                              child: ColoredBox(
-                                color: theme.iconTheme.color!,
+                              child: const NColoredBox(
+                                color: NColors.icon,
                               ),
                             ),
                           ),
@@ -2438,7 +2434,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                      color: theme.listTileTheme.textColor!,
+                      color: colors.listTileText,
                     ),
                   ),
                 ),
@@ -2453,7 +2449,7 @@ class _NamidaWheelSliderState extends State<NamidaWheelSlider> {
               child: Text(
                 widget.text!,
                 style: TextStyle(
-                  color: textTheme.displaySmall?.color,
+                  color: NText.small.of(context).color,
                 ),
               ),
             ),
@@ -2653,18 +2649,18 @@ class NamidaRawLikeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final nColors = NColorsData.of(context);
 
-    late final enabledIconWidget = Icon(
+    late final enabledIconWidget = NIcon(
       key: const ValueKey('like_switcher_on'),
       likedIcon,
-      color: enabledColor ?? theme.colorScheme.primary,
+      color: NColors.custom((colors) => enabledColor ?? colors.primary),
       size: size,
     );
-    late final normalIconWidget = Icon(
+    late final normalIconWidget = NIcon(
       key: const ValueKey('like_switcher_off'),
       normalIcon,
-      color: disabledColor ?? theme.colorScheme.secondary,
+      color: NColors.custom((colors) => disabledColor ?? colors.secondary),
       size: size,
     );
     return NamidaMouseRegion(
@@ -2675,12 +2671,12 @@ class NamidaRawLikeButton extends StatelessWidget {
         padding: padding,
         likeCountPadding: EdgeInsets.zero,
         bubblesColor: BubblesColor(
-          dotPrimaryColor: theme.colorScheme.primary,
-          dotSecondaryColor: theme.colorScheme.primaryContainer,
+          dotPrimaryColor: nColors.primary,
+          dotSecondaryColor: nColors.primaryContainer,
         ),
         circleColor: CircleColor(
-          start: theme.colorScheme.secondary,
-          end: theme.colorScheme.secondaryContainer,
+          start: nColors.secondary,
+          end: nColors.secondaryContainer,
         ),
         isLiked: isLiked,
         onTap: (isLiked) async {
@@ -2702,13 +2698,13 @@ class NamidaRawLikeButton extends StatelessWidget {
                       shaderCallback: (Rect bounds) => LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        stops: [
+                        stops: const [
                           0.2,
                           0.9,
                         ],
                         colors: [
-                          theme.colorScheme.primary.withOpacityExt(0.75),
-                          Color.alphaBlend(theme.colorScheme.primary.withOpacityExt(0.25), CurrentColor.inst.color).withOpacityExt(0.75),
+                          nColors.primary.withOpacityExt(0.75),
+                          Color.alphaBlend(nColors.primary.withOpacityExt(0.25), CurrentColor.inst.color).withOpacityExt(0.75),
                         ],
                       ).createShader(bounds),
                       child: enabledIconWidget,
@@ -2762,7 +2758,7 @@ class NamidaIconButton extends StatefulWidget {
   final double verticalPadding;
   final double? iconSize;
   final IconData? icon;
-  final Color? iconColor;
+  final NColors? iconColor;
   final void Function()? onPressed;
   final void Function(LongPressStartDetails details)? onLongPressStart;
   final void Function()? onLongPressFinish;
@@ -2819,10 +2815,10 @@ class _NamidaIconButtonState extends State<NamidaIconButton> {
               padding: widget.padding ?? EdgeInsets.symmetric(horizontal: widget.horizontalPadding, vertical: widget.verticalPadding),
               child:
                   widget.child ??
-                  Icon(
+                  NIcon(
                     widget.icon,
                     size: widget.iconSize,
-                    color: widget.disableColor ? null : (widget.iconColor ?? context.theme.colorScheme.secondary),
+                    color: widget.disableColor ? null : widget.iconColor ?? NColors.secondary,
                   ),
             ),
           ),
@@ -2904,7 +2900,7 @@ class _NamidaPartyContainerState extends State<NamidaPartyContainer> {
             decoration: BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: CurrentColor.inst.miniplayerColor.withAlpha(150),
+                  color: CurrentColor.inst.miniplayerColor.withOpacityExt(0.59),
                   spreadRadius: 150 * finalScale * spreadRadiusMultiplier,
                   blurRadius: 10 + (200 * finalScale),
                 ),
@@ -2989,7 +2985,7 @@ class _PartyPaletteBox extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: color.withAlpha(150),
+                    color: color.withOpacityExt(0.59),
                     spreadRadius: spreadRadius * finalScale,
                     blurRadius: 10 + (200 * finalScale),
                   ),
@@ -3051,8 +3047,6 @@ class SubpageInfoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const textHeroEnabled = false;
     const pauseHero = 'kururing';
     final showSubpageInfoAtSide = Dimensions.inst.showSubpageInfoAtSideContext(context);
@@ -3144,7 +3138,7 @@ class SubpageInfoContainer extends StatelessWidget {
                       child: Text(
                         title,
                         textAlign: textAlign,
-                        style: textTheme.displayLarge?.copyWith(fontSize: titleFontSize),
+                        style: NText.large.of(context).copyWith(fontSize: titleFontSize),
                         maxLines: titleMaxLines,
                         softWrap: titleMaxLines != 1,
                         overflow: titleMaxLines == null ? null : TextOverflow.ellipsis,
@@ -3163,7 +3157,7 @@ class SubpageInfoContainer extends StatelessWidget {
                           textAlign: textAlign,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 2,
-                          style: textTheme.displayMedium?.copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
+                          style: NText.medium.of(context).copyWith(fontSize: getFontSize(0.28, 10.0, 24.0)),
                         ),
                       ),
                     ),
@@ -3180,7 +3174,7 @@ class SubpageInfoContainer extends StatelessWidget {
                           textAlign: textAlign,
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
-                          style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
+                          style: NText.small.of(context).copyWith(fontSize: getFontSize(0.25, 10.0, 22.0)),
                         ),
                       ),
                     ),
@@ -3194,7 +3188,7 @@ class SubpageInfoContainer extends StatelessWidget {
                         textAlign: textAlign,
                         overflow: TextOverflow.ellipsis,
                         maxLines: 3,
-                        style: textTheme.displaySmall?.copyWith(fontSize: getFontSize(0.22, 10.0, 18.0)),
+                        style: NText.small.of(context).copyWith(fontSize: getFontSize(0.22, 10.0, 18.0)),
                       ),
                     ),
                   ],
@@ -3383,8 +3377,6 @@ class SubpageInfoContainer extends StatelessWidget {
                     ],
                   );
                 }
-                final bgColor = theme.scaffoldBackgroundColor;
-                final fadeMidColor = bgColor.withOpacityExt(0.8);
                 final textOverlayWidget = Stack(
                   alignment: Alignment.bottomLeft,
                   clipBehavior: Clip.none,
@@ -3395,15 +3387,15 @@ class SubpageInfoContainer extends StatelessWidget {
                       right: 0.0,
                       bottom: -_kFeatherOverdraw,
                       child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
+                        child: NDecoratedBox(
+                          decoration: (colors) => BoxDecoration(
                             gradient: LinearGradient(
                               begin: const Alignment(0.0, -0.4),
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                fadeMidColor,
-                                bgColor,
+                                colors.scaffold.withOpacityExt(0.8),
+                                colors.scaffold,
                               ],
                               stops: const [0.0, 0.55, 1.0],
                             ),
@@ -3442,23 +3434,21 @@ class SubpageInfoContainer extends StatelessWidget {
               }
 
               if (isOverlay && !showSubpageInfoAtSide) {
-                final bgColor = theme.scaffoldBackgroundColor;
-                final overlayMidColor = bgColor.withOpacityExt(0.8);
                 final overlayWidget = Stack(
                   alignment: Alignment.bottomLeft,
                   children: [
                     Positioned.fill(
                       child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
+                        child: NDecoratedBox(
+                          decoration: (colors) => BoxDecoration(
                             borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                             gradient: LinearGradient(
                               begin: const Alignment(0.0, -0.3),
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                overlayMidColor,
-                                bgColor,
+                                colors.scaffold.withOpacityExt(0.8),
+                                colors.scaffold,
                               ],
                               stops: const [0.0, 0.55, 1.0],
                             ),
@@ -3657,7 +3647,8 @@ class _BottomFeathered extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.scaffoldBackgroundColor;
+    final nColors = NColorsData.of(context);
+    final bgColor = nColors.scaffold;
     const overdraw = SubpageInfoContainer._kFeatherOverdraw;
     final overdrawnHeight = featherHeight + overdraw;
     final solidFromStop = featherHeight / overdrawnHeight;
@@ -3676,7 +3667,7 @@ class _BottomFeathered extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [bgColor.withAlpha(0), bgColor],
+                  colors: [bgColor.withOpacityExt(0.0), bgColor],
                   stops: [0.0, solidFromStop],
                 ),
               ),
@@ -3700,8 +3691,8 @@ class _SubpageInfoBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final bgColor = theme.scaffoldBackgroundColor;
+    final nColors = NColorsData.of(context);
+    final bgColor = nColors.scaffold;
     final dimColorTop = bgColor.withOpacityExt(0.5);
     return IgnorePointer(
       child: HeroMode(
@@ -3979,20 +3970,19 @@ class NamidaDrawerListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = CurrentColor.inst.color;
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.targetOf(context);
     return NamidaInkWell(
       animationDurationMS: 200,
       alignment: Alignment.center,
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: enabled ? colorScheme : theme.cardColor,
+        color: enabled ? colorScheme : colors.card,
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         boxShadow: enabled
             ? [
                 BoxShadow(
-                  color: colorScheme.withAlpha(100),
+                  color: colorScheme.withOpacityExt(0.39),
                   spreadRadius: 0.2,
                   blurRadius: 8.0,
                   offset: const Offset(0.0, 3.0),
@@ -4009,18 +3999,16 @@ class NamidaDrawerListTile extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: enabled ? Colors.white.withAlpha(200) : null,
+            color: enabled ? Colors.white.withOpacityExt(0.78) : null,
             size: iconSize,
           ),
           if (title != '') const SizedBox(width: 10.0),
           if (title != '')
             Expanded(
-              child: Text(
+              child: NamidaText(
                 title,
-                style: textTheme.displayMedium?.copyWith(
-                  color: enabled ? Colors.white.withAlpha(200) : null,
-                  fontSize: 15.0,
-                ),
+                style: const NText(.medium, size: .s15),
+                color: NColors.fixed(enabled ? Colors.white.withOpacityExt(0.78) : null),
                 overflow: TextOverflow.fade,
                 softWrap: false,
               ),
@@ -4052,7 +4040,6 @@ class SearchPageTitleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Row(
       children: [
         const SizedBox(width: 16.0),
@@ -4065,15 +4052,15 @@ class SearchPageTitleRow extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       title,
-                      style: textTheme.displayLarge?.copyWith(fontSize: 15.5),
+                      style: const NText(.large, size: .s15p5),
                     ),
                     ?subtitleWidget,
                     if (subtitle != '')
-                      Text(
+                      NamidaText(
                         subtitle,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                   ],
                 ),
@@ -4107,7 +4094,8 @@ class NamidaEndEdgeFeather extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = color ?? context.theme.scaffoldBackgroundColor;
+    final nColors = NColorsData.of(context);
+    final bgColor = color ?? nColors.scaffold;
     final overdrawnWidth = width + _kEdgeOverdraw;
     final solidFromStop = width / overdrawnWidth;
     return Stack(
@@ -4124,7 +4112,7 @@ class NamidaEndEdgeFeather extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: AlignmentDirectional.centerStart,
                   end: AlignmentDirectional.centerEnd,
-                  colors: [bgColor.withAlpha(0), bgColor],
+                  colors: [bgColor.withOpacityExt(0.0), bgColor],
                   stops: [0.0, solidFromStop],
                 ),
               ),
@@ -4157,9 +4145,9 @@ class NoResultsWidget extends StatelessWidget {
           color: iconColor,
         ),
         const SizedBox(height: 8.0),
-        Text(
+        NamidaText(
           lang.noResults,
-          style: context.textTheme.displayLarge,
+          style: NText.large,
         ),
       ],
     );
@@ -4189,13 +4177,12 @@ class NamidaLogoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final nColors = NColorsData.targetOf(context);
     final isDarkMode = context.isDarkMode;
     final colorScheme = CurrentColor.inst.color;
-    final scaffoldBgColor = Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
+    final scaffoldBgColor = Color.alphaBlend(nColors.scaffold.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
     const foregroundColorOpacity = 0.8;
-    final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), theme.colorScheme.onSurface).withOpacityExt(foregroundColorOpacity);
+    final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), nColors.onSurface).withOpacityExt(foregroundColorOpacity);
     return NamidaInkWell(
       onTap: () {
         if (NamidaNavigator.inst.currentRoute?.route != RouteType.PAGE_about) {
@@ -4225,13 +4212,13 @@ class NamidaLogoContainer extends StatelessWidget {
         boxShadow: [
           lighterShadow
               ? BoxShadow(
-                  color: colorScheme.withAlpha(isDarkMode ? 20 : 60),
+                  color: colorScheme.withOpacityExt(isDarkMode ? 0.08 : 0.24),
                   spreadRadius: 0.1,
                   blurRadius: 6.0,
                   offset: const Offset(0.0, 2.0),
                 )
               : BoxShadow(
-                  color: colorScheme.withAlpha(isDarkMode ? 30 : 80),
+                  color: colorScheme.withOpacityExt(isDarkMode ? 0.12 : 0.31),
                   spreadRadius: 0.2,
                   blurRadius: 8.0,
                   offset: const Offset(0.0, 4.0),
@@ -4255,12 +4242,10 @@ class NamidaLogoContainer extends StatelessWidget {
           if (displayText) ...[
             const SizedBox(width: 10.0),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 'Namida',
-                style: textTheme.displayLarge?.copyWith(
-                  color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9),
-                  fontSize: 17.5,
-                ),
+                style: const NText(.large, size: .s17p5),
+                color: NColors.fixed(foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9)),
                 overflow: TextOverflow.fade,
                 softWrap: false,
               ),
@@ -4290,12 +4275,12 @@ class NamidaContainerDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return NContainer(
       height: height,
       width: width,
       margin: margin,
-      decoration: BoxDecoration(
-        color: colorForce ?? (color ?? context.theme.dividerColor).withAlpha(namida.isDarkMode ? 100 : 20),
+      decoration: (colors) => BoxDecoration(
+        color: colorForce ?? (color ?? colors.divider).withOpacityExt(namida.isDarkMode ? 0.39 : 0.08),
         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
       ),
     );
@@ -4695,19 +4680,23 @@ class NamidaSelectableAutoLinkText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.of(context);
     return SelectableAutoLinkText(
       text,
-      style: textTheme.displayMedium?.copyWith(
-        fontSize: 13.5 * fontScale,
-      ),
-      linkStyle: textTheme.displayMedium?.copyWith(
-        color: theme.colorScheme.primary.withAlpha(210),
-        fontSize: 13.5 * fontScale,
-      ),
+      style: NText.medium
+          .of(context)
+          .copyWith(
+            fontSize: 13.5 * fontScale,
+          ),
+      linkStyle: NText.medium
+          .of(context)
+          .copyWith(
+            color: colors.primary.withOpacityExt(0.82),
+            fontSize: 13.5 * fontScale,
+          ),
       highlightedLinkStyle: TextStyle(
-        color: theme.colorScheme.primary.withAlpha(220),
-        backgroundColor: theme.colorScheme.onSurface.withAlpha(40),
+        color: colors.primary.withOpacityExt(0.86),
+        backgroundColor: colors.onSurface.withOpacityExt(0.16),
         fontSize: 13.5 * fontScale,
       ),
       scrollPhysics: const NeverScrollableScrollPhysics(),
@@ -4738,24 +4727,24 @@ class DefaultPlaylistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.of(context);
     return NamidaInkWell(
       borderRadius: 12.0,
-      bgColor: Color.alphaBlend(colorScheme.withAlpha(10), theme.cardColor),
+      bgColor: NColors.fixed(Color.alphaBlend(colorScheme.withOpacityExt(0.04), colors.card)),
       onTap: onTap,
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
       child: Row(
         children: [
           Icon(
             icon,
-            color: colorScheme.withAlpha(200),
+            color: colorScheme.withOpacityExt(0.78),
           ),
           const SizedBox(width: 10.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               title,
-              style: textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(10), textTheme.displayMedium!.color!)),
+              style: NText.medium,
+              color: NColors.fixed(Color.alphaBlend(colorScheme.withOpacityExt(0.04), NText.medium.of(context).color!)),
               softWrap: false,
               overflow: TextOverflow.fade,
             ),
@@ -4763,9 +4752,10 @@ class DefaultPlaylistCard extends StatelessWidget {
           const SizedBox(width: 6.0),
           displayLoadingIndicator
               ? const LoadingIndicator()
-              : Text(
+              : NamidaText(
                   text,
-                  style: textTheme.displayMedium?.copyWith(color: Color.alphaBlend(colorScheme.withAlpha(30), textTheme.displayMedium!.color!)),
+                  style: NText.medium,
+                  color: NColors.fixed(Color.alphaBlend(colorScheme.withOpacityExt(0.12), NText.medium.of(context).color!)),
                 ),
           const SizedBox(width: 2.0),
         ],
@@ -4790,9 +4780,8 @@ class NamidaCircularPercentage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final textStyle = textTheme.displaySmall?.copyWith(fontSize: size / 3.2);
+    final colors = NColorsData.of(context);
+    final textStyle = NText.small.of(context).copyWith(fontSize: size / 3.2);
     final circularSlider = SleekCircularSlider(
       appearance: CircularSliderAppearance(
         customWidths: CustomSliderWidths(
@@ -4801,14 +4790,14 @@ class NamidaCircularPercentage extends StatelessWidget {
         ),
         customColors: CustomSliderColors(
           dotColor: Colors.transparent,
-          trackColor: theme.cardTheme.color,
+          trackColor: colors.cardTheme,
           dynamicGradient: true,
           progressBarColors: [
-            theme.colorScheme.primary.withAlpha(100),
+            colors.primary.withOpacityExt(0.39),
             Colors.transparent,
-            theme.colorScheme.secondary.withAlpha(100),
+            colors.secondary.withOpacityExt(0.39),
             Colors.transparent,
-            theme.colorScheme.primary.withAlpha(100),
+            colors.primary.withOpacityExt(0.39),
           ],
           hideShadow: true,
         ),
@@ -5450,9 +5439,9 @@ class BackgroundWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = NColorsData.of(context);
     return Material(
-      color: theme.scaffoldBackgroundColor,
+      color: colors.scaffold,
       clipBehavior: Clip.hardEdge,
       child: Stack(
         fit: StackFit.passthrough,
@@ -5471,7 +5460,7 @@ class BackgroundWrapper extends StatelessWidget {
 }
 
 class NamidaInkWell extends StatelessWidget {
-  final Color? bgColor;
+  final NColors? bgColor;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final bool enableSecondaryTap;
@@ -5507,13 +5496,14 @@ class NamidaInkWell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = animationDurationMS > 0 ? NColorsData.targetOf(context) : NColorsData.of(context);
     final borderR =
         decoration.borderRadius?.resolve(Directionality.of(context)) ?? (transparentHighlight || borderRadius == 0 ? null : BorderRadius.circular(borderRadius.multipliedRadius));
-    final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(theme.scaffoldBackgroundColor.withAlpha(20), theme.highlightColor);
-    final bgColor = this.bgColor ?? decoration.color;
+    final highlightColor = transparentHighlight ? Colors.transparent : Color.alphaBlend(colors.scaffold.withOpacityExt(0.08), colors.highlight);
+    final resolvedBgColor = bgColor?.resolve(colors);
+    final finalBgColor = resolvedBgColor ?? decoration.color;
     final decorationFinal = BoxDecoration(
-      color: bgColor,
+      color: finalBgColor,
       borderRadius: borderR,
       backgroundBlendMode: decoration.backgroundBlendMode,
       boxShadow: decoration.boxShadow,
@@ -5611,9 +5601,8 @@ class NamidaInkWellButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final itemsColor = this.itemsColor ?? theme.colorScheme.onSurface.withOpacityExt(0.8);
+    final colors = NColorsData.targetOf(context);
+    final itemsColor = this.itemsColor ?? colors.onSurface.withOpacityExt(0.8);
     final textGood = text.isNotEmpty;
     return IgnorePointer(
       ignoring: !enabled && disableWhenLoading,
@@ -5624,7 +5613,7 @@ class NamidaInkWellButton extends StatelessWidget {
           animationDurationMS: animationDurationMS,
           borderRadius: borderRadius * sizeMultiplier,
           padding: EdgeInsets.symmetric(horizontal: 12.0 * sizeMultiplier * paddingMultiplier, vertical: 6.0 * sizeMultiplier * paddingMultiplier),
-          bgColor: bgColor ?? theme.colorScheme.secondaryContainer.withOpacityExt(0.5),
+          bgColor: NColors.fixed(bgColor ?? colors.secondaryContainer.withOpacityExt(0.5)),
           decoration: decoration,
           onTap: onTap,
           enableSecondaryTap: false,
@@ -5649,10 +5638,12 @@ class NamidaInkWellButton extends StatelessWidget {
                 Flexible(
                   child: Text(
                     text,
-                    style: textTheme.displayMedium?.copyWith(
-                      color: itemsColor,
-                      fontSize: (15.0 * sizeMultiplier),
-                    ),
+                    style: NText.medium
+                        .of(context)
+                        .copyWith(
+                          color: itemsColor,
+                          fontSize: (15.0 * sizeMultiplier),
+                        ),
                   ),
                 ),
                 if (textGood) const SizedBox(width: 4.0),
@@ -5749,7 +5740,6 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final textWidget = Text(lang.betweenDates);
 
     return TextButton.icon(
@@ -5781,13 +5771,13 @@ class _BetweenDatesTextButtonState extends State<BetweenDatesTextButton> {
                     if (widget.tracksLength != 0)
                       NamidaButtonText(
                         "(${widget.tracksLength.displayTrackKeyword})",
-                        style: textTheme.displaySmall,
+                        style: NText.small.of(context),
                       ),
                   ],
                 ),
                 NamidaButtonText(
                   "${oldestDate?.dateFormattedOriginal} → ${newestDate?.dateFormattedOriginal}",
-                  style: textTheme.displaySmall,
+                  style: NText.small.of(context),
                 ),
               ],
             ),
@@ -6083,7 +6073,8 @@ class ShimmerWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = transparent ? Colors.transparent : context.theme.cardColor.withAlpha(120);
+    final nColors = NColorsData.of(context);
+    final color = transparent ? Colors.transparent : nColors.card.withOpacityExt(0.47);
     return CustomAnimatedSwitcher(
       duration: fadeDurationMS.ms,
       alignment: alignment,
@@ -6760,9 +6751,9 @@ class QueueUtilsRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 8.0),
                       Expanded(
-                        child: Text(
+                        child: NamidaText(
                           title,
-                          style: context.textTheme.displayMedium,
+                          style: NText.medium,
                         ),
                       ),
                       const SizedBox(width: 12.0),
@@ -6801,7 +6792,7 @@ class QueueUtilsRow extends StatelessWidget {
 
 class RepeatModeIconButton extends StatelessWidget {
   final bool compact;
-  final Color? color;
+  final NColors? color;
   final double iconSize;
   final VoidCallback? onPressed;
   final Widget Function(Widget child, String Function()? tooltipCallback, void Function() onTap)? builder;
@@ -6840,13 +6831,13 @@ class RepeatModeIconButton extends StatelessWidget {
         final mainIcon = repeatMode.toMainIcon();
         final secondaryIcon = repeatMode.toSecondaryIcon();
         const iconSize = 22.0;
-        final iconColor = context.defaultIconColor();
+        final iconColor = NColors.defaultIcon();
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
           child: NamidaInkWell(
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             borderRadius: 12.0,
-            bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
+            bgColor: NColors.fixed(enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null),
             onTap: () {
               final times = repeatMode == PlayerRepeatMode.forNtimes ? _numberOfRepeats.value : null;
               Player.inst.setRepeatMode(repeatMode, times: times);
@@ -6867,7 +6858,7 @@ class RepeatModeIconButton extends StatelessWidget {
                             iconSize: iconSize,
                             secondaryIconSize: iconSize * 0.6,
                           )
-                        : Icon(
+                        : NIcon(
                             mainIcon,
                             size: iconSize,
                             color: iconColor,
@@ -6876,9 +6867,10 @@ class RepeatModeIconButton extends StatelessWidget {
                     if (repeatMode == PlayerRepeatMode.forNtimes)
                       ObxO(
                         rx: _numberOfRepeats,
-                        builder: (context, repeats) => Text(
+                        builder: (context, repeats) => NamidaText(
                           '$repeats',
-                          style: context.textTheme.displaySmall?.copyWith(color: iconColor),
+                          style: NText.small,
+                          color: iconColor,
                         ),
                       ),
                   ],
@@ -6888,9 +6880,9 @@ class RepeatModeIconButton extends StatelessWidget {
                   child: ObxPrefer(
                     rx: _numberOfRepeats,
                     enabled: repeatMode == PlayerRepeatMode.forNtimes,
-                    builder: (context, repeats) => Text(
+                    builder: (context, repeats) => NamidaText(
                       repeatMode.buildText(numberOfRepeats: repeats),
-                      style: context.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                 ),
@@ -6930,9 +6922,8 @@ class RepeatModeIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final iconColor = color ?? theme.colorScheme.onSecondaryContainer;
+    final colors = NColorsData.of(context);
+    final iconColor = color?.resolve(colors) ?? colors.onSecondaryContainer;
 
     final rawWidget = ObxO(
       rx: Player.inst.forcedRepeatMode,
@@ -6950,8 +6941,8 @@ class RepeatModeIconButton extends StatelessWidget {
                   ? StackedIcon(
                       baseIcon: mainIcon,
                       secondaryIcon: secondaryIcon,
-                      baseIconColor: iconColor,
-                      secondaryIconColor: iconColor,
+                      baseIconColor: NColors.fixed(iconColor),
+                      secondaryIconColor: NColors.fixed(iconColor),
                       iconSize: iconSize,
                       secondaryIconSize: iconSize * 0.6,
                     )
@@ -6963,9 +6954,10 @@ class RepeatModeIconButton extends StatelessWidget {
               if (repeatMode == PlayerRepeatMode.forNtimes)
                 ObxO(
                   rx: Player.inst.numberOfRepeats,
-                  builder: (context, numberOfRepeats) => Text(
+                  builder: (context, numberOfRepeats) => NamidaText(
                     '$numberOfRepeats',
-                    style: textTheme.displaySmall?.copyWith(color: iconColor),
+                    style: NText.small,
+                    color: NColors.fixed(iconColor),
                   ),
                 ),
             ],
@@ -7021,7 +7013,7 @@ class RepeatModeIconButton extends StatelessWidget {
 
 class NumberOfRepeatsWidgetProvider extends StatelessWidget {
   final RxBase<int> numberOfRepeatsRx;
-  final Color? iconColor;
+  final NColors? iconColor;
   final double iconSize;
   final double horizontalPadding;
 
@@ -7059,7 +7051,7 @@ class NumberOfRepeatsWidgetProvider extends StatelessWidget {
 
 class SoundControlButton extends StatelessWidget {
   final bool compact;
-  final Color? color;
+  final NColors? color;
   final double iconSize;
   final VoidCallback? onPressed;
   final Widget Function(Widget child, String Function() tooltipCallback, void Function() onTap)? builder;
@@ -7081,8 +7073,9 @@ class SoundControlButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
     final tooltip = lang.soundControl;
-    final iconColor = color ?? context.theme.colorScheme.onSecondaryContainer;
+    final iconColor = color?.resolve(colors) ?? colors.onSecondaryContainer;
     final child = SoundControlButtonRaw(
       iconSize: iconSize,
       iconColor: iconColor,
@@ -7155,8 +7148,8 @@ class SoundControlButtonRaw extends StatelessWidget {
                 secondaryIcon: secondaryIcon,
                 iconSize: iconSize,
                 secondaryIconSize: iconSize * 0.5,
-                baseIconColor: iconColor,
-                secondaryIconColor: iconColor,
+                baseIconColor: NColors.fixed(iconColor),
+                secondaryIconColor: NColors.fixed(iconColor),
                 blurRadius: 12.0,
               )
             : Icon(
@@ -7709,7 +7702,6 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: bgColor,
@@ -7734,9 +7726,9 @@ class NamidaHistoryDayHeaderBox extends StatelessWidget {
           children: [
             const SizedBox(width: 12.0),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 title,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
             ),
             const SizedBox(width: 4.0),
@@ -7779,7 +7771,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final nColors = NColorsData.of(context);
     final tempFilesSize = this.tempFilesSize;
     final tempFilesDelete = this.tempFilesDelete;
     return NamidaExpansionTile(
@@ -7790,9 +7782,9 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
       trailingBuilder: (iconWidget) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: theme.cardColor,
+          NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
+              color: colors.card,
               borderRadius: BorderRadius.circular(6.0.multipliedRadius),
             ),
             child: Padding(
@@ -7813,7 +7805,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
               borderRadius: 12.0,
               icon: Broken.arrow_right_3,
               iconSize: 20.0,
-              color: theme.cardColor,
+              color: nColors.card,
               visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
               title: data.title,
               subtitle: data.subtitle,
@@ -7847,7 +7839,7 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
                 borderRadius: 12.0,
                 icon: Broken.broom,
                 iconSize: 20.0,
-                color: theme.cardColor,
+                color: nColors.card,
                 visualDensity: const VisualDensity(horizontal: -3.0, vertical: -3.0),
                 title: lang.deleteTempFiles,
                 subtitle: size.fileSizeFormatted,
@@ -7876,33 +7868,6 @@ class NamidaClearDialogExpansionTile<T> extends StatelessWidget {
 }
 
 /// Returns [AnimatedTheme] or [Theme] based on [settings.animatedTheme].
-class AnimatedThemeOrTheme extends StatelessWidget {
-  final ThemeData data;
-  final Widget child;
-  final Duration duration;
-
-  const AnimatedThemeOrTheme({
-    super.key,
-    required this.data,
-    required this.child,
-    this.duration = kThemeAnimationDuration,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return settings.animatedTheme.value
-        ? AnimatedTheme(
-            data: data,
-            duration: duration,
-            child: child,
-          )
-        : Theme(
-            data: data,
-            child: child,
-          );
-  }
-}
-
 class EnableDisablePlaylistReordering extends StatelessWidget {
   final String playlistName;
   final PlaylistManager playlistManager;
@@ -8027,8 +7992,6 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
   }
 
   NamidaPopupWrapper? _getPopupWrapper() {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return cachePriority != null || widget.totalCount > 1
         ? NamidaPopupWrapper(
             childrenAfterChildrenDefault: false,
@@ -8044,11 +8007,11 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
                     ),
                     const SizedBox(width: 6.0),
                     Expanded(
-                      child: Text(
+                      child: NamidaText(
                         lang.priority,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                     ),
                     const SizedBox(width: 6.0),
@@ -8087,10 +8050,10 @@ class _SetVideosPriorityChipState extends State<SetVideosPriorityChip> {
             ),
             child: NamidaInkWell(
               padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-              bgColor: theme.cardColor.withOpacityExt(0.5),
+              bgColor: const NColors(.card, opacity: 0.5),
               child: Text(
                 cachePriority?.toText() ?? '?',
-                style: widget.smaller ? theme.textTheme.displaySmall : theme.textTheme.displayMedium,
+                style: widget.smaller ? NText.small.of(context) : NText.medium.of(context),
               ),
             ),
           )
@@ -8207,13 +8170,13 @@ class _SwipeQueueActionBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = Radius.circular(8.0.multipliedRadius);
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
         borderRadius: BorderRadius.horizontal(
           left: isLeft ? Radius.zero : radius,
           right: isLeft ? radius : Radius.zero,
         ),
-        color: context.theme.cardColor,
+        color: colors.card,
       ),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: context.width * 0.25),
@@ -8226,10 +8189,10 @@ class _SwipeQueueActionBox extends StatelessWidget {
                 action.toIcon(),
                 size: 22.0,
               ),
-              SizedBox(height: 4.0),
-              Text(
+              const SizedBox(height: 4.0),
+              NamidaText(
                 action.toText(),
-                style: context.textTheme.displaySmall,
+                style: NText.small,
                 softWrap: false,
                 overflow: TextOverflow.fade,
               ),
@@ -8306,7 +8269,6 @@ class NamidaUpdateButton extends StatelessWidget {
 
     NamidaNavigator.inst.showSheet(
       builder: (context, bottomPadding, maxWidth, maxHeight) {
-        final textTheme = context.textTheme;
         return SizedBox(
           height: maxHeight,
           child: Padding(
@@ -8314,7 +8276,7 @@ class NamidaUpdateButton extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 32.0),
+                const SizedBox(height: 32.0),
                 ObxO(
                   rx: VersionController.inst.latestVersion,
                   builder: (context, latestVersion) {
@@ -8328,10 +8290,10 @@ class NamidaUpdateButton extends StatelessWidget {
                             : [
                                 TextSpan(
                                   text: buildDateText,
-                                  style: textTheme.displayMedium,
+                                  style: NText.medium.of(context),
                                 ),
                               ],
-                        style: textTheme.displayLarge,
+                        style: NText.large.of(context),
                       ),
                     );
                   },
@@ -8345,33 +8307,33 @@ class NamidaUpdateButton extends StatelessWidget {
                         child: RichText(
                           text: TextSpan(
                             text: '⤵ ',
-                            style: textTheme.displaySmall,
+                            style: NText.small.of(context),
                           ),
                         ),
                       ),
                       RichText(
                         text: TextSpan(
                           text: currentVersion.prettyVersion,
-                          style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                          style: NText.small.of(context).copyWith(fontSize: 11.0),
                           children: currentVersionDateText.isEmpty
                               ? null
                               : [
                                   TextSpan(
                                     text: currentVersionDateText,
-                                    style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                    style: NText.small.of(context).copyWith(fontSize: 10.0),
                                   ),
                                 ],
                         ),
                       ),
                     ],
                   ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
                 Expanded(
                   child: _NamidaVersionReleasesInfoList(
                     maxHeight: maxHeight,
                   ),
                 ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -8390,18 +8352,19 @@ class NamidaUpdateButton extends StatelessWidget {
                         borderRadius: 12.0,
                         padding: const EdgeInsets.all(12.0),
                         height: 48.0,
-                        bgColor: CurrentColor.inst.color.withOpacityExt(0.9),
+                        bgColor: NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.9)),
                         child: Center(
-                          child: Text(
+                          child: NamidaText(
                             lang.update.toUpperCase(),
-                            style: textTheme.displayMedium?.copyWith(color: Colors.white.withOpacityExt(0.9)),
+                            style: NText.medium,
+                            color: NColors.fixed(Colors.white.withOpacityExt(0.9)),
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 12.0),
+                const SizedBox(height: 12.0),
               ],
             ),
           ),
@@ -8438,8 +8401,6 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return ObxO(
       rx: VersionController.inst.releasesAfterCurrent,
       builder: (context, releasesAfterCurrent) => releasesAfterCurrent == null
@@ -8454,7 +8415,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                     margin: const EdgeInsets.symmetric(vertical: 4.0),
                     width: context.width,
                     height: widget.maxHeight * 0.5,
-                    bgColor: theme.cardColor,
+                    bgColor: NColors.card,
                   );
                 },
               ),
@@ -8469,14 +8430,14 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (index > 0)
-                      Text(
+                      NamidaText(
                         info.version.prettyVersion,
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                       ),
-                    SizedBox(height: 4.0),
+                    const SizedBox(height: 4.0),
                     NamidaInkWell(
-                      bgColor: theme.cardColor,
-                      padding: EdgeInsets.all(8.0),
+                      bgColor: NColors.card,
+                      padding: const EdgeInsets.all(8.0),
                       child: NamidaMarkdown.document(
                         document: _documents[info] ??= NamidaMarkdownDocument.parse(info.body),
                         selectable: false,
@@ -8485,7 +8446,7 @@ class _NamidaVersionReleasesInfoListState extends State<_NamidaVersionReleasesIn
                         padding: EdgeInsets.zero,
                       ),
                     ),
-                    SizedBox(height: 12.0),
+                    const SizedBox(height: 12.0),
                   ],
                 );
               },
@@ -8707,9 +8668,9 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
     final pageIndicatorWidget = count > 1
         ? ObxO(
             rx: _currentIndex,
-            builder: (context, currentIndex) => Text(
+            builder: (context, currentIndex) => NamidaText(
               '${currentIndex + 1}/$count',
-              style: context.textTheme.displayMedium,
+              style: NText.medium,
             ),
           )
         : null;
@@ -8730,8 +8691,8 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
               ignoring: !_showTopBar,
               child: SizedBox(
                 width: context.width,
-                child: ColoredBox(
-                  color: context.theme.scaffoldBackgroundColor,
+                child: NColoredBox(
+                  color: NColors.scaffold,
                   child: Padding(
                     padding: EdgeInsets.only(
                       top: 12.0 + _heighestTopPadding,
@@ -8938,9 +8899,9 @@ class NamidaCoolBox extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: vPadding),
         child:
             builder?.call(context) ??
-            Text(
+            NamidaText(
               text,
-              style: context.theme.textTheme.displaySmall,
+              style: NText.small,
             ),
       ),
     );
@@ -9045,17 +9006,18 @@ class CustomIconButtonTonal extends StatelessWidget {
     required this.onTap,
   }) : assert(icon != null || iconWidget != null);
 
-  static Color? getIconColor(BuildContext context, [Color? colorScheme]) =>
-      context.theme.iconTheme.color?.withOpacityExt(0.7) ?? context.defaultIconColor(colorScheme).withOpacityExt(0.75);
+  static const iconColor = NColors(.icon, opacity: 0.7);
+  // static NColors iconColorAlt([Color? colorScheme]) => NColors.defaultIcon(mainColor: colorScheme, opacity: 0.75);
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
     return IconButton.filledTonal(
       padding: dense ? EdgeInsets.zero : null,
       style: ButtonStyle(
         tapTargetSize: dense ? MaterialTapTargetSize.shrinkWrap : null,
         visualDensity: dense ? VisualDensity.compact : null,
-        backgroundColor: WidgetStatePropertyAll((colorScheme ?? context.theme.colorScheme.secondary).withOpacityExt(0.18)),
+        backgroundColor: WidgetStatePropertyAll((colorScheme ?? colors.secondary).withOpacityExt(0.18)),
       ),
       onPressed: onTap,
       icon:
@@ -9063,7 +9025,7 @@ class CustomIconButtonTonal extends StatelessWidget {
           Icon(
             icon,
             size: iconSize,
-            color: getIconColor(context, colorScheme),
+            color: iconColor.resolve(colors),
           ),
       tooltip: tooltip,
     );
@@ -9123,7 +9085,6 @@ class SplitPageState extends State<SplitPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final pages = widget.pages;
     final selectedIndex = _selectedIndex;
     final selectedPage = pages[selectedIndex];
@@ -9158,36 +9119,40 @@ class SplitPageState extends State<SplitPage> {
                       } else {
                         borderRadius = BorderRadius.circular(brValue);
                       }
-                      return Expanded(
-                        child: NamidaInkWell(
-                          alignment: Alignment.center,
-                          animationDurationMS: 200,
-                          borderRadius: 8.0,
-                          bgColor: theme.cardTheme.color,
-                          padding: const EdgeInsets.all(8.0),
-                          decoration: BoxDecoration(
-                            border: isSelected
-                                ? Border.all(
-                                    color: theme.colorScheme.primary.withOpacityExt(0.6),
-                                    width: 1.2,
-                                  )
-                                : null,
-                            borderRadius: borderRadius,
+                      final buttonContent = Row(
+                        mainAxisAlignment: .center,
+                        children: [
+                          ?e.titleIconWidget,
+                          Flexible(
+                            fit: e.titleIconWidget == null ? FlexFit.tight : FlexFit.loose,
+                            child: NamidaText(
+                              e.title,
+                              style: NText.medium,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          onTap: () => _onButtonTap(i),
-                          child: Row(
-                            mainAxisAlignment: .center,
-                            children: [
-                              ?e.titleIconWidget,
-                              Flexible(
-                                fit: e.titleIconWidget == null ? FlexFit.tight : FlexFit.loose,
-                                child: Text(
-                                  e.title,
-                                  style: theme.textTheme.displayMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
+                        ],
+                      );
+                      return Expanded(
+                        child: NBuilder(
+                          selfAnimated: true,
+                          builder: (context, colors) => NamidaInkWell(
+                            alignment: Alignment.center,
+                            animationDurationMS: 200,
+                            borderRadius: 8.0,
+                            bgColor: NColors.cardTheme,
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              border: isSelected
+                                  ? Border.all(
+                                      color: colors.primary.withOpacityExt(0.6),
+                                      width: 1.2,
+                                    )
+                                  : null,
+                              borderRadius: borderRadius,
+                            ),
+                            onTap: () => _onButtonTap(i),
+                            child: buttonContent,
                           ),
                         ),
                       );
@@ -9204,8 +9169,8 @@ class SplitPageState extends State<SplitPage> {
         const SizedBox(height: 6.0),
 
         if (widget.showDivider)
-          NamidaContainerDivider(
-            margin: const EdgeInsets.symmetric(horizontal: 18.0),
+          const NamidaContainerDivider(
+            margin: EdgeInsets.symmetric(horizontal: 18.0),
           ),
 
         Flexible(
@@ -9318,11 +9283,10 @@ class NamidaToggleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final inactiveColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!);
-    final activeColor = theme.colorScheme.secondaryContainer;
+    final colors = NColorsData.targetOf(context);
+    final tileOpacity = context.isDarkMode ? 0.02 : 0.08;
+    final inactiveColor = Color.alphaBlend(colors.onSurface.withOpacityExt(tileOpacity), colors.cardTheme);
+    final activeColor = colors.secondaryContainer;
     final bgColor = active
         ? activeColor
         : halfActive
@@ -9333,7 +9297,7 @@ class NamidaToggleCard extends StatelessWidget {
       borderRadius: 10.0,
       padding: padding,
       animationDurationMS: 200,
-      bgColor: bgColor,
+      bgColor: NColors.fixed(bgColor),
       onTap: onTap,
       child: showTitle
           ? Column(
@@ -9346,9 +9310,9 @@ class NamidaToggleCard extends StatelessWidget {
                 const SizedBox(
                   height: 4.0,
                 ),
-                Text(
+                NamidaText(
                   title,
-                  style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                  style: const NText(.small, size: .s12),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,

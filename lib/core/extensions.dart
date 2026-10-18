@@ -23,8 +23,8 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart';
@@ -534,7 +534,7 @@ extension ListiePrecomputedSortUtils<E> on List<E> {
 
 extension ListieEqualityUtils<T1> on List<T1>? {
   bool didChangeFrom<T2>(List<T2>? other, {bool ordered = false}) {
-    final equality = ordered ? DeepCollectionEquality() : DeepCollectionEquality.unordered();
+    final equality = ordered ? const DeepCollectionEquality() : const DeepCollectionEquality.unordered();
     final didChange = !equality.equals(this, other);
     return didChange;
   }
@@ -1508,21 +1508,21 @@ extension DirectoryIndexServerUtils on DirectoryIndex {
                 mainAxisSize: .min,
                 crossAxisAlignment: .start,
                 children: [
-                  Text(
+                  NamidaText(
                     title ?? '',
-                    style: context.theme.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                   subtitleBuilder?.call(context) ??
-                      Text(
+                      NamidaText(
                         subtitle ?? e.toSourceInfo(),
-                        style: context.theme.textTheme.displaySmall,
+                        style: NText.small,
                       ),
                 ],
               ),
             ),
             if (!stillExists) ...[
               const SizedBox(width: 12.0),
-              Icon(
+              const Icon(
                 Broken.trash,
                 size: 20.0,
               ),

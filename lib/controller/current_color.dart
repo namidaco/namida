@@ -76,7 +76,7 @@ class CurrentColor {
   Color get color => _namidaColor.valueR?.color ?? _defaultNamidaColor.color;
   List<Color> get palette => _namidaColor.valueR?.palette ?? _defaultNamidaColor.palette;
   Color get currentColorScheme => _colorSchemeOfSubPages.valueR ?? color;
-  int get colorAlpha => namida.isDarkMode ? 200 : 120;
+  double get colorOpacity => namida.isDarkMode ? 0.78 : 0.47;
 
   final _namidaColorMiniplayer = Rxn<NamidaColor>();
 
@@ -155,7 +155,7 @@ class CurrentColor {
       final nc = _namidaColor.value ?? _defaultNamidaColor;
       _namidaColor.set(
         NamidaColor(
-          used: nc.used?.withAlpha(colorAlpha),
+          used: nc.used?.withOpacityExt(colorOpacity),
           // mix: nc.mix,
           mix2: nc.mix2,
           palette: nc.palette,
@@ -169,7 +169,7 @@ class CurrentColor {
   }
 
   void updatePlayerColorFromColor(Color color, [bool customAlpha = true]) async {
-    final colorWithAlpha = customAlpha ? color.withAlpha(colorAlpha) : color;
+    final colorWithAlpha = customAlpha ? color.withOpacityExt(colorOpacity) : color;
     _namidaColor.set(NamidaColor.single(colorWithAlpha));
     _refreshColorsRx();
   }
@@ -202,7 +202,7 @@ class CurrentColor {
   Future<NamidaColor?> getPlayerColorFromDeviceWallpaper({bool forceCheck = false, bool customAlpha = true}) async {
     final accentColor = await _getDeviceWallpaperColorAccent(forceCheck: forceCheck);
     if (accentColor != null) {
-      final colorWithAlpha = customAlpha ? accentColor.withAlpha(colorAlpha) : accentColor;
+      final colorWithAlpha = customAlpha ? accentColor.withOpacityExt(colorOpacity) : accentColor;
       return NamidaColor.single(colorWithAlpha);
     }
     return null;
@@ -338,9 +338,9 @@ class CurrentColor {
     } else {
       // the value is a normal color
       return NamidaColor(
-        used: delightnedAndAlpha ? nc.used?.withAlpha(colorAlpha).delightned : nc.used,
-        // mix: delightnedAndAlpha ? nc.mix.withAlpha(colorAlpha).delightned : nc.mix,
-        mix2: delightnedAndAlpha ? nc.mix2.withAlpha(colorAlpha).delightned : nc.mix2,
+        used: delightnedAndAlpha ? nc.used?.withOpacityExt(colorOpacity).delightned : nc.used,
+        // mix: delightnedAndAlpha ? nc.mix.withOpacityExt(colorOpacity).delightned : nc.mix,
+        mix2: delightnedAndAlpha ? nc.mix2.withOpacityExt(colorOpacity).delightned : nc.mix2,
         palette: nc.palette,
       );
     }
@@ -460,7 +460,7 @@ class CurrentColor {
   }
 
   void updateCurrentColorSchemeOfSubPages([Color? color, bool customAlpha = true]) async {
-    final colorWithAlpha = customAlpha ? color?.withAlpha(colorAlpha) : color;
+    final colorWithAlpha = customAlpha ? color?.withOpacityExt(colorOpacity) : color;
     if (colorWithAlpha != null) _prebuildAppTheme(colorWithAlpha);
     _colorSchemeOfSubPages.value = colorWithAlpha;
   }

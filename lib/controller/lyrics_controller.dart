@@ -31,6 +31,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -419,9 +420,9 @@ class Lyrics {
         ],
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12.0),
-          child: Text(
+          child: NamidaText(
             embeddedLyrics,
-            style: namida.textTheme.displaySmall,
+            style: NText.small,
             maxLines: 8,
             overflow: TextOverflow.ellipsis,
           ),

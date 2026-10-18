@@ -16,6 +16,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -223,9 +224,6 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-
     if (widget.notification.isRead == true && _isNowRead.value == false) _isNowRead.value = true; // after refreshing response and was read outside
 
     final thumbnailWidth = this.widget.thumbnailWidth;
@@ -283,10 +281,10 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
               Positioned(
                 bottom: -3.0,
                 right: -3.0,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
+                child: NDecoratedBox(
+                  decoration: (colors) => BoxDecoration(
                     shape: BoxShape.circle,
-                    color: theme.scaffoldBackgroundColor,
+                    color: colors.scaffold,
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(2.0),
@@ -312,7 +310,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 shimmerEnabled: false,
                 child: Text(
                   firstLine,
-                  style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * widget.fontMultiplier),
+                  style: NText.medium.of(context).copyWith(fontSize: 13.0 * widget.fontMultiplier),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -325,10 +323,12 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
                 shimmerEnabled: false,
                 child: Text(
                   secondLine,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 13.0 * widget.fontMultiplier,
-                  ),
+                  style: NText.small
+                      .of(context)
+                      .copyWith(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 13.0 * widget.fontMultiplier,
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -404,7 +404,7 @@ class _YoutubeVideoCardNotificationState extends State<YoutubeVideoCardNotificat
       final plItem = YoutubeID(id: videoId, playlistID: null);
       return SwipeQueueAddTile(
         item: plItem,
-        infoCallback: () => SwipeQueueAddTileInfo(
+        infoCallback: () => const SwipeQueueAddTileInfo(
           queueSource: QueueSourceYoutubeID.ytNotificationsHosted,
           heroTag: null,
         ),

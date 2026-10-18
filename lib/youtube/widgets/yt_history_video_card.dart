@@ -17,6 +17,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -38,14 +39,9 @@ class VideoTilePropertiesProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final queueSource = configs.queueSource;
-    final queueSupportResuming = queueSource.supportResuming;
     final comingFromQueue = queueSource == QueueSourceYoutubeID.ytPlayerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
-
-    final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
-    final highlightColorLayer = queueSupportResuming ? theme.focusColor.withOpacityExt(0.2) : null;
 
     final itemsColor7 = Colors.white.withOpacityExt(0.7);
     final itemsColor6 = Colors.white.withOpacityExt(0.6);
@@ -77,62 +73,23 @@ class VideoTilePropertiesProvider extends StatelessWidget {
           rx: settings.thumbnailTapAction,
           builder: (context, thumbnailTapAction) => ObxO(
             rx: settings.thumbnailLongPressAction,
-            builder: (context, thumbnailLongPressAction) => ObxPrefer(
-              enabled: queueSupportResuming,
-              rx: QueueController.latestPlayedForSourceManager.map,
-              builder: (context, latestPlayedForSource) {
-                YoutubeID? currentHighlightedVideo;
-                final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
-                if (currentHighlightedPlayable is YoutubeID) currentHighlightedVideo = currentHighlightedPlayable;
-                return ObxO(
-                  rx: Player.inst.currentIndex,
-                  builder: (context, currentPlayingIndex) => Obx(
-                    (context) {
-                      int? sleepingIndex;
-                      if (comingFromQueue) {
-                        final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                        if (sleepconfig.enableSleepAfterItems) {
-                          final repeatMode = settings.player.repeatMode.valueR;
-                          if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                            sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
-                          }
-                        }
-                      }
-                      final currentPlayingVideo = Player.inst.currentVideoR;
-                      final pageColorScheme = CurrentColor.inst.currentColorScheme;
-
-                      final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                          ? CurrentColor.inst.miniplayerColor
-                          : pageColorScheme; // always follow track color
-
-                      final properties = VideoTileProperties(
-                        threeLines: threeLines,
-                        threeLinesPlaying: threeLinesPlaying,
-                        itemsColor7: itemsColor7,
-                        itemsColor6: itemsColor6,
-                        itemsColor5: itemsColor5,
-                        pageColorScheme: pageColorScheme,
-                        backgroundColorPlaying: backgroundColorPlaying,
-                        backgroundColorNotPlaying: backgroundColorNotPlaying,
-                        highlightColorLayer: highlightColorLayer,
-                        currentPlayingVideo: currentPlayingVideo,
-                        currentPlayingIndex: currentPlayingIndex,
-                        currentHighlightedVideo: currentHighlightedVideo,
-                        sleepingIndex: sleepingIndex,
-                        comingFromQueue: comingFromQueue,
-                        configs: configs,
-                        canHaveDuplicates: canHaveDuplicates,
-                        allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                        allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                        thumbnailTapAction: thumbnailTapAction,
-                        thumbnailLongPressAction: thumbnailLongPressAction,
-                      );
-                      return builder(properties);
-                    },
-                  ),
-                );
-              },
-            ),
+            builder: (context, thumbnailLongPressAction) {
+              final properties = VideoTileProperties(
+                threeLines: threeLines,
+                threeLinesPlaying: threeLinesPlaying,
+                itemsColor7: itemsColor7,
+                itemsColor6: itemsColor6,
+                itemsColor5: itemsColor5,
+                comingFromQueue: comingFromQueue,
+                configs: configs,
+                canHaveDuplicates: canHaveDuplicates,
+                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                thumbnailTapAction: thumbnailTapAction,
+                thumbnailLongPressAction: thumbnailLongPressAction,
+              );
+              return builder(properties);
+            },
           ),
         ),
       ),
@@ -176,15 +133,6 @@ class VideoTileProperties {
   final Color? itemsColor6;
   final Color? itemsColor5;
 
-  final Color pageColorScheme;
-  final Color backgroundColorPlaying;
-  final Color backgroundColorNotPlaying;
-  final Color? highlightColorLayer;
-
-  final YoutubeID? currentPlayingVideo;
-  final int? currentPlayingIndex;
-  final YoutubeID? currentHighlightedVideo;
-  final int? sleepingIndex;
   final bool comingFromQueue;
   final bool canHaveDuplicates;
 
@@ -200,14 +148,6 @@ class VideoTileProperties {
     required this.itemsColor7,
     required this.itemsColor6,
     required this.itemsColor5,
-    required this.pageColorScheme,
-    required this.backgroundColorPlaying,
-    required this.backgroundColorNotPlaying,
-    required this.highlightColorLayer,
-    required this.currentPlayingVideo,
-    required this.currentPlayingIndex,
-    required this.currentHighlightedVideo,
-    required this.sleepingIndex,
     required this.comingFromQueue,
     required this.canHaveDuplicates,
     required this.allowSwipeLeft,
@@ -263,7 +203,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
   final double cardColorOpacity;
   final double fadeOpacity;
   final bool isImportantInCache;
-  final Color? bgColor;
+  final NColors? bgColor;
   final StreamInfoItem? Function(T item)? info;
   final Widget? topRightWidget;
   final int? downloadIndex;
@@ -370,7 +310,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
   late final _infoFetcher = VideoCardInfoFetcherWrapper(
     this,
     fetchExtraDetails: false,
-    networkFetchDelay: widget.deferNetworkFetch ? Duration(milliseconds: 500) : Duration.zero,
+    networkFetchDelay: widget.deferNetworkFetch ? const Duration(milliseconds: 500) : Duration.zero,
   );
 
   Iterable<YoutubeID>? _getPlayOptionsQueue() {
@@ -390,385 +330,490 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
     ),
   );
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+  _YTHistoryCardPlayState _selectPlayState() {
     final properties = widget.properties;
-    final configs = properties.configs;
-
-    double thumbHeight = widget.thumbnailHeight ?? (widget.minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
-    double thumbWidth = widget.minimalCardWidth ?? thumbHeight * 16 / 9;
-    if (widget.minimalCard) {
-      // this might crop the image since we enabling forceSquared.
-      thumbHeight -= YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight;
-      thumbWidth -= YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth;
-    }
-
-    final info = _infoFetcher.infoFinal;
-    final duration = _infoFetcher.duration;
-
-    String? dateText;
-    if (configs.displayTimeAgo) {
-      final watchMS = videoWatch?.dateMSNull;
-      if (watchMS != null) dateText = widget.minimalCard ? TimeAgoController.dateMSSEFromNow(watchMS) : watchMS.dateAndClockFormattedOriginal;
-    }
-
-    Widget? draggingThumbWidget;
-    Widget? draggingTileWidget;
-    if (configs.draggableThumbnail && configs.draggingEnabled) {
-      final listener = NamidaReordererableListener(
-        key: const ValueKey(0),
-        durationMs: 80,
-        index: index,
-        child: widget.minimalCard
-            ? Container(
-                color: Colors.transparent,
-                height: thumbHeight * 0.9,
-                width: thumbWidth * 0.9, // not fully but better, to avoid accidents
-              )
-            : const ColoredBox(color: Colors.transparent),
-      );
-      final reorderableRx = configs.reorderableRx;
-      final gatedListener = reorderableRx != null
-          ? ObxO(
-              rx: reorderableRx,
-              builder: (context, value) => value ? listener : const SizedBox(),
-            )
-          : listener;
-      if (widget.minimalCard) {
-        draggingThumbWidget = gatedListener;
-      } else {
-        draggingTileWidget = Positioned(
-          left: 0.0,
-          top: 0.0,
-          bottom: 0.0,
-          width: ThreeLineSmallContainers.enabledWidth + thumbWidth + 4.0,
-          child: gatedListener,
-        );
-      }
-    }
-
-    final willSleepAfterThis = properties.sleepingIndex == index;
-
-    final videoTitle = _infoFetcher.videoTitle;
-    final videoChannel = _infoFetcher.videoChannel;
-
-    final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
-    final displayDateText = dateText != null && dateText.isNotEmpty;
-
-    final bool isRightIndex = properties.canHaveDuplicates ? index == properties.currentPlayingIndex : true;
-    bool isCurrentlyPlaying = false;
-
+    final queueSource = properties.configs.queueSource;
+    final isRightIndex = properties.canHaveDuplicates ? index == Player.inst.currentIndex.valueR : true;
+    var isPlaying = false;
     if (isRightIndex) {
-      final curr = properties.currentPlayingVideo;
-      if (videoId == curr?.id && videoWatch == curr?.watchNull) isCurrentlyPlaying = true;
-    }
-    final currentHighlightedVideo = properties.currentHighlightedVideo;
-    final bool isVideoHighlighted = !widget.minimalCard && currentHighlightedVideo != null && (item == currentHighlightedVideo);
-
-    Widget? threeLines;
-    Color? itemsColor7;
-    Color? itemsColor6;
-    Color? itemsColor5;
-
-    if (isCurrentlyPlaying) {
-      itemsColor7 = properties.itemsColor7;
-      itemsColor6 = properties.itemsColor6;
-      itemsColor5 = properties.itemsColor5;
-      threeLines = properties.threeLinesPlaying;
-    } else {
-      threeLines = properties.threeLines;
+      final curr = Player.inst.currentVideoR;
+      if (videoId == curr?.id && videoWatch == curr?.watchNull) isPlaying = true;
     }
 
-    Widget thumbnail = YoutubeThumbnail(
-      type: ThumbnailType.video,
-      key: Key(videoId),
-      borderRadius: YTHistoryVideoCardBase.kDefaultBorderRadiusThumbnail,
-      isImportantInCache: widget.isImportantInCache,
-      width: thumbWidth,
-      height: thumbHeight,
-      videoId: videoId,
-      preferLowerRes: true,
-      customUrl: _infoFetcher.infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
-      smallBoxText: duration,
-      smallBoxIcon: willSleepAfterThis
-          ? Broken.timer_1
-          : _infoFetcher.isVideoUnavailable
-          ? Broken.danger
-          : null,
-      forceSquared: true, // -- if false, low quality images with black bars would appear
-    );
-    if (!widget.minimalCard) {
-      final thumbnailTapAction = properties.thumbnailTapAction;
-      final thumbnailLongPressAction = properties.thumbnailLongPressAction;
-      final hasThumbnailTap = thumbnailTapAction != TrackExecuteActions.none;
-      final hasThumbnailLongPress = thumbnailLongPressAction != TrackExecuteActions.none;
-      if (hasThumbnailTap || hasThumbnailLongPress) {
-        thumbnail = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: hasThumbnailTap ? () => _executeThumbnailAction(thumbnailTapAction) : null,
-          onLongPress: hasThumbnailLongPress ? () => _executeThumbnailAction(thumbnailLongPressAction) : null,
-          child: thumbnail,
-        );
-      }
+    var isHighlighted = false;
+    if (queueSource.supportResuming && !widget.minimalCard) {
+      final highlighted = QueueController.latestPlayedForSourceManager.map.valueR[queueSource];
+      isHighlighted = highlighted is YoutubeID && item == highlighted;
     }
 
-    final children = [
-      ?threeLines,
-      Stack(
-        alignment: Alignment.center,
-        children: [
-          Center(
-            child: Padding(
-              padding: widget.minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
-              child: thumbnail,
-            ),
-          ),
-          ?draggingThumbWidget,
-        ],
-      ),
-      const SizedBox(width: 8.0),
-      Expanded(
-        child: Padding(
-          padding: widget.minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                videoTitle ?? videoId,
-                maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.displayMedium?.copyWith(
-                  fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
-                  color: itemsColor7,
-                ),
-              ),
-              if (displayVideoChannel)
-                Text(
-                  videoChannel,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
-                    color: itemsColor6,
-                  ),
-                ),
-              if (displayDateText)
-                Text(
-                  dateText,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
-                    color: itemsColor5,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-      const SizedBox(width: 6.0 + 12.0), // right + iconWidth
-      const SizedBox(width: 8.0),
-    ];
-
-    final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
-
-    BoxDecoration decoration;
-    Border? border;
-    var bgColor =
-        widget.bgColor ??
-        (isCurrentlyPlaying ? (properties.backgroundColorPlaying).withAlpha(140) : (properties.backgroundColorNotPlaying.withOpacityExt(widget.cardColorOpacity)));
-
-    if (!isCurrentlyPlaying && isVideoHighlighted && properties.highlightColorLayer != null) {
-      border = Border(
-        right: BorderSide(
-          width: 3.0,
-          color: properties.pageColorScheme,
-        ),
-      );
-      bgColor = Color.alphaBlend(
-        properties.highlightColorLayer!,
-        bgColor,
-      );
-    }
-
-    if (settings.gradientTiles.value) {
-      Color? bgColorAlt;
-      if (isCurrentlyPlaying) {
-        final palette = CurrentColor.inst.miniplayerColorM.palette;
-        if (palette.isNotEmpty) {
-          bgColorAlt = palette[0].withOpacityExt(0.4);
+    var willSleep = false;
+    if (properties.comingFromQueue) {
+      final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+      if (sleepconfig.enableSleepAfterItems) {
+        final repeatMode = settings.player.repeatMode.valueR;
+        if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+          willSleep = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
         }
       }
-      // -- has to be always gradient to animate properly
-      decoration = BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            bgColor,
-            bgColorAlt ?? bgColor,
-          ],
-          stops: [0.6, 1.0],
-        ),
-        border: border,
-      );
-    } else {
-      decoration = BoxDecoration(
-        color: bgColor,
-        border: border,
-      );
     }
+    return (isPlaying: isPlaying, isHighlighted: isHighlighted, willSleep: willSleep);
+  }
 
-    Widget finalChild = NamidaPopupWrapper(
-      openOnTap: false,
-      openOnLongPress: configs.openMenuOnLongPress,
-      childrenDefault: () => YTUtils.getVideoCardMenuItems(
-        queueIndex: index,
-        queueSource: configs.queueSource,
-        downloadIndex: widget.downloadIndex,
-        totalLength: widget.downloadTotalLength,
-        playlistInfo: configs.playlistInfo,
-        streamInfoItem: info,
-        videoId: videoId,
-        channelID: _infoFetcher.channelId,
-        playlistID: configs.playlistID,
-        idsNamesLookup: {videoId: _infoFetcher.infoVideoFinal?.title},
-        playlistName: configs.playlistName,
-        videoYTID: itemToYTIDPlay(item),
-      ),
-      child: NamidaInkWell(
-        animationDurationMS: 300,
-        borderRadius: borderRadiusRawValue,
-        width: widget.minimalCard ? thumbWidth : null,
-        onTap:
-            widget.onTap ??
-            () {
-              YTUtils.expandMiniplayer();
-              if (properties.comingFromQueue) {
-                final i = this.widget.index;
-                if (i == Player.inst.currentIndex.value) {
-                  Player.inst.togglePlayPause();
-                } else {
-                  Player.inst.skipToQueueItem(i);
-                }
-              } else {
-                final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;
-                if (widget.playSingle) {
-                  Player.inst.playOrPause(
-                    0,
-                    [itemToYTIDPlay(finalList.elementAt(this.widget.index))],
-                    configs.queueSource,
-                    gentlePlay: true,
-                  );
-                } else {
-                  final gentlePlay = finalList.hasSingleItem();
-                  Player.inst.playOrPause(
-                    this.widget.index,
-                    finalList.map(itemToYTIDPlay),
-                    configs.queueSource,
-                    gentlePlay: gentlePlay,
-                  );
-                }
-              }
-            },
-        height: widget.minimalCard ? null : Dimensions.youtubeCardItemExtent,
-        margin: YTHistoryVideoCardBase.cardMargin(widget.minimalCard),
-        decoration: decoration,
-        child: Stack(
-          children: [
-            widget.minimalCard
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: children,
+  @override
+  Widget build(BuildContext context) {
+    return ObxSelect(
+      selector: _selectPlayState,
+      builder: (context, playState) {
+        final properties = widget.properties;
+        final configs = properties.configs;
+
+        double thumbHeight = widget.thumbnailHeight ?? (widget.minimalCard ? 24.0 * 3.2 : Dimensions.youtubeCardItemHeight);
+        double thumbWidth = widget.minimalCardWidth ?? thumbHeight * 16 / 9;
+        if (widget.minimalCard) {
+          // this might crop the image since we enabling forceSquared.
+          thumbHeight -= YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight;
+          thumbWidth -= YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth;
+        }
+
+        final info = _infoFetcher.infoFinal;
+        final duration = _infoFetcher.duration;
+
+        String? dateText;
+        if (configs.displayTimeAgo) {
+          final watchMS = videoWatch?.dateMSNull;
+          if (watchMS != null) dateText = widget.minimalCard ? TimeAgoController.dateMSSEFromNow(watchMS) : watchMS.dateAndClockFormattedOriginal;
+        }
+
+        Widget? draggingThumbWidget;
+        Widget? draggingTileWidget;
+        if (configs.draggableThumbnail && configs.draggingEnabled) {
+          final listener = NamidaReordererableListener(
+            key: const ValueKey(0),
+            durationMs: 80,
+            index: index,
+            child: widget.minimalCard
+                ? Container(
+                    color: Colors.transparent,
+                    height: thumbHeight * 0.9,
+                    width: thumbWidth * 0.9, // not fully but better, to avoid accidents
                   )
-                : Row(
-                    children: children,
-                  ),
-            ?draggingTileWidget,
-            Positioned(
-              bottom: 4.0,
-              right: widget.minimalCard ? 2.0 : 12.0,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: YTUtils.getVideoCacheStatusIcons(
-                  context: context,
-                  videoId: videoId,
-                  iconsColor: itemsColor5,
-                  overrideListens: widget.overrideListens,
-                  displayCacheIcons: !widget.minimalCard,
-                  fontMultiplier: widget.minimalCard ? widget.minimalCardFontMultiplier : null,
-                  likeStatusRx: canFetchLikeStatus ? likeStatusRx : null,
-                ),
-              ),
-            ),
-            if (configs.showMoreIcon)
-              Positioned(
-                top: 0.0,
-                right: 0.0,
-                child: NamidaPopupWrapper(
-                  childrenDefault: () => YTUtils.getVideoCardMenuItems(
-                    queueIndex: index,
-                    queueSource: configs.queueSource,
-                    downloadIndex: widget.downloadIndex,
-                    totalLength: widget.downloadTotalLength,
-                    playlistInfo: configs.playlistInfo,
-                    streamInfoItem: info,
-                    videoId: videoId,
-                    channelID: _infoFetcher.channelId,
-                    playlistID: configs.playlistID,
-                    idsNamesLookup: {videoId: videoTitle},
-                    playlistName: configs.playlistName,
-                    videoYTID: itemToYTIDPlay(item),
-                  ),
-                  child: MoreIcon(
-                    iconSize: 16.0,
-                    padding: 8.0,
-                    iconColor: itemsColor6,
-                  ),
-                ),
-              ),
-            Positioned(
+                : const ColoredBox(color: Colors.transparent),
+          );
+          final reorderableRx = configs.reorderableRx;
+          final gatedListener = reorderableRx != null
+              ? ObxO(
+                  rx: reorderableRx,
+                  builder: (context, value) => value ? listener : const SizedBox(),
+                )
+              : listener;
+          if (widget.minimalCard) {
+            draggingThumbWidget = gatedListener;
+          } else {
+            draggingTileWidget = Positioned(
+              left: 0.0,
               top: 0.0,
-              right: 0.0,
-              child: widget.topRightWidget ?? const SizedBox(),
+              bottom: 0.0,
+              width: ThreeLineSmallContainers.enabledWidth + thumbWidth + 4.0,
+              child: gatedListener,
+            );
+          }
+        }
+
+        final willSleepAfterThis = playState.willSleep;
+
+        final videoTitle = _infoFetcher.videoTitle;
+        final videoChannel = _infoFetcher.videoChannel;
+
+        final displayVideoChannel = videoChannel != null && videoChannel.isNotEmpty;
+        final displayDateText = dateText != null && dateText.isNotEmpty;
+
+        final bool isCurrentlyPlaying = playState.isPlaying;
+        final bool isVideoHighlighted = playState.isHighlighted;
+
+        Widget? threeLines;
+        Color? itemsColor7;
+        Color? itemsColor6;
+        Color? itemsColor5;
+
+        if (isCurrentlyPlaying) {
+          itemsColor7 = properties.itemsColor7;
+          itemsColor6 = properties.itemsColor6;
+          itemsColor5 = properties.itemsColor5;
+          threeLines = properties.threeLinesPlaying;
+        } else {
+          threeLines = properties.threeLines;
+        }
+
+        Widget thumbnail = YoutubeThumbnail(
+          type: ThumbnailType.video,
+          key: Key(videoId),
+          borderRadius: YTHistoryVideoCardBase.kDefaultBorderRadiusThumbnail,
+          isImportantInCache: widget.isImportantInCache,
+          width: thumbWidth,
+          height: thumbHeight,
+          videoId: videoId,
+          preferLowerRes: true,
+          customUrl: _infoFetcher.infoVideoFinal?.thumbnails.pick()?.url ?? info?.liveThumbs.pick()?.url,
+          smallBoxText: duration,
+          smallBoxIcon: willSleepAfterThis
+              ? Broken.timer_1
+              : _infoFetcher.isVideoUnavailable
+              ? Broken.danger
+              : null,
+          forceSquared: true, // -- if false, low quality images with black bars would appear
+        );
+        if (!widget.minimalCard) {
+          final thumbnailTapAction = properties.thumbnailTapAction;
+          final thumbnailLongPressAction = properties.thumbnailLongPressAction;
+          final hasThumbnailTap = thumbnailTapAction != TrackExecuteActions.none;
+          final hasThumbnailLongPress = thumbnailLongPressAction != TrackExecuteActions.none;
+          if (hasThumbnailTap || hasThumbnailLongPress) {
+            thumbnail = GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: hasThumbnailTap ? () => _executeThumbnailAction(thumbnailTapAction) : null,
+              onLongPress: hasThumbnailLongPress ? () => _executeThumbnailAction(thumbnailLongPressAction) : null,
+              child: thumbnail,
+            );
+          }
+        }
+
+        final children = [
+          ?threeLines,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Center(
+                child: Padding(
+                  padding: widget.minimalCard ? const EdgeInsets.all(1.0) : const EdgeInsets.all(2.0),
+                  child: thumbnail,
+                ),
+              ),
+              ?draggingThumbWidget,
+            ],
+          ),
+          const SizedBox(width: 8.0),
+          Expanded(
+            child: Padding(
+              padding: widget.minimalCard ? const EdgeInsets.fromLTRB(4.0, 0, 4.0, 4.0) : EdgeInsets.zero,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    videoTitle ?? videoId,
+                    maxLines: widget.minimalCard && (displayVideoChannel || displayDateText) ? 1 : 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: NText.medium
+                        .of(context)
+                        .copyWith(
+                          fontSize: widget.minimalCard ? 12.0 * widget.minimalCardFontMultiplier : null,
+                          color: itemsColor7,
+                        ),
+                  ),
+                  if (displayVideoChannel)
+                    Text(
+                      videoChannel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: NText.small
+                          .of(context)
+                          .copyWith(
+                            fontSize: widget.minimalCard ? 11.5 * widget.minimalCardFontMultiplier : null,
+                            color: itemsColor6,
+                          ),
+                    ),
+                  if (displayDateText)
+                    Text(
+                      dateText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: NText.small
+                          .of(context)
+                          .copyWith(
+                            fontSize: widget.minimalCard ? 11.0 * widget.minimalCardFontMultiplier : null,
+                            color: itemsColor5,
+                          ),
+                    ),
+                ],
+              ),
             ),
-            if (widget.fadeOpacity > 0)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(borderRadiusRawValue.multipliedRadius),
-                      color: theme.cardColor.withOpacityExt(widget.fadeOpacity),
+          ),
+          const SizedBox(width: 6.0 + 12.0), // right + iconWidth
+          const SizedBox(width: 8.0),
+        ];
+
+        final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
+
+        final background = _YTHistoryCardBackgroundState(
+          bgColor: widget.bgColor,
+          isPlaying: isCurrentlyPlaying,
+          hasHighlightLayer: !isCurrentlyPlaying && isVideoHighlighted && configs.queueSource.supportResuming,
+          comingFromQueue: properties.comingFromQueue,
+          cardColorOpacity: widget.cardColorOpacity,
+        );
+
+        Widget finalChild = NamidaPopupWrapper(
+          openOnTap: false,
+          openOnLongPress: configs.openMenuOnLongPress,
+          childrenDefault: () => YTUtils.getVideoCardMenuItems(
+            queueIndex: index,
+            queueSource: configs.queueSource,
+            downloadIndex: widget.downloadIndex,
+            totalLength: widget.downloadTotalLength,
+            playlistInfo: configs.playlistInfo,
+            streamInfoItem: info,
+            videoId: videoId,
+            channelID: _infoFetcher.channelId,
+            playlistID: configs.playlistID,
+            idsNamesLookup: {videoId: _infoFetcher.infoVideoFinal?.title},
+            playlistName: configs.playlistName,
+            videoYTID: itemToYTIDPlay(item),
+          ),
+          child: _YTHistoryCardInkWell(
+            background: background,
+            borderRadius: borderRadiusRawValue,
+            width: widget.minimalCard ? thumbWidth : null,
+            onTap:
+                widget.onTap ??
+                () {
+                  YTUtils.expandMiniplayer();
+                  if (properties.comingFromQueue) {
+                    final i = this.widget.index;
+                    if (i == Player.inst.currentIndex.value) {
+                      Player.inst.togglePlayPause();
+                    } else {
+                      Player.inst.skipToQueueItem(i);
+                    }
+                  } else {
+                    final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;
+                    if (widget.playSingle) {
+                      Player.inst.playOrPause(
+                        0,
+                        [itemToYTIDPlay(finalList.elementAt(this.widget.index))],
+                        configs.queueSource,
+                        gentlePlay: true,
+                      );
+                    } else {
+                      final gentlePlay = finalList.hasSingleItem();
+                      Player.inst.playOrPause(
+                        this.widget.index,
+                        finalList.map(itemToYTIDPlay),
+                        configs.queueSource,
+                        gentlePlay: gentlePlay,
+                      );
+                    }
+                  }
+                },
+            height: widget.minimalCard ? null : Dimensions.youtubeCardItemExtent,
+            margin: YTHistoryVideoCardBase.cardMargin(widget.minimalCard),
+            child: Stack(
+              children: [
+                widget.minimalCard
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: children,
+                      )
+                    : Row(
+                        children: children,
+                      ),
+                ?draggingTileWidget,
+                Positioned(
+                  bottom: 4.0,
+                  right: widget.minimalCard ? 2.0 : 12.0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: YTUtils.getVideoCacheStatusIcons(
+                      context: context,
+                      videoId: videoId,
+                      iconsColor: itemsColor5,
+                      overrideListens: widget.overrideListens,
+                      displayCacheIcons: !widget.minimalCard,
+                      fontMultiplier: widget.minimalCard ? widget.minimalCardFontMultiplier : null,
+                      likeStatusRx: canFetchLikeStatus ? likeStatusRx : null,
                     ),
                   ),
                 ),
-              ),
-          ],
-        ),
-      ),
+                if (configs.showMoreIcon)
+                  Positioned(
+                    top: 0.0,
+                    right: 0.0,
+                    child: NamidaPopupWrapper(
+                      childrenDefault: () => YTUtils.getVideoCardMenuItems(
+                        queueIndex: index,
+                        queueSource: configs.queueSource,
+                        downloadIndex: widget.downloadIndex,
+                        totalLength: widget.downloadTotalLength,
+                        playlistInfo: configs.playlistInfo,
+                        streamInfoItem: info,
+                        videoId: videoId,
+                        channelID: _infoFetcher.channelId,
+                        playlistID: configs.playlistID,
+                        idsNamesLookup: {videoId: videoTitle},
+                        playlistName: configs.playlistName,
+                        videoYTID: itemToYTIDPlay(item),
+                      ),
+                      child: MoreIcon(
+                        iconSize: 16.0,
+                        padding: 8.0,
+                        iconColor: itemsColor6,
+                      ),
+                    ),
+                  ),
+                Positioned(
+                  top: 0.0,
+                  right: 0.0,
+                  child: widget.topRightWidget ?? const SizedBox(),
+                ),
+                if (widget.fadeOpacity > 0)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: NDecoratedBox(
+                        decoration: (colors) => BoxDecoration(
+                          borderRadius: BorderRadius.circular(borderRadiusRawValue.multipliedRadius),
+                          color: colors.card.withOpacityExt(widget.fadeOpacity),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+
+        if (!widget.minimalCard && configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+          final plItem = itemToYTIDPlay(item);
+          return SwipeQueueAddTile(
+            item: plItem,
+            infoCallback: () => SwipeQueueAddTileInfo(
+              queueSource: configs.queueSource,
+              heroTag: null,
+              queue: _getPlayOptionsQueue(),
+              index: widget.index,
+            ),
+            dismissibleKey: plItem,
+            allowSwipeLeft: properties.allowSwipeLeft,
+            allowSwipeRight: properties.allowSwipeRight,
+            disabledRx: configs.reorderableRx,
+            child: finalChild,
+          );
+        }
+
+        return finalChild;
+      },
     );
-
-    if (!widget.minimalCard && configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
-      final plItem = itemToYTIDPlay(item);
-      return SwipeQueueAddTile(
-        item: plItem,
-        infoCallback: () => SwipeQueueAddTileInfo(
-          queueSource: configs.queueSource,
-          heroTag: null,
-          queue: _getPlayOptionsQueue(),
-          index: widget.index,
-        ),
-        dismissibleKey: plItem,
-        allowSwipeLeft: properties.allowSwipeLeft,
-        allowSwipeRight: properties.allowSwipeRight,
-        disabledRx: configs.reorderableRx,
-        child: finalChild,
-      );
-    }
-
-    return finalChild;
   }
 }
+
+class _YTHistoryCardInkWell extends StatelessWidget {
+  final _YTHistoryCardBackgroundState background;
+  final double borderRadius;
+  final double? width;
+  final double? height;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  const _YTHistoryCardInkWell({
+    required this.background,
+    required this.borderRadius,
+    required this.width,
+    required this.height,
+    required this.margin,
+    required this.onTap,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final needsAccent = background.isPlaying || background.hasHighlightLayer;
+    // -- always an Obx so the tree keeps its shape when the card starts playing
+    return Obx(
+      (context) {
+        final colors = NColorsData.targetOf(context);
+        final pageColorScheme = needsAccent ? CurrentColor.inst.currentColorScheme : null;
+        Border? border;
+        var bgColor = background.bgColor?.resolve(colors);
+        if (bgColor == null) {
+          if (background.isPlaying && pageColorScheme != null) {
+            final backgroundColorPlaying = background.comingFromQueue || settings.autoColor.valueR
+                ? CurrentColor.inst.miniplayerColor
+                : pageColorScheme; // always follow track color
+            bgColor = backgroundColorPlaying.withOpacityExt(0.55);
+          } else {
+            bgColor = colors.cardTheme.withOpacityExt(background.cardColorOpacity);
+          }
+        }
+
+        if (background.hasHighlightLayer && pageColorScheme != null) {
+          border = Border(
+            right: BorderSide(
+              width: 3.0,
+              color: pageColorScheme,
+            ),
+          );
+          bgColor = Color.alphaBlend(
+            colors.focus.withOpacityExt(0.2),
+            bgColor,
+          );
+        }
+
+        BoxDecoration decoration;
+        if (settings.gradientTiles.value) {
+          Color? bgColorAlt;
+          if (background.isPlaying) {
+            final palette = CurrentColor.inst.miniplayerColorM.palette;
+            if (palette.isNotEmpty) {
+              bgColorAlt = palette[0].withOpacityExt(0.4);
+            }
+          }
+          // -- has to be always gradient to animate properly
+          decoration = BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                bgColor,
+                bgColorAlt ?? bgColor,
+              ],
+              stops: const [0.6, 1.0],
+            ),
+            border: border,
+          );
+        } else {
+          decoration = BoxDecoration(
+            color: bgColor,
+            border: border,
+          );
+        }
+        return NamidaInkWell(
+          animationDurationMS: 300,
+          borderRadius: borderRadius,
+          width: width,
+          onTap: onTap,
+          height: height,
+          margin: margin,
+          decoration: decoration,
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+class _YTHistoryCardBackgroundState {
+  final NColors? bgColor;
+  final bool isPlaying;
+  final bool hasHighlightLayer;
+  final bool comingFromQueue;
+  final double cardColorOpacity;
+
+  const _YTHistoryCardBackgroundState({
+    required this.bgColor,
+    required this.isPlaying,
+    required this.hasHighlightLayer,
+    required this.comingFromQueue,
+    required this.cardColorOpacity,
+  });
+}
+
+typedef _YTHistoryCardPlayState = ({bool isPlaying, bool isHighlighted, bool willSleep});

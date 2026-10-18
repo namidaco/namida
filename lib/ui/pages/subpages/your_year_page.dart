@@ -20,6 +20,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -718,8 +719,6 @@ class _YourYearPageState extends State<YourYearPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final currentPage = _loading ? null : _pages.elementAtOrNull(_currentPage);
     final hasPlaylistMenu = currentPage?.playlistMenu != null;
     return BackgroundWrapper(
@@ -730,7 +729,7 @@ class _YourYearPageState extends State<YourYearPage> {
             child: Row(
               children: [
                 if (widget.isYoutube) ...[
-                  Icon(Broken.video_square, size: 18.0, color: context.defaultIconColor()),
+                  NIcon(Broken.video_square, size: 18.0, color: NColors.defaultIcon()),
                   const SizedBox(width: 8.0),
                 ],
                 Expanded(
@@ -765,9 +764,11 @@ class _YourYearPageState extends State<YourYearPage> {
           Expanded(
             child: _loading
                 ? Center(
-                    child: ThreeArchedCircle(
-                      color: theme.colorScheme.secondary.withOpacityExt(0.5),
-                      size: 48.0,
+                    child: NBuilder(
+                      builder: (context, colors) => ThreeArchedCircle(
+                        color: colors.secondary.withOpacityExt(0.5),
+                        size: 48.0,
+                      ),
                     ),
                   )
                 : _pages.isEmpty
@@ -817,7 +818,7 @@ class _YourYearPageState extends State<YourYearPage> {
                       width: i == _currentPage ? 18.0 : 6.0,
                       height: 6.0,
                       decoration: BoxDecoration(
-                        color: i == _currentPage ? CurrentColor.inst.color : textTheme.displaySmall?.color?.withOpacityExt(0.25),
+                        color: i == _currentPage ? CurrentColor.inst.color : NText.small.of(context).color?.withOpacityExt(0.25),
                         borderRadius: BorderRadius.circular(3.0),
                       ),
                     ),
@@ -1009,7 +1010,7 @@ class _YoutubeStoryAdapter extends _StoryAdapter<String> {
 class _YearTicket extends StatelessWidget {
   final _StoryYear storyYear;
   final Color tint;
-  final Color cardColor;
+  final NColors cardColor;
 
   const _YearTicket({required this.storyYear, required this.tint, required this.cardColor});
 
@@ -1018,10 +1019,10 @@ class _YearTicket extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final onSurface = theme.colorScheme.onSurface;
-    final tintedCardColor = Color.alphaBlend(tint.withOpacityExt(0.15), cardColor);
+    final colors = NColorsData.of(context);
+    final onSurface = colors.onSurface;
+    final resolvedCardColor = cardColor.resolve(colors);
+    final tintedCardColor = Color.alphaBlend(tint.withOpacityExt(0.15), resolvedCardColor);
     final ticketColor = Color.alphaBlend(onSurface.withOpacityExt(0.05), tintedCardColor);
     final logoColor = Color.alphaBlend(tint.withOpacityExt(0.1), onSurface).withOpacityExt(0.8);
     final perforationColor = onSurface.withOpacityExt(0.25);
@@ -1060,20 +1061,24 @@ class _YearTicket extends StatelessWidget {
                   children: [
                     Text(
                       'NAMIDA',
-                      style: textTheme.displaySmall?.copyWith(
-                        fontSize: 9.0,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.6,
-                        color: onSurface.withOpacityExt(0.6),
-                      ),
+                      style: NText.small
+                          .of(context)
+                          .copyWith(
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.6,
+                            color: onSurface.withOpacityExt(0.6),
+                          ),
                     ),
                     Text(
                       storyYear.year.toString(),
-                      style: textTheme.displayLarge?.copyWith(
-                        fontSize: 18.0,
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
-                      ),
+                      style: NText.large
+                          .of(context)
+                          .copyWith(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                          ),
                     ),
                   ],
                 ),
@@ -1222,26 +1227,25 @@ class _StoryPage {
   static const _contentPadding = EdgeInsets.fromLTRB(20.0, 24.0, 20.0, 68.0);
 
   _StoryStyle _style(BuildContext context) {
-    final textTheme = context.theme.textTheme;
     return _StoryStyle(
-      title: textTheme.displayLarge!.copyWith(fontSize: 28.0, fontWeight: FontWeight.w800),
-      subtitle: textTheme.displayMedium!.copyWith(fontSize: 13.5, color: textTheme.displayMedium!.color?.withOpacityExt(0.8)),
-      bigValue: textTheme.displayLarge!.copyWith(fontSize: 26.0, fontWeight: FontWeight.w700),
-      label: textTheme.displaySmall!.copyWith(fontSize: 11.5, fontWeight: FontWeight.w600),
+      title: NText.large.of(context).copyWith(fontSize: 28.0, fontWeight: FontWeight.w800),
+      subtitle: NText.medium.of(context).copyWith(fontSize: 13.5, color: NText.medium.of(context).color?.withOpacityExt(0.8)),
+      bigValue: NText.large.of(context).copyWith(fontSize: 26.0, fontWeight: FontWeight.w700),
+      label: NText.small.of(context).copyWith(fontSize: 11.5, fontWeight: FontWeight.w600),
     );
   }
 
   Widget _card(BuildContext context, _StoryYear storyYear, {required Widget content, required bool clipContent}) {
-    final theme = context.theme;
-    final bg = Color.alphaBlend(tint.withOpacityExt(theme.brightness == Brightness.dark ? 0.16 : 0.12), theme.scaffoldBackgroundColor);
-    return Container(
+    final bgTintOpacity = context.isDarkMode ? 0.16 : 0.12;
+    final bg = NColors.custom((colors) => Color.alphaBlend(tint.withOpacityExt(bgTintOpacity), colors.scaffold));
+    return NContainer(
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: bg,
+      decoration: (colors) => BoxDecoration(
+        color: bg.resolve(colors),
         borderRadius: BorderRadius.circular(_radius.multipliedRadius),
         boxShadow: [
           BoxShadow(
-            color: theme.shadowColor.withAlpha(40),
+            color: colors.shadow.withOpacityExt(0.16),
             blurRadius: 12.0,
             offset: const Offset(0, 4),
           ),
@@ -1291,7 +1295,7 @@ class _StoryPage {
   Widget build(BuildContext context, _StoryYear storyYear) {
     final style = _style(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0).add(EdgeInsetsGeometry.only(top: 8.0)),
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0).add(const EdgeInsetsGeometry.only(top: 8.0)),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480.0),
@@ -1391,8 +1395,6 @@ class _MonthCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -1404,26 +1406,26 @@ class _MonthCell extends StatelessWidget {
           child: Stack(
             children: [
               child ??
-                  Container(
+                  NContainer(
                     width: size,
                     height: height,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.onSurface.withOpacityExt(0.06),
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.onSurface.withOpacityExt(0.06),
                       borderRadius: BorderRadius.circular(10.0.multipliedRadius),
                     ),
                   ),
               Positioned(
                 top: 4.0,
                 left: 4.0,
-                child: Container(
+                child: NContainer(
                   padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  decoration: BoxDecoration(
-                    color: theme.scaffoldBackgroundColor.withOpacityExt(0.85),
+                  decoration: (colors) => BoxDecoration(
+                    color: colors.scaffold.withOpacityExt(0.85),
                     borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                   ),
-                  child: Text(
+                  child: NamidaText(
                     label,
-                    style: textTheme.displaySmall?.copyWith(fontSize: 10.5, fontWeight: FontWeight.w700),
+                    style: const NText(.small, size: .s10p5, weight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -1431,16 +1433,16 @@ class _MonthCell extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4.0),
-        Text(
+        NamidaText(
           title ?? label,
-          style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w600),
+          style: const NText(.small, size: .s11, weight: FontWeight.w600),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         if (count != null)
-          Text(
+          NamidaText(
             count!.formatDecimal(),
-            style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+            style: const NText(.small, size: .s10),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

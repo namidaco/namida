@@ -39,8 +39,6 @@ class _SignalPathSheetState extends State<_SignalPathSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final pathRx = Platform.isAndroid ? AudioOutputController.inst.signalPath : _desktopPath;
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: widget.maxHeight * 0.85),
@@ -58,9 +56,9 @@ class _SignalPathSheetState extends State<_SignalPathSheet> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: NamidaText(
                         lang.signalPath,
-                        style: textTheme.displayLarge,
+                        style: NText.large,
                       ),
                     ),
                     if (isBitPerfect)
@@ -259,10 +257,8 @@ class _SignalPathStepTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final nodeColor = step.changesAudio ? _kChangesAudioColor : theme.colorScheme.primary;
-    final lineColor = theme.colorScheme.onSurface.withOpacityExt(0.15);
+    final nodeColor = NColors.custom((colors) => step.changesAudio ? _kChangesAudioColor : colors.primary);
+    const lineColor = NColors(.onSurface, opacity: 0.15);
     final detail = step.detail;
     return IntrinsicHeight(
       child: Row(
@@ -277,32 +273,37 @@ class _SignalPathStepTile extends StatelessWidget {
                       ? const SizedBox()
                       : Column(
                           children: [
-                            Expanded(
-                              child: Container(
+                            const Expanded(
+                              child: NContainer(
                                 width: 2.0,
                                 color: lineColor,
                               ),
                             ),
-                            CustomPaint(
-                              size: const Size(10.0, 6.0),
-                              painter: _SignalPathArrowHeadPainter(color: lineColor),
+                            NBuilder(
+                              builder: (context, colors) => CustomPaint(
+                                size: const Size(10.0, 6.0),
+                                painter: _SignalPathArrowHeadPainter(color: lineColor.resolve(colors)),
+                              ),
                             ),
                             const SizedBox(height: 3.0),
                           ],
                         ),
                 ),
-                Container(
+                NContainer(
                   width: 34.0,
                   height: 34.0,
-                  decoration: BoxDecoration(
-                    color: nodeColor.withOpacityExt(0.18),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: nodeColor,
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Icon(
+                  decoration: (colors) {
+                    final color = nodeColor.resolve(colors);
+                    return BoxDecoration(
+                      color: color.withOpacityExt(0.18),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: color,
+                        width: 1.5,
+                      ),
+                    );
+                  },
+                  child: NIcon(
                     step.icon,
                     size: 16.0,
                     color: nodeColor,
@@ -311,7 +312,7 @@ class _SignalPathStepTile extends StatelessWidget {
                 Expanded(
                   child: isLast
                       ? const SizedBox()
-                      : Container(
+                      : const NContainer(
                           width: 2.0,
                           color: lineColor,
                         ),
@@ -328,14 +329,14 @@ class _SignalPathStepTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  NamidaText(
                     step.title,
-                    style: textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                   if (detail != null && detail.isNotEmpty)
-                    Text(
+                    NamidaText(
                       detail,
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     ),
                 ],
               ),
@@ -382,11 +383,10 @@ class _SignalPathBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
+    return NContainer(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacityExt(0.15),
+      decoration: (colors) => BoxDecoration(
+        color: colors.primary.withOpacityExt(0.15),
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
       ),
       child: Row(
@@ -397,9 +397,9 @@ class _SignalPathBadge extends StatelessWidget {
             size: 14.0,
           ),
           const SizedBox(width: 4.0),
-          Text(
+          NamidaText(
             title,
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ],
       ),

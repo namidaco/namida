@@ -79,8 +79,8 @@ class _YoutubeInfoUtils {
       isUnlisted: null,
       isLive: null,
       category: null,
-      publishDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? PublishTime.unknown(),
-      uploadDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? PublishTime.unknown(),
+      publishDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? const PublishTime.unknown(),
+      uploadDate: tempVideoInfosFromStreams[videoId]?.publishedAt ?? const PublishTime.unknown(),
     );
   }
 

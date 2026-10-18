@@ -32,6 +32,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
@@ -414,7 +415,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     required AnimationController controller,
     required bool isForward,
   }) {
-    final textTheme = context.textTheme;
     final seekContainerSize = _maxWidth;
     final finalOffset = seekContainerSize * 0.05;
     const forwardIcons = <int, IconData>{
@@ -459,10 +459,12 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
               const SizedBox(height: 8.0),
               Text(
                 '$ss ${lang.seconds}',
-                style: textTheme.displayMedium?.copyWith(
-                  color: color,
-                  shadows: outlineShadow,
-                ),
+                style: NText.medium
+                    .of(context)
+                    .copyWith(
+                      color: color,
+                      shadows: outlineShadow,
+                    ),
               ),
             ],
           ),
@@ -483,7 +485,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     bool popOnTap = true,
     double? progress,
   }) {
-    final textTheme = context.textTheme;
     progress = progress?.clampDouble(0.0, 1.0);
     final color = CurrentColor.inst.miniplayerColor;
     final bgColor = selected ? color.withOpacityExt(0.4) : null;
@@ -523,10 +524,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   width: 20.0,
                   child: FittedBox(
                     fit: .scaleDown,
-                    child: Text(
+                    child: NamidaText(
                       "${(progress * 100).toStringAsFixed(0)}%",
                       textAlign: TextAlign.center,
-                      style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                      style: const NText(.small, size: .s12),
                     ),
                   ),
                 ),
@@ -540,22 +541,22 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
-                      child: Text(
+                      child: NamidaText(
                         title,
-                        style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                        style: const NText(.medium, size: .s13),
                       ),
                     ),
                     if (subtitle != null && subtitle != '')
-                      Text(
+                      NamidaText(
                         subtitle,
-                        style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                        style: const NText(.small, size: .s12),
                       ),
                   ],
                 ),
                 if (thirdLine != null && thirdLine != '')
-                  Text(
+                  NamidaText(
                     thirdLine,
-                    style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                    style: const NText(.small, size: .s12),
                   ),
               ],
             ),
@@ -610,7 +611,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
   final _maxBrightnessValue = NamidaFeaturesVisibility.changeApplicationBrightness ? 2.0 : 1.0;
 
   Widget _getVerticalSliderWidget(String key, double? perc, IconData icon, ui.FlutterView view, {double max = 1.0}) {
-    final textTheme = context.textTheme;
     final totalHeight = view.physicalSize.shortestSide / (view.devicePixelRatioWithScale) * 0.75;
     return CustomAnimatedSwitcher(
       duration: const Duration(milliseconds: 200),
@@ -619,10 +619,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           : Material(
               key: Key('$key.visible'),
               type: MaterialType.transparency,
-              child: Container(
+              child: NContainer(
                 width: 42.0,
-                decoration: BoxDecoration(
-                  color: context.theme.cardColor.withOpacityExt(0.5),
+                decoration: (colors) => BoxDecoration(
+                  color: colors.card.withOpacityExt(0.5),
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                 ),
                 child: Column(
@@ -650,9 +650,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                       ],
                     ),
                     const SizedBox(height: 12.0),
-                    Text(
+                    NamidaText(
                       "${(perc * 100).round()}%",
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     ),
                     const SizedBox(height: 6.0),
                     Icon(icon, size: 20.0),
@@ -742,7 +742,6 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final newDeviceInsets = MediaQuery.viewPaddingOf(context);
     if (_deviceInsets == EdgeInsets.zero || _didDeviceInsetsChange(newDeviceInsets)) {
       if (newDeviceInsets != EdgeInsets.zero) _deviceInsets = newDeviceInsets;
@@ -793,7 +792,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           builder: (context, providerMaxWidth) {
             // -- in landscape, the size is calculated based on height, to fit in correctly.
             final fallbackWidth = (inLandscape ? maxHeight * 16 / 9 : maxWidth).withMaximum(providerMaxWidth);
-            final fallbackHeight = double.infinity;
+            const fallbackHeight = double.infinity;
             return ObxO(
               rx: Player.inst.currentItem,
               builder: (context, item) {
@@ -870,7 +869,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     // -- how much the subtitles are pushed up while the bottom controls are visible
     final subtitlesControlsOffset = isFullScreen ? 78.0 : 46.0;
     final subtitlesFontSize = isFullScreen ? 16.0 : 12.0;
-    final itemsColor = Colors.white.withAlpha(200);
+    final itemsColor = Colors.white.withOpacityExt(0.78);
     final shouldShowSliders = _canShowControls && isFullScreen;
     final shouldShowSeekBar = isFullScreen;
     final view = View.of(context);
@@ -898,7 +897,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 padding: EdgeInsets.zero,
                 icon: _isLocked ? Broken.lock_slash : Broken.lock_1,
                 iconSize: _isLocked ? 22.0 : 18.0,
-                iconColor: itemsColor,
+                iconColor: NColors.fixed(itemsColor),
                 onPressed: _toggleLocked,
               ),
             ),
@@ -912,7 +911,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           verticalPadding: 6.0,
           onPressed: isFullScreen ? NamidaNavigator.inst.exitFullScreen : widget.onMinimizeTap,
           icon: Broken.arrow_down_2,
-          iconColor: itemsColor,
+          iconColor: NColors.fixed(itemsColor),
           iconSize: 20.0,
         ),
       const SizedBox(width: 8.0),
@@ -939,7 +938,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 key: const Key('brightnesseto_ok'),
                 tooltip: () => lang.resetBrightness,
                 icon: Broken.sun_1,
-                iconColor: itemsColor.withOpacityExt(0.8),
+                iconColor: NColors.fixed(itemsColor.withOpacityExt(0.8)),
                 verticalPadding: 4.0,
                 horizontalPadding: 8.0,
                 iconSize: 18.0,
@@ -975,16 +974,16 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                 },
                 decoration: const BoxDecoration(),
                 borderRadius: 6.0,
-                bgColor: isSelected ? CurrentColor.inst.miniplayerColor.withAlpha(100) : null,
+                bgColor: NColors.fixed(isSelected ? CurrentColor.inst.miniplayerColor.withOpacityExt(0.39) : null),
                 margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
                 padding: const EdgeInsets.all(6.0),
                 child: Row(
                   children: [
                     const Icon(Broken.play_cricle, size: 20.0),
                     const SizedBox(width: 12.0),
-                    Text(
+                    NamidaText(
                       "${speed}x",
-                      style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                      style: const NText(.medium, size: .s13),
                     ),
                   ],
                 ),
@@ -1007,9 +1006,9 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
             children: [
               const Icon(Broken.add_circle, size: 20.0),
               const SizedBox(width: 12.0),
-              Text(
+              NamidaText(
                 lang.add,
-                style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                style: const NText(.medium, size: .s13),
               ),
             ],
           ),
@@ -1027,12 +1026,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   color: itemsColor,
                 ),
                 const SizedBox(width: 4.0).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
-                Text(
+                NamidaText(
                   "${speed}x",
-                  style: textTheme.displaySmall?.copyWith(
-                    color: itemsColor,
-                    fontSize: 12.0,
-                  ),
+                  style: const NText(.small, size: .s12),
+                  color: NColors.fixed(itemsColor),
                 ).animateEntrance(showWhen: speed != 1.0, allCurves: Curves.easeInOutQuart),
               ],
             );
@@ -1533,8 +1530,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     margin: 0.0,
                     iconSize: 16.0,
                     secondaryIconSize: 8.0,
-                    baseIconColor: itemsColor,
-                    secondaryIconColor: itemsColor,
+                    baseIconColor: NColors.fixed(itemsColor),
+                    secondaryIconColor: NColors.fixed(itemsColor),
                     shadowColor: itemsColor.invert(),
                   ),
           );
@@ -1634,9 +1631,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           child: Padding(
             padding: const EdgeInsets.all(6.0),
             child: Obx(
-              (context) => Text(
+              (context) => NamidaText(
                 "${Player.inst.currentIndex.valueR + 1}/$queueL",
-                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600, color: itemsColor),
+                style: const NText(.small, weight: FontWeight.w600),
+                color: NColors.fixed(itemsColor),
               ),
             ),
           ),
@@ -1669,13 +1667,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(6.0),
-                      child: Text(
+                      child: NamidaText(
                         currentSegment.title,
-                        style: textTheme.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 11.0,
-                          color: itemsColor,
-                        ),
+                        style: const NText(.small, size: .s11, weight: FontWeight.w500),
+                        color: NColors.fixed(itemsColor),
                         softWrap: false,
                         overflow: TextOverflow.fade,
                       ),
@@ -1704,7 +1699,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
           _startTimer();
         }
         _disableSliders = !_canSlideVolume(context, event.localPosition.dy);
-        _isEndCardsVisibleTimer = Timer(Duration(milliseconds: 200), () {
+        _isEndCardsVisibleTimer = Timer(const Duration(milliseconds: 200), () {
           _isEndCardsVisible.value = false;
         });
       },
@@ -1862,17 +1857,19 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               child: SubtitleOverlay(
-                                style: textTheme.displayMedium?.copyWith(
-                                  fontSize: subtitlesFontSize,
-                                  fontWeight: FontWeight.w600,
-                                  color: const ui.Color.fromARGB(255, 222, 222, 222),
-                                  shadows: const <Shadow>[
-                                    Shadow(offset: Offset(-1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                    Shadow(offset: Offset(1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                    Shadow(offset: Offset(1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                    Shadow(offset: Offset(-1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
-                                  ],
-                                ),
+                                style: NText.medium
+                                    .of(context)
+                                    .copyWith(
+                                      fontSize: subtitlesFontSize,
+                                      fontWeight: FontWeight.w600,
+                                      color: const ui.Color.fromARGB(255, 222, 222, 222),
+                                      shadows: const <Shadow>[
+                                        Shadow(offset: Offset(-1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                        Shadow(offset: Offset(1.0, -1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                        Shadow(offset: Offset(1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                        Shadow(offset: Offset(-1.0, 1.0), color: Color.fromRGBO(10, 10, 10, 0.75), blurRadius: 6.0),
+                                      ],
+                                    ),
                               ),
                             ),
                           ),
@@ -2039,7 +2036,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                         ?configChip,
                                       ]),
                                       Transform.translate(
-                                        offset: Offset(0, -4.0),
+                                        offset: const Offset(0, -4.0),
                                         child: FittedBox(
                                           fit: BoxFit.scaleDown,
                                           child: Row(
@@ -2122,12 +2119,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     Obx(
-                                                      (context) => Text(
+                                                      (context) => NamidaText(
                                                         "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
-                                                        style: textTheme.displayMedium?.copyWith(
-                                                          fontSize: 13.5,
-                                                          color: itemsColor,
-                                                        ),
+                                                        style: const NText(.medium, size: .s13p5),
+                                                        color: NColors.fixed(itemsColor),
                                                       ),
                                                     ),
                                                     Obx(
@@ -2139,12 +2134,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                           prefix = '-';
                                                         }
 
-                                                        return Text(
+                                                        return NamidaText(
                                                           "$prefix${totalDurMs.milliSecondsLabel}",
-                                                          style: textTheme.displayMedium?.copyWith(
-                                                            fontSize: 13.5,
-                                                            color: itemsColor,
-                                                          ),
+                                                          style: const NText(.medium, size: .s13p5),
+                                                          color: NColors.fixed(itemsColor),
                                                         );
                                                       },
                                                     ),
@@ -2189,7 +2182,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       padding: EdgeInsets.zero,
                                                       iconSize: 20.0,
                                                       icon: Broken.rotate_left_1,
-                                                      iconColor: itemsColor,
+                                                      iconColor: NColors.fixed(itemsColor),
                                                       onPressed: () {
                                                         _startTimer();
                                                         NamidaNavigator.inst.setDeviceOrientations(null);
@@ -2205,7 +2198,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                       padding: EdgeInsets.zero,
                                                       iconSize: 18.0,
                                                       icon: Broken.video_octagon,
-                                                      iconColor: itemsColor,
+                                                      iconColor: NColors.fixed(itemsColor),
                                                       onPressed: () {
                                                         settings.youtube.youtubeStyleMiniplayer.save(false);
                                                         MiniPlayerController.inst.snapToExpanded(haptic: false);
@@ -2217,7 +2210,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
                                                   RepeatModeIconButton(
                                                     compact: true,
-                                                    color: itemsColor,
+                                                    color: NColors.fixed(itemsColor),
                                                     onPressed: () {
                                                       _startTimer();
                                                     },
@@ -2225,7 +2218,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                   if (isFullScreen) const SizedBox(width: 10.0) else const SizedBox(width: 8.0),
                                                   SoundControlButton(
                                                     compact: true,
-                                                    color: itemsColor,
+                                                    color: NColors.fixed(itemsColor),
                                                     onPressed: () {
                                                       _startTimer();
                                                     },
@@ -2237,7 +2230,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     padding: EdgeInsets.zero,
                                                     iconSize: 20.0,
                                                     icon: Broken.copy,
-                                                    iconColor: itemsColor,
+                                                    iconColor: NColors.fixed(itemsColor),
                                                     onPressed: () {
                                                       _startTimer();
                                                       final id = Player.inst.currentVideo?.id;
@@ -2256,7 +2249,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                     padding: EdgeInsets.zero,
                                                     iconSize: 20.0,
                                                     icon: Broken.maximize_2,
-                                                    iconColor: itemsColor,
+                                                    iconColor: NColors.fixed(itemsColor),
                                                     onPressed: () {
                                                       _startTimer();
                                                       VideoController.inst.toggleFullScreenVideoView(isLocal: widget.isLocal);
@@ -2505,7 +2498,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                       blur: 2.5,
                                       child: NamidaInkWell(
                                         borderRadius: 8.0,
-                                        bgColor: Colors.black.withOpacityExt(0.3),
+                                        bgColor: NColors.fixed(Colors.black.withOpacityExt(0.3)),
                                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -2516,11 +2509,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                               color: itemsColor,
                                             ),
                                             const SizedBox(width: 6.0),
-                                            Text(
+                                            NamidaText(
                                               "${lang.speed} ${settings.player.longPressSpeed.value}x",
-                                              style: context.textTheme.displayMedium?.copyWith(
-                                                color: itemsColor,
-                                              ),
+                                              style: NText.medium,
+                                              color: NColors.fixed(itemsColor),
                                             ),
                                           ],
                                         ),
@@ -2564,8 +2556,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     if (settings.youtube.whiteVideoBGInLightMode.value && context.isDarkMode == false) {
-      videoControlsWidget = ColoredBox(
-        color: context.theme.scaffoldBackgroundColor,
+      videoControlsWidget = NColoredBox(
+        color: NColors.scaffold,
         child: videoControlsWidget,
       );
     }
@@ -2649,11 +2641,11 @@ class __SpeedsEditorDialogState extends State<_SpeedsEditorDialog> {
                       ignoring: e == 1.0,
                       child: Opacity(
                         opacity: e == 1.0 ? 0.5 : 1.0,
-                        child: Container(
+                        child: NContainer(
                           margin: const EdgeInsets.all(4.0),
                           padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 10.0),
-                          decoration: BoxDecoration(
-                            color: context.theme.cardTheme.color,
+                          decoration: (colors) => BoxDecoration(
+                            color: colors.cardTheme,
                             borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                           ),
                           child: InkWell(
@@ -2864,7 +2856,6 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
     String? title = e.title;
     String? subtitle = e.viewsCount?.formatDecimalShort() ?? e.viewsCountText;
 
-    final textTheme = context.textTheme;
     return [
       NamidaInkWell(
         onTap: videoId == null
@@ -2891,20 +2882,18 @@ class _YTVideoEndcardsState extends State<_YTVideoEndcards> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  NamidaText(
                     title!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                   ),
                   if (subtitle != null)
-                    Text(
+                    NamidaText(
                       subtitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: textTheme.displaySmall?.copyWith(
-                        fontSize: 10.0,
-                      ),
+                      style: const NText(.small, size: .s10),
                     ),
                 ],
               ),
@@ -3087,7 +3076,6 @@ class _VideoTitleSubtitleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return PlayableTitleSubtitleWidget(
       isYTID: !isLocal,
       builder: (title, subtitle) => Column(
@@ -3095,16 +3083,18 @@ class _VideoTitleSubtitleWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (title != null && title.isNotEmpty)
-            Text(
+            NamidaText(
               title,
-              style: textTheme.displayLarge?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.85)),
+              style: NText.large,
+              color: NColors.fixed(const Color.fromRGBO(255, 255, 255, 0.85)),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
           if (subtitle != null && subtitle.isNotEmpty)
-            Text(
+            NamidaText(
               subtitle,
-              style: textTheme.displaySmall?.copyWith(color: const Color.fromRGBO(255, 255, 255, 0.7)),
+              style: NText.small,
+              color: NColors.fixed(const Color.fromRGBO(255, 255, 255, 0.7)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -3146,10 +3136,12 @@ class _VideoWidgetActionChip extends StatelessWidget {
             if (leading != null) const SizedBox(width: 4.0),
             Text(
               text,
-              style: context.textTheme.displaySmall?.copyWith(
-                color: textColor,
-                height: 1.3,
-              ),
+              style: NText.small
+                  .of(context)
+                  .copyWith(
+                    color: textColor,
+                    height: 1.3,
+                  ),
             ),
             if (trailing != null) const SizedBox(width: 4.0),
           ] else if (leading != null && trailing != null)
@@ -3197,8 +3189,8 @@ class _DropShadowWrapper extends StatelessWidget {
     return Stack(
       children: [
         CustomAnimatedSwitcher(
-          duration: Duration(milliseconds: 800),
-          reverseDuration: Duration(milliseconds: 500),
+          duration: const Duration(milliseconds: 800),
+          reverseDuration: const Duration(milliseconds: 500),
           child: enabled
               ? Transform.scale(
                   scale: 1.1,

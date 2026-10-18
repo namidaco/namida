@@ -17,7 +17,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -740,7 +740,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
       }
     }
 
-    final textTheme = context.textTheme;
     final widgets = <Widget>[];
     for (final e in map.entries) {
       widgets.add(
@@ -758,16 +757,16 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
               _navigateTo(newDirPath);
             }
           },
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: context.theme.cardColor,
+          child: NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
+              color: colors.card,
               borderRadius: BorderRadius.circular(8.0.multipliedRadius),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-              child: Text(
+              child: NamidaText(
                 e.value == '' ? _pathSeparator : e.value,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
             ),
           ),
@@ -791,9 +790,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final chipColor = theme.cardColor;
     final pathSplitsChildren = _getCurrentPathsSplitsChildren;
     return NamidaPopScope(
       onWillPop: () async {
@@ -815,33 +811,31 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                     : NamidaInkWell(
                         onTap: _refreshPermissionStatus,
                         borderRadius: 8.0,
-                        bgColor: Colors.red.withOpacityExt(0.1),
-                        margin: EdgeInsets.symmetric(horizontal: 8.0),
-                        padding: EdgeInsets.symmetric(vertical: 10.0),
+                        bgColor: NColors.fixed(Colors.red.withOpacityExt(0.1)),
+                        margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                        padding: const EdgeInsets.symmetric(vertical: 10.0),
                         child: Row(
                           children: [
-                            SizedBox(width: 8.0),
-                            Icon(
+                            const SizedBox(width: 8.0),
+                            const Icon(
                               Broken.warning_2,
                               size: 24.0,
                             ),
-                            SizedBox(width: 8.0),
+                            const SizedBox(width: 8.0),
                             Expanded(
-                              child: Text(
+                              child: NamidaText(
                                 lang.grantStoragePermission,
-                                style: textTheme.displayMedium?.copyWith(
-                                  fontSize: 16.0,
-                                ),
+                                style: const NText(.medium, size: .s16),
                               ),
                             ),
-                            SizedBox(width: 8.0),
+                            const SizedBox(width: 8.0),
                             NamidaInkWellButton(
                               onTap: _refreshPermissionStatus,
                               borderRadius: 6.0,
                               icon: null,
                               text: lang.manage,
                             ),
-                            SizedBox(width: 8.0),
+                            const SizedBox(width: 8.0),
                           ],
                         ),
                       ),
@@ -861,11 +855,9 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                   const SizedBox(width: 4.0),
                   Expanded(
                     child: widget.note != ''
-                        ? Text(
+                        ? NamidaText(
                             widget.note.addDQuotation(),
-                            style: textTheme.displayMedium?.copyWith(
-                              fontSize: 16.0,
-                            ),
+                            style: const NText(.medium, size: .s16),
                           )
                         : const SizedBox(),
                   ),
@@ -926,10 +918,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                           ),
                         );
                       },
-                      icon: Icon(
+                      icon: NIcon(
                         Broken.wallet_1,
                         size: 20.0,
-                        color: context.defaultIconColor(),
+                        color: NColors.defaultIcon(),
                       ),
                     ),
                   LongPressDetector(
@@ -939,10 +931,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       visualDensity: VisualDensity.compact,
                       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                       onPressed: () => _onBackupPickerLaunch(_effectiveAllowedExtensions),
-                      icon: Icon(
+                      icon: NIcon(
                         Broken.export_1,
                         size: 20.0,
-                        color: context.defaultIconColor(),
+                        color: NColors.defaultIcon(),
                       ),
                     ),
                   ),
@@ -964,13 +956,13 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             (e) => NamidaInkWell(
                               animationDurationMS: 200,
                               borderRadius: 8.0,
-                              bgColor: _currentFolderPath.startsWith(e) ? theme.colorScheme.secondaryContainer : theme.cardColor,
+                              bgColor: _currentFolderPath.startsWith(e) ? NColors.secondaryContainer : NColors.card,
                               onTap: () => _navigateTo(e),
                               margin: const EdgeInsets.symmetric(horizontal: 4.0),
                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-                              child: Text(
+                              child: NamidaText(
                                 e,
-                                style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                style: const NText(.small, weight: FontWeight.w600),
                               ),
                             ),
                           )
@@ -1001,12 +993,12 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-                          child: Text(
+                          child: NamidaText(
                             [
                               if (_visibleFolders.isNotEmpty) _visibleFolders.length.displayFolderKeyword,
                               if (_currentFiles.isNotEmpty) _currentFiles.length.displayFilesKeyword,
                             ].join(' | '),
-                            style: textTheme.displayMedium,
+                            style: NText.medium,
                           ),
                         ),
                       ),
@@ -1072,10 +1064,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             ),
                           );
                         },
-                        icon: Icon(
+                        icon: NIcon(
                           Broken.add_circle,
                           size: 20.0,
-                          color: context.defaultIconColor(),
+                          color: NColors.defaultIcon(),
                         ),
                       ),
                     IconButton(
@@ -1107,10 +1099,10 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                         _fetchFiles(_currentFolderPath);
                       },
                       icon: Obx(
-                        (context) => Icon(
+                        (context) => NIcon(
                           _showHiddenFiles.valueR ? Broken.eye : Broken.eye_slash,
                           size: 20.0,
-                          color: _showHiddenFiles.valueR ? null : context.defaultIconColor(),
+                          color: _showHiddenFiles.valueR ? null : NColors.defaultIcon(),
                         ),
                       ),
                     ),
@@ -1174,9 +1166,11 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                       child: _isFetching
                           ? Center(
                               key: const Key('loading'),
-                              child: ThreeArchedCircle(
-                                color: theme.colorScheme.primary.withOpacityExt(0.5),
-                                size: 56.0,
+                              child: NBuilder(
+                                builder: (context, colors) => ThreeArchedCircle(
+                                  color: colors.primary.withOpacityExt(0.5),
+                                  size: 56.0,
+                                ),
                               ),
                             )
                           : _visibleFolders.isEmpty && _currentFiles.isEmpty
@@ -1191,9 +1185,9 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                     size: 42.0,
                                   ),
                                   const SizedBox(height: 12.0),
-                                  Text(
+                                  NamidaText(
                                     "0 ${lang.files}",
-                                    style: textTheme.displayLarge,
+                                    style: NText.large,
                                   ),
                                 ],
                               ),
@@ -1213,7 +1207,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                         final subtitle = stats == null ? '…' : stats.toSubtitle();
                                         return _FileSystemChip(
                                           position: index,
-                                          bgColor: chipColor,
                                           onTap: () => _onFolderTap(folder),
                                           onLongPress: () => _onFolderLongPress(folder),
                                           displayCheckMark: _selectedFolderPaths.isNotEmpty,
@@ -1237,7 +1230,6 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                         final image = _getFileImage(file);
                                         return _FileSystemChip(
                                           position: index + _visibleFolders.length + 1,
-                                          bgColor: chipColor,
                                           onTap: () => _onFileTap(file),
                                           onLongPress: () => _onFileLongPress(file),
                                           displayCheckMark: _selectedFiles.isNotEmpty,
@@ -1505,7 +1497,6 @@ class _FileSystemChip extends StatelessWidget {
   final String title;
   final String subtitle;
   final IconData? icon;
-  final Color bgColor;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
   final int position;
@@ -1517,7 +1508,6 @@ class _FileSystemChip extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
-    required this.bgColor,
     required this.onTap,
     required this.onLongPress,
     required this.position,
@@ -1528,10 +1518,9 @@ class _FileSystemChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return NamidaInkWell(
       borderRadius: 8.0,
-      bgColor: bgColor,
+      bgColor: NColors.card,
       margin: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       onTap: onTap,
@@ -1545,21 +1534,15 @@ class _FileSystemChip extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   title,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const NText(.small, size: .s13, weight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2.0),
-                Text(
+                NamidaText(
                   subtitle,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.w400,
-                    // color: theme.colorScheme.onSurface.withOpacityExt(0.7),
-                  ),
+                  style: const NText(.small, size: .s12, weight: FontWeight.w400),
+                  // color: const NColors(.onSurface, opacity: 0.7),
                 ),
               ],
             ),

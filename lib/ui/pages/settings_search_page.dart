@@ -7,6 +7,7 @@ import 'package:namida/controller/settings_search_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -16,7 +17,6 @@ class SettingsSearchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return BackgroundWrapper(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -41,14 +41,14 @@ class SettingsSearchPage extends StatelessWidget {
                             borderRadius: 6.0,
                             margin: const EdgeInsets.symmetric(vertical: 6.0),
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-                            bgColor: context.theme.cardColor,
+                            bgColor: NColors.card,
                             child: Row(
                               children: [
                                 Icon(details.icon),
                                 const SizedBox(width: 6.0),
-                                Text(
+                                NamidaText(
                                   details.title(),
-                                  style: textTheme.displayLarge,
+                                  style: NText.large,
                                 ),
                               ],
                             ),
@@ -85,16 +85,16 @@ class SettingsSearchPage extends StatelessWidget {
                                     Broken.slash,
                                     size: 22.0,
                                   )
-                                : DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      color: context.theme.cardColor,
+                                : NDecoratedBox(
+                                    decoration: (colors) => BoxDecoration(
+                                      color: colors.card,
                                       borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                                     ),
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 3.0),
-                                      child: Text(
+                                      child: NamidaText(
                                         '${index + 1}',
-                                        style: textTheme.displaySmall,
+                                        style: NText.small,
                                         textAlign: TextAlign.center,
                                       ),
                                     ),
@@ -144,21 +144,20 @@ class _ModifiedOnlyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final secondaryColor = theme.colorScheme.secondary;
-    final textStyle = theme.textTheme.displayMedium;
+    final textStyle = NText.medium.of(context);
     final controller = SettingsSearchController.inst;
     return Obx(
       (context) {
         final isActive = controller.isModifiedOnly.valueR;
         final count = controller.modifiedCount.valueR;
         if (count == 0 && !isActive) return const SizedBox();
-        final style = textStyle?.copyWith(color: secondaryColor.withOpacityExt(isActive ? 0.9 : 0.6));
+        final secondaryColor = NColorsData.targetOf(context).secondary;
+        final style = textStyle.copyWith(color: secondaryColor.withOpacityExt(isActive ? 0.9 : 0.6));
         return Align(
           alignment: AlignmentDirectional.centerStart,
           child: NamidaInkWell(
             animationDurationMS: 200,
-            bgColor: secondaryColor.withOpacityExt(isActive ? 0.18 : 0.0),
+            bgColor: NColors.fixed(secondaryColor.withOpacityExt(isActive ? 0.18 : 0.0)),
             borderRadius: 8.0,
             onTap: controller.toggleModifiedOnly,
             margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),

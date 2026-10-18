@@ -125,11 +125,10 @@ class _EditorTimelineState extends State<_EditorTimeline> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colorScheme = theme.colorScheme;
-    final accentColor = colorScheme.secondary;
-    final onSurface = colorScheme.onSurface;
-    final labelStyle = theme.textTheme.displaySmall?.copyWith(fontSize: 10.0, fontWeight: FontWeight.w600);
+    final colors = NColorsData.of(context);
+    final accentColor = colors.secondary;
+    final onSurface = colors.onSurface;
+    final labelStyle = NText.small.of(context).copyWith(fontSize: 10.0, fontWeight: FontWeight.w600);
     return SizedBox(
       height: _kHeight,
       child: LayoutBuilder(
@@ -144,8 +143,8 @@ class _EditorTimelineState extends State<_EditorTimeline> {
             onHorizontalDragCancel: _onDragEnd,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-              child: ColoredBox(
-                color: theme.scaffoldBackgroundColor.withOpacityExt(0.5),
+              child: NColoredBox(
+                color: const NColors(.scaffold, opacity: 0.5),
                 child: RepaintBoundary(
                   child: CustomPaint(
                     size: Size(_width, _kHeight),

@@ -27,6 +27,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
@@ -788,7 +789,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
         );
       },
     );
-    return AnimatedThemeOrTheme(
+    return NTheme(
       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
       data: theme,
       child: BackgroundWrapper(
@@ -799,10 +800,10 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                  color: theme.cardColor,
+                  color: colors.card,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(6.0, 6.0, 6.0, 8.0),
@@ -817,9 +818,11 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
                           rx: _isLoading,
                           builder: (context, isLoading) => isLoading
                               ? Center(
-                                  child: ThreeArchedCircle(
-                                    color: theme.colorScheme.secondary,
-                                    size: 42.0,
+                                  child: NBuilder(
+                                    builder: (context, colors) => ThreeArchedCircle(
+                                      color: colors.secondary,
+                                      size: 42.0,
+                                    ),
                                   ),
                                 )
                               : syncWidget,

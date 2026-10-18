@@ -4,7 +4,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -35,8 +35,6 @@ class ArtistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final hero = 'artist_$name$additionalHeroTag';
     final imagePath = artist.pathToImage;
     final imageSize = (width - 12.0).withMinimum(0.0);
@@ -79,9 +77,9 @@ class ArtistCard extends StatelessWidget {
                 if (bottomCenterText != null && bottomCenterText!.isNotEmpty && bottomCenterText != name)
                   Positioned(
                     bottom: -5.0,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: theme.scaffoldBackgroundColor,
+                    child: NDecoratedBox(
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.scaffold,
                         borderRadius: BorderRadius.circular(99.0.multipliedRadius),
                       ),
                       child: Padding(
@@ -94,7 +92,7 @@ class ArtistCard extends StatelessWidget {
                           ),
                           child: Text(
                             bottomCenterText!,
-                            style: textTheme.displaySmall?.copyWith(fontSize: bottomCenterTextSize),
+                            style: NText.small.of(context).copyWith(fontSize: bottomCenterTextSize),
                             textAlign: TextAlign.center,
                             softWrap: false,
                             overflow: TextOverflow.fade,
@@ -123,10 +121,12 @@ class ArtistCard extends StatelessWidget {
                           tag: 'line1_$hero',
                           child: Text(
                             name,
-                            style: textTheme.displayMedium?.copyWith(
-                              fontSize: getFontSize(0.5),
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: NText.medium
+                                .of(context)
+                                .copyWith(
+                                  fontSize: getFontSize(0.5),
+                                  fontWeight: FontWeight.w500,
+                                ),
                             softWrap: false,
                             overflow: TextOverflow.fade,
                           ),

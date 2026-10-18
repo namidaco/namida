@@ -308,7 +308,7 @@ class TracksSearchWrapper {
           lyricsBuffer.writeln(line.readableText);
         }
       } else {
-        final split = LineSplitter().convert(lrcContent);
+        final split = const LineSplitter().convert(lrcContent);
         for (final line in split) {
           lyricsBuffer.writeln(line);
         }

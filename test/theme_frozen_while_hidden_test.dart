@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:namida/core/themes.dart';
+import 'package:namida/core/ntheme.dart';
 
 void main() {
   testWidgets('hidden subtree keeps its theme until visible again', (tester) async {
@@ -19,7 +19,7 @@ void main() {
         data: ThemeData(),
         child: ValueListenableBuilder(
           valueListenable: appTheme,
-          builder: (context, theme, child) => AppThemeProvider(
+          builder: (context, theme, child) => NTheme(
             data: theme,
             child: child!,
           ),
@@ -38,7 +38,7 @@ void main() {
                   enabled: visible,
                   child: child!,
                 ),
-                child: AppThemeFrozenWhileHidden(
+                child: NThemeFrozenWhileHidden(
                   child: Builder(
                     builder: (context) {
                       hiddenBuilds++;

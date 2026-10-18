@@ -26,6 +26,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -153,22 +154,26 @@ class YtUtilsPlaylist {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: PlaylistPrivacy.values.map(
                         (e) {
+                          final trailing =
+                              NamidaCheckMark(
+                                size: 16.0,
+                                active: privacy == e,
+                              ).animateEntrance(
+                                showWhen: privacy == e,
+                                allCurves: Curves.fastLinearToSlowEaseIn,
+                                durationMS: 300,
+                              );
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: NamidaInkWellButton(
-                              icon: privacyIconsLookup[e],
-                              text: e.toText(),
-                              bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
-                              onTap: () => privacyRx.value = e,
-                              trailing:
-                                  NamidaCheckMark(
-                                    size: 16.0,
-                                    active: privacy == e,
-                                  ).animateEntrance(
-                                    showWhen: privacy == e,
-                                    allCurves: Curves.fastLinearToSlowEaseIn,
-                                    durationMS: 300,
-                                  ),
+                            child: NBuilder(
+                              selfAnimated: true,
+                              builder: (context, colors) => NamidaInkWellButton(
+                                icon: privacyIconsLookup[e],
+                                text: e.toText(),
+                                bgColor: colors.secondaryContainer.withOpacityExt(privacy == e ? 0.5 : 0.2),
+                                onTap: () => privacyRx.value = e,
+                                trailing: trailing,
+                              ),
                             ),
                           );
                         },
@@ -326,10 +331,8 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                 .showSheet(
                   isDismissible: false,
                   builder: (context, bottomPadding, maxWidth, maxHeight) {
-                    final theme = context.theme;
-                    final textTheme = theme.textTheme;
                     final iconSize = maxWidth * 0.5;
-                    final iconColor = theme.colorScheme.onSurface.withOpacityExt(0.6);
+                    const iconColor = NColors(.onSurface, opacity: 0.6);
                     return Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Column(
@@ -342,11 +345,13 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                                 key: const Key('circle_switch'),
                                 duration: switchAnimationDurHalf,
                                 child: totalC == null || currentCount.valueR < totalC
-                                    ? ThreeArchedCircle(
-                                        size: iconSize,
-                                        color: iconColor,
+                                    ? NBuilder(
+                                        builder: (context, colors) => ThreeArchedCircle(
+                                          size: iconSize,
+                                          color: iconColor.resolve(colors),
+                                        ),
                                       )
-                                    : Icon(
+                                    : NIcon(
                                         key: const Key('tick_switch'),
                                         Broken.tick_circle,
                                         size: iconSize,
@@ -356,17 +361,17 @@ extension PlaylistBasicInfoExt on PlaylistBasicInfo {
                             },
                           ),
                           const SizedBox(height: 12.0),
-                          Text(
+                          NamidaText(
                             '${lang.fetching}...',
-                            style: textTheme.displayLarge,
+                            style: NText.large,
                           ),
                           const SizedBox(height: 8.0),
                           Obx(
                             (context) {
                               final totalC = totalCount.valueR;
-                              return Text(
+                              return NamidaText(
                                 '${currentCount.valueR.formatDecimal()}/${totalC == null ? '?' : totalC.formatDecimal()}',
-                                style: textTheme.displayLarge,
+                                style: NText.large,
                               );
                             },
                           ),

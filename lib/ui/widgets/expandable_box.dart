@@ -7,6 +7,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -86,7 +87,6 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final leftWidgets = widget.leftWidgets;
     final textFieldRow = Row(
       children: [
@@ -145,16 +145,16 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                     widget.onLeftTextTap != null
                                         ? TapDetector(
                                             onTap: widget.onLeftTextTap,
-                                            child: Text(
+                                            child: NamidaText(
                                               widget.leftText,
-                                              style: textTheme.displayMedium,
+                                              style: NText.medium,
                                               softWrap: false,
                                               overflow: TextOverflow.fade,
                                             ),
                                           )
-                                        : Text(
+                                        : NamidaText(
                                             widget.leftText,
-                                            style: textTheme.displayMedium,
+                                            style: NText.medium,
                                             softWrap: false,
                                             overflow: TextOverflow.fade,
                                           ),
@@ -364,7 +364,6 @@ class ChangeGridCountWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = context.theme.colorScheme.secondary;
     return ObxO(
       rx: settings.mediaGridCounts,
       builder: (context, mediaGridCounts) {
@@ -377,6 +376,7 @@ class ChangeGridCountWidget extends StatelessWidget {
         } else {
           secondaryText = "$count";
         }
+        final baseIcon = _resolveIcon(count);
 
         return NamidaPopupWrapper(
           openOnTap: currentCount.getNext() == null,
@@ -400,14 +400,16 @@ class ChangeGridCountWidget extends StatelessWidget {
             ];
           },
           onTap: () => _onTap(currentCount.getNext()),
-          child: StackedIcon(
-            baseIcon: _resolveIcon(count),
-            secondaryText: secondaryText,
-            secondaryIcon: secondaryIcon,
-            baseIconColor: iconColor,
-            secondaryIconColor: iconColor,
-            iconSize: 20.0,
-            secondaryIconSize: 13.0,
+          child: NBuilder(
+            builder: (context, colors) => StackedIcon(
+              baseIcon: baseIcon,
+              secondaryText: secondaryText,
+              secondaryIcon: secondaryIcon,
+              baseIconColor: NColors.fixed(colors.secondary),
+              secondaryIconColor: NColors.fixed(colors.secondary),
+              iconSize: 20.0,
+              secondaryIconSize: 13.0,
+            ),
           ),
         );
       },

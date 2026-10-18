@@ -15,6 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -32,7 +33,6 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const multiplier = 1;
     const thumbnailHeight = multiplier * Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = multiplier * Dimensions.youtubeThumbnailWidth;
@@ -48,7 +48,7 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
     );
 
     return VideoTilePropertiesProvider(
-      configs: VideoTilePropertiesConfigs(
+      configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytHistoryHosted,
         showMoreIcon: true,
       ),
@@ -82,9 +82,9 @@ class YoutubeUserHistoryPage extends StatelessWidget with NamidaRouteWidget {
                       height: beforeSublistHeight,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        child: Text(
+                        child: NamidaText(
                           chunk.title,
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                         ),
                       ),
                     ),
@@ -178,13 +178,13 @@ class YoutubeUserHistoryPageHorizontal extends StatelessWidget {
       margin: YTHistoryVideoCardBase.cardMargin(true),
       width: thumbnailWidth,
       height: thumbnailHeight,
-      bgColor: context.theme.cardColor,
+      bgColor: NColors.card,
     );
 
     const isShortsVisible = false;
 
     return VideoTilePropertiesProvider(
-      configs: VideoTilePropertiesConfigs(
+      configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytHistoryFilteredHosted,
         playlistName: k_PLAYLIST_NAME_HISTORY,
       ),

@@ -111,7 +111,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   final _sincePositionReport = Stopwatch()..start();
 
-  final _player = mk.Player(configuration: mk.PlayerConfiguration(pitch: true, libass: true, bufferSize: 64 * 1024 * 1024));
+  final _player = mk.Player(configuration: const mk.PlayerConfiguration(pitch: true, libass: true, bufferSize: 64 * 1024 * 1024));
   late final _audioFilters = _MPVAudioFilters(_player);
   VideoController? _videoControllerRaw;
   VideoController get _videoController {

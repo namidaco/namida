@@ -13,6 +13,7 @@ import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -290,7 +291,7 @@ class _YoutubeThumbnailState extends State<YoutubeThumbnail> with LoadingItemsDe
       child: ArtworkWidget(
         key: thumbKey,
         isCircle: widget.isCircle,
-        bgcolor: context.theme.cardColor.withAlpha(60),
+        bgcolor: context.theme.cardColor.withOpacityExt(0.24),
         compressed: widget.compressed,
         blur: widget.blur,
         glowOpacity: widget.glowOpacity,
@@ -340,7 +341,6 @@ class YtThumbnailOverlayBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.all(2.0),
       child: NamidaBgBlurClipped(
@@ -364,12 +364,10 @@ class YtThumbnailOverlayBox extends StatelessWidget {
                 ),
               if (text != null && icon != null) const SizedBox(width: 2.0),
               if (text != null)
-                Text(
+                NamidaText(
                   text!,
-                  style: textTheme.displaySmall?.copyWith(
-                    color: Colors.white.withOpacityExt(0.8),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: const NText(.small, weight: FontWeight.w600),
+                  color: NColors.fixed(Colors.white.withOpacityExt(0.8)),
                 ),
             ],
           ),

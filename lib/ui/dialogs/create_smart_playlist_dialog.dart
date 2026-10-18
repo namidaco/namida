@@ -11,6 +11,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -305,8 +306,8 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
   @override
   Widget build(BuildContext context) {
     const ruleLeftSpaceForJoiner = 28.0;
-    final textStyleMedium = context.textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w500);
-    final textStyleSmall = context.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500);
+    final textStyleMedium = NText.medium.of(context).copyWith(fontWeight: FontWeight.w500);
+    final textStyleSmall = NText.small.of(context).copyWith(fontWeight: FontWeight.w500);
     final isForTempSearch = widget._onSearchCompleter != null;
     final dialogTitle = isForTempSearch ? lang.search : lang.smartPlaylist;
     final ruleGroupsAreValid = _ruleGroups.isValid();
@@ -331,14 +332,14 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       dialogTitle,
-                      style: context.theme.textTheme.displayLarge,
+                      style: NText.large,
                     ),
                     if (_resolvedTracksCountForCurrentSmartPlaylist != null)
-                      Text(
+                      NamidaText(
                         _resolvedTracksCountForCurrentSmartPlaylist!.displayTrackKeyword,
-                        style: context.theme.textTheme.displaySmall,
+                        style: NText.small,
                       ),
                   ],
                 ),
@@ -418,9 +419,9 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                     ..._ruleGroups
                         .mapIndexed(
                           (group, groupIndex) {
-                            final groupIndexWidget = DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: context.theme.colorScheme.secondary.withOpacityExt(0.25),
+                            final groupIndexWidget = NDecoratedBox(
+                              decoration: (colors) => BoxDecoration(
+                                color: colors.secondary.withOpacityExt(0.25),
                                 borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                               ),
                               child: SizedBox(
@@ -439,11 +440,11 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                             );
                             return SizedBox(
                               width: context.width,
-                              child: NamidaCoolBox(
+                              child: _ThemedCoolBox(
+                                colorRole: .secondary,
                                 extraVPadding: true,
                                 hPadding: 6.0,
-                                colorScheme: context.theme.colorScheme.secondary,
-                                builder: (context) => Column(
+                                child: Column(
                                   crossAxisAlignment: .start,
                                   mainAxisSize: .min,
                                   children: [
@@ -477,9 +478,9 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                                   width: ruleLeftSpaceForJoiner,
                                                                   child: FittedBox(
                                                                     fit: BoxFit.scaleDown,
-                                                                    child: DecoratedBox(
-                                                                      decoration: BoxDecoration(
-                                                                        color: context.theme.cardColor,
+                                                                    child: NDecoratedBox(
+                                                                      decoration: (colors) => BoxDecoration(
+                                                                        color: colors.card,
                                                                         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                                                                       ),
                                                                       child: Padding(
@@ -500,7 +501,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                           Expanded(
                                                             child: NamidaInkWell(
                                                               borderRadius: 6.0,
-                                                              bgColor: context.theme.cardColor,
+                                                              bgColor: NColors.card,
                                                               padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 6.0),
                                                               onTap: () => _addEditRule(group, (ruleIndex, rule)),
                                                               child: Row(
@@ -563,7 +564,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                                                     Expanded(
                                                       child: NamidaInkWell(
                                                         borderRadius: 6.0,
-                                                        bgColor: context.theme.colorScheme.secondary.withOpacityExt(0.1),
+                                                        bgColor: const NColors(.secondary, opacity: 0.1),
                                                         padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 8.0),
                                                         onTap: () => _addEditRule(group, null),
                                                         child: Row(
@@ -628,11 +629,11 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
                     NamidaInkWell(
                       onTap: _addGroup,
                       borderRadius: 8.0,
-                      child: NamidaCoolBox(
-                        colorScheme: context.theme.colorScheme.primary,
+                      child: _ThemedCoolBox(
+                        colorRole: .primary,
                         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                         extraVPadding: true,
-                        builder: (context) => Row(
+                        child: Row(
                           mainAxisAlignment: .center,
                           mainAxisSize: .min,
                           children: [
@@ -701,13 +702,13 @@ class _JoinerRow extends StatelessWidget {
               final isSelected = joiner == activeJoiner;
               return Expanded(
                 child: NamidaInkWell(
-                  bgColor: isSelected ? context.theme.colorScheme.secondary.withOpacityExt(0.5) : context.theme.cardColor,
+                  bgColor: isSelected ? const NColors(.secondary, opacity: 0.5) : NColors.card,
                   borderRadius: 4.0,
                   padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 6.0),
                   onTap: () => onTap(joiner),
-                  child: Text(
+                  child: NamidaText(
                     joiner.toTitle(),
-                    style: context.textTheme.displaySmall,
+                    style: NText.small,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -882,9 +883,9 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                 ),
                 const SizedBox(width: 6.0),
                 Expanded(
-                  child: Text(
+                  child: NamidaText(
                     type.toText(),
-                    style: context.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                 ),
               ],
@@ -901,26 +902,30 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                   ...type.getRuleSources(withoutCustomSource: true).map(
                     (s) {
                       final isSelected = s == selectedFilter;
+                      final tickIcon =
+                          const Icon(
+                            Broken.tick_circle,
+                            size: 16.0,
+                          ).animateEntrance(
+                            showWhen: isSelected,
+                            allCurves: Curves.fastLinearToSlowEaseIn,
+                            durationMS: 200,
+                          );
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                        child: NamidaInkWellButton(
-                          borderRadius: 99.0,
-                          sizeMultiplier: 0.95,
-                          paddingMultiplier: 0.9,
-                          icon: s.toIcon(),
-                          iconSize: 18.0,
-                          trailing:
-                              Icon(
-                                Broken.tick_circle,
-                                size: 16.0,
-                              ).animateEntrance(
-                                showWhen: isSelected,
-                                allCurves: Curves.fastLinearToSlowEaseIn,
-                                durationMS: 200,
-                              ),
-                          text: s.toText(),
-                          bgColor: isSelected ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4) : context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                          onTap: () => onSelect(s),
+                        child: NBuilder(
+                          selfAnimated: true,
+                          builder: (context, colors) => NamidaInkWellButton(
+                            borderRadius: 99.0,
+                            sizeMultiplier: 0.95,
+                            paddingMultiplier: 0.9,
+                            icon: s.toIcon(),
+                            iconSize: 18.0,
+                            trailing: tickIcon,
+                            text: s.toText(),
+                            bgColor: isSelected ? colors.secondaryContainer.withOpacityExt(0.4) : colors.secondaryContainer.withOpacityExt(0.2),
+                            onTap: () => onSelect(s),
+                          ),
                         ),
                       );
                     },
@@ -970,8 +975,8 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
       dialog: CustomBlurryDialog(
         horizontalInset: 42.0,
         title: lang.source,
-        actions: [
-          const CancelButton(),
+        actions: const [
+          CancelButton(),
         ],
         child: SizedBox(
           height: context.height * 0.6,
@@ -1021,7 +1026,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
             _selectedRule = selectedRule.copyWith(
               filter: filter,
               datas: isRelative ? (null, null) : null,
-              relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? SmartPlaylistRelativeDuration.initial() : null,
+              relativeDuration: isRelative ? _selectedRule?.relativeDuration ?? const SmartPlaylistRelativeDuration.initial() : null,
             );
           });
           _tempFilterForTypeMap[_selectedRule?.type] = filter;
@@ -1297,10 +1302,10 @@ class _InfoRowRaw extends StatelessWidget {
     return Row(
       mainAxisSize: .min,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
+        NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
             borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-            color: context.theme.cardColor,
+            color: colors.card,
           ),
           child: SizedBox(
             width: 24.0,
@@ -1315,9 +1320,9 @@ class _InfoRowRaw extends StatelessWidget {
                         size: 16.0,
                       )
                     : filterIconText != null
-                    ? Text(
+                    ? NamidaText(
                         filterIconText!,
-                        style: context.textTheme.displaySmall?.copyWith(fontSize: 22.0),
+                        style: const NText(.small, size: .s22),
                       )
                     : null,
               ),
@@ -1326,9 +1331,9 @@ class _InfoRowRaw extends StatelessWidget {
         ),
         const SizedBox(width: 6.0),
         Flexible(
-          child: Text(
+          child: NamidaText(
             filterText ?? '?',
-            style: context.textTheme.displayMedium,
+            style: NText.medium,
           ),
         ),
       ],
@@ -1358,7 +1363,7 @@ class _PopupChoiceItem extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 8.0,
         padding: const .symmetric(vertical: 8.0, horizontal: 4.0),
-        bgColor: isSelected ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
+        bgColor: isSelected ? const NColors(.secondary, opacity: 0.1) : null,
         onTap: onTap,
         child: _InfoRowRaw(
           filterIcon: icon,
@@ -1385,7 +1390,6 @@ class _ChoiceChipsWrap<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
     return Wrap(
       alignment: WrapAlignment.start,
       runAlignment: WrapAlignment.start,
@@ -1393,23 +1397,27 @@ class _ChoiceChipsWrap<T> extends StatelessWidget {
       runSpacing: 4.0,
       children: values.map((value) {
         final isSelected = value == selected;
+        final tickIcon =
+            const Icon(
+              Broken.tick_circle,
+              size: 15.0,
+            ).animateEntrance(
+              showWhen: isSelected,
+              allCurves: Curves.fastLinearToSlowEaseIn,
+              durationMS: 200,
+            );
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2.0),
-          child: NamidaInkWellButton(
-            icon: null,
-            borderRadius: 99.0,
-            trailing:
-                Icon(
-                  Broken.tick_circle,
-                  size: 15.0,
-                ).animateEntrance(
-                  showWhen: isSelected,
-                  allCurves: Curves.fastLinearToSlowEaseIn,
-                  durationMS: 200,
-                ),
-            text: toText(value),
-            bgColor: isSelected ? colorScheme.secondaryContainer.withOpacityExt(0.4) : colorScheme.secondaryContainer.withOpacityExt(0.2),
-            onTap: () => onSelect(value),
+          child: NBuilder(
+            selfAnimated: true,
+            builder: (context, colors) => NamidaInkWellButton(
+              icon: null,
+              borderRadius: 99.0,
+              trailing: tickIcon,
+              text: toText(value),
+              bgColor: isSelected ? colors.secondaryContainer.withOpacityExt(0.4) : colors.secondaryContainer.withOpacityExt(0.2),
+              onTap: () => onSelect(value),
+            ),
           ),
         );
       }).toFixedList(),
@@ -1757,7 +1765,7 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
       dialog: CustomBlurryDialog(
         horizontalInset: 42.0,
         title: lang.source,
-        actions: [const CancelButton()],
+        actions: const [CancelButton()],
         child: SizedBox(
           height: context.height * 0.55,
           width: context.width,
@@ -1807,10 +1815,10 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
 
     final suggestionsSource = widget.rule.source.toSuggestionsSource();
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
         borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        border: Border.all(color: context.theme.dividerColor.withOpacityExt(0.4)),
+        border: Border.all(color: colors.divider.withOpacityExt(0.4)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -1821,9 +1829,9 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
             if (tokens.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 4.0),
-                child: Text(
+                child: NamidaText(
                   lang.emptyValue,
-                  style: context.textTheme.displaySmall,
+                  style: NText.small,
                 ),
               )
             else
@@ -1833,17 +1841,17 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                 children: [
                   ...tokens.mapIndexed(
                     (token, index) {
-                      final (IconData? icon, String label, Color bgColor, VoidCallback onTap) = switch (token) {
+                      final (IconData? icon, String label, NColors bgColor, VoidCallback onTap) = switch (token) {
                         SmartPlaylistTextDataTokenSource() => (
                           token.source.toIcon(),
                           token.displayText(),
-                          context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                          const NColors(.secondaryContainer, opacity: 0.4),
                           () => _pickSource(replaceIndex: index),
                         ),
                         SmartPlaylistTextDataTokenLiteral() => (
                           null,
                           '"${token.text}"',
-                          context.theme.cardColor,
+                          NColors.card,
                           () => _editLiteral(index, token),
                         ),
                       };
@@ -1864,9 +1872,9 @@ class _TextDataTokensEditorState extends State<_TextDataTokensEditor> {
                               const SizedBox(width: 4.0),
                             ],
                             Flexible(
-                              child: Text(
+                              child: NamidaText(
                                 label,
-                                style: context.textTheme.displaySmall,
+                                style: NText.small,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -1961,13 +1969,11 @@ class _LimitTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final limit = this.limit;
     return NamidaInkWell(
       onTap: _openLimitDialog,
       borderRadius: 8.0,
-      bgColor: theme.cardColor,
+      bgColor: NColors.card,
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       child: Row(
         children: [
@@ -1981,13 +1987,13 @@ class _LimitTile extends StatelessWidget {
               crossAxisAlignment: .start,
               mainAxisSize: .min,
               children: [
-                Text(
+                NamidaText(
                   lang.limit,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 ),
-                Text(
+                NamidaText(
                   limit?.toText() ?? lang.none,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ],
             ),
@@ -2120,9 +2126,9 @@ class _LimitDialogState extends State<_LimitDialog> {
               trailing: Row(
                 mainAxisSize: .min,
                 children: [
-                  Text(
+                  NamidaText(
                     sortText,
-                    style: context.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                   const SizedBox(width: 4.0),
                   Icon(
@@ -2135,6 +2141,34 @@ class _LimitDialogState extends State<_LimitDialog> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ThemedCoolBox extends StatelessWidget {
+  final NColorRole colorRole;
+  final bool extraVPadding;
+  final double hPadding;
+  final BorderRadius? borderRadius;
+  final Widget child;
+
+  const _ThemedCoolBox({
+    required this.colorRole,
+    this.extraVPadding = false,
+    this.hPadding = 12.0,
+    this.borderRadius,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    return NamidaCoolBox(
+      colorScheme: colors.get(colorRole),
+      extraVPadding: extraVPadding,
+      hPadding: hPadding,
+      borderRadius: borderRadius,
+      builder: (_) => child,
     );
   }
 }

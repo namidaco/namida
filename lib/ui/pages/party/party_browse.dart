@@ -131,15 +131,16 @@ class _BrowseInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final color = theme.colorScheme.onSurface.withOpacityExt(0.5);
+    const color = NColors(.onSurface, opacity: 0.5);
     final icon = this.icon;
     final iconWidget = icon == null
-        ? ThreeArchedCircle(
-            color: theme.colorScheme.primary.withOpacityExt(0.5),
-            size: 28.0,
+        ? NBuilder(
+            builder: (context, colors) => ThreeArchedCircle(
+              color: colors.primary.withOpacityExt(0.5),
+              size: 28.0,
+            ),
           )
-        : Icon(
+        : NIcon(
             icon,
             size: 28.0,
             color: color,
@@ -150,9 +151,10 @@ class _BrowseInfo extends StatelessWidget {
         children: [
           iconWidget,
           const SizedBox(height: 8.0),
-          Text(
+          NamidaText(
             text,
-            style: theme.textTheme.displaySmall?.copyWith(color: color),
+            style: NText.small,
+            color: color,
             textAlign: TextAlign.center,
           ),
         ],
@@ -190,9 +192,9 @@ class _RoomTile extends StatelessWidget {
       trailingRaw: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          NamidaText(
             room.maxMembers > 0 ? '${room.members}/${room.maxMembers}' : '${room.members}',
-            style: context.theme.textTheme.displaySmall,
+            style: NText.small,
           ),
           NamidaIconButton(
             icon: Broken.eye_slash,

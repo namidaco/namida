@@ -17,6 +17,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -120,16 +121,18 @@ class _ArtistsMapPageState extends State<ArtistsMapPage> {
     return BackgroundWrapper(
       child: _isEmpty
           ? Center(
-              child: Text(
+              child: NamidaText(
                 lang.noTracksFound,
-                style: context.textTheme.displayMedium,
+                style: NText.medium,
               ),
             )
           : data == null
           ? Center(
-              child: ThreeArchedCircle(
-                color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
-                size: 48.0,
+              child: NBuilder(
+                builder: (context, colors) => ThreeArchedCircle(
+                  color: colors.secondary.withOpacityExt(0.5),
+                  size: 48.0,
+                ),
               ),
             )
           : _ArtistsMapView(
@@ -430,9 +433,9 @@ class _ArtistsMapViewState extends State<_ArtistsMapView> with SingleTickerProvi
           left: 8.0,
           child: _OverlayPill(
             padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-            child: Text(
+            child: NamidaText(
               lang.countArtists(count: widget.data.names.length),
-              style: context.textTheme.displaySmall,
+              style: NText.small,
             ),
           ),
         ),
@@ -506,9 +509,9 @@ class _OverlayPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: context.theme.cardColor.withOpacityExt(0.85),
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
+        color: colors.card.withOpacityExt(0.85),
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
       ),
       child: Padding(
@@ -558,13 +561,13 @@ class _MapTile extends StatelessWidget {
               height: 3.0,
             ),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 name,
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.ellipsis,
-                style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                style: const NText(.small, size: .s10),
               ),
             ),
           ],

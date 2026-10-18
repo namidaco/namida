@@ -30,7 +30,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
@@ -198,7 +198,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     final innerMaxWidth = maxWidth / innerScale;
 
     final mainTheme = context.theme;
-    final mainTextTheme = context.textTheme;
 
     final miniplayerBGColor = Color.alphaBlend(mainTheme.secondaryHeaderColor.withOpacityExt(0.25), mainTheme.scaffoldBackgroundColor);
 
@@ -275,7 +274,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
     return SafeArea(
       top: false,
       child: DefaultTextStyle(
-        style: mainTextTheme.displayMedium!,
+        style: NText.medium.of(context),
         child: ObxO(
           rx: Player.inst.currentItem,
           builder: (context, currentItem) {
@@ -284,7 +283,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             final currentId = currentItem.id;
             final currentIdTask = DownloadTaskVideoId(videoId: currentId);
             final keys = _YTMiniplayerKeys(currentId);
-            final defaultIconColor = context.defaultIconColor(CurrentColor.inst.miniplayerColor);
+            final defaultIconColor = NColors.defaultIcon(mainColor: CurrentColor.inst.miniplayerColor);
 
             final infoBody = _YTMiniplayerInfoBody(
               currentId: currentId,
@@ -294,7 +293,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
               scrollController: _scrollController,
               maxWidth: innerMaxWidth,
               mainTheme: mainTheme,
-              mainTextTheme: mainTextTheme,
               isTitleExpanded: _isTitleExpanded,
               numberOfRepeats: _numberOfRepeats,
               expansibleController: _expansibleController,
@@ -403,7 +401,6 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
             final titleChild = _YTCollapsedTitle(
               key: keys.titleChild,
               maxWidth: maxWidth,
-              textTheme: mainTextTheme,
             );
 
             final playPauseButtonChild = ObxO(
@@ -416,10 +413,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                     children: [
                       if (isLoading)
                         IgnorePointer(
-                          child: ThreeArchedCircle(
-                            key: keys.buttonLoading,
-                            color: defaultIconColor.withOpacityExt(0.3),
-                            size: 36.0,
+                          child: NBuilder(
+                            builder: (context, colors) => ThreeArchedCircle(
+                              key: keys.buttonLoading,
+                              color: defaultIconColor.resolve(colors).withOpacityExt(0.3),
+                              size: 36.0,
+                            ),
                           ),
                         ),
                       NamidaIconButton(
@@ -430,12 +429,12 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                         child: CustomAnimatedSwitcher(
                           duration: const Duration(milliseconds: 200),
                           child: playWhenReady
-                              ? Icon(
+                              ? NIcon(
                                   Broken.pause,
                                   color: defaultIconColor,
                                   key: const Key('pause'),
                                 )
-                              : Icon(
+                              : NIcon(
                                   Broken.play,
                                   color: defaultIconColor,
                                   key: const Key('play'),
@@ -789,12 +788,10 @@ class _YTMiniplayerKeys {
 
 class _YTCollapsedTitle extends StatelessWidget {
   final double maxWidth;
-  final TextTheme textTheme;
 
   const _YTCollapsedTitle({
     super.key,
     required this.maxWidth,
-    required this.textTheme,
   });
 
   @override
@@ -819,14 +816,11 @@ class _YTCollapsedTitle extends StatelessWidget {
                   height: 16.0,
                   shimmerEnabled: shimmerEnabledDummyContainer && videoTitle == null,
                   width: maxWidth - 24.0,
-                  child: Text(
+                  child: NamidaText(
                     videoTitle ?? '',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
+                    style: const NText(.medium, size: .s13p5, weight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 4.0),
@@ -835,12 +829,9 @@ class _YTCollapsedTitle extends StatelessWidget {
                   height: 10.0,
                   shimmerEnabled: shimmerEnabledDummyContainer && channelName == null,
                   width: maxWidth - 24.0 * 2,
-                  child: Text(
+                  child: NamidaText(
                     channelName ?? '',
-                    style: textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13.0,
-                    ),
+                    style: const NText(.small, size: .s13, weight: FontWeight.w500),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -862,12 +853,11 @@ class _YTMiniplayerInfoBody extends StatelessWidget {
   final ScrollController scrollController;
   final double maxWidth;
   final ThemeData mainTheme;
-  final TextTheme mainTextTheme;
   final Rx<bool> isTitleExpanded;
   final Rx<int> numberOfRepeats;
   final ExpansibleController expansibleController;
   final YtVideoLikeManager videoLikeManager;
-  final Color defaultIconColor;
+  final NColors defaultIconColor;
   final Rx<bool> shouldShowGlowUnderVideo;
 
   const _YTMiniplayerInfoBody({
@@ -878,7 +868,6 @@ class _YTMiniplayerInfoBody extends StatelessWidget {
     required this.scrollController,
     required this.maxWidth,
     required this.mainTheme,
-    required this.mainTextTheme,
     required this.isTitleExpanded,
     required this.numberOfRepeats,
     required this.expansibleController,
@@ -992,7 +981,6 @@ class _YTMiniplayerInfoBody extends StatelessWidget {
                       videoTitle: videoTitle,
                       mainTheme: mainTheme,
                       isTitleExpanded: isTitleExpanded,
-                      mainTextTheme: mainTextTheme,
                       numberOfRepeats: numberOfRepeats,
                       uploadDate: uploadDate,
                       uploadDateAgo: uploadDateAgo,
@@ -1039,7 +1027,6 @@ class _YTPlayerInnerPage extends StatelessWidget {
   final String? videoTitle;
   final ThemeData mainTheme;
   final Rx<bool> _isTitleExpanded;
-  final TextTheme mainTextTheme;
   final Rx<int> _numberOfRepeats;
   final String? uploadDate;
   final String? uploadDateAgo;
@@ -1057,7 +1044,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
   final YoutiPieChannelInfo? channel;
   final String? channelID;
   final bool channelIsVerified;
-  final Color defaultIconColor;
+  final NColors defaultIconColor;
   final YoutubeVideoCardDummy dummyVideoCard;
   final double relatedThumbnailItemExtent;
   final double relatedThumbnailHeight;
@@ -1073,7 +1060,6 @@ class _YTPlayerInnerPage extends StatelessWidget {
     required this.videoTitle,
     required this.mainTheme,
     required this._isTitleExpanded,
-    required this.mainTextTheme,
     required this._numberOfRepeats,
     required this.uploadDate,
     required this.uploadDateAgo,
@@ -1140,7 +1126,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
       color: mainTheme.scaffoldBackgroundColor,
     );
     final body = VideoTilePropertiesProvider(
-      configs: VideoTilePropertiesConfigs(
+      configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytRelatedVideos,
         showMoreIcon: true,
       ),
@@ -1160,22 +1146,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
                 shimmerDurationMS: 550,
                 shimmerDelayMS: 250,
                 shimmerEnabled: shimmerEnabled && videoTitle == null,
-                child: ExpansionTile(
+                child: _VideoTitleExpansionTile(
                   controller: expansibleController,
                   // key: Key(currentId),
-                  backgroundColor: Colors.transparent,
-                  collapsedShape: const Border(),
-                  shape: const Border(),
-                  initiallyExpanded: false,
-                  maintainState: false,
-                  expandedAlignment: Alignment.centerLeft,
-                  expandedCrossAxisAlignment: CrossAxisAlignment.start,
-                  tilePadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 14.0),
-                  textColor: Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(40), mainTheme.colorScheme.onSurface),
-                  collapsedTextColor: mainTheme.colorScheme.onSurface,
-                  iconColor: Color.alphaBlend(CurrentColor.inst.miniplayerColor.withAlpha(40), mainTheme.colorScheme.onSurface),
-                  collapsedIconColor: mainTheme.colorScheme.onSurface,
-                  childrenPadding: EdgeInsets.zero,
                   onExpansionChanged: (value) => _isTitleExpanded.value = value,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -1187,16 +1160,15 @@ class _YTPlayerInnerPage extends StatelessWidget {
                           if (videoListens.isEmpty) return const SizedBox();
                           return NamidaInkWell(
                             borderRadius: 6.0,
-                            bgColor: CurrentColor.inst.miniplayerColor.withOpacityExt(0.7),
+                            bgColor: NColors.fixed(CurrentColor.inst.miniplayerColor.withOpacityExt(0.7)),
                             onTap: () {
                               showVideoListensDialog(currentId);
                             },
                             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                            child: Text(
+                            child: NamidaText(
                               videoListens.length.formatDecimal(),
-                              style: mainTextTheme.displaySmall?.copyWith(
-                                color: Colors.white.withOpacityExt(0.6),
-                              ),
+                              style: NText.small,
+                              color: NColors.fixed(Colors.white.withOpacityExt(0.6)),
                             ),
                           );
                         },
@@ -1239,11 +1211,11 @@ class _YTPlayerInnerPage extends StatelessWidget {
                             height: 24.0,
                             borderRadius: 6.0,
                             shimmerEnabled: shimmerEnabledDummyContainer && videoTitle == null,
-                            child: Text(
+                            child: NamidaText(
                               videoTitle ?? '',
                               maxLines: isTitleExpanded ? 6 : 2,
                               overflow: TextOverflow.ellipsis,
-                              style: mainTextTheme.displayLarge,
+                              style: NText.large,
                             ),
                           ),
                           const SizedBox(height: 6.0),
@@ -1266,24 +1238,21 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                               fit: .scaleDown,
                                               child: NamidaInkWell(
                                                 borderRadius: 6.0,
-                                                bgColor: context.theme.cardColor.withOpacityExt(0.5),
+                                                bgColor: const NColors(.card, opacity: 0.5),
                                                 padding: const EdgeInsetsGeometry.symmetric(horizontal: 6.0, vertical: 4.0),
                                                 onTap: null,
                                                 child: Row(
                                                   mainAxisSize: .min,
                                                   children: [
-                                                    Icon(
+                                                    NIcon(
                                                       info.$2,
                                                       size: 12.0,
-                                                      color: mainTextTheme.displaySmall?.color,
+                                                      color: NColors.textSmall,
                                                     ),
                                                     const SizedBox(width: 4.0),
-                                                    Text(
+                                                    NamidaText(
                                                       info.$1,
-                                                      style: mainTextTheme.displaySmall?.copyWith(
-                                                        fontWeight: FontWeight.w500,
-                                                        fontSize: 12.0,
-                                                      ),
+                                                      style: const NText(.small, size: .s12, weight: FontWeight.w500),
                                                       softWrap: false,
                                                     ),
                                                   ],
@@ -1320,10 +1289,10 @@ class _YTPlayerInnerPage extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
+                      const Flexible(
                         flex: 1,
                         fit: FlexFit.tight,
-                        child: const SizedBox(),
+                        child: SizedBox(),
                       ),
                       Flexible(
                         flex: 4,
@@ -1345,16 +1314,18 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                   icon: Broken.like_1,
                                   smallIconWidget: NamidaLoadingSwitcher(
                                     controller: likeLoadingController,
-                                    builder: (likeLoadingController) => NamidaRawLikeButton(
-                                      isLiked: isUserLiked,
-                                      likedIcon: Broken.like_filled,
-                                      normalIcon: Broken.like_1,
-                                      disabledColor: mainTheme.iconTheme.color,
-                                      size: 24.0,
-                                      removeConfirmationAction: null, // manually managed
-                                      onTap: (isLiked) => _onLikeTap(
-                                        isLiked: isLiked,
-                                        loadingController: likeLoadingController,
+                                    builder: (likeLoadingController) => NBuilder(
+                                      builder: (context, colors) => NamidaRawLikeButton(
+                                        isLiked: isUserLiked,
+                                        likedIcon: Broken.like_filled,
+                                        normalIcon: Broken.like_1,
+                                        disabledColor: colors.icon,
+                                        size: 24.0,
+                                        removeConfirmationAction: null, // manually managed
+                                        onTap: (isLiked) => _onLikeTap(
+                                          isLiked: isLiked,
+                                          loadingController: likeLoadingController,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -1386,16 +1357,18 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                     icon: Broken.dislike,
                                     smallIconWidget: NamidaLoadingSwitcher(
                                       controller: dislikeLoadingController,
-                                      builder: (dislikeLoadingController) => NamidaRawLikeButton(
-                                        isLiked: isUserDisLiked,
-                                        likedIcon: Broken.dislike_filled,
-                                        normalIcon: Broken.dislike,
-                                        disabledColor: mainTheme.iconTheme.color,
-                                        size: 24.0,
-                                        removeConfirmationAction: null, // manually managed
-                                        onTap: (isDisLiked) => _onDislikeTap(
-                                          isDisLiked: isDisLiked,
-                                          loadingController: dislikeLoadingController,
+                                      builder: (dislikeLoadingController) => NBuilder(
+                                        builder: (context, colors) => NamidaRawLikeButton(
+                                          isLiked: isUserDisLiked,
+                                          likedIcon: Broken.dislike_filled,
+                                          normalIcon: Broken.dislike,
+                                          disabledColor: colors.icon,
+                                          size: 24.0,
+                                          removeConfirmationAction: null, // manually managed
+                                          onTap: (isDisLiked) => _onDislikeTap(
+                                            isDisLiked: isDisLiked,
+                                            loadingController: dislikeLoadingController,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1514,10 +1487,10 @@ class _YTPlayerInnerPage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Flexible(
+                      const Flexible(
                         flex: 1,
                         fit: FlexFit.tight,
-                        child: const SizedBox(),
+                        child: SizedBox(),
                       ),
                     ],
                   ),
@@ -1592,11 +1565,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                             height: 12.0,
                                             borderRadius: 4.0,
                                             shimmerEnabled: channelName == null,
-                                            child: Text(
+                                            child: NamidaText(
                                               channelName ?? '',
-                                              style: mainTextTheme.displayMedium?.copyWith(
-                                                fontSize: 13.5,
-                                              ),
+                                              style: const NText(.medium, size: .s13p5),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               textAlign: TextAlign.start,
@@ -1619,11 +1590,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                         shimmerEnabled: channelSubs == null,
                                         child: ObxO(
                                           rx: _isTitleExpanded,
-                                          builder: (context, isTitleExpanded) => Text(
+                                          builder: (context, isTitleExpanded) => NamidaText(
                                             channelSubs == null ? '? ${lang.subscribers}' : channelSubs.displaySubscribersKeywordShort,
-                                            style: mainTextTheme.displaySmall?.copyWith(
-                                              fontSize: 12.0,
-                                            ),
+                                            style: const NText(.small, size: .s12),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -1672,7 +1641,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                       shimmerEnabled: shimmerEnabled && (comments == null || comments.isEmpty),
                       child: NamidaInkWell(
                         key: keys.topCommentsHighlight,
-                        bgColor: Color.alphaBlend(mainTheme.scaffoldBackgroundColor.withOpacityExt(0.4), mainTheme.cardColor),
+                        bgColor: NColors.custom((c) => Color.alphaBlend(c.scaffold.withOpacityExt(0.4), c.card)),
                         margin: const EdgeInsets.symmetric(horizontal: 18.0),
                         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                         onTap: () {
@@ -1696,12 +1665,12 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 8.0),
                                 Expanded(
-                                  child: Text(
+                                  child: NamidaText(
                                     [
                                       lang.comments,
                                       if (comments?.commentsCount != null) comments!.commentsCount!.formatDecimalShort(),
                                     ].join(' • '),
-                                    style: mainTextTheme.displaySmall,
+                                    style: NText.small,
                                     textAlign: TextAlign.start,
                                   ),
                                 ),
@@ -1728,7 +1697,7 @@ class _YTPlayerInnerPage extends StatelessWidget {
                                               baseIconColor: defaultIconColor,
                                               secondaryIconColor: defaultIconColor,
                                             )
-                                          : Icon(
+                                          : NIcon(
                                               Broken.refresh,
                                               color: defaultIconColor,
                                               size: 20.0,
@@ -2100,6 +2069,48 @@ class _MouseActivityListener extends StatelessWidget {
           child: child,
         );
       },
+    );
+  }
+}
+
+class _VideoTitleExpansionTile extends StatelessWidget {
+  final ExpansibleController? controller;
+  final void Function(bool value) onExpansionChanged;
+  final Widget trailing;
+  final Widget title;
+  final List<Widget> children;
+
+  const _VideoTitleExpansionTile({
+    required this.controller,
+    required this.onExpansionChanged,
+    required this.trailing,
+    required this.title,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    final expandedColor = Color.alphaBlend(CurrentColor.inst.miniplayerColor.withOpacityExt(0.16), colors.onSurface);
+    return ExpansionTile(
+      controller: controller,
+      backgroundColor: Colors.transparent,
+      collapsedShape: const Border(),
+      shape: const Border(),
+      initiallyExpanded: false,
+      maintainState: false,
+      expandedAlignment: Alignment.centerLeft,
+      expandedCrossAxisAlignment: CrossAxisAlignment.start,
+      tilePadding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 14.0),
+      textColor: expandedColor,
+      collapsedTextColor: colors.onSurface,
+      iconColor: expandedColor,
+      collapsedIconColor: colors.onSurface,
+      childrenPadding: EdgeInsets.zero,
+      onExpansionChanged: onExpansionChanged,
+      trailing: trailing,
+      title: title,
+      children: children,
     );
   }
 }

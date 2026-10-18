@@ -71,6 +71,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/arb/app_localizations.dart';
 import 'package:namida/core/translations/fallback_delegates.dart';
@@ -110,8 +111,8 @@ void main(List<String> args) {
       }
 
       const app = Namida();
-      final rootWidget = kScreenshotsMode
-          ? const ScreenshotsRoot(
+      const rootWidget = kScreenshotsMode
+          ? ScreenshotsRoot(
               child: app,
             )
           : app;
@@ -605,7 +606,7 @@ class _NamidaState extends State<Namida> {
             child: NamidaEffectsLayer.overlay(),
           );
 
-          return AppThemeProvider(
+          return NTheme(
             data: theme,
             child: WindowController.instance == null
                 ? Stack(
@@ -1208,44 +1209,48 @@ class _DropZoneBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final backgroundColor = theme.cardColor.withOpacityExt(isHovered ? 0.95 : 0.85);
-    final borderColor = theme.colorScheme.onSurface.withOpacityExt(isHovered ? 0.2 : 0.06);
+    final content = AnimatedOpacity(
+      opacity: isHovered ? 1.0 : 0.5,
+      duration: _animationDuration,
+      curve: Curves.easeOut,
+      child: AnimatedScale(
+        scale: isHovered ? 1.0 : 0.94,
+        duration: _animationDuration,
+        curve: Curves.easeOutBack,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              zone.toIcon(),
+              size: 28.0,
+            ),
+            const SizedBox(width: 12.0),
+            NamidaText(
+              zone.toText(),
+              style: const NText(.large, size: .s20),
+            ),
+          ],
+        ),
+      ),
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3.0),
-      child: AnimatedDecoration(
-        duration: _animationDuration,
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(16.0.multipliedRadius),
-        ),
-        child: AnimatedOpacity(
-          opacity: isHovered ? 1.0 : 0.5,
-          duration: _animationDuration,
-          curve: Curves.easeOut,
-          child: AnimatedScale(
-            scale: isHovered ? 1.0 : 0.94,
+      child: NBuilder(
+        selfAnimated: true,
+        builder: (context, colors) {
+          final backgroundColor = colors.card.withOpacityExt(isHovered ? 0.95 : 0.85);
+          final borderColor = colors.onSurface.withOpacityExt(isHovered ? 0.2 : 0.06);
+          return AnimatedDecoration(
             duration: _animationDuration,
-            curve: Curves.easeOutBack,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  zone.toIcon(),
-                  size: 28.0,
-                ),
-                const SizedBox(width: 12.0),
-                Text(
-                  zone.toText(),
-                  style: textTheme.displayLarge?.copyWith(fontSize: 20.0),
-                ),
-              ],
+            curve: Curves.easeOut,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              border: Border.all(color: borderColor),
+              borderRadius: BorderRadius.circular(16.0.multipliedRadius),
             ),
-          ),
-        ),
+            child: content,
+          );
+        },
       ),
     );
   }

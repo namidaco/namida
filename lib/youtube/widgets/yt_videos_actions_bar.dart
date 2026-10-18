@@ -11,7 +11,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -244,10 +244,10 @@ class YTVideosActionBar extends StatelessWidget {
           childrenDefault: getMenuItems,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 3.0),
-            child: Icon(
+            child: NIcon(
               Broken.more_2,
               size: 24.0,
-              color: context.defaultIconColor(),
+              color: NColors.defaultIcon(),
             ),
           ),
         ),
@@ -272,7 +272,7 @@ class _ActionItem extends StatelessWidget {
     return NamidaIconButton(
       iconSize: 22.0,
       horizontalPadding: 6.0,
-      iconColor: context.defaultIconColor(),
+      iconColor: NColors.defaultIcon(),
       icon: icon,
       tooltip: () => tooltip,
       onPressed: onTap,

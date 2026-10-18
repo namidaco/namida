@@ -12,10 +12,10 @@ import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -73,11 +73,10 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const libraryTab = LibraryTab.genres;
     final scrollController = libraryTab.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
-    final genreTypeColor = context.theme.colorScheme.onSecondaryContainer.withOpacityExt(0.8);
+    const genreTypeColor = NColors(.onSecondaryContainer, opacity: 0.8);
 
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
 
@@ -116,17 +115,16 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const NIcon(
                           Broken.arrange_circle,
                           size: 14.0,
                           color: genreTypeColor,
                         ),
                         const SizedBox(width: 4.0),
-                        Text(
+                        NamidaText(
                           leftText,
-                          style: textTheme.displayMedium?.copyWith(
-                            color: genreTypeColor,
-                          ),
+                          style: NText.medium,
+                          color: genreTypeColor,
                         ),
                       ],
                     ),
@@ -152,7 +150,7 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                 child: SmoothCustomScrollView(
                   controller: scrollController,
                   slivers: [
-                    SliverToBoxAdapter(child: listHeader),
+                    const SliverToBoxAdapter(child: listHeader),
                     ObxPrefer(
                       enabled: sort.requiresHistory,
                       rx: HistoryController.inst.topTracksMapListens,

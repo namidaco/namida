@@ -91,7 +91,7 @@ class _IsolateExecuter {
     const String? token = null;
     final response = await Rhttp.get(
       uri.toString(),
-      headers: HttpHeaders.rawMap({
+      headers: const HttpHeaders.rawMap({
         'User-Agent': 'namida',
         if (token != null) 'Authorization': 'Bearer $token',
       }),

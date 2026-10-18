@@ -25,6 +25,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -336,7 +337,7 @@ class ExtrasSettings extends SettingSubpageProvider {
       trailing: NamidaIconButton(
         icon: Broken.flag,
         tooltip: () => lang.configure,
-        iconColor: context.defaultIconColor(),
+        iconColor: NColors.defaultIcon(),
         onPressed: _showExtrasFlagsDialog,
       ),
       child: SettingSectionsColumn(
@@ -403,7 +404,7 @@ class _LoadingIndicatorState extends State<LoadingIndicator> with SingleTickerPr
           width: widget.width,
           height: widget.height,
           decoration: BoxDecoration(
-            color: widget.circleColor ?? context.textTheme.displayMedium?.color,
+            color: widget.circleColor ?? NText.medium.of(context).color,
             borderRadius: BorderRadius.circular(30.0),
           ),
         ),
@@ -416,8 +417,8 @@ class _ExtrasFlagsOptions extends StatelessWidget {
   const _ExtrasFlagsOptions();
 
   static Iterable<Widget> _getTitlebarIconsTypeChildren() {
-    final buttonWidth = 18.0;
-    final buttonHeight = 18.0;
+    const buttonWidth = 18.0;
+    const buttonHeight = 18.0;
     return DesktopTitlebarIconsType.values.map(
       (e) {
         void onTap() {
@@ -468,7 +469,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
             borderRadius: 6.0,
-            bgColor: value == e ? context.theme.cardColor : null,
+            bgColor: value == e ? NColors.card : null,
             onTap: onTap,
             child: row,
           ),
@@ -653,9 +654,9 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                         children: _getTitlebarIconsTypeChildren,
                         child: ObxO(
                           rx: settings.desktopTitlebarType,
-                          builder: (context, type) => Text(
+                          builder: (context, type) => NamidaText(
                             type.name,
-                            style: context.textTheme.displayMedium,
+                            style: NText.medium,
                             textAlign: TextAlign.end,
                           ),
                         ),
@@ -710,9 +711,9 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     childrenDefault: _getSearchTypeChildren,
                     child: ObxO(
                       rx: settings.preferredSearchType,
-                      builder: (context, type) => Text(
+                      builder: (context, type) => NamidaText(
                         type.name,
-                        style: context.textTheme.displayMedium,
+                        style: NText.medium,
                         textAlign: TextAlign.end,
                       ),
                     ),
@@ -838,7 +839,6 @@ class _SubpageInfoStyleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return ObxO(
       rx: settings.subpageInfoStyles,
       builder: (context, styles) {
@@ -853,14 +853,14 @@ class _SubpageInfoStyleRow extends StatelessWidget {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
+                      child: NamidaText(
                         type.toText(),
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                       ),
                     ),
-                    Text(
+                    NamidaText(
                       current.toText(),
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     ),
                   ],
                 ),
@@ -916,9 +916,9 @@ class _ArtworkCollageStyleTile extends StatelessWidget {
           childrenDefault: _getChildren,
           child: ObxO(
             rx: settings.artworkCollageStyle,
-            builder: (context, style) => Text(
+            builder: (context, style) => NamidaText(
               style.toText(),
-              style: context.textTheme.displayMedium,
+              style: NText.medium,
               textAlign: TextAlign.end,
             ),
           ),
@@ -1016,9 +1016,10 @@ class _DefaultLibraryTabTile extends StatelessWidget {
           title: lang.defaultLibraryTab,
           trailing: NamidaPopupWrapper(
             childrenDefault: _getMenuItems,
-            child: Text(
+            child: NamidaText(
               valueText,
-              style: CustomListTile.getTrailingTextStyle(context.theme),
+              style: NText.medium,
+              color: const NColors(.onSurface, opacity: 0.78),
               maxLines: 1,
             ),
           ),
@@ -1320,7 +1321,6 @@ class _CommonPrefixesTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Obx(
       (context) {
         final prefixesText = settings.commonPrefixes.valueR.map((e) => e.addDQuotation()).join(', ');
@@ -1331,7 +1331,7 @@ class _CommonPrefixesTile extends StatelessWidget {
           title: lang.ignoreCommonPrefixesWhileSorting,
           subtitle: prefixesText,
           trailingText: "$typesCount",
-          onTap: () => _showDialog(theme),
+          onTap: () => _showDialog(context.theme),
         );
       },
     );
@@ -1365,9 +1365,9 @@ class _PrefixChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            NamidaText(
               text,
-              style: context.textTheme.displayMedium,
+              style: NText.medium,
             ),
             const SizedBox(width: 6.0),
             Icon(
@@ -1558,7 +1558,6 @@ class _LyricsSaveLocationOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Padding(
       padding: const EdgeInsets.all(3.0),
       child: Row(
@@ -1579,11 +1578,12 @@ class _LyricsSaveLocationOption extends StatelessWidget {
             rx: settings.lyricsDeleteWithTrackIn,
             builder: (context, deleteIn) {
               final isEnabled = deleteIn.contains(location);
+              final colors = NColorsData.of(context);
               return NamidaIconButton(
                 tooltip: () => '${lang.lyricsDeleteWithTrack}\n${lang.lyricsDeleteWithTrackSubtitle}',
                 icon: Broken.trash,
                 iconSize: 20.0,
-                iconColor: isEnabled ? Colors.red : theme.disabledColor,
+                iconColor: NColors.fixed(isEnabled ? Colors.red : colors.disabled),
                 onPressed: _onDeleteWithTrackTap,
               );
             },
@@ -1776,7 +1776,6 @@ class _VibrationTypeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return CustomListTile(
       bgColor: bgColor,
       leading: const StackedIcon(
@@ -1789,9 +1788,9 @@ class _VibrationTypeTile extends StatelessWidget {
         childrenDefault: _getChildren,
         child: ObxO(
           rx: settings.vibrationType,
-          builder: (context, vibrationType) => Text(
+          builder: (context, vibrationType) => NamidaText(
             vibrationType.toText(),
-            style: textTheme.displaySmall,
+            style: NText.small,
             textAlign: TextAlign.end,
           ),
         ),
@@ -1863,9 +1862,9 @@ class _ExtractAllPalettesTile extends StatelessWidget {
           trailing: isGenerating
               ? Column(
                   children: [
-                    Text(
+                    NamidaText(
                       "$genProgress/$genTotal",
-                      style: context.textTheme.displaySmall,
+                      style: NText.small,
                     ),
                     const LoadingIndicator(),
                   ],
@@ -1974,12 +1973,12 @@ class DiscordSharingDotWrapper extends StatelessWidget {
             Positioned(
               bottom: 0.0,
               right: 0.0,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
                   shape: BoxShape.circle,
                   color: _kDiscordColor,
                   border: Border.all(
-                    color: context.theme.scaffoldBackgroundColor,
+                    color: colors.scaffold,
                     width: 1.0,
                   ),
                 ),
@@ -2024,7 +2023,7 @@ class _IntegrationsTrailing extends StatelessWidget {
           icon: Broken.flag,
           tooltip: () => lang.configure,
           iconSize: 20.0,
-          iconColor: context.defaultIconColor(),
+          iconColor: NColors.defaultIcon(),
           onPressed: _showFlagsDialog,
         ),
         const SizedBox(
@@ -2122,9 +2121,9 @@ class _LyricsIntegrationsListTile extends StatelessWidget {
         builder: (context, enabled) => CustomListTile(
           icon: Broken.message_text,
           title: 'status_bar_lyrics'.toUpperCase(),
-          trailing: Text(
+          trailing: NamidaText(
             '${enabled.length}/${LyricsIntegration.values.length}',
-            style: context.textTheme.displayMedium,
+            style: NText.medium,
           ),
         ),
       ),
@@ -2223,9 +2222,9 @@ class _WebhookListTile extends StatelessWidget {
                       for (final rx in draftEvents.values) {
                         if (rx.valueR) activeCount++;
                       }
-                      return Text(
+                      return NamidaText(
                         '$activeCount/${WebhookEvent.values.length}',
-                        style: context.textTheme.displayMedium,
+                        style: NText.medium,
                       );
                     },
                   ),

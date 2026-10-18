@@ -56,8 +56,8 @@ void _renameAndroidFiles(String suffix) {
 }
 
 void _replaceInDart() {
-  final prefixComment = '// $_kPrefixComment';
-  final suffixComment = '// $_kSuffixComment';
+  const prefixComment = '// $_kPrefixComment';
+  const suffixComment = '// $_kSuffixComment';
   final iconsEnum = _appIcons
       .map((e) {
         final authorInfo = e.authorInfos.map((e) => e.toClassString()).join(', ');
@@ -101,8 +101,8 @@ $suffixComment''',
 }
 
 void _replaceInManifest() {
-  final prefixComment = '<!-- $_kPrefixComment -->';
-  final suffixComment = '<!-- $_kSuffixComment -->';
+  const prefixComment = '<!-- $_kPrefixComment -->';
+  const suffixComment = '<!-- $_kSuffixComment -->';
   const indent = '        ';
 
   String manifestCode = _appIcons
@@ -126,8 +126,8 @@ void _replaceInManifest() {
       .join('\n\n$indent');
 
   if (_appIconsRemoved.isNotEmpty) {
-    final removedPrefixComment = '<!-- $_kRemovedPrefixComment -->';
-    final removedSuffixComment = '<!-- $_kRemovedSuffixComment -->';
+    const removedPrefixComment = '<!-- $_kRemovedPrefixComment -->';
+    const removedSuffixComment = '<!-- $_kRemovedSuffixComment -->';
     final removedManifestCode = _appIconsRemoved
         .map(
           (icon) =>
@@ -160,8 +160,8 @@ void _replaceInManifest() {
 }
 
 void _replaceInKotlin() {
-  final prefixComment = '// $_kPrefixComment';
-  final suffixComment = '// $_kSuffixComment';
+  const prefixComment = '// $_kPrefixComment';
+  const suffixComment = '// $_kSuffixComment';
   const indent = '        ';
   final iconsMatches = _appIcons.map((e) => '$indent    "${e.dartName}" -> LauncherIcon.${e.kotlinName}').join('\n');
   final kotlinCode =
@@ -241,7 +241,7 @@ void _replaceAllInFile(String filePath, String Function(String content) newConte
 }
 
 void _renameAllInSubFolderInRes(String subdirPrefix, String filenamePrefix, String suffix, {bool exactName = false, bool Function(String ext)? extValidator}) {
-  final parentDir = _FilePaths.android_res;
+  const parentDir = _FilePaths.android_res;
   for (final e in Directory(parentDir).listSync()) {
     if (e is Directory) {
       if (p.basename(e.path).startsWith(subdirPrefix)) {
@@ -290,29 +290,29 @@ final _appIcons = [
     'cutsie',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('smilez', null, _AuthorPlatform.discord, _AuthorAIModel.gpt4),
+      const _AuthorInfo('smilez', null, _AuthorPlatform.discord, _AuthorAIModel.gpt4),
     ],
   ),
   _IconDetails.create(
     'jellyda',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
-      _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+      const _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      const _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
     ],
   ),
   _IconDetails.create(
     'eddy',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'namichin',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('Scarecloud', null, _AuthorPlatform.discord, null),
     ],
   ),
 
@@ -320,21 +320,21 @@ final _appIcons = [
     'space',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo(':𝟛𝓗𝓪𝓹𝓹𝔂', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'retro',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('sgfreak', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('sgfreak', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'ookami',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+      const _AuthorInfo('神 ᴛᴀᴋᴜᴍɪ', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
 
@@ -343,56 +343,56 @@ final _appIcons = [
     'enhanced',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('im_mehu', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('im_mehu', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'hollow',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('wispy', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('wispy', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'pastel',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('cui', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
+      const _AuthorInfo('cui', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
     ],
   ),
   _IconDetails.create(
     'monet',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
+      const _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
     ],
   ),
   _IconDetails.create(
     'glowy',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
+      const _AuthorInfo('Sujal', null, _AuthorPlatform.telegram, null),
     ],
   ),
   _IconDetails.create(
     'spooky',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Miguquis', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
+      const _AuthorInfo('Miguquis', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
     ],
   ),
   _IconDetails.create(
     'namiween',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+      const _AuthorInfo('𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
   _IconDetails.create(
     'tired',
     ext: _ImgExtension.webp,
     authorInfos: [
-      _AuthorInfo('Zephyr', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
+      const _AuthorInfo('Zephyr', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
 ];
@@ -401,14 +401,14 @@ final _appIconsRemoved = [
     'shade',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
     ],
   ),
   _IconDetails.create(
     'mini',
     ext: _ImgExtension.png,
     authorInfos: [
-      _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
+      const _AuthorInfo('شاكور', null, _AuthorPlatform.discord, null),
     ],
   ),
 ];

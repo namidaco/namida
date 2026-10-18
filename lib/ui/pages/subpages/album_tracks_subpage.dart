@@ -16,6 +16,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -56,8 +57,6 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final tracks = widget.tracks;
     final name = widget.albumIdentifier.displayAlbumName;
     final displayTrackNumberinAlbumPage = settings.displayTrackNumberinAlbumPage.value;
@@ -198,36 +197,36 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                     slivers: [
                                       PinnedHeaderSliver(
                                         child: Padding(
-                                          padding: EdgeInsets.only(bottom: 4.0),
+                                          padding: const EdgeInsets.only(bottom: 4.0),
                                           child: Row(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              DecoratedBox(
-                                                decoration: BoxDecoration(
-                                                  color: Color.alphaBlend(theme.colorScheme.secondaryContainer.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
+                                              NDecoratedBox(
+                                                decoration: (colors) => BoxDecoration(
+                                                  color: Color.alphaBlend(colors.secondaryContainer.withOpacityExt(0.5), colors.scaffold),
                                                   borderRadius: BorderRadius.horizontal(
                                                     right: Radius.circular(6.0.multipliedRadius),
                                                   ),
                                                 ),
                                                 child: Padding(
-                                                  padding: EdgeInsets.symmetric(vertical: 6.0),
+                                                  padding: const EdgeInsets.symmetric(vertical: 6.0),
                                                   child: Row(
                                                     mainAxisSize: MainAxisSize.min,
                                                     children: [
-                                                      SizedBox(width: 8.0),
-                                                      Icon(
+                                                      const SizedBox(width: 8.0),
+                                                      const Icon(
                                                         Broken.cd,
                                                         size: 20.0,
                                                       ),
-                                                      SizedBox(width: 4.0),
+                                                      const SizedBox(width: 4.0),
                                                       Flexible(
-                                                        child: Text(
+                                                        child: NamidaText(
                                                           " ${discEntry.key}",
-                                                          style: textTheme.displayMedium,
+                                                          style: NText.medium,
                                                         ),
                                                       ),
-                                                      SizedBox(width: 12.0),
+                                                      const SizedBox(width: 12.0),
                                                     ],
                                                   ),
                                                 ),
@@ -235,27 +234,27 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                               Flexible(
                                                 child: FittedBox(
                                                   fit: BoxFit.scaleDown,
-                                                  child: DecoratedBox(
-                                                    decoration: BoxDecoration(
-                                                      color: theme.scaffoldBackgroundColor,
+                                                  child: NDecoratedBox(
+                                                    decoration: (colors) => BoxDecoration(
+                                                      color: colors.scaffold,
                                                       borderRadius: BorderRadius.only(
                                                         bottomLeft: Radius.circular(6.0.multipliedRadius),
                                                       ),
                                                     ),
                                                     child: Padding(
-                                                      padding: EdgeInsets.symmetric(vertical: 6.0),
+                                                      padding: const EdgeInsets.symmetric(vertical: 6.0),
                                                       child: Row(
                                                         mainAxisSize: MainAxisSize.min,
                                                         children: [
-                                                          SizedBox(width: 8.0),
-                                                          Text(
+                                                          const SizedBox(width: 8.0),
+                                                          NamidaText(
                                                             [
                                                               discEntry.value.displayTrackKeyword,
                                                               discEntry.value.totalDurationFormatted,
                                                             ].join(' • '),
-                                                            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                                            style: const NText(.small, weight: FontWeight.w500),
                                                           ),
-                                                          SizedBox(width: 12.0),
+                                                          const SizedBox(width: 12.0),
                                                         ],
                                                       ),
                                                     ),
@@ -289,7 +288,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                 },
                               )
                               .addSeparators(
-                                separator: SliverPadding(
+                                separator: const SliverPadding(
                                   padding: EdgeInsets.symmetric(vertical: 12.0),
                                 ),
                               )

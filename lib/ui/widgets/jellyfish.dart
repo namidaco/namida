@@ -15,6 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/waveform_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -377,12 +378,13 @@ class _JellyFieldState extends State<JellyField> {
           return const SizedBox();
         }
         _attach();
+        final tint = widget.tint ?? NColorsData.of(context).primary;
         return RepaintBoundary(
           child: CustomPaint(
             isComplex: true,
             painter: _JellyFieldPainter(
               swarm: _swarm!,
-              tint: widget.tint ?? context.theme.colorScheme.primary,
+              tint: tint,
               tintStrength: widget.tintStrength,
               opacity: widget.opacity,
               fade: widget.fade,
@@ -585,7 +587,7 @@ class FloatingJelly extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = this.tint ?? context.theme.colorScheme.primary;
+    final tint = this.tint ?? NColorsData.of(context).primary;
     Widget image = ColorFiltered(
       colorFilter: NamidaJellys.tintFilter(tint, tintStrength, opacity),
       child: Image.asset(
@@ -655,7 +657,7 @@ class _JellyListEndState extends State<JellyListEnd> {
     final rng = math.Random();
     const randomJelly = false;
     // final randomCount = 1 + rng.nextInt(3);
-    final randomCount = 1;
+    const randomCount = 1;
     _jellies = List.generate(randomCount, (i) {
       return _RestingJelly(
         // ignore: dead_code
@@ -675,34 +677,28 @@ class _JellyListEndState extends State<JellyListEnd> {
     if (!NamidaJellys.enabled) return const SizedBox();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 32.0),
-      child: Builder(
-        builder: (context) {
-          final tint = context.theme.colorScheme.primary;
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: _jellies.map(
-              (e) {
-                final height = widget.height * e.scale;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                  child: Transform.translate(
-                    offset: Offset(0, height * e.verticalOffset),
-                    child: FloatingJelly(
-                      jelly: e.jelly,
-                      mirrored: e.mirrored,
-                      height: height,
-                      tint: tint,
-                      opacity: 0.5,
-                      amplitude: 4.0,
-                      cycleDuration: Duration(seconds: e.cycleSeconds),
-                      seed: e.seed,
-                    ),
-                  ),
-                );
-              },
-            ).toList(),
-          );
-        },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: _jellies.map(
+          (e) {
+            final height = widget.height * e.scale;
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              child: Transform.translate(
+                offset: Offset(0, height * e.verticalOffset),
+                child: FloatingJelly(
+                  jelly: e.jelly,
+                  mirrored: e.mirrored,
+                  height: height,
+                  opacity: 0.5,
+                  amplitude: 4.0,
+                  cycleDuration: Duration(seconds: e.cycleSeconds),
+                  seed: e.seed,
+                ),
+              ),
+            );
+          },
+        ).toList(),
       ),
     );
   }
@@ -744,7 +740,7 @@ class JellyLoader extends StatelessWidget {
   Widget build(BuildContext context) {
     const art = NamidaJelly.jelly70d;
     final percentage = this.percentage;
-    final tint = this.tint ?? context.theme.colorScheme.primary;
+    final tint = this.tint ?? NColorsData.of(context).primary;
     return SizedBox(
       height: height,
       child: FloatingImage(
@@ -767,10 +763,12 @@ class JellyLoader extends StatelessWidget {
             if (percentage != null && percentage.isFinite)
               Text(
                 "${(percentage.clamp(0.0, 1.0) * 100).toStringAsFixed(0)}%",
-                style: context.textTheme.displayMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  shadows: const [Shadow(color: Colors.black38, blurRadius: 6.0)],
-                ),
+                style: NText.medium
+                    .of(context)
+                    .copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      shadows: const [Shadow(color: Colors.black38, blurRadius: 6.0)],
+                    ),
               ),
           ],
         ),
@@ -1398,15 +1396,15 @@ abstract class NamidaJellys {
   }
 
   /// A full color set built around this key's jelly color, for wherever a palette is expected.
-  static NamidaColor namidaColorFor(String? key, {int? alpha}) {
+  static NamidaColor namidaColorFor(String? key, {double? opacity}) {
     if (key == null || key.isEmpty) {
-      final color = alpha == null ? paletteLight : paletteLight.withAlpha(alpha);
+      final color = opacity == null ? paletteLight : paletteLight.withOpacityExt(opacity);
       return NamidaColor.single(color);
     }
     final index = _hash(key) % palette.length;
     final color = palette[index];
     return NamidaColor.create(
-      used: alpha == null ? color : color.withAlpha(alpha),
+      used: opacity == null ? color : color.withOpacityExt(opacity),
       palette: [
         color,
         palette[(index + 3) % palette.length],

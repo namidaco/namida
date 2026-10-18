@@ -11,6 +11,7 @@ import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -39,20 +40,17 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
   }
 
   Widget _getFilterChip({
-    required BuildContext context,
     required String title,
     required IconData icon,
     required void Function() onTap,
     required bool? isOnGoing,
   }) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Obx(
       (context) {
         final enabled = isOnGoing == YTOnGoingFinishedDownloads.inst.isOnGoingSelected.valueR;
         final color = enabled ? Colors.white.withOpacityExt(0.7) : null;
         return NamidaInkWell(
-          bgColor: enabled ? CurrentColor.inst.color : theme.cardColor,
+          bgColor: enabled ? NColors.fixed(CurrentColor.inst.color) : NColors.card,
           borderRadius: 6.0,
           margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 6.0),
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
@@ -63,9 +61,10 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
             children: [
               Icon(icon, size: 18.0, color: color),
               const SizedBox(width: 4.0),
-              Text(
+              NamidaText(
                 title,
-                style: textTheme.displayMedium?.copyWith(color: color),
+                style: NText.medium,
+                color: NColors.fixed(color),
               ),
             ],
           ),
@@ -81,7 +80,6 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
     String groupTitle = '',
     required int itemsLength,
   }) async {
-    final textTheme = context.textTheme;
     bool confirmed = false;
     bool delete = false;
 
@@ -120,12 +118,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "$operationTitle: ", style: textTheme.displayLarge),
+                    TextSpan(text: "$operationTitle: ", style: NText.large.of(context)),
                     TextSpan(
                       text: '$groupTitleText ($itemsLength)',
-                      style: textTheme.displayMedium,
+                      style: NText.medium.of(context),
                     ),
-                    TextSpan(text: " ?", style: textTheme.displayLarge),
+                    TextSpan(text: " ?", style: NText.large.of(context)),
                   ],
                 ),
               ),
@@ -210,16 +208,16 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeController.inst.isLoadingDownloadTasks,
         builder: (context, loadingAllTasks) => loadingAllTasks
             ? Center(
-                child: ThreeArchedCircle(
-                  color: theme.colorScheme.primary.withOpacityExt(0.5),
-                  size: 56.0,
+                child: NBuilder(
+                  builder: (context, colors) => ThreeArchedCircle(
+                    color: colors.primary.withOpacityExt(0.5),
+                    size: 56.0,
+                  ),
                 ),
               )
             : Column(
@@ -233,7 +231,6 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                           child: Wrap(
                             children: [
                               _getFilterChip(
-                                context: context,
                                 title: lang.all,
                                 icon: Broken.task,
                                 onTap: () {
@@ -243,7 +240,6 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                 isOnGoing: null,
                               ),
                               _getFilterChip(
-                                context: context,
                                 title: lang.ongoing,
                                 icon: Broken.import,
                                 onTap: () {
@@ -253,7 +249,6 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                 isOnGoing: true,
                               ),
                               _getFilterChip(
-                                context: context,
                                 title: lang.finished,
                                 icon: Broken.tick_circle,
                                 onTap: () {
@@ -288,9 +283,9 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                             child: Row(
                               children: [
                                 const SizedBox(width: 24.0),
-                                Text(
+                                NamidaText(
                                   _downloadTasksTempList.length.displayVideoKeyword,
-                                  style: textTheme.displayMedium?.copyWith(fontSize: 20.0),
+                                  style: const NText(.medium, size: .s20),
                                 ),
                                 if (_isOnGoingSelectedR == true) ...[
                                   const Spacer(),
@@ -363,7 +358,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                       builder: (context, maxWidth) => NamidaInkWell(
                                         borderRadius: 0.0,
                                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                        bgColor: theme.scaffoldBackgroundColor,
+                                        bgColor: NColors.scaffold,
                                         onTap: () {
                                           _hiddenGroupsMap.value[groupName] = _hiddenGroupsMap.value[groupName] == true ? false : true;
                                           _hiddenGroupsMap.refresh();
@@ -376,12 +371,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                               width: maxWidth * 0.12,
                                               borderRadius: 8.0,
                                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                                              bgColor: theme.cardColor,
+                                              bgColor: NColors.card,
                                               child: FittedBox(
                                                 fit: BoxFit.scaleDown,
-                                                child: Text(
+                                                child: NamidaText(
                                                   "${list.length}",
-                                                  style: textTheme.displayLarge,
+                                                  style: NText.large,
                                                 ),
                                               ),
                                             ),
@@ -391,25 +386,25 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Text(
+                                                  NamidaText(
                                                     groupName.groupName == '' ? lang.defaultLabel : groupName.groupName,
-                                                    style: textTheme.displayMedium,
+                                                    style: NText.medium,
                                                   ),
                                                   if (lastEditedAgo != null)
-                                                    Text(
+                                                    NamidaText(
                                                       lastEditedAgo,
-                                                      style: textTheme.displaySmall,
+                                                      style: NText.small,
                                                     ),
                                                 ],
                                               ),
                                             ),
-                                            SizedBox(width: 4.0),
+                                            const SizedBox(width: 4.0),
                                             CustomIconButtonTonal(
                                               icon: Broken.play,
                                               iconSize: 18.0,
                                               onTap: () => YoutubeController.inst.resumeDownloadTasks(groupName: groupName),
                                             ),
-                                            SizedBox(width: 4.0),
+                                            const SizedBox(width: 4.0),
                                             CustomIconButtonTonal(
                                               icon: Broken.pause,
                                               iconSize: 18.0,
@@ -421,7 +416,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                                                 );
                                               },
                                             ),
-                                            SizedBox(width: 4.0),
+                                            const SizedBox(width: 4.0),
                                             CustomIconButtonTonal(
                                               icon: Broken.close_circle,
                                               iconSize: 18.0,

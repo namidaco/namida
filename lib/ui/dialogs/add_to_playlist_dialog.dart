@@ -6,6 +6,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
@@ -29,9 +30,9 @@ void showAddToPlaylistDialog(List<Track> tracks) {
             const SizedBox(
               width: 12.0,
             ),
-            Text(
+            NamidaText(
               lang.addToPlaylist,
-              style: namida.theme.textTheme.displayMedium,
+              style: NText.medium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -39,9 +40,9 @@ void showAddToPlaylistDialog(List<Track> tracks) {
         ),
       ),
       leftAction: Obx(
-        (context) => Text(
+        (context) => NamidaText(
           lang.countPlaylists(count: PlaylistController.inst.playlistsMap.length),
-          style: namida.theme.textTheme.displayMedium,
+          style: NText.medium,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -70,12 +71,12 @@ void showAddToPlaylistDialog(List<Track> tracks) {
                 ),
               ),
             ),
-            SizedBox(height: 2.0),
+            const SizedBox(height: 2.0),
             Expanded(
               child: PlaylistsPage(
                 enableHero: true,
                 tracksToAdd: tracks,
-                countPerRow: CountPerRow(1),
+                countPerRow: const CountPerRow(1),
               ),
             ),
           ],

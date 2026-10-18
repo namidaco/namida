@@ -301,7 +301,7 @@ class _EffectField extends ChangeNotifier {
 
         case _Motion.drift:
           final heading = _direction[i];
-          final turning = _driftBobRate * _twoPi;
+          const turning = _driftBobRate * _twoPi;
           final bobbed = math.cos(time * turning + _phase[i]) * emitter.sway * turning * dt / height;
           final margin = _size[i] / width;
           final travelled = _speed[i] * push * dt;
@@ -651,9 +651,8 @@ class _EffectFieldCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final isDark = theme.brightness == Brightness.dark;
-    final primary = theme.colorScheme.primary;
+    final isDark = context.theme.brightness == Brightness.dark;
+    final primary = NColorsData.of(context).primary;
     final tint = isDark ? Color.lerp(primary, Colors.white, 0.45)! : primary;
     final ink = isDark ? Colors.white : Colors.black;
     return RepaintBoundary(

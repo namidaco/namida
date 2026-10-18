@@ -41,14 +41,14 @@ class NotificationManager {
   static Future<bool?> init() {
     final didInit = _flutterLocalNotificationsPlugin.initialize(
       settings: InitializationSettings(
-        android: AndroidInitializationSettings('ic_stat_musicnote'),
+        android: const AndroidInitializationSettings('ic_stat_musicnote'),
         windows: WindowsInitializationSettings(
           appName: 'Namida',
           appUserModelId: 'namidaco.namida.notification',
           guid: '51435cfe-f7be-4a73-82c1-50d53a8e7ae6',
           iconPath: AppPaths.NAMIDA_LOGO_LAYER,
         ),
-        linux: LinuxInitializationSettings(
+        linux: const LinuxInitializationSettings(
           defaultActionName: 'namidaco.namida.notification',
         ),
       ),

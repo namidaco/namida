@@ -15,6 +15,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/setting_dialog_with_text_field.dart';
@@ -857,7 +858,6 @@ class _TrackActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return NamidaPopupWrapper(
       childrenDefault: _getItems,
       child: CustomListTile(
@@ -869,9 +869,9 @@ class _TrackActionTile extends StatelessWidget {
           childrenDefault: _getItems,
           child: ObxO(
             rx: setting,
-            builder: (context, action) => Text(
+            builder: (context, action) => NamidaText(
               action.toText(),
-              style: textTheme.displayMedium,
+              style: NText.medium,
               textAlign: TextAlign.end,
             ),
           ),
@@ -931,7 +931,6 @@ class _TrackTilePreview extends StatelessWidget {
         final isThirdRowShown = settings.displayThirdRow.valueR;
         final isFavouriteShown = settings.displayFavouriteIconInListTile.valueR;
         final isForceSquared = settings.forceSquaredTrackThumbnail.valueR;
-        final cardColor = context.theme.cardTheme.color;
         final track = allTracksInLibrary.firstOrNull;
         final imagePath = track?.pathToImage;
         final artworkKeyText = imagePath ?? '';
@@ -947,8 +946,8 @@ class _TrackTilePreview extends StatelessWidget {
                 height: 3.0,
               ),
             );
-        return Container(
-          color: cardColor,
+        return NContainer(
+          color: NColors.cardTheme,
           width: context.width,
           height: tileHeight * 1.5,
           alignment: Alignment.center,
@@ -1114,22 +1113,21 @@ class _TrackItemSmallBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final text = this.text;
     return NamidaPopupWrapper(
       children: _getChildren,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface.withAlpha(160),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.surface.withOpacityExt(0.63),
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: text == null
               ? null
-              : Text(
+              : NamidaText(
                   text,
-                  style: theme.textTheme.displaySmall,
+                  style: NText.small,
                 ),
         ),
       ),
@@ -1393,11 +1391,8 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final enabledIcon = _enabledIcon;
     final enabledIconAuthorInfo = enabledIcon?.authorInfos.firstOrNull;
-    final bgColor = theme.colorScheme.secondaryContainer;
     final iconsRow = Row(
       mainAxisSize: MainAxisSize.min,
       children:
@@ -1405,63 +1400,68 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                 ...NamidaAppIcons.values.map(
                   (e) {
                     final isEnabled = e == enabledIcon;
-                    return NamidaInkWell(
-                      animationDurationMS: 300,
-                      borderRadius: 12.0,
-                      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                      enableSecondaryTap: false,
-                      decoration: isEnabled
-                          ? BoxDecoration(
-                              color: bgColor.withOpacityExt(0.75),
-                              border: Border.all(
-                                color: bgColor,
-                                width: 1.5,
-                              ),
-                            )
-                          : BoxDecoration(
-                              color: bgColor.withOpacityExt(0.25),
-                            ),
-                      onTap: () async {
-                        await NamidaChannel.inst.changeAppIcon(e);
-                        await _refreshStatus();
-                        if (e.isJelly) NamidaJellys.promptEnable('Let jellyfishes invade namida too?');
+                    final iconChild = Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          e.assetPath,
+                          width: 34.0,
+                          height: 35.0,
+                          alignment: Alignment.center,
+                        ),
+                        const SizedBox(height: 1.0),
+                        NamidaText(
+                          e.name,
+                          style: NText.small,
+                        ),
+                      ],
+                    );
+                    return NBuilder(
+                      selfAnimated: true,
+                      builder: (context, colors) {
+                        final bgColor = colors.secondaryContainer;
+                        return NamidaInkWell(
+                          animationDurationMS: 300,
+                          borderRadius: 12.0,
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                          enableSecondaryTap: false,
+                          decoration: isEnabled
+                              ? BoxDecoration(
+                                  color: bgColor.withOpacityExt(0.75),
+                                  border: Border.all(
+                                    color: bgColor,
+                                    width: 1.5,
+                                  ),
+                                )
+                              : BoxDecoration(
+                                  color: bgColor.withOpacityExt(0.25),
+                                ),
+                          onTap: () async {
+                            await NamidaChannel.inst.changeAppIcon(e);
+                            await _refreshStatus();
+                            if (e.isJelly) NamidaJellys.promptEnable('Let jellyfishes invade namida too?');
+                          },
+                          child: iconChild,
+                        );
                       },
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.asset(
-                            e.assetPath,
-                            width: 34.0,
-                            height: 35.0,
-                            alignment: Alignment.center,
-                          ),
-                          SizedBox(height: 1.0),
-                          Text(
-                            e.name,
-                            style: textTheme.displaySmall,
-                          ),
-                        ],
-                      ),
                     );
                   },
                 ),
                 NamidaInkWell(
                   animationDurationMS: 300,
                   borderRadius: 12.0,
-                  padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                   enableSecondaryTap: false,
-                  decoration: BoxDecoration(
-                    color: bgColor.withOpacityExt(0.25),
-                  ),
+                  bgColor: const NColors(.secondaryContainer, opacity: 0.25),
                   onTap: _onAddTap,
-                  child: Text(
+                  child: NamidaText(
                     lang.add,
-                    style: textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                 ),
               ]
               .addSeparators(
-                separator: SizedBox(width: 4.0),
+                separator: const SizedBox(width: 4.0),
               )
               .toFixedList(),
     );
@@ -1469,18 +1469,18 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: 12.0),
+        const SizedBox(height: 12.0),
         SizedBox(
           width: context.width,
           child: Row(
             children: [
-              SizedBox(width: 8.0),
-              Icon(
+              const SizedBox(width: 8.0),
+              NIcon(
                 Broken.attach_square,
                 size: 22.0,
-                color: context.defaultIconColor(),
+                color: NColors.defaultIcon(),
               ),
-              SizedBox(width: 8.0),
+              const SizedBox(width: 8.0),
               Expanded(
                 child: Wrap(
                   runSpacing: 2.0,
@@ -1488,31 +1488,31 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                   runAlignment: WrapAlignment.start,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Text(
+                    NamidaText(
                       "${lang.appIcon}:",
-                      style: theme.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                     if (enabledIcon != null) ...[
-                      SizedBox(width: 6.0),
-                      Text(
+                      const SizedBox(width: 6.0),
+                      NamidaText(
                         enabledIcon.name,
-                        style: theme.textTheme.displayMedium,
+                        style: NText.medium,
                       ),
                       if (enabledIconAuthorInfo != null) ...[
-                        SizedBox(width: 2.0),
-                        Text(
+                        const SizedBox(width: 2.0),
+                        NamidaText(
                           "(@${enabledIconAuthorInfo.name})",
-                          style: theme.textTheme.displaySmall,
+                          style: NText.small,
                         ),
                         if (enabledIconAuthorInfo.aiModel != null)
-                          NamidaInkWell(
-                            bgColor: theme.cardColor,
+                          const NamidaInkWell(
+                            bgColor: NColors.card,
                             margin: EdgeInsets.symmetric(horizontal: 2.0),
                             padding: EdgeInsets.symmetric(horizontal: 2.0, vertical: 2.0),
                             borderRadius: 4.0,
-                            child: Text(
+                            child: NamidaText(
                               "AI",
-                              style: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                              style: NText(.small, size: .s10),
                             ),
                           ),
                       ],
@@ -1523,12 +1523,12 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
             ],
           ),
         ),
-        SizedBox(height: 8.0),
+        const SizedBox(height: 8.0),
         SmoothSingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: iconsRow,
         ),
-        SizedBox(height: 8.0),
+        const SizedBox(height: 8.0),
       ],
     );
   }

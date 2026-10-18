@@ -20,7 +20,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -41,22 +41,21 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   const YoutubeAccountManagePage({super.key});
 
   void _onSignInTap(BuildContext context, {required bool forceSignIn}) {
-    final textTheme = context.textTheme;
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        NamidaText(
           lang.signInToYourAccount,
-          style: textTheme.displayMedium,
+          style: NText.medium,
         ),
         ObxO(
           rx: YoutubeAccountController.signInProgress,
           builder: (context, loginProgress) => loginProgress == null
               ? const SizedBox()
-              : Text(
+              : NamidaText(
                   loginProgress.name,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
         ),
       ],
@@ -110,21 +109,21 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 12.0),
+              const SizedBox(height: 12.0),
               CustomTagTextField(
                 controller: controllerVisitorData,
                 labelText: 'Visitor Data',
                 hintText: initialVisitorData ?? '',
                 maxLines: 3,
               ),
-              SizedBox(height: 12.0),
+              const SizedBox(height: 12.0),
               CustomTagTextField(
                 controller: controllerPlayerRequestPoToken,
                 labelText: 'PoToken (Player Request)',
                 hintText: '',
                 maxLines: 3,
               ),
-              SizedBox(height: 12.0),
+              const SizedBox(height: 12.0),
               CustomTagTextField(
                 controller: controllerStreamingPoToken,
                 labelText: 'PoToken (Streaming)',
@@ -228,25 +227,26 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   }
 
   Widget _buildMembershipTile(BuildContext context, {required bool compact}) {
-    final theme = context.theme;
     return ObxO(
       rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
       builder: (context, userMembershipType) {
         final hasMembership = userMembershipType != null && userMembershipType.index >= MembershipType.cutie.index;
-        return CustomListTile(
-          borderR: 12.0,
-          onTap: const YoutubeManageSubscriptionPage().navigate,
-          dense: compact,
-          title: hasMembership ? lang.membershipManage : lang.signingInAllowsBasicUsage,
-          subtitle: hasMembership ? null : lang.signingInAllowsBasicUsageSubtitle,
-          icon: Broken.money_3,
-          bgColor: Color.alphaBlend(
-            theme.cardTheme.color?.withOpacityExt(0.3) ?? Colors.transparent,
-            theme.colorScheme.secondaryContainer,
-          ).withOpacityExt(compact ? 0.3 : 0.5),
-          trailingRaw: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6.0),
-            child: const MembershipCard(displayName: false),
+        return NBuilder(
+          builder: (context, colors) => CustomListTile(
+            borderR: 12.0,
+            onTap: const YoutubeManageSubscriptionPage().navigate,
+            dense: compact,
+            title: hasMembership ? lang.membershipManage : lang.signingInAllowsBasicUsage,
+            subtitle: hasMembership ? null : lang.signingInAllowsBasicUsageSubtitle,
+            icon: Broken.money_3,
+            bgColor: Color.alphaBlend(
+              colors.cardTheme.withOpacityExt(0.3),
+              colors.secondaryContainer,
+            ).withOpacityExt(compact ? 0.3 : 0.5),
+            trailingRaw: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 6.0),
+              child: MembershipCard(displayName: false),
+            ),
           ),
         );
       },
@@ -254,29 +254,27 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            NIcon(
               Broken.profile_circle,
               size: 72.0,
-              color: context.defaultIconColor().withOpacityExt(0.7),
+              color: NColors.defaultIcon(opacity: 0.7),
             ),
             const SizedBox(height: 20.0),
-            Text(
+            NamidaText(
               lang.signInYouDontHaveAccount,
-              style: textTheme.displayLarge,
+              style: NText.large,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 6.0),
-            Text(
+            NamidaText(
               lang.signInToYourAccount,
-              style: textTheme.displaySmall,
+              style: NText.small,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24.0),
@@ -293,10 +291,8 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
   }
 
   Widget _buildAccountTile(BuildContext context, UserChannelInfo acc, {required bool active}) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final accountColorActive = theme.colorScheme.secondaryContainer.withOpacityExt(0.8);
-    final accountColorNonActive = theme.cardColor.withOpacityExt(0.5);
+    const accountColorActive = NColors(.secondaryContainer, opacity: 0.8);
+    const accountColorNonActive = NColors(.card, opacity: 0.5);
     return NamidaInkWell(
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       bgColor: active ? accountColorActive : accountColorNonActive,
@@ -324,32 +320,32 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(
+                      child: NamidaText(
                         acc.title ?? '',
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (active) ...[
                       const SizedBox(width: 8.0),
-                      Container(
+                      NContainer(
                         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
+                        decoration: (colors) => BoxDecoration(
+                          color: colors.secondaryContainer,
                           borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                         ),
-                        child: Text(
+                        child: NamidaText(
                           lang.active.toUpperCase(),
-                          style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                          style: const NText(.small, size: .s10),
                         ),
                       ),
                     ],
                   ],
                 ),
                 if (acc.handler.isNotEmpty)
-                  Text(
+                  NamidaText(
                     acc.handler,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                   ),
               ],
             ),
@@ -384,8 +380,6 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeAccountController.current.signedInAccounts,
@@ -410,16 +404,16 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16.0),
                         child: Row(
                           children: [
-                            Icon(
+                            NIcon(
                               Broken.profile_2user,
                               size: 20.0,
-                              color: context.defaultIconColor(),
+                              color: NColors.defaultIcon(),
                             ),
                             const SizedBox(width: 8.0),
                             Expanded(
-                              child: Text(
+                              child: NamidaText(
                                 lang.manageYourAccounts,
-                                style: textTheme.displayMedium,
+                                style: NText.medium,
                               ),
                             ),
                           ],
@@ -460,12 +454,12 @@ class YoutubeAccountManagePage extends StatelessWidget with NamidaRouteWidget {
                                 ? const SizedBox()
                                 : Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 8.0),
-                                    child: Text(
+                                    child: NamidaText(
                                       lang.membershipYouNeedMembershipOfToAddMultipleAccounts(
                                         name1: MembershipType.pookie.name,
                                         name2: MembershipType.patootie.name,
                                       ),
-                                      style: textTheme.displaySmall,
+                                      style: NText.small,
                                       textAlign: TextAlign.center,
                                     ),
                                   ),

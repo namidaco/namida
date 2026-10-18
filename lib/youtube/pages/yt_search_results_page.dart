@@ -27,6 +27,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -260,8 +261,6 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
@@ -270,7 +269,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
     const thumbnailWidthLocal = thumbnailWidth * localMultiplier;
     const thumbnailHeightLocal = thumbnailHeight * localMultiplier;
     const thumbnailItemExtentLocal = thumbnailWidthLocal - 2 * 2.0; // - card margin
-    final horizontalListHeight = 112.0 * localMultiplier;
+    const horizontalListHeight = 112.0 * localMultiplier;
 
     final searchResult = _searchResult;
     final musicSearchResult = _musicSearchResult;
@@ -304,9 +303,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                             children: [
                               const Icon(Broken.radar_2),
                               const SizedBox(width: 8.0),
-                              Text(
+                              NamidaText(
                                 lang.offlineSearch,
-                                style: textTheme.displayLarge,
+                                style: NText.large,
                               ),
                               const Spacer(),
                               const SizedBox(width: 6.0),
@@ -346,7 +345,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                       margin: YTHistoryVideoCardBase.cardMargin(true),
                                       width: thumbnailWidthLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropWidth,
                                       height: thumbnailHeightLocal - YTHistoryVideoCardBase.minimalCardExtraThumbCropHeight,
-                                      bgColor: theme.cardColor,
+                                      bgColor: NColors.card,
                                     );
                                   },
                                 ),
@@ -355,12 +354,12 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                           );
                         }
                         if (searchResultsLocal.isEmpty) {
-                          return SliverToBoxAdapter();
+                          return const SliverToBoxAdapter();
                         }
                         final localSearchDisplayExtraCardWithRemainingCount = searchResultsLocal.length > maxLocalSeachHorizontalCount;
                         return SliverToBoxAdapter(
                           child: VideoTilePropertiesProvider(
-                            configs: VideoTilePropertiesConfigs(
+                            configs: const VideoTilePropertiesConfigs(
                               queueSource: QueueSourceYoutubeID.ytSearch,
                             ),
                             builder: (properties) => SizedBox(
@@ -380,9 +379,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                             margin: const EdgeInsets.all(12.0),
                                             padding: const EdgeInsets.all(12.0),
                                             child: Center(
-                                              child: Text(
+                                              child: NamidaText(
                                                 "+${remainingVideosCount.formatDecimalShort()}",
-                                                style: textTheme.displayMedium,
+                                                style: NText.medium,
                                               ),
                                             ),
                                           );
@@ -455,15 +454,17 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                   child: Text.rich(
                                     TextSpan(
                                       text: "${lang.didYouMean}: ",
-                                      style: textTheme.displaySmall?.copyWith(fontSize: 13.0),
+                                      style: NText.small.of(context).copyWith(fontSize: 13.0),
                                       children: searchResult.correctedQuery
                                           .map(
                                             (c) => TextSpan(
                                               text: c.text,
-                                              style: textTheme.displaySmall?.copyWith(
-                                                fontSize: 14.0,
-                                                fontWeight: c.corrected ? FontWeight.w700 : FontWeight.w500,
-                                              ),
+                                              style: NText.small
+                                                  .of(context)
+                                                  .copyWith(
+                                                    fontSize: 14.0,
+                                                    fontWeight: c.corrected ? FontWeight.w700 : FontWeight.w500,
+                                                  ),
                                             ),
                                           )
                                           .toFixedList(),
@@ -493,7 +494,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                 child: NamidaInkWell(
                                   borderRadius: 10.0,
                                   padding: const EdgeInsets.symmetric(vertical: 12.0),
-                                  bgColor: theme.cardColor,
+                                  bgColor: NColors.card,
                                   onTap: () {
                                     ScrollSearchController.inst.searchTextEditingController.text = fullText;
                                     fetchSearch(customText: fullText);
@@ -515,21 +516,21 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                             Text.rich(
                                               TextSpan(
                                                 text: typed ?? fullText,
-                                                style: textTheme.displaySmall?.copyWith(fontSize: 14.0, fontWeight: FontWeight.w700),
+                                                style: NText.small.of(context).copyWith(fontSize: 14.0, fontWeight: FontWeight.w700),
                                                 children: completion == null
                                                     ? null
                                                     : [
                                                         TextSpan(
                                                           text: completion,
-                                                          style: textTheme.displaySmall?.copyWith(fontSize: 14.0, fontWeight: FontWeight.w400),
+                                                          style: NText.small.of(context).copyWith(fontSize: 14.0, fontWeight: FontWeight.w400),
                                                         ),
                                                       ],
                                               ),
                                             ),
                                             if (subtitle != null && subtitle.isNotEmpty)
-                                              Text(
+                                              NamidaText(
                                                 subtitle,
-                                                style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w200),
+                                                style: const NText(.small, size: .s11, weight: FontWeight.w200),
                                               ),
                                           ],
                                         ),
@@ -586,7 +587,7 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                         : searchResult == null
                         ? const SliverToBoxAdapter()
                         : VideoTilePropertiesProvider(
-                            configs: VideoTilePropertiesConfigs(
+                            configs: const VideoTilePropertiesConfigs(
                               queueSource: QueueSourceYoutubeID.ytSearchHosted,
                             ),
                             builder: (properties) => ObxO(
@@ -620,9 +621,9 @@ class YoutubeSearchResultsPageState extends State<YoutubeSearchResultsPage> {
                                             if (chunk.title.isNotEmpty)
                                               Padding(
                                                 padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                                                child: Text(
+                                                child: NamidaText(
                                                   chunk.title,
-                                                  style: textTheme.displayMedium,
+                                                  style: NText.medium,
                                                 ),
                                               ),
                                             SizedBox(
@@ -1000,10 +1001,9 @@ class _YTSearchFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final color = isActive ? Colors.white.withOpacityExt(0.8) : null;
     return NamidaInkWell(
-      bgColor: isActive ? CurrentColor.inst.color : theme.cardColor,
+      bgColor: isActive ? NColors.custom((_) => CurrentColor.inst.color) : NColors.card,
       borderRadius: 8.0,
       margin: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 6.0),
       padding: const EdgeInsets.only(left: 10.0, right: 6.0),
@@ -1015,9 +1015,10 @@ class _YTSearchFilterChip extends StatelessWidget {
         children: [
           Icon(icon, size: 16.0, color: color),
           const SizedBox(width: 6.0),
-          Text(
+          NamidaText(
             title,
-            style: context.textTheme.displaySmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+            style: const NText(.small, weight: FontWeight.w600),
+            color: NColors.fixed(color),
           ),
           if (isActive && onClear != null)
             NamidaIconButton(
@@ -1025,7 +1026,7 @@ class _YTSearchFilterChip extends StatelessWidget {
               verticalPadding: 4.0,
               icon: Broken.close_circle,
               iconSize: 16.0,
-              iconColor: color,
+              iconColor: NColors.fixed(color),
               onPressed: onClear,
             )
           else

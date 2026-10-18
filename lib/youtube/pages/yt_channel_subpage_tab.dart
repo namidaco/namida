@@ -107,8 +107,6 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final tabResult = _tabResult;
     final displaySortChips = tabResult != null && tabResult.itemsSort.isNotEmpty;
 
@@ -135,7 +133,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                 ...tabResult.itemsSort.map(
                   (s) => NamidaInkWell(
                     borderRadius: 10.0,
-                    bgColor: _currentSort?.title == s.title ? theme.colorScheme.secondaryContainer : theme.cardColor.withOpacityExt(0.5),
+                    bgColor: _currentSort?.title == s.title ? NColors.secondaryContainer : const NColors(.card, opacity: 0.5),
                     margin: const EdgeInsets.symmetric(horizontal: 4.0),
                     padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                     onTap: () async {
@@ -158,9 +156,9 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                         });
                       }
                     },
-                    child: Text(
+                    child: NamidaText(
                       s.title,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                 ),
@@ -171,7 +169,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
         if (displaySortChips) const SizedBox(height: 8.0),
         Expanded(
           child: VideoTilePropertiesProvider(
-            configs: VideoTilePropertiesConfigs(
+            configs: const VideoTilePropertiesConfigs(
               queueSource: QueueSourceYoutubeID.ytChannelHosted,
             ),
             builder: (properties) => NamidaScrollbar(
@@ -203,7 +201,7 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                             ),
                           )
                         : tabResult == null
-                        ? SliverToBoxAdapter(
+                        ? const SliverToBoxAdapter(
                             // child: Center(
                             //   child: Text(
                             //     lang.error,
@@ -251,9 +249,9 @@ class _YTChannelSubpageTabState extends State<YTChannelSubpageTab> {
                                             ),
                                           if (headerThumbUrl != null) const SizedBox(width: 12.0),
                                           Expanded(
-                                            child: Text(
+                                            child: NamidaText(
                                               headerTitle,
-                                              style: textTheme.displayMedium,
+                                              style: NText.medium,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),

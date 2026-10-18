@@ -9,7 +9,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -48,40 +48,41 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
   static bool _isCached(StreamInfoItem item) => AudioCacheController.inst.isAvailableOffline(item.id) || VideoController.inst.doesVideoExistsInCache(item.id);
 
   Widget getChipButton({
-    required BuildContext context,
     required YTLocalSearchSortType sort,
     required String title,
     required IconData icon,
     required bool Function(YTLocalSearchSortType sort) enabled,
   }) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final isEnabled = enabled(sort);
-    return NamidaInkWell(
-      animationDurationMS: 100,
-      borderRadius: 8.0,
-      bgColor: theme.cardTheme.color,
-      padding: const EdgeInsets.all(8.0),
-      decoration: BoxDecoration(
-        border: isEnabled ? Border.all(color: theme.colorScheme.primary) : null,
-        borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-      ),
-      onTap: () {
-        setState(() => YTLocalSearchController.inst.sortType = sort);
-        final sc = YTLocalSearchController.inst.scrollController;
-        if (sc != null && sc.hasClients) sc.jumpTo(0);
-      },
-      child: Row(
-        children: [
-          Icon(icon, size: 18.0),
-          const SizedBox(width: 4.0),
-          Text(
-            title,
-            style: textTheme.displayMedium,
-          ),
-          const SizedBox(width: 4.0),
-          const Icon(Broken.arrow_down_2, size: 14.0),
-        ],
+    final chipContent = Row(
+      children: [
+        Icon(icon, size: 18.0),
+        const SizedBox(width: 4.0),
+        NamidaText(
+          title,
+          style: NText.medium,
+        ),
+        const SizedBox(width: 4.0),
+        const Icon(Broken.arrow_down_2, size: 14.0),
+      ],
+    );
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) => NamidaInkWell(
+        animationDurationMS: 100,
+        borderRadius: 8.0,
+        bgColor: NColors.cardTheme,
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          border: isEnabled ? Border.all(color: colors.primary) : null,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        onTap: () {
+          setState(() => YTLocalSearchController.inst.sortType = sort);
+          final sc = YTLocalSearchController.inst.scrollController;
+          if (sc != null && sc.hasClients) sc.jumpTo(0);
+        },
+        child: chipContent,
       ),
     );
   }
@@ -116,9 +117,11 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                               children: [
                                 if (YTLocalSearchController.inst.didLoadLookupLists.valueR == false)
                                   IgnorePointer(
-                                    child: ThreeArchedCircle(
-                                      color: context.defaultIconColor().withOpacityExt(0.3),
-                                      size: 36.0,
+                                    child: NBuilder(
+                                      builder: (context, colors) => ThreeArchedCircle(
+                                        color: NColors.defaultIcon(opacity: 0.3).resolve(colors),
+                                        size: 36.0,
+                                      ),
                                     ),
                                   ),
                                 const Icon(Broken.arrow_left_2),
@@ -131,7 +134,6 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   ),
                   const SizedBox(width: 8.0),
                   getChipButton(
-                    context: context,
                     sort: YTLocalSearchSortType.mostPlayed,
                     title: lang.mostPlayed,
                     icon: Broken.medal,
@@ -139,7 +141,6 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   ),
                   const SizedBox(width: 8.0),
                   getChipButton(
-                    context: context,
                     sort: YTLocalSearchSortType.latestPlayed,
                     title: lang.recentListens,
                     icon: Broken.timer,
@@ -147,7 +148,6 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
                   ),
                   const SizedBox(width: 8.0),
                   getChipButton(
-                    context: context,
                     sort: YTLocalSearchSortType.firstListen,
                     title: lang.firstListen,
                     icon: Broken.calendar_search,
@@ -161,7 +161,7 @@ class YTLocalSearchResultsState extends State<YTLocalSearchResults> {
           ),
           Expanded(
             child: VideoTilePropertiesProvider(
-              configs: VideoTilePropertiesConfigs(
+              configs: const VideoTilePropertiesConfigs(
                 queueSource: QueueSourceYoutubeID.ytSearch,
                 showMoreIcon: true,
               ),
@@ -241,30 +241,35 @@ class _CachedOnlyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return ObxO(
       rx: YTLocalSearchController.inst.cachedOnly,
-      builder: (context, enabled) => NamidaInkWell(
-        animationDurationMS: 100,
-        borderRadius: 8.0,
-        bgColor: theme.cardTheme.color,
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          border: enabled ? Border.all(color: theme.colorScheme.primary) : null,
-          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-        ),
-        onTap: YTLocalSearchController.inst.toggleCachedOnly,
-        child: Row(
+      builder: (context, enabled) {
+        final chipContent = Row(
           children: [
             Icon(enabled ? Broken.tick_circle : Broken.document_download, size: 18.0),
             const SizedBox(width: 4.0),
-            Text(
+            NamidaText(
               lang.cache,
-              style: theme.textTheme.displayMedium,
+              style: NText.medium,
             ),
           ],
-        ),
-      ),
+        );
+        return NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) => NamidaInkWell(
+            animationDurationMS: 100,
+            borderRadius: 8.0,
+            bgColor: NColors.cardTheme,
+            padding: const EdgeInsets.all(8.0),
+            decoration: BoxDecoration(
+              border: enabled ? Border.all(color: colors.primary) : null,
+              borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+            ),
+            onTap: YTLocalSearchController.inst.toggleCachedOnly,
+            child: chipContent,
+          ),
+        );
+      },
     );
   }
 }

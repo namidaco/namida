@@ -9,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/window_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -33,13 +34,11 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
   void _exit() => WindowController.instance?.exitMiniLyricsMode();
 
   static const _borderRadius = BorderRadius.all(Radius.circular(14.0));
+  static const _backgroundColor = NColors(.scaffold, opacity: 0.94);
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final isDark = context.isDarkMode;
-    final backgroundColor = theme.scaffoldBackgroundColor.withOpacityExt(0.94);
     final foregroundColor = isDark ? const Color(0xFFDDDDDD) : const Color(0xFF16161A);
 
     return MouseRegion(
@@ -48,9 +47,9 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
       child: Stack(
         children: [
           Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: backgroundColor,
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
+                color: _backgroundColor.resolve(colors),
                 borderRadius: _borderRadius,
                 border: Border.all(
                   width: 1.0,
@@ -68,7 +67,6 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
                       Positioned.fill(
                         child: _MiniLyricsText(
                           color: foregroundColor,
-                          textTheme: textTheme,
                         ),
                       ),
                       Positioned(
@@ -79,7 +77,7 @@ class _MiniLyricsWindowState extends State<MiniLyricsWindow> {
                           duration: const Duration(milliseconds: 200),
                           child: _hovering
                               ? _MiniLyricsControls(
-                                  backgroundColor: backgroundColor,
+                                  backgroundColor: _backgroundColor,
                                   color: foregroundColor,
                                   borderRadius: _borderRadius,
                                   onExit: _exit,
@@ -151,26 +149,27 @@ class _ResizeGrip extends StatelessWidget {
 
 class _MiniLyricsText extends StatelessWidget {
   final Color color;
-  final TextTheme textTheme;
 
-  const _MiniLyricsText({required this.color, required this.textTheme});
+  const _MiniLyricsText({required this.color});
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
       rx: Lyrics.inst.currentLyricsLRC,
       builder: (context, lrc) {
-        if (lrc == null) return _MiniLyricsNoSyncedText(color: color, textTheme: textTheme);
+        if (lrc == null) return _MiniLyricsNoSyncedText(color: color);
         return SimpleLyricsLineWidget(
           textAlign: TextAlign.center,
           maxLines: 3,
           softWrap: true,
           maxSecondaryLines: 2,
-          style: textTheme.displayMedium?.copyWith(
-            fontSize: 17.0,
-            fontWeight: FontWeight.w600,
-            color: color,
-          ),
+          style: NText.medium
+              .of(context)
+              .copyWith(
+                fontSize: 17.0,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
         );
       },
     );
@@ -179,9 +178,8 @@ class _MiniLyricsText extends StatelessWidget {
 
 class _MiniLyricsNoSyncedText extends StatelessWidget {
   final Color color;
-  final TextTheme textTheme;
 
-  const _MiniLyricsNoSyncedText({required this.color, required this.textTheme});
+  const _MiniLyricsNoSyncedText({required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -199,24 +197,19 @@ class _MiniLyricsNoSyncedText extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (title.isNotEmpty)
-              Text(
+              NamidaText(
                 title,
-                style: textTheme.displayMedium?.copyWith(
-                  fontSize: 15.0,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
+                style: const NText(.medium, size: .s15, weight: FontWeight.w600),
+                color: NColors.fixed(color),
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.fade,
               ),
-            Text(
+            NamidaText(
               'no synced lyrics',
-              style: textTheme.displaySmall?.copyWith(
-                fontSize: 12.0,
-                color: color.withOpacityExt(0.6),
-              ),
+              style: const NText(.small, size: .s12),
+              color: NColors.fixed(color.withOpacityExt(0.6)),
               textAlign: TextAlign.center,
               maxLines: 1,
               softWrap: false,
@@ -231,7 +224,7 @@ class _MiniLyricsNoSyncedText extends StatelessWidget {
 
 class _MiniLyricsControls extends StatelessWidget {
   final Color color;
-  final Color backgroundColor;
+  final NColors backgroundColor;
   final BorderRadiusGeometry borderRadius;
   final VoidCallback onExit;
 
@@ -245,9 +238,9 @@ class _MiniLyricsControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const iconSize = 18.0;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor.withOpacityExt(1.0),
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
+        color: backgroundColor.resolve(colors).withOpacityExt(1.0),
         borderRadius: borderRadius,
       ),
       child: Padding(
@@ -259,7 +252,7 @@ class _MiniLyricsControls extends StatelessWidget {
             NamidaIconButton(
               horizontalPadding: 6.0,
               iconSize: iconSize,
-              iconColor: color,
+              iconColor: NColors.fixed(color),
               icon: Broken.previous,
               tooltip: () => lang.previous,
               onPressed: () => Player.inst.previous().ignoreError(),
@@ -269,7 +262,7 @@ class _MiniLyricsControls extends StatelessWidget {
               builder: (context, playWhenReady) => NamidaIconButton(
                 horizontalPadding: 6.0,
                 iconSize: iconSize,
-                iconColor: color,
+                iconColor: NColors.fixed(color),
                 icon: playWhenReady ? Broken.pause : Broken.play,
                 tooltip: () => playWhenReady ? lang.pause : lang.play,
                 onPressed: () => Player.inst.togglePlayPause().ignoreError(),
@@ -278,7 +271,7 @@ class _MiniLyricsControls extends StatelessWidget {
             NamidaIconButton(
               horizontalPadding: 6.0,
               iconSize: iconSize,
-              iconColor: color,
+              iconColor: NColors.fixed(color),
               icon: Broken.next,
               tooltip: () => lang.next,
               onPressed: () => Player.inst.next().ignoreError(),
@@ -287,7 +280,7 @@ class _MiniLyricsControls extends StatelessWidget {
             NamidaIconButton(
               horizontalPadding: 8.0,
               iconSize: iconSize,
-              iconColor: color,
+              iconColor: NColors.fixed(color),
               icon: Broken.maximize_3,
               tooltip: () => lang.miniLyricsWindow,
               onPressed: onExit,

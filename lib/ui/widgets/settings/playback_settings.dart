@@ -21,6 +21,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
@@ -579,7 +580,7 @@ class _VideoQualityTile extends StatelessWidget {
     settings.youtubeVideoQualities.update((list) => list.sortByReverse((e) => kStockVideoQualities.indexOf(e)));
   }
 
-  void _showDialog(TextTheme textTheme) {
+  void _showDialog(TextStyle textStyle) {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.videoQuality,
@@ -591,7 +592,7 @@ class _VideoQualityTile extends StatelessWidget {
           DoneButton(),
         ],
         child: DefaultTextStyle(
-          style: textTheme.displaySmall!,
+          style: textStyle,
           child: Column(
             children: [
               Text(lang.videoQualitySubtitle),
@@ -632,7 +633,7 @@ class _VideoQualityTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
+    final textStyle = NText.small.of(context);
     return Obx(
       (context) => CustomListTile(
         bgColor: bgColor,
@@ -640,7 +641,7 @@ class _VideoQualityTile extends StatelessWidget {
         title: lang.videoQuality,
         icon: Broken.story,
         trailingText: settings.youtubeVideoQualities.valueR.first,
-        onTap: () => _showDialog(textTheme),
+        onTap: () => _showDialog(textStyle),
       ),
     );
   }
@@ -678,9 +679,10 @@ class _LocalVideoMatchingTile extends StatelessWidget {
                 title: lang.matchingType,
                 trailing: NamidaPopupWrapper(
                   childrenDefault: _getMatchingTypeItems,
-                  child: Text(
+                  child: NamidaText(
                     settings.localVideoMatchingType.valueR.toText(),
-                    style: CustomListTile.getTrailingTextStyle(context.theme),
+                    style: NText.medium,
+                    color: const NColors(.onSurface, opacity: 0.78),
                     maxLines: 1,
                   ),
                 ),
@@ -722,9 +724,10 @@ class _LocalVideoMatchingTile extends StatelessWidget {
             children: [
               const LocalVideosRescanButton(),
               const SizedBox(width: 8.0),
-              Text(
+              NamidaText(
                 settings.localVideoMatchingType.valueR.toText(),
-                style: CustomListTile.getTrailingTextStyle(context.theme),
+                style: NText.medium,
+                color: const NColors(.onSurface, opacity: 0.78),
                 maxLines: 1,
               ),
             ],
@@ -850,9 +853,9 @@ class _ReplayGainTile extends StatelessWidget {
         ),
         child: ObxO(
           rx: settings.player.replayGainType,
-          builder: (context, replayGainType) => Text(
+          builder: (context, replayGainType) => NamidaText(
             "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
-            style: context.textTheme.displayMedium,
+            style: NText.medium,
             textAlign: TextAlign.center,
           ),
         ),
@@ -1060,9 +1063,9 @@ class _InterruptionActionTile extends StatelessWidget {
         child: Obx(
           (context) {
             final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
-            return Text(
+            return NamidaText(
               actionInSetting.toText(),
-              style: context.textTheme.displayMedium,
+              style: NText.medium,
             );
           },
         ),
@@ -1139,7 +1142,7 @@ class _CountListenAfterTile extends StatelessWidget {
 
   const _CountListenAfterTile({required this.bgColor});
 
-  void _showDialog(TextTheme textTheme) {
+  void _showDialog() {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         title: lang.choose,
@@ -1148,9 +1151,9 @@ class _CountListenAfterTile extends StatelessWidget {
         ],
         child: Column(
           children: [
-            Text(
+            NamidaText(
               lang.minValueToCountTrackListen,
-              style: textTheme.displayLarge,
+              style: NText.large,
             ),
             const SizedBox(
               height: 32.0,
@@ -1168,9 +1171,9 @@ class _CountListenAfterTile extends StatelessWidget {
                     topText: lang.seconds.capitalizeFirst(),
                     textPadding: 8.0,
                   ),
-                  Text(
+                  NamidaText(
                     lang.or,
-                    style: textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                   NamidaWheelSlider(
                     min: 20,
@@ -1192,13 +1195,12 @@ class _CountListenAfterTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return Obx(
       (context) => CustomListTile(
         bgColor: bgColor,
         icon: Broken.timer,
         title: lang.minValueToCountTrackListen,
-        onTap: () => _showDialog(textTheme),
+        onTap: _showDialog,
         trailingText: "${settings.isTrackPlayedSecondsCount.valueR}s | ${settings.isTrackPlayedPercentageCount.valueR}%",
       ),
     );
@@ -1429,20 +1431,18 @@ class _NotificationButtonsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final iconColor = theme.iconTheme.color;
-    final lockedIconColor = iconColor?.withOpacityExt(_NotificationButtonsEditorState._kLockedOpacity);
+    const lockedIconColor = NColors(.icon, opacity: _NotificationButtonsEditorState._kLockedOpacity);
     final icons = buttons
         .map(
-          (button) => Icon(
+          (button) => NIcon(
             button.toIcon(),
             size: 20.0,
-            color: isLocked(button) ? lockedIconColor : iconColor,
+            color: isLocked(button) ? lockedIconColor : NColors.icon,
           ),
         )
         .toFixedList();
     return NamidaInkWell(
-      bgColor: theme.cardColor,
+      bgColor: NColors.card,
       borderRadius: 12.0,
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
       child: Row(
@@ -1488,7 +1488,6 @@ class _NotificationPlaylistsDialogState extends State<_NotificationPlaylistsDial
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final localCount = _localNames.length;
     return CustomBlurryDialog(
       title: lang.addToPlaylist,
@@ -1512,9 +1511,9 @@ class _NotificationPlaylistsDialogState extends State<_NotificationPlaylistsDial
               final source = index == 0 ? lang.local : lang.youtube;
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 8.0),
-                child: Text(
+                child: NamidaText(
                   "${lang.playlists} ($source)",
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 ),
               );
             }
@@ -1576,9 +1575,10 @@ class _CrossfadeModeTile extends StatelessWidget {
           title: lang.style,
           trailing: NamidaPopupWrapper(
             childrenDefault: _getModeItems,
-            child: Text(
+            child: NamidaText(
               mode.toText(),
-              style: CustomListTile.getTrailingTextStyle(context.theme),
+              style: NText.medium,
+              color: const NColors(.onSurface, opacity: 0.78),
               maxLines: 1,
             ),
           ),

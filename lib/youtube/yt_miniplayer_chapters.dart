@@ -181,7 +181,6 @@ class _ChaptersHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final count = tracker.segments.length;
     return Padding(
       padding: const EdgeInsets.only(left: 12.0, right: 8.0),
@@ -196,11 +195,11 @@ class _ChaptersHeader extends StatelessWidget {
                   children: [
                     TextSpan(
                       text: currentIndex < 0 ? '  •  $count' : '  •  ${currentIndex + 1}/$count',
-                      style: textTheme.displaySmall,
+                      style: NText.small.of(context),
                     ),
                   ],
                 ),
-                style: textTheme.displayMedium?.copyWith(fontSize: 13.0),
+                style: NText.medium.of(context).copyWith(fontSize: 13.0),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -261,24 +260,24 @@ class _ChapterTile extends StatelessWidget {
         rx: tracker.currentIndex,
         selector: (currentIndex) => ChapterStatus.of(index, currentIndex),
         builder: (context, status) {
-          final theme = context.theme;
-          final textTheme = theme.textTheme;
           final segment = tracker.segments[index];
           final url = segment.thumbnail?.url;
           final rangeMS = tracker.rangeMSOf(index, videoDurationMS);
           final isCurrent = status == ChapterStatus.current;
           final isPlayed = status == ChapterStatus.played;
-          final titleStyle = textTheme.displaySmall?.copyWith(
-            fontSize: _kTitleFontSize,
-            fontWeight: FontWeight.w500,
-            color: isPlayed ? textTheme.displaySmall?.color?.withOpacityExt(0.5) : null,
-          );
+          final titleStyle = NText.small
+              .of(context)
+              .copyWith(
+                fontSize: _kTitleFontSize,
+                fontWeight: FontWeight.w500,
+                color: isPlayed ? NText.small.of(context).color?.withOpacityExt(0.5) : null,
+              );
 
           return NamidaInkWell(
             animationDurationMS: 200,
             borderRadius: 6.0,
             margin: const EdgeInsets.symmetric(horizontal: _kMargin),
-            bgColor: isCurrent ? theme.colorScheme.secondaryContainer : theme.cardColor.withOpacityExt(0.4),
+            bgColor: isCurrent ? NColors.secondaryContainer : const NColors(.card, opacity: 0.4),
             onTap: () => tracker.seekTo(index),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,7 +386,6 @@ class _ChaptersSheetState extends State<_ChaptersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     _itemExtent = _ChapterSheetRow.extentFor(MediaQuery.textScalerOf(context));
 
     return Column(
@@ -401,11 +399,11 @@ class _ChaptersSheetState extends State<_ChaptersSheet> {
               children: [
                 TextSpan(
                   text: '  •  ${widget.segments.length}',
-                  style: textTheme.displayMedium,
+                  style: NText.medium.of(context),
                 ),
               ],
             ),
-            style: textTheme.displayLarge,
+            style: NText.large.of(context),
           ),
         ),
         Expanded(
@@ -486,8 +484,6 @@ class _ChapterSheetRow extends StatelessWidget {
         rx: tracker.currentIndex,
         selector: (currentIndex) => ChapterStatus.of(index, currentIndex),
         builder: (context, status) {
-          final theme = context.theme;
-          final textTheme = theme.textTheme;
           final segment = tracker.segments[index];
           final url = segment.thumbnail?.url;
           final rangeMS = tracker.rangeMSOf(index, videoDurationMS);
@@ -500,7 +496,7 @@ class _ChapterSheetRow extends StatelessWidget {
             borderRadius: 10.0,
             margin: _kMargin,
             padding: const EdgeInsets.all(_kPadding),
-            bgColor: isCurrent ? theme.colorScheme.secondaryContainer : null,
+            bgColor: isCurrent ? NColors.secondaryContainer : null,
             onTap: () => tracker.seekTo(index),
             child: Row(
               children: [
@@ -527,10 +523,12 @@ class _ChapterSheetRow extends StatelessWidget {
                     children: [
                       Text(
                         segment.title,
-                        style: textTheme.displayMedium?.copyWith(
-                          fontSize: _kTitleFontSize,
-                          color: isPlayed ? textTheme.displayMedium?.color?.withOpacityExt(0.5) : null,
-                        ),
+                        style: NText.medium
+                            .of(context)
+                            .copyWith(
+                              fontSize: _kTitleFontSize,
+                              color: isPlayed ? NText.medium.of(context).color?.withOpacityExt(0.5) : null,
+                            ),
                         strutStyle: _kTitleStrut,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -538,7 +536,7 @@ class _ChapterSheetRow extends StatelessWidget {
                       const SizedBox(height: _kSubtitleGap),
                       Text(
                         startLabel == null ? '${index + 1}' : '${index + 1}  •  $startLabel',
-                        style: textTheme.displaySmall?.copyWith(fontSize: _kSubtitleFontSize),
+                        style: NText.small.of(context).copyWith(fontSize: _kSubtitleFontSize),
                         strutStyle: _kSubtitleStrut,
                         maxLines: 1,
                       ),
@@ -576,9 +574,9 @@ class _PlayedScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
-      child: ColoredBox(
-        color: context.theme.scaffoldBackgroundColor.withAlpha(110),
+    return const Positioned.fill(
+      child: NColoredBox(
+        color: NColors(.scaffold, opacity: 0.43),
       ),
     );
   }

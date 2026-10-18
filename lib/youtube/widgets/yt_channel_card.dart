@@ -5,6 +5,7 @@ import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/class/route.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/yt_channel_subpage.dart';
@@ -39,8 +40,6 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final channel = widget.channel;
     final thumbnailSize = widget.thumbnailSize;
     // const verticalPadding = 8.0;
@@ -76,15 +75,15 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     );
     final titleTextWidget = Text(
       channel?.title ?? '',
-      style: mininmalCard ? textTheme.displayMedium : textTheme.displayLarge,
+      style: mininmalCard ? NText.medium.of(context) : NText.large.of(context),
       maxLines: mininmalCard ? 1 : 2,
       overflow: TextOverflow.ellipsis,
     );
     final subtitleTextWidget = subscribersCount == null
         ? null
-        : Text(
+        : NamidaText(
             subscribersCount.displaySubscribersKeywordShort,
-            style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+            style: const NText(.small, weight: FontWeight.w400),
             maxLines: mininmalCard ? 1 : 2,
             overflow: TextOverflow.ellipsis,
           );
@@ -92,7 +91,7 @@ class _YoutubeChannelCardState extends State<YoutubeChannelCard> {
     final dummyMaxWidthSubtitle = dummyMaxWidth * 0.95;
     return NamidaInkWell(
       margin: mininmalCard ? const EdgeInsets.symmetric(horizontal: 4.0) : EdgeInsets.symmetric(horizontal: 24.0, vertical: widget.vMargin),
-      bgColor: bgColor?.withOpacityExt(0.12) ?? theme.cardColor,
+      bgColor: NColors.fixed(bgColor?.withOpacityExt(0.12)) ?? NColors.card,
       animationDurationMS: 300,
       borderRadius: mininmalCard ? 16.0 : 20.0,
       onTap: () {

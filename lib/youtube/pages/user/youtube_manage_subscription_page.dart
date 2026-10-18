@@ -115,14 +115,13 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     _isSigningInPatreon.value = true;
     _patreonResultUrlController.clear();
 
-    final textTheme = context.textTheme;
     final header = Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        NamidaText(
           lang.membershipSignInToPatreonAccount,
-          style: textTheme.displayMedium,
+          style: NText.medium,
         ),
       ],
     );
@@ -261,7 +260,6 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   static Color _warningColor(BuildContext context) => Colors.orange.withOpacityExt(context.isDarkMode ? 0.4 : 0.5);
 
   Widget _buildHero(BuildContext context, MembershipType? membershipType) {
-    final textTheme = context.textTheme;
     final hasMembership = _hasMembership(membershipType);
     return Column(
       children: [
@@ -293,10 +291,12 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                           return Text(
                             text,
                             style: warn
-                                ? textTheme.displaySmall?.copyWith(
-                                    color: Color.alphaBlend(_warningColor(context), textTheme.displaySmall?.color ?? Colors.transparent),
-                                  )
-                                : textTheme.displaySmall,
+                                ? NText.small
+                                      .of(context)
+                                      .copyWith(
+                                        color: Color.alphaBlend(_warningColor(context), NText.small.of(context).color ?? Colors.transparent),
+                                      )
+                                : NText.small.of(context),
                             textAlign: TextAlign.center,
                           );
                         },
@@ -304,9 +304,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     ),
                   ),
                 )
-              : Text(
+              : NamidaText(
                   lang.signingInAllowsBasicUsageSubtitle,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                   textAlign: TextAlign.center,
                 ),
         ),
@@ -317,7 +317,6 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Widget _buildOrDivider(BuildContext context) {
-    final textTheme = context.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
       child: Row(
@@ -325,9 +324,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
           const Expanded(child: NamidaContainerDivider()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text(
+            child: NamidaText(
               lang.or.toUpperCase(),
-              style: textTheme.displaySmall,
+              style: NText.small,
             ),
           ),
           const Expanded(child: NamidaContainerDivider()),
@@ -337,7 +336,6 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Widget _buildPatreonWaiting(BuildContext context) {
-    final textTheme = context.textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -347,9 +345,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
             const LoadingIndicator(),
             const SizedBox(width: 12.0),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 lang.membershipSignInToPatreonAccount,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
             ),
             const SizedBox(width: 8.0),
@@ -404,7 +402,6 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Widget _buildPatreonCard(BuildContext context, MembershipType? membershipType) {
-    final textTheme = context.textTheme;
     return ObxO(
       rx: YoutubeAccountController.membership.userPatreonTier,
       builder: (context, userPatreonTier) => ObxO(
@@ -437,14 +434,14 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        NamidaText(
                           username ?? '?',
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                         ),
                         if (sinceText != null)
-                          Text(
+                          NamidaText(
                             sinceText,
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                       ],
                     ),
@@ -616,7 +613,6 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return BackgroundWrapper(
       child: ObxO(
         rx: YoutubeAccountController.membership.userMembershipTypeGlobal,
@@ -627,10 +623,10 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: _kMaxWidth),
-                child: Container(
+                child: NContainer(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor.withOpacityExt(0.2),
+                  decoration: (colors) => BoxDecoration(
+                    color: colors.card.withOpacityExt(0.2),
                     borderRadius: BorderRadius.circular(22.0.multipliedRadius),
                   ),
                   child: Column(
@@ -681,63 +677,64 @@ class _SourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final containerColor = theme.colorScheme.secondaryContainer;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutQuart,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      decoration: BoxDecoration(
-        color: containerColor.withOpacityExt(isEffective ? 0.25 : 0.15),
-        borderRadius: BorderRadius.circular(18.0.multipliedRadius),
-        border: Border.all(color: isEffective ? containerColor : Colors.transparent),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 24.0,
-                color: context.defaultIconColor(),
-              ),
-              const SizedBox(width: 12.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: textTheme.displayMedium,
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            NIcon(
+              icon,
+              size: 24.0,
+              color: NColors.defaultIcon(),
+            ),
+            const SizedBox(width: 12.0),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      NamidaText(
+                        title,
+                        style: NText.medium,
+                      ),
+                      if (isEffective) ...[
+                        const SizedBox(width: 6.0),
+                        const NamidaCheckMark(
+                          size: 11.0,
+                          active: true,
                         ),
-                        if (isEffective) ...[
-                          const SizedBox(width: 6.0),
-                          const NamidaCheckMark(
-                            size: 11.0,
-                            active: true,
-                          ),
-                        ],
                       ],
-                    ),
-                    Text(
-                      status,
-                      style: statusColor == null
-                          ? textTheme.displaySmall
-                          : textTheme.displaySmall?.copyWith(color: Color.alphaBlend(statusColor!, textTheme.displaySmall?.color ?? Colors.transparent)),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                  Text(
+                    status,
+                    style: statusColor == null
+                        ? NText.small.of(context)
+                        : NText.small.of(context).copyWith(color: Color.alphaBlend(statusColor!, NText.small.of(context).color ?? Colors.transparent)),
+                  ),
+                ],
               ),
-              ?trailing,
-            ],
-          ),
-          ...children,
-        ],
+            ),
+            ?trailing,
+          ],
+        ),
+        ...children,
+      ],
+    );
+    return NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) => AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutQuart,
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
+        decoration: BoxDecoration(
+          color: colors.secondaryContainer.withOpacityExt(isEffective ? 0.25 : 0.15),
+          borderRadius: BorderRadius.circular(18.0.multipliedRadius),
+          border: Border.all(color: isEffective ? colors.secondaryContainer : Colors.transparent),
+        ),
+        child: content,
       ),
     );
   }
@@ -780,79 +777,83 @@ class _BenefitsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final currentIndex = membershipType?.index ?? -1;
-    final iconColor = context.defaultIconColor();
-    final dimmedColor = iconColor.withOpacityExt(0.4);
-    return NamidaCoolBox(
-      colorScheme: theme.colorScheme.secondary,
-      reducedColors: true,
-      hPadding: 12.0,
-      vPadding: 8.0,
-      builder: (context) => Column(
-        children: [
-          Row(
-            children: [
-              const SizedBox(width: 2.0),
-              Expanded(
-                child: Text(
-                  lang.features,
-                  style: textTheme.displayMedium,
-                ),
+    final iconColor = NColors.defaultIcon();
+    final dimmedColor = NColors.defaultIcon(opacity: 0.4);
+    final featuresColumn = Column(
+      children: [
+        Row(
+          children: [
+            const SizedBox(width: 2.0),
+            Expanded(
+              child: NamidaText(
+                lang.features,
+                style: NText.medium,
               ),
-              NamidaInkWellButton(
-                bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
+            ),
+            NBuilder(
+              selfAnimated: true,
+              builder: (context, colors) => NamidaInkWellButton(
+                bgColor: colors.secondaryContainer.withOpacityExt(0.25),
                 sizeMultiplier: 0.8,
                 icon: Broken.export_1,
                 text: lang.learnMore,
                 onTap: () => NamidaLinkUtils.openLink(AppSocial.PATREON_BENEFITS_POST),
               ),
-            ],
-          ),
-          const SizedBox(height: 4.0),
-          ..._benefits.map(
-            (benefit) {
-              final unlocked = benefit.isFree || currentIndex >= benefit.minTier.index;
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  children: [
-                    Icon(
-                      benefit.icon,
-                      size: 18.0,
-                      color: unlocked ? iconColor : dimmedColor,
+            ),
+          ],
+        ),
+        const SizedBox(height: 4.0),
+        ..._benefits.map(
+          (benefit) {
+            final unlocked = benefit.isFree || currentIndex >= benefit.minTier.index;
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: Row(
+                children: [
+                  NIcon(
+                    benefit.icon,
+                    size: 18.0,
+                    color: unlocked ? iconColor : dimmedColor,
+                  ),
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    child: NamidaText(
+                      benefit.text,
+                      style: NText.small,
                     ),
-                    const SizedBox(width: 10.0),
-                    Expanded(
-                      child: Text(
-                        benefit.text,
-                        style: textTheme.displaySmall,
-                      ),
+                  ),
+                  const SizedBox(width: 8.0),
+                  NContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.secondaryContainer.withOpacityExt(unlocked ? 0.6 : 0.2),
+                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                     ),
-                    const SizedBox(width: 8.0),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer.withOpacityExt(unlocked ? 0.6 : 0.2),
-                        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                      ),
-                      child: Text(
-                        _tierLabel(benefit),
-                        style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
-                      ),
+                    child: NamidaText(
+                      _tierLabel(benefit),
+                      style: const NText(.small, size: .s10),
                     ),
-                    const SizedBox(width: 6.0),
-                    NamidaCheckMark(
-                      size: 11.0,
-                      active: unlocked,
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
+                  ),
+                  const SizedBox(width: 6.0),
+                  NamidaCheckMark(
+                    size: 11.0,
+                    active: unlocked,
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+    return NBuilder(
+      builder: (context, colors) => NamidaCoolBox(
+        colorScheme: colors.secondary,
+        reducedColors: true,
+        hPadding: 12.0,
+        vPadding: 8.0,
+        builder: (_) => featuresColumn,
       ),
     );
   }

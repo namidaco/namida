@@ -9,6 +9,7 @@ import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -68,7 +69,6 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const waveform = WaveformMiniplayer(
       fixPadding: true,
       enableHero: false,
@@ -102,9 +102,9 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                           child: ObxO(
                             rx: Player.inst.nowPlayingPosition,
-                            builder: (context, currentMS) => Text(
+                            builder: (context, currentMS) => NamidaText(
                               currentMS.milliSecondsLabel,
-                              style: textTheme.displaySmall,
+                              style: NText.small,
                             ),
                           ),
                         ),
@@ -152,9 +152,9 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                                           }
                                           return ObxO(
                                             rx: Player.inst.nowPlayingPosition,
-                                            builder: (context, toSubtract) => Text(
+                                            builder: (context, toSubtract) => NamidaText(
                                               "- ${(finalDurMS - toSubtract).milliSecondsLabel}",
-                                              style: textTheme.displaySmall,
+                                              style: NText.small,
                                             ),
                                           );
                                         },
@@ -167,15 +167,15 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                                       if (milliseconds == null || milliseconds == 0) {
                                         return ObxO(
                                           rx: Player.inst.currentItem,
-                                          builder: (context, currentItem) => Text(
+                                          builder: (context, currentItem) => NamidaText(
                                             (currentItem is Selectable ? currentItem.track.durationMS : 0).milliSecondsLabel,
-                                            style: textTheme.displaySmall,
+                                            style: NText.small,
                                           ),
                                         );
                                       }
-                                      return Text(
+                                      return NamidaText(
                                         milliseconds.milliSecondsLabel,
-                                        style: textTheme.displaySmall,
+                                        style: NText.small,
                                       );
                                     },
                                   ),
@@ -222,20 +222,20 @@ class _PlayPauseButton extends StatelessWidget {
             child: AnimatedDecoration(
               duration: const Duration(milliseconds: 400),
               decoration: BoxDecoration(
-                color: isButtonHighlighed ? Color.alphaBlend(miniplayerColor.withAlpha(233), Colors.white) : miniplayerColor,
+                color: isButtonHighlighed ? Color.alphaBlend(miniplayerColor.withOpacityExt(0.91), Colors.white) : miniplayerColor,
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
                     miniplayerColor,
-                    Color.alphaBlend(miniplayerColor.withAlpha(200), Colors.grey),
+                    Color.alphaBlend(miniplayerColor.withOpacityExt(0.78), Colors.grey),
                   ],
                   stops: const [0, 0.7],
                 ),
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: miniplayerColor.withAlpha(160),
+                    color: miniplayerColor.withOpacityExt(0.63),
                     blurRadius: 8.0,
                     spreadRadius: isButtonHighlighed ? 3.0 : 1.0,
                     offset: const Offset(0.0, 2.0),
@@ -255,7 +255,7 @@ class _PlayPauseButton extends StatelessWidget {
                           playWhenReady ? Broken.pause : Broken.play,
                           size: iconSize,
                           key: Key(playWhenReady ? 'pauseicon' : 'playicon'),
-                          color: Colors.white.withAlpha(180),
+                          color: Colors.white.withOpacityExt(0.71),
                         ),
                       ),
                     ),
@@ -264,7 +264,7 @@ class _PlayPauseButton extends StatelessWidget {
                     child: Obx(
                       (context) => Player.inst.shouldShowLoadingIndicatorR
                           ? ThreeArchedCircle(
-                              color: Colors.white.withAlpha(120),
+                              color: Colors.white.withOpacityExt(0.47),
                               size: iconSize * 1.4,
                             )
                           : const SizedBox(),

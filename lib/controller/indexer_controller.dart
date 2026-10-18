@@ -2416,7 +2416,7 @@ class _IndexerIsolateExecuter {
 
     final tracksDBManager = await DBWrapper.openFromInfoSyncTry(
       fileInfo: tracksDbInfo,
-      config: DBConfig(
+      config: const DBConfig(
         createIfNotExist: true,
         autoDisposeTimerDuration: null, // we close manually
       ),

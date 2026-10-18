@@ -33,6 +33,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -138,7 +139,7 @@ Future<void> showGeneralPopupDialog(
   void onColorsObtained(Color color) {
     if (colorDelightened.value == color) return;
     colorDelightened.value = color;
-    iconColor.value = Color.alphaBlend(color.withAlpha(120), namida.textTheme.displayMedium!.color!);
+    iconColor.value = Color.alphaBlend(color.withOpacityExt(0.47), namida.textTheme.displayMedium!.color!);
   }
 
   onColorsObtained(CurrentColor.inst.color);
@@ -207,9 +208,9 @@ Future<void> showGeneralPopupDialog(
                   ),
               if (subtitle != '') ...[
                 const SizedBox(height: 2.0),
-                Text(
+                NamidaText(
                   subtitle,
-                  style: namida.textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                  style: const NText(.small, size: .s12),
                   maxLines: 1,
                 ),
               ],
@@ -281,9 +282,9 @@ Future<void> showGeneralPopupDialog(
               labelText: lang.setMoods,
             ),
             const SizedBox(height: 8.0),
-            Text(
+            NamidaText(
               lang.setMoodsSubtitle,
-              style: theme.textTheme.displaySmall,
+              style: NText.small,
             ),
           ],
         ),
@@ -470,9 +471,9 @@ Future<void> showGeneralPopupDialog(
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        NamidaText(
           lang.highMatches,
-          style: namida.textTheme.displayMedium,
+          style: NText.medium,
         ),
         const SizedBox(height: 8.0),
         ...highMatchesFiles.map(
@@ -826,7 +827,7 @@ Future<void> showGeneralPopupDialog(
       rx: colorDelightened,
       builder: (context, colorDelightened) {
         final theme = AppThemes.inst.getAppTheme(colorDelightened, null, false);
-        final iconColor = Color.alphaBlend(colorDelightened.withAlpha(120), theme.textTheme.displayMedium!.color!);
+        final iconColor = Color.alphaBlend(colorDelightened.withOpacityExt(0.47), NText.medium.of(context).color!);
         double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, 34.0);
 
         final openInYtViewWidget = availableYoutubeIDs.isNotEmpty
@@ -891,14 +892,12 @@ Future<void> showGeneralPopupDialog(
               )
             : null;
 
-        return AnimatedThemeOrTheme(
+        return NTheme(
           data: theme,
-          child: Dialog(
-            backgroundColor: theme.dialogTheme.backgroundColor,
+          child: _ThemedDialog(
             insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: 24.0),
-            clipBehavior: Clip.antiAlias,
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: kDialogMaxWidth),
+              constraints: const BoxConstraints(maxWidth: kDialogMaxWidth),
               child: SmoothSingleChildScrollView(
                 child: Column(
                   children: [
@@ -957,33 +956,39 @@ Future<void> showGeneralPopupDialog(
                                       title,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: titleMaxLines,
-                                      style: theme.textTheme.displayLarge?.copyWith(
-                                        fontSize: 17.0,
-                                        height: 1.2,
-                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
-                                      ),
+                                      style: NText.large
+                                          .of(context)
+                                          .copyWith(
+                                            fontSize: 17.0,
+                                            height: 1.2,
+                                            color: Color.alphaBlend(colorDelightened.withOpacityExt(0.16), NText.medium.of(context).color!),
+                                          ),
                                     ),
                                   if (subtitle.isNotEmpty)
                                     Text(
                                       subtitle,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
-                                      style: theme.textTheme.displayMedium?.copyWith(
-                                        fontSize: 14.0,
-                                        height: 1.1,
-                                        color: Color.alphaBlend(colorDelightened.withAlpha(80), theme.textTheme.displayMedium!.color!),
-                                      ),
+                                      style: NText.medium
+                                          .of(context)
+                                          .copyWith(
+                                            fontSize: 14.0,
+                                            height: 1.1,
+                                            color: Color.alphaBlend(colorDelightened.withOpacityExt(0.31), NText.medium.of(context).color!),
+                                          ),
                                     ),
                                   if (thirdLineText.isNotEmpty) ...[
                                     Text(
                                       thirdLineText,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
-                                      style: theme.textTheme.displaySmall?.copyWith(
-                                        fontSize: 12.5,
-                                        height: 1.0,
-                                        color: Color.alphaBlend(colorDelightened.withAlpha(40), theme.textTheme.displayMedium!.color!),
-                                      ),
+                                      style: NText.small
+                                          .of(context)
+                                          .copyWith(
+                                            fontSize: 12.5,
+                                            height: 1.0,
+                                            color: Color.alphaBlend(colorDelightened.withOpacityExt(0.16), NText.medium.of(context).color!),
+                                          ),
                                     ),
                                   ],
                                 ],
@@ -1024,11 +1029,7 @@ Future<void> showGeneralPopupDialog(
                         ),
                       ),
                     ),
-                    Divider(
-                      color: theme.dividerColor,
-                      thickness: 0.5,
-                      height: 0,
-                    ),
+                    const _ThemedDivider(),
 
                     /// if the track doesnt exist
                     errorPlayingTrack != null || tracksExisting.isEmpty
@@ -1045,11 +1046,11 @@ Future<void> showGeneralPopupDialog(
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
-                                    child: Text(
+                                    child: NamidaText(
                                       tracksExisting.isEmpty
                                           ? "${lang.trackNotFound}.\n${lang.promptToChangeTrackPath}"
                                           : "${lang.errorPlayingTrack}.\n${errorPlayingTrack.toString()}",
-                                      style: theme.textTheme.displayMedium,
+                                      style: NText.medium,
                                     ),
                                   ),
                                 ),
@@ -1106,7 +1107,7 @@ Future<void> showGeneralPopupDialog(
                                           ? null
                                           : NamidaIconButton(
                                               icon: Broken.close_circle,
-                                              iconColor: namida.context?.defaultIconColor(colorDelightened, theme.textTheme.displayMedium?.color),
+                                              iconColor: NColors.fixed(Color.alphaBlend(colorDelightened.withOpacityExt(0.47), NText.medium.of(context).color!)),
                                               onPressed: cancelSkipTimer,
                                             ),
                                       onTap: () {
@@ -1202,7 +1203,6 @@ Future<void> showGeneralPopupDialog(
                                         ...availableAlbums.map(
                                           (e) => _SmallUnderlinedChip(
                                             text: e.displayAlbumName,
-                                            textTheme: theme.textTheme,
                                             onTap: () => NamidaOnTaps.inst.onAlbumTap(e),
                                             onLongPress: () => Player.inst.addToQueue(e.getAlbumTracks(), insertNext: true, insertionType: QueueInsertionType.moreAlbum),
                                           ),
@@ -1282,7 +1282,6 @@ Future<void> showGeneralPopupDialog(
                                         ...availableArtists.map(
                                           (e) => _SmallUnderlinedChip(
                                             text: e,
-                                            textTheme: theme.textTheme,
                                             onTap: () => NamidaOnTaps.inst.onArtistTap(e, MediaType.artist),
                                             onLongPress: () => Player.inst.addToQueue(e.getArtistTracks(), insertNext: true, insertionType: QueueInsertionType.moreArtist),
                                           ),
@@ -1357,7 +1356,7 @@ Future<void> showGeneralPopupDialog(
                                             secondaryIcon: Broken.arrow_swap,
                                             iconSize: 20.0,
                                             secondaryIconSize: 10.0,
-                                            baseIconColor: iconColor,
+                                            baseIconColor: NColors.fixed(iconColor),
                                           ),
                                           iconSize: 20.0,
                                           onPressed: () {
@@ -1454,8 +1453,8 @@ Future<void> showGeneralPopupDialog(
                                                     secondaryIcon: Broken.tick_circle,
                                                     iconSize: 20.0,
                                                     secondaryIconSize: 10.0,
-                                                    baseIconColor: iconColor,
-                                                    secondaryIconColor: iconColor,
+                                                    baseIconColor: NColors.fixed(iconColor),
+                                                    secondaryIconColor: NColors.fixed(iconColor),
                                                   )
                                                 : Icon(
                                                     Broken.document,
@@ -1518,7 +1517,7 @@ Future<void> showGeneralPopupDialog(
                                     },
                                     trailing: NumberOfRepeatsWidgetProvider(
                                       numberOfRepeatsRx: numberOfRepeats,
-                                      iconColor: iconColor,
+                                      iconColor: NColors.fixed(iconColor),
                                       iconSize: 20.0,
                                     ),
                                   ),
@@ -1601,8 +1600,8 @@ Future<void> showGeneralPopupDialog(
                                           iconWidget: StackedIcon(
                                             baseIcon: Broken.edit_2,
                                             secondaryIcon: Broken.video_square,
-                                            baseIconColor: iconColor,
-                                            secondaryIconColor: iconColor,
+                                            baseIconColor: NColors.fixed(iconColor),
+                                            secondaryIconColor: NColors.fixed(iconColor),
                                           ),
                                         ),
                                       ),
@@ -1625,11 +1624,7 @@ Future<void> showGeneralPopupDialog(
 
                               const SizedBox(height: 4.0),
 
-                              Divider(
-                                color: theme.dividerColor,
-                                thickness: 0.5,
-                                height: 0,
-                              ),
+                              const _ThemedDivider(),
 
                               /// bottom 2 tiles
                               Row(
@@ -1647,10 +1642,10 @@ Future<void> showGeneralPopupDialog(
                                       onLongPress: moveToNextInQueue,
                                     ),
                                   ),
-                                  Container(
+                                  const NContainer(
                                     width: 0.5,
                                     height: 30,
-                                    color: theme.dividerColor,
+                                    color: NColors.divider,
                                   ),
                                   Expanded(
                                     child: SmallListTile(
@@ -1684,13 +1679,11 @@ class _SmallUnderlinedChip extends StatelessWidget {
   final String text;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final TextTheme textTheme;
 
   const _SmallUnderlinedChip({
     required this.text,
     required this.onTap,
     this.onLongPress,
-    required this.textTheme,
   });
 
   @override
@@ -1705,10 +1698,12 @@ class _SmallUnderlinedChip extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 3.0),
           child: Text(
             text,
-            style: textTheme.displaySmall?.copyWith(
-              decoration: TextDecoration.underline,
-              fontSize: 13.5,
-            ),
+            style: NText.small
+                .of(context)
+                .copyWith(
+                  decoration: TextDecoration.underline,
+                  fontSize: 13.5,
+                ),
           ),
         ),
       ),
@@ -1838,17 +1833,15 @@ extension CustomArtworkManagerDialog on CustomArtworkManager {
           child: ObxO(
             rx: possibleArtworks,
             builder: (context, urls) {
-              final theme = context.theme;
-              final textTheme = theme.textTheme;
               final extraCountText = fetchPossibleArtworksFn == null ? '' : " (${urls?.length ?? 0})";
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(12.0),
-                    child: Text(
+                    child: NamidaText(
                       lang.choose + extraCountText,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                   ObxO(
@@ -1858,9 +1851,11 @@ extension CustomArtworkManagerDialog on CustomArtworkManager {
                       width: context.width,
                       child: loading
                           ? Center(
-                              child: ThreeArchedCircle(
-                                color: theme.colorScheme.onSurface.withOpacityExt(0.5),
-                                size: 32.0,
+                              child: NBuilder(
+                                builder: (context, colors) => ThreeArchedCircle(
+                                  color: colors.onSurface.withOpacityExt(0.5),
+                                  size: 32.0,
+                                ),
                               ),
                             )
                           : fetchPossibleArtworksFn == null
@@ -1872,7 +1867,7 @@ extension CustomArtworkManagerDialog on CustomArtworkManager {
                           : SmoothGridView.builder(
                               padding: EdgeInsets.zero,
                               shrinkWrap: true,
-                              scrollCacheExtent: ScrollCacheExtent.viewport(3),
+                              scrollCacheExtent: const ScrollCacheExtent.viewport(3),
                               itemCount: urls.length,
                               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
@@ -1899,8 +1894,8 @@ extension CustomArtworkManagerDialog on CustomArtworkManager {
                                         },
                                         duration: const Duration(milliseconds: 200),
                                         child: bytes == null
-                                            ? ColoredBox(
-                                                color: theme.cardColor,
+                                            ? const NColoredBox(
+                                                color: NColors.card,
                                               )
                                             : TapDetector(
                                                 onTap: () async {
@@ -1984,14 +1979,13 @@ class _MenuCountChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final contentColor = Color.alphaBlend(color.withAlpha(30), theme.textTheme.displaySmall!.color!);
+    final contentColor = Color.alphaBlend(color.withOpacityExt(0.12), NText.small.of(context).color!);
     return Padding(
       padding: const EdgeInsets.only(right: 10.0),
       child: NamidaInkWell(
         borderRadius: 8.0,
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
-        bgColor: theme.colorScheme.onSurface.withAlpha(12),
+        bgColor: const NColors(.onSurface, opacity: 0.05),
         onTap: onTap,
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -2002,16 +1996,49 @@ class _MenuCountChip extends StatelessWidget {
               color: contentColor,
             ),
             const SizedBox(width: 4.0),
-            Text(
+            NamidaText(
               '$count',
-              style: theme.textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: contentColor,
-              ),
+              style: const NText(.small, weight: FontWeight.w700),
+              color: NColors.fixed(contentColor),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ThemedDialog extends StatelessWidget {
+  final EdgeInsets insetPadding;
+  final Widget child;
+
+  const _ThemedDialog({
+    required this.insetPadding,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    return Dialog(
+      backgroundColor: colors.dialogBackground,
+      insetPadding: insetPadding,
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+}
+
+class _ThemedDivider extends StatelessWidget {
+  const _ThemedDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    return Divider(
+      color: colors.divider,
+      thickness: 0.5,
+      height: 0,
     );
   }
 }

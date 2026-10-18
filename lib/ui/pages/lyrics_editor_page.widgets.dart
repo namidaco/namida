@@ -7,7 +7,6 @@ class _EditorHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return SizedBox(
       height: 46.0,
       child: Row(
@@ -26,9 +25,9 @@ class _EditorHeader extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
+                    NamidaText(
                       lang.lyrics,
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                       maxLines: 1,
                     ),
                     ObxO(
@@ -37,9 +36,9 @@ class _EditorHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                Text(
+                NamidaText(
                   state.widget.lrcUtils.initialSearchTextHint,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -119,17 +118,16 @@ class _DraftBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Container(
+    return NContainer(
       margin: const EdgeInsets.symmetric(horizontal: 6.0),
       padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.0),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacityExt(0.5),
+      decoration: (colors) => BoxDecoration(
+        color: colors.secondaryContainer.withOpacityExt(0.5),
         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
       ),
-      child: Text(
+      child: NamidaText(
         lang.draft,
-        style: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+        style: const NText(.small, size: .s10),
       ),
     );
   }
@@ -142,22 +140,23 @@ class _SaveButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return ObxO(
       rx: state._isSaving,
       builder: (context, isSaving) {
         if (isSaving) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: ThreeArchedCircle(
-              color: theme.colorScheme.secondary,
-              size: 22.0,
+            child: NBuilder(
+              builder: (context, colors) => ThreeArchedCircle(
+                color: colors.secondary,
+                size: 22.0,
+              ),
             ),
           );
         }
-        final face = DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacityExt(0.2),
+        final face = NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
+            color: colors.secondary.withOpacityExt(0.2),
             borderRadius: BorderRadius.circular(10.0.multipliedRadius),
           ),
           child: Padding(
@@ -172,9 +171,9 @@ class _SaveButton extends StatelessWidget {
                 const SizedBox(
                   width: 4.0,
                 ),
-                Text(
+                NamidaText(
                   lang.save,
-                  style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: const NText(.small, weight: FontWeight.w600),
                 ),
               ],
             ),
@@ -272,45 +271,48 @@ class _LineRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
     final doc = state._doc;
     final isUntimed = doc.isUntimed(index);
     final hasWarning = doc.hasWarning(index);
     final startMS = line.startMS;
     final timestampText = startMS == null ? '--:--.--' : _LyricsEditorPageState._formatMS(startMS);
-    final timestampColor = isUntimed
-        ? colorScheme.onSurface.withOpacityExt(0.4)
-        : hasWarning
-        ? Colors.orange
-        : colorScheme.onSurface;
     final translation = line.translation;
     final hasTranslation = translation.isNotEmpty;
     final person = line.person;
 
     final textWidget = line.text.isEmpty
-        ? Icon(
+        ? const NIcon(
             Broken.music,
             size: 18.0,
-            color: colorScheme.onSurface.withOpacityExt(0.5),
+            color: NColors(.onSurface, opacity: 0.5),
           )
-        : Text(
+        : NamidaText(
             line.text,
-            style: textTheme.displayMedium,
+            style: NText.medium,
             maxLines: hasTranslation ? 1 : 2,
             overflow: TextOverflow.ellipsis,
           );
 
     final lineContentWidget = Row(
       children: [
-        Text(
-          timestampText,
-          style: textTheme.displaySmall?.copyWith(
-            color: timestampColor,
-            fontWeight: FontWeight.w600,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+        NBuilder(
+          builder: (context, colors) {
+            final timestampColor = isUntimed
+                ? colors.onSurface.withOpacityExt(0.4)
+                : hasWarning
+                ? Colors.orange
+                : colors.onSurface;
+            return Text(
+              timestampText,
+              style: NText.small
+                  .of(context)
+                  .copyWith(
+                    color: timestampColor,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+            );
+          },
         ),
         const SizedBox(
           width: 12.0,
@@ -325,7 +327,7 @@ class _LineRow extends StatelessWidget {
               if (hasTranslation)
                 Text(
                   translation,
-                  style: textTheme.displaySmall?.copyWith(fontStyle: FontStyle.italic),
+                  style: NText.small.of(context).copyWith(fontStyle: FontStyle.italic),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -333,12 +335,12 @@ class _LineRow extends StatelessWidget {
           ),
         ),
         if (line.hasTimedWords())
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2.0),
-            child: Icon(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 2.0),
+            child: NIcon(
               Broken.text,
               size: 14.0,
-              color: colorScheme.secondary,
+              color: NColors.secondary,
             ),
           ),
         if (person != null) _SingerBadge(person: person),
@@ -353,15 +355,19 @@ class _LineRow extends StatelessWidget {
       children: [
         SizedBox(
           width: 24.0,
-          child: Text(
-            '${index + 1}',
-            style: textTheme.displaySmall?.copyWith(
-              fontSize: 10.0,
-              color: colorScheme.onSurface.withOpacityExt(0.45),
-              fontFeatures: const [FontFeature.tabularFigures()],
+          child: NBuilder(
+            builder: (context, colors) => Text(
+              '${index + 1}',
+              style: NText.small
+                  .of(context)
+                  .copyWith(
+                    fontSize: 10.0,
+                    color: colors.onSurface.withOpacityExt(0.45),
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
           ),
         ),
         NamidaReordererableListener(
@@ -400,18 +406,23 @@ class _LineRow extends StatelessWidget {
         builder: (context, child) {
           final isSelected = state._selectedIndex.value == index;
           final isPlaying = state._playingIndex.value == index;
-          final accentColor = colorScheme.secondary;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            decoration: BoxDecoration(
-              color: isPlaying ? accentColor.withOpacityExt(0.14) : Colors.transparent,
-              borderRadius: BorderRadius.circular(10.0.multipliedRadius),
-              border: Border.all(
-                color: isSelected ? accentColor : Colors.transparent,
-                width: 1.5,
-              ),
-            ),
-            child: child,
+          return NBuilder(
+            selfAnimated: true,
+            builder: (context, colors) {
+              final accentColor = colors.secondary;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                decoration: BoxDecoration(
+                  color: isPlaying ? accentColor.withOpacityExt(0.14) : Colors.transparent,
+                  borderRadius: BorderRadius.circular(10.0.multipliedRadius),
+                  border: Border.all(
+                    color: isSelected ? accentColor : Colors.transparent,
+                    width: 1.5,
+                  ),
+                ),
+                child: child,
+              );
+            },
           );
         },
         child: contentWidget,
@@ -427,17 +438,16 @@ class _SingerBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacityExt(0.6),
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
+        color: colors.secondaryContainer.withOpacityExt(0.6),
         borderRadius: BorderRadius.circular(6.0.multipliedRadius),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-        child: Text(
+        child: NamidaText(
           _LyricsEditorPageState._singerLabel(person),
-          style: theme.textTheme.displaySmall?.copyWith(fontSize: 10.0, fontWeight: FontWeight.w600),
+          style: const NText(.small, size: .s10, weight: FontWeight.w600),
         ),
       ),
     );
@@ -483,7 +493,6 @@ class _SelectedLineTools extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const nudgeStepMS = _LyricsEditorPageState._kNudgeStepMS;
     return ListenableBuilder(
       listenable: state._selectionListenable,
@@ -505,9 +514,9 @@ class _SelectedLineTools extends StatelessWidget {
               const SizedBox(
                 width: 6.0,
               ),
-              Text(
+              NamidaText(
                 '#${index + 1}',
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
               const SizedBox(
                 width: 8.0,
@@ -518,7 +527,7 @@ class _SelectedLineTools extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
                 child: Text(
                   timestampText,
-                  style: textTheme.displayMedium?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                  style: NText.medium.of(context).copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                 ),
               ),
               const Spacer(),
@@ -622,26 +631,24 @@ class _WordChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final accentColor = theme.colorScheme.secondary;
     return NamidaPopupWrapper(
       openOnTap: false,
       onTap: onTap,
       childrenDefault: menuItems,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isTimed ? accentColor.withOpacityExt(0.25) : theme.scaffoldBackgroundColor.withOpacityExt(0.5),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: isTimed ? colors.secondary.withOpacityExt(0.25) : colors.scaffold.withOpacityExt(0.5),
           borderRadius: BorderRadius.circular(8.0.multipliedRadius),
           border: Border.all(
-            color: isCursor ? accentColor : Colors.transparent,
+            color: isCursor ? colors.secondary : Colors.transparent,
             width: 1.5,
           ),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: Text(
+          child: NamidaText(
             text,
-            style: theme.textTheme.displaySmall,
+            style: NText.small,
           ),
         ),
       ),
@@ -656,9 +663,7 @@ class _TransportRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final accentColor = theme.colorScheme.secondary;
+    const activeBgColor = NColors(.secondary, opacity: 0.3);
     const seekStepMS = _LyricsEditorPageState._kSeekStepMS;
     const seekStepSeconds = seekStepMS ~/ 1000;
     return Row(
@@ -669,7 +674,7 @@ class _TransportRow extends StatelessWidget {
           builder: (context, isWordMode) => NamidaInkWell(
             onTap: state._toggleWordMode,
             borderRadius: 10.0,
-            bgColor: isWordMode ? accentColor.withOpacityExt(0.3) : null,
+            bgColor: isWordMode ? activeBgColor : null,
             padding: const EdgeInsets.all(8.0),
             child: Tooltip(
               message: lang.wordByWord,
@@ -709,7 +714,7 @@ class _TransportRow extends StatelessWidget {
           builder: (context, speed) => NamidaInkWell(
             onTap: state._cycleSpeed,
             borderRadius: 10.0,
-            bgColor: speed != 1.0 ? accentColor.withOpacityExt(0.3) : null,
+            bgColor: speed != 1.0 ? activeBgColor : null,
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
             child: Tooltip(
               message: lang.speed,
@@ -717,9 +722,9 @@ class _TransportRow extends StatelessWidget {
                 width: 38.0,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(
+                  child: NamidaText(
                     '${speed.toStringAsFixed(2)}x',
-                    style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: const NText(.small, weight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -788,45 +793,47 @@ class _StampButtonState extends State<_StampButton> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final accentColor = theme.colorScheme.secondary;
+    final labelWidget = ListenableBuilder(
+      listenable: _labelListenable,
+      builder: (context, _) {
+        final isCurrentItem = widget.state._isCurrentItem.value;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isCurrentItem ? Broken.timer_1 : Broken.play,
+              size: 18.0,
+            ),
+            const SizedBox(
+              width: 8.0,
+            ),
+            Flexible(
+              child: NamidaText(
+                _getLabel(),
+                style: NText.medium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        );
+      },
+    );
     final buttonWidget = Listener(
       onPointerDown: _onPointerDown,
       onPointerUp: _onPointerUp,
       onPointerCancel: _onPointerCancel,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
-        height: 46.0,
-        decoration: BoxDecoration(
-          color: accentColor.withOpacityExt(_isPressed ? 0.6 : 0.3),
-          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-        ),
-        alignment: Alignment.center,
-        child: ListenableBuilder(
-          listenable: _labelListenable,
-          builder: (context, _) {
-            final isCurrentItem = widget.state._isCurrentItem.value;
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isCurrentItem ? Broken.timer_1 : Broken.play,
-                  size: 18.0,
-                ),
-                const SizedBox(
-                  width: 8.0,
-                ),
-                Flexible(
-                  child: Text(
-                    _getLabel(),
-                    style: theme.textTheme.displayMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            );
-          },
+      child: NBuilder(
+        selfAnimated: true,
+        builder: (context, colors) => AnimatedContainer(
+          duration: const Duration(milliseconds: 80),
+          height: 46.0,
+          decoration: BoxDecoration(
+            color: colors.secondary.withOpacityExt(_isPressed ? 0.6 : 0.3),
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+          ),
+          alignment: Alignment.center,
+          child: labelWidget,
         ),
       ),
     );

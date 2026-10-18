@@ -29,7 +29,7 @@ void main(List<String> args) {
 
   final sorted = Map.fromEntries(map.entries.toList()..sort((a, b) => a.key.compareTo(b.key)));
 
-  e.writeAsStringSync(JsonEncoder.withIndent('  ').convert(sorted));
+  e.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(sorted));
 
   Process.runSync('dart', ['format', e.path], runInShell: true);
 

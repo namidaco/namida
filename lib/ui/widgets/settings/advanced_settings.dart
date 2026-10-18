@@ -27,6 +27,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -153,7 +154,7 @@ class AdvancedSettings extends SettingSubpageProvider {
         ? NamidaIconButton(
             icon: Broken.flag,
             tooltip: () => lang.configure,
-            iconColor: context.defaultIconColor(),
+            iconColor: NColors.defaultIcon(),
             onPressed: _showAdvancedFlagsDialog,
           )
         : null;
@@ -176,8 +177,6 @@ class _PerformanceModeTile extends StatelessWidget {
   const _PerformanceModeTile({required this.bgColor});
 
   void _onTap(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const artworkPartsMultiplier = 100;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
@@ -212,9 +211,9 @@ class _PerformanceModeTile extends StatelessWidget {
                   ),
                   child: ObxO(
                     rx: settings.performanceMode,
-                    builder: (context, performanceMode) => Text(
+                    builder: (context, performanceMode) => NamidaText(
                       performanceMode.toText(),
-                      style: textTheme.displayMedium,
+                      style: NText.medium,
                       textAlign: TextAlign.end,
                     ),
                   ),
@@ -302,17 +301,15 @@ class _PerformanceModeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return CustomListTile(
       bgColor: bgColor,
       icon: Broken.cpu_setting,
       title: lang.performanceMode,
       trailing: ObxO(
         rx: settings.performanceMode,
-        builder: (context, performanceMode) => Text(
+        builder: (context, performanceMode) => NamidaText(
           performanceMode.toText(),
-          style: textTheme.displayMedium,
+          style: NText.medium,
           textAlign: TextAlign.end,
         ),
       ),
@@ -508,9 +505,9 @@ class _RemoveSourceFromHistoryTile extends StatelessWidget {
                   const Icon(Broken.danger),
                   const SizedBox(width: 8.0),
                   Obx(
-                    (context) => Text(
+                    (context) => NamidaText(
                       '${lang.totalTracks}: ${totalTracksToBeRemoved.valueR}',
-                      style: context.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                 ],
@@ -540,7 +537,7 @@ class _RemoveSourceFromHistoryTile extends StatelessWidget {
                   );
                 },
               ),
-              NamidaContainerDivider(
+              const NamidaContainerDivider(
                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               ),
               Obx(
@@ -1106,8 +1103,8 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
       leading: StackedIcon(
         baseIcon: Broken.folder,
         secondaryIcon: Broken.music,
-        baseIconColor: colorScheme,
-        secondaryIconColor: colorScheme,
+        baseIconColor: NColors.fixed(colorScheme),
+        secondaryIconColor: NColors.fixed(colorScheme),
         delightenColors: true,
       ),
       title: lang.updateDirectoryPath,
@@ -1494,7 +1491,6 @@ class _RhythmTagsWriteDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final tracksCount = plan.tagsPerTrack.length;
     final notAnalyzedCount = plan.notAnalyzedCount;
     return CustomBlurryDialog(
@@ -1516,21 +1512,22 @@ class _RhythmTagsWriteDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            NamidaText(
               'Analyzed BPM will be written into $tracksCount files. Tracks that already have a BPM tag or no steady beat are skipped.',
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
             if (notAnalyzedCount > 0) ...[
               const SizedBox(height: 8.0),
-              Text(
+              NamidaText(
                 '$notAnalyzedCount tracks are not analyzed yet, analyze first to include them.',
-                style: textTheme.displaySmall,
+                style: NText.small,
               ),
             ],
             const SizedBox(height: 12.0),
-            Text(
+            NamidaText(
               'This edits files across your whole library, back up your music files first.',
-              style: textTheme.displayMedium?.copyWith(color: Colors.red),
+              style: NText.medium,
+              color: NColors.fixed(Colors.red),
             ),
           ],
         ),
@@ -1596,7 +1593,6 @@ class _LosslessFindingsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final hasFindings = findings.isNotEmpty;
     final listWidget = ConstrainedBox(
       constraints: BoxConstraints(maxHeight: context.height * 0.5),
@@ -1627,9 +1623,9 @@ class _LosslessFindingsDialog extends StatelessWidget {
       ],
       child: hasFindings
           ? listWidget
-          : Text(
+          : NamidaText(
               lang.noTracksFound,
-              style: textTheme.displayMedium,
+              style: NText.medium,
             ),
     );
   }

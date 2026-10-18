@@ -5,6 +5,7 @@ import 'package:history_manager/history_manager.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -77,8 +78,6 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
   double get yearsRowHeight => 32.0;
 
   Widget getYearsRowWidget(BuildContext context, void Function(int year) onYearTap, {Widget? trailing}) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final yearsWidget = SmoothSingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Padding(
@@ -86,29 +85,34 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
         child: Row(
           children: [
             ...historyYears.map(
-              (e) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3.0),
-                child: TapDetector(
-                  onTap: () => onYearTap(e),
-                  child: AnimatedDecoration(
-                    duration: const Duration(milliseconds: 250),
-                    decoration: BoxDecoration(
-                      color: currentActiveYear == e ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
-                      borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                      child: Text(
-                        '$e',
-                        style: textTheme.displaySmall?.copyWith(
-                          color: currentActiveYear == e ? Colors.white.withAlpha(240) : null,
-                          fontWeight: FontWeight.w600,
+              (e) {
+                final isActive = currentActiveYear == e;
+                final yearText = Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                  child: NamidaText(
+                    '$e',
+                    style: const NText(.small, weight: FontWeight.w600),
+                    color: NColors.fixed(isActive ? Colors.white.withOpacityExt(0.94) : null),
+                  ),
+                );
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                  child: TapDetector(
+                    onTap: () => onYearTap(e),
+                    child: NBuilder(
+                      selfAnimated: true,
+                      builder: (context, colors) => AnimatedDecoration(
+                        duration: const Duration(milliseconds: 250),
+                        decoration: BoxDecoration(
+                          color: isActive ? CurrentColor.inst.currentColorScheme.withOpacityExt(0.63) : colors.card,
+                          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                         ),
+                        child: yearText,
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ],
         ),
@@ -117,8 +121,8 @@ mixin HistoryDaysRebuilderMixin<T extends StatefulWidget, E extends ItemWithDate
     return SizedBox(
       height: yearsRowHeight,
       width: context.width,
-      child: ColoredBox(
-        color: theme.scaffoldBackgroundColor,
+      child: NColoredBox(
+        color: NColors.scaffold,
         child: trailing == null
             ? yearsWidget
             : Row(

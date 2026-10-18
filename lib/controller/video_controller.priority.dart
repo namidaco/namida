@@ -36,7 +36,7 @@ class VideosPriorityManager {
   final _videosPriorityMap = <String, CacheVideoPriority>{};
 
   static Future<Map<String, CacheVideoPriority>> loadEverythingSync(DbWrapperFileInfo fileInfo) async {
-    final values = CacheVideoPriority.values;
+    const values = CacheVideoPriority.values;
     final db = await DBWrapper.openFromInfoSyncTry(
       fileInfo: fileInfo,
       config: _dbConfigNoAutoDispose,
@@ -67,7 +67,7 @@ class VideosPriorityManager {
 
   /// videos with no saved entry are absent from the map, they default to [CacheVideoPriority.normal].
   Future<Map<String, CacheVideoPriority>> getAllVideosPriorities() async {
-    final values = CacheVideoPriority.values;
+    const values = CacheVideoPriority.values;
     final res = await cacheVideosPriorityDB.loadEverythingKeyedResult();
     for (final entry in res.entries) {
       final index = entry.value[_priorityKey];
@@ -96,7 +96,7 @@ class VideosPriorityManager {
 
   CacheVideoPriority? _mapToPriority(Map<String, dynamic>? map) {
     if (map == null) return null;
-    final values = CacheVideoPriority.values;
+    const values = CacheVideoPriority.values;
     final int valueIndex = map[_priorityKey];
     return values[valueIndex];
   }
@@ -126,7 +126,7 @@ class VideosPriorityManager {
   }
 
   void _applyImportedPriorities(Map<String, int> changed) {
-    final values = CacheVideoPriority.values;
+    const values = CacheVideoPriority.values;
     for (final e in changed.entries) {
       _videosPriorityMap[e.key] = values[e.value];
     }

@@ -13,8 +13,8 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
-import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/pages/artists_map_page.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
@@ -225,7 +225,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final nodes = _nodes;
 
     return BackgroundWrapper(
@@ -242,10 +241,15 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          kEnableFancyAnimations ? CAKineticTypeTextHover(text: lang.discover, style: textTheme.displayLarge) : Text(lang.discover, style: textTheme.displayLarge),
-                          Text(
+                          kEnableFancyAnimations
+                              ? CAKineticTypeTextHover(text: lang.discover, style: NText.large.of(context))
+                              : NamidaText(
+                                  lang.discover,
+                                  style: NText.large,
+                                ),
+                          NamidaText(
                             lang.countArtists(count: nodes.length),
-                            style: textTheme.displaySmall,
+                            style: NText.small,
                           ),
                         ],
                       ),
@@ -269,7 +273,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   ? Padding(
                       padding: const EdgeInsets.all(32.0),
                       child: Center(
-                        child: Text(lang.noTracksFound, style: textTheme.displayMedium),
+                        child: NamidaText(
+                          lang.noTracksFound,
+                          style: NText.medium,
+                        ),
                       ),
                     )
                   : Padding(
@@ -332,13 +339,13 @@ class _ArtistNode extends StatelessWidget {
           ),
           const SizedBox(height: 3.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               node.name,
               textAlign: TextAlign.center,
               maxLines: 1,
               softWrap: false,
               overflow: TextOverflow.fade,
-              style: context.textTheme.displaySmall?.copyWith(fontSize: 10.0),
+              style: const NText(.small, size: .s10),
             ),
           ),
         ],

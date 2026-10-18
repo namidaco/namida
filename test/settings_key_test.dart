@@ -890,7 +890,7 @@ void main() {
         'ytPlaylistSort': 'dateModified',
       });
       expect(settings.groupSortingOf(MediaType.album), SortChain.of(const [GroupSortType.dateModified]));
-      final playlistSorting = SortChain(const [SortEntry(GroupSortType.modifiedDate, reverse: true), SortEntry(GroupSortType.title)], reverse: true);
+      const playlistSorting = SortChain([SortEntry(GroupSortType.modifiedDate, reverse: true), SortEntry(GroupSortType.title)], reverse: true);
       expect(settings.groupSortingOf(MediaType.playlist), playlistSorting);
       expect(settings.ytPlaylistSort.value, GroupSortType.modifiedDate);
     });

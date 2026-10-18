@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:namida/class/color_m.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
@@ -72,8 +73,6 @@ class YoutubeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const verticalPadding = 8.0;
 
     final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
@@ -81,31 +80,16 @@ class YoutubeCard extends StatelessWidget {
 
     final channelThumbSize = 0.25 * thumbnailHeight * thumbnailWidthPercentage;
 
-    late final borderSide = BorderSide(
-      width: 2.0,
-      color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
-    );
-    final decoration = checkmarkStatus == true
-        ? BoxDecoration(
-            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-            border: Border(
-              left: borderSide,
-              bottom: borderSide,
-            ),
-          )
-        : null;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: verticalPadding * 0.5, horizontal: 8.0),
       child: Stack(
         alignment: Alignment.bottomRight,
         children: [
-          NamidaInkWell(
-            animationDurationMS: checkmarkStatus != null ? 200 : 0,
-            bgColor: theme.cardColor,
+          _YoutubeCardInkWell(
+            checkmarkStatus: checkmarkStatus,
             borderRadius: borderRadius,
             onTap: onTap,
             height: thumbnailHeight + verticalPadding,
-            decoration: decoration ?? const BoxDecoration(),
             child: Row(
               children: [
                 const SizedBox(width: 4.0),
@@ -145,7 +129,7 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
-                          style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
+                          style: NText.medium.of(context).copyWith(fontSize: 13.0 * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -158,10 +142,12 @@ class YoutubeCard extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && subtitle == '',
                         child: Text(
                           subtitle,
-                          style: textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 13.0 * fontMultiplier,
-                          ),
+                          style: NText.small
+                              .of(context)
+                              .copyWith(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13.0 * fontMultiplier,
+                              ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -202,10 +188,12 @@ class YoutubeCard extends StatelessWidget {
                                     width: double.infinity,
                                     child: Text(
                                       thirdLineText,
-                                      style: textTheme.displaySmall?.copyWith(
-                                        fontWeight: FontWeight.w400,
-                                        fontSize: 11.0 * fontMultiplier,
-                                      ),
+                                      style: NText.small
+                                          .of(context)
+                                          .copyWith(
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 11.0 * fontMultiplier,
+                                          ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -314,8 +302,6 @@ class YoutubeCardMinimal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final thumbnailHeight = this.thumbnailHeight ?? (thumbnailWidthPercentage * Dimensions.youtubeThumbnailHeight);
     final thumbnailWidth = this.thumbnailWidth ?? (isCircle ? thumbnailHeight : thumbnailHeight * 16 / 9);
 
@@ -325,7 +311,7 @@ class YoutubeCardMinimal extends StatelessWidget {
         alignment: Alignment.topRight,
         children: [
           NamidaInkWell(
-            bgColor: theme.cardColor,
+            bgColor: NColors.card,
             borderRadius: borderRadius,
             onTap: onTap,
             width: thumbnailWidth,
@@ -367,7 +353,7 @@ class YoutubeCardMinimal extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && title == '',
                         child: Text(
                           title,
-                          style: textTheme.displayMedium?.copyWith(fontSize: 13.0 * fontMultiplier),
+                          style: NText.medium.of(context).copyWith(fontSize: 13.0 * fontMultiplier),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -380,10 +366,12 @@ class YoutubeCardMinimal extends StatelessWidget {
                         shimmerEnabled: shimmerEnabled && subtitle == '',
                         child: Text(
                           subtitle,
-                          style: textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.w400,
-                            fontSize: 13.0 * fontMultiplier,
-                          ),
+                          style: NText.small
+                              .of(context)
+                              .copyWith(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 13.0 * fontMultiplier,
+                              ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -419,6 +407,49 @@ class YoutubeCardMinimal extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _YoutubeCardInkWell extends StatelessWidget {
+  final bool? checkmarkStatus;
+  final double borderRadius;
+  final void Function()? onTap;
+  final double height;
+  final Widget child;
+
+  const _YoutubeCardInkWell({
+    required this.checkmarkStatus,
+    required this.borderRadius,
+    required this.onTap,
+    required this.height,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.targetOf(context);
+    late final borderSide = BorderSide(
+      width: 2.0,
+      color: colors.secondary.withOpacityExt(0.5),
+    );
+    final decoration = checkmarkStatus == true
+        ? BoxDecoration(
+            borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+            border: Border(
+              left: borderSide,
+              bottom: borderSide,
+            ),
+          )
+        : null;
+    return NamidaInkWell(
+      animationDurationMS: checkmarkStatus != null ? 200 : 0,
+      bgColor: NColors.card,
+      borderRadius: borderRadius,
+      onTap: onTap,
+      height: height,
+      decoration: decoration ?? const BoxDecoration(),
+      child: child,
     );
   }
 }

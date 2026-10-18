@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_shimmer.dart';
 
@@ -28,7 +28,6 @@ class SmallYTActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return SizedBox(
       width: width,
       child: NamidaInkWell(
@@ -53,7 +52,7 @@ class SmallYTActionButton extends StatelessWidget {
                         size: 25.0,
                       ),
                 ),
-                SizedBox(height: 6.0),
+                const SizedBox(height: 6.0),
                 NamidaDummyContainer(
                   width: 24.0,
                   height: 8.0,
@@ -64,9 +63,9 @@ class SmallYTActionButton extends StatelessWidget {
                     fadeDurationMS: titleWidget == null ? 600 : 100,
                     child:
                         titleWidget ??
-                        Text(
+                        NamidaText(
                           title ?? '',
-                          style: textTheme.displaySmall,
+                          style: NText.small,
                           softWrap: false,
                           overflow: TextOverflow.fade,
                         ),

@@ -168,7 +168,7 @@ class _PopupContent extends StatelessWidget {
             key: arrowKey,
             quarterTurns: arrowDirection == _ArrowDirection.top ? 2 : 4,
             child: arrowDirection == null || !showArrow
-                ? SizedBox()
+                ? const SizedBox()
                 : CustomPaint(
                     size: const Size(16, 8),
                     painter: _TrianglePainter(color: arrowColor ?? Colors.white),

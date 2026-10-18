@@ -19,7 +19,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -329,11 +329,10 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final searchBoxManager = _searchBoxManager;
-    Widget headerTitle = Text(
+    Widget headerTitle = NamidaText(
       widget.title,
-      style: textTheme.displayLarge?.copyWith(fontSize: 28.0),
+      style: const NText(.large, size: .s28),
     );
     final sortWidget = widget.isSortable
         ? ObxO(
@@ -375,19 +374,18 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
                   child: Row(
                     mainAxisSize: .min,
                     children: [
-                      Icon(
+                      const NIcon(
                         Broken.arrow_swap,
                         size: 12.0,
-                        color: context.theme.colorScheme.secondary,
+                        color: NColors.secondary,
                       ),
                       const SizedBox(width: 4.0),
                       ObxO(
                         rx: _currentSort!,
-                        builder: (context, sort) => Text(
+                        builder: (context, sort) => NamidaText(
                           sort?.title ?? selectedSort?.title ?? '?',
-                          style: textTheme.displaySmall?.copyWith(
-                            color: context.theme.colorScheme.secondary,
-                          ),
+                          style: NText.small,
+                          color: NColors.secondary,
                         ),
                       ),
                     ],
@@ -678,7 +676,7 @@ class YoutubeMainPageHeaderIconButton extends StatelessWidget {
       horizontalPadding: 6.0,
       icon: icon,
       iconSize: 22.0,
-      iconColor: context.defaultIconColor(),
+      iconColor: NColors.defaultIcon(),
       tooltip: tooltip,
       onPressed: onPressed,
     );
@@ -724,7 +722,6 @@ class _BlockedPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final subtitle = this.subtitle;
     final secondaryText = this.secondaryText;
     return Padding(
@@ -735,22 +732,22 @@ class _BlockedPage extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              NIcon(
                 icon,
                 size: 64.0,
-                color: context.defaultIconColor().withOpacityExt(0.7),
+                color: NColors.defaultIcon(opacity: 0.7),
               ),
               const SizedBox(height: 16.0),
-              Text(
+              NamidaText(
                 title,
-                style: textTheme.displayLarge,
+                style: NText.large,
                 textAlign: TextAlign.center,
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: 6.0),
-                Text(
+                NamidaText(
                   subtitle,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                   textAlign: TextAlign.center,
                 ),
               ],

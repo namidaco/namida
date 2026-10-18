@@ -18,6 +18,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/track_info_dialog.dart';
@@ -38,15 +39,9 @@ class TrackTilePropertiesProvider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final queueSource = configs.queueSource;
-    final queueSupportResuming = queueSource.supportResuming;
     final comingFromQueue = queueSource == QueueSource.playerQueue;
     final canHaveDuplicates = queueSource.canHaveDuplicates;
-
-    final backgroundColorNotPlaying = theme.cardTheme.color ?? Colors.transparent;
-    final selectionColorLayer = theme.focusColor;
-    final highlightColorLayer = queueSupportResuming ? theme.focusColor.withOpacityExt(0.2) : null;
 
     final listenToTopHistoryItems = settings.trackItem.value.values.any(
       (element) => element == TrackTileItem.listenCount || element == TrackTileItem.latestListenDate || element == TrackTileItem.firstListenDate,
@@ -79,80 +74,30 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                         builder: (context, _) => ObxPrefer(
                           enabled: listenToStatsMap,
                           rx: Indexer.inst.trackStatsMap,
-                          builder: (context, trackStatsMap) => ObxPrefer(
-                            enabled: queueSupportResuming,
-                            rx: QueueController.latestPlayedForSourceManager.map,
-                            builder: (context, latestPlayedForSource) {
-                              Selectable? currentHighlightedTrack;
-                              final currentHighlightedPlayable = latestPlayedForSource?[queueSource];
-                              if (currentHighlightedPlayable is Selectable) currentHighlightedTrack = currentHighlightedPlayable;
-                              return ObxO(
-                                rx: SelectedTracksController.inst.existingTracksMap,
-                                builder: (context, selectedTracksMap) => ObxPrefer(
-                                  rx: HistoryController.inst.topTracksMapListens,
-                                  enabled: listenToTopHistoryItems,
-                                  builder: (context, _) => ObxO(
-                                    rx: CurrentColor.inst.currentPlayingTrack,
-                                    builder: (context, currentPlayingTrack) => ObxO(
-                                      rx: CurrentColor.inst.currentPlayingIndex,
-                                      builder: (context, currentPlayingIndex) => Obx(
-                                        (context) {
-                                          int? sleepingIndex;
-                                          if (comingFromQueue) {
-                                            final sleepconfig = Player.inst.sleepTimerConfig.valueR;
-                                            if (sleepconfig.enableSleepAfterItems) {
-                                              final repeatMode = settings.player.repeatMode.valueR;
-                                              if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
-                                                sleepingIndex = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR);
-                                              }
-                                            }
-                                          }
-
-                                          final pageColorScheme = CurrentColor.inst.currentColorScheme;
-                                          final backgroundColorPlaying = comingFromQueue || settings.autoColor.valueR
-                                              ? CurrentColor.inst.miniplayerColor
-                                              : pageColorScheme; // always follow track color
-
-                                          Color? backgroundColorPlayingAlt;
-
-                                          final palette = CurrentColor.inst.miniplayerColorM.palette;
-                                          if (palette.isNotEmpty) {
-                                            backgroundColorPlayingAlt = palette[0].withOpacityExt(0.4);
-                                          }
-
-                                          final properties = TrackTileProperties(
-                                            pageColorScheme: pageColorScheme,
-                                            backgroundColorPlaying: backgroundColorPlaying,
-                                            backgroundColorPlayingAlt: backgroundColorPlayingAlt,
-                                            backgroundColorNotPlaying: backgroundColorNotPlaying,
-                                            selectionColorLayer: selectionColorLayer,
-                                            highlightColorLayer: highlightColorLayer,
-                                            thumbnailSize: thumbnailSize,
-                                            trackTileHeight: trackTileHeight,
-                                            forceSquaredThumbnails: forceSquaredThumbnails,
-                                            sleepingIndex: sleepingIndex,
-                                            displayThirdRow: displayThirdRow,
-                                            displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                                            comingFromQueue: comingFromQueue,
-                                            configs: configs,
-                                            canHaveDuplicates: canHaveDuplicates,
-                                            currentPlayingTrack: currentPlayingTrack,
-                                            currentPlayingIndex: currentPlayingIndex,
-                                            currentHighlightedTrack: currentHighlightedTrack,
-                                            isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                                            allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                                            allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                                            thumbnailTapAction: thumbnailTapAction,
-                                            thumbnailLongPressAction: thumbnailLongPressAction,
-                                          );
-                                          return builder(properties);
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
+                          builder: (context, trackStatsMap) => ObxO(
+                            rx: SelectedTracksController.inst.existingTracksMap,
+                            builder: (context, selectedTracksMap) => ObxPrefer(
+                              rx: HistoryController.inst.topTracksMapListens,
+                              enabled: listenToTopHistoryItems,
+                              builder: (context, _) {
+                                final properties = TrackTileProperties(
+                                  thumbnailSize: thumbnailSize,
+                                  trackTileHeight: trackTileHeight,
+                                  forceSquaredThumbnails: forceSquaredThumbnails,
+                                  displayThirdRow: displayThirdRow,
+                                  displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                                  comingFromQueue: comingFromQueue,
+                                  configs: configs,
+                                  canHaveDuplicates: canHaveDuplicates,
+                                  isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                                  thumbnailTapAction: thumbnailTapAction,
+                                  thumbnailLongPressAction: thumbnailLongPressAction,
+                                );
+                                return builder(properties);
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -200,24 +145,14 @@ class TrackTilePropertiesConfigs {
 
 class TrackTileProperties {
   final TrackTilePropertiesConfigs configs;
-  final Color pageColorScheme;
-  final Color backgroundColorPlaying;
-  final Color? backgroundColorPlayingAlt;
-  final Color backgroundColorNotPlaying;
-  final Color selectionColorLayer;
-  final Color? highlightColorLayer;
 
   final double thumbnailSize;
   final double trackTileHeight;
   final bool forceSquaredThumbnails;
-  final int? sleepingIndex;
   final bool displayThirdRow;
   final bool displayFavouriteIconInListTile;
   final bool comingFromQueue;
   final bool canHaveDuplicates;
-  final Selectable? currentPlayingTrack;
-  final int? currentPlayingIndex;
-  final Selectable? currentHighlightedTrack;
   final bool Function(Selectable trOrTwd) isTrackSelected;
 
   final bool allowSwipeLeft;
@@ -227,23 +162,13 @@ class TrackTileProperties {
 
   const TrackTileProperties({
     required this.configs,
-    required this.pageColorScheme,
-    required this.backgroundColorPlaying,
-    required this.backgroundColorPlayingAlt,
-    required this.backgroundColorNotPlaying,
-    required this.selectionColorLayer,
-    required this.highlightColorLayer,
     required this.thumbnailSize,
     required this.trackTileHeight,
     required this.forceSquaredThumbnails,
-    required this.sleepingIndex,
     required this.displayThirdRow,
     required this.displayFavouriteIconInListTile,
     required this.comingFromQueue,
     required this.canHaveDuplicates,
-    required this.currentPlayingTrack,
-    required this.currentPlayingIndex,
-    required this.currentHighlightedTrack,
     required this.isTrackSelected,
     required this.allowSwipeLeft,
     required this.allowSwipeRight,
@@ -263,7 +188,7 @@ class TrackTile extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onPlaying;
 
-  final Color? bgColor;
+  final NColors? bgColor;
   final double cardColorOpacity;
   final double fadeOpacity;
   final void Function()? onRightAreaTap;
@@ -362,456 +287,419 @@ class TrackTile extends StatelessWidget {
     _executeThumbnailAction(action);
   }
 
+  _TrackTilePlayState _selectPlayState() {
+    final queueSource = properties.configs.queueSource;
+    final currentPlayingTrack = CurrentColor.inst.currentPlayingTrack.valueR;
+    final isTrackSame = _tr == currentPlayingTrack?.track;
+    final isRightHistoryList = queueSource == QueueSource.history ? _twd == currentPlayingTrack?.trackWithDate : true;
+    final isRightIndex = properties.canHaveDuplicates ? index == CurrentColor.inst.currentPlayingIndex.valueR : true;
+    final isPlaying = isRightIndex && isTrackSame && isRightHistoryList;
+
+    var isHighlighted = false;
+    if (queueSource.supportResuming) {
+      final highlighted = QueueController.latestPlayedForSourceManager.map.valueR[queueSource];
+      if (highlighted is Selectable) isHighlighted = _twd == highlighted.trackWithDate || _tr == highlighted.track;
+    }
+
+    var willSleep = false;
+    if (properties.comingFromQueue) {
+      final sleepconfig = Player.inst.sleepTimerConfig.valueR;
+      if (sleepconfig.enableSleepAfterItems) {
+        final repeatMode = settings.player.repeatMode.valueR;
+        if (repeatMode == PlayerRepeatMode.all || repeatMode == PlayerRepeatMode.none) {
+          willSleep = Player.inst.sleepingItemIndex(sleepconfig.sleepAfterItems, Player.inst.currentIndex.valueR) == index;
+        }
+      }
+    }
+    return (isPlaying: isPlaying, isHighlighted: isHighlighted, willSleep: willSleep);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final queueSource = properties.configs.queueSource;
-    final track = _tr;
-    final trackWithDate = _twd;
-    final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
+    return ObxSelect(
+      selector: _selectPlayState,
+      builder: (context, playState) {
+        final queueSource = properties.configs.queueSource;
+        final track = _tr;
+        final isInSelectedTracksPreview = queueSource == QueueSource.selectedTracks;
 
-    final willSleepAfterThis = properties.sleepingIndex == index;
+        final willSleepAfterThis = playState.willSleep;
 
-    final bool isTrackSelected = properties.isTrackSelected(trackOrTwd);
-    final bool isTrackSame = track == properties.currentPlayingTrack?.track;
-    final bool isRightHistoryList = queueSource == QueueSource.history ? trackWithDate == properties.currentPlayingTrack?.trackWithDate : true;
-    final bool isRightIndex = properties.canHaveDuplicates ? index == properties.currentPlayingIndex : true;
-    final bool isTrackCurrentlyPlaying = isRightIndex && isTrackSame && isRightHistoryList;
+        final bool isTrackSelected = properties.isTrackSelected(trackOrTwd);
+        final bool isTrackCurrentlyPlaying = playState.isPlaying;
+        final bool isTrackHighlighted = playState.isHighlighted;
 
-    final currentHighlightedTrack = properties.currentHighlightedTrack;
-    final bool isTrackHighlighted = currentHighlightedTrack != null && (trackWithDate == currentHighlightedTrack.trackWithDate || track == currentHighlightedTrack.track);
+        final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
 
-    final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
-
-    Color backgroundColor;
-    Color? backgroundColorAlt;
-    Border? border;
-    if (bgColor != null) {
-      backgroundColor = bgColor!;
-    } else {
-      if (isTrackCurrentlyPlaying) {
-        backgroundColor = properties.backgroundColorPlaying;
-        backgroundColorAlt = properties.backgroundColorPlayingAlt;
-      } else {
-        backgroundColor = properties.backgroundColorNotPlaying.withOpacityExt(cardColorOpacity);
-      }
-      if (isTrackSelected && queueSource != QueueSource.selectedTracks) {
-        backgroundColor = Color.alphaBlend(
-          properties.selectionColorLayer,
-          backgroundColor,
+        final background = _TrackTileBackgroundState(
+          bgColor: bgColor,
+          isPlaying: isTrackCurrentlyPlaying,
+          hasSelectionLayer: isTrackSelected && queueSource != QueueSource.selectedTracks,
+          hasHighlightLayer: !isTrackCurrentlyPlaying && isTrackHighlighted && queueSource.supportResuming,
+          comingFromQueue: properties.comingFromQueue,
+          cardColorOpacity: cardColorOpacity,
         );
-      } else if (!isTrackCurrentlyPlaying && isTrackHighlighted && properties.highlightColorLayer != null) {
-        border = Border(
-          right: BorderSide(
-            width: 3.0,
-            color: properties.pageColorScheme,
+
+        Widget threeLinesColumn;
+        if (trackOrTwd.track.toTrackExtOrNull() == null) {
+          threeLinesColumn = NamidaText(
+            trackOrTwd.track.path,
+            style: NText.small,
+            color: NColors.fixed(textColor?.withOpacityExt(0.67)),
+          );
+        } else {
+          final thirdLineText = this.thirdLineText;
+          final row1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.first, track);
+          final row2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.second, track);
+          final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
+              ? thirdLineText
+              : properties.displayThirdRow
+              ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
+              : '';
+
+          threeLinesColumn = Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (row1Text.isNotEmpty)
+                NamidaText(
+                  row1Text,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: NText.medium,
+                  color: NColors.fixed(textColor?.withOpacityExt(0.67)),
+                ),
+
+              // -- add small spacing if there is no third row
+              if (row3Text.isEmpty) const SizedBox(height: 1.0),
+
+              if (row2Text.isNotEmpty)
+                NamidaText(
+                  row2Text,
+                  style: const NText(.small, weight: FontWeight.w500),
+                  color: NColors.fixed(textColor?.withOpacityExt(0.55)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+              if (row3Text.isNotEmpty)
+                NamidaText(
+                  row3Text,
+                  style: NText.small,
+                  color: NColors.fixed(textColor?.withOpacityExt(0.51)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          );
+        }
+        final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
+        final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
+
+        final heroTag = this._heroTag;
+
+        final topRightWidget = this.topRightWidget;
+        final videoIcon = track is Video
+            ? Icon(
+                Broken.video,
+                size: 12.0,
+                color: textColor?.withOpacityExt(0.39) ?? NText.small.of(context).color?.withOpacityExt(0.39),
+              )
+            : null;
+
+        Widget? draggingTileWidget;
+        if (properties.configs.draggableThumbnail) {
+          final listener = NamidaReordererableListener(
+            durationMs: 80,
+            index: index,
+            child: const ColoredBox(color: Colors.transparent),
+          );
+          final reorderableRx = properties.configs.reorderableRx;
+          draggingTileWidget = Positioned(
+            left: 0.0,
+            top: 0.0,
+            bottom: 0.0,
+            width: _thumbnailLeftPadding + properties.thumbnailSize,
+            child: reorderableRx != null
+                ? ObxO(
+                    rx: reorderableRx,
+                    builder: (context, reorderable) => reorderable ? listener : const SizedBox(),
+                  )
+                : listener,
+          );
+        }
+
+        Widget thumbnail = AnimatedScale(
+          duration: const Duration(milliseconds: 400),
+          scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
+          curve: Curves.easeInOut,
+          child: SizedBox(
+            width: properties.thumbnailSize,
+            height: properties.thumbnailSize,
+            child: NamidaHero(
+              tag: heroTag,
+              child: ArtworkWidget(
+                key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
+                track: track,
+                thumbnailSize: properties.thumbnailSize,
+                path: track.pathToImage,
+                forceSquared: properties.forceSquaredThumbnails,
+                fallbackToAlbumCover: properties.configs.fallbackToAlbumCover,
+                icon: track is Video ? Broken.video : Broken.musicnote,
+                iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
+                onTopWidgets: [
+                  if (track.isNetwork)
+                    Positioned.fill(
+                      child: ServerCacheTrackIndicator(
+                        track: track,
+                      ),
+                    ),
+                  if (properties.configs.displayTrackNumber)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: NamidaBlurryContainer(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
+                        borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
+                        child: NamidaText(
+                          track.trackNo.toString(),
+                          style: NText.small,
+                        ),
+                      ),
+                    ),
+                  if (willSleepAfterThis)
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: NDecoratedBox(
+                        decoration: (colors) => BoxDecoration(
+                          color: colors.surface.withOpacityExt(0.63),
+                          borderRadius: BorderRadius.circular(12.0.multipliedRadius),
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(3.0),
+                          child: Icon(
+                            Broken.timer_1,
+                            size: 15.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
         );
-        backgroundColor = Color.alphaBlend(
-          properties.highlightColorLayer!,
-          backgroundColor,
-        );
-      }
-    }
+        if (onTap == null) {
+          final thumbnailTapAction = properties.thumbnailTapAction;
+          final thumbnailLongPressAction = properties.thumbnailLongPressAction;
+          final hasThumbnailTap = thumbnailTapAction != TrackExecuteActions.none;
+          final hasThumbnailLongPress = thumbnailLongPressAction != TrackExecuteActions.none;
+          if (hasThumbnailTap || hasThumbnailLongPress) {
+            thumbnail = GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: hasThumbnailTap ? () => _onThumbnailTap(thumbnailTapAction) : null,
+              onLongPress: hasThumbnailLongPress ? () => _executeThumbnailAction(thumbnailLongPressAction) : null,
+              child: thumbnail,
+            );
+          }
+        }
 
-    BoxDecoration decoration;
-    if (settings.gradientTiles.value) {
-      // -- has to be always gradient to animate properly
-      decoration = BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            backgroundColor,
-            backgroundColorAlt ?? backgroundColor,
-          ],
-          stops: [0.6, 1.0],
-        ),
-        border: border,
-      );
-    } else {
-      decoration = BoxDecoration(
-        color: backgroundColor,
-        border: border,
-      );
-    }
+        Widget finalChild = Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onTap:
+                      onTap ??
+                      () async {
+                        if (_trySelectOnTap()) return;
 
-    Widget threeLinesColumn;
-    if (trackOrTwd.track.toTrackExtOrNull() == null) {
-      threeLinesColumn = Text(
-        trackOrTwd.track.path,
-        style: textTheme.displaySmall?.copyWith(
-          color: textColor?.withAlpha(170),
-        ),
-      );
-    } else {
-      final thirdLineText = this.thirdLineText;
-      final row1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.first, track);
-      final row2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.second, track);
-      final row3Text = thirdLineText != null && thirdLineText.isNotEmpty
-          ? thirdLineText
-          : properties.displayThirdRow
-          ? TrackTileManager._joinTrackItems(_TrackTileRowOrder.third, track)
-          : '';
+                        if (onPlaying != null) {
+                          onPlaying!();
+                          return;
+                        }
+                        if (queueSource.s == QueueSourceEnum.search) {
+                          ScrollSearchController.inst.unfocusKeyboard();
+                          final playMode = settings.trackPlayMode.value;
+                          await Player.inst.playOrPause(
+                            playMode.shouldBeIndex0 ? 0 : index,
+                            playMode.generateQueue(track),
+                            queueSource,
+                            homePageItem: homePageItem,
+                            gentlePlay: playMode.gentlePlay,
+                            maximumItems: null,
+                          );
+                        } else {
+                          final queueSourceNormalized = queueSource.s == QueueSourceEnum.allTracks ? QueueSource.allTracksAll : queueSource;
+                          await Player.inst.playOrPause(
+                            index,
+                            tracks,
+                            queueSourceNormalized,
+                            homePageItem: homePageItem,
+                            maximumItems: null,
+                          );
+                        }
+                      },
+                  onLongPress: onTap != null
+                      ? null
+                      : () {
+                          var selectable = properties.configs.selectable;
+                          if (selectable != null && selectable() == false) return;
+                          if (isInSelectedTracksPreview) return;
 
-      threeLinesColumn = Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (row1Text.isNotEmpty)
-            Text(
-              row1Text,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: textTheme.displayMedium!.copyWith(
-                color: textColor?.withAlpha(170),
-              ),
-            ),
-
-          // -- add small spacing if there is no third row
-          if (row3Text.isEmpty) const SizedBox(height: 1.0),
-
-          if (row2Text.isNotEmpty)
-            Text(
-              row2Text,
-              style: textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w500,
-                color: textColor?.withAlpha(140),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-          if (row3Text.isNotEmpty)
-            Text(
-              row3Text,
-              style: textTheme.displaySmall?.copyWith(
-                color: textColor?.withAlpha(130),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-        ],
-      );
-    }
-    final rightItem1Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right1, track);
-    final rightItem2Text = TrackTileManager._joinTrackItems(_TrackTileRowOrder.right2, track);
-
-    final heroTag = this._heroTag;
-
-    final topRightWidget = this.topRightWidget;
-    final videoIcon = track is Video
-        ? Icon(
-            Broken.video,
-            size: 12.0,
-            color: textColor?.withAlpha(100) ?? textTheme.displaySmall?.color?.withAlpha(100),
-          )
-        : null;
-
-    late final iconColor = !isTrackCurrentlyPlaying
-        ? Color.alphaBlend(
-            properties.pageColorScheme.withOpacityExt(0.4),
-            (textColor ?? textTheme.displayMedium?.color?.withAlpha(140) ?? Colors.transparent).withOpacityExt(0.4),
-          )
-        : textColor?.withAlpha(140) ?? textTheme.displayMedium?.color?.withAlpha(140);
-
-    Widget? draggingTileWidget;
-    if (properties.configs.draggableThumbnail) {
-      final listener = NamidaReordererableListener(
-        durationMs: 80,
-        index: index,
-        child: const ColoredBox(color: Colors.transparent),
-      );
-      final reorderableRx = properties.configs.reorderableRx;
-      draggingTileWidget = Positioned(
-        left: 0.0,
-        top: 0.0,
-        bottom: 0.0,
-        width: _thumbnailLeftPadding + properties.thumbnailSize,
-        child: reorderableRx != null
-            ? ObxO(
-                rx: reorderableRx,
-                builder: (context, reorderable) => reorderable ? listener : const SizedBox(),
-              )
-            : listener,
-      );
-    }
-
-    Widget thumbnail = AnimatedScale(
-      duration: const Duration(milliseconds: 400),
-      scale: isTrackCurrentlyPlaying ? 0.96 : 1.0,
-      curve: Curves.easeInOut,
-      child: SizedBox(
-        width: properties.thumbnailSize,
-        height: properties.thumbnailSize,
-        child: NamidaHero(
-          tag: heroTag,
-          child: ArtworkWidget(
-            key: Key("$willSleepAfterThis${trackOrTwd.hashCode}"),
-            track: track,
-            thumbnailSize: properties.thumbnailSize,
-            path: track.pathToImage,
-            forceSquared: properties.forceSquaredThumbnails,
-            fallbackToAlbumCover: properties.configs.fallbackToAlbumCover,
-            icon: track is Video ? Broken.video : Broken.musicnote,
-            iconSize: (properties.trackTileHeight.withMaximum(properties.thumbnailSize)) * 0.5,
-            onTopWidgets: [
-              if (track.isNetwork)
-                Positioned.fill(
-                  child: ServerCacheTrackIndicator(
-                    track: track,
-                  ),
-                ),
-              if (properties.configs.displayTrackNumber)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: NamidaBlurryContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(4.0.multipliedRadius)),
-                    child: Text(
-                      track.trackNo.toString(),
-                      style: textTheme.displaySmall,
-                    ),
-                  ),
-                ),
-              if (willSleepAfterThis)
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withAlpha(160),
-                      borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(3.0),
-                      child: const Icon(
-                        Broken.timer_1,
-                        size: 15.0,
+                          ScrollSearchController.inst.unfocusKeyboard();
+                          _selectTrack(ranged: true);
+                        },
+                  onSecondaryTap: _triggerTrackDialog,
+                  child: _TrackTileBackground(
+                    state: background,
+                    child: SizedBox(
+                      height: Dimensions.inst.trackTileItemExtent,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: _thumbnailLeftPadding),
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                thumbnail,
+                              ],
+                            ),
+                            const SizedBox(width: 12.0),
+                            Expanded(
+                              child: threeLinesColumn,
+                            ),
+                            const SizedBox(width: 6.0),
+                            if (properties.displayFavouriteIconInListTile || rightItem1Text.isNotEmpty || rightItem2Text.isNotEmpty)
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  if (rightItem1Text.isNotEmpty)
+                                    NamidaText(
+                                      rightItem1Text,
+                                      style: const NText(.small, weight: FontWeight.w500),
+                                      color: NColors.fixed(textColor?.withOpacityExt(0.67)),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  if (rightItem2Text.isNotEmpty)
+                                    NamidaText(
+                                      rightItem2Text,
+                                      style: const NText(.small, weight: FontWeight.w500),
+                                      color: NColors.fixed(textColor?.withOpacityExt(0.67)),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  if (properties.displayFavouriteIconInListTile)
+                                    _TrackTileLikeButton(
+                                      track: track,
+                                      isPlaying: isTrackCurrentlyPlaying,
+                                      textColor: textColor,
+                                    ),
+                                ],
+                              ),
+                            if (properties.configs.displayRightDragHandler) ...[
+                              const SizedBox(width: 8.0),
+                              NamidaReordererableListener(
+                                durationMs: 40,
+                                index: index,
+                                child: FittedBox(
+                                  child: Icon(
+                                    Broken.menu_1,
+                                    color: textColor?.withOpacityExt(0.63),
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 2.0),
+                            MoreIcon(
+                              padding: 6.0,
+                              iconColor: textColor?.withOpacityExt(0.63),
+                              onPressed: _triggerTrackDialog,
+                              onLongPress: _triggerTrackInfoDialog,
+                            ),
+                            if (trailingWidget == null)
+                              const SizedBox(width: 4.0)
+                            else ...[
+                              trailingWidget!,
+                              const SizedBox(width: 10.0),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (onTap == null) {
-      final thumbnailTapAction = properties.thumbnailTapAction;
-      final thumbnailLongPressAction = properties.thumbnailLongPressAction;
-      final hasThumbnailTap = thumbnailTapAction != TrackExecuteActions.none;
-      final hasThumbnailLongPress = thumbnailLongPressAction != TrackExecuteActions.none;
-      if (hasThumbnailTap || hasThumbnailLongPress) {
-        thumbnail = GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: hasThumbnailTap ? () => _onThumbnailTap(thumbnailTapAction) : null,
-          onLongPress: hasThumbnailLongPress ? () => _executeThumbnailAction(thumbnailLongPressAction) : null,
-          child: thumbnail,
-        );
-      }
-    }
-
-    Widget finalChild = Stack(
-      alignment: Alignment.centerRight,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: Dimensions.tileBottomMargin),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onTap:
-                  onTap ??
-                  () async {
-                    if (_trySelectOnTap()) return;
-
-                    if (onPlaying != null) {
-                      onPlaying!();
-                      return;
-                    }
-                    if (queueSource.s == QueueSourceEnum.search) {
-                      ScrollSearchController.inst.unfocusKeyboard();
-                      final playMode = settings.trackPlayMode.value;
-                      await Player.inst.playOrPause(
-                        playMode.shouldBeIndex0 ? 0 : index,
-                        playMode.generateQueue(track),
-                        queueSource,
-                        homePageItem: homePageItem,
-                        gentlePlay: playMode.gentlePlay,
-                        maximumItems: null,
-                      );
-                    } else {
-                      final queueSourceNormalized = queueSource.s == QueueSourceEnum.allTracks ? QueueSource.allTracksAll : queueSource;
-                      await Player.inst.playOrPause(
-                        index,
-                        tracks,
-                        queueSourceNormalized,
-                        homePageItem: homePageItem,
-                        maximumItems: null,
-                      );
-                    }
-                  },
-              onLongPress: onTap != null
-                  ? null
-                  : () {
-                      var selectable = properties.configs.selectable;
-                      if (selectable != null && selectable() == false) return;
-                      if (isInSelectedTracksPreview) return;
-
-                      ScrollSearchController.inst.unfocusKeyboard();
-                      _selectTrack(ranged: true);
-                    },
-              onSecondaryTap: _triggerTrackDialog,
-              child: AnimatedDecoration(
-                duration: const Duration(milliseconds: 300),
-                decoration: decoration,
-                child: SizedBox(
-                  height: Dimensions.inst.trackTileItemExtent,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: Dimensions.tileVerticalPadding),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: _thumbnailLeftPadding),
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            thumbnail,
-                          ],
-                        ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: threeLinesColumn,
-                        ),
-                        const SizedBox(width: 6.0),
-                        if (properties.displayFavouriteIconInListTile || rightItem1Text.isNotEmpty || rightItem2Text.isNotEmpty)
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (rightItem1Text.isNotEmpty)
-                                Text(
-                                  rightItem1Text,
-                                  style: textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (rightItem2Text.isNotEmpty)
-                                Text(
-                                  rightItem2Text,
-                                  style: textTheme.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: textColor?.withAlpha(170),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (properties.displayFavouriteIconInListTile)
-                                NamidaLocalLikeButton(
-                                  track: track,
-                                  size: 22.0,
-                                  color: iconColor,
-                                ),
-                            ],
-                          ),
-                        if (properties.configs.displayRightDragHandler) ...[
-                          const SizedBox(width: 8.0),
-                          NamidaReordererableListener(
-                            durationMs: 40,
-                            index: index,
-                            child: FittedBox(
-                              child: Icon(
-                                Broken.menu_1,
-                                color: textColor?.withAlpha(160),
-                              ),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(width: 2.0),
-                        MoreIcon(
-                          padding: 6.0,
-                          iconColor: textColor?.withAlpha(160),
-                          onPressed: _triggerTrackDialog,
-                          onLongPress: _triggerTrackInfoDialog,
-                        ),
-                        if (trailingWidget == null)
-                          const SizedBox(width: 4.0)
-                        else ...[
-                          trailingWidget!,
-                          const SizedBox(width: 10.0),
-                        ],
-                      ],
-                    ),
+              ),
+            ),
+            ?draggingTileWidget,
+            if (fadeOpacity > 0)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: NColoredBox(
+                    color: NColors(.scaffold, opacity: fadeOpacity),
                   ),
                 ),
               ),
-            ),
-          ),
-        ),
-        ?draggingTileWidget,
-        if (fadeOpacity > 0)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: ColoredBox(
-                color: theme.scaffoldBackgroundColor.withOpacityExt(fadeOpacity),
+            GestureDetector(
+              onTap: onRightAreaTap ?? _triggerTrackDialog,
+              onLongPress: _triggerTrackInfoDialog,
+              onSecondaryTap: _triggerTrackInfoDialog,
+              child: Container(
+                width: 36.0,
+                color: Colors.transparent,
               ),
             ),
-          ),
-        GestureDetector(
-          onTap: onRightAreaTap ?? _triggerTrackDialog,
-          onLongPress: _triggerTrackInfoDialog,
-          onSecondaryTap: _triggerTrackInfoDialog,
-          child: Container(
-            width: 36.0,
-            color: Colors.transparent,
-          ),
-        ),
-        if (videoIcon != null && topRightWidget != null)
-          Positioned(
-            top: 0.0,
-            right: 0.0,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                videoIcon,
-                const SizedBox(width: 2.0),
-                topRightWidget,
-              ],
-            ),
-          )
-        else if (videoIcon != null)
-          Positioned(
-            top: 6.0,
-            right: 6.0,
-            child: videoIcon,
-          )
-        else if (topRightWidget != null)
-          Positioned(
-            top: 0.0,
-            right: 0.0,
-            child: topRightWidget,
-          ),
-      ],
-    );
+            if (videoIcon != null && topRightWidget != null)
+              Positioned(
+                top: 0.0,
+                right: 0.0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    videoIcon,
+                    const SizedBox(width: 2.0),
+                    topRightWidget,
+                  ],
+                ),
+              )
+            else if (videoIcon != null)
+              Positioned(
+                top: 6.0,
+                right: 6.0,
+                child: videoIcon,
+              )
+            else if (topRightWidget != null)
+              Positioned(
+                top: 0.0,
+                right: 0.0,
+                child: topRightWidget,
+              ),
+          ],
+        );
 
-    if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
-      finalChild = SwipeQueueAddTile(
-        item: trackOrTwd,
-        infoCallback: () => SwipeQueueAddTileInfo(
-          queueSource: queueSource,
-          heroTag: heroTag,
-          queue: tracks,
-          index: index,
-        ),
-        dismissibleKey: heroTag,
-        allowSwipeLeft: properties.allowSwipeLeft,
-        allowSwipeRight: properties.allowSwipeRight,
-        disabledRx: properties.configs.reorderableRx,
-        child: finalChild,
-      );
-    }
-    return finalChild;
+        if (properties.configs.horizontalGestures && (properties.allowSwipeLeft || properties.allowSwipeRight)) {
+          finalChild = SwipeQueueAddTile(
+            item: trackOrTwd,
+            infoCallback: () => SwipeQueueAddTileInfo(
+              queueSource: queueSource,
+              heroTag: heroTag,
+              queue: tracks,
+              index: index,
+            ),
+            dismissibleKey: heroTag,
+            allowSwipeLeft: properties.allowSwipeLeft,
+            allowSwipeRight: properties.allowSwipeRight,
+            disabledRx: properties.configs.reorderableRx,
+            child: finalChild,
+          );
+        }
+        return finalChild;
+      },
+    );
   }
 }
 
@@ -989,3 +877,176 @@ class TrackTileManager {
     },
   };
 }
+
+class _TrackTileBackground extends StatelessWidget {
+  final _TrackTileBackgroundState state;
+  final Widget child;
+
+  const _TrackTileBackground({
+    required this.state,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final needsAccent = state.bgColor == null && (state.isPlaying || state.hasHighlightLayer);
+    // -- always an Obx so the tree keeps its shape when the tile starts playing
+    return Obx(
+      (context) {
+        if (!needsAccent) {
+          return _TrackTileDecoration(
+            state: state,
+            accent: null,
+            child: child,
+          );
+        }
+        final pageColorScheme = CurrentColor.inst.currentColorScheme;
+        final playingColor = state.comingFromQueue || settings.autoColor.valueR ? CurrentColor.inst.miniplayerColor : pageColorScheme; // always follow track color
+        final palette = CurrentColor.inst.miniplayerColorM.palette;
+        final playingColorAlt = palette.isNotEmpty ? palette[0].withOpacityExt(0.4) : null;
+        return _TrackTileDecoration(
+          state: state,
+          accent: (pageColorScheme: pageColorScheme, playingColor: playingColor, playingColorAlt: playingColorAlt),
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+class _TrackTileDecoration extends StatelessWidget {
+  final _TrackTileBackgroundState state;
+  final _TrackTileAccent? accent;
+  final Widget child;
+
+  const _TrackTileDecoration({
+    required this.state,
+    required this.accent,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.targetOf(context);
+    final accent = this.accent;
+    Color backgroundColor;
+    Color? backgroundColorAlt;
+    Border? border;
+    final bgColor = state.bgColor?.resolve(colors);
+    if (bgColor != null) {
+      backgroundColor = bgColor;
+    } else {
+      if (state.isPlaying && accent != null) {
+        backgroundColor = accent.playingColor;
+        backgroundColorAlt = accent.playingColorAlt;
+      } else {
+        backgroundColor = colors.cardTheme.withOpacityExt(state.cardColorOpacity);
+      }
+      if (state.hasSelectionLayer) {
+        backgroundColor = Color.alphaBlend(
+          colors.focus,
+          backgroundColor,
+        );
+      } else if (state.hasHighlightLayer && accent != null) {
+        border = Border(
+          right: BorderSide(
+            width: 3.0,
+            color: accent.pageColorScheme,
+          ),
+        );
+        backgroundColor = Color.alphaBlend(
+          colors.focus.withOpacityExt(0.2),
+          backgroundColor,
+        );
+      }
+    }
+
+    BoxDecoration decoration;
+    if (settings.gradientTiles.value) {
+      // -- has to be always gradient to animate properly
+      decoration = BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            backgroundColor,
+            backgroundColorAlt ?? backgroundColor,
+          ],
+          stops: const [0.6, 1.0],
+        ),
+        border: border,
+      );
+    } else {
+      decoration = BoxDecoration(
+        color: backgroundColor,
+        border: border,
+      );
+    }
+    return AnimatedDecoration(
+      duration: const Duration(milliseconds: 300),
+      decoration: decoration,
+      child: child,
+    );
+  }
+}
+
+class _TrackTileLikeButton extends StatelessWidget {
+  final Track track;
+  final bool isPlaying;
+  final Color? textColor;
+
+  const _TrackTileLikeButton({
+    required this.track,
+    required this.isPlaying,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textMediumColor = NText.medium.of(context).color?.withOpacityExt(0.55);
+    return Obx(
+      (context) {
+        if (isPlaying) {
+          return NamidaLocalLikeButton(
+            track: track,
+            size: 22.0,
+            color: textColor?.withOpacityExt(0.55) ?? textMediumColor,
+          );
+        }
+        final pageColorScheme = CurrentColor.inst.currentColorScheme;
+        final baseColor = textColor ?? textMediumColor ?? Colors.transparent;
+        final iconColor = Color.alphaBlend(
+          pageColorScheme.withOpacityExt(0.4),
+          baseColor.withOpacityExt(0.4),
+        );
+        return NamidaLocalLikeButton(
+          track: track,
+          size: 22.0,
+          color: iconColor,
+        );
+      },
+    );
+  }
+}
+
+class _TrackTileBackgroundState {
+  final NColors? bgColor;
+  final bool isPlaying;
+  final bool hasSelectionLayer;
+  final bool hasHighlightLayer;
+  final bool comingFromQueue;
+  final double cardColorOpacity;
+
+  const _TrackTileBackgroundState({
+    required this.bgColor,
+    required this.isPlaying,
+    required this.hasSelectionLayer,
+    required this.hasHighlightLayer,
+    required this.comingFromQueue,
+    required this.cardColorOpacity,
+  });
+}
+
+typedef _TrackTileAccent = ({Color pageColorScheme, Color playingColor, Color? playingColorAlt});
+
+typedef _TrackTilePlayState = ({bool isPlaying, bool isHighlighted, bool willSleep});

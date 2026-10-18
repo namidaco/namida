@@ -20,6 +20,7 @@ import 'package:youtipie/youtipie.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/youtube_streams_manager.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -28,7 +29,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -184,7 +185,7 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
   Widget build(BuildContext context) {
     const horizontalBigThumbPadding = 12.0;
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
-    return AnimatedThemeOrTheme(
+    return NTheme(
       duration: const Duration(milliseconds: 300),
       data: theme,
       child: BackgroundWrapper(
@@ -259,20 +260,20 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      NamidaText(
                                         playlistCurrentName.translatePlaylistName(),
-                                        style: theme.textTheme.displayLarge,
+                                        style: NText.large,
                                       ),
                                       const SizedBox(height: 6.0),
-                                      Text(
+                                      NamidaText(
                                         playlist.tracks.length.displayVideoKeyword,
-                                        style: theme.textTheme.displaySmall,
+                                        style: NText.small,
                                       ),
                                       if (playlist.comment != '') ...[
                                         const SizedBox(height: 2.0),
-                                        Text(
+                                        NamidaText(
                                           playlist.comment,
-                                          style: theme.textTheme.displaySmall,
+                                          style: NText.small,
                                         ),
                                       ],
                                     ],
@@ -283,19 +284,19 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.defaultIcon(mainColor: bgColor),
                                         icon: Broken.shuffle,
                                         tooltip: () => lang.shuffle,
                                         onPressed: () => Player.inst.playOrPause(0, playlist.tracks, widget.queueSource, shuffle: true),
                                       ),
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.defaultIcon(mainColor: bgColor),
                                         icon: Broken.play_cricle,
                                         tooltip: () => lang.playLast,
                                         onPressed: () => Player.inst.addToQueue(playlist.tracks, insertNext: false),
                                       ),
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.defaultIcon(mainColor: bgColor),
                                         icon: Broken.import,
                                         onPressed: () async {
                                           YTPlaylistDownloadPage(
@@ -347,9 +348,9 @@ class _YTNormalPlaylistSubpageState extends State<YTNormalPlaylistSubpage> {
                                         ],
                                         child: Padding(
                                           padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                          child: Icon(
+                                          child: NIcon(
                                             Broken.more_2,
-                                            color: context.defaultIconColor(bgColor),
+                                            color: NColors.defaultIcon(mainColor: bgColor),
                                           ),
                                         ),
                                       ),
@@ -633,11 +634,11 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
     final hasMoreStreamsLeft = playlist.canFetchNext;
     final theme = AppThemes.inst.getAppTheme(bgColor, !context.isDarkMode);
     return VideoTilePropertiesProvider(
-      configs: VideoTilePropertiesConfigs(
+      configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytPlaylistHosted,
         showMoreIcon: true,
       ),
-      builder: (properties) => AnimatedThemeOrTheme(
+      builder: (properties) => NTheme(
         duration: const Duration(milliseconds: 300),
         data: theme,
         child: BackgroundWrapper(
@@ -651,6 +652,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
               listview: (controller) => NamidaListViewRaw(
                 scrollController: controller,
                 infoBox: (maxWidth) {
+                  final headerIconColor = Color.alphaBlend((bgColor ?? CurrentColor.inst.color).withOpacityExt(0.47), context.theme.colorScheme.onSurface);
                   final bigThumbWidth = maxWidth - horizontalBigThumbPadding * 2;
                   final bigThumbHeight = bigThumbWidth * 9 / 16;
                   return Align(
@@ -725,33 +727,33 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      NamidaText(
                                         title,
-                                        style: theme.textTheme.displayLarge,
+                                        style: NText.large,
                                       ),
                                       const SizedBox(height: 6.0),
-                                      Text(
+                                      NamidaText(
                                         videosCountTextFinal ?? '',
-                                        style: theme.textTheme.displaySmall,
+                                        style: NText.small,
                                       ),
                                       if (album != null) ...[
                                         const SizedBox(height: 2.0),
                                         _AlbumSubtitle(
                                           album: album,
-                                          style: theme.textTheme.displaySmall,
+                                          style: NText.small.of(context),
                                         ),
                                       ] else if (uploaderTitleAndViews.isNotEmpty == true) ...[
                                         const SizedBox(height: 2.0),
-                                        Text(
+                                        NamidaText(
                                           uploaderTitleAndViews,
-                                          style: theme.textTheme.displaySmall,
+                                          style: NText.small,
                                         ),
                                       ],
                                       if (description != null && description.isNotEmpty) ...[
                                         const SizedBox(height: 2.0),
-                                        Text(
+                                        NamidaText(
                                           description,
-                                          style: theme.textTheme.displaySmall,
+                                          style: NText.small,
                                         ),
                                       ],
                                     ],
@@ -762,7 +764,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.fixed(headerIconColor),
                                         icon: Broken.shuffle,
                                         tooltip: () => lang.shuffle,
                                         onPressed: () async {
@@ -772,7 +774,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         },
                                       ),
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.fixed(headerIconColor),
                                         icon: Broken.play_cricle,
                                         tooltip: () => lang.playLast,
                                         onPressed: () async {
@@ -782,7 +784,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                         },
                                       ),
                                       NamidaIconButton(
-                                        iconColor: context.defaultIconColor(bgColor),
+                                        iconColor: NColors.fixed(headerIconColor),
                                         icon: Broken.import,
                                         onPressed: () async {
                                           final videos = await _getAllPlaylistVideos();
@@ -813,7 +815,7 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                                           padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                           child: Icon(
                                             Broken.more_2,
-                                            color: context.defaultIconColor(bgColor),
+                                            color: headerIconColor,
                                           ),
                                         ),
                                       ),
@@ -833,8 +835,8 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
                   SliverMainAxisGroup(
                     slivers: [
                       PinnedHeaderSliver(
-                        child: ColoredBox(
-                          color: theme.scaffoldBackgroundColor,
+                        child: NColoredBox(
+                          color: NColors.scaffold,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                             child: Row(

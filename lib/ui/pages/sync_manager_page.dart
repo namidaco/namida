@@ -13,6 +13,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -150,9 +151,9 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
               final entries = log.entries;
               if (entries.isEmpty) {
                 return Center(
-                  child: Text(
+                  child: NamidaText(
                     lang.none,
-                    style: context.theme.textTheme.displayMedium,
+                    style: NText.medium,
                   ),
                 );
               }
@@ -329,7 +330,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                       ),
                       const SizedBox(height: 4.0),
 
-                      NamidaContainerDivider(
+                      const NamidaContainerDivider(
                         margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                       ),
 
@@ -356,7 +357,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                           children: [
                             NamidaIconButton(
                               icon: Broken.health,
-                              iconColor: context.defaultIconColor(),
+                              iconColor: NColors.defaultIcon(),
                               iconSize: 16.0,
                               horizontalPadding: 4.0,
                               tooltip: () => lang.diagnostics,
@@ -365,7 +366,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                             const SizedBox(width: 4.0),
                             NamidaIconButton(
                               icon: Broken.link_21,
-                              iconColor: context.defaultIconColor(),
+                              iconColor: NColors.defaultIcon(),
                               iconSize: 16.0,
                               horizontalPadding: 4.0,
                               tooltip: () => lang.connectByIp,
@@ -382,7 +383,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
 
                       const SizedBox(height: 4.0),
 
-                      NamidaContainerDivider(
+                      const NamidaContainerDivider(
                         margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
                       ),
 
@@ -398,7 +399,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                             children: [
                               NamidaIconButton(
                                 icon: Broken.magicpen,
-                                iconColor: context.defaultIconColor(),
+                                iconColor: NColors.defaultIcon(),
                                 iconSize: 16.0,
                                 horizontalPadding: 4.0,
                                 tooltip: () => lang.restoreDefaults,
@@ -499,16 +500,17 @@ class _SectionTitle extends StatelessWidget {
           if (count != null)
             ConstrainedBox(
               constraints: const BoxConstraints(minWidth: 24.0),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                  color: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                  color: colors.secondaryContainer.withOpacityExt(0.4),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                  child: Text(
+                  child: NamidaText(
                     total == null ? '$count' : '$count/$total',
-                    style: context.theme.textTheme.displaySmall?.copyWith(color: context.theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                    style: const NText(.small, weight: FontWeight.w600),
+                    color: NColors.primary,
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -516,9 +518,9 @@ class _SectionTitle extends StatelessWidget {
             ),
           if (count != null) const SizedBox(width: 6.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               title,
-              style: context.theme.textTheme.displayMedium,
+              style: NText.medium,
             ),
           ),
           ?trailing,
@@ -538,21 +540,21 @@ class _AdvancedViewToggle extends StatelessWidget {
       builder: (context, advancedView) {
         return NamidaInkWell(
           borderRadius: 8.0,
-          bgColor: advancedView ? context.theme.colorScheme.secondaryContainer.withOpacityExt(0.5) : null,
+          bgColor: advancedView ? const NColors(.secondaryContainer, opacity: 0.5) : null,
           padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
           onTap: () => settings.sync.syncItemsAdvancedView.save(!advancedView),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              NIcon(
                 Broken.setting_4,
                 size: 14.0,
-                color: context.defaultIconColor(),
+                color: NColors.defaultIcon(),
               ),
               const SizedBox(width: 6.0),
-              Text(
+              NamidaText(
                 lang.advanced,
-                style: context.theme.textTheme.displaySmall,
+                style: NText.small,
               ),
             ],
           ),
@@ -808,13 +810,13 @@ class _SyncActionEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = NColorsData.of(context);
     final statusColor = switch (entry.status) {
       SyncActionStatus.inProgress => Colors.orange,
       SyncActionStatus.success => Colors.green,
       SyncActionStatus.failed => Colors.red,
     };
-    final colorScheme = Color.alphaBlend(statusColor.withOpacityExt(0.5), theme.colorScheme.onSurface);
+    final colorScheme = Color.alphaBlend(statusColor.withOpacityExt(0.5), colors.onSurface);
     final deviceName = settings.sync.deviceIdNames.value[entry.deviceId] ?? entry.deviceId;
     final isSent = entry.type == SyncActionType.sent;
     return Padding(
@@ -836,20 +838,20 @@ class _SyncActionEntryTile extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    NamidaText(
                       deviceName,
-                      style: theme.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                     if (entry.items.isNotEmpty)
-                      Text(
+                      NamidaText(
                         entry.items.map((e) => e.toText()).join(', '),
-                        style: theme.textTheme.displaySmall,
+                        style: NText.small,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    Text(
+                    NamidaText(
                       '${entry.sizeBytes.fileSizeFormatted} • ${entry.count}',
-                      style: theme.textTheme.displaySmall,
+                      style: NText.small,
                     ),
                   ],
                 ),
@@ -871,9 +873,9 @@ class _SyncActionEntryTile extends StatelessWidget {
                           color: colorScheme,
                         ),
                   const SizedBox(height: 2.0),
-                  Text(
+                  NamidaText(
                     entry.timeMS.clockFormatted,
-                    style: theme.textTheme.displaySmall,
+                    style: NText.small,
                   ),
                 ],
               ),
@@ -919,7 +921,6 @@ class _SyncItemTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.theme.textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -928,9 +929,9 @@ class _SyncItemTitle extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Flexible(
-              child: Text(
+              child: NamidaText(
                 title,
-                style: textTheme.displayMedium,
+                style: NText.medium,
               ),
             ),
             if (isHeavy) ...[
@@ -940,7 +941,7 @@ class _SyncItemTitle extends StatelessWidget {
                 child: Icon(
                   Broken.danger,
                   size: 14.0,
-                  color: textTheme.displayMedium?.color?.withOpacityExt(0.5),
+                  color: NText.medium.of(context).color?.withOpacityExt(0.5),
                 ),
               ),
             ],
@@ -962,9 +963,9 @@ class _SyncItemTitle extends StatelessWidget {
                   if (hasUnknownYt) buffer.write('?');
                 }
               }
-              return Text(
+              return NamidaText(
                 buffer.toString(),
-                style: textTheme.displaySmall,
+                style: NText.small,
               );
             },
           ),
@@ -989,7 +990,7 @@ class SyncStatusIconWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = this.color ?? context.theme.colorScheme.secondary;
+    final color = this.color ?? NColorsData.of(context).secondary;
     return ObxO(
       rx: SyncDiscovery.serverRunning,
       builder: (context, serverRunning) => ObxO(
@@ -1002,8 +1003,8 @@ class SyncStatusIconWrapper extends StatelessWidget {
                     baseIcon: icon,
                     secondaryIcon: Broken.radar_1,
                     iconSize: iconSize,
-                    baseIconColor: color,
-                    secondaryIconColor: color,
+                    baseIconColor: NColors.fixed(color),
+                    secondaryIconColor: NColors.fixed(color),
                     secondaryIconSize: 13.0,
                   )
                 : Icon(
@@ -1020,12 +1021,12 @@ class SyncStatusIconWrapper extends StatelessWidget {
                 Positioned(
                   top: 0.0,
                   right: 0.0,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
+                  child: NDecoratedBox(
+                    decoration: (colors) => BoxDecoration(
                       shape: BoxShape.circle,
-                      color: connected ? Colors.green.withOpacityExt(0.8) : context.theme.colorScheme.onSurface.withOpacityExt(0.4),
+                      color: connected ? Colors.green.withOpacityExt(0.8) : colors.onSurface.withOpacityExt(0.4),
                       border: Border.all(
-                        color: context.theme.scaffoldBackgroundColor,
+                        color: colors.scaffold,
                         width: 1.0,
                       ),
                     ),
@@ -1048,10 +1049,10 @@ class _StatusDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return NDecoratedBox(
+      decoration: (colors) => BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? Colors.green.withOpacityExt(0.8) : context.theme.colorScheme.onSurface.withOpacityExt(0.3),
+        color: active ? Colors.green.withOpacityExt(0.8) : colors.onSurface.withOpacityExt(0.3),
       ),
       child: const SizedBox(width: 8.0, height: 8.0),
     );
@@ -1065,18 +1066,20 @@ class _RoleChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = context.theme.colorScheme.primary;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-        color: color.withOpacityExt(0.12),
-        border: Border.all(color: color.withOpacityExt(0.3)),
-      ),
+    return NDecoratedBox(
+      decoration: (colors) {
+        final color = colors.primary;
+        return BoxDecoration(
+          borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+          color: color.withOpacityExt(0.12),
+          border: Border.all(color: color.withOpacityExt(0.3)),
+        );
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-        child: Text(
+        child: NamidaText(
           text,
-          style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+          style: const NText(.small, size: .s11),
         ),
       ),
     );
@@ -1110,14 +1113,14 @@ class _DeviceInfoColumn extends StatelessWidget {
             mainAxisSize: .min,
             crossAxisAlignment: .start,
             children: [
-              Text(
+              NamidaText(
                 name,
-                style: context.theme.textTheme.displayMedium,
+                style: NText.medium,
               ),
               if (details != null && details.isNotEmpty) ...[
-                Text(
+                NamidaText(
                   details,
-                  style: context.theme.textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ],
             ],
@@ -1187,125 +1190,126 @@ class _DeviceCard extends StatelessWidget {
     final isBlocked = settings.sync.blockedClientIds.value.contains(deviceId);
     final canDisconnect = device.isConnected || device.isConnectingAsClient;
     // final statusCocolorSchemelor = device.isConnected ? Color.alphaBlend(Colors.green.withOpacityExt(0.5), context.theme.colorScheme.onSurface) : context.theme.colorScheme.onSurface;
-    final colorScheme = context.theme.colorScheme.primary;
+    final deviceContent = Column(
+      children: [
+        Row(
+          crossAxisAlignment: .start,
+          children: [
+            Expanded(
+              child: _DeviceInfoColumn(
+                isConnected: device.isConnected,
+                name: device.displayName,
+                details: details,
+              ),
+            ),
+            const SizedBox(width: 8.0),
+            if (device.asClient) _RoleChip(text: lang.server),
+            if (device.asClient && device.asServer) const SizedBox(width: 2.0),
+            if (device.asServer) _RoleChip(text: lang.client),
+            // const SizedBox(width: 4.0),
+            // NamidaPopupWrapper(
+            //   childrenDefault: _actionsMenuItems,
+            // ),
+          ],
+        ),
+        _DeviceProgress(deviceId: deviceId),
+        const SizedBox(height: 12.0),
+        _DeviceActionsRow(
+          actions: [
+            _DeviceAction(
+              title: device.connectedAsClient ? lang.reconnect : lang.connect,
+              enabled: networkDevice != null,
+              onTap: networkDevice == null ? null : () => SyncDiscovery.client.connectToServer(networkDevice, forceReconnect: device.connectedAsClient),
+            ),
+            _DeviceAction(
+              title: lang.disconnect,
+              enabled: canDisconnect,
+              onTap: _disconnect,
+            ),
+            isBlocked
+                ? _DeviceAction(
+                    title: lang.unblock,
+                    onTap: () => SyncDiscovery.server.unblockConnection(deviceId),
+                  )
+                : _DeviceAction(
+                    title: lang.block,
+                    onTap: () => SyncDiscovery.server.blockConnection(deviceId),
+                  ),
+          ],
+        ),
+        const SizedBox(height: 12.0),
+        ObxOClass(
+          rx: SyncSender.inst,
+          builder: (context, sender) {
+            final enabled = device.isConnected;
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 8,
+                      child: NamidaButton(
+                        dense: true,
+                        direction: .vertical,
+                        minHeight: NamidaButton.kDefaultMinHeight * 1.2,
+                        borderRadius: 18.0,
+                        icon: Broken.arrow_swap,
+                        text: lang.sync,
+                        tooltip: () => lang.sync,
+                        enabled: enabled,
+                        onTap: onSync,
+                      ),
+                    ),
+                    const SizedBox(width: 6.0),
+                    Expanded(
+                      flex: 7,
+                      child: NamidaButton(
+                        dense: true,
+                        direction: .vertical,
+                        minHeight: NamidaButton.kDefaultMinHeight * 1.2,
+                        borderRadius: 18.0,
+                        icon: Broken.received,
+                        text: lang.receive,
+                        tooltip: () => lang.receive,
+                        enabled: enabled,
+                        onTap: onReceive,
+                      ),
+                    ),
+                    const SizedBox(width: 6.0),
+                    Expanded(
+                      flex: 7,
+                      child: NamidaButton(
+                        dense: true,
+                        direction: .vertical,
+                        minHeight: NamidaButton.kDefaultMinHeight * 1.2,
+                        borderRadius: 18.0,
+                        icon: Broken.send_2,
+                        text: lang.send,
+                        tooltip: () => lang.send,
+                        enabled: enabled,
+                        isLoading: sender.isSendingTo(deviceId),
+                        onTap: onSend,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       child: SizedBox(
         width: context.width,
-        child: NamidaCoolBox(
-          colorScheme: colorScheme,
-          reducedColors: true,
-          extraVPadding: true,
-          vPadding: 10.0,
-          builder: (context) => Column(
-            children: [
-              Row(
-                crossAxisAlignment: .start,
-                children: [
-                  Expanded(
-                    child: _DeviceInfoColumn(
-                      isConnected: device.isConnected,
-                      name: device.displayName,
-                      details: details,
-                    ),
-                  ),
-                  const SizedBox(width: 8.0),
-                  if (device.asClient) _RoleChip(text: lang.server),
-                  if (device.asClient && device.asServer) const SizedBox(width: 2.0),
-                  if (device.asServer) _RoleChip(text: lang.client),
-                  // const SizedBox(width: 4.0),
-                  // NamidaPopupWrapper(
-                  //   childrenDefault: _actionsMenuItems,
-                  // ),
-                ],
-              ),
-              _DeviceProgress(deviceId: deviceId),
-              const SizedBox(height: 12.0),
-              _DeviceActionsRow(
-                colorScheme: colorScheme,
-                actions: [
-                  _DeviceAction(
-                    title: device.connectedAsClient ? lang.reconnect : lang.connect,
-                    enabled: networkDevice != null,
-                    onTap: networkDevice == null ? null : () => SyncDiscovery.client.connectToServer(networkDevice, forceReconnect: device.connectedAsClient),
-                  ),
-                  _DeviceAction(
-                    title: lang.disconnect,
-                    enabled: canDisconnect,
-                    onTap: _disconnect,
-                  ),
-                  isBlocked
-                      ? _DeviceAction(
-                          title: lang.unblock,
-                          onTap: () => SyncDiscovery.server.unblockConnection(deviceId),
-                        )
-                      : _DeviceAction(
-                          title: lang.block,
-                          onTap: () => SyncDiscovery.server.blockConnection(deviceId),
-                        ),
-                ],
-              ),
-              const SizedBox(height: 12.0),
-              ObxOClass(
-                rx: SyncSender.inst,
-                builder: (context, sender) {
-                  final enabled = device.isConnected;
-                  return Column(
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            flex: 8,
-                            child: NamidaButton(
-                              dense: true,
-                              direction: .vertical,
-                              minHeight: NamidaButton.kDefaultMinHeight * 1.2,
-                              borderRadius: 18.0,
-                              icon: Broken.arrow_swap,
-                              text: lang.sync,
-                              tooltip: () => lang.sync,
-                              enabled: enabled,
-                              onTap: onSync,
-                            ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          Expanded(
-                            flex: 7,
-                            child: NamidaButton(
-                              dense: true,
-                              direction: .vertical,
-                              minHeight: NamidaButton.kDefaultMinHeight * 1.2,
-                              borderRadius: 18.0,
-                              icon: Broken.received,
-                              text: lang.receive,
-                              tooltip: () => lang.receive,
-                              enabled: enabled,
-                              onTap: onReceive,
-                            ),
-                          ),
-                          const SizedBox(width: 6.0),
-                          Expanded(
-                            flex: 7,
-                            child: NamidaButton(
-                              dense: true,
-                              direction: .vertical,
-                              minHeight: NamidaButton.kDefaultMinHeight * 1.2,
-                              borderRadius: 18.0,
-                              icon: Broken.send_2,
-                              text: lang.send,
-                              tooltip: () => lang.send,
-                              enabled: enabled,
-                              isLoading: sender.isSendingTo(deviceId),
-                              onTap: onSend,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ],
+        child: NBuilder(
+          builder: (context, colors) => NamidaCoolBox(
+            colorScheme: colors.primary,
+            reducedColors: true,
+            extraVPadding: true,
+            vPadding: 10.0,
+            builder: (context) => deviceContent,
           ),
         ),
       ),
@@ -1326,55 +1330,56 @@ class _DeviceAction {
 }
 
 class _DeviceActionsRow extends StatelessWidget {
-  final Color colorScheme;
   final List<_DeviceAction> actions;
 
   const _DeviceActionsRow({
-    required this.colorScheme,
     required this.actions,
   });
 
   @override
   Widget build(BuildContext context) {
     const kBrRaw = 8.0;
-    return SizedBox(
-      width: context.width,
-      child: NamidaCoolBox(
-        colorScheme: colorScheme,
-        reducedColors: true,
-        borderRadius: BorderRadius.circular(kBrRaw.multipliedRadius),
-        hPadding: 0.0,
-        vPadding: 0.0,
-        builder: (context) => IntrinsicHeight(
-          child: Row(
-            children: actions
-                .map(
-                  (a) => Expanded(
-                    child: NamidaInkWell(
-                      borderRadius: kBrRaw * 0.75,
-                      onTap: a.enabled ? a.onTap : null,
-                      padding: const EdgeInsets.symmetric(vertical: 10.0),
-                      child: AnimatedOpacity(
-                        duration: const Duration(milliseconds: 200),
-                        opacity: a.enabled ? 1.0 : 0.4,
-                        child: Text(
-                          a.title,
-                          textAlign: TextAlign.center,
-                          style: context.theme.textTheme.displaySmall,
-                        ),
-                      ),
+    final actionsRow = IntrinsicHeight(
+      child: Row(
+        children: actions
+            .map(
+              (a) => Expanded(
+                child: NamidaInkWell(
+                  borderRadius: kBrRaw * 0.75,
+                  onTap: a.enabled ? a.onTap : null,
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: a.enabled ? 1.0 : 0.4,
+                    child: NamidaText(
+                      a.title,
+                      textAlign: TextAlign.center,
+                      style: NText.small,
                     ),
                   ),
-                )
-                .addSeparators(
-                  separator: const NamidaContainerDivider(
-                    height: 12.0,
-                    width: 1.5,
-                    margin: EdgeInsets.symmetric(horizontal: 2.0),
-                  ),
-                )
-                .toList(),
-          ),
+                ),
+              ),
+            )
+            .addSeparators(
+              separator: const NamidaContainerDivider(
+                height: 12.0,
+                width: 1.5,
+                margin: EdgeInsets.symmetric(horizontal: 2.0),
+              ),
+            )
+            .toList(),
+      ),
+    );
+    return SizedBox(
+      width: context.width,
+      child: NBuilder(
+        builder: (context, colors) => NamidaCoolBox(
+          colorScheme: colors.primary,
+          reducedColors: true,
+          borderRadius: BorderRadius.circular(kBrRaw.multipliedRadius),
+          hPadding: 0.0,
+          vPadding: 0.0,
+          builder: (context) => actionsRow,
         ),
       ),
     );
@@ -1436,16 +1441,15 @@ class _SyncProgressRow extends StatelessWidget {
       rx: progressRx,
       builder: (context, progress) => progress == null
           ? const SizedBox()
-          : Text(
+          : NamidaText(
               '${progress.$1.fileSizeFormatted} / ${progress.$2.fileSizeFormatted}',
-              style: context.theme.textTheme.displaySmall,
+              style: NText.small,
             ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final headlineItem = info.headlineItem;
     final extraItemsCount = info.extraActiveItemsCount;
     final itemProgress = info.itemProgress;
@@ -1460,29 +1464,27 @@ class _SyncProgressRow extends StatelessWidget {
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 18.0),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
+                child: NDecoratedBox(
+                  decoration: (colors) => BoxDecoration(
                     borderRadius: BorderRadius.circular(4.0.multipliedRadius),
-                    color: theme.colorScheme.secondaryContainer.withOpacityExt(0.3),
+                    color: colors.secondaryContainer.withOpacityExt(0.3),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                     child: Row(
                       mainAxisSize: .min,
                       children: [
-                        Icon(
+                        NIcon(
                           icon,
                           size: 12.0,
-                          color: context.defaultIconColor(),
+                          color: NColors.defaultIcon(),
                         ),
                         const SizedBox(width: 4.0),
                         Flexible(
-                          child: Text(
+                          child: NamidaText(
                             '${info.progress}/${info.total}',
-                            style: theme.textTheme.displaySmall?.copyWith(
-                              color: theme.colorScheme.secondary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: const NText(.small, weight: FontWeight.w500),
+                            color: NColors.secondary,
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -1495,33 +1497,33 @@ class _SyncProgressRow extends StatelessWidget {
               Expanded(
                 child: headlineItem == null
                     ? const SizedBox()
-                    : Text(
+                    : NamidaText(
                         extraItemsCount > 0 ? '${headlineItem.toText()} +$extraItemsCount' : headlineItem.toText(),
-                        style: theme.textTheme.displaySmall,
+                        style: NText.small,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
               ),
               const SizedBox(width: 4.0),
               if (itemProgress != null)
-                Text(
+                NamidaText(
                   itemProgress.totalBytes > 0
                       ? '${itemProgress.count}/${itemProgress.totalCount} • ${itemProgress.bytes.fileSizeFormatted} / ${itemProgress.totalBytes.fileSizeFormatted}'
                       : '${itemProgress.count}/${itemProgress.totalCount}',
-                  style: theme.textTheme.displaySmall?.copyWith(
-                    fontSize: 12.0,
-                  ),
+                  style: const NText(.small, size: .s12),
                 )
               else if (incomingDeviceId != null)
                 _socketProgressText(incomingDeviceId!),
             ],
           ),
           const SizedBox(height: 6.0),
-          LinearProgressIndicator(
-            borderRadius: BorderRadius.circular(99.0),
-            value: info.overallFraction,
-            minHeight: 3.0,
-            backgroundColor: theme.colorScheme.onSurface.withOpacityExt(0.1),
+          NBuilder(
+            builder: (context, colors) => LinearProgressIndicator(
+              borderRadius: BorderRadius.circular(99.0),
+              value: info.overallFraction,
+              minHeight: 3.0,
+              backgroundColor: colors.onSurface.withOpacityExt(0.1),
+            ),
           ),
         ],
       ),
@@ -1536,29 +1538,32 @@ class _AvailableDeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final deviceRow = Row(
+      children: [
+        Expanded(
+          child: _DeviceInfoColumn(
+            isConnected: false,
+            name: serverDevice.deviceName,
+            details: '${serverDevice.address}:${serverDevice.port}',
+          ),
+        ),
+        const SizedBox(width: 8.0),
+        NamidaButton(
+          icon: Broken.link,
+          text: lang.connect,
+          onTap: () => SyncDiscovery.client.connectToServer(serverDevice).catchError(_showConnectErrorSnack),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
       child: SizedBox(
         width: context.width,
-        child: NamidaCoolBox(
-          colorScheme: context.theme.colorScheme.secondary,
-          extraVPadding: true,
-          builder: (context) => Row(
-            children: [
-              Expanded(
-                child: _DeviceInfoColumn(
-                  isConnected: false,
-                  name: serverDevice.deviceName,
-                  details: '${serverDevice.address}:${serverDevice.port}',
-                ),
-              ),
-              const SizedBox(width: 8.0),
-              NamidaButton(
-                icon: Broken.link,
-                text: lang.connect,
-                onTap: () => SyncDiscovery.client.connectToServer(serverDevice).catchError(_showConnectErrorSnack),
-              ),
-            ],
+        child: NBuilder(
+          builder: (context, colors) => NamidaCoolBox(
+            colorScheme: colors.secondary,
+            extraVPadding: true,
+            builder: (context) => deviceRow,
           ),
         ),
       ),
@@ -1658,9 +1663,9 @@ class _ConnectByIpDialogState extends State<_ConnectByIpDialog> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: Text(
+            child: NamidaText(
               lang.enterTheAddressShownOnTheOtherDevice,
-              style: context.theme.textTheme.displaySmall,
+              style: NText.small,
             ),
           ),
           const SizedBox(height: 12.0),
@@ -1718,15 +1723,17 @@ class _SyncDiagnosticsDialogState extends State<_SyncDiagnosticsDialog> {
             width: namida.width,
             child: report == null
                 ? Center(
-                    child: ThreeArchedCircle(
-                      color: context.theme.colorScheme.secondary.withOpacityExt(0.5),
-                      size: 48.0,
+                    child: NBuilder(
+                      builder: (context, colors) => ThreeArchedCircle(
+                        color: colors.secondary.withOpacityExt(0.5),
+                        size: 48.0,
+                      ),
                     ),
                   )
                 : SingleChildScrollView(
                     child: SelectableText(
                       report,
-                      style: context.theme.textTheme.displaySmall?.copyWith(fontFamily: 'monospace'),
+                      style: NText.small.of(context).copyWith(fontFamily: 'monospace'),
                     ),
                   ),
           ),

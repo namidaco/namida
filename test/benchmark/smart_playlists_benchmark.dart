@@ -85,14 +85,14 @@ void main() {
 
     final rules = <String, SmartPlaylistRuleBase>{
       'text contains (cleanup)': SmartPlaylistRuleText(
-        data: [SmartPlaylistTextDataTokenLiteral('love')],
+        data: [const SmartPlaylistTextDataTokenLiteral('love')],
         data2: null,
         filter: SmartPlaylistRuleFilterText.contains,
         source: SmartPlaylistRuleFilterTextSource.title,
         enableCleanup: true,
       ),
       'text regex (cleanup)': SmartPlaylistRuleText(
-        data: [SmartPlaylistTextDataTokenLiteral(r'^(the|a)\s')],
+        data: [const SmartPlaylistTextDataTokenLiteral(r'^(the|a)\s')],
         data2: null,
         filter: SmartPlaylistRuleFilterText.regexMatch,
         source: SmartPlaylistRuleFilterTextSource.title,

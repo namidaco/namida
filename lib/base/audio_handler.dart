@@ -607,7 +607,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
             label: title,
             disabled: true,
           ),
-          TrayMenuItem.separator(),
+          const TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.previous,
             icon: trayIcons?.previous,
@@ -630,7 +630,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
             label: isFavourite == true ? (isLike ? lang.liked : lang.removeFromFavourites) : (isLike ? lang.like : lang.addToFavourites),
             disabled: isFavourite == null,
           ),
-          TrayMenuItem.separator(),
+          const TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.showWindow,
             icon: trayIcons?.showWindow,
@@ -641,7 +641,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
             icon: trayIcons?.icStatMusicnote,
             label: lang.miniLyricsWindow,
           ),
-          TrayMenuItem.separator(),
+          const TrayMenuItem.separator(),
           TrayMenuItem(
             key: TrayMenuKey.exit,
             icon: trayIcons?.stop,
@@ -2113,7 +2113,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
     try {
       if (config == null) {
-        throw _NoPreparedConfigException('Failed to fetch required item info');
+        throw const _NoPreparedConfigException('Failed to fetch required item info');
       }
 
       duration = await setSource(
@@ -2815,7 +2815,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   int _headsetClicksCount = 0;
 
   Timer _createHeadsetClicksTimer(void Function() callback) {
-    return Timer(Duration(milliseconds: 250), () {
+    return Timer(const Duration(milliseconds: 250), () {
       callback();
 
       // -- reset timer

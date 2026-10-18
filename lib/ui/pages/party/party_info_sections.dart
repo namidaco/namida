@@ -38,32 +38,32 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final countText = this.countText;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         children: [
           if (countText != null) ...[
-            DecoratedBox(
-              decoration: BoxDecoration(
+            NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                color: theme.colorScheme.secondaryContainer.withOpacityExt(0.4),
+                color: colors.secondaryContainer.withOpacityExt(0.4),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
-                child: Text(
+                child: NamidaText(
                   countText,
-                  style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.w600),
+                  style: const NText(.small, weight: FontWeight.w600),
+                  color: NColors.primary,
                 ),
               ),
             ),
             const SizedBox(width: 6.0),
           ],
           Expanded(
-            child: Text(
+            child: NamidaText(
               title,
-              style: theme.textTheme.displayMedium,
+              style: NText.medium,
             ),
           ),
         ],
@@ -105,9 +105,9 @@ class _Chip extends StatelessWidget {
               ),
               const SizedBox(width: 4.0),
             ],
-            Text(
+            NamidaText(
               text,
-              style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+              style: const NText(.small, size: .s11),
             ),
           ],
         ),
@@ -123,11 +123,12 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
     final (text, color) = switch (status) {
       PartyConnectionStatus.connected => (lang.partyStatusConnected, Colors.green),
       PartyConnectionStatus.pendingApproval => (lang.partyStatusPendingApproval, Colors.orange),
       PartyConnectionStatus.reconnecting => (lang.partyStatusReconnecting, Colors.orange),
-      PartyConnectionStatus.connecting || PartyConnectionStatus.closed => (lang.partyStatusConnecting, context.theme.colorScheme.primary),
+      PartyConnectionStatus.connecting || PartyConnectionStatus.closed => (lang.partyStatusConnecting, colors.primary),
     };
     return _Chip(
       text: text,
@@ -158,7 +159,7 @@ class _SyncStateChip extends StatelessWidget {
           child: NamidaInkWell(
             onTap: onTap,
             borderRadius: 6.0,
-            bgColor: color.withOpacityExt(0.12),
+            bgColor: NColors.fixed(color.withOpacityExt(0.12)),
             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -171,9 +172,9 @@ class _SyncStateChip extends StatelessWidget {
                 const SizedBox(width: 4.0),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 140.0),
-                  child: Text(
+                  child: NamidaText(
                     text,
-                    style: context.theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                    style: const NText(.small, size: .s11),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -322,7 +323,6 @@ class _ReactionOverlayState extends State<_ReactionOverlay> with SingleTickerPro
     final emoji = _emoji;
     if (emoji == null) return const SizedBox();
     final name = _name;
-    final theme = context.theme;
     return IgnorePointer(
       child: Obx(
         (context) => Align(
@@ -334,9 +334,9 @@ class _ReactionOverlayState extends State<_ReactionOverlay> with SingleTickerPro
                 opacity: _opacity,
                 child: SlideTransition(
                   position: _slide,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: theme.cardColor.withOpacityExt(0.9),
+                  child: NDecoratedBox(
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.card.withOpacityExt(0.9),
                       borderRadius: BorderRadius.circular(16.0.multipliedRadius),
                     ),
                     child: Padding(
@@ -350,9 +350,9 @@ class _ReactionOverlayState extends State<_ReactionOverlay> with SingleTickerPro
                           ),
                           if (name != null) ...[
                             const SizedBox(width: 8.0),
-                            Text(
+                            NamidaText(
                               name,
-                              style: theme.textTheme.displaySmall,
+                              style: NText.small,
                             ),
                           ],
                         ],
@@ -647,13 +647,7 @@ class _MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final isMe = me?.n == member.n;
-    final (roleText, roleColor, roleIcon) = switch (member.role) {
-      PartyRole.host => (lang.host, Colors.orange, Broken.crown_1),
-      PartyRole.admin => (lang.partyRoleAdmin, theme.colorScheme.primary, Broken.shield_tick),
-      PartyRole.guest => (lang.partyRoleGuest, theme.colorScheme.onSurface.withOpacityExt(0.5), null),
-    };
     final actionItems = _actionItems();
     final tile = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
@@ -664,33 +658,44 @@ class _MemberTile extends StatelessWidget {
               children: [
                 Tooltip(
                   message: member.listening ? lang.partyListenOnThisDevice : lang.partyRemoteControl,
-                  child: Icon(
+                  child: NIcon(
                     member.listening ? Broken.headphone : Broken.mobile,
                     size: 20.0,
-                    color: context.defaultIconColor(),
+                    color: NColors.defaultIcon(),
                   ),
                 ),
                 const SizedBox(width: 12.0),
                 Flexible(
-                  child: Text(
+                  child: NamidaText(
                     member.name,
-                    style: theme.textTheme.displayMedium,
+                    style: NText.medium,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (isMe) ...[
                   const SizedBox(width: 6.0),
-                  _Chip(
-                    text: lang.partyYou,
-                    color: theme.colorScheme.secondary,
+                  NBuilder(
+                    builder: (context, colors) => _Chip(
+                      text: lang.partyYou,
+                      color: colors.secondary,
+                    ),
                   ),
                 ],
                 const SizedBox(width: 6.0),
-                _Chip(
-                  text: roleText,
-                  color: roleColor,
-                  icon: roleIcon,
+                NBuilder(
+                  builder: (context, colors) {
+                    final (roleText, roleColor, roleIcon) = switch (member.role) {
+                      PartyRole.host => (lang.host, Colors.orange, Broken.crown_1),
+                      PartyRole.admin => (lang.partyRoleAdmin, colors.primary, Broken.shield_tick),
+                      PartyRole.guest => (lang.partyRoleGuest, colors.onSurface.withOpacityExt(0.5), null),
+                    };
+                    return _Chip(
+                      text: roleText,
+                      color: roleColor,
+                      icon: roleIcon,
+                    );
+                  },
                 ),
               ],
             ),
@@ -698,10 +703,10 @@ class _MemberTile extends StatelessWidget {
           if (actionItems.isNotEmpty)
             NamidaPopupWrapper(
               childrenDefault: () => actionItems,
-              child: Icon(
+              child: NIcon(
                 Broken.more,
                 size: 18.0,
-                color: context.defaultIconColor(),
+                color: NColors.defaultIcon(),
               ),
             ),
         ],
@@ -902,8 +907,6 @@ class _InviteSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final link = inviteLink;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -919,22 +922,22 @@ class _InviteSection extends StatelessWidget {
                       onTap: () => NamidaUtils.copyToClipboard(content: code, title: lang.partyCode),
                       borderRadius: 10.0,
                       padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-                      bgColor: theme.cardColor.withOpacityExt(0.4),
+                      bgColor: const NColors(.card, opacity: 0.4),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Row(
                             children: [
-                              Text(
+                              NamidaText(
                                 lang.partyCode,
-                                style: textTheme.displaySmall,
+                                style: NText.small,
                               ),
                               const SizedBox(width: 6.0),
                               Icon(
                                 Broken.copy,
                                 size: 14.0,
-                                color: textTheme.displaySmall?.color,
+                                color: NText.small.of(context).color,
                               ),
                             ],
                           ),
@@ -943,7 +946,7 @@ class _InviteSection extends StatelessWidget {
                             alignment: AlignmentDirectional.centerStart,
                             child: Text(
                               code,
-                              style: textTheme.displayLarge?.copyWith(fontSize: 26.0, letterSpacing: 4.0),
+                              style: NText.large.of(context).copyWith(fontSize: 26.0, letterSpacing: 4.0),
                             ),
                           ),
                         ],
@@ -982,7 +985,7 @@ class _InviteSection extends StatelessWidget {
                 const SizedBox(width: 14.0),
                 NamidaInkWell(
                   onTap: () => _showQrCode(link),
-                  bgColor: Colors.white,
+                  bgColor: NColors.fixed(Colors.white),
                   borderRadius: 10.0,
                   padding: const EdgeInsets.all(6.0),
                   child: RepaintBoundary(

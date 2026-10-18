@@ -100,7 +100,7 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                 child: SmoothCustomScrollView(
                   controller: scrollController,
                   slivers: [
-                    SliverToBoxAdapter(child: listHeader),
+                    const SliverToBoxAdapter(child: listHeader),
                     ObxPrefer(
                       enabled: sort.requiresHistory,
                       rx: HistoryController.inst.topTracksMapListens,

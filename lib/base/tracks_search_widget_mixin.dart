@@ -17,6 +17,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/create_smart_playlist_dialog.dart';
@@ -363,8 +364,8 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: context.theme.scaffoldBackgroundColor,
+    return NColoredBox(
+      color: NColors.scaffold,
       child: ExpandableBox(
         enableHero: false,
         isBarVisible: true,
@@ -372,12 +373,12 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
         onSearchBoxVisibilityChange: state.onSearchBoxVisibilityChange,
         onCloseButtonPressed: state.clearSearch,
         onFilterIconLongPress: onFilterIconLongPress,
-        leftWidgets: [
-          const Icon(
+        leftWidgets: const [
+          Icon(
             Broken.musicnote,
             size: 18.0,
           ),
-          const SizedBox(width: 10.0),
+          SizedBox(width: 10.0),
         ],
         sortByMenuWidget: SortByMenu(
           title: presetName ?? sort?.toText() ?? lang.custom,

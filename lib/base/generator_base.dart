@@ -52,7 +52,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   }
 
   Iterable<E> generateRecommendedSimilarDiscoverDateFor(E item, E Function(T current) itemToSub) {
-    final qit = QueueInsertionType.algorithmDiscoverDate;
+    const qit = QueueInsertionType.algorithmDiscoverDate;
     final q = qit.toQueueInsertion();
     final listensSampleCount = q.sample ?? 2;
     final firstListens = historyController.topTracksMapListens.value[item]?.take(listensSampleCount);
@@ -74,7 +74,7 @@ abstract class NamidaGeneratorBase<T extends ItemWithDate, E> {
   }
 
   Iterable<E> generateRecommendedSimilarTimeRangeFor(E item, E Function(T current) itemToSub) {
-    final qit = QueueInsertionType.algorithmTimeRange;
+    const qit = QueueInsertionType.algorithmTimeRange;
     final listens = historyController.topTracksMapListens.value[item];
     final q = qit.toQueueInsertion();
     final daysCount = q.sampleDays ?? qit.recommendedSampleDaysCount ?? 7;

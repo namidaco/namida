@@ -347,7 +347,7 @@ class _LyricsKaraokeTextState extends State<LyricsKaraokeText> with TickerProvid
       maxLines: maxLines,
       ellipsis: maxLines == null ? null : _ellipsis,
       textWidthBasis: TextWidthBasis.parent,
-      textHeightBehavior: TextHeightBehavior(
+      textHeightBehavior: const TextHeightBehavior(
         applyHeightToFirstAscent: false,
         applyHeightToLastDescent: false,
       ),

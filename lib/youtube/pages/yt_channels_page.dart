@@ -31,6 +31,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -395,8 +396,6 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const horizontalPadding = 6.0;
 
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
@@ -407,7 +406,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
     final currentChannelSubscribersText = currentChannelInfo?.subscribersCountText ?? currentChannelInfo?.subscribersCount?.displaySubscribersKeywordShort;
 
-    final selectedChannelBgColor = theme.colorScheme.secondary.withOpacityExt(0.1);
+    const selectedChannelBgColor = NColors(.secondary, opacity: 0.1);
 
     final importButton = Padding(
       padding: const EdgeInsets.only(left: _kHeaderGap),
@@ -505,7 +504,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                               scrollDirection: Axis.horizontal,
                               child: NamidaInkWell(
                                 borderRadius: 24.0,
-                                bgColor: theme.cardColor,
+                                bgColor: NColors.card,
                                 padding: const EdgeInsets.symmetric(vertical: 4.0),
                                 onTap: YTChannelSubpage(channelID: selectedChannel.channelID, sub: selectedChannel).navigate,
                                 child: Row(
@@ -526,15 +525,15 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        NamidaText(
                                           selectedChannel.title != '' ? selectedChannel.title : currentChannelInfo?.title ?? '',
-                                          style: textTheme.displayMedium,
+                                          style: NText.medium,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         if (currentChannelSubscribersText != null)
-                                          Text(
+                                          NamidaText(
                                             currentChannelSubscribersText,
-                                            style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                            style: const NText(.small, size: .s10),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                       ],
@@ -762,14 +761,12 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     const horizontalPadding = 6.0;
 
     final currentChannelInfo = _currentChannelInfo;
     final currentChannelThumbnail = currentChannelInfo?.thumbnails.pick()?.url;
 
-    final selectedChannelBgColor = theme.colorScheme.secondary.withOpacityExt(0.1);
+    const selectedChannelBgColor = NColors(.secondary, opacity: 0.1);
 
     final userChannelsResult = _userChannelsResult;
     final userChannels = userChannelsResult?.items ?? List<YoutiPieChannelInfo?>.filled(10, null);
@@ -787,7 +784,7 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                         scrollDirection: Axis.horizontal,
                         child: NamidaInkWell(
                           borderRadius: 24.0,
-                          bgColor: theme.cardColor,
+                          bgColor: NColors.card,
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           onTap: YTChannelSubpage(channelID: currentChannelInfo.id).navigate,
                           child: Row(
@@ -807,15 +804,15 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  NamidaText(
                                     currentChannelInfo.title ?? '',
-                                    style: textTheme.displayMedium,
+                                    style: NText.medium,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   if (currentChannelInfo.subscribed ?? false)
-                                    Text(
+                                    NamidaText(
                                       lang.subscribed,
-                                      style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                                      style: const NText(.small, size: .s10),
                                       overflow: TextOverflow.ellipsis,
                                     ),
                                 ],
@@ -858,8 +855,8 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
               animationDurationMS: 150,
               bgColor: channel != null && currentChannelInfo?.id == channel.id ? selectedChannelBgColor : null,
               width: thumbSize,
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
-              margin: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+              padding: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
+              margin: const EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
               onTap: () => _updateChannel(channel, forceRequest: false),
               child: Column(
                 children: [
@@ -874,9 +871,9 @@ class _YoutubeChannelsHostedPageState extends State<YoutubeChannelsHostedPage> w
                     isCircle: true,
                   ),
                   const SizedBox(height: 4.0),
-                  Text(
+                  NamidaText(
                     channelName ?? '',
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -1021,17 +1018,15 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return AnimatedSizedBox(
       duration: const Duration(milliseconds: 200),
       width: context.width,
       animateWidth: false,
       height: listHeight,
-      child: Container(
+      child: NContainer(
         padding: EdgeInsets.only(bottom: _listBottomPadding, top: _listTopPadding),
-        decoration: BoxDecoration(
-          color: Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.4), theme.cardTheme.color!),
+        decoration: (colors) => BoxDecoration(
+          color: Color.alphaBlend(colors.scaffold.withOpacityExt(0.4), colors.cardTheme),
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(12.0.multipliedRadius),
           ),
@@ -1041,7 +1036,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
             NamidaInkWell(
               borderRadius: 10.0,
               animationDurationMS: 150,
-              bgColor: isAllSelected ? theme.colorScheme.secondary.withOpacityExt(0.15) : null,
+              bgColor: isAllSelected ? const NColors(.secondary, opacity: 0.15) : null,
               width: _thumbSize,
               margin: EdgeInsets.symmetric(horizontal: horizontalPadding),
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding / 2),
@@ -1066,9 +1061,9 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4.0),
-                  Text(
+                  NamidaText(
                     lang.all,
-                    style: textTheme.displaySmall,
+                    style: NText.small,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -1077,7 +1072,7 @@ class _ChannelsRowSlider<T> extends StatelessWidget {
             Expanded(
               child: SuperSmoothListView.builder(
                 controller: controller,
-                padding: EdgeInsets.only(right: kFABSize + 12.0),
+                padding: const EdgeInsets.only(right: kFABSize + 12.0),
                 scrollDirection: Axis.horizontal,
                 itemCount: list.length,
                 itemExtent: _thumbSize + horizontalPadding * 2,
@@ -1134,7 +1129,7 @@ class _ChannelGroupsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final countStyle = context.textTheme.displaySmall;
+    final countStyle = NText.small.of(context);
     return ObxO(
       rx: YoutubeSubscriptionsController.inst.allGroups,
       builder: (context, allGroups) {
@@ -1174,7 +1169,7 @@ class _ChannelGroupsButton extends StatelessWidget {
 
 class _ChannelSmallCard extends StatefulWidget {
   final YoutubeSubscription sub;
-  final Color? bgColor;
+  final NColors? bgColor;
   final double width;
   final double horizontalPadding;
   final void Function() onTap;
@@ -1220,7 +1215,6 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final ch = widget.sub;
     final info = _channelInfo;
     final channelTitle = info?.title;
@@ -1247,9 +1241,9 @@ class __ChannelSmallCardState extends State<_ChannelSmallCard> {
             isCircle: true,
           ),
           const SizedBox(height: 4.0),
-          Text(
+          NamidaText(
             channelName,
-            style: textTheme.displaySmall,
+            style: NText.small,
             overflow: TextOverflow.ellipsis,
           ),
         ],

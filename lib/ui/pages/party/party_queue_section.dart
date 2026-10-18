@@ -48,9 +48,9 @@ class _PartyQueueSectionState extends State<_PartyQueueSection> {
                 final entries = state.entries;
                 if (entries.isEmpty) {
                   return Center(
-                    child: Text(
+                    child: NamidaText(
                       lang.partyQueueEmpty,
-                      style: context.theme.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   );
                 }
@@ -112,13 +112,11 @@ class _NowPlayingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = PartyController.inst;
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return Container(
+    return NContainer(
       margin: const EdgeInsets.all(12.0),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-      decoration: BoxDecoration(
-        color: theme.cardColor.withOpacityExt(0.6),
+      decoration: (colors) => BoxDecoration(
+        color: colors.card.withOpacityExt(0.6),
         borderRadius: BorderRadius.circular(20.0.multipliedRadius),
       ),
       child: ObxO(
@@ -131,32 +129,32 @@ class _NowPlayingCard extends StatelessWidget {
             final anchor = state.anchor;
             final entry = state.currentEntry;
             final canControl = me != null && entry != null && state.canControl(me);
-            final iconColor = canControl ? context.defaultIconColor() : theme.disabledColor;
+            final iconColor = canControl ? NColors.defaultIcon() : NColors.disabled;
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Row(
                   children: [
-                    Icon(
+                    NIcon(
                       entry == null || entry.isLocal ? Broken.musicnote : Broken.video_square,
                       size: 22.0,
-                      color: context.defaultIconColor(),
+                      color: NColors.defaultIcon(),
                     ),
                     const SizedBox(width: 12.0),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          NamidaText(
                             entry == null ? lang.partyQueueEmpty : entry.title,
-                            style: textTheme.displayMedium,
+                            style: NText.medium,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (entry != null && entry.artist.isNotEmpty)
-                            Text(
+                            NamidaText(
                               entry.artist,
-                              style: textTheme.displaySmall,
+                              style: NText.small,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -260,7 +258,7 @@ class _PositionBarState extends State<_PositionBar> {
     final durationMS = widget.durationMS;
     final maxMS = durationMS > 0 ? durationMS.toDouble() : 1.0;
     final positionMS = _draggingMS ?? widget.anchor.positionAt(PartyController.inst.nowMS()).toDouble().clampDouble(0.0, maxMS);
-    final textStyle = context.theme.textTheme.displaySmall;
+    final textStyle = NText.small.of(context);
     return Row(
       children: [
         Text(
@@ -307,8 +305,6 @@ class _QueueEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final addedBy = this.addedBy;
     final artist = entry.artist;
     final subtitle = addedBy == null
@@ -318,10 +314,10 @@ class _QueueEntryTile extends StatelessWidget {
         : '$artist  •  ${lang.partyAddedBy(name: addedBy)}';
     final content = Row(
       children: [
-        Icon(
+        NIcon(
           entry.isLocal ? Broken.musicnote : Broken.video_square,
           size: 20.0,
-          color: context.defaultIconColor(),
+          color: NColors.defaultIcon(),
         ),
         if (entry.fallbackApproximate)
           NamidaTooltip(
@@ -341,23 +337,24 @@ class _QueueEntryTile extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              NamidaText(
                 entry.title,
-                style: textTheme.displayMedium,
+                style: NText.medium,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               if (subtitle.isNotEmpty)
-                Text(
+                NamidaText(
                   subtitle,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               if (isUnavailable)
-                Text(
+                NamidaText(
                   lang.partyUnavailableHere,
-                  style: textTheme.displaySmall?.copyWith(fontSize: 11.0, color: Colors.orange),
+                  style: const NText(.small, size: .s11),
+                  color: NColors.fixed(Colors.orange),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -365,9 +362,9 @@ class _QueueEntryTile extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8.0),
-        Text(
+        NamidaText(
           entry.durationMS.milliSecondsLabel,
-          style: textTheme.displaySmall,
+          style: NText.small,
         ),
         if (canRemove)
           NamidaIconButton(
@@ -378,7 +375,7 @@ class _QueueEntryTile extends StatelessWidget {
           ),
       ],
     );
-    final currentColor = theme.colorScheme.primary.withOpacityExt(0.15);
+    const currentColor = NColors(.primary, opacity: 0.15);
     return ObxO(
       rx: currentId,
       builder: (context, currentId) => NamidaInkWell(

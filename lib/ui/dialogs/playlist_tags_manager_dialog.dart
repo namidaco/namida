@@ -5,6 +5,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -97,9 +98,9 @@ class _TagActions {
             const SizedBox(
               height: 8.0,
             ),
-            Text(
+            NamidaText(
               lang.setTagsNestedSubtitle,
-              style: namida.textTheme.displaySmall,
+              style: NText.small,
             ),
           ],
         ),
@@ -199,14 +200,12 @@ class _TopLevelTagTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final nestedTags = tag.nested;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer.withOpacityExt(0.15),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.secondaryContainer.withOpacityExt(0.15),
           borderRadius: BorderRadius.circular(14.0.multipliedRadius),
         ),
         child: Padding(
@@ -241,15 +240,15 @@ class _TopLevelTagTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
+                        NamidaText(
                           tag.path,
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
+                        NamidaText(
                           tag.count.displayPlaylistKeyword,
-                          style: textTheme.displaySmall,
+                          style: NText.small,
                           maxLines: 1,
                         ),
                       ],
@@ -297,33 +296,36 @@ class _TagColorButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final color = this.color;
     const size = 28.0;
+    final brushIcon = color == null
+        ? const NIcon(
+            Broken.brush_2,
+            size: 14.0,
+            color: NColors(.icon, opacity: 0.6),
+          )
+        : null;
+    final bgColor = NColors.fixed(color == null ? null : Color(color));
     return NamidaTooltip(
       message: () => lang.color,
-      child: NamidaInkWell(
-        width: size,
-        height: size,
-        onTap: onTap,
-        bgColor: color == null ? null : Color(color),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(size),
-          border: color == null
-              ? Border.all(
-                  color: theme.colorScheme.secondaryContainer,
-                  width: 1.5,
-                )
-              : null,
+      child: NBuilder(
+        builder: (context, colors) => NamidaInkWell(
+          width: size,
+          height: size,
+          onTap: onTap,
+          bgColor: bgColor,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(size),
+            border: color == null
+                ? Border.all(
+                    color: colors.secondaryContainer,
+                    width: 1.5,
+                  )
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: brushIcon,
         ),
-        alignment: Alignment.center,
-        child: color == null
-            ? Icon(
-                Broken.brush_2,
-                size: 14.0,
-                color: theme.iconTheme.color?.withOpacityExt(0.6),
-              )
-            : null,
       ),
     );
   }
@@ -340,8 +342,6 @@ class _NestedTagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final path = tag.path;
     final color = tag.color;
     final relativePathStart = path.indexOf(PlaylistTagsFilter.separator) + 1;
@@ -349,9 +349,9 @@ class _NestedTagChip extends StatelessWidget {
     return NamidaPopupWrapper(
       openOnLongPress: false, // -- long press drags the row
       childrenDefault: actions.buildMenuItems,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer.withOpacityExt(0.35),
+      child: NDecoratedBox(
+        decoration: (colors) => BoxDecoration(
+          color: colors.secondaryContainer.withOpacityExt(0.35),
           borderRadius: BorderRadius.circular(99.0),
         ),
         child: Padding(
@@ -367,19 +367,17 @@ class _NestedTagChip extends StatelessWidget {
                   width: 6.0,
                 ),
               ],
-              Text(
+              NamidaText(
                 relativePath,
-                style: textTheme.displaySmall,
+                style: NText.small,
               ),
               const SizedBox(
                 width: 6.0,
               ),
-              Text(
+              NamidaText(
                 tag.count.formatDecimal(),
-                style: textTheme.displaySmall?.copyWith(
-                  fontSize: 11.0,
-                  color: textTheme.displaySmall?.color?.withOpacityExt(0.6),
-                ),
+                style: const NText(.small, size: .s11),
+                color: const NColors(.textSmall, opacity: 0.6),
               ),
             ],
           ),

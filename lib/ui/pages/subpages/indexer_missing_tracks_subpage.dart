@@ -18,6 +18,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/three_arched_circle.dart';
@@ -267,11 +268,6 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final cardColor = theme.cardColor;
-    final borderColor = theme.colorScheme.secondary.withOpacityExt(0.6);
-
     return BackgroundWrapper(
       child: Stack(
         children: [
@@ -288,15 +284,17 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                           Stack(
                             alignment: Alignment.center,
                             children: [
-                              ThreeArchedCircle(
-                                size: 56.0,
-                                color: theme.colorScheme.secondary,
+                              NBuilder(
+                                builder: (context, colors) => ThreeArchedCircle(
+                                  size: 56.0,
+                                  color: colors.secondary,
+                                ),
                               ),
                               ObxO(
                                 rx: _subLoadingProgress,
-                                builder: (context, subProgress) => Text(
+                                builder: (context, subProgress) => NamidaText(
                                   "${(subProgress * 100).toStringAsFixed(2)}%",
-                                  style: textTheme.displaySmall,
+                                  style: NText.small,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -318,11 +316,10 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                   if (trsCount != null) val += ' (${trsCount.formatDecimal()})';
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                                    child: Text(
+                                    child: NamidaText(
                                       val,
-                                      style: textTheme.displaySmall?.copyWith(
-                                        color: textTheme.displaySmall?.color?.withOpacityExt(opacity),
-                                      ),
+                                      style: NText.small,
+                                      color: NColors(.textSmall, opacity: opacity),
                                     ),
                                   );
                                 },
@@ -351,14 +348,14 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                             crossAxisAlignment: .center,
                             mainAxisAlignment: .center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Broken.emoji_happy,
                                 size: 48.0,
                               ),
                               const SizedBox(height: 8.0),
-                              Text(
+                              NamidaText(
                                 lang.noTracksFound,
-                                style: context.textTheme.displayLarge,
+                                style: NText.large,
                               ),
                             ],
                           ),
@@ -379,114 +376,120 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                     (context) {
                                       final suggestion = _missingTracksSuggestions[path];
                                       final isSelected = _selectedTracksToUpdate[path] == true;
-                                      final leftColor = theme.colorScheme.secondary.withOpacityExt(0.3);
-                                      return NamidaInkWell(
-                                        animationDurationMS: 300,
-                                        borderRadius: 12.0,
-                                        bgColor: cardColor,
-                                        decoration: BoxDecoration(
-                                          border: isSelected
-                                              ? Border.all(
-                                                  width: 1.5,
-                                                  color: borderColor,
-                                                )
-                                              : null,
-                                        ),
-                                        onTap: () {
-                                          if (_missingTracksSuggestions[path] == null) return;
-                                          final wasUpadting = (_selectedTracksToUpdate[path] ?? false);
-                                          if (wasUpadting) {
-                                            _selectedTracksToUpdate.remove(path);
-                                          } else {
-                                            _selectedTracksToUpdate[path] = true;
-                                          }
-                                        },
-                                        child: Stack(
-                                          children: [
-                                            Padding(
-                                              padding: const EdgeInsets.symmetric(vertical: 6.0),
-                                              child: Row(
-                                                children: [
-                                                  const SizedBox(width: 12.0),
-                                                  DecoratedBox(
-                                                    decoration: BoxDecoration(
-                                                      color: leftColor,
-                                                      borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                                                    ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
-                                                      child: ObxO(
-                                                        rx: HistoryController.inst.topTracksMapListens,
-                                                        builder: (context, topTracksMapListens) {
-                                                          final listens = topTracksMapListens[Track.explicit(path)] ?? topTracksMapListens[Video.explicit(path)];
-                                                          final listensCount = listens?.length ?? 0;
-                                                          return Text(
-                                                            '$listensCount',
-                                                            style: textTheme.displaySmall,
-                                                          );
-                                                        },
-                                                      ),
+                                      final itemContent = Stack(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 6.0),
+                                            child: Row(
+                                              children: [
+                                                const SizedBox(width: 12.0),
+                                                NDecoratedBox(
+                                                  decoration: (colors) => BoxDecoration(
+                                                    color: colors.secondary.withOpacityExt(0.3),
+                                                    borderRadius: BorderRadius.circular(6.0.multipliedRadius),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 3.0, vertical: 2.0),
+                                                    child: ObxO(
+                                                      rx: HistoryController.inst.topTracksMapListens,
+                                                      builder: (context, topTracksMapListens) {
+                                                        final listens = topTracksMapListens[Track.explicit(path)] ?? topTracksMapListens[Video.explicit(path)];
+                                                        final listensCount = listens?.length ?? 0;
+                                                        return NamidaText(
+                                                          '$listensCount',
+                                                          style: NText.small,
+                                                        );
+                                                      },
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 12.0),
-                                                  Expanded(
-                                                    child: Column(
-                                                      mainAxisAlignment: MainAxisAlignment.center,
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Text(
-                                                          path,
-                                                          style: textTheme.displayMedium,
-                                                        ),
-                                                        if (suggestion != null)
-                                                          Text(
-                                                            " --> $suggestion",
-                                                            style: textTheme.displaySmall,
-                                                          ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12.0),
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.end,
-                                                    mainAxisSize: MainAxisSize.min,
+                                                ),
+                                                const SizedBox(width: 12.0),
+                                                Expanded(
+                                                  child: Column(
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
-                                                      _missingTracksSuggestions[path] == null
-                                                          ? const SizedBox()
-                                                          : NamidaCheckMark(
-                                                              size: 18.0,
-                                                              active: isSelected,
-                                                            ),
-                                                      const SizedBox(width: 4.0),
-                                                      NamidaIconButton(
-                                                        verticalPadding: 6.0,
-                                                        horizontalPadding: 4.0,
-                                                        icon: Broken.repeat_circle,
-                                                        onPressed: () => _pickNewPathFor(path),
+                                                      NamidaText(
+                                                        path,
+                                                        style: NText.medium,
                                                       ),
+                                                      if (suggestion != null)
+                                                        NamidaText(
+                                                          " --> $suggestion",
+                                                          style: NText.small,
+                                                        ),
                                                     ],
                                                   ),
-                                                  const SizedBox(width: 8.0),
-                                                ],
+                                                ),
+                                                const SizedBox(width: 12.0),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.end,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    _missingTracksSuggestions[path] == null
+                                                        ? const SizedBox()
+                                                        : NamidaCheckMark(
+                                                            size: 18.0,
+                                                            active: isSelected,
+                                                          ),
+                                                    const SizedBox(width: 4.0),
+                                                    NamidaIconButton(
+                                                      verticalPadding: 6.0,
+                                                      horizontalPadding: 4.0,
+                                                      icon: Broken.repeat_circle,
+                                                      onPressed: () => _pickNewPathFor(path),
+                                                    ),
+                                                  ],
+                                                ),
+                                                const SizedBox(width: 8.0),
+                                              ],
+                                            ),
+                                          ),
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: NamidaBlurryContainer(
+                                              borderRadius: BorderRadius.only(
+                                                bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                                topRight: Radius.circular(6.0.multipliedRadius),
+                                              ),
+                                              padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
+                                              child: NamidaText(
+                                                "${index + 1}",
+                                                style: NText.small,
                                               ),
                                             ),
-                                            Positioned(
-                                              top: 0,
-                                              right: 0,
-                                              child: NamidaBlurryContainer(
-                                                borderRadius: BorderRadius.only(
-                                                  bottomLeft: Radius.circular(6.0.multipliedRadius),
-                                                  topRight: Radius.circular(6.0.multipliedRadius),
-                                                ),
-                                                padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
-                                                child: Text(
-                                                  "${index + 1}",
-                                                  style: textTheme.displaySmall,
-                                                ),
-                                              ),
+                                          ),
+                                        ],
+                                      );
+                                      return NBuilder(
+                                        selfAnimated: true,
+                                        builder: (context, colors) {
+                                          final borderColor = colors.secondary.withOpacityExt(0.6);
+                                          return NamidaInkWell(
+                                            animationDurationMS: 300,
+                                            borderRadius: 12.0,
+                                            bgColor: NColors.card,
+                                            decoration: BoxDecoration(
+                                              border: isSelected
+                                                  ? Border.all(
+                                                      width: 1.5,
+                                                      color: borderColor,
+                                                    )
+                                                  : null,
                                             ),
-                                          ],
-                                        ),
+                                            onTap: () {
+                                              if (_missingTracksSuggestions[path] == null) return;
+                                              final wasUpadting = (_selectedTracksToUpdate[path] ?? false);
+                                              if (wasUpadting) {
+                                                _selectedTracksToUpdate.remove(path);
+                                              } else {
+                                                _selectedTracksToUpdate[path] = true;
+                                              }
+                                            },
+                                            child: itemContent,
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -502,13 +505,13 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
               bottom: Dimensions.inst.globalBottomPaddingTotalR,
               right: 12.0,
               child: _isUpdatingPaths
-                  ? DecoratedBox(
-                      decoration: BoxDecoration(
+                  ? NDecoratedBox(
+                      decoration: (colors) => BoxDecoration(
                         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                        color: theme.cardColor,
+                        color: colors.card,
                         boxShadow: [
                           BoxShadow(
-                            color: theme.shadowColor,
+                            color: colors.shadow,
                             blurRadius: 6.0,
                             offset: const Offset(0, 4.0),
                           ),
@@ -516,9 +519,11 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: ThreeArchedCircle(
-                          size: 36.0,
-                          color: theme.colorScheme.secondary,
+                        child: NBuilder(
+                          builder: (context, colors) => ThreeArchedCircle(
+                            size: 36.0,
+                            color: colors.secondary,
+                          ),
                         ),
                       ),
                     )

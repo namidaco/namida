@@ -15,7 +15,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -50,22 +50,21 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   Widget _getChip({
     required BuildContext context,
     required IconData icon,
-    Color? iconColor,
+    NColors? iconColor,
     required String title,
     String betweenBrackets = '',
     bool displayTitle = false,
     void Function()? onTap,
     Widget? Function(double size)? iconWidget,
   }) {
-    final textTheme = context.textTheme;
     final textWidget = Text.rich(
       TextSpan(
         children: [
-          TextSpan(text: title, style: textTheme.displayMedium?.copyWith(fontSize: 13.0)),
+          TextSpan(text: title, style: NText.medium.of(context).copyWith(fontSize: 13.0)),
           if (betweenBrackets != '')
             TextSpan(
               text: " ($betweenBrackets)",
-              style: namida.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+              style: NText.small.of(context).copyWith(fontSize: 11.0),
             ),
         ],
       ),
@@ -80,7 +79,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            iconWidget?.call(iconSize) ?? Icon(icon, size: iconSize, color: iconColor),
+            iconWidget?.call(iconSize) ?? NIcon(icon, size: iconSize, color: iconColor),
             if (displayTitle) ...[
               const SizedBox(width: 4.0),
               textWidget,
@@ -160,15 +159,14 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     final audioStream = item.audioStream;
 
     Widget getRow({required IconData icon, required List<String> texts}) {
-      final textTheme = context.textTheme;
       return Row(
         children: [
           Icon(icon, size: 18.0),
           const SizedBox(width: 6.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               texts.joinText(),
-              style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+              style: const NText(.small, size: .s12),
             ),
           ),
         ],
@@ -216,7 +214,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     String confirmMessage = '',
     bool deleteButton = false,
   }) async {
-    final textTheme = context.textTheme;
     final item = widget.videos[widget.index];
     bool confirmed = false;
     bool delete = false;
@@ -257,12 +254,12 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(text: "$operationTitle: ", style: textTheme.displayLarge),
+                    TextSpan(text: "$operationTitle: ", style: NText.large.of(context)),
                     TextSpan(
                       text: item.filename.filename,
-                      style: textTheme.displayMedium,
+                      style: NText.medium.of(context),
                     ),
-                    TextSpan(text: " ?", style: textTheme.displayLarge),
+                    TextSpan(text: " ?", style: NText.large.of(context)),
                   ],
                 ),
               ),
@@ -397,7 +394,6 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     const thumbHeight = 24.0 * 2.6;
     const thumbWidth = thumbHeight * 16 / 9;
 
@@ -430,7 +426,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
         onTap: null,
         margin: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
         padding: const EdgeInsets.symmetric(vertical: 4.0),
-        bgColor: context.theme.cardColor,
+        bgColor: NColors.card,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.0.multipliedRadius),
         ),
@@ -485,22 +481,22 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 6.0),
-                    Text(
+                    NamidaText(
                       filename.filename,
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     ),
                     const SizedBox(height: 6.0),
                     Row(
                       children: [
                         if (canDisplayPercentage || isFetchingData || isDownloading) ...[
                           canDisplayPercentage
-                              ? Text(
+                              ? NamidaText(
                                   audioPerc != null
                                       ? lang.audio
                                       : videoPerc != null
                                       ? lang.video
                                       : '',
-                                  style: textTheme.displaySmall,
+                                  style: NText.small,
                                 )
                               : const LoadingIndicator(),
                           const SizedBox(width: 6.0),
@@ -538,9 +534,9 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                     ),
                     if (canDisplayPercentage) ...[
                       const SizedBox(height: 4.0),
-                      Text(
+                      NamidaText(
                         [percentageText, downloadInfoText].joinText(),
-                        style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                        style: const NText(.small, size: .s11),
                       ),
                     ],
                     const SizedBox(height: 4.0),
@@ -576,7 +572,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                                             context: context,
                                             title: lang.pause,
                                             icon: Broken.pause,
-                                            iconColor: context.defaultIconColor(),
+                                            iconColor: NColors.defaultIcon(),
                                             iconWidget: isDownloading
                                                 ? null
                                                 : (size) => StackedIcon(
@@ -658,32 +654,32 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            NamidaText(
                               [
                                 if (item.cacheOnly) lang.cache,
                                 item.videoStream?.qualityLabel,
                                 downloadedFile?.fileSizeFormatted(),
                               ].joinText(),
-                              style: textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                              style: const NText(.small, size: .s11),
                             ),
                             const SizedBox(width: 4.0),
                             if (itemIcon != null)
-                              Icon(
+                              NIcon(
                                 itemIcon,
                                 size: 16.0,
-                                color: context.defaultIconColor(),
+                                color: NColors.defaultIcon(),
                               ),
                             const SizedBox(width: 4.0),
                             fileExists
-                                ? Icon(
+                                ? NIcon(
                                     Broken.tick_circle,
                                     size: 16.0,
-                                    color: context.defaultIconColor(),
+                                    color: NColors.defaultIcon(),
                                   )
-                                : Icon(
+                                : NIcon(
                                     Broken.import,
                                     size: 16.0,
-                                    color: context.defaultIconColor(),
+                                    color: NColors.defaultIcon(),
                                   ),
                           ],
                         ),

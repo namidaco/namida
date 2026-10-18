@@ -106,7 +106,6 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final uploadsScrollController = widget.scrollController;
     const thumbnailHeight = Dimensions.youtubeThumbnailHeight;
     const thumbnailWidth = Dimensions.youtubeThumbnailWidth;
@@ -225,7 +224,7 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                             ),
                           )
                         : streamsList == null
-                        ? SliverToBoxAdapter(
+                        ? const SliverToBoxAdapter(
                             // child: Center(
                             //   child: Text(
                             //     lang.error,
@@ -261,13 +260,13 @@ class _YTChannelVideosTabState extends YoutubeChannelController<YTChannelVideosT
                               Icon(
                                 Broken.calendar_1,
                                 size: 14.0,
-                                color: textTheme.displaySmall?.color,
+                                color: NText.small.of(context).color,
                               ),
                               const SizedBox(width: 4.0),
                               Flexible(
-                                child: Text(
+                                child: NamidaText(
                                   peakDatesText,
-                                  style: textTheme.displaySmall,
+                                  style: NText.small,
                                 ),
                               ),
                             ],

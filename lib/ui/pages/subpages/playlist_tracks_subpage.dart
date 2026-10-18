@@ -25,6 +25,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -182,24 +183,19 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final trackTileExtent = Dimensions.inst.trackTileItemExtent;
     const dayHeaderExtent = kHistoryDayHeaderHeightWithPadding;
 
     const dayHeaderHeight = kHistoryDayHeaderHeight;
-    final dayHeaderBgColor = Color.alphaBlend(theme.cardTheme.color!.withAlpha(140), theme.scaffoldBackgroundColor);
     final dayHeaderSideColor = CurrentColor.inst.color;
-
-    final dayHeaderShadowColor = Color.alphaBlend(theme.shadowColor.withAlpha(140), theme.scaffoldBackgroundColor).withOpacityExt(0.4);
 
     final filteredHistory = _getFilteredHistory();
     final isFiltering = filteredHistory != null;
     final shownDays = filteredHistory?.days ?? historyDays;
     final shownDaysLength = shownDays.length;
 
-    final highlightColor = theme.colorScheme.onSurface.withAlpha(40);
-    final smallTextStyle = textTheme.displaySmall?.copyWith(fontSize: 12.0);
+    const highlightColor = NColors(.onSurface, opacity: 0.16);
+    final smallTextStyle = NText.small.of(context).copyWith(fontSize: 12.0);
 
     final isSearchBoxShown = _isSearchBoxShown;
     final yearsRow = getYearsRowWidget(
@@ -280,7 +276,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                     child: AnimatedSize(
                       duration: animationDuration,
                       child: hasScrolledEnough
-                          ? SizedBox.shrink()
+                          ? const SizedBox.shrink()
                           : Padding(
                               padding: const EdgeInsets.only(bottom: yearsRowBottomPadding),
                               child: yearsRow,
@@ -320,33 +316,41 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                           final tracks = filteredHistory?.dayItems[day] ?? history[day] ?? [];
                           final isHighlightedDay = !isFiltering && highlightedItem != null && day == highlightedItem.dayToHighLight;
 
-                          return StickyHeader(
-                            key: ValueKey(index),
-                            header: NamidaHistoryDayHeaderBox(
-                              height: dayHeaderHeight,
-                              title: [
+                          final dayHeaderMenu = NamidaIconButton(
+                            icon: Broken.more,
+                            horizontalPadding: 8.0,
+                            iconSize: 22.0,
+                            onPressed: () {
+                              showGeneralPopupDialog(
+                                tracks.toTracks(),
                                 dayInMs.dateFormattedOriginal,
                                 tracks.length.displayTrackKeyword,
-                              ].join('  •  '),
-                              sideColor: dayHeaderSideColor,
-                              bgColor: dayHeaderBgColor,
-                              shadowColor: dayHeaderShadowColor,
-                              menu: NamidaIconButton(
-                                icon: Broken.more,
-                                horizontalPadding: 8.0,
-                                iconSize: 22.0,
-                                onPressed: () {
-                                  showGeneralPopupDialog(
-                                    tracks.toTracks(),
+                                QueueSource.history,
+                                tracksWithDates: tracks,
+                                playlistName: k_PLAYLIST_NAME_HISTORY,
+                                showPlayAllReverse: true,
+                              );
+                            },
+                          );
+
+                          return StickyHeader(
+                            key: ValueKey(index),
+                            header: NBuilder(
+                              builder: (context, colors) {
+                                final dayHeaderBgColor = Color.alphaBlend(colors.cardTheme.withOpacityExt(0.55), colors.scaffold);
+                                final dayHeaderShadowColor = Color.alphaBlend(colors.shadow.withOpacityExt(0.55), colors.scaffold).withOpacityExt(0.4);
+                                return NamidaHistoryDayHeaderBox(
+                                  height: dayHeaderHeight,
+                                  title: [
                                     dayInMs.dateFormattedOriginal,
                                     tracks.length.displayTrackKeyword,
-                                    QueueSource.history,
-                                    tracksWithDates: tracks,
-                                    playlistName: k_PLAYLIST_NAME_HISTORY,
-                                    showPlayAllReverse: true,
-                                  );
-                                },
-                              ),
+                                  ].join('  •  '),
+                                  sideColor: dayHeaderSideColor,
+                                  bgColor: dayHeaderBgColor,
+                                  shadowColor: dayHeaderShadowColor,
+                                  menu: dayHeaderMenu,
+                                );
+                              },
                             ),
                             content: SuperSmoothListView.builder(
                               padding: const EdgeInsets.only(bottom: kHistoryDayListBottomPadding, top: kHistoryDayListTopPadding),
@@ -384,7 +388,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
         AnimatedOpacity(
           opacity: hasScrolledEnough ? 1.0 : 0.0,
           duration: animationDuration,
-          child: hasScrolledEnough ? yearsRow : SizedBox.shrink(),
+          child: hasScrolledEnough ? yearsRow : const SizedBox.shrink(),
         ),
       ],
     );
@@ -419,8 +423,6 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return TrackTilePropertiesProvider(
       configs: const TrackTilePropertiesConfigs(
         queueSource: QueueSource.mostPlayed,
@@ -479,15 +481,15 @@ class MostPlayedTracksPage extends StatelessWidget with NamidaRouteWidget {
                     trackOrTwd: track,
                     tracks: tracks,
                     onRightAreaTap: () => showTrackListensDialog(track, datesOfListen: listens),
-                    trailingWidget: Container(
+                    trailingWidget: NContainer(
                       padding: const EdgeInsets.all(6.0),
-                      decoration: BoxDecoration(
-                        color: theme.scaffoldBackgroundColor,
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.scaffold,
                         shape: BoxShape.circle,
                       ),
-                      child: Text(
+                      child: NamidaText(
                         listens.length.formatDecimal(),
-                        style: textTheme.displaySmall,
+                        style: NText.small,
                       ),
                     ),
                   );
@@ -536,7 +538,6 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return TrackTilePropertiesProvider(
       configs: TrackTilePropertiesConfigs(
         queueSource: QueueSource.playlist(null),
@@ -567,7 +568,7 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.availableAppContentWidth * 0.15).add(const EdgeInsets.only(bottom: 8.0)),
               sliver: SliverToBoxAdapter(
-                child: Theme(
+                child: NTheme(
                   data: AppThemes.inst.getAppTheme(Colors.red, !context.isDarkMode),
                   child: NamidaButton(
                     icon: Broken.trash,
@@ -588,12 +589,12 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
                   showRail: false,
                   onExpansionChanged: (value) => setState(() => isExpanded = value),
                   children: [
-                    Container(
+                    NContainer(
                       clipBehavior: Clip.antiAlias,
                       height: context.height * 0.5,
                       width: context.width,
-                      decoration: BoxDecoration(
-                        color: theme.cardColor,
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.card,
                         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                       ),
                       child: SuperSmoothListView.builder(
@@ -855,6 +856,7 @@ class ThreeLineSmallContainers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final barColor = color ?? NColorsData.targetOf(context).listTileIcon.withOpacityExt(0.47);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List<Widget>.filled(
@@ -868,7 +870,7 @@ class ThreeLineSmallContainers extends StatelessWidget {
             height: 1.2,
             animateHeight: false,
             decoration: BoxDecoration(
-              color: color ?? context.theme.listTileTheme.iconColor?.withAlpha(120),
+              color: barColor,
             ),
           ),
         ),

@@ -33,6 +33,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -873,7 +874,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       try {
         tracksDBManager = await DBWrapper.openFromInfoSyncTry(
           fileInfo: params.tracksDbInfo,
-          config: DBConfig(
+          config: const DBConfig(
             createIfNotExist: true,
             autoDisposeTimerDuration: null, // we close manually
           ),
@@ -1142,9 +1143,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
         title: lang.note,
         child: Column(
           children: [
-            Text(
+            NamidaText(
               '${lang.enableM3uSync}?\n\n${lang.enableM3uSyncNote1}\n\n${lang.enableM3uSyncNote2(playlistsBackupPath: AppDirs.M3UBackup)}\n\n${lang.warning.toUpperCase()}: ${lang.enableM3uSyncSubtitle}',
-              style: namida.textTheme.displayMedium,
+              style: NText.medium,
             ),
             const SizedBox(height: 12.0),
             ListTileWithCheckMark(

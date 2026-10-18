@@ -13,7 +13,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
@@ -120,16 +120,16 @@ class _WideScreenPlayerPageState extends State<WideScreenPlayerPage> {
               left: _backButtonInset,
               child: IconButton(
                 tooltip: lang.exit,
-                icon: Icon(
+                icon: NIcon(
                   Broken.arrow_left_2,
                   size: 22.0,
-                  color: context.defaultIconColor(),
+                  color: NColors.defaultIcon(),
                 ),
                 onPressed: NamidaNavigator.inst.popRoot,
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: _edgePadding, vertical: 6.0),
+              padding: const EdgeInsets.symmetric(horizontal: _edgePadding, vertical: 6.0),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -282,22 +282,21 @@ class _TrackInfoText extends StatelessWidget {
   }
 
   Widget _build(BuildContext context, String title, String subtitle) {
-    final textTheme = context.textTheme;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
+        NamidaText(
           title,
-          style: textTheme.displayLarge,
+          style: NText.large,
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
         if (subtitle != '') ...[
           const SizedBox(height: 4.0),
-          Text(
+          NamidaText(
             subtitle,
-            style: textTheme.displaySmall,
+            style: NText.small,
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -323,11 +322,11 @@ class _PlayerActionsRow extends StatelessWidget {
             child: _VideoAudioChip(),
           ),
           const SizedBox(width: 2.0),
-          RepeatModeIconButton(
+          const RepeatModeIconButton(
             iconSize: 20.0,
           ),
           const SizedBox(width: 2.0),
-          SoundControlButton(
+          const SoundControlButton(
             iconSize: 21.0,
           ),
           const SizedBox(width: 2.0),
@@ -350,7 +349,6 @@ class _PlayerActionsRow extends StatelessWidget {
                 // Lyrics.inst.updateLyrics(currentItem);
               },
               icon: NamidaMiniPlayerBase.getLrcButton(
-                context.theme,
                 iconSize: 20.0,
               ),
             ),
@@ -485,28 +483,28 @@ class _PaneChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final bgColor = enabled ? NColors.card : NColors.fixed(Colors.transparent);
+    final contentColor = enabled ? NColors.onSurface : NColors.disabled;
     return Expanded(
       child: NamidaInkWell(
         onTap: onTap,
         borderRadius: 8.0,
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-        bgColor: enabled ? theme.cardColor : Colors.transparent,
+        bgColor: bgColor,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            NIcon(
               icon,
               size: 18.0,
-              color: enabled ? theme.colorScheme.onSurface : theme.disabledColor,
+              color: contentColor,
             ),
             const SizedBox(width: 6.0),
             Flexible(
-              child: Text(
+              child: NamidaText(
                 title,
-                style: theme.textTheme.displayMedium?.copyWith(
-                  color: enabled ? theme.colorScheme.onSurface : theme.disabledColor,
-                ),
+                style: NText.medium,
+                color: contentColor,
                 overflow: TextOverflow.ellipsis,
               ),
             ),

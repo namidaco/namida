@@ -543,7 +543,7 @@ class _JellyfinClientWrapper {
 
   Future<MusicWebServerError?> ping() async {
     if (!await ensureAuthenticated()) {
-      return MusicWebServerError(code: 0, message: 'Jellyfin authentication failed');
+      return const MusicWebServerError(code: 0, message: 'Jellyfin authentication failed');
     }
     try {
       await _api.getSystemInfo();

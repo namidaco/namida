@@ -2242,7 +2242,7 @@ class _IsolateFunctions {
 
     DownloadTaskGroupName fileToGroupName(File file) {
       final filenameWOExt = file.path.getFilenameWOExt;
-      return filenameWOExt.startsWith('.') ? DownloadTaskGroupName.defaulty() : DownloadTaskGroupName(groupName: filenameWOExt);
+      return filenameWOExt.startsWith('.') ? const DownloadTaskGroupName.defaulty() : DownloadTaskGroupName(groupName: filenameWOExt);
     }
 
     // -- migrating old .json files to .db

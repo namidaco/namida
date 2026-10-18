@@ -20,6 +20,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/lyrics_lrc_parsed_view.dart';
@@ -336,9 +337,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      NamidaText(
                         lang.offset,
-                        style: namida.textTheme.displayMedium,
+                        style: NText.medium,
                       ),
                       Obx(
                         (context) {
@@ -348,9 +349,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                           if (msText.endsWith('0')) msText = msText.substring(0, 2);
                           final secondsText = off.abs().milliSecondsLabel;
                           final prefix = off < 0 ? '-' : '';
-                          return Text(
+                          return NamidaText(
                             "$prefix$secondsText.$msText",
-                            style: namida.textTheme.displaySmall,
+                            style: NText.small,
                           );
                         },
                       ),
@@ -361,9 +362,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   getButton(Broken.minus_cirlce, false),
                   const SizedBox(width: 8.0),
                   Obx(
-                    (context) => Text(
+                    (context) => NamidaText(
                       "${newOffset.valueR}ms",
-                      style: namida.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                   const SizedBox(width: 8.0),
@@ -569,17 +570,17 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
         children: [
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 24.0),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                color: theme.cardColor,
+                color: colors.card,
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
                 child: Obx(
-                  (context) => Text(
+                  (context) => NamidaText(
                     (availableLyrics.length + fetchedLyrics.length).formatDecimal(),
-                    style: theme.textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: const NText(.small, weight: FontWeight.w600),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -588,9 +589,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
           ),
           const SizedBox(width: 12.0),
           Expanded(
-            child: Text(
+            child: NamidaText(
               lang.lyrics,
-              style: theme.textTheme.displayLarge,
+              style: NText.large,
             ),
           ),
           const SizedBox(width: 8.0),
@@ -713,7 +714,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                           borderRadius: 12.0,
                           animationDurationMS: 200,
                           onTap: () => onLyricsTap(l),
-                          bgColor: namida.theme.cardColor.withOpacityExt(0.4),
+                          bgColor: NColors.fixed(namida.theme.cardColor.withOpacityExt(0.4)),
                           decoration: BoxDecoration(
                             border: selectedLyrics.valueR == l
                                 ? Border.all(
@@ -743,9 +744,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                       mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
+                                        NamidaText(
                                           cacheText != '' ? "$syncedText ($cacheText)" : syncedText,
-                                          style: namida.textTheme.displayMedium,
+                                          style: NText.medium,
                                         ),
                                         Row(
                                           children: [
@@ -763,9 +764,9 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                                   final diff = lrcDuration - durMS;
                                                   var label = diff.milliSecondsLabelWithCentiSeconds;
                                                   if (diff >= 0) label = '+$label';
-                                                  return Text(
+                                                  return NamidaText(
                                                     "${lang.duration}: $label",
-                                                    style: theme.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                                                    style: const NText(.small, size: .s11),
                                                   );
                                                 },
                                               ),
@@ -777,7 +778,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                   ),
                                   NamidaIconButton(
                                     verticalPadding: 3.0,
-                                    horizontalPadding: 3.0,
+                                    horizontalPadding: 3.0 + 2.0, // +2px bcz this icon looks leaning to left (or bcz menu icon looks condensed)
                                     tooltip: () => lang.edit,
                                     icon: Broken.edit_2,
                                     iconSize: 20.0,
@@ -810,18 +811,18 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                     NamidaInkWell(
                                       width: context.width,
                                       borderRadius: 8.0,
-                                      bgColor: namida.theme.cardColor,
+                                      bgColor: NColors.fixed(namida.theme.cardColor),
                                       padding: const EdgeInsets.all(8.0),
                                       child: expandedLyrics.valueR == l
-                                          ? Text(
+                                          ? NamidaText(
                                               l.lyrics,
-                                              style: namida.textTheme.displaySmall,
+                                              style: NText.small,
                                             )
-                                          : Text(
+                                          : NamidaText(
                                               l.lyrics,
                                               maxLines: 12,
                                               overflow: TextOverflow.fade,
-                                              style: namida.textTheme.displaySmall,
+                                              style: NText.small,
                                             ),
                                     ),
                                     Positioned(
@@ -892,7 +893,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                       if (fetchedLyricsValue.isEmpty && fetchingFromInternet.valueR != null)
                         SliverToBoxAdapter(
                           child: Padding(
-                            padding: EdgeInsetsGeometry.symmetric(vertical: 12.0),
+                            padding: const EdgeInsetsGeometry.symmetric(vertical: 12.0),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -900,18 +901,18 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                                 const SizedBox(height: 8.0),
                                 NamidaInkWell(
                                   borderRadius: 6.0,
-                                  bgColor: context.theme.cardColor,
+                                  bgColor: NColors.card,
                                   onTap: onSearchExternallyTap,
-                                  padding: EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 4.0),
+                                  padding: const EdgeInsetsGeometry.symmetric(horizontal: 8.0, vertical: 4.0),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Text(
+                                      NamidaText(
                                         '${lang.search}: Google',
-                                        style: context.textTheme.displayMedium,
+                                        style: NText.medium,
                                       ),
                                       const SizedBox(width: 6.0),
-                                      Icon(
+                                      const Icon(
                                         Broken.export_1,
                                         size: 14.0,
                                       ),
@@ -937,7 +938,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             margin: EdgeInsets.symmetric(vertical: 4.0),
                           ),
                         ),
-                      SliverPadding(padding: EdgeInsetsGeometry.only(top: 8.0)),
+                      const SliverPadding(padding: EdgeInsetsGeometry.only(top: 8.0)),
                       SliverToBoxAdapter(
                         child: CustomListTile(
                           icon: Broken.additem,
@@ -1170,7 +1171,6 @@ class _LyricsInUseChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     return DecoratedBox(
       decoration: BoxDecoration(
         color: colorScheme.withOpacityExt(0.3),
@@ -1186,9 +1186,9 @@ class _LyricsInUseChip extends StatelessWidget {
               size: 10.0,
             ),
             const SizedBox(width: 2.0),
-            Text(
+            NamidaText(
               lang.active,
-              style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w600),
+              style: const NText(.small, size: .s11, weight: FontWeight.w600),
             ),
           ],
         ),

@@ -26,6 +26,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
@@ -252,7 +253,6 @@ class MainPage extends StatelessWidget {
               if (!isMiniplayerAlwaysVisible)
                 Obx(
                   (context) {
-                    final theme = context.theme;
                     final currentItem = Player.inst.currentItem.valueR;
                     return CustomAnimatedSwitcher(
                       duration: const Duration(milliseconds: 600),
@@ -263,16 +263,19 @@ class MainPage extends StatelessWidget {
                               width: context.width,
                               child: Transform(
                                 transform: Matrix4.translationValues(0, 8.0, 0),
-                                child: AnimatedDecoration(
-                                  duration: const Duration(milliseconds: kThemeAnimationDurationMS),
-                                  decoration: BoxDecoration(
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: theme.scaffoldBackgroundColor,
-                                        spreadRadius: 4.0,
-                                        blurRadius: 8.0,
-                                      ),
-                                    ],
+                                child: NBuilder(
+                                  selfAnimated: true,
+                                  builder: (context, colors) => AnimatedDecoration(
+                                    duration: const Duration(milliseconds: kThemeAnimationDurationMS),
+                                    decoration: BoxDecoration(
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: colors.scaffold,
+                                          spreadRadius: 4.0,
+                                          blurRadius: 8.0,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
@@ -340,7 +343,7 @@ class MainPage extends StatelessWidget {
       );
     }
 
-    final themedMainChild = AppThemeFrozenWhileHidden(
+    final themedMainChild = NThemeFrozenWhileHidden(
       child: mainChild,
     );
 
@@ -439,14 +442,13 @@ class __MainPageFABButtonState extends State<_MainPageFABButton> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final searchProgressWidget = IgnorePointer(
-      child: Builder(
-        builder: (context) {
+      child: NBuilder(
+        builder: (context, colors) {
           return CircularProgressIndicator(
             strokeWidth: 2.0,
             strokeCap: StrokeCap.round,
-            color: theme.colorScheme.onSecondaryContainer.withOpacityExt(0.4),
+            color: colors.onSecondaryContainer.withOpacityExt(0.4),
           );
         },
       ),
@@ -712,103 +714,111 @@ class NamidaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    return SearchBarAnimation(
-      key: searchBarKey,
-      initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value,
-      isSearchBoxOnRightSide: true,
-      textAlignToRight: false,
-      durationInMilliSeconds: 300,
-      enableKeyboardFocus: true,
-      isOriginalAnimation: false,
-      textEditingController: ScrollSearchController.inst.searchTextEditingController,
-      hintText: /*  ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.searchYoutube : */ lang.search,
-      searchBoxWidth: context.width / 1.2,
-      buttonColour: Colors.transparent,
-      enableBoxShadow: false,
-      buttonShadowColour: Colors.transparent,
-      hintTextStyle: (height) => textTheme.displaySmall?.copyWith(
-        fontSize: 17.0,
-        height: height * 1.1,
-      ),
-      searchBoxColour: context.isDarkMode ? theme.cardColor.withAlpha(200) : Color.alphaBlend(theme.cardColor.withAlpha(200), theme.colorScheme.onSurface.withAlpha(40)),
-      enteredTextStyle: theme.textTheme.displayMedium,
-      cursorColour: theme.colorScheme.onSurface,
-      buttonBorderColour: Colors.black45,
-      cursorRadius: const Radius.circular(12.0),
-      buttonWidget: const IgnorePointer(
-        child: NamidaIconButton(
-          icon: Broken.search_normal,
-        ),
-      ),
-      secondaryButtonWidget: const IgnorePointer(
-        child: NamidaIconButton(
-          icon: Broken.search_status_1,
-        ),
-      ),
-      buttonWidgetSmallPadding: 24.0 + 8.0,
-      buttonWidgetSmall: Obx(
-        (context) {
-          final clipboard = ClipboardController.inst.clipboardText.valueR;
-          final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed.valueR;
-          final empty = ClipboardController.inst.textInControllerEmpty.valueR;
+    final searchBoxWidth = context.width / 1.2;
+    final hintTextStyle = NText.small.of(context);
+    final enteredTextStyle = NText.medium.of(context);
+    final buttonWidgetSmall = Obx(
+      (context) {
+        final clipboard = ClipboardController.inst.clipboardText.valueR;
+        final alreadyPasted = clipboard == ClipboardController.inst.lastCopyUsed.valueR;
+        final empty = ClipboardController.inst.textInControllerEmpty.valueR;
 
-          return AnimatedShow(
-            isHorizontal: true,
-            show: clipboard.isNotEmpty && (empty || !alreadyPasted),
-            duration: const Duration(milliseconds: 200),
+        return AnimatedShow(
+          isHorizontal: true,
+          show: clipboard.isNotEmpty && (empty || !alreadyPasted),
+          duration: const Duration(milliseconds: 200),
+          child: NamidaIconButton(
+            horizontalPadding: 2.0,
+            verticalPadding: 8.0,
+            icon: Broken.clipboard_tick,
+            iconSize: 20.0,
+            onPressed: () {
+              ClipboardController.inst.setLastPasted(ClipboardController.inst.clipboardText.value);
+              final c = ScrollSearchController.inst.searchTextEditingController;
+              c.text = "${c.text} $clipboard";
+              c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
+              _onSubmitted(clipboard);
+              ClipboardController.inst.updateTextInControllerEmpty(false);
+            },
+          ),
+        );
+      },
+    );
+    final trailingWidget = NamidaIconButton(
+      padding: const EdgeInsets.all(8.0),
+      icon: Broken.close_circle,
+      iconSize: 22,
+      onPressed: ScrollSearchController.inst.resetSearch,
+    );
+    return NBuilder(
+      builder: (context, colors) {
+        final searchBoxColour = context.isDarkMode ? colors.card.withOpacityExt(0.78) : Color.alphaBlend(colors.card.withOpacityExt(0.78), colors.onSurface.withOpacityExt(0.16));
+        return SearchBarAnimation(
+          key: searchBarKey,
+          initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value,
+          isSearchBoxOnRightSide: true,
+          textAlignToRight: false,
+          durationInMilliSeconds: 300,
+          enableKeyboardFocus: true,
+          isOriginalAnimation: false,
+          textEditingController: ScrollSearchController.inst.searchTextEditingController,
+          hintText: /*  ScrollSearchController.inst.currentSearchType.value == SearchType.youtube ? lang.searchYoutube : */ lang.search,
+          searchBoxWidth: searchBoxWidth,
+          buttonColour: Colors.transparent,
+          enableBoxShadow: false,
+          buttonShadowColour: Colors.transparent,
+          hintTextStyle: (height) => hintTextStyle.copyWith(
+            fontSize: 17.0,
+            height: height * 1.1,
+          ),
+          searchBoxColour: searchBoxColour,
+          enteredTextStyle: enteredTextStyle,
+          cursorColour: colors.onSurface,
+          buttonBorderColour: Colors.black45,
+          cursorRadius: const Radius.circular(12.0),
+          buttonWidget: const IgnorePointer(
             child: NamidaIconButton(
-              horizontalPadding: 2.0,
-              verticalPadding: 8.0,
-              icon: Broken.clipboard_tick,
-              iconSize: 20.0,
-              onPressed: () {
-                ClipboardController.inst.setLastPasted(ClipboardController.inst.clipboardText.value);
-                final c = ScrollSearchController.inst.searchTextEditingController;
-                c.text = "${c.text} $clipboard";
-                c.selection = TextSelection.fromPosition(TextPosition(offset: c.text.length));
-                _onSubmitted(clipboard);
-                ClipboardController.inst.updateTextInControllerEmpty(false);
-              },
+              icon: Broken.search_normal,
             ),
-          );
-        },
-      ),
-      trailingWidget: NamidaIconButton(
-        padding: const EdgeInsets.all(8.0),
-        icon: Broken.close_circle,
-        iconSize: 22,
-        onPressed: ScrollSearchController.inst.resetSearch,
-      ),
-      onTap: () {
-        ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
-        ScrollSearchController.inst.showSearchMenu();
+          ),
+          secondaryButtonWidget: const IgnorePointer(
+            child: NamidaIconButton(
+              icon: Broken.search_status_1,
+            ),
+          ),
+          buttonWidgetSmallPadding: 24.0 + 8.0,
+          buttonWidgetSmall: buttonWidgetSmall,
+          trailingWidget: trailingWidget,
+          onTap: () {
+            ScrollSearchController.inst.searchBarKey.currentState?.openCloseSearchBar(forceOpen: true);
+            ScrollSearchController.inst.showSearchMenu();
+          },
+          onPressButton: (isOpen) {
+            ScrollSearchController.inst.showSearchMenu(isOpen);
+            ScrollSearchController.inst.resetSearch();
+            ClipboardController.inst.updateTextInControllerEmpty(true);
+            if (isOpen) {
+              SearchSortController.inst.prepareResources();
+              ClipboardController.inst.setClipboardMonitoringStatus(settings.enableClipboardMonitoring.value);
+            } else {
+              SearchSortController.inst.disposeResources();
+              YTLocalSearchController.inst.cleanResources();
+              ClipboardController.inst.setClipboardMonitoringStatus(false);
+            }
+          },
+          onFieldSubmitted: _onSubmitted,
+          onChanged: (value) {
+            if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
+              ClipboardController.inst.updateTextInControllerEmpty(value == '');
+              SearchSortController.inst.searchAll(value);
+            }
+          },
+          // -- unfocusing produces weird bug while swiping for drawer
+          // -- leaving it will leave the pointer while entering miniplayer
+          // -- bruh
+          // onTapOutside: (event) => FocusScope.of(context).unfocus(),
+        );
       },
-      onPressButton: (isOpen) {
-        ScrollSearchController.inst.showSearchMenu(isOpen);
-        ScrollSearchController.inst.resetSearch();
-        ClipboardController.inst.updateTextInControllerEmpty(true);
-        if (isOpen) {
-          SearchSortController.inst.prepareResources();
-          ClipboardController.inst.setClipboardMonitoringStatus(settings.enableClipboardMonitoring.value);
-        } else {
-          SearchSortController.inst.disposeResources();
-          YTLocalSearchController.inst.cleanResources();
-          ClipboardController.inst.setClipboardMonitoringStatus(false);
-        }
-      },
-      onFieldSubmitted: _onSubmitted,
-      onChanged: (value) {
-        if (ScrollSearchController.inst.currentSearchType.value == SearchType.localTracks) {
-          ClipboardController.inst.updateTextInControllerEmpty(value == '');
-          SearchSortController.inst.searchAll(value);
-        }
-      },
-      // -- unfocusing produces weird bug while swiping for drawer
-      // -- leaving it will leave the pointer while entering miniplayer
-      // -- bruh
-      // onTapOutside: (event) => FocusScope.of(context).unfocus(),
     );
   }
 }
@@ -908,12 +918,6 @@ class _CustomAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appBarTheme = AppBarTheme.of(context);
-    final theme = context.theme;
-    final colorscheme = theme.colorScheme;
-    final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
-    final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
-    final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
     final appbar = Obx(
       (context) {
         final currentWidgetStack = NamidaNavigator.inst.currentWidgetStack.valueR;
@@ -950,41 +954,54 @@ class _CustomAppBar extends StatelessWidget {
       },
     );
     final showNavigationAtSide = Dimensions.inst.showNavigationAtSide;
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: overlayStyle,
-      child: Material(
-        shadowColor: Colors.transparent,
-        type: MaterialType.canvas,
-        color: backgroundColor,
-        surfaceTintColor: surfaceTintColor,
-        child: SafeArea(
-          left: !showNavigationAtSide,
-          bottom: false,
-          child: isMiniplayerAlwaysVisible
-              ? SizedBox(
-                  height: kToolbarHeight,
-                  child: appbar,
-                )
-              : Obx(
-                  (context) {
-                    return !settings.enableMiniplayerParallaxEffect.valueR
-                        ? SizedBox(
-                            height: kToolbarHeight,
+    final appBarContent = SafeArea(
+      left: !showNavigationAtSide,
+      bottom: false,
+      child: isMiniplayerAlwaysVisible
+          ? SizedBox(
+              height: kToolbarHeight,
+              child: appbar,
+            )
+          : Obx(
+              (context) {
+                return !settings.enableMiniplayerParallaxEffect.valueR
+                    ? SizedBox(
+                        height: kToolbarHeight,
+                        child: appbar,
+                      )
+                    : AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, _) {
+                          return SizedBox(
+                            height: kToolbarHeight * (1 - animation.value * 0.3),
                             child: appbar,
-                          )
-                        : AnimatedBuilder(
-                            animation: animation,
-                            builder: (context, _) {
-                              return SizedBox(
-                                height: kToolbarHeight * (1 - animation.value * 0.3),
-                                child: appbar,
-                              );
-                            },
                           );
-                  },
-                ),
-        ),
-      ),
+                        },
+                      );
+              },
+            ),
+    );
+    return NBuilder(
+      builder: (context, colors) {
+        final appBarTheme = AppBarTheme.of(context);
+        final theme = context.theme;
+        final colorscheme = theme.colorScheme;
+        final appBarBackgroundColor = appBarTheme.backgroundColor;
+        final backgroundColor = appBarBackgroundColor ?? colorscheme.surface;
+        final materialColor = appBarBackgroundColor ?? colors.surface;
+        final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
+        final overlayStyle = _systemOverlayStyleForBrightness(ThemeData.estimateBrightnessForColor(backgroundColor), theme.useMaterial3 ? const Color(0x00000000) : null);
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: overlayStyle,
+          child: Material(
+            shadowColor: Colors.transparent,
+            type: MaterialType.canvas,
+            color: materialColor,
+            surfaceTintColor: surfaceTintColor,
+            child: appBarContent,
+          ),
+        );
+      },
     );
   }
 }
@@ -999,7 +1016,7 @@ class _CustomNavBar extends StatelessWidget {
     final bottomNavBar = NavigationBarTheme(
       data: NavigationBarThemeData(
         backgroundColor: theme.navigationBarTheme.backgroundColor,
-        indicatorColor: Color.alphaBlend(theme.colorScheme.primary.withAlpha(20), theme.colorScheme.secondaryContainer),
+        indicatorColor: Color.alphaBlend(theme.colorScheme.primary.withOpacityExt(0.08), theme.colorScheme.secondaryContainer),
       ),
       child: ObxO(
         rx: settings.libraryTabs,
@@ -1106,12 +1123,11 @@ class _RailTabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final button = NamidaIconButton(
       tooltip: () => tab.toText(),
       padding: EdgeInsets.all(iconPadding),
       icon: tab.toIcon(),
-      iconColor: isSelected ? AppThemes.selectedNavigationIconColor : null,
+      iconColor: NColors.fixed(isSelected ? AppThemes.selectedNavigationIconColor : null),
       iconSize: iconSize,
       onPressed: () {
         ScrollSearchController.inst.animatePageController(tab);
@@ -1122,36 +1138,40 @@ class _RailTabItem extends StatelessWidget {
       builder: (context, includeVideos) {
         final variants = tab.availableVariants(includeVideos);
         final hasMenu = variants.isNotEmpty || tab.hasSectionsMenu;
-        final item = AnimatedDecoration(
-          duration: Duration(milliseconds: 400),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
-            color: isSelected ? theme.colorScheme.secondaryContainer : null,
-          ),
-          child: !hasMenu
-              ? button
-              : Stack(
-                  children: [
-                    button,
-                    Positioned(
-                      right: 0.0,
-                      bottom: 0.0,
-                      child: LibraryTabVariantsPopup(
-                        tab: tab,
-                        variants: variants,
-                        openOnTap: true,
-                        child: Padding(
-                          padding: const EdgeInsets.all(3.0),
-                          child: Icon(
-                            Broken.arrow_right_3,
-                            size: iconSize * 0.4,
-                            color: isSelected ? AppThemes.selectedNavigationIconColor : null,
-                          ),
+        final itemChild = !hasMenu
+            ? button
+            : Stack(
+                children: [
+                  button,
+                  Positioned(
+                    right: 0.0,
+                    bottom: 0.0,
+                    child: LibraryTabVariantsPopup(
+                      tab: tab,
+                      variants: variants,
+                      openOnTap: true,
+                      child: Padding(
+                        padding: const EdgeInsets.all(3.0),
+                        child: Icon(
+                          Broken.arrow_right_3,
+                          size: iconSize * 0.4,
+                          color: isSelected ? AppThemes.selectedNavigationIconColor : null,
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
+              );
+        final item = NBuilder(
+          selfAnimated: true,
+          builder: (context, colors) => AnimatedDecoration(
+            duration: const Duration(milliseconds: 400),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular((isSelected ? 16.0 : 24.0).multipliedRadius),
+              color: isSelected ? colors.secondaryContainer : null,
+            ),
+            child: itemChild,
+          ),
         );
         if (!hasMenu) return item;
         return LibraryTabVariantsPopup(
@@ -1170,7 +1190,6 @@ class _CustomRailBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final maxHeight = context.height;
 
     const hMargin = 4.0;
@@ -1187,167 +1206,174 @@ class _CustomRailBar extends StatelessWidget {
     final showCustomizationIcon = maxHeight > 550;
     final showLogo = WindowController.instance?.usingCustomWindowTitleBar != true;
 
-    final bgColor = Color.alphaBlend(
-      (theme.navigationRailTheme.backgroundColor ?? theme.colorScheme.surface).withOpacityExt(.5),
-      theme.colorScheme.surfaceContainer,
-    );
-    Widget child = Material(
-      color: bgColor,
-      child: SafeArea(
-        child: SizedBox(
-          width: maxWidth,
-          height: maxHeight,
-          child: ObxO(
-            rx: settings.libraryTabs,
-            builder: (context, libraryTabs) => ObxO(
-              rx: settings.extra.selectedLibraryTab,
-              builder: (context, selectedLibraryTab) => Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  Expanded(
+    final railContent = SafeArea(
+      child: SizedBox(
+        width: maxWidth,
+        height: maxHeight,
+        child: ObxO(
+          rx: settings.libraryTabs,
+          builder: (context, libraryTabs) => ObxO(
+            rx: settings.extra.selectedLibraryTab,
+            builder: (context, selectedLibraryTab) => Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Expanded(
+                  child: FittedBox(
+                    alignment: Alignment.topCenter,
+                    fit: BoxFit.fitWidth,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: hMargin),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          if (showLogo) const SizedBox(height: 6.0) else const SizedBox(height: 4.0),
+                          if (showLogo)
+                            const NamidaLogoContainer(
+                              displayText: false,
+                              lighterShadow: true,
+                              width: maxWidth - iconPadding,
+                              height: maxWidth - iconPadding,
+                              iconSize: iconSize * 1.5,
+                              margin: EdgeInsets.zero,
+                              padding: EdgeInsets.zero,
+                            ),
+                          const NamidaContainerDivider(
+                            margin: EdgeInsets.only(top: 6.0),
+                            width: itemWidth - 4.0,
+                          ),
+                          ...libraryTabs
+                              .toNavTabs()
+                              .map(
+                                (e) => _RailTabItem(
+                                  tab: e,
+                                  isSelected: selectedLibraryTab.group == e.group,
+                                  iconSize: iconSize,
+                                  iconPadding: iconPadding,
+                                ),
+                              )
+                              .addSeparators(separator: const SizedBox(height: 6.0)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12.0),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxHeight * 0.25),
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
                     child: FittedBox(
-                      alignment: Alignment.topCenter,
+                      alignment: Alignment.bottomCenter,
                       fit: BoxFit.fitWidth,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: hMargin),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            if (showLogo) const SizedBox(height: 6.0) else const SizedBox(height: 4.0),
-                            if (showLogo)
-                              const NamidaLogoContainer(
-                                displayText: false,
-                                lighterShadow: true,
-                                width: maxWidth - iconPadding,
-                                height: maxWidth - iconPadding,
-                                iconSize: iconSize * 1.5,
-                                margin: EdgeInsets.zero,
-                                padding: EdgeInsets.zero,
+                            const SizedBox(height: 6.0),
+                            ObxO(
+                              rx: settings.themeMode,
+                              builder: (context, themeMode) => IconButton(
+                                visualDensity: VisualDensity.compact,
+                                style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                                padding: const EdgeInsets.all(iconPaddingBottomAction),
+                                iconSize: iconSizeBottomAction,
+                                icon: Icon(
+                                  themeMode.toIcon(),
+                                  size: iconSizeBottomAction,
+                                ),
+                                onPressed: () {
+                                  final nextMode = themeMode.nextElement(ThemeMode.values);
+                                  ToggleThemeModeContainer.onThemeChangeTap(nextMode);
+                                },
                               ),
+                            ),
                             const NamidaContainerDivider(
-                              margin: EdgeInsets.only(top: 6.0),
+                              margin: EdgeInsets.symmetric(vertical: 4.0),
                               width: itemWidth - 4.0,
                             ),
-                            ...libraryTabs
-                                .toNavTabs()
-                                .map(
-                                  (e) => _RailTabItem(
-                                    tab: e,
-                                    isSelected: selectedLibraryTab.group == e.group,
-                                    iconSize: iconSize,
-                                    iconPadding: iconPadding,
-                                  ),
-                                )
-                                .addSeparators(separator: SizedBox(height: 6.0)),
+                            NamidaTooltip(
+                              message: () => lang.sleepTimer,
+                              child: NamidaDrawerListTile(
+                                margin: EdgeInsets.zero,
+                                padding: const EdgeInsets.all(iconPaddingBottomAction),
+                                enabled: false,
+                                isCentered: true,
+                                iconSize: iconSizeBottomAction,
+                                title: '',
+                                width: itemWidthBottomAction,
+                                icon: Broken.timer_1,
+                                onTap: () {
+                                  NamidaDrawer.openSleepTimerDialog(context);
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 6.0),
+                            if (showCustomizationIcon) ...[
+                              NamidaTooltip(
+                                message: () => lang.customizations,
+                                child: NamidaDrawerListTile(
+                                  margin: EdgeInsets.zero,
+                                  padding: const EdgeInsets.all(iconPaddingBottomAction),
+                                  enabled: false,
+                                  isCentered: true,
+                                  iconSize: iconSizeBottomAction,
+                                  title: '',
+                                  width: itemWidthBottomAction,
+                                  icon: Broken.brush_1,
+                                  onTap: () {
+                                    SettingsSubPage(
+                                      title: () => lang.customizations,
+                                      child: const CustomizationSettings(),
+                                    ).navigate();
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 6.0),
+                            ],
+                            NamidaTooltip(
+                              message: () => lang.settings,
+                              child: NamidaDrawerListTile(
+                                margin: EdgeInsets.zero,
+                                padding: const EdgeInsets.all(iconPaddingBottomAction),
+                                enabled: false,
+                                isCentered: true,
+                                iconSize: iconSizeBottomAction,
+                                title: '',
+                                width: itemWidthBottomAction,
+                                icon: Broken.setting,
+                                onTap: () {
+                                  const SettingsPage().navigate();
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 6.0),
                           ],
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12.0),
-                  ConstrainedBox(
-                    constraints: BoxConstraints(maxHeight: maxHeight * 0.25),
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: FittedBox(
-                        alignment: Alignment.bottomCenter,
-                        fit: BoxFit.fitWidth,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: hMargin),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(height: 6.0),
-                              ObxO(
-                                rx: settings.themeMode,
-                                builder: (context, themeMode) => IconButton(
-                                  visualDensity: VisualDensity.compact,
-                                  style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                                  padding: EdgeInsets.all(iconPaddingBottomAction),
-                                  iconSize: iconSizeBottomAction,
-                                  icon: Icon(
-                                    themeMode.toIcon(),
-                                    size: iconSizeBottomAction,
-                                  ),
-                                  onPressed: () {
-                                    final nextMode = themeMode.nextElement(ThemeMode.values);
-                                    ToggleThemeModeContainer.onThemeChangeTap(nextMode);
-                                  },
-                                ),
-                              ),
-                              const NamidaContainerDivider(
-                                margin: EdgeInsets.symmetric(vertical: 4.0),
-                                width: itemWidth - 4.0,
-                              ),
-                              NamidaTooltip(
-                                message: () => lang.sleepTimer,
-                                child: NamidaDrawerListTile(
-                                  margin: EdgeInsets.zero,
-                                  padding: EdgeInsets.all(iconPaddingBottomAction),
-                                  enabled: false,
-                                  isCentered: true,
-                                  iconSize: iconSizeBottomAction,
-                                  title: '',
-                                  width: itemWidthBottomAction,
-                                  icon: Broken.timer_1,
-                                  onTap: () {
-                                    NamidaDrawer.openSleepTimerDialog(context);
-                                  },
-                                ),
-                              ),
-                              SizedBox(height: 6.0),
-                              if (showCustomizationIcon) ...[
-                                NamidaTooltip(
-                                  message: () => lang.customizations,
-                                  child: NamidaDrawerListTile(
-                                    margin: EdgeInsets.zero,
-                                    padding: EdgeInsets.all(iconPaddingBottomAction),
-                                    enabled: false,
-                                    isCentered: true,
-                                    iconSize: iconSizeBottomAction,
-                                    title: '',
-                                    width: itemWidthBottomAction,
-                                    icon: Broken.brush_1,
-                                    onTap: () {
-                                      SettingsSubPage(
-                                        title: () => lang.customizations,
-                                        child: const CustomizationSettings(),
-                                      ).navigate();
-                                    },
-                                  ),
-                                ),
-                                SizedBox(height: 6.0),
-                              ],
-                              NamidaTooltip(
-                                message: () => lang.settings,
-                                child: NamidaDrawerListTile(
-                                  margin: EdgeInsets.zero,
-                                  padding: EdgeInsets.all(iconPaddingBottomAction),
-                                  enabled: false,
-                                  isCentered: true,
-                                  iconSize: iconSizeBottomAction,
-                                  title: '',
-                                  width: itemWidthBottomAction,
-                                  icon: Broken.setting,
-                                  onTap: () {
-                                    const SettingsPage().navigate();
-                                  },
-                                ),
-                              ),
-                              SizedBox(height: 6.0),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+    final child = NBuilder(
+      builder: (context, colors) {
+        final railThemeBackgroundColor = context.theme.navigationRailTheme.backgroundColor;
+        final railBackgroundColor = railThemeBackgroundColor ?? colors.surface;
+        final bgColor = Color.alphaBlend(
+          railBackgroundColor.withOpacityExt(.5),
+          colors.surfaceContainer,
+        );
+        return Material(
+          color: bgColor,
+          child: railContent,
+        );
+      },
     );
     final drawerState = NamidaNavigator.inst.innerDrawerKey.currentState;
     if (drawerState == null) return child;

@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/enums.dart';
-import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/pages/youtube_home_view.dart';
@@ -77,14 +77,13 @@ class LibraryTabVariantChip extends StatelessWidget {
       builder: (context, includeVideos) {
         final variants = tab.availableVariants(includeVideos);
         if (variants.isEmpty) return const SizedBox();
-        final theme = context.theme;
         return LibraryTabVariantsPopup(
           tab: tab,
           variants: variants,
           openOnTap: true,
           child: NamidaInkWell(
             borderRadius: 8.0,
-            bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.5),
+            bgColor: const NColors(.secondaryContainer, opacity: 0.5),
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -94,9 +93,9 @@ class LibraryTabVariantChip extends StatelessWidget {
                   size: 14.0,
                 ),
                 const SizedBox(width: 4.0),
-                Text(
+                NamidaText(
                   tab.toVariantText(),
-                  style: theme.textTheme.displaySmall,
+                  style: NText.small,
                 ),
                 const SizedBox(width: 2.0),
                 const Icon(

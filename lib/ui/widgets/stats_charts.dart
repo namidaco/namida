@@ -17,7 +17,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/image_advanced.dart' show ImageAdvanced;
@@ -69,7 +69,6 @@ class _ChartTipOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -91,22 +90,22 @@ class _ChartTipOverlay extends StatelessWidget {
                         left: left,
                         top: top,
                         child: IgnorePointer(
-                          child: Container(
+                          child: NContainer(
                             constraints: const BoxConstraints(maxWidth: 160.0),
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surface.withOpacityExt(0.95),
+                            decoration: (colors) => BoxDecoration(
+                              color: colors.surface.withOpacityExt(0.95),
                               borderRadius: BorderRadius.circular(8.0.multipliedRadius),
                               boxShadow: [
                                 BoxShadow(
-                                  color: theme.shadowColor.withAlpha(50),
+                                  color: colors.shadow.withOpacityExt(0.2),
                                   blurRadius: 6.0,
                                 ),
                               ],
                             ),
-                            child: Text(
+                            child: NamidaText(
                               tip.text,
-                              style: theme.textTheme.displaySmall?.copyWith(fontSize: 11.5, fontWeight: FontWeight.w600),
+                              style: const NText(.small, size: .s11p5, weight: FontWeight.w600),
                             ),
                           ),
                         ),
@@ -177,8 +176,8 @@ class StatsWatermark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = context.theme.textTheme.displayMedium;
-    final color = style?.color?.withOpacityExt(0.7);
+    final style = NText.medium.of(context);
+    final color = style.color?.withOpacityExt(0.7);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -192,7 +191,7 @@ class StatsWatermark extends StatelessWidget {
         const SizedBox(width: 6.0),
         Text(
           'Namida',
-          style: style?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700, color: color),
+          style: style.copyWith(fontSize: 13.0, fontWeight: FontWeight.w700, color: color),
         ),
       ],
     );
@@ -371,24 +370,22 @@ class _StatsChartCardState extends State<StatsChartCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
       child: RepaintBoundary(
         key: _boundaryKey,
         child: ValueListenableBuilder(
           valueListenable: _exporting,
-          builder: (context, exporting, child) => DecoratedBox(
-            decoration: BoxDecoration(
-              color: exporting ? theme.scaffoldBackgroundColor : Colors.transparent,
+          builder: (context, exporting, child) => NDecoratedBox(
+            decoration: (colors) => BoxDecoration(
+              color: exporting ? colors.scaffold : Colors.transparent,
               borderRadius: BorderRadius.circular(20.0.multipliedRadius),
             ),
             child: child,
           ),
           child: NamidaInkWell(
             borderRadius: 20.0,
-            bgColor: theme.cardColor.withOpacityExt(0.6),
+            bgColor: const NColors(.card, opacity: 0.6),
             onLongPress: widget.copyText == null ? null : _copy,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,10 +395,10 @@ class _StatsChartCardState extends State<StatsChartCard> {
                   padding: const EdgeInsets.fromLTRB(16.0, 12.0, 8.0, 6.0),
                   child: Row(
                     children: [
-                      Icon(
+                      NIcon(
                         widget.icon,
                         size: 20.0,
-                        color: context.defaultIconColor(),
+                        color: NColors.defaultIcon(),
                       ),
                       const SizedBox(width: 10.0),
                       Expanded(
@@ -409,16 +406,16 @@ class _StatsChartCardState extends State<StatsChartCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            NamidaText(
                               widget.title,
-                              style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w600),
+                              style: const NText(.medium, weight: FontWeight.w600),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (widget.subtitle != null)
-                              Text(
+                              NamidaText(
                                 widget.subtitle!,
-                                style: textTheme.displaySmall?.copyWith(fontSize: 11.5),
+                                style: const NText(.small, size: .s11p5),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -519,7 +516,7 @@ class _ListensHeatmapChartState extends State<ListensHeatmapChart> with SingleTi
     final theme = context.theme;
     _painter.baseColor = ChartPalette.base();
     _painter.emptyColor = theme.colorScheme.onSurface.withOpacityExt(0.07);
-    _painter.labelStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.0);
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 10.0);
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = _painter.heightFor(constraints.maxWidth);
@@ -575,7 +572,7 @@ class _HeatmapPainter extends CustomPainter {
 
   _HeatmapPainter({required this.widget, required this.repaint}) : super(repaint: repaint) {
     final values = widget.values;
-    final maxDays = ListensHeatmapChart.maxWeeks * 7;
+    const maxDays = ListensHeatmapChart.maxWeeks * 7;
     _startIndex = values.length > maxDays ? values.length - maxDays : 0;
     _count = values.length - _startIndex;
     _firstDay = widget.firstDay + _startIndex;
@@ -742,9 +739,9 @@ class _ListeningClockChartState extends State<ListeningClockChart> with SingleTi
     final theme = context.theme;
     _painter.baseColor = ChartPalette.base();
     _painter.trackColor = theme.colorScheme.onSurface.withOpacityExt(0.07);
-    _painter.labelStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.5);
-    _painter.centerStyle = theme.textTheme.displayLarge!.copyWith(fontSize: 20.0, fontWeight: FontWeight.w700);
-    _painter.centerSubStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.5);
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 10.5);
+    _painter.centerStyle = NText.large.of(context).copyWith(fontSize: 20.0, fontWeight: FontWeight.w700);
+    _painter.centerSubStyle = NText.small.of(context).copyWith(fontSize: 10.5);
     _painter.hourFormat12 = settings.hourFormat12.value;
     return _ChartTipOverlay(
       tip: tip,
@@ -860,7 +857,7 @@ class _ClockPainter extends CustomPainter {
       if (hProgress <= 0) continue;
       final len = (v / _max) * (_r - _r0) * Curves.easeOutCubic.transform(hProgress);
       final start = -math.pi / 2 + h * _sweep + _sweep * 0.12;
-      final sweep = _sweep * 0.76;
+      const sweep = _sweep * 0.76;
       final mid = _r0 + len / 2;
       final w = math.max(1.0, len);
       paint
@@ -936,9 +933,8 @@ class _VerticalBarsChartState extends State<VerticalBarsChart> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     _painter.baseColor = ChartPalette.base();
-    _painter.labelStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.0);
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 10.0);
     return _ChartTipOverlay(
       tip: tip,
       child: GestureDetector(
@@ -1095,7 +1091,7 @@ class _GridHeatmapChartState extends State<GridHeatmapChart> with SingleTickerPr
     final theme = context.theme;
     _painter.baseColor = ChartPalette.base();
     _painter.emptyColor = theme.colorScheme.onSurface.withOpacityExt(0.07);
-    _painter.labelStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.0);
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 10.0);
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = _painter.heightFor(constraints.maxWidth);
@@ -1187,7 +1183,7 @@ class _GridHeatmapPainter extends CustomPainter {
     final progress = repaint.value;
     final paint = Paint();
     final radius = Radius.circular(_cellW >= 6 ? 3.0 : 1.5);
-    final top = _labelsHeight + 2.0;
+    const top = _labelsHeight + 2.0;
 
     for (int col = 0; col < widget.cols; col++) {
       final tp = _colLabels[col];
@@ -1276,12 +1272,11 @@ class _DonutChartState extends State<DonutChart> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final colors = ChartPalette.series(ChartPalette.base(), widget.data.length, theme.brightness);
     _painter.colors = colors;
     _painter.otherColor = theme.colorScheme.onSurface.withOpacityExt(0.18);
-    _painter.centerStyle = textTheme.displayLarge!.copyWith(fontSize: 18.0, fontWeight: FontWeight.w700);
-    _painter.centerSubStyle = textTheme.displaySmall!.copyWith(fontSize: 10.5);
+    _painter.centerStyle = NText.large.of(context).copyWith(fontSize: 18.0, fontWeight: FontWeight.w700);
+    _painter.centerSubStyle = NText.small.of(context).copyWith(fontSize: 10.5);
     _painter.centerLabel = widget.centerLabel;
 
     final total = _painter.total;
@@ -1334,17 +1329,17 @@ class _DonutChartState extends State<DonutChart> with SingleTickerProviderStateM
                           ),
                           const SizedBox(width: 6.0),
                           Expanded(
-                            child: Text(
+                            child: NamidaText(
                               label,
-                              style: textTheme.displaySmall?.copyWith(fontSize: 11.5, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500),
+                              style: NText(.small, size: .s11p5, weight: isSelected ? FontWeight.w700 : FontWeight.w500),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 6.0),
-                          Text(
+                          NamidaText(
                             '${pct.roundDecimals(1)}%',
-                            style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w600),
+                            style: const NText(.small, size: .s11, weight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -1514,9 +1509,9 @@ class _RankBarsChartState extends State<RankBarsChart> with SingleTickerProvider
     final theme = context.theme;
     _painter.baseColor = ChartPalette.base();
     _painter.trackColor = theme.colorScheme.onSurface.withOpacityExt(0.06);
-    _painter.labelStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 12.0, fontWeight: FontWeight.w500);
-    _painter.valueStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 11.0, fontWeight: FontWeight.w700);
-    _painter.rankStyle = theme.textTheme.displaySmall!.copyWith(fontSize: 10.0, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withOpacityExt(0.5));
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 12.0, fontWeight: FontWeight.w500);
+    _painter.valueStyle = NText.small.of(context).copyWith(fontSize: 11.0, fontWeight: FontWeight.w700);
+    _painter.rankStyle = NText.small.of(context).copyWith(fontSize: 10.0, fontWeight: FontWeight.w700, color: theme.colorScheme.onSurface.withOpacityExt(0.5));
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTapUp: widget.onTap == null
@@ -1672,12 +1667,11 @@ class _ListensLineChartState extends State<ListensLineChart> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final base = ChartPalette.base();
     final colors = ChartPalette.series(base, widget.series.length, theme.brightness);
     _painter.colors = List.generate(widget.series.length, (i) => widget.series[i].color ?? colors[i], growable: false);
     _painter.gridColor = theme.colorScheme.onSurface.withOpacityExt(0.08);
-    _painter.labelStyle = textTheme.displaySmall!.copyWith(fontSize: 10.0);
+    _painter.labelStyle = NText.small.of(context).copyWith(fontSize: 10.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -1712,9 +1706,9 @@ class _ListensLineChartState extends State<ListensLineChart> with SingleTickerPr
                       decoration: BoxDecoration(color: _painter.colors[i], borderRadius: BorderRadius.circular(2.0)),
                     ),
                     const SizedBox(width: 5.0),
-                    Text(
+                    NamidaText(
                       '${widget.series[i].label} • ${_painter.totals[i].formatDecimal()}',
-                      style: textTheme.displaySmall?.copyWith(fontSize: 11.0, fontWeight: FontWeight.w600),
+                      style: const NText(.small, size: .s11, weight: FontWeight.w600),
                     ),
                   ],
                 ),
@@ -1958,7 +1952,7 @@ class _GaugeChartState extends State<GaugeChart> with SingleTickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    final colors = NColorsData.of(context);
     return RepaintBoundary(
       child: CustomPaint(
         size: Size(widget.size, widget.size * 0.72),
@@ -1966,11 +1960,11 @@ class _GaugeChartState extends State<GaugeChart> with SingleTickerProviderStateM
           fraction: widget.fraction.clamp(0.0, 1.0),
           repaint: revealCurve,
           baseColor: ChartPalette.base(),
-          trackColor: theme.colorScheme.onSurface.withOpacityExt(0.08),
+          trackColor: colors.onSurface.withOpacityExt(0.08),
           valueText: widget.valueText,
           subText: widget.subText,
-          valueStyle: theme.textTheme.displayLarge!.copyWith(fontSize: 18.0, fontWeight: FontWeight.w700),
-          subStyle: theme.textTheme.displaySmall!.copyWith(fontSize: 10.5),
+          valueStyle: NText.large.of(context).copyWith(fontSize: 18.0, fontWeight: FontWeight.w700),
+          subStyle: NText.small.of(context).copyWith(fontSize: 10.5),
         ),
       ),
     );

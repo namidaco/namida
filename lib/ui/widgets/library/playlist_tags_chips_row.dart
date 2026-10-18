@@ -5,6 +5,7 @@ import 'package:playlist_manager/playlist_manager.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/playlist_tags_manager_dialog.dart';
@@ -139,16 +140,13 @@ class _TagChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
     final key = chip.key;
     final state = chip.state;
     final isExcluded = state == PlaylistTagFilterState.excluded;
     final bgColor = switch (state) {
-      PlaylistTagFilterState.none => colorScheme.secondaryContainer.withOpacityExt(0.25),
-      PlaylistTagFilterState.included => colorScheme.secondaryContainer,
-      PlaylistTagFilterState.excluded => colorScheme.errorContainer.withOpacityExt(0.5),
+      PlaylistTagFilterState.none => const NColors(.secondaryContainer, opacity: 0.25),
+      PlaylistTagFilterState.included => NColors.secondaryContainer,
+      PlaylistTagFilterState.excluded => NColors.fixed(context.theme.colorScheme.errorContainer.withOpacityExt(0.5)),
     };
     final icon = switch (key) {
       PlaylistVirtualTag() => key.toIcon(),
@@ -159,10 +157,12 @@ class _TagChip extends StatelessWidget {
       PlaylistUserTag() => chip.label ?? key.path,
     };
     final color = chip.color;
-    final textStyle = textTheme.displaySmall?.copyWith(
-      decoration: isExcluded ? TextDecoration.lineThrough : null,
-      fontWeight: state == PlaylistTagFilterState.included ? FontWeight.w600 : null,
-    );
+    final textStyle = NText.small
+        .of(context)
+        .copyWith(
+          decoration: isExcluded ? TextDecoration.lineThrough : null,
+          fontWeight: state == PlaylistTagFilterState.included ? FontWeight.w600 : null,
+        );
     return NamidaInkWell(
       animationDurationMS: 200,
       margin: const EdgeInsetsDirectional.only(end: 6.0),
@@ -201,12 +201,10 @@ class _TagChip extends StatelessWidget {
             const SizedBox(
               width: 6.0,
             ),
-            Text(
+            NamidaText(
               chip.count.formatDecimal(),
-              style: textTheme.displaySmall?.copyWith(
-                fontSize: 11.0,
-                color: textTheme.displaySmall?.color?.withOpacityExt(0.6),
-              ),
+              style: const NText(.small, size: .s11),
+              color: const NColors(.textSmall, opacity: 0.6),
               maxLines: 1,
             ),
           ],
@@ -229,7 +227,6 @@ class _SavedFilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 6.0),
       child: NamidaPopupWrapper(
@@ -242,12 +239,12 @@ class _SavedFilterChip extends StatelessWidget {
             onTap: onRemove,
           ),
         ],
-        child: Container(
+        child: NContainer(
           height: _kChipsRowHeight,
-          decoration: BoxDecoration(
+          decoration: (colors) => BoxDecoration(
             borderRadius: BorderRadius.circular(99.0),
             border: Border.all(
-              color: theme.colorScheme.secondaryContainer,
+              color: colors.secondaryContainer,
             ),
           ),
           child: Padding(
@@ -262,9 +259,9 @@ class _SavedFilterChip extends StatelessWidget {
                 const SizedBox(
                   width: 4.0,
                 ),
-                Text(
+                NamidaText(
                   selection.toText(),
-                  style: theme.textTheme.displaySmall,
+                  style: NText.small,
                   maxLines: 1,
                 ),
               ],
@@ -291,14 +288,13 @@ class _SquareChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25);
     final menuItems = this.menuItems;
     final tooltip = this.tooltip;
     Widget child = NamidaInkWell(
       height: _kChipsRowHeight,
       margin: const EdgeInsetsDirectional.only(start: 4.0),
       borderRadius: 99.0,
-      bgColor: bgColor,
+      bgColor: const NColors(.secondaryContainer, opacity: 0.25),
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       onTap: onTap,
       child: Icon(

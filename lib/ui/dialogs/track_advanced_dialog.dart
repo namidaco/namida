@@ -26,6 +26,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -174,14 +175,14 @@ void showTrackAdvancedDialog({
             crossAxisAlignment: .start,
             children: [
               const SizedBox(height: 12.0),
-              Text(
+              NamidaText(
                 "${lang.overrideOldFilesInTheSameFolder}?",
-                style: namida.textTheme.displayMedium,
+                style: NText.medium,
               ),
               const SizedBox(height: 12.0),
-              Text(
+              NamidaText(
                 path,
-                style: namida.textTheme.displaySmall,
+                style: NText.small,
               ),
               const SizedBox(height: 12.0),
               const NamidaContainerDivider(
@@ -235,15 +236,15 @@ void showTrackAdvancedDialog({
       final pathsKeys = erroredPaths.keys.toList();
       if (pathsKeys.isEmpty) return;
 
-      final separatorWidget = NamidaContainerDivider(
-        margin: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 4.0),
+      const separatorWidget = NamidaContainerDivider(
+        margin: EdgeInsets.symmetric(horizontal: 0.0, vertical: 4.0),
       );
       NamidaNavigator.inst.navigateDialog(
         dialog: CustomBlurryDialog(
           title: '${lang.failed}: ${pathsKeys.length.displayFilesKeyword}',
           normalTitleStyle: true,
-          actions: [
-            const DoneButton(),
+          actions: const [
+            DoneButton(),
           ],
           child: SizedBox(
             height: namida.height * 0.5,
@@ -261,7 +262,7 @@ void showTrackAdvancedDialog({
                     child: Row(
                       mainAxisSize: .min,
                       children: [
-                        Icon(
+                        const Icon(
                           Broken.danger,
                           size: 16.0,
                         ),
@@ -271,13 +272,13 @@ void showTrackAdvancedDialog({
                             mainAxisSize: .min,
                             crossAxisAlignment: .start,
                             children: [
-                              Text(
+                              NamidaText(
                                 pathKey,
-                                style: context.textTheme.displaySmall,
+                                style: NText.small,
                               ),
-                              Text(
+                              NamidaText(
                                 errText,
-                                style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+                                style: const NText(.small, size: .s11),
                               ),
                             ],
                           ),
@@ -492,8 +493,8 @@ void showTrackAdvancedDialog({
               leading: StackedIcon(
                 baseIcon: Broken.copy,
                 secondaryIcon: Broken.broom,
-                baseIconColor: colorScheme,
-                secondaryIconColor: colorScheme,
+                baseIconColor: NColors.fixed(colorScheme),
+                secondaryIconColor: NColors.fixed(colorScheme),
                 delightenColors: true,
               ),
               onTap: onRemovePlaylistDuplicates,
@@ -578,7 +579,7 @@ void showTrackAdvancedDialog({
                   subtitle: shouldShow ? "${reIndexedTracksSuccessful.valueR}/${tracksUniquedPhysical.length}$secondLine" : null,
                   trailingRaw: NamidaInkWell(
                     padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 12.0),
-                    bgColor: theme.cardColor,
+                    bgColor: NColors.card,
                     onTap: () => willUpdateArtwork.toggle(),
                     child: Obx((context) => Text('${lang.artwork}  ${willUpdateArtwork.valueR ? '✓' : 'x'}')),
                   ),
@@ -663,13 +664,13 @@ void showTrackAdvancedDialog({
                 title: lang.colorPalette,
                 icon: Broken.color_swatch,
                 trailingRaw: CustomAnimatedSwitcher(
-                  duration: Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   child: trackColors == null
-                      ? SizedBox(
+                      ? const SizedBox(
                           key: Key('color_not_visible'),
                         )
                       : Padding(
-                          key: Key('color_visible'),
+                          key: const Key('color_visible'),
                           padding: const EdgeInsets.only(right: 12.0),
                           child: CustomPaint(
                             painter: _QuarterCirclePainter(
@@ -812,15 +813,14 @@ void _showTrackColorPaletteDialog({
     required void Function(Color color) onColorTap,
     required void Function(Color color) onColorLongPress,
     required bool Function(Color color) displayCheckMark,
-    required ThemeData theme,
     Widget? additionalWidget,
   }) {
-    return Container(
+    return NContainer(
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.all(6.0),
-      decoration: BoxDecoration(
-        color: (namida.isDarkMode ? Colors.black : Colors.white).withAlpha(160),
-        border: Border.all(color: theme.shadowColor),
+      decoration: (colors) => BoxDecoration(
+        color: (namida.isDarkMode ? Colors.black : Colors.white).withOpacityExt(0.63),
+        border: Border.all(color: colors.shadow),
         borderRadius: BorderRadius.circular(12.0.multipliedRadius),
       ),
       child: Wrap(
@@ -836,10 +836,10 @@ void _showTrackColorPaletteDialog({
                   alignment: Alignment.center,
                   children: [
                     getColorWidget(e),
-                    Container(
+                    NContainer(
                       padding: const EdgeInsets.all(2.0),
-                      decoration: BoxDecoration(
-                        color: theme.scaffoldBackgroundColor,
+                      decoration: (colors) => BoxDecoration(
+                        color: colors.scaffold,
                         shape: BoxShape.circle,
                       ),
                       child: const Text('✓'),
@@ -917,7 +917,6 @@ void _showTrackColorPaletteDialog({
                             removedColors.remove(color);
                           },
                           displayCheckMark: (color) => false,
-                          theme: theme,
                         ),
                         const SizedBox(height: 12.0),
                       ],
@@ -942,21 +941,25 @@ void _showTrackColorPaletteDialog({
                       didChangeOriginalPalette.value = true;
                     },
                     displayCheckMark: (color) => selectedColors.contains(color),
-                    theme: theme,
-                    additionalWidget: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: theme.shadowColor),
+                    additionalWidget: NContainer(
+                      decoration: (colors) => BoxDecoration(
+                        border: Border.all(color: colors.shadow),
                         shape: BoxShape.circle,
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(100.0),
                         onTap: showAddNewColorPaletteDialog,
-                        child: getColorWidget(
-                          theme.cardColor.withAlpha(200),
-                          Icon(
-                            Broken.add,
-                            color: theme.cardColor.withAlpha(200).invert(),
-                          ),
+                        child: NBuilder(
+                          builder: (context, colors) {
+                            final addColorBg = colors.card.withOpacityExt(0.78);
+                            return getColorWidget(
+                              addColorBg,
+                              Icon(
+                                Broken.add,
+                                color: addColorBg.invert(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
@@ -1180,9 +1183,9 @@ void showLibraryTracksChooseDialog({
             if (trackName != '')
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
+                child: NamidaText(
                   trackName,
-                  style: namida.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
               ),
             if (trackName != '') const SizedBox(height: 8.0),
@@ -1268,12 +1271,12 @@ class _QuarterCirclePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final Offset center = Offset(0, 0);
+    const Offset center = Offset(0, 0);
     final Paint paint = Paint()..style = PaintingStyle.fill;
 
     final int segments = colors.length;
     final double sweep = 2 * math.pi / segments;
-    final double startAngle = -math.pi / 2;
+    const double startAngle = -math.pi / 2;
 
     final Rect arcRect = Rect.fromCircle(center: center, radius: radius);
 

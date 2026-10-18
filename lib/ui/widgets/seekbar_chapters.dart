@@ -5,6 +5,7 @@ import 'package:namida/class/media_chapter.dart';
 import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 
 /// cuts a thin gap into [child] where each chapter of the current item starts.
@@ -75,15 +76,15 @@ class ChapterProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.theme.colorScheme;
+    final colors = NColorsData.of(context);
     return RepaintBoundary(
       child: CustomPaint(
         size: Size.infinite,
         painter: _ChapterProgressPainter(
           startMS: rangeMS.$1,
           endMS: rangeMS.$2,
-          trackColor: colorScheme.onSecondaryContainer.withOpacityExt(0.15),
-          fillColor: colorScheme.primary,
+          trackColor: colors.onSecondaryContainer.withOpacityExt(0.15),
+          fillColor: colors.primary,
         ),
       ),
     );

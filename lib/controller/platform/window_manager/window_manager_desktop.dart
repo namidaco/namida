@@ -15,7 +15,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
   @override
   Future<void> restorePosition() async {
     final windowOptions = WindowOptions(
-      size: Size(428, 812),
+      size: const Size(428, 812),
       center: true,
       // -- on windows this makes dwm fill the window with a gray accent until flutter draws
       backgroundColor: Platform.isWindows ? null : Colors.transparent,

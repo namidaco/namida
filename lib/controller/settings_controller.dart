@@ -101,6 +101,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final language = _keyObject<NamidaLanguage?>('language', null, NamidaLanguage.fromJson, (v) => v?.toJson(), sync: false);
   late final themeMode = _keyEnum('themeMode', ThemeMode.system, ThemeMode.values);
   late final pitchBlack = _key('pitchBlack', false);
+  late final pitchBlackAdv = _key<int?>('pitchBlackAdv', null);
   late final autoColor = _key('autoColor', true, sync: false);
   late final animatedTheme = _key('animatedTheme', true, sync: false);
   late final staticColor = _key<int?>('staticColor_v2', null);

@@ -475,7 +475,7 @@ void main() {
     });
 
     test('only connection messages decode from a device not trusted on the socket', () {
-      final ping = PingMessage(messageInfo: BaseMessageInfo.connection(clientId));
+      const ping = PingMessage(messageInfo: BaseMessageInfo.connection(clientId));
       final pingBytes = ping.encodeBytes();
       expect(() => BaseMessage.decodeBytes(pingBytes, const <String>{}, const <String>{}), throwsA(isA<NonAllowedMessageException>()));
       expect(BaseMessage.decodeBytes(pingBytes, const {clientId}, const <String>{}), isA<PingMessage>());

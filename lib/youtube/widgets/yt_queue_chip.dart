@@ -19,7 +19,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
-import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/miniplayer_base.dart';
@@ -148,8 +148,6 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final maxHeight = context.height;
     const minHeight = kYTQueueSheetMinHeight;
     const smallChipBorderRadius = 12.0;
@@ -201,14 +199,14 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                         margin: smallChipMargin,
                         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                         height: minHeight,
-                        bgColor: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor).withOpacityExt(0.95),
+                        bgColor: NColors.custom((c) => Color.alphaBlend(c.card.withOpacityExt(0.5), c.scaffold).withOpacityExt(0.95)),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const NIcon(
                               Broken.airdrop,
                               size: 24.0,
-                              color: theme.iconTheme.color?.withOpacityExt(0.65),
+                              color: NColors(.icon, opacity: 0.65),
                             ),
                             const SizedBox(width: 6.0),
                             Expanded(
@@ -226,15 +224,15 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(
+                                      NamidaText(
                                         "${currentIndex + 1}/$queueLength",
-                                        style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600),
+                                        style: const NText(.small, weight: FontWeight.w600),
                                       ),
                                       // const SizedBox(height: 2.0),
                                       if (nextItemName != null && nextItemName != '')
-                                        Text(
+                                        NamidaText(
                                           "${lang.next}: $nextItemName",
-                                          style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w500),
+                                          style: const NText(.small, weight: FontWeight.w500),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -260,8 +258,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 },
                                 icon: null,
                                 iconWidget: NamidaMiniPlayerBase.getLrcButton(
-                                  theme,
-                                  color: _ActionItemAlt.getIconColor(context),
+                                  color: _ActionItemAlt.iconColor,
                                   iconSize: 22.0,
                                 ),
                               ),
@@ -314,8 +311,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
           animation: _bigBoxAnimation,
           child: Stack(
             children: [
-              ColoredBox(
-                color: Color.alphaBlend(theme.cardColor.withOpacityExt(0.5), theme.scaffoldBackgroundColor),
+              NColoredBox(
+                color: NColors.custom((colors) => Color.alphaBlend(colors.card.withOpacityExt(0.5), colors.scaffold)),
                 child: Listener(
                   onPointerMove: (event) {
                     if (Player.inst.isModifyingQueue) return;
@@ -424,8 +421,8 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                             ),
                           ),
                         ),
-                        ColoredBox(
-                          color: theme.scaffoldBackgroundColor,
+                        NColoredBox(
+                          color: NColors.scaffold,
                           child: SizedBox(
                             width: context.width,
                             height: kQueueBottomRowHeight,
@@ -657,10 +654,8 @@ class QueueChipHeaderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final textStyle = textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w600);
-    final playbackActionsIconColor = showPlaybackActions ? CustomIconButtonTonal.getIconColor(context) : null;
+    final textStyle = NText.small.of(context).copyWith(fontWeight: FontWeight.w600);
+    final playbackActionsIconColor = showPlaybackActions ? CustomIconButtonTonal.iconColor : null;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: 42.0, maxHeight: (context.height * 0.15).withMinimum(42.0)),
       child: Padding(
@@ -687,9 +682,9 @@ class QueueChipHeaderRow extends StatelessWidget {
                             builder: (context, currentQueue) => Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                NamidaText(
                                   lang.queue,
-                                  style: textTheme.displayMedium,
+                                  style: NText.medium,
                                 ),
 
                                 if (durationFormatter != null)
@@ -846,7 +841,7 @@ class QueueChipHeaderRow extends StatelessWidget {
                           if (onArrowDownPressed != null) ...[
                             SizedBox(width: isLocal ? 4.0 : 6.0),
                             NamidaIconButton(
-                              iconColor: context.defaultIconColor().withOpacityExt(0.95),
+                              iconColor: NColors.defaultIcon(opacity: 0.95),
                               icon: Broken.arrow_down_2,
                               onPressed: onArrowDownPressed,
                             ),
@@ -907,10 +902,11 @@ class _ActionItemAlt extends StatelessWidget {
     required this.onTap,
   });
 
-  static Color? getIconColor(BuildContext context) => context.theme.iconTheme.color?.withAlpha(150);
+  static const iconColor = NColors(.icon, opacity: 0.59);
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
     return IconButton(
       padding: EdgeInsets.zero,
       visualDensity: VisualDensity.compact,
@@ -922,7 +918,7 @@ class _ActionItemAlt extends StatelessWidget {
             icon,
             size: iconSize,
           ),
-      color: getIconColor(context),
+      color: iconColor.resolve(colors),
       iconSize: iconSize,
       onPressed: onTap,
     );
@@ -948,7 +944,7 @@ class _QueueConfigureOptions extends StatelessWidget {
               SettingEntryTile(
                 entry: YoutubeSettings.autoStartRadio,
               ),
-              NamidaContainerDivider(
+              const NamidaContainerDivider(
                 margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
               ),
             ],

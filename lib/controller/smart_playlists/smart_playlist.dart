@@ -376,7 +376,7 @@ sealed class SmartPlaylistRuleBase<T, T2, F extends SmartPlaylistRuleFilter, S e
       source: source as SmartPlaylistRuleFilterDateTimeSource,
       enableCleanup: enableCleanup,
       clockOnly: clockOnly,
-      relativeDuration: relativeDuration ?? (filter.isRelativeDate ? SmartPlaylistRelativeDuration.initial() : null),
+      relativeDuration: relativeDuration ?? (filter.isRelativeDate ? const SmartPlaylistRelativeDuration.initial() : null),
     ),
     SmartPlaylistFilterType.boolean => SmartPlaylistRuleBoolean(
       filter: filter as SmartPlaylistRuleFilterBoolean,

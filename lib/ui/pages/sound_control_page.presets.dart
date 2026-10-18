@@ -91,50 +91,54 @@ class _ConfigPresetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final secondaryColor = theme.colorScheme.secondary;
-    final itemsColor = secondaryColor.withOpacityExt(isActive ? 0.9 : 0.6);
+    final itemsColor = isActive ? const NColors(.secondary, opacity: 0.9) : const NColors(.secondary, opacity: 0.6);
+    final bgColor = isActive ? const NColors(.secondary, opacity: 0.18) : const NColors(.secondary, opacity: 0.0);
+    final contentWidget = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        NIcon(
+          Broken.layer,
+          size: 14.0,
+          color: itemsColor,
+        ),
+        const SizedBox(width: 6.0),
+        NamidaText(
+          preset.name,
+          style: NText.medium,
+          color: itemsColor,
+        ),
+        AnimatedShow(
+          isHorizontal: true,
+          show: isActive,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(start: 8.0),
+            child: NamidaCheckMark(
+              size: 14.0,
+              active: isActive,
+            ),
+          ),
+        ),
+      ],
+    );
     return NamidaPopupWrapper(
       openOnTap: false,
       childrenDefault: _getMenuItems,
-      child: NamidaInkWell(
-        animationDurationMS: 200,
-        bgColor: secondaryColor.withOpacityExt(isActive ? 0.18 : 0.0),
-        borderRadius: 8.0,
-        onTap: () => onTap(preset.config),
-        margin: const EdgeInsets.symmetric(horizontal: 2.0),
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: secondaryColor.withOpacityExt(isActive ? 0.7 : 0.3),
-            width: 1.5,
+      child: NBuilder(
+        selfAnimated: true,
+        builder: (context, colors) => NamidaInkWell(
+          animationDurationMS: 200,
+          bgColor: bgColor,
+          borderRadius: 8.0,
+          onTap: () => onTap(preset.config),
+          margin: const EdgeInsets.symmetric(horizontal: 2.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: colors.secondary.withOpacityExt(isActive ? 0.7 : 0.3),
+              width: 1.5,
+            ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Broken.layer,
-              size: 14.0,
-              color: itemsColor,
-            ),
-            const SizedBox(width: 6.0),
-            Text(
-              preset.name,
-              style: theme.textTheme.displayMedium?.copyWith(color: itemsColor),
-            ),
-            AnimatedShow(
-              isHorizontal: true,
-              show: isActive,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 8.0),
-                child: NamidaCheckMark(
-                  size: 14.0,
-                  active: isActive,
-                ),
-              ),
-            ),
-          ],
+          child: contentWidget,
         ),
       ),
     );
@@ -182,7 +186,7 @@ class _ConfigPresetSaveButton extends StatelessWidget {
       tooltip: () => lang.saveAsPreset,
       icon: Broken.save_add,
       iconSize: 20.0,
-      iconColor: context.defaultIconColor(),
+      iconColor: NColors.defaultIcon(),
       onPressed: onTap,
     );
   }

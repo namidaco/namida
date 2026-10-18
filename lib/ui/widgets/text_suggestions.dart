@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:namida/controller/text_suggestions_provider.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 /// Wraps a text field with a suggestions dropdown, values are fetched & filtered only while focused.
@@ -226,15 +226,14 @@ class _SuggestionsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     final borderRadius = BorderRadius.circular(10.0.multipliedRadius);
-    return Container(
+    return NContainer(
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(theme.cardColor, theme.scaffoldBackgroundColor),
+      decoration: (colors) => BoxDecoration(
+        color: Color.alphaBlend(colors.card, colors.scaffold),
         borderRadius: borderRadius,
-        border: Border.all(color: theme.dividerColor.withOpacityExt(0.3)),
+        border: Border.all(color: colors.divider.withOpacityExt(0.3)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacityExt(0.2),
@@ -258,9 +257,9 @@ class _SuggestionsList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
               alignment: Alignment.centerLeft,
               onTap: () => onTap(values.values[valueIndex]),
-              child: Text(
+              child: NamidaText(
                 values.labelAt(valueIndex),
-                style: context.textTheme.displaySmall,
+                style: NText.small,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -288,7 +287,6 @@ class TextSuggestionsChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25);
     return Padding(
       padding: padding ?? EdgeInsets.zero,
       child: SizedBox(
@@ -301,15 +299,15 @@ class TextSuggestionsChipsRow extends StatelessWidget {
             return NamidaInkWell(
               margin: const EdgeInsets.only(right: 6.0),
               borderRadius: 99.0,
-              bgColor: bgColor,
+              bgColor: const NColors(.secondaryContainer, opacity: 0.25),
               padding: const EdgeInsets.symmetric(horizontal: 10.0),
               onTap: () => onTap(values.values[valueIndex]),
               child: Align(
                 alignment: Alignment.center,
                 widthFactor: 1.0,
-                child: Text(
+                child: NamidaText(
                   values.labelAt(valueIndex),
-                  style: context.textTheme.displaySmall,
+                  style: NText.small,
                   maxLines: 1,
                 ),
               ),

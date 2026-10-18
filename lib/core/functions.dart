@@ -40,6 +40,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -182,7 +183,7 @@ class NamidaOnTaps {
     if (settings.libraryTabs.value.contains(historyTab)) {
       ScrollSearchController.inst.animatePageController(historyTab, jumpToTopIfSamePage: false, restoreScrollPosition: initialListen == null);
     } else {
-      await HistoryTracksPage().navigate();
+      await const HistoryTracksPage().navigate();
     }
   }
 
@@ -904,9 +905,9 @@ class NamidaOnTaps {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (displayTitle)
-                Text(
+                NamidaText(
                   lang.duplicatedItemsAdding,
-                  style: namida.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
               if (displayTitle) const SizedBox(height: 12.0),
               Column(
@@ -1036,9 +1037,9 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
     scale: 0.90,
     dialog: CustomBlurryDialog(
       titleWidgetInPadding: Obx(
-        (context) => Text(
+        (context) => NamidaText(
           '$title ${daysNumber.valueR == 0 ? '' : "(${daysNumber.valueR.displayDayKeyword})"}',
-          style: namida.textTheme.displayLarge,
+          style: NText.large,
         ),
       ),
       normalTitleStyle: true,
@@ -1106,9 +1107,9 @@ Future<void> showCalendarDialog<T extends ItemWithDate, E>({
                           ),
                           const SizedBox(width: 6.0),
                           Flexible(
-                            child: Text(
+                            child: NamidaText(
                               text,
-                              style: context.textTheme.displayMedium,
+                              style: NText.medium,
                             ),
                           ),
                         ],
@@ -1278,7 +1279,6 @@ Future<String?> showNamidaBottomSheetWithTextField({
     isScrollControlled: isScrollControlled,
     hasUnsavedChanges: confirmDiscardingEdits ? () => finalText == null && localController.text != initialText : null,
     builder: (context, bottomPadding, maxWidth, maxHeight) {
-      final textTheme = context.textTheme;
       final child = Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28.0).add(const EdgeInsets.only(bottom: 18.0)),
         child: Form(
@@ -1288,14 +1288,14 @@ Future<String?> showNamidaBottomSheetWithTextField({
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  NamidaText(
                     title,
-                    style: textTheme.displayLarge,
+                    style: NText.large,
                   ),
                   if (subtitle != null)
-                    Text(
+                    NamidaText(
                       subtitle,
-                      style: textTheme.displaySmall,
+                      style: NText.small,
                     ),
                   if (subtitle != null) const SizedBox(height: 6.0),
                   const SizedBox(height: 18.0),
@@ -1440,7 +1440,6 @@ class TracksAddOnTap {
     final currentTrackS = Player.inst.currentItem.value;
     if (currentTrackS is! Selectable) return;
     final currentTrack = currentTrackS.track;
-    final textTheme = context.textTheme;
     showAddItemsToQueueDialog(
       onDisposing: null,
       context: context,
@@ -1522,7 +1521,6 @@ class TracksAddOnTap {
 
               final selectedmoodsPlaylists = <String>[].obs;
               final selectedmoodsTracks = <String>[].obs;
-              final textTheme = context.textTheme;
 
               List<Widget> getListy({
                 required String title,
@@ -1536,15 +1534,15 @@ class TracksAddOnTap {
                       padding: const EdgeInsets.all(12.0),
                       child: Row(
                         children: [
-                          Text(
+                          NamidaText(
                             title,
-                            style: textTheme.displayMedium,
+                            style: NText.medium,
                           ),
                           const SizedBox(width: 8.0),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
+                          NDecoratedBox(
+                            decoration: (colors) => BoxDecoration(
                               borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                              color: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.25),
+                              color: colors.secondaryContainer.withOpacityExt(0.25),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 1.0),
@@ -1572,41 +1570,46 @@ class TracksAddOnTap {
                               (context) {
                                 final isSelected = selectedList.valueR.contains(m);
                                 final extraOpacity = isSelected ? 0.25 : 0.0;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                                  child: NamidaInkWellButton(
-                                    borderRadius: 99.0,
-                                    paddingMultiplier: 0.8,
-                                    icon: null,
-                                    text: m,
-                                    bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2 + extraOpacity),
-                                    onTap: () => selectedList.addOrRemove(m),
-                                    leading: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(99.0),
-                                        color: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.3 + extraOpacity),
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
-                                        child: ConstrainedBox(
-                                          constraints: const BoxConstraints(minWidth: 8.0),
-                                          child: Text(
-                                            '$tracksCount',
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
+                                final countWidget = NDecoratedBox(
+                                  decoration: (colors) => BoxDecoration(
+                                    borderRadius: BorderRadius.circular(99.0),
+                                    color: colors.secondaryContainer.withOpacityExt(0.3 + extraOpacity),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(minWidth: 8.0),
+                                      child: Text(
+                                        '$tracksCount',
+                                        textAlign: TextAlign.center,
                                       ),
                                     ),
-                                    trailing:
-                                        Padding(
-                                          padding: EdgeInsetsGeometry.only(left: 2.0),
-                                          child: NamidaCheckMark(
-                                            size: 12.0,
-                                            active: true,
-                                          ),
-                                        ).animateEntrance(
-                                          showWhen: isSelected,
-                                        ),
+                                  ),
+                                );
+                                final checkMarkWidget =
+                                    const Padding(
+                                      padding: EdgeInsetsGeometry.only(left: 2.0),
+                                      child: NamidaCheckMark(
+                                        size: 12.0,
+                                        active: true,
+                                      ),
+                                    ).animateEntrance(
+                                      showWhen: isSelected,
+                                    );
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                                  child: NBuilder(
+                                    selfAnimated: true,
+                                    builder: (context, colors) => NamidaInkWellButton(
+                                      borderRadius: 99.0,
+                                      paddingMultiplier: 0.8,
+                                      icon: null,
+                                      text: m,
+                                      bgColor: colors.secondaryContainer.withOpacityExt(0.2 + extraOpacity),
+                                      onTap: () => selectedList.addOrRemove(m),
+                                      leading: countWidget,
+                                      trailing: checkMarkWidget,
+                                    ),
                                   ),
                                 );
                               },
@@ -1736,9 +1739,9 @@ class TracksAddOnTap {
                               ),
                               const SizedBox(height: 2.0),
                               Obx(
-                                (context) => Text(
+                                (context) => NamidaText(
                                   '${minRating.valueR}%',
-                                  style: textTheme.displaySmall,
+                                  style: NText.small,
                                 ),
                               ),
                             ],
@@ -1754,9 +1757,9 @@ class TracksAddOnTap {
                               ),
                               const SizedBox(height: 2.0),
                               Obx(
-                                (context) => Text(
+                                (context) => NamidaText(
                                   '${maxRating.valueR}%',
-                                  style: textTheme.displaySmall,
+                                  style: NText.small,
                                 ),
                               ),
                             ],
@@ -2206,7 +2209,7 @@ class TracksAddOnTap {
                     children: [
                       NamidaIconButton(
                         icon: icon,
-                        iconColor: context.defaultIconColor(),
+                        iconColor: NColors.defaultIcon(),
                         padding: EdgeInsets.zero,
                         onPressed: () => onTap(insertionType),
                       ),
@@ -2404,9 +2407,6 @@ class _TrackSortPresetsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final bgColor = theme.colorScheme.secondary.withOpacityExt(0.15);
     return ObxO(
       rx: settings.mediaItemsTrackSortingPresets,
       builder: (context, presetsMap) {
@@ -2415,7 +2415,7 @@ class _TrackSortPresetsButton extends StatelessWidget {
         return NamidaInkWell(
           borderRadius: 6.0,
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          bgColor: bgColor,
+          bgColor: const NColors(.secondary, opacity: 0.15),
           onTap: () => _showMenu(context),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -2426,9 +2426,9 @@ class _TrackSortPresetsButton extends StatelessWidget {
               ),
               const SizedBox(width: 4.0),
               Flexible(
-                child: Text(
+                child: NamidaText(
                   title,
-                  style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: const NText(.small, weight: FontWeight.w700),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2452,15 +2452,18 @@ class _SortEntryReverseButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final iconColor = isReversed ? theme.colorScheme.secondary : theme.iconTheme.color?.withOpacityExt(0.5);
-    return NamidaIconButton(
-      horizontalPadding: 8.0,
-      icon: isReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
-      iconSize: 18.0,
-      iconColor: iconColor,
-      tooltip: () => lang.reverseOrder,
-      onPressed: onTap,
+    return NBuilder(
+      builder: (context, colors) {
+        final iconColor = isReversed ? colors.secondary : colors.icon.withOpacityExt(0.5);
+        return NamidaIconButton(
+          horizontalPadding: 8.0,
+          icon: isReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
+          iconSize: 18.0,
+          iconColor: NColors.fixed(iconColor),
+          tooltip: () => lang.reverseOrder,
+          onPressed: onTap,
+        );
+      },
     );
   }
 }
@@ -2526,15 +2529,13 @@ class _SimilarTracksSourcesChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return NamidaPopupWrapper(
       children: () => const [
         _SimilarTracksSourcesGrid(),
       ],
       child: NamidaInkWell(
         padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 12.0),
-        bgColor: theme.cardColor.withOpacityExt(0.5),
+        bgColor: const NColors(.card, opacity: 0.5),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -2549,9 +2550,9 @@ class _SimilarTracksSourcesChip extends StatelessWidget {
                 final activeCount = insertions[QueueInsertionType.similar]?.similarSources.length ?? 0;
                 final totalCount = SimilarTracksSource.values.length;
                 final text = activeCount == totalCount ? lang.all : '$activeCount/$totalCount';
-                return Text(
+                return NamidaText(
                   text,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 );
               },
             ),

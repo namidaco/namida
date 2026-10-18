@@ -9,6 +9,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -247,9 +248,10 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
     required void Function(DateTime newDate) onPick,
   }) {
     final isToday = _isToday(date);
+    final bgColor = isToday ? NColors.fixed(CurrentColor.inst.color.withOpacityExt(0.25)) : NColors.card;
     return NamidaInkWell(
       borderRadius: 6.0,
-      bgColor: isToday ? CurrentColor.inst.color.withOpacityExt(0.25) : context.theme.cardColor,
+      bgColor: bgColor,
       padding: const EdgeInsetsGeometry.symmetric(horizontal: 10.0, vertical: 6.0),
       onTap: () {
         showCalendarDialog(
@@ -275,7 +277,6 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
   }
 
   Widget _getRangeButton(BuildContext context, MostPlayedTimeRange activeRange) {
-    final theme = context.theme;
     return NamidaPopupWrapper(
       openOnLongPress: false,
       childrenDefault: () => MostPlayedTimeRange.values.map(
@@ -289,7 +290,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
       child: NamidaInkWell(
         animationDurationMS: 200,
         borderRadius: 6.0,
-        bgColor: theme.cardTheme.color,
+        bgColor: NColors.cardTheme,
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           border: activeRange == MostPlayedTimeRange.custom ? Border.all(color: CurrentColor.inst.color) : null,
@@ -302,9 +303,9 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
               size: 18.0,
             ),
             const SizedBox(width: 6.0),
-            Text(
+            NamidaText(
               activeRange.toText(),
-              style: theme.textTheme.displayMedium,
+              style: NText.medium,
             ),
             const SizedBox(width: 6.0),
             const Icon(
@@ -319,8 +320,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
 
   Widget getChipsRow(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final dateTextStyle = textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600);
+    final dateTextStyle = NText.small.of(context).copyWith(fontSize: 13.0, fontWeight: FontWeight.w600);
 
     final rangeButton = ObxO(
       rx: widget.historyController.currentMostPlayedTimeRange,
@@ -424,7 +424,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                   constraints: const BoxConstraints(maxWidth: 86.0),
                   child: NamidaInkWell(
                     borderRadius: 6.0,
-                    bgColor: theme.cardColor,
+                    bgColor: NColors.card,
                     padding: _useNewHeaderOrder ? const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0) : const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                     onTap: () => _showDaysRadiusPicker(
                       currentRange: effectiveRange,
@@ -433,9 +433,9 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                     ),
                     child: FittedBox(
                       fit: .scaleDown,
-                      child: Text(
+                      child: NamidaText(
                         rangeDays.displayDayKeyword,
-                        style: textTheme.displaySmall?.copyWith(fontSize: 13.0, fontWeight: FontWeight.w600),
+                        style: const NText(.small, size: .s13, weight: FontWeight.w600),
                         softWrap: false,
                         maxLines: 1,
                       ),
@@ -447,21 +447,23 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
                 double sliderValueOf(int index) => _kReversedSlider ? sliderMax - index : index.toDouble();
                 double rangeIndexOf(double value) => _kReversedSlider ? sliderMax - value : value;
 
-                Widget sliderWidget = Slider.adaptive(
-                  min: 0,
-                  max: sliderMax,
-                  value: sliderValueOf(currentIndex),
-                  onChangeStart: (value) {
-                    if (isSliderDifferentFromSelected) {
-                      selectRangeIndex(rangeIndexOf(value).round() - 1);
-                    }
-                  },
-                  onChanged: (v) {
-                    // -- floor cuz adding index can offset (when isSliderDifferentFromSelected == true)
-                    selectRangeIndex(rangeIndexOf(v).floor());
-                  },
-                  divisions: rangesCount > 1 ? rangesCount - 1 : null,
-                  thumbColor: isSliderDifferentFromSelected ? theme.colorScheme.primary.withOpacityExt(0.4) : null,
+                Widget sliderWidget = NBuilder(
+                  builder: (context, colors) => Slider.adaptive(
+                    min: 0,
+                    max: sliderMax,
+                    value: sliderValueOf(currentIndex),
+                    onChangeStart: (value) {
+                      if (isSliderDifferentFromSelected) {
+                        selectRangeIndex(rangeIndexOf(value).round() - 1);
+                      }
+                    },
+                    onChanged: (v) {
+                      // -- floor cuz adding index can offset (when isSliderDifferentFromSelected == true)
+                      selectRangeIndex(rangeIndexOf(v).floor());
+                    },
+                    divisions: rangesCount > 1 ? rangesCount - 1 : null,
+                    thumbColor: isSliderDifferentFromSelected ? colors.primary.withOpacityExt(0.4) : null,
+                  ),
                 );
                 // -- dates chips are the readout, indicator would be drawn above the header where appbar cuts it
                 sliderWidget = SliderTheme(
@@ -616,7 +618,7 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
             //           margin: const EdgeInsets.symmetric(horizontal: 2.0),
             //           padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
             //           decoration: BoxDecoration(
-            //             color: isActive ? CurrentColor.inst.currentColorScheme.withAlpha(160) : theme.cardColor,
+            //             color: isActive ? CurrentColor.inst.currentColorScheme.withOpacityExt(0.63) : theme.cardColor,
             //             borderRadius: BorderRadius.circular(8.0.multipliedRadius),
             //           ),
             //           child: Row(
@@ -676,10 +678,9 @@ class _MostPlayedItemsPageState<T extends ItemWithDate, E> extends State<MostPla
     final bottomWidget = getChipsRow(context);
     if (!widget.isInFullPage) return bottomWidget;
 
-    final theme = context.theme;
     const bottomPadding = 0.0;
-    final headerWidget = ColoredBox(
-      color: theme.scaffoldBackgroundColor,
+    final headerWidget = NColoredBox(
+      color: NColors.scaffold,
       child: widget.header?.call(bottomWidget, bottomPadding),
     );
 

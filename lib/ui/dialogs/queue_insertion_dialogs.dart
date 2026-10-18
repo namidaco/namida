@@ -12,6 +12,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -184,9 +185,12 @@ Future<void> showQueueInsertionConfigDialog(QueueInsertionType type, {required S
         children: [
           NamidaInkWell(
             borderRadius: 10.0,
-            bgColor: namida.theme.cardColor,
+            bgColor: NColors.fixed(namida.theme.cardColor),
             padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-            child: Text(title, style: namida.textTheme.displayLarge),
+            child: NamidaText(
+              title,
+              style: NText.large,
+            ),
           ),
           const SizedBox(height: 24.0),
           ObxO(
@@ -379,9 +383,9 @@ class _QueueInsertionTiles extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   sortText,
-                  style: context.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 const SizedBox(width: 4.0),
                 Icon(
@@ -540,14 +544,14 @@ class _PickerSubtitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textStyle = context.textTheme.displaySmall;
+    final textStyle = NText.small.of(context);
     final trailingText = this.trailingText;
     return Row(
       children: [
         Icon(
           Broken.arrow_swap,
           size: 14.0,
-          color: textStyle?.color,
+          color: textStyle.color,
         ),
         const SizedBox(width: 4.0),
         Flexible(

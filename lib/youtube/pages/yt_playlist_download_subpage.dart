@@ -16,6 +16,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -219,7 +220,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   ];
 
   void _showAllConfigDialog(BuildContext context) {
-    final textTheme = context.textTheme;
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         horizontalInset: 32.0,
@@ -229,9 +229,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             const Icon(Broken.setting_3, size: 28.0),
             const SizedBox(width: 8.0),
             Expanded(
-              child: Text(
+              child: NamidaText(
                 lang.configure,
-                style: textTheme.displayLarge,
+                style: NText.large,
               ),
             ),
           ],
@@ -345,9 +345,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                 trailing: NamidaPopupWrapper(
                   childrenDefault: _qualityMenuChildren,
                   child: Obx(
-                    (context) => Text(
+                    (context) => NamidaText(
                       settings.downloadAudioOnly.valueR ? lang.audioOnly : preferredQuality.valueR,
-                      style: context.textTheme.displayMedium,
+                      style: NText.medium,
                     ),
                   ),
                 ),
@@ -413,8 +413,6 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final thumHeight = _hmultiplier * Dimensions.youtubeThumbnailHeight;
     final thumWidth = thumHeight * 16 / 9;
     const cardBorderRadiusRaw = 12.0;
@@ -467,7 +465,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   ),
                 ),
               ),
-              NamidaContainerDivider(),
+              const NamidaContainerDivider(),
               const SizedBox(height: 4.0),
               if (!widget.cacheOnly) ...[
                 Padding(
@@ -500,9 +498,9 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           rx: settings.youtube.downloadFilenameBuilder,
                           builder: (context, value) {
                             if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
-                            return Text(
+                            return NamidaText(
                               value,
-                              style: textTheme.displaySmall,
+                              style: NText.small,
                             );
                           },
                         ),
@@ -548,127 +546,131 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                                   : config == null
                                   ? false
                                   : YoutubeController.inst.doesIDHasFileDownloadedInGroup(config.id, _groupName.valueR) != null;
-                              return NamidaInkWell(
-                                animationDurationMS: 200,
-                                height: Dimensions.youtubeCardItemHeight * _hmultiplier,
-                                margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * _hmultiplier),
-                                borderRadius: cardBorderRadiusRaw,
-                                bgColor: theme.cardColor.withOpacityExt(0.3),
-                                decoration: isSelected
-                                    ? BoxDecoration(
-                                        border: Border.all(
-                                          color: theme.colorScheme.secondary.withOpacityExt(0.5),
-                                          width: 2.0,
-                                        ),
-                                      )
-                                    : const BoxDecoration(),
-                                onTap: () {
-                                  _onItemTap(id);
-                                  _didManuallyEditSelection = true;
-                                },
-                                onLongPress: () {
-                                  if (_selectedList.isEmpty) return;
-                                  int? latestIndex;
-                                  for (int i = widget.ids.length - 1; i >= 0; i--) {
-                                    final item = widget.ids[i];
-                                    if (_selectedList.contains(item.id)) {
-                                      latestIndex = i;
-                                      break;
-                                    }
-                                  }
-                                  if (latestIndex != null && originalIndex > latestIndex) {
-                                    final selectedRange = widget.ids.getRange(latestIndex + 1, originalIndex + 1);
-                                    for (final e in selectedRange) {
-                                      if (!_selectedList.contains(e.id)) _selectedList.add(e.id);
-                                    }
-                                  } else {
-                                    _onItemTap(id);
-                                  }
-                                  _didManuallyEditSelection = true;
-                                },
-                                child: Stack(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.all(4.0),
-                                          child: YoutubeThumbnail(
-                                            type: ThumbnailType.video,
-                                            key: Key(id),
-                                            borderRadius: 8.0,
-                                            width: thumWidth - 4.0,
-                                            height: thumHeight - 4.0,
-                                            isImportantInCache: false,
-                                            videoId: id,
-                                            customUrl: info?.liveThumbs.pick()?.url,
-                                            smallBoxText: duration,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4.0),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const SizedBox(height: 6.0),
-                                              Text(
-                                                info?.title ?? id,
-                                                style: textTheme.displayMedium?.copyWith(fontSize: 15.0 * _hmultiplier),
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              const SizedBox(height: 4.0),
-                                              Row(
-                                                children: [
-                                                  NamidaIconButton(
-                                                    horizontalPadding: 0.0,
-                                                    icon: fileExists ? Broken.tick_circle : Broken.import_2,
-                                                    iconSize: 15.0,
-                                                  ),
-                                                  const SizedBox(width: 2.0),
-                                                  _VideoIdToChannelNameWidget(
-                                                    channelName: info?.channelName ?? info?.channel?.title,
-                                                    videoId: id,
-                                                    style: textTheme.displaySmall?.copyWith(fontSize: 14.0 * _hmultiplier),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 6.0),
-                                            ],
-                                          ),
-                                        ),
-                                        if (!widget.cacheOnly)
-                                          NamidaIconButton(
-                                            verticalPadding: 4.0,
-                                            horizontalPadding: 4.0,
-                                            icon: Broken.edit_2,
-                                            iconSize: 20.0,
-                                            onPressed: () => _onEditIconTap(id: id, originalIndex: originalIndex),
-                                          ),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                          child: NamidaCheckMark(
-                                            size: 18.0,
-                                            active: isSelected,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8.0),
-                                      ],
-                                    ),
-                                    Positioned(
-                                      right: 0,
-                                      child: NamidaBlurryContainer(
-                                        borderRadius: BorderRadius.only(
-                                          bottomLeft: Radius.circular(6.0.multipliedRadius),
-                                          topRight: Radius.circular(cardBorderRadiusRaw.multipliedRadius),
-                                        ),
-                                        padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
-                                        child: Text(
-                                          '${originalIndex + 1}',
-                                          style: textTheme.displaySmall,
+                              final cardContent = Stack(
+                                children: [
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(4.0),
+                                        child: YoutubeThumbnail(
+                                          type: ThumbnailType.video,
+                                          key: Key(id),
+                                          borderRadius: 8.0,
+                                          width: thumWidth - 4.0,
+                                          height: thumHeight - 4.0,
+                                          isImportantInCache: false,
+                                          videoId: id,
+                                          customUrl: info?.liveThumbs.pick()?.url,
+                                          smallBoxText: duration,
                                         ),
                                       ),
+                                      const SizedBox(width: 4.0),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const SizedBox(height: 6.0),
+                                            Text(
+                                              info?.title ?? id,
+                                              style: NText.medium.of(context).copyWith(fontSize: 15.0 * _hmultiplier),
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                            Row(
+                                              children: [
+                                                NamidaIconButton(
+                                                  horizontalPadding: 0.0,
+                                                  icon: fileExists ? Broken.tick_circle : Broken.import_2,
+                                                  iconSize: 15.0,
+                                                ),
+                                                const SizedBox(width: 2.0),
+                                                _VideoIdToChannelNameWidget(
+                                                  channelName: info?.channelName ?? info?.channel?.title,
+                                                  videoId: id,
+                                                  style: NText.small.of(context).copyWith(fontSize: 14.0 * _hmultiplier),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6.0),
+                                          ],
+                                        ),
+                                      ),
+                                      if (!widget.cacheOnly)
+                                        NamidaIconButton(
+                                          verticalPadding: 4.0,
+                                          horizontalPadding: 4.0,
+                                          icon: Broken.edit_2,
+                                          iconSize: 20.0,
+                                          onPressed: () => _onEditIconTap(id: id, originalIndex: originalIndex),
+                                        ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                        child: NamidaCheckMark(
+                                          size: 18.0,
+                                          active: isSelected,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8.0),
+                                    ],
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    child: NamidaBlurryContainer(
+                                      borderRadius: BorderRadius.only(
+                                        bottomLeft: Radius.circular(6.0.multipliedRadius),
+                                        topRight: Radius.circular(cardBorderRadiusRaw.multipliedRadius),
+                                      ),
+                                      padding: const EdgeInsets.only(top: 2.0, right: 8.0, left: 6.0, bottom: 2.0),
+                                      child: NamidaText(
+                                        '${originalIndex + 1}',
+                                        style: NText.small,
+                                      ),
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              );
+                              return NBuilder(
+                                selfAnimated: true,
+                                builder: (context, colors) => NamidaInkWell(
+                                  animationDurationMS: 200,
+                                  height: Dimensions.youtubeCardItemHeight * _hmultiplier,
+                                  margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: Dimensions.youtubeCardItemVerticalPadding * _hmultiplier),
+                                  borderRadius: cardBorderRadiusRaw,
+                                  bgColor: const NColors(.card, opacity: 0.3),
+                                  decoration: isSelected
+                                      ? BoxDecoration(
+                                          border: Border.all(
+                                            color: colors.secondary.withOpacityExt(0.5),
+                                            width: 2.0,
+                                          ),
+                                        )
+                                      : const BoxDecoration(),
+                                  onTap: () {
+                                    _onItemTap(id);
+                                    _didManuallyEditSelection = true;
+                                  },
+                                  onLongPress: () {
+                                    if (_selectedList.isEmpty) return;
+                                    int? latestIndex;
+                                    for (int i = widget.ids.length - 1; i >= 0; i--) {
+                                      final item = widget.ids[i];
+                                      if (_selectedList.contains(item.id)) {
+                                        latestIndex = i;
+                                        break;
+                                      }
+                                    }
+                                    if (latestIndex != null && originalIndex > latestIndex) {
+                                      final selectedRange = widget.ids.getRange(latestIndex + 1, originalIndex + 1);
+                                      for (final e in selectedRange) {
+                                        if (!_selectedList.contains(e.id)) _selectedList.add(e.id);
+                                      }
+                                    } else {
+                                      _onItemTap(id);
+                                    }
+                                    _didManuallyEditSelection = true;
+                                  },
+                                  child: cardContent,
                                 ),
                               );
                             },
@@ -729,8 +731,6 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     return SmoothSingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -738,7 +738,7 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
             .map(
               (e) => NamidaInkWell(
                 borderRadius: 4.0,
-                bgColor: theme.cardColor,
+                bgColor: NColors.card,
                 margin: const EdgeInsets.symmetric(horizontal: 2.0),
                 padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 3.0),
                 onTap: () {
@@ -753,9 +753,9 @@ class YTDownloadFilenameBuilderRow extends StatelessWidget {
                   controller.selection = TextSelection.collapsed(offset: textBeforeCursor.length + toAdd.length);
                   onChanged?.call(controller.text);
                 },
-                child: Text(
+                child: NamidaText(
                   e,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ),
             )

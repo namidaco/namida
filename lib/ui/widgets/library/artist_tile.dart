@@ -5,7 +5,7 @@ import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/utils.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
@@ -28,7 +28,6 @@ class ArtistTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final hero = 'artist_$name';
 
     return Padding(
@@ -69,37 +68,35 @@ class ArtistTile extends StatelessWidget {
                     children: [
                       NamidaHero(
                         tag: 'line1_$hero',
-                        child: Text(
+                        child: NamidaText(
                           name,
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       NamidaHero(
                         tag: 'line2_$hero',
-                        child: Text(
+                        child: NamidaText(
                           [
                             tracks.displayTrackKeyword,
                             albums.length.displayAlbumKeyword,
                           ].join(' & '),
-                          style: textTheme.displaySmall?.copyWith(fontSize: 14.0),
+                          style: const NText(.small, size: .s14),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (extraText != null && extraText!.isNotEmpty && extraText != name)
-                        Text(
+                        NamidaText(
                           extraText!,
-                          style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+                          style: const NText(.small, size: .s12),
                           overflow: TextOverflow.ellipsis,
                         ),
                     ],
                   ),
                 ),
-                Text(
+                NamidaText(
                   tracks.totalDurationFormatted,
-                  style: textTheme.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: const NText(.small, weight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(width: 4.0),

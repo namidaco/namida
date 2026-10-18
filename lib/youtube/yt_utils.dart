@@ -41,6 +41,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -104,9 +105,7 @@ class YTUtils {
     double? fontMultiplier,
     required RxBaseCore<LikeStatus?>? likeStatusRx,
   }) {
-    iconsColor ??= context.theme.iconTheme.color;
     final listens = overrideListens.isNotEmpty ? overrideListens : YoutubeHistoryController.inst.topTracksMapListens.value[videoId] ?? [];
-    final textTheme = context.textTheme;
     return [
       if (likeStatusRx != null) ...[
         ObxO(
@@ -118,16 +117,21 @@ class YTUtils {
               LikeStatus.disliked => (true, Broken.dislike_filled, Broken.dislike),
               LikeStatus.undefined || LikeStatus.unknown => (false, Broken.like_filled, Broken.like_1),
             };
-            final likeButtonColor = iconsColor?.withOpacityExt(likeStatus == LikeStatus.unknown ? 0.1 : 0.6);
-            return NamidaRawLikeButton(
-              isLiked: isFilled,
-              likedIcon: likedIcon,
-              normalIcon: normalIcon,
-              enabledColor: likeButtonColor,
-              disabledColor: likeButtonColor,
-              size: 14.0,
-              removeConfirmationAction: null,
-              onTap: null,
+            return NBuilder(
+              builder: (context, colors) {
+                final baseColor = iconsColor ?? colors.icon;
+                final likeButtonColor = baseColor.withOpacityExt(likeStatus == LikeStatus.unknown ? 0.1 : 0.6);
+                return NamidaRawLikeButton(
+                  isLiked: isFilled,
+                  likedIcon: likedIcon,
+                  normalIcon: normalIcon,
+                  enabledColor: likeButtonColor,
+                  disabledColor: likeButtonColor,
+                  size: 14.0,
+                  removeConfirmationAction: null,
+                  onTap: null,
+                );
+              },
             );
           },
         ),
@@ -141,18 +145,18 @@ class YTUtils {
             onTap: () => showVideoListensDialog(videoId),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.0), // extra hittest margin
-              child: DecoratedBox(
-                decoration: BoxDecoration(
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
                   borderRadius: BorderRadius.circular(6.0.multipliedRadius),
-                  color: context.theme.scaffoldBackgroundColor.withOpacityExt(0.5),
+                  color: colors.scaffold.withOpacityExt(0.5),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 1.0),
                   child: Text(
                     listens.length.formatDecimal(),
                     style: fontMultiplier != null
-                        ? textTheme.displaySmall?.copyWith(fontSize: (textTheme.displaySmall?.fontSize ?? 12.0) * fontMultiplier)
-                        : textTheme.displaySmall,
+                        ? NText.small.of(context).copyWith(fontSize: (NText.small.of(context).fontSize ?? 12.0) * fontMultiplier)
+                        : NText.small.of(context),
                   ),
                 ),
               ),
@@ -165,23 +169,19 @@ class YTUtils {
       if (displayCacheIcons) ...[
         Tooltip(
           message: lang.videoCache,
-          child: Icon(
-            Broken.video,
-            size: 15.0,
-            color: iconsColor?.withValues(
-              alpha: VideoController.inst.hasNVCachedFromID(videoId) ? 0.6 : 0.1,
-            ),
+          child: _CacheStatusIcon(
+            icon: Broken.video,
+            isCached: VideoController.inst.hasNVCachedFromID(videoId),
+            iconsColor: iconsColor,
           ),
         ),
         const SizedBox(width: 4.0),
         Tooltip(
           message: lang.audioCache,
-          child: Icon(
-            Broken.audio_square,
-            size: 15.0,
-            color: iconsColor?.withValues(
-              alpha: AudioCacheController.inst.isAvailableOffline(videoId) ? 0.6 : 0.1,
-            ),
+          child: _CacheStatusIcon(
+            icon: Broken.audio_square,
+            isCached: AudioCacheController.inst.isAvailableOffline(videoId),
+            iconsColor: iconsColor,
           ),
         ),
       ],
@@ -195,12 +195,12 @@ class YTUtils {
       onTap: () => Player.inst.playOrPause(0, videos, queueSource),
       trailing: showPlayAllReverse
           ? IconButton(
-              style: ButtonStyle(
+              style: const ButtonStyle(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
               tooltip: "${lang.playAll} (${lang.reverseOrder})",
-              icon: StackedIcon(
+              icon: const StackedIcon(
                 baseIcon: Broken.play_cricle,
                 secondaryIcon: Broken.arrow_swap,
                 iconSize: 20.0,
@@ -871,7 +871,7 @@ class YTUtils {
         RouteType.YOUTUBE_HISTORY_SUBPAGE,
       );
     }
-    if (shouldNavigate) await YoutubeHistoryPage().navigate();
+    if (shouldNavigate) await const YoutubeHistoryPage().navigate();
   }
 
   static Future<void> onYoutubeLikedPlaylistTap() {
@@ -1278,5 +1278,28 @@ extension YoutiPieNotificationResultUtils on YoutiPieNotificationResult {
       QueueSourceYoutubeID.ytNotificationsHosted,
     );
     YTUtils.expandMiniplayer();
+  }
+}
+
+class _CacheStatusIcon extends StatelessWidget {
+  final IconData icon;
+  final bool isCached;
+  final Color? iconsColor;
+
+  const _CacheStatusIcon({
+    required this.icon,
+    required this.isCached,
+    required this.iconsColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    final baseColor = iconsColor ?? colors.icon;
+    return Icon(
+      icon,
+      size: 15.0,
+      color: baseColor.withValues(alpha: isCached ? 0.6 : 0.1),
+    );
   }
 }

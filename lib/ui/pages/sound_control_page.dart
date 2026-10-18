@@ -27,6 +27,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -104,9 +105,9 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
           titleIconWidget: Obx(
             (context) {
               final currentConfig = Player.audioConfigs.map.valueR[Player.inst.currentItem.valueR?.key ?? ''];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: const Icon(
+              return const Padding(
+                padding: EdgeInsets.only(right: 8.0),
+                child: Icon(
                   Broken.magicpen,
                   size: 16.0,
                 ),
@@ -157,7 +158,7 @@ class _SoundControlMainSlidersColumnState extends State<SoundControlMainSlidersC
                                 visualDensity: VisualDensity.compact,
                                 style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
                                 tooltip: lang.restoreDefaults,
-                                icon: Icon(
+                                icon: const Icon(
                                   Broken.refresh,
                                   size: 20.0,
                                 ),
@@ -485,8 +486,6 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final verticalPadding = SizedBox(height: widget.verticalInBetweenPadding);
     final currentItem = widget.currentItem;
     return Column(
@@ -501,26 +500,28 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                 constraints: const BoxConstraints(minHeight: 38.0),
                 child: PlayableTitleSubtitleWidget(
                   isYTID: currentItem is YoutubeID,
-                  builder: (title, artist) => NamidaCoolBox(
-                    extraVPadding: true,
-                    colorScheme: theme.colorScheme.secondary,
-                    builder: (context) => Row(
-                      children: [
-                        const Icon(
-                          Broken.music_square,
-                          size: 20.0,
-                        ),
-                        const SizedBox(width: 8.0),
-                        Expanded(
-                          child: Text(
-                            [
-                              artist,
-                              title,
-                            ].joinText(separator: ' - '),
-                            style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+                  builder: (title, artist) => NBuilder(
+                    builder: (context, colors) => NamidaCoolBox(
+                      extraVPadding: true,
+                      colorScheme: colors.secondary,
+                      builder: (context) => Row(
+                        children: [
+                          const Icon(
+                            Broken.music_square,
+                            size: 20.0,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 8.0),
+                          Expanded(
+                            child: NamidaText(
+                              [
+                                artist,
+                                title,
+                              ].joinText(separator: ' - '),
+                              style: const NText(.medium, size: .s14),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -539,44 +540,46 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                 settings.player.isPerTrackAudioConfigOverriden.save(!settings.player.isPerTrackAudioConfigOverriden.value);
                 Player.inst.refreshCurrentItemPlayerConfig();
               },
-              child: NamidaCoolBox(
-                borderRadius: BorderRadius.circular(8.0.multipliedRadius),
-                colorScheme: theme.colorScheme.secondary,
-                builder: (context) => Row(
-                  mainAxisSize: .min,
-                  children: [
-                    const Icon(
-                      Broken.autobrightness,
-                      size: 20.0,
-                    ),
-                    const SizedBox(width: 8.0),
-                    Expanded(
-                      child: Text(
-                        lang.forceUseGlobalConfig,
-                        style: textTheme.displayMedium?.copyWith(fontSize: 14.0),
+              child: NBuilder(
+                builder: (context, colors) => NamidaCoolBox(
+                  borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+                  colorScheme: colors.secondary,
+                  builder: (context) => Row(
+                    mainAxisSize: .min,
+                    children: [
+                      const Icon(
+                        Broken.autobrightness,
+                        size: 20.0,
                       ),
-                    ),
-                    if (widget.forceUseGlobalConfigResetWidget != null) ...[
-                      widget.forceUseGlobalConfigResetWidget!,
+                      const SizedBox(width: 8.0),
+                      Expanded(
+                        child: NamidaText(
+                          lang.forceUseGlobalConfig,
+                          style: const NText(.medium, size: .s14),
+                        ),
+                      ),
+                      if (widget.forceUseGlobalConfigResetWidget != null) ...[
+                        widget.forceUseGlobalConfigResetWidget!,
+                        const SizedBox(width: 8.0),
+                      ],
+                      ObxO(
+                        rx: settings.player.isPerTrackAudioConfigOverriden,
+                        builder: (context, overriden) => NamidaCheckMark(
+                          size: 18.0,
+                          active: overriden,
+                        ),
+                      ),
                       const SizedBox(width: 8.0),
                     ],
-                    ObxO(
-                      rx: settings.player.isPerTrackAudioConfigOverriden,
-                      builder: (context, overriden) => NamidaCheckMark(
-                        size: 18.0,
-                        active: overriden,
-                      ),
-                    ),
-                    const SizedBox(width: 8.0),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
         SizedBox(height: widget.verticalInBetweenPadding * 0.5),
 
-        NamidaContainerDivider(
-          margin: const EdgeInsets.symmetric(horizontal: 14.0),
+        const NamidaContainerDivider(
+          margin: EdgeInsets.symmetric(horizontal: 14.0),
         ),
 
         SizedBox(height: widget.verticalInBetweenPadding * 0.5),
@@ -617,7 +620,7 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                                       child: Row(
                                         children: [
-                                          NamidaIconButton(
+                                          const NamidaIconButton(
                                             horizontalPadding: 6.0,
                                             icon: Broken.forward,
                                           ),
@@ -627,9 +630,9 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                               mainAxisSize: .min,
                                               crossAxisAlignment: .start,
                                               children: [
-                                                Text(
+                                                NamidaText(
                                                   lang.skipSilence,
-                                                  style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                                                  style: const NText(.large, size: .s16),
                                                 ),
                                                 if (!isSupported) ...[
                                                   const SizedBox(height: 2.0),
@@ -693,34 +696,37 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                                   onManualChange: (convertedValue) {
                                     pitchKey.currentState?._updateValNoRound(convertedValue); // no conversion
                                   },
-                                  featuredButton: NamidaInkWellButton(
-                                    icon: null,
-                                    text: '',
-                                    borderRadius: 8.0,
-                                    sizeMultiplier: 0.9,
-                                    paddingMultiplier: 0.7,
-                                    bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
-                                    onTap: () {
-                                      final newValue = is432HzEnabled ? 1.0 : hz432Value;
-                                      widget.updateConfig.setPitch(newValue);
-                                      pitchKey.currentState?.updateValNoRoundExternal(newValue);
-                                    },
-                                    leading: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          '✓ ',
-                                          style: textTheme.displaySmall,
-                                        ).animateEntrance(
-                                          showWhen: is432HzEnabled,
-                                          allCurves: Curves.fastLinearToSlowEaseIn,
-                                          durationMS: 300,
-                                        ),
-                                        Text(
-                                          '432Hz',
-                                          style: textTheme.displaySmall,
-                                        ),
-                                      ],
+                                  featuredButton: NBuilder(
+                                    selfAnimated: true,
+                                    builder: (context, colors) => NamidaInkWellButton(
+                                      icon: null,
+                                      text: '',
+                                      borderRadius: 8.0,
+                                      sizeMultiplier: 0.9,
+                                      paddingMultiplier: 0.7,
+                                      bgColor: colors.secondaryContainer.withOpacityExt(is432HzEnabled ? 0.5 : 0.2),
+                                      onTap: () {
+                                        final newValue = is432HzEnabled ? 1.0 : hz432Value;
+                                        widget.updateConfig.setPitch(newValue);
+                                        pitchKey.currentState?.updateValNoRoundExternal(newValue);
+                                      },
+                                      leading: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const NamidaText(
+                                            '✓ ',
+                                            style: NText.small,
+                                          ).animateEntrance(
+                                            showWhen: is432HzEnabled,
+                                            allCurves: Curves.fastLinearToSlowEaseIn,
+                                            durationMS: 300,
+                                          ),
+                                          const NamidaText(
+                                            '432Hz',
+                                            style: NText.small,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
@@ -790,39 +796,42 @@ class _SoundControlMainSlidersColumnBaseState extends State<_SoundControlMainSli
                           valToText: _SliderTextWidget.toXMultiplier,
                           featuredButton: ObxO(
                             rx: settings.player.linkSpeedPitch,
-                            builder: (context, enabled) => NamidaInkWellButton(
-                              icon: null,
-                              text: '',
-                              borderRadius: 8.0,
-                              sizeMultiplier: 0.9,
-                              paddingMultiplier: 0.7,
-                              bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(enabled ? 0.5 : 0.2),
-                              onTap: () {
-                                final newLinkValue = !settings.player.linkSpeedPitch.value;
-                                final newValue = newLinkValue ? widget.updateConfig.speedRx.value : widget.updateConfig.pitchRx.value;
-                                widget.updateConfig.setPitch(newValue);
-                                settings.player.linkSpeedPitch.save(newLinkValue);
-                                pitchKey.currentState?.updateValNoRoundExternal(newValue);
-                              },
-                              leading: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 4.0),
-                                    child: Icon(
-                                      Broken.link_21,
-                                      size: 12.0,
+                            builder: (context, enabled) => NBuilder(
+                              selfAnimated: true,
+                              builder: (context, colors) => NamidaInkWellButton(
+                                icon: null,
+                                text: '',
+                                borderRadius: 8.0,
+                                sizeMultiplier: 0.9,
+                                paddingMultiplier: 0.7,
+                                bgColor: colors.secondaryContainer.withOpacityExt(enabled ? 0.5 : 0.2),
+                                onTap: () {
+                                  final newLinkValue = !settings.player.linkSpeedPitch.value;
+                                  final newValue = newLinkValue ? widget.updateConfig.speedRx.value : widget.updateConfig.pitchRx.value;
+                                  widget.updateConfig.setPitch(newValue);
+                                  settings.player.linkSpeedPitch.save(newLinkValue);
+                                  pitchKey.currentState?.updateValNoRoundExternal(newValue);
+                                },
+                                leading: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(right: 4.0),
+                                      child: Icon(
+                                        Broken.link_21,
+                                        size: 12.0,
+                                      ),
+                                    ).animateEntrance(
+                                      showWhen: enabled,
+                                      allCurves: Curves.fastLinearToSlowEaseIn,
+                                      durationMS: 300,
                                     ),
-                                  ).animateEntrance(
-                                    showWhen: enabled,
-                                    allCurves: Curves.fastLinearToSlowEaseIn,
-                                    durationMS: 300,
-                                  ),
-                                  Text(
-                                    lang.pitch,
-                                    style: textTheme.displaySmall,
-                                  ),
-                                ],
+                                    NamidaText(
+                                      lang.pitch,
+                                      style: NText.small,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -988,20 +997,19 @@ class SoundControlPageState extends State<SoundControlPage> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     const verticalInBetweenPaddingH = 8.0;
     const verticalInBetweenPadding = SizedBox(height: verticalInBetweenPaddingH);
-    return AnimatedThemeOrTheme(
+    return NTheme(
       duration: const Duration(milliseconds: kThemeAnimationDurationMS),
       data: theme,
       child: BackgroundWrapper(
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12.0),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
+            child: NDecoratedBox(
+              decoration: (colors) => BoxDecoration(
                 borderRadius: BorderRadius.circular(12.0.multipliedRadius),
-                color: theme.cardColor,
+                color: colors.card,
               ),
               child: Column(
                 children: [
@@ -1021,9 +1029,9 @@ class SoundControlPageState extends State<SoundControlPage> {
                       const Icon(Broken.sound),
                       const SizedBox(width: 12.0),
                       Expanded(
-                        child: Text(
+                        child: NamidaText(
                           "${lang.configure} (${lang.beta})",
-                          style: textTheme.displayMedium,
+                          style: NText.medium,
                         ),
                       ),
                       NamidaIconButton(
@@ -1055,7 +1063,7 @@ class SoundControlPageState extends State<SoundControlPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const _AudioOutputSection(),
-                          NamidaContainerDivider(
+                          const NamidaContainerDivider(
                             margin: EdgeInsets.symmetric(
                               horizontal: 12.0,
                               vertical: verticalInBetweenPaddingH / 2,
@@ -1067,7 +1075,7 @@ class SoundControlPageState extends State<SoundControlPage> {
                               entry: PlaybackSettings.replayGain,
                             ),
                           ),
-                          NamidaContainerDivider(
+                          const NamidaContainerDivider(
                             margin: EdgeInsets.symmetric(
                               horizontal: 12.0,
                               vertical: verticalInBetweenPaddingH / 2,
@@ -1081,14 +1089,14 @@ class SoundControlPageState extends State<SoundControlPage> {
                               isInDialog: false,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                            child: const _MonoAudioTile(),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4.0),
+                            child: _MonoAudioTile(),
                           ),
                           if (NamidaFeaturesVisibility.soundEffectsAvailable)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                              child: const _SoundEffectsSection(),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.0),
+                              child: _SoundEffectsSection(),
                             ),
                           verticalInBetweenPadding,
                         ],
@@ -1191,7 +1199,6 @@ class _SliderTextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final valueActual = valueModifier?.call(value) ?? value;
     final subtitle = this.subtitle;
     Widget child = Padding(
@@ -1221,15 +1228,15 @@ class _SliderTextWidget extends StatelessWidget {
                         mainAxisSize: .min,
                         children: [
                           Flexible(
-                            child: Text(
+                            child: NamidaText(
                               title,
-                              style: textTheme.displayLarge?.copyWith(fontSize: 16.0),
+                              style: const NText(.large, size: .s16),
                             ),
                           ),
 
                           if (onTap != null) const SizedBox(width: 4.0),
                           if (onTap != null)
-                            Icon(
+                            const Icon(
                               Broken.arrange_circle_2,
                               size: 12.0,
                             ),
@@ -1237,18 +1244,18 @@ class _SliderTextWidget extends StatelessWidget {
                       ),
 
                       if (subtitle != null && subtitle.isNotEmpty)
-                        Text(
+                        NamidaText(
                           subtitle,
-                          style: textTheme.displaySmall?.copyWith(fontSize: 10.0),
+                          style: const NText(.small, size: .s10),
                         ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8.0),
                 if (displayValue)
-                  Text(
+                  NamidaText(
                     valToText(valueActual),
-                    style: textTheme.displayMedium?.copyWith(fontSize: 13.5),
+                    style: const NText(.medium, size: .s13p5),
                   ),
               ],
             ),
@@ -1262,7 +1269,7 @@ class _SliderTextWidget extends StatelessWidget {
               visualDensity: VisualDensity.compact,
               style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
               tooltip: lang.restoreDefaults,
-              icon: Icon(
+              icon: const Icon(
                 Broken.refresh,
                 size: 20.0,
               ),
@@ -1412,7 +1419,7 @@ class _CuteSliderState extends State<_CuteSlider> {
           ),
         ),
         if (_currentVal > widget.max)
-          Icon(
+          const Icon(
             Broken.flash,
             size: 16.0,
           ),
@@ -1493,7 +1500,6 @@ class _VerticalSliderState extends State<VerticalSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     const circleHeight = 32.0;
     final circleWidth = widget.circleWidth;
     final total = widget.min.abs() + widget.max;
@@ -1503,9 +1509,9 @@ class _VerticalSliderState extends State<VerticalSlider> {
       top: 0,
       child: SizedBox(
         width: 6.0,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.secondary.withOpacityExt(0.2),
+        child: NDecoratedBox(
+          decoration: (colors) => BoxDecoration(
+            color: colors.secondary.withOpacityExt(0.2),
             borderRadius: const BorderRadius.all(
               Radius.circular(12.0),
             ),
@@ -1548,15 +1554,18 @@ class _VerticalSliderState extends State<VerticalSlider> {
                 topButton,
                 Positioned(
                   bottom: 0,
-                  child: AnimatedSizedBox(
-                    duration: const Duration(milliseconds: 50),
-                    height: height,
-                    width: 8.0,
-                    animateWidth: false,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacityExt(0.5),
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(12.0),
+                  child: NBuilder(
+                    selfAnimated: true,
+                    builder: (context, colors) => AnimatedSizedBox(
+                      duration: const Duration(milliseconds: 50),
+                      height: height,
+                      width: 8.0,
+                      animateWidth: false,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withOpacityExt(0.5),
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12.0),
+                        ),
                       ),
                     ),
                   ),
@@ -1568,11 +1577,11 @@ class _VerticalSliderState extends State<VerticalSlider> {
                     (context) => AnimatedScale(
                       duration: const Duration(milliseconds: 200),
                       scale: _isPointerDown.valueR ? 1.2 : 1.0,
-                      child: Container(
+                      child: NContainer(
                         width: circleWidth,
                         height: circleHeight,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary,
+                        decoration: (colors) => BoxDecoration(
+                          color: colors.primary,
                           borderRadius: const BorderRadius.all(
                             Radius.circular(12.0),
                           ),

@@ -29,7 +29,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
     const thumbnailItemExtent = thumbnailHeight + 8.0 * 2;
 
     return VideoTilePropertiesProvider(
-      configs: VideoTilePropertiesConfigs(
+      configs: const VideoTilePropertiesConfigs(
         queueSource: QueueSourceYoutubeID.ytHomeFeed,
         showMoreIcon: true,
       ),

@@ -343,7 +343,7 @@ class _VisualizerViewState extends State<_VisualizerView> {
           return const SizedBox();
         }
         final driver = _attach();
-        final themeColors = [context.theme.colorScheme.secondary];
+        final themeColors = [NColorsData.of(context).secondary];
         if (!widget.hasArtworkColors) {
           return _VisualizerCanvas(
             view: widget,

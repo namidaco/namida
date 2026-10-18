@@ -15,6 +15,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -324,7 +325,6 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final fullscreen = widget.isFullscreen;
     final clampCircleEdges = widget.clampCircleEdges ?? !widget.isFullscreen;
     const barHeight = SeekReadyDimensions.barHeight;
@@ -339,7 +339,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
     final progressBarBottomPosition = barHeight / 2 - (progressBarHeight / 2);
 
     final progressColor = widget.useReducedProgressColor
-        ? Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(40), CurrentColor.inst.miniplayerColor).withOpacityExt(0.8)
+        ? Color.alphaBlend(theme.colorScheme.onSurface.withOpacityExt(0.16), CurrentColor.inst.miniplayerColor).withOpacityExt(0.8)
         : CurrentColor.inst.miniplayerColor.withOpacityExt(0.8);
     final miniplayerBGColor = fullscreen ? Colors.grey : Color.alphaBlend(theme.secondaryHeaderColor.withOpacityExt(0.25), theme.scaffoldBackgroundColor);
     final bufferColorOg = fullscreen
@@ -487,11 +487,11 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                           animation: _animation,
                           child: Padding(
                             padding: EdgeInsets.only(bottom: 12.0 + extraBottomPadding),
-                            child: Container(
+                            child: NContainer(
                               width: seekTextWidth,
                               padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
-                              decoration: BoxDecoration(
-                                color: theme.scaffoldBackgroundColor,
+                              decoration: (colors) => BoxDecoration(
+                                color: colors.scaffold,
                                 borderRadius: BorderRadius.circular(6.0.multipliedRadius),
                               ),
                               child: isGoodSegmentTitle
@@ -499,16 +499,16 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Text(
+                                        NamidaText(
                                           landingSegmentTitle,
-                                          style: textTheme.displaySmall,
+                                          style: NText.small,
                                           textAlign: TextAlign.center,
                                           softWrap: false,
                                           overflow: TextOverflow.fade,
                                         ),
-                                        Text(
+                                        NamidaText(
                                           finalText,
-                                          style: textTheme.displaySmall,
+                                          style: NText.small,
                                           textAlign: TextAlign.center,
                                           softWrap: false,
                                           overflow: TextOverflow.fade,
@@ -516,9 +516,9 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                       ],
                                     )
                                   : FittedBox(
-                                      child: Text(
+                                      child: NamidaText(
                                         finalText,
-                                        style: textTheme.displaySmall,
+                                        style: NText.small,
                                       ),
                                     ),
                             ),
@@ -1202,7 +1202,7 @@ class SmoothLinePainter extends CustomPainter {
       return;
     }
 
-    final kernelSize = 3;
+    const kernelSize = 3;
 
     for (int i = 0; i < points.length; i++) {
       var sumY = 0.0;

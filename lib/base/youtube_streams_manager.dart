@@ -9,6 +9,7 @@ import 'package:youtipie/class/youtipie_feed/yt_feed_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -126,9 +127,9 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   Widget _sortMenuSectionTitle(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
-      child: Text(
+      child: NamidaText(
         title,
-        style: context.textTheme.displaySmall?.copyWith(fontSize: 11.0),
+        style: const NText(.small, size: .s11),
       ),
     );
   }
@@ -137,7 +138,6 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   List<Widget> _sortMenuServerChildren(BuildContext context) {
     final serverSorts = _serverSorts;
     final activeServerSortTitle = _activeServerSort?.title;
-    final textTheme = context.textTheme;
     return [
       if (serverSorts.isNotEmpty) ...[
         _sortMenuSectionTitle(context, lang.youtube),
@@ -146,7 +146,7 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
             borderRadius: 8.0,
             margin: const EdgeInsets.symmetric(horizontal: 2.0, vertical: 1.0),
             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            bgColor: activeServerSortTitle == s.title ? context.theme.colorScheme.secondary.withOpacityExt(0.1) : null,
+            bgColor: activeServerSortTitle == s.title ? const NColors(.secondary, opacity: 0.1) : null,
             onTap: () {
               NamidaNavigator.inst.popMenu(); // the whole list gets replaced, no point in keeping the menu open
               sortStreamsServerSide(s);
@@ -156,9 +156,9 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
               children: [
                 const Icon(Broken.cloud_change, size: 20.0),
                 const SizedBox(width: 6.0),
-                Text(
+                NamidaText(
                   s.title,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 ),
               ],
             ),
@@ -383,62 +383,65 @@ class YTLoadedCountChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     const borderRadius = 8.0;
     final loadedCount = this.loadedCount;
     final totalCount = this.totalCount;
     final progress = loadedCount == null || totalCount == null || totalCount <= 0 ? null : (loadedCount / totalCount).clampDouble(0.0, 1.0);
 
-    return NamidaTooltip(
-      message: canLoadMore ? () => lang.loadAll : null,
-      child: NamidaInkWell(
-        borderRadius: borderRadius,
-        bgColor: theme.cardColor,
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.secondary.withOpacityExt(0.5)),
-        ),
-        onTap: canLoadMore ? onTap : null,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    isLoading
-                        ? const LoadingIndicator(boxHeight: 14.0)
-                        : Icon(
-                            canLoadMore ? Broken.task_square : Broken.video_square,
-                            size: 16.0,
-                          ),
-                    const SizedBox(width: 6.0),
-                    Flexible(
-                      child: Text(
-                        "${loadedCount ?? '?'} / ${totalCount?.formatDecimalShort() ?? '?'}",
-                        style: context.textTheme.displayMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+    final chipChild = ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius.multipliedRadius),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isLoading
+                    ? const LoadingIndicator(boxHeight: 14.0)
+                    : Icon(
+                        canLoadMore ? Broken.task_square : Broken.video_square,
+                        size: 16.0,
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              if (progress != null && progress < 1.0)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  height: 2.0,
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: progress,
-                    child: ColoredBox(color: theme.colorScheme.secondary.withOpacityExt(0.8)),
+                const SizedBox(width: 6.0),
+                Flexible(
+                  child: NamidaText(
+                    "${loadedCount ?? '?'} / ${totalCount?.formatDecimalShort() ?? '?'}",
+                    style: NText.medium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
+          if (progress != null && progress < 1.0)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 2.0,
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: progress,
+                child: const NColoredBox(color: NColors(.secondary, opacity: 0.8)),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    return NamidaTooltip(
+      message: canLoadMore ? () => lang.loadAll : null,
+      child: NBuilder(
+        builder: (context, colors) => NamidaInkWell(
+          borderRadius: borderRadius,
+          bgColor: NColors.card,
+          decoration: BoxDecoration(
+            border: Border.all(color: colors.secondary.withOpacityExt(0.5)),
+          ),
+          onTap: canLoadMore ? onTap : null,
+          child: chipChild,
         ),
       ),
     );

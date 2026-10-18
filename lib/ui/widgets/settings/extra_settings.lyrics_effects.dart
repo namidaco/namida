@@ -190,11 +190,9 @@ class _LyricsEffectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final tileAlpha = context.isDarkMode ? 5 : 20;
-    final inactiveColor = Color.alphaBlend(theme.colorScheme.onSurface.withAlpha(tileAlpha), theme.cardTheme.color!);
-    final bgColor = active ? theme.colorScheme.secondaryContainer : inactiveColor;
+    final tileOpacity = context.isDarkMode ? 0.02 : 0.08;
+    final inactiveColor = NColors.custom((c) => Color.alphaBlend(c.onSurface.withOpacityExt(tileOpacity), c.cardTheme));
+    final bgColor = active ? NColors.secondaryContainer : inactiveColor;
     return NamidaInkWell(
       borderRadius: 10.0,
       padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
@@ -211,9 +209,9 @@ class _LyricsEffectCard extends StatelessWidget {
           const SizedBox(
             height: 4.0,
           ),
-          Text(
+          NamidaText(
             title,
-            style: textTheme.displaySmall?.copyWith(fontSize: 12.0),
+            style: const NText(.small, size: .s12),
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,

@@ -219,7 +219,7 @@ Future<void> _watchAndCopyBinariesForDir(MapEntry<String, Directory> entry) asyn
     d.deleteSync(recursive: true); // ensure deleted so that detection happens after building ends.
   } catch (_) {}
   while (!d.existsSync()) {
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(const Duration(milliseconds: 10));
   }
   print('====--> detected change in $d, copying binaries...');
 

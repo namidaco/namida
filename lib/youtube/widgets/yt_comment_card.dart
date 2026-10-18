@@ -14,6 +14,7 @@ import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -29,7 +30,7 @@ import 'package:namida/youtube/yt_utils.dart';
 
 class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
-  final int bgAlpha;
+  final double bgOpacity;
   final bool showRepliesBox;
   final String? videoId;
   final CommentInfoItemBase? comment;
@@ -46,7 +47,7 @@ class YTCommentCard<W extends YoutiPieListWrapper<CommentInfoItemBase>> extends 
   const YTCommentCard({
     super.key,
     required this.margin,
-    this.bgAlpha = 100,
+    this.bgOpacity = 0.39,
     this.showRepliesBox = true,
     required this.videoId,
     required this.comment,
@@ -231,8 +232,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final comment = this.widget.comment;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
@@ -248,14 +247,10 @@ class _YTCommentCardState extends State<YTCommentCard> {
     final voiceReplyTranscript = (commentContent?.rawText?.isEmpty ?? true) ? comment?.voiceReplyTranscript : null;
     final isHearted = comment?.isHearted ?? false;
 
-    final containerColor = theme.cardColor.withAlpha(widget.bgAlpha);
-    final readmoreColor = theme.colorScheme.primary.withAlpha(160);
+    const readmoreColor = NColors(.primary, opacity: 0.63);
 
-    final authorTextColor = theme.colorScheme.onSurface.withAlpha(180);
-    final authorTextStyle = textTheme.displaySmall?.copyWith(
-      fontWeight: FontWeight.w400,
-      color: authorTextColor,
-    );
+    const authorTextColor = NColors(.onSurface, opacity: 0.71);
+    const authorTextStyle = NText(.small, weight: FontWeight.w400);
 
     return LayoutWidthProvider(
       builder: (context, maxWidth) {
@@ -264,13 +259,13 @@ class _YTCommentCardState extends State<YTCommentCard> {
           children: [
             Padding(
               padding: widget.margin ?? EdgeInsets.zero,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: containerColor,
+              child: NDecoratedBox(
+                decoration: (colors) => BoxDecoration(
+                  color: colors.card.withOpacityExt(widget.bgOpacity),
                   borderRadius: BorderRadius.circular(12.0.multipliedRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: theme.secondaryHeaderColor.withAlpha(60),
+                      color: colors.secondaryHeader.withOpacityExt(0.24),
                       blurRadius: 4.0,
                       spreadRadius: 1.5,
                       offset: const Offset(0.0, 1.0),
@@ -315,11 +310,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                       size: 13.0,
                                     ),
                                     const SizedBox(width: 4.0),
-                                    Text(
+                                    NamidaText(
                                       lang.pinned,
-                                      style: textTheme.displaySmall?.copyWith(
-                                        fontSize: 11.5,
-                                      ),
+                                      style: const NText(.small, size: .s11p5),
                                     ),
                                   ],
                                 ),
@@ -336,18 +329,20 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                   child: Row(
                                     children: [
                                       if (author != null)
-                                        Text(
+                                        NamidaText(
                                           author,
                                           style: authorTextStyle,
+                                          color: authorTextColor,
                                         ),
                                       if (uploadedFromText != null)
-                                        Text(
+                                        NamidaText(
                                           " • $uploadedFromText",
                                           style: authorTextStyle,
+                                          color: authorTextColor,
                                         ),
                                       if (comment?.isEdited == true) ...[
                                         const SizedBox(width: 4.0),
-                                        Icon(
+                                        const NIcon(
                                           Broken.edit_2,
                                           size: 12.0,
                                           color: authorTextColor,
@@ -355,7 +350,7 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                       ],
                                       if (isArtist) ...[
                                         const SizedBox(width: 4.0),
-                                        Icon(
+                                        const NIcon(
                                           Broken.musicnote,
                                           size: 12.0,
                                           color: authorTextColor,
@@ -408,7 +403,6 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                     : YoutubeDescriptionWidget(
                                         videoId: widget.videoId,
                                         content: commentContent,
-                                        linkColor: theme.colorScheme.primary.withAlpha(210),
                                         childBuilder: (span) {
                                           return NamidaReadMoreText(
                                             span: span,
@@ -430,12 +424,13 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                                         child: Row(
                                                           mainAxisAlignment: MainAxisAlignment.end,
                                                           children: [
-                                                            Text(
+                                                            NamidaText(
                                                               isExpanded ? '' : lang.showMore,
-                                                              style: textTheme.displaySmall?.copyWith(color: readmoreColor),
+                                                              style: NText.small,
+                                                              color: readmoreColor,
                                                             ),
                                                             const SizedBox(width: 8),
-                                                            Icon(
+                                                            NIcon(
                                                               isExpanded ? Broken.arrow_up_3 : Broken.arrow_down_2,
                                                               size: 18.0,
                                                               color: readmoreColor,
@@ -486,9 +481,9 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                             height: 8.0,
                                             borderRadius: 4.0,
                                             shimmerEnabled: likeCount == null,
-                                            child: Text(
+                                            child: NamidaText(
                                               likeCount?.formatDecimalShort() ?? '?',
-                                              style: textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w400),
+                                              style: const NText(.small, weight: FontWeight.w400),
                                             ),
                                           ),
                                         ],
@@ -513,16 +508,19 @@ class _YTCommentCardState extends State<YTCommentCard> {
                                           ),
                                         if (widget.showRepliesBox && comment is CommentInfoItem) const SizedBox(width: 8.0),
                                         if (widget.showRepliesBox && comment is CommentInfoItem)
-                                          NamidaInkWellButton(
-                                            sizeMultiplier: 0.8,
-                                            borderRadius: 6.0,
-                                            onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
-                                            bgColor: theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                                            icon: Broken.document,
-                                            text: [
-                                              lang.replies,
-                                              if (comment.repliesCount != null) comment.repliesCount!,
-                                            ].join(' • '),
+                                          NBuilder(
+                                            selfAnimated: true,
+                                            builder: (context, colors) => NamidaInkWellButton(
+                                              sizeMultiplier: 0.8,
+                                              borderRadius: 6.0,
+                                              onTap: () => _onRepliesTap(comment: comment, repliesCount: comment.repliesCount),
+                                              bgColor: colors.secondaryContainer.withOpacityExt(0.2),
+                                              icon: Broken.document,
+                                              text: [
+                                                lang.replies,
+                                                if (comment.repliesCount != null) comment.repliesCount!,
+                                              ].join(' • '),
+                                            ),
                                           ),
                                       ],
                                     );
@@ -571,12 +569,14 @@ class _MemberBadge extends StatelessWidget {
 
 class _VoiceReplyText extends StatelessWidget {
   final String transcript;
-  final Color? color;
+  final NColors color;
 
   const _VoiceReplyText({required this.transcript, required this.color});
 
   @override
   Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    final resolvedColor = color.resolve(colors);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -585,17 +585,19 @@ class _VoiceReplyText extends StatelessWidget {
           child: Icon(
             Broken.microphone,
             size: 14.0,
-            color: color,
+            color: resolvedColor,
           ),
         ),
         const SizedBox(width: 6.0),
         Expanded(
           child: Text(
             transcript,
-            style: context.textTheme.displaySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-              color: color,
-            ),
+            style: NText.small
+                .of(context)
+                .copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: resolvedColor,
+                ),
           ),
         ),
       ],
@@ -609,8 +611,6 @@ class YTCommentCardCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
     final uploaderAvatar = comment?.authorAvatarUrl ?? comment?.author?.avatarThumbnailUrl;
     final author = comment?.author?.displayName;
 
@@ -627,12 +627,8 @@ class YTCommentCardCompact extends StatelessWidget {
     final isArtist = comment?.author?.isArtist ?? false;
     final isMember = comment?.author?.memberBadgeText != null;
 
-    final authorTextColor = theme.colorScheme.onSurface.withAlpha(180);
-    final authorTextStyle = textTheme.displaySmall?.copyWith(
-      fontSize: 11.5,
-      fontWeight: FontWeight.w400,
-      color: authorTextColor,
-    );
+    const authorTextColor = NColors(.onSurface, opacity: 0.71);
+    const authorTextStyle = NText(.small, size: .s11p5, weight: FontWeight.w400);
 
     return LayoutWidthProvider(
       builder: (context, maxWidth) {
@@ -671,18 +667,20 @@ class YTCommentCardCompact extends StatelessWidget {
                       child: Row(
                         children: [
                           if (author != null)
-                            Text(
+                            NamidaText(
                               author,
                               style: authorTextStyle,
+                              color: authorTextColor,
                             ),
                           if (uploadedFromText != null)
-                            Text(
+                            NamidaText(
                               " • $uploadedFromText",
                               style: authorTextStyle,
+                              color: authorTextColor,
                             ),
                           if (comment?.isEdited == true) ...[
                             const SizedBox(width: 4.0),
-                            Icon(
+                            const NIcon(
                               Broken.edit_2,
                               size: 12.0,
                               color: authorTextColor,
@@ -690,7 +688,7 @@ class YTCommentCardCompact extends StatelessWidget {
                           ],
                           if (isArtist) ...[
                             const SizedBox(width: 4.0),
-                            Icon(
+                            const NIcon(
                               Broken.musicnote,
                               size: 12.0,
                               color: authorTextColor,
@@ -740,15 +738,12 @@ class YTCommentCardCompact extends StatelessWidget {
                               ),
                             ],
                           )
-                        : Text(
+                        : NamidaText(
                             commentTextParsed,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
-                            style: textTheme.displaySmall?.copyWith(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w500,
-                              color: theme.colorScheme.onSurface.withAlpha(220),
-                            ),
+                            style: const NText(.small, size: .s12p5, weight: FontWeight.w500),
+                            color: const NColors(.onSurface, opacity: 0.86),
                           ),
                   ),
                   const SizedBox(height: 4.0),
@@ -770,29 +765,23 @@ class YTCommentCardCompact extends StatelessWidget {
                             height: 6.0,
                             borderRadius: 4.0,
                             shimmerEnabled: likeCount == null,
-                            child: Text(
+                            child: NamidaText(
                               likeCount?.formatDecimalShort() ?? '?',
-                              style: textTheme.displaySmall?.copyWith(
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w400,
-                              ),
+                              style: const NText(.small, size: .s11p5, weight: FontWeight.w400),
                             ),
                           ),
                         ],
                         if (repliesCount != null && repliesCount > 0) ...[
-                          Text(
+                          const NamidaText(
                             ' | ',
-                            style: textTheme.displayMedium?.copyWith(fontWeight: FontWeight.w300),
+                            style: NText(.medium, weight: FontWeight.w300),
                           ),
-                          Text(
+                          NamidaText(
                             [
                               lang.replies,
                               repliesCount,
                             ].join(' • '),
-                            style: textTheme.displaySmall?.copyWith(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w400,
-                            ),
+                            style: const NText(.small, size: .s11p5, weight: FontWeight.w400),
                           ),
                         ],
                       ],

@@ -111,7 +111,7 @@ SnackbarController snackyy({
           latestCountStyle: latestCountStyle,
         );
 
-  final content = Theme(
+  final content = NTheme(
     data: context?.theme ?? material.ThemeData(),
     child: Padding(
       padding: paddingInsets,
@@ -236,7 +236,7 @@ SnackbarController snackyy({
           boxShadow: isError
               ? [
                   BoxShadow(
-                    color: Colors.red.withAlpha(15),
+                    color: Colors.red.withOpacityExt(0.06),
                     blurRadius: 16.0,
                   ),
                 ]

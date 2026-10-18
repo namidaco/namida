@@ -18,6 +18,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -279,12 +280,12 @@ class NamidaDialogs {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                NamidaText(
                   deleteM3uFileOnly ? lang.convertToNormalPlaylist : '${lang.deletePlaylist}: "${playlist.name.translatePlaylistName()}"?',
-                  style: theme.textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 if (hasM3u) ...[
-                  SizedBox(height: 12.0),
+                  const SizedBox(height: 12.0),
                   ObxO(
                     rx: alsoDeleteM3uRx,
                     builder: (context, deletem3u) => ListTileWithCheckMark(

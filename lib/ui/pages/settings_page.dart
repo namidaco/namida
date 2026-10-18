@@ -11,6 +11,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main_page_wrapper.dart';
@@ -28,20 +29,6 @@ import 'package:namida/ui/widgets/settings/playback_settings.dart';
 import 'package:namida/ui/widgets/settings/theme_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 
-LinearGradient _bgLinearGradient(BuildContext context) {
-  final firstC = context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withAlpha(context.isDarkMode ? 0 : 25);
-  final secondC = CurrentColor.inst.color.withAlpha(context.isDarkMode ? 40 : 60);
-  return LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    stops: const [0.2, 1.0],
-    colors: [
-      firstC,
-      secondC,
-    ],
-  );
-}
-
 class SettingsPage extends StatelessWidget with NamidaRouteWidget {
   @override
   RouteType get route => RouteType.SETTINGS_page;
@@ -52,12 +39,7 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: Stack(
         children: [
-          Container(
-            height: context.height,
-            decoration: BoxDecoration(
-              gradient: _bgLinearGradient(context),
-            ),
-          ),
+          const _SettingsBackgroundGradient(),
           const Positioned.fill(
             child: NamidaJellyBackground.forSettingsPage,
           ),
@@ -67,17 +49,17 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
                 ? const CollapsedSettingTiles()
                 : SuperSmoothListView(
                     padding: EdgeInsets.symmetric(horizontal: Dimensions.inst.getSettingsHorizontalMargin(context)),
-                    children: [
-                      const _QuickSuggestionsForSettings(),
-                      const ThemeSetting(),
-                      const IndexerSettings(),
-                      const PlaybackSettings(),
-                      const CustomizationSettings(),
-                      const YoutubeSettings(),
-                      const ExtrasSettings(),
-                      const BackupAndRestore(),
-                      const AdvancedSettings(),
-                      const Padding(
+                    children: const [
+                      _QuickSuggestionsForSettings(),
+                      ThemeSetting(),
+                      IndexerSettings(),
+                      PlaybackSettings(),
+                      CustomizationSettings(),
+                      YoutubeSettings(),
+                      ExtrasSettings(),
+                      BackupAndRestore(),
+                      AdvancedSettings(),
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 12.0),
                         child: AboutPageTileWidget(),
                       ),
@@ -113,12 +95,7 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
     return BackgroundWrapper(
       child: Stack(
         children: [
-          Container(
-            height: context.height,
-            decoration: BoxDecoration(
-              gradient: _bgLinearGradient(context),
-            ),
-          ),
+          const _SettingsBackgroundGradient(),
           const Positioned.fill(
             child: NamidaJellyBackground.forSettingsPage,
           ),
@@ -302,7 +279,7 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
                   leading: (color) => RefreshLibraryIcon(
                     widgetKey: 'quick_suggestions',
                     size: 20.0,
-                    color: color,
+                    color: NColors.fixed(color),
                   ),
                   title: lang.refreshLibrary,
                   subtitle: '',
@@ -424,13 +401,12 @@ class _QuickSuggestionsTile extends StatelessWidget {
     final title = expanded ? this.title : '';
     final tooltip = this.title;
 
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final colors = NColorsData.of(context);
     final isDarkMode = context.isDarkMode;
     final colorScheme = CurrentColor.inst.color;
-    final scaffoldBgColor = Color.alphaBlend(theme.scaffoldBackgroundColor.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
+    final scaffoldBgColor = Color.alphaBlend(colors.scaffold.withOpacityExt(0.5), isDarkMode ? Colors.black : Colors.white);
     const foregroundColorOpacity = 0.8;
-    final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), theme.colorScheme.onSurface).withOpacityExt(foregroundColorOpacity);
+    final foregroundColor = Color.alphaBlend(colorScheme.withOpacityExt(0.1), colors.onSurface).withOpacityExt(foregroundColorOpacity);
     final iconColor = foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9);
     return Tooltip(
       message: tooltip,
@@ -453,7 +429,7 @@ class _QuickSuggestionsTile extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: colorScheme.withAlpha(isDarkMode ? 20 : 60),
+              color: colorScheme.withOpacityExt(isDarkMode ? 0.08 : 0.24),
               spreadRadius: 0.1,
               blurRadius: 4.0,
               offset: const Offset(0.0, 2.0),
@@ -486,20 +462,18 @@ class _QuickSuggestionsTile extends StatelessWidget {
                     mainAxisSize: .min,
                     children: [
                       if (title.isNotEmpty)
-                        Text(
+                        NamidaText(
                           title,
-                          style: textTheme.displayMedium?.copyWith(
-                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9),
-                          ),
+                          style: NText.medium,
+                          color: NColors.fixed(foregroundColor.withOpacityExt(foregroundColorOpacity * 0.9)),
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,
                         ),
                       if (subtitle.isNotEmpty)
-                        Text(
+                        NamidaText(
                           subtitle,
-                          style: textTheme.displaySmall?.copyWith(
-                            color: foregroundColor.withOpacityExt(foregroundColorOpacity * 0.8),
-                          ),
+                          style: NText.small,
+                          color: NColors.fixed(foregroundColor.withOpacityExt(foregroundColorOpacity * 0.8)),
                           overflow: TextOverflow.ellipsis,
                           softWrap: false,
                         ),
@@ -510,6 +484,31 @@ class _QuickSuggestionsTile extends StatelessWidget {
               const SizedBox(width: 4.0),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsBackgroundGradient extends StatelessWidget {
+  const _SettingsBackgroundGradient();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    final firstC = context.theme.appBarTheme.backgroundColor ?? CurrentColor.inst.color.withOpacityExt(isDarkMode ? 0.0 : 0.1);
+    final secondC = CurrentColor.inst.color.withOpacityExt(isDarkMode ? 0.16 : 0.24);
+    return Container(
+      height: context.height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: const [0.2, 1.0],
+          colors: [
+            firstC,
+            secondC,
+          ],
         ),
       ),
     );

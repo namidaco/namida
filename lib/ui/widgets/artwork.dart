@@ -22,6 +22,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/packages/image_advanced.dart';
 import 'package:namida/ui/widgets/baked_blur.dart';
@@ -370,23 +371,21 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     Key? key,
     required final double? boxWidth,
     required final double? boxHeight,
-    final Color? bgc,
     required final bool stackWithOnTopWidgets,
     required final BoxShape shape,
     required final BorderRadiusGeometry? borderRadius,
   }) {
-    final theme = context.theme;
     final icon = Icon(
       widget.displayIcon ? widget.icon ?? (widget.track is Video ? Broken.video : Broken.musicnote) : null,
       size: widget.iconSize ?? widget.thumbnailSize * 0.5,
     );
-    return Container(
+    return NContainer(
       key: key,
       width: boxWidth,
       height: boxHeight,
       clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor),
+      decoration: (colors) => BoxDecoration(
+        color: widget.bgcolor ?? Color.alphaBlend(colors.card.withOpacityExt(0.39), colors.scaffold),
         borderRadius: borderRadius,
         shape: shape,
         boxShadow: widget.boxShadow,
@@ -472,9 +471,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
     final borderR = widget.isCircle || settings.borderRadiusMultiplier.value == 0 ? null : BorderRadius.circular(widget.borderRadius.multipliedRadius);
     final shape = widget.isCircle ? BoxShape.circle : BoxShape.rectangle;
-    final theme = context.theme;
     final isStock = !canDisplayImage || widget.forceDummyArtwork;
-    final stockColor = widget.bgcolor ?? Color.alphaBlend(theme.cardColor.withAlpha(100), theme.scaffoldBackgroundColor);
     final artworkBox = isStock
         ? _getStockWidget(
             key: key,
@@ -483,7 +480,6 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
             borderRadius: borderR,
             shape: shape,
             stackWithOnTopWidgets: true,
-            bgc: stockColor,
           )
         : Container(
             clipBehavior: Clip.antiAlias,
@@ -534,7 +530,7 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
                               child!,
                               Positioned.fill(
                                 child: IgnorePointer(
-                                  child: ColoredBox(color: theme.cardColor.withOpacityExt(value)),
+                                  child: NColoredBox(color: NColors(.card, opacity: value)),
                                 ),
                               ),
                             ],
@@ -574,19 +570,23 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
     final isBackdropSource = isBlurSourceNeeded && !isStock;
     if (dropShadowEnabled || isBackdropSource) {
       final glowScale = DropShadow.defaultBgSizePercentage / sizePercentage;
-      bakedArtworkBox = BakedBlurArtwork(
-        image: image,
-        stockGlowColor: isStock ? stockColor : null,
-        glowBlur: dropShadowEnabled ? widget.blur : 0.0,
-        glowScale: glowScale,
-        glowOffset: _kGlowOffset,
-        glowOpacity: widget.glowOpacity,
-        isBackdropSource: isBackdropSource,
-        fit: widget.fit,
-        alignment: widget.alignment,
-        isCircle: widget.isCircle,
-        borderRadius: borderR,
-        child: artworkBox,
+      bakedArtworkBox = _StockGlowColorBuilder(
+        isStock: isStock,
+        bgcolor: widget.bgcolor,
+        builder: (stockGlowColor) => BakedBlurArtwork(
+          image: image,
+          stockGlowColor: stockGlowColor,
+          glowBlur: dropShadowEnabled ? widget.blur : 0.0,
+          glowScale: glowScale,
+          glowOffset: _kGlowOffset,
+          glowOpacity: widget.glowOpacity,
+          isBackdropSource: isBackdropSource,
+          fit: widget.fit,
+          alignment: widget.alignment,
+          isCircle: widget.isCircle,
+          borderRadius: borderR,
+          child: artworkBox,
+        ),
       );
     }
     if (sizePercentage != 1.0) {
@@ -1242,7 +1242,7 @@ class _CollageStack extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final shadow = BoxShadow(
-      color: theme.shadowColor.withAlpha(90),
+      color: theme.shadowColor.withOpacityExt(0.35),
       blurRadius: 6.0,
       offset: const Offset(0.0, 2.0),
     );
@@ -1405,6 +1405,28 @@ class _CollageCells {
       onTap: () => onCellTap(index),
       child: artwork,
     );
+  }
+}
+
+class _StockGlowColorBuilder extends StatelessWidget {
+  final bool isStock;
+  final Color? bgcolor;
+  final Widget Function(Color? stockGlowColor) builder;
+
+  const _StockGlowColorBuilder({
+    required this.isStock,
+    required this.bgcolor,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Color? stockGlowColor;
+    if (isStock) {
+      final colors = NColorsData.of(context);
+      stockGlowColor = bgcolor ?? Color.alphaBlend(colors.card.withOpacityExt(0.39), colors.scaffold);
+    }
+    return builder(stockGlowColor);
   }
 }
 

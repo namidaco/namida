@@ -22,7 +22,7 @@ import 'package:namida/core/extensions.dart';
 import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/themes.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
@@ -93,7 +93,7 @@ class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderSt
   Widget build(BuildContext context) {
     final width = context.width;
     final drawerScale = (width / _drawerReferenceWidth).clampDouble(0.7, 1.0);
-    return AppThemeFrozenWhileHidden(
+    return NThemeFrozenWhileHidden(
       child: NamidaInnerDrawer(
         key: NamidaNavigator.inst.innerDrawerKey,
         borderRadius: 42.0.multipliedRadius,
@@ -175,8 +175,6 @@ class NamidaDrawer extends StatelessWidget {
   void toggleDrawer() => NamidaNavigator.inst.toggleDrawer();
 
   static void openSleepTimerDialog(BuildContext context) {
-    final textTheme = context.textTheme;
-
     final initialSleepConfig = Player.inst.sleepTimerConfig.value;
     final minutesRx = initialSleepConfig.sleepAfterMin.obs;
     final tracksRx = initialSleepConfig.sleepAfterItems.obs;
@@ -252,9 +250,9 @@ class NamidaDrawer extends StatelessWidget {
                     textPadding: 8.0,
                   ),
                 ),
-                Text(
+                NamidaText(
                   lang.or,
-                  style: textTheme.displayMedium,
+                  style: NText.medium,
                 ),
                 ObxO(
                   rx: tracksRx,
@@ -410,7 +408,7 @@ class NamidaDrawer extends StatelessWidget {
                                         child: Icon(
                                           Broken.arrow_right_3,
                                           size: 16.0,
-                                          color: enabled ? Colors.white.withAlpha(200) : null,
+                                          color: enabled ? Colors.white.withOpacityExt(0.78) : null,
                                         ),
                                       ),
                                     ),
@@ -498,7 +496,7 @@ class NamidaDrawer extends StatelessWidget {
                   SizedBox(
                     width: tileWidth,
                     child: NamidaDrawerListTile(
-                      margin: EdgeInsets.only(top: 4.0),
+                      margin: const EdgeInsets.only(top: 4.0),
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: iconTilePadding.vertical / 2),
                       enabled: false,
                       isCentered: true,
@@ -596,25 +594,20 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
 
   @override
   Widget build(BuildContext context) {
-    final title = 'Namida';
+    const title = 'Namida';
     final height = WindowController.instance?.windowTitleBarHeightIfActive;
 
     final appBarTheme = AppBarTheme.of(context);
     final theme = context.theme;
-    final textTheme = theme.textTheme;
-    final colorscheme = theme.colorScheme;
     final brightness = theme.brightness;
+    final isDarkMode = context.isDarkMode;
     final buttonHeight = (height ?? 24.0) * 0.75;
     final buttonWidth = Platform.isWindows ? 42.0 : 18.0;
     // final backgroundColor = Color.alphaBlend(context.theme.scaffoldBackgroundColor, Colors.white.withOpacityExt(0.25));
-    final backgroundColor = appBarTheme.backgroundColor ?? colorscheme.surface;
-    final surfaceTintColor = appBarTheme.surfaceTintColor ?? colorscheme.surfaceTint;
-    final logoImgPath = NamidaChannel.defaultLayerIconForPlatform;
-    final logoBgColor = context.isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
-    final logoColor = context.isDarkMode
-        ? Color.alphaBlend(theme.colorScheme.secondary.withOpacityExt(0.5), const Color.fromARGB(240, 230, 230, 230))
-        : Color.alphaBlend(theme.colorScheme.secondary.withOpacityExt(0.5), const Color.fromARGB(220, 16, 16, 16));
-    final logoTextColor = logoColor.withOpacityExt(0.7);
+    final appBarBackgroundColor = appBarTheme.backgroundColor;
+    final surfaceTintColor = appBarTheme.surfaceTintColor ?? theme.colorScheme.surfaceTint;
+    const logoImgPath = NamidaChannel.defaultLayerIconForPlatform;
+    final logoBgColor = isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
 
     final buttonsRow = Platform.isWindows
         ? Row(
@@ -713,10 +706,8 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
           );
     return SizedBox(
       height: height,
-      child: Material(
-        shadowColor: Colors.transparent,
-        type: MaterialType.canvas,
-        color: backgroundColor,
+      child: _DesktopAppBarMaterial(
+        backgroundColor: appBarBackgroundColor,
         surfaceTintColor: surfaceTintColor,
         child: Stack(
           children: [
@@ -763,37 +754,43 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                   bottomRight: Radius.circular(8.0),
                                 ),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(width: 6.0),
-                                  Flexible(
-                                    child: Image.asset(
-                                      logoImgPath,
-                                      width: 22.0,
-                                      height: 22.0,
-                                      cacheHeight: 240,
-                                      cacheWidth: 240,
-                                      color: logoColor,
-                                      alignment: Alignment.center,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4.0),
-                                  Flexible(
-                                    child: Text(
-                                      title,
-                                      style: textTheme.displayMedium?.copyWith(
-                                        color: logoTextColor,
-                                        fontSize: 14.0,
+                              child: NBuilder(
+                                builder: (context, colors) {
+                                  final logoColor = isDarkMode
+                                      ? Color.alphaBlend(colors.secondary.withOpacityExt(0.5), const Color.fromARGB(240, 230, 230, 230))
+                                      : Color.alphaBlend(colors.secondary.withOpacityExt(0.5), const Color.fromARGB(220, 16, 16, 16));
+                                  final logoTextColor = logoColor.withOpacityExt(0.7);
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const SizedBox(width: 6.0),
+                                      Flexible(
+                                        child: Image.asset(
+                                          logoImgPath,
+                                          width: 22.0,
+                                          height: 22.0,
+                                          cacheHeight: 240,
+                                          cacheWidth: 240,
+                                          color: logoColor,
+                                          alignment: Alignment.center,
+                                        ),
                                       ),
-                                      overflow: TextOverflow.fade,
-                                      softWrap: false,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6.0),
-                                  const SizedBox(width: 4.0),
-                                ],
+                                      const SizedBox(width: 4.0),
+                                      Flexible(
+                                        child: NamidaText(
+                                          title,
+                                          style: const NText(.medium, size: .s14),
+                                          color: NColors.fixed(logoTextColor),
+                                          overflow: TextOverflow.fade,
+                                          softWrap: false,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6.0),
+                                      const SizedBox(width: 4.0),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ),
@@ -807,7 +804,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  SizedBox(width: 2.0),
+                                  const SizedBox(width: 2.0),
                                   // -- dont try to hide based on rail bar or widescreen, its not reactive here and would look a bit bad
                                   _DesktopShortcutIcon(
                                     type: _DesktopShortcutActionType.opensRoute,
@@ -839,9 +836,9 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                                     tooltip: lang.refreshLibrary,
                                     icon: Broken.refresh_2,
                                     onTap: () => showRefreshPromptDialog(false, allowBypassing: true),
-                                    child: RefreshLibraryIcon(
+                                    child: const RefreshLibraryIcon(
                                       widgetKey: 'desktop_appbar',
-                                      color: _DesktopShortcutIcon.getColor(context),
+                                      color: _DesktopShortcutIcon.color,
                                       size: _DesktopShortcutIcon.iconSize,
                                     ),
                                   ),
@@ -866,8 +863,11 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
             // -- juust slight dim
             Positioned.fill(
               child: IgnorePointer(
-                child: ColoredBox(
-                  color: backgroundColor.withOpacityExt(0.1),
+                child: NColoredBox(
+                  color: NColors.custom((colors) {
+                    final backgroundColor = appBarBackgroundColor ?? colors.surface;
+                    return backgroundColor.withOpacityExt(0.1);
+                  }),
                 ),
               ),
             ),
@@ -901,9 +901,7 @@ class _DesktopShortcutIcon extends StatelessWidget {
     this.child,
   });
 
-  static Color getColor(BuildContext context) {
-    return context.theme.colorScheme.secondary.withOpacityExt(0.8);
-  }
+  static const color = NColors(.secondary, opacity: 0.8);
 
   static const double iconSize = 15.0;
 
@@ -932,10 +930,10 @@ class _DesktopShortcutIcon extends StatelessWidget {
         width: iconSize * 1.6,
         child:
             child ??
-            Icon(
+            NIcon(
               icon,
               size: size ?? iconSize,
-              color: getColor(context),
+              color: color,
             ),
       ),
     );
@@ -951,37 +949,38 @@ class _SleepTimerPresetsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final textTheme = theme.textTheme;
+    final presetsList = ObxO(
+      rx: settings.player.sleepTimerPresetsMin,
+      builder: (context, presetsMin) => ObxO(
+        rx: minutesRx,
+        builder: (context, minutes) => SmoothSingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsetsDirectional.only(end: 16.0),
+          child: Row(
+            children: presetsMin
+                .map(
+                  (presetMinutes) => _SleepTimerChip(
+                    selected: minutes == presetMinutes,
+                    onTap: () => minutesRx.value = presetMinutes,
+                    onLongPress: () => settings.player.sleepTimerPresetsMin.update((presets) => presets.remove(presetMinutes)),
+                    child: NamidaText(
+                      NamidaDrawer._sleepMinutesToText(presetMinutes),
+                      style: NText.small,
+                    ),
+                  ),
+                )
+                .toFixedList(),
+          ),
+        ),
+      ),
+    );
     return Row(
       children: [
         Expanded(
-          child: NamidaEndEdgeFeather(
-            color: theme.dialogTheme.backgroundColor,
-            child: ObxO(
-              rx: settings.player.sleepTimerPresetsMin,
-              builder: (context, presetsMin) => ObxO(
-                rx: minutesRx,
-                builder: (context, minutes) => SmoothSingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsetsDirectional.only(end: 16.0),
-                  child: Row(
-                    children: presetsMin
-                        .map(
-                          (presetMinutes) => _SleepTimerChip(
-                            selected: minutes == presetMinutes,
-                            onTap: () => minutesRx.value = presetMinutes,
-                            onLongPress: () => settings.player.sleepTimerPresetsMin.update((presets) => presets.remove(presetMinutes)),
-                            child: Text(
-                              NamidaDrawer._sleepMinutesToText(presetMinutes),
-                              style: textTheme.displaySmall,
-                            ),
-                          ),
-                        )
-                        .toFixedList(),
-                  ),
-                ),
-              ),
+          child: NBuilder(
+            builder: (context, colors) => NamidaEndEdgeFeather(
+              color: colors.dialogBackground,
+              child: presetsList,
             ),
           ),
         ),
@@ -1018,14 +1017,14 @@ class _SleepTimerChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final borderColor = selected ? theme.colorScheme.primary : Colors.transparent;
+    final colors = NColorsData.targetOf(context);
+    final borderColor = selected ? colors.primary : Colors.transparent;
     return NamidaInkWell(
       alignment: .center,
       animationDurationMS: 200,
       height: big ? _kHeight : _kHeight * 0.75,
       borderRadius: 8.0,
-      bgColor: theme.cardTheme.color,
+      bgColor: NColors.cardTheme,
       margin: const EdgeInsets.symmetric(horizontal: 3.0),
       padding: const EdgeInsets.symmetric(horizontal: 10.0),
       decoration: BoxDecoration(
@@ -1038,6 +1037,31 @@ class _SleepTimerChip extends StatelessWidget {
         widthFactor: 1.0,
         child: child,
       ),
+    );
+  }
+}
+
+class _DesktopAppBarMaterial extends StatelessWidget {
+  final Color? backgroundColor;
+  final Color surfaceTintColor;
+  final Widget child;
+
+  const _DesktopAppBarMaterial({
+    required this.backgroundColor,
+    required this.surfaceTintColor,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = NColorsData.of(context);
+    final color = backgroundColor ?? colors.surface;
+    return Material(
+      shadowColor: Colors.transparent,
+      type: MaterialType.canvas,
+      color: color,
+      surfaceTintColor: surfaceTintColor,
+      child: child,
     );
   }
 }

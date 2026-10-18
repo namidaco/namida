@@ -13,6 +13,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
@@ -177,7 +178,6 @@ class _OfflineDocsPageState extends State<_OfflineDocsPage> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final textTheme = theme.textTheme;
     final initialUrl = WebUri(widget.url);
     final docsTheme = theme.brightness == Brightness.dark ? 'dark' : 'light';
     final themeScript = UserScript(
@@ -204,9 +204,9 @@ class _OfflineDocsPageState extends State<_OfflineDocsPage> {
                   Expanded(
                     child: ObxO(
                       rx: _title,
-                      builder: (context, title) => Text(
+                      builder: (context, title) => NamidaText(
                         title,
-                        style: textTheme.displayMedium,
+                        style: NText.medium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),

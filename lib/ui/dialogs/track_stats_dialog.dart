@@ -11,6 +11,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
+import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -638,28 +639,32 @@ class TrackRatingRowWidget extends StatelessWidget {
               children: const [100, 95, 90, 85, 80, 75, 70, 60, 50].map(
                 (e) {
                   final isSelected = e == selectedRating;
+                  final tickIcon =
+                      const Icon(
+                        Broken.tick_circle,
+                        size: 12.0,
+                      ).animateEntrance(
+                        showWhen: isSelected,
+                        allCurves: Curves.fastLinearToSlowEaseIn,
+                        durationMS: 200,
+                      );
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 2.0),
-                    child: NamidaInkWellButton(
-                      borderRadius: 99.0,
-                      sizeMultiplier: 0.85,
-                      paddingMultiplier: 0.6,
-                      icon: null,
-                      leading:
-                          Icon(
-                            Broken.tick_circle,
-                            size: 12.0,
-                          ).animateEntrance(
-                            showWhen: isSelected,
-                            allCurves: Curves.fastLinearToSlowEaseIn,
-                            durationMS: 200,
-                          ),
-                      text: '$e',
-                      bgColor: context.theme.colorScheme.secondaryContainer.withOpacityExt(0.2),
-                      onTap: () {
-                        selectedRatingRx.value = e; // -- must be first
-                        selectedFixedRatingRx.value = e;
-                      },
+                    child: NBuilder(
+                      selfAnimated: true,
+                      builder: (context, colors) => NamidaInkWellButton(
+                        borderRadius: 99.0,
+                        sizeMultiplier: 0.85,
+                        paddingMultiplier: 0.6,
+                        icon: null,
+                        leading: tickIcon,
+                        text: '$e',
+                        bgColor: colors.secondaryContainer.withOpacityExt(0.2),
+                        onTap: () {
+                          selectedRatingRx.value = e; // -- must be first
+                          selectedFixedRatingRx.value = e;
+                        },
+                      ),
                     ),
                   );
                 },
@@ -801,9 +806,9 @@ class _StatsItemsAddField extends StatelessWidget {
         const SizedBox(height: 4.0),
         Padding(
           padding: const EdgeInsets.only(left: iconSize + iconRightPadding),
-          child: Text(
+          child: NamidaText(
             subtitle,
-            style: context.textTheme.displaySmall,
+            style: NText.small,
           ),
         ),
       ],
@@ -815,20 +820,14 @@ class _SetMoodsTagsRows extends StatelessWidget {
   final _TrackStatsItemsSelection selection;
   const _SetMoodsTagsRows({required this.selection});
 
+  static const _highlightedColor = NColors(.secondaryContainer, opacity: 0.5);
+  static const _normalColor = NColors(.secondaryContainer, opacity: 0.2);
+  static final _removedColor = NColors.custom((c) => Color.alphaBlend(Colors.red.withOpacityExt(0.2), c.secondaryContainer.withOpacityExt(0.5)));
+
   @override
   Widget build(BuildContext context) {
     const horizontalPadding = EdgeInsets.symmetric(horizontal: 12.0);
-    final smallTextStyle = context.textTheme.displaySmall?.copyWith(fontSize: 11.0);
-    final secondaryContainer = context.theme.colorScheme.secondaryContainer;
-    final highlightedColor = secondaryContainer.withOpacityExt(0.5);
-    final normalColor = secondaryContainer.withOpacityExt(0.2);
-    final removedColor = Color.alphaBlend(Colors.red.withOpacityExt(0.2), highlightedColor);
-    final suggestionDecoration = BoxDecoration(
-      border: Border.all(
-        color: secondaryContainer.withOpacityExt(0.8),
-      ),
-    );
-    final suggestionItemsColor = context.theme.colorScheme.onSurface.withOpacityExt(0.6);
+    final smallTextStyle = NText.small.of(context).copyWith(fontSize: 11.0);
     return Column(
       crossAxisAlignment: .start,
       mainAxisSize: .min,
@@ -850,7 +849,7 @@ class _SetMoodsTagsRows extends StatelessWidget {
                       return _StatsItemChip(
                         text: item,
                         icon: isKept ? null : Broken.minus_cirlce,
-                        bgColor: isKept ? normalColor : removedColor,
+                        bgColor: isKept ? _normalColor : _removedColor,
                         onTap: () => isKept ? selection.unselect(item) : selection.selectForAll([item]),
                       );
                     },
@@ -868,10 +867,10 @@ class _SetMoodsTagsRows extends StatelessWidget {
                             ? null
                             : Broken.minus_cirlce,
                         bgColor: isAdded
-                            ? highlightedColor
+                            ? _highlightedColor
                             : isKept
-                            ? normalColor
-                            : removedColor,
+                            ? _normalColor
+                            : _removedColor,
                         trailing: Text(
                           '${e.value}/${selection.tracksCount}',
                           style: smallTextStyle,
@@ -890,7 +889,7 @@ class _SetMoodsTagsRows extends StatelessWidget {
                         (item) => _StatsItemChip(
                           text: item,
                           icon: Broken.add_circle,
-                          bgColor: highlightedColor,
+                          bgColor: _highlightedColor,
                           onTap: () => selection.unselect(item),
                         ),
                       ),
@@ -916,8 +915,6 @@ class _SetMoodsTagsRows extends StatelessWidget {
                     .map(
                       (e) => _StatsItemSuggestionChip(
                         text: e,
-                        decoration: suggestionDecoration,
-                        itemsColor: suggestionItemsColor,
                         onTap: () => selection.selectForAll([e]),
                       ),
                     )
@@ -935,7 +932,7 @@ class _SetMoodsTagsRows extends StatelessWidget {
 class _StatsItemChip extends StatelessWidget {
   final String text;
   final IconData? icon;
-  final Color bgColor;
+  final NColors bgColor;
   final Widget? trailing;
   final VoidCallback onTap;
 
@@ -953,20 +950,23 @@ class _StatsItemChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: NamidaInkWellButton(
-        borderRadius: 99.0,
-        paddingMultiplier: 0.8,
-        icon: icon,
-        iconSize: _iconSize,
-        leading: icon == null
-            ? const SizedBox(
-                height: _iconSize,
-              )
-            : null,
-        text: text,
-        trailing: trailing,
-        bgColor: bgColor,
-        onTap: onTap,
+      child: NBuilder(
+        selfAnimated: true,
+        builder: (context, colors) => NamidaInkWellButton(
+          borderRadius: 99.0,
+          paddingMultiplier: 0.8,
+          icon: icon,
+          iconSize: _iconSize,
+          leading: icon == null
+              ? const SizedBox(
+                  height: _iconSize,
+                )
+              : null,
+          text: text,
+          trailing: trailing,
+          bgColor: bgColor.resolve(colors),
+          onTap: onTap,
+        ),
       ),
     );
   }
@@ -974,14 +974,10 @@ class _StatsItemChip extends StatelessWidget {
 
 class _StatsItemSuggestionChip extends StatelessWidget {
   final String text;
-  final BoxDecoration decoration;
-  final Color itemsColor;
   final VoidCallback onTap;
 
   const _StatsItemSuggestionChip({
     required this.text,
-    required this.decoration,
-    required this.itemsColor,
     required this.onTap,
   });
 
@@ -989,17 +985,24 @@ class _StatsItemSuggestionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2.0),
-      child: NamidaInkWellButton(
-        borderRadius: 99.0,
-        sizeMultiplier: 0.9,
-        paddingMultiplier: 0.8,
-        icon: Broken.add,
-        iconSize: 14.0,
-        text: text,
-        bgColor: Colors.transparent,
-        decoration: decoration,
-        itemsColor: itemsColor,
-        onTap: onTap,
+      child: NBuilder(
+        selfAnimated: true,
+        builder: (context, colors) => NamidaInkWellButton(
+          borderRadius: 99.0,
+          sizeMultiplier: 0.9,
+          paddingMultiplier: 0.8,
+          icon: Broken.add,
+          iconSize: 14.0,
+          text: text,
+          bgColor: Colors.transparent,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: colors.secondaryContainer.withOpacityExt(0.8),
+            ),
+          ),
+          itemsColor: colors.onSurface.withOpacityExt(0.6),
+          onTap: onTap,
+        ),
       ),
     );
   }

@@ -106,7 +106,6 @@ class _QueueReplaceDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = context.textTheme;
     final playAfterTitle = this.playAfterTitle;
     return CustomBlurryDialog(
       titleWidgetInPadding: Row(
@@ -119,13 +118,13 @@ class _QueueReplaceDialog extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                NamidaText(
                   lang.queue,
-                  style: textTheme.displayLarge,
+                  style: NText.large,
                 ),
-                Text(
+                NamidaText(
                   subtitle,
-                  style: textTheme.displaySmall,
+                  style: NText.small,
                 ),
               ],
             ),
