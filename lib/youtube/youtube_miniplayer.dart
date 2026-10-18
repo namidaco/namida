@@ -322,6 +322,7 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                 child: LyricsLRCParsedView(
                                   key: Lyrics.inst.lrcViewKey,
                                   videoOrImage: const SizedBox(),
+                                  canHoldToCopyLine: false,
                                   allowOverflow: false,
                                   blurColorMaskOpacity: 0.75,
                                   useSafeArea: false,

@@ -61,6 +61,8 @@ class LyricsLRCParsedView extends StatefulWidget {
   /// receives the overlay's animated visibility, so siblings can match its backdrop.
   final ValueNotifier<double>? visibilityNotifier;
 
+  final bool canHoldToCopyLine;
+
   const LyricsLRCParsedView({
     super.key,
     required this.videoOrImage,
@@ -81,6 +83,7 @@ class LyricsLRCParsedView extends StatefulWidget {
     this.maxHeight,
     this.verticalPadding,
     this.bottomPadding,
+    this.canHoldToCopyLine = true,
   });
 
   @override
@@ -350,6 +353,13 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   Timer? _scrollTimer;
   final _canAnimateScroll = true.obs;
+
+  static const _kCopyLineHoldDuration = Duration(seconds: 1);
+
+  void _copyLine(String text) {
+    VibratorController.medium();
+    Lyrics.inst.copyLine(text);
+  }
 
   final _scrollTick = _LyricsScrollTick();
 
@@ -999,6 +1009,26 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                       child: textWidget,
                                     );
 
+                                    Widget lineTapArea = Material(
+                                      type: MaterialType.transparency,
+                                      child: InkWell(
+                                        splashFactory: InkSparkle.splashFactory,
+                                        onTap: () {
+                                          _canAnimateScroll.value = true;
+                                          _currentIndex = null; // reset so that tapping the current line still animates to it
+                                          Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
+                                        },
+                                      ),
+                                    );
+                                    if (widget.canHoldToCopyLine) {
+                                      lineTapArea = LongPressDetector(
+                                        duration: _kCopyLineHoldDuration,
+                                        enableSecondaryTap: true,
+                                        onLongPress: () => _copyLine(text),
+                                        child: lineTapArea,
+                                      );
+                                    }
+
                                     return Directionality(
                                       textDirection: textDirection,
                                       child: Align(
@@ -1011,17 +1041,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
                                             alignment: Alignment.center,
                                             children: [
                                               Positioned.fill(
-                                                child: Material(
-                                                  type: MaterialType.transparency,
-                                                  child: InkWell(
-                                                    splashFactory: InkSparkle.splashFactory,
-                                                    onTap: () {
-                                                      _canAnimateScroll.value = true;
-                                                      _currentIndex = null; // reset so that tapping the current line still animates to it
-                                                      Player.inst.seek(lrc.timestamp); //  should auto scroll bcz position changes
-                                                    },
-                                                  ),
-                                                ),
+                                                child: lineTapArea,
                                               ),
                                               IgnorePointer(
                                                 child: NamidaHero(

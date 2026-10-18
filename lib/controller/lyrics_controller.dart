@@ -95,6 +95,10 @@ class Lyrics {
     _updateWidgets(lrc, null);
   }
 
+  void copyLine(String text) {
+    NamidaUtils.copyToClipboard(content: text, maxLinesMessage: 2);
+  }
+
   void resetLyrics({bool hide = true}) {
     currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;

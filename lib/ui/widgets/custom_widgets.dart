@@ -7241,6 +7241,7 @@ class LongPressDetector extends StatelessWidget {
   final Widget? child;
   final HitTestBehavior? behavior;
   final bool enableSecondaryTap;
+  final Duration? duration;
 
   const LongPressDetector({
     super.key,
@@ -7249,13 +7250,14 @@ class LongPressDetector extends StatelessWidget {
     this.child,
     this.behavior,
     this.enableSecondaryTap = false,
+    this.duration,
   });
 
   @override
   Widget build(BuildContext context) {
     final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
     gestures[LongPressGestureRecognizer] = GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-      () => LongPressGestureRecognizer(debugOwner: this),
+      () => LongPressGestureRecognizer(debugOwner: this, duration: duration),
       initializer ??
           (LongPressGestureRecognizer instance) {
             instance
