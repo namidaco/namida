@@ -1098,6 +1098,43 @@ enum PlayerBackground {
   none,
   artwork,
   image,
+  meshGradient(ambient: AmbientBackdrop.meshGradient),
+  ambientLights(ambient: AmbientBackdrop.ambientLights),
+  bokeh(ambient: AmbientBackdrop.bokeh),
+  ;
+
+  final AmbientBackdrop? ambient;
+
+  const PlayerBackground({this.ambient});
+}
+
+enum LyricsBackground {
+  artwork,
+  ambientLights(ambient: AmbientBackdrop.ambientLights),
+  bokeh(ambient: AmbientBackdrop.bokeh),
+  ;
+
+  final AmbientBackdrop? ambient;
+
+  const LyricsBackground({this.ambient});
+}
+
+enum LyricsVisualizer {
+  none,
+  bars(style: MiniplayerVisualizer.bars),
+  mirroredBars(style: MiniplayerVisualizer.mirroredBars),
+  waves(style: MiniplayerVisualizer.waves),
+  ;
+
+  final MiniplayerVisualizer? style;
+
+  const LyricsVisualizer({this.style});
+}
+
+enum AmbientBackdrop {
+  meshGradient,
+  ambientLights,
+  bokeh,
 }
 
 enum EffectTheme {

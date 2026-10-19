@@ -30,6 +30,7 @@ import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/ui/dialogs/set_lrc_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/lyrics_karaoke_text.dart';
 import 'package:namida/ui/widgets/player_transport_controls.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -623,70 +624,8 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
               fit: StackFit.expand,
               alignment: Alignment.center,
               children: [
-                ClipRect(
-                  child: NamidaBlur(
-                    fixArtifacts: true,
-                    blur: 60.0,
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: ObxO(
-                        rx: Player.inst.currentItem,
-                        builder: (context, item) {
-                          Widget child;
-                          if (item is YoutubeID) {
-                            final vidId = item.id;
-                            child = YoutubeThumbnail(
-                              type: ThumbnailType.video,
-                              key: Key(vidId),
-                              isImportantInCache: true,
-                              width: context.width,
-                              borderRadius: 0,
-                              blur: 0,
-                              disableBlurBgSizeShrink: true,
-                              videoId: vidId,
-                              displayFallbackIcon: false,
-                              compressed: true,
-                              preferLowerRes: true,
-                              forceSquared: true,
-                              fit: BoxFit.cover,
-                            );
-                          } else {
-                            final track = item is Selectable ? item.track : null;
-                            child = ArtworkWidget(
-                              key: ValueKey(track?.path),
-                              track: track,
-                              path: track?.pathToImage,
-                              thumbnailSize: context.width,
-                              width: context.width,
-                              borderRadius: 0,
-                              blur: 0,
-                              disableBlurBgSizeShrink: true,
-                              compressed: true,
-                              forceSquared: true,
-                              fit: BoxFit.cover,
-                            );
-                          }
-
-                          return CustomAnimatedSwitcher(
-                            duration: const Duration(milliseconds: 1200),
-                            switchInCurve: Curves.easeInOutQuart,
-                            switchOutCurve: Curves.easeInOutQuart,
-                            child: child,
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: context.isDarkMode ? Colors.black.withOpacityExt(0.4) : Colors.white.withOpacityExt(0.2),
-                  ),
-                ),
-                Positioned.fill(
-                  child: NColoredBox(
-                    color: NColors(.scaffold, opacity: widget.blurColorMaskOpacity),
-                  ),
+                _LyricsFullscreenBackground(
+                  maskOpacity: widget.blurColorMaskOpacity,
                 ),
                 // -- old design, simple color/gradient
                 // Positioned.fill(
@@ -1135,6 +1074,15 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
           child: Stack(
             alignment: Alignment.center,
             children: [
+              if (fullscreen)
+                Positioned.fill(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: _LyricsIdleVisualizer(
+                      opacity: mpAnimation,
+                    ),
+                  ),
+                ),
               Positioned.fill(
                 child: FadeIgnoreTransition(
                   opacity: mpAnimation,
@@ -1231,6 +1179,146 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     }
 
     return finalStack;
+  }
+}
+
+// by claude
+class _LyricsFullscreenBackground extends StatelessWidget {
+  final double maskOpacity;
+
+  const _LyricsFullscreenBackground({required this.maskOpacity});
+
+  static const _switchDuration = Duration(milliseconds: 800);
+
+  static bool _isAmbientShownR() => settings.lyricsBackgroundAlways.valueR || !Lyrics.inst.lyricsCanBeAvailable.valueR;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final ambient = settings.lyricsBackground.valueR.ambient;
+        final child = ambient != null && _isAmbientShownR()
+            ? NamidaAmbientBackdrop(
+                key: ValueKey(ambient),
+                kind: ambient,
+                isReactive: true,
+                isUnderText: true,
+              )
+            : _LyricsFullscreenArtwork(
+                maskOpacity: maskOpacity,
+              );
+        return CustomAnimatedSwitcher(
+          duration: _switchDuration,
+          switchInCurve: Curves.easeInOutQuart,
+          switchOutCurve: Curves.easeInOutQuart,
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+class _LyricsFullscreenArtwork extends StatelessWidget {
+  final double maskOpacity;
+
+  const _LyricsFullscreenArtwork({required this.maskOpacity});
+
+  @override
+  Widget build(BuildContext context) {
+    final artworkWidget = ClipRect(
+      child: NamidaBlur(
+        fixArtifacts: true,
+        blur: 60.0,
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: ObxO(
+            rx: Player.inst.currentItem,
+            builder: (context, item) {
+              Widget child;
+              if (item is YoutubeID) {
+                final vidId = item.id;
+                child = YoutubeThumbnail(
+                  type: ThumbnailType.video,
+                  key: Key(vidId),
+                  isImportantInCache: true,
+                  width: context.width,
+                  borderRadius: 0,
+                  blur: 0,
+                  disableBlurBgSizeShrink: true,
+                  videoId: vidId,
+                  displayFallbackIcon: false,
+                  compressed: true,
+                  preferLowerRes: true,
+                  forceSquared: true,
+                  fit: BoxFit.cover,
+                );
+              } else {
+                final track = item is Selectable ? item.track : null;
+                child = ArtworkWidget(
+                  key: ValueKey(track?.path),
+                  track: track,
+                  path: track?.pathToImage,
+                  thumbnailSize: context.width,
+                  width: context.width,
+                  borderRadius: 0,
+                  blur: 0,
+                  disableBlurBgSizeShrink: true,
+                  compressed: true,
+                  forceSquared: true,
+                  fit: BoxFit.cover,
+                );
+              }
+
+              return CustomAnimatedSwitcher(
+                duration: const Duration(milliseconds: 1200),
+                switchInCurve: Curves.easeInOutQuart,
+                switchOutCurve: Curves.easeInOutQuart,
+                child: child,
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        artworkWidget,
+        ColoredBox(
+          color: context.isDarkMode ? Colors.black.withOpacityExt(0.4) : Colors.white.withOpacityExt(0.2),
+        ),
+        NColoredBox(
+          color: NColors(.scaffold, opacity: maskOpacity),
+        ),
+      ],
+    );
+  }
+}
+
+// by claude
+class _LyricsIdleVisualizer extends StatelessWidget {
+  final Animation<double> opacity;
+
+  const _LyricsIdleVisualizer({required this.opacity});
+
+  static const _switchDuration = Duration(milliseconds: 600);
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final isEnabled = settings.lyricsVisualizer.valueR != LyricsVisualizer.none;
+        final isShown = isEnabled && !Lyrics.inst.lyricsCanBeAvailable.valueR;
+        return CustomAnimatedSwitcher(
+          duration: _switchDuration,
+          child: isShown
+              ? NamidaVisualizer.lyrics(
+                  opacity: opacity,
+                )
+              : const SizedBox(),
+        );
+      },
+    );
   }
 }
 

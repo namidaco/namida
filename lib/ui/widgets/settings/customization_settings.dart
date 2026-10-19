@@ -440,12 +440,20 @@ class CustomizationSettings extends SettingSubpageProvider {
           ),
           SettingCustom(
             title: () => lang.playerBackground,
-            aliases: () => [lang.artwork, lang.blur, lang.dimIntensity, lang.colorWhenExpanded],
+            aliases: () => [lang.artwork, lang.blur, lang.dimIntensity, lang.colorWhenExpanded, lang.meshGradient, lang.ambientLights, lang.bokeh],
             keys: [
               settings.playerBackground, settings.playerBackgroundImage, settings.playerBackgroundBlur, settings.playerBackgroundDim, //
               settings.playerBackgroundVignette, settings.playerBackgroundAnimated, settings.playerColorWhenExpanded, //
             ],
             tile: (args) => PlayerBackgroundTile(
+              bgColor: args.bgColor,
+            ),
+          ),
+          SettingCustom(
+            title: () => '${lang.lyrics} (${lang.fullscreen})',
+            aliases: () => [lang.visualizer, ...LyricsBackground.values.map((e) => e.toText())],
+            keys: [settings.lyricsBackground, settings.lyricsBackgroundAlways, settings.lyricsVisualizer],
+            tile: (args) => LyricsBackgroundTile(
               bgColor: args.bgColor,
             ),
           ),

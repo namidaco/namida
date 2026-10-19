@@ -272,6 +272,7 @@ class _PerformanceModeTile extends StatelessWidget {
               const EffectThemeTile.overlay(),
               const VisualizerTile(),
               const PlayerBackgroundTile(),
+              const LyricsBackgroundTile(),
               CustomListTile(
                 icon: Broken.card_pos,
                 title: lang.artwork,

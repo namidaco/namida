@@ -1191,6 +1191,8 @@ extension PerformanceModeUtils on PerformanceMode {
           settings.effectsBackground.save(EffectTheme.none);
           settings.effectsOverlay.save(EffectTheme.none);
           settings.playerBackground.save(PlayerBackground.none);
+          settings.lyricsBackground.save(LyricsBackground.artwork);
+          settings.lyricsVisualizer.save(LyricsVisualizer.none);
           settings.artworkCacheHeightMultiplier.save(0.8);
           settings.autoColor.save(false);
           settings.animatedTheme.save(false);
@@ -2869,12 +2871,56 @@ extension PlayerBackgroundL10n on PlayerBackground {
     PlayerBackground.none => lang.none,
     PlayerBackground.artwork => lang.artwork,
     PlayerBackground.image => lang.custom,
+    PlayerBackground.meshGradient => lang.meshGradient,
+    PlayerBackground.ambientLights => lang.ambientLights,
+    PlayerBackground.bokeh => lang.bokeh,
   };
 
   IconData toIcon() => switch (this) {
     PlayerBackground.none => Broken.slash,
     PlayerBackground.artwork => Broken.music_square,
     PlayerBackground.image => Broken.gallery,
+    PlayerBackground.meshGradient => AmbientBackdrop.meshGradient.toIcon(),
+    PlayerBackground.ambientLights => AmbientBackdrop.ambientLights.toIcon(),
+    PlayerBackground.bokeh => AmbientBackdrop.bokeh.toIcon(),
+  };
+}
+
+extension LyricsBackgroundL10n on LyricsBackground {
+  String toText() => switch (this) {
+    LyricsBackground.artwork => lang.artwork,
+    LyricsBackground.ambientLights => lang.ambientLights,
+    LyricsBackground.bokeh => lang.bokeh,
+  };
+
+  IconData toIcon() => switch (this) {
+    LyricsBackground.artwork => Broken.music_square,
+    LyricsBackground.ambientLights => AmbientBackdrop.ambientLights.toIcon(),
+    LyricsBackground.bokeh => AmbientBackdrop.bokeh.toIcon(),
+  };
+}
+
+extension LyricsVisualizerL10n on LyricsVisualizer {
+  String toText() => switch (this) {
+    LyricsVisualizer.none => lang.none,
+    LyricsVisualizer.bars => lang.bars,
+    LyricsVisualizer.mirroredBars => lang.mirroredBars,
+    LyricsVisualizer.waves => lang.waves,
+  };
+
+  IconData toIcon() => switch (this) {
+    LyricsVisualizer.none => Broken.slash,
+    LyricsVisualizer.bars => MiniplayerVisualizer.bars.toIcon(),
+    LyricsVisualizer.mirroredBars => MiniplayerVisualizer.mirroredBars.toIcon(),
+    LyricsVisualizer.waves => MiniplayerVisualizer.waves.toIcon(),
+  };
+}
+
+extension _AmbientBackdropUtils on AmbientBackdrop {
+  IconData toIcon() => switch (this) {
+    AmbientBackdrop.meshGradient => Broken.blend_2,
+    AmbientBackdrop.ambientLights => Broken.sun_fog,
+    AmbientBackdrop.bokeh => Broken.bubble,
   };
 }
 

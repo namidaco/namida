@@ -260,6 +260,9 @@ class _SettingsController extends _SettingsKeysWriter {
   late final playerBackgroundVignette = _key('playerBackgroundVignette', true, sync: false);
   late final playerBackgroundAnimated = _key('playerBackgroundAnimated', true, sync: false);
   late final playerColorWhenExpanded = _key('playerColorWhenExpanded', true, sync: false);
+  late final lyricsBackground = _keyEnum('lyricsBackground', LyricsBackground.ambientLights, LyricsBackground.values, sync: false);
+  late final lyricsBackgroundAlways = _key('lyricsBackgroundAlways', true, sync: false);
+  late final lyricsVisualizer = _keyEnum('lyricsVisualizer', LyricsVisualizer.none, LyricsVisualizer.values, sync: false);
   late final appWallpaper = _key<String?>('appWallpaper', null, sync: false);
   late final appWallpaperBlur = _key('appWallpaperBlur_v2', 4, sync: false);
   late final appWallpaperDim = _key('appWallpaperDim_v2', 5, sync: false);

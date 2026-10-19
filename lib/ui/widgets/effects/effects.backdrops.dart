@@ -70,6 +70,15 @@ class NamidaPlayerBackground extends StatelessWidget {
         PlayerBackground.none => const SizedBox(),
         PlayerBackground.artwork => const _PlayerArtworkBackdrop(),
         PlayerBackground.image => const _PlayerImageBackdrop(),
+        PlayerBackground.meshGradient => const _PlayerAmbientBackdrop(
+          kind: AmbientBackdrop.meshGradient,
+        ),
+        PlayerBackground.ambientLights => const _PlayerAmbientBackdrop(
+          kind: AmbientBackdrop.ambientLights,
+        ),
+        PlayerBackground.bokeh => const _PlayerAmbientBackdrop(
+          kind: AmbientBackdrop.bokeh,
+        ),
       },
     );
   }
@@ -136,6 +145,29 @@ class _PlayerImageBackdrop extends StatelessWidget {
   }
 }
 
+class _PlayerAmbientBackdrop extends StatelessWidget {
+  final AmbientBackdrop kind;
+
+  const _PlayerAmbientBackdrop({required this.kind});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) => Stack(
+        fit: StackFit.expand,
+        children: [
+          NamidaAmbientBackdrop(
+            kind: kind,
+            isReactive: settings.playerBackgroundAnimated.valueR,
+            isUnderText: true,
+          ),
+          if (settings.playerBackgroundVignette.valueR) const _BackdropVignette(),
+        ],
+      ),
+    );
+  }
+}
+
 class _Backdrop extends StatelessWidget {
   final _BackdropKind kind;
   final int blurUnits;
@@ -157,31 +189,9 @@ class _Backdrop extends StatelessWidget {
   static const _maxSigma = 40.0;
   static const _maxShrink = 8.0;
 
-  static double _unitsToFraction(int unitsPre, double minFraction) {
-    final units = unitsPre.withMinimum(NamidaBackdrops.minUnits).withMaximum(NamidaBackdrops.maxUnits);
-    final fractionPerUnit = (1.0 - minFraction) / (NamidaBackdrops.maxUnits - NamidaBackdrops.minUnits);
-    return minFraction + (units - NamidaBackdrops.minUnits) * fractionPerUnit;
-  }
-
-  static BoxDecoration _createVignette(Color color) {
-    return BoxDecoration(
-      gradient: RadialGradient(
-        radius: 0.95,
-        colors: [color.withOpacityExt(0.0), color.withOpacityExt(0.6)],
-        stops: const [0.45, 1.0],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final blurFraction = _unitsToFraction(blurUnits, kind.minBlurFraction);
-    final dimFraction = _unitsToFraction(dimUnits, kind.minDimFraction);
-    final vignetteWidget = hasVignette
-        ? NDecoratedBox(
-            decoration: (colors) => _createVignette(colors.scaffold),
-          )
-        : null;
+    final blurFraction = _BackdropShade._unitsToFraction(blurUnits, kind.minBlurFraction);
     return LayoutBuilder(
       builder: (context, constraints) {
         // -- blurred in a box this much smaller then stretched back, so the blur only ever runs over a fraction of the pixels
@@ -208,20 +218,72 @@ class _Backdrop extends StatelessWidget {
             child: picture,
           );
         }
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            // -- blur spreads ~3 sigma past the box, pulse scales past it
-            ClipRect(
-              child: picture,
-            ),
-            NColoredBox(
-              color: NColors(.scaffold, opacity: dimFraction),
-            ),
-            ?vignetteWidget,
-          ],
+        return _BackdropShade(
+          kind: kind,
+          dimUnits: dimUnits,
+          hasVignette: hasVignette,
+          // -- blur spreads ~3 sigma past the box, pulse scales past it
+          child: ClipRect(
+            child: picture,
+          ),
         );
       },
+    );
+  }
+}
+
+class _BackdropShade extends StatelessWidget {
+  final _BackdropKind kind;
+  final int dimUnits;
+  final bool hasVignette;
+  final Widget child;
+
+  const _BackdropShade({
+    required this.kind,
+    required this.dimUnits,
+    required this.hasVignette,
+    required this.child,
+  });
+
+  static double _unitsToFraction(int unitsPre, double minFraction) {
+    final units = unitsPre.withMinimum(NamidaBackdrops.minUnits).withMaximum(NamidaBackdrops.maxUnits);
+    final fractionPerUnit = (1.0 - minFraction) / (NamidaBackdrops.maxUnits - NamidaBackdrops.minUnits);
+    return minFraction + (units - NamidaBackdrops.minUnits) * fractionPerUnit;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dimFraction = _unitsToFraction(dimUnits, kind.minDimFraction);
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        child,
+        NColoredBox(
+          color: NColors(.scaffold, opacity: dimFraction),
+        ),
+        if (hasVignette) const _BackdropVignette(),
+      ],
+    );
+  }
+}
+
+class _BackdropVignette extends StatelessWidget {
+  const _BackdropVignette();
+
+  static BoxDecoration _createVignette(Color color) {
+    return BoxDecoration(
+      gradient: RadialGradient(
+        radius: 0.95,
+        colors: [color.withOpacityExt(0.0), color.withOpacityExt(0.6)],
+        stops: const [0.45, 1.0],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NDecoratedBox(
+      decoration: (colors) => _createVignette(colors.scaffold),
     );
   }
 }

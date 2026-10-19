@@ -32,6 +32,7 @@ import 'package:namida/ui/widgets/waveform.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 
+part 'effects.ambient.dart';
 part 'effects.backdrops.dart';
 part 'effects.field.dart';
 part 'effects.scenery.dart';

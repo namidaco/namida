@@ -175,6 +175,7 @@ class EggsController {
   }
 
   void _disableVisualizer(MiniplayerVisualizer visualizer) {
+    if (settings.lyricsVisualizer.value.style == visualizer) settings.lyricsVisualizer.save(LyricsVisualizer.none);
     if (!settings.miniplayerVisualizers.value.contains(visualizer)) return;
     settings.miniplayerVisualizers.update((styles) => styles.remove(visualizer));
   }

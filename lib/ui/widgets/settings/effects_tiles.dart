@@ -257,6 +257,49 @@ class PlayerBackgroundTile extends StatelessWidget {
   }
 }
 
+class LyricsBackgroundTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const LyricsBackgroundTile({super.key, this.bgColor});
+
+  void _openOptions() {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: '${lang.lyrics} (${lang.fullscreen})',
+        normalTitleStyle: true,
+        icon: Broken.document,
+        actions: const [
+          DoneButton(),
+        ],
+        child: const _LyricsBackgroundOptions(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomListTile(
+      bgColor: bgColor,
+      leading: const StackedIcon(
+        baseIcon: Broken.document,
+        secondaryIcon: Broken.maximize_3,
+        secondaryIconSize: 13.0,
+      ),
+      title: '${lang.lyrics} (${lang.fullscreen})',
+      subtitle: lang.performanceNote,
+      onTap: _openOptions,
+      trailing: ObxO(
+        rx: settings.lyricsBackground,
+        builder: (context, background) => NamidaText(
+          background.toText(),
+          style: NText.medium,
+          textAlign: TextAlign.end,
+        ),
+      ),
+    );
+  }
+}
+
 class AppWallpaperTile extends StatelessWidget {
   final Color? bgColor;
 
@@ -370,18 +413,20 @@ class _PlayerBackgroundOptions extends StatelessWidget {
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            ...PlayerBackground.values.where((e) => backgroundImages || e != PlayerBackground.image).map(
-              (e) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3.0),
-                child: ListTileWithCheckMark(
-                  active: e == source,
-                  icon: e.toIcon(),
-                  title: e.toText(),
-                  titleWidget: e == PlayerBackground.image ? _SupportersTitle(title: e.toText()) : null,
-                  onTap: () => _onSourceSelected(e),
+            ...PlayerBackground.values
+                .where((e) => backgroundImages || e != PlayerBackground.image)
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3.0),
+                    child: ListTileWithCheckMark(
+                      active: e == source,
+                      icon: e.toIcon(),
+                      title: e.toText(),
+                      titleWidget: e == PlayerBackground.image ? _SupportersTitle(title: e.toText()) : null,
+                      onTap: () => _onSourceSelected(e),
+                    ),
+                  ),
                 ),
-              ),
-            ),
             if (source == PlayerBackground.image)
               CustomListTile(
                 icon: Broken.gallery_add,
@@ -392,18 +437,20 @@ class _PlayerBackgroundOptions extends StatelessWidget {
               ),
             if (source != PlayerBackground.none) ...[
               const SizedBox(height: 8.0),
-              _BackdropUnitsTile(
-                icon: Broken.blur,
-                title: lang.blur,
-                units: settings.playerBackgroundBlur.valueR,
-                onChanged: settings.playerBackgroundBlur.save,
-              ),
-              _BackdropUnitsTile(
-                icon: Broken.eye,
-                title: lang.dimIntensity,
-                units: settings.playerBackgroundDim.valueR,
-                onChanged: settings.playerBackgroundDim.save,
-              ),
+              if (source.ambient == null) ...[
+                _BackdropUnitsTile(
+                  icon: Broken.blur,
+                  title: lang.blur,
+                  units: settings.playerBackgroundBlur.valueR,
+                  onChanged: settings.playerBackgroundBlur.save,
+                ),
+                _BackdropUnitsTile(
+                  icon: Broken.eye,
+                  title: lang.dimIntensity,
+                  units: settings.playerBackgroundDim.valueR,
+                  onChanged: settings.playerBackgroundDim.save,
+                ),
+              ],
               CustomSwitchListTile(
                 icon: Broken.mask,
                 title: lang.vignette,
@@ -422,6 +469,94 @@ class _PlayerBackgroundOptions extends StatelessWidget {
               title: lang.colorWhenExpanded,
               value: settings.playerColorWhenExpanded.valueR,
               onChanged: (isTrue) => settings.playerColorWhenExpanded.save(!isTrue),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LyricsBackgroundOptions extends StatelessWidget {
+  const _LyricsBackgroundOptions();
+
+  void _saveBackground(LyricsBackground background) {
+    settings.transaction(() {
+      settings.lyricsBackground.save(background);
+      if (background != LyricsBackground.artwork) _leaveHighPerformanceMode();
+    });
+  }
+
+  void _saveVisualizer(LyricsVisualizer visualizer) {
+    settings.transaction(() {
+      settings.lyricsVisualizer.save(visualizer);
+      if (visualizer != LyricsVisualizer.none) _leaveHighPerformanceMode();
+    });
+  }
+
+  void _onVisualizerSelected(LyricsVisualizer visualizer) {
+    final unlockable = visualizer.style?.toUnlockable();
+    if (unlockable == null) return _saveVisualizer(visualizer);
+    SussyBaka.monetize(unlockable: unlockable, onEnable: () => _saveVisualizer(visualizer));
+  }
+
+  List<NamidaPopupItem> _getVisualizerItems() {
+    final current = settings.lyricsVisualizer.value;
+    return LyricsVisualizer.values
+        .map(
+          (e) => NamidaPopupItem(
+            selected: e == current,
+            icon: e.toIcon(),
+            title: e.toText(),
+            onTap: () => _onVisualizerSelected(e),
+            trailing: e.style?.isForSupporters() == true ? const _SupportersMark() : null,
+          ),
+        )
+        .toFixedList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final background = settings.lyricsBackground.valueR;
+        final visualizer = settings.lyricsVisualizer.valueR;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...LyricsBackground.values.map(
+              (e) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3.0),
+                child: ListTileWithCheckMark(
+                  active: e == background,
+                  icon: e.toIcon(),
+                  title: e.toText(),
+                  onTap: () => _saveBackground(e),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            if (background.ambient != null)
+              CustomSwitchListTile(
+                icon: Broken.repeat,
+                title: lang.always,
+                value: settings.lyricsBackgroundAlways.valueR,
+                onChanged: (isTrue) => settings.lyricsBackgroundAlways.save(!isTrue),
+              ),
+            NamidaPopupWrapper(
+              childrenDefault: _getVisualizerItems,
+              child: CustomListTile(
+                icon: Broken.chart_2,
+                title: lang.visualizer,
+                trailing: NamidaPopupWrapper(
+                  childrenDefault: _getVisualizerItems,
+                  child: NamidaText(
+                    visualizer.toText(),
+                    style: NText.medium,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
+              ),
             ),
           ],
         );

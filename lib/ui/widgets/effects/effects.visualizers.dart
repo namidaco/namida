@@ -44,6 +44,17 @@ class NamidaVisualizer extends StatelessWidget {
       waveformScale = 1.0,
       waveformPadding = 0.0;
 
+  const NamidaVisualizer.lyrics({super.key, this.opacity = kAlwaysCompleteAnimation})
+    : _placement = _Placement.lyrics,
+      artworkScale = 1.0,
+      artworkRadius = 0.0,
+      baseline = kAlwaysDismissedAnimation,
+      waveformScale = 1.0,
+      waveformPadding = 0.0;
+
+  static const _lyricsMaxWidth = 760.0;
+  static const _lyricsHeight = 260.0;
+
   static ({bool hasAroundPlayer, bool hasInsidePanel, bool hasAroundArtwork}) placementsOf(Set<MiniplayerVisualizer> enabled) {
     bool hasAroundPlayer = false;
     bool hasInsidePanel = false;
@@ -56,7 +67,7 @@ class NamidaVisualizer extends StatelessWidget {
           hasInsidePanel = true;
         case _Placement.artwork:
           hasAroundArtwork = true;
-        case _Placement.wallpaper:
+        case _Placement.wallpaper || _Placement.lyrics:
           break;
       }
     }
@@ -82,6 +93,24 @@ class NamidaVisualizer extends StatelessWidget {
                 waveformScale: waveformScale,
                 waveformPadding: waveformPadding,
                 hasArtworkColors: settings.visualizerArtworkColors.valueR,
+                isCentered: false,
+              ),
+            );
+          }
+        } else if (placement == _Placement.lyrics) {
+          final style = settings.lyricsVisualizer.valueR.style;
+          if (style != null) {
+            views.add(
+              _VisualizerView(
+                kind: style.toKind(),
+                opacity: opacity,
+                artworkScale: artworkScale,
+                artworkRadius: artworkRadius,
+                baseline: baseline,
+                waveformScale: waveformScale,
+                waveformPadding: waveformPadding,
+                hasArtworkColors: settings.visualizerArtworkColors.valueR,
+                isCentered: true,
               ),
             );
           }
@@ -99,15 +128,29 @@ class NamidaVisualizer extends StatelessWidget {
                 waveformScale: waveformScale,
                 waveformPadding: waveformPadding,
                 hasArtworkColors: settings.visualizerArtworkColors.valueR,
+                isCentered: false,
               ),
             );
           }
         }
         if (views.isEmpty) return const SizedBox();
+        final stack = Stack(
+          fit: StackFit.expand,
+          children: views,
+        );
+        if (placement != _Placement.lyrics) {
+          return IgnorePointer(
+            child: stack,
+          );
+        }
         return IgnorePointer(
-          child: Stack(
-            fit: StackFit.expand,
-            children: views,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _lyricsMaxWidth, maxHeight: _lyricsHeight),
+              child: SizedBox.expand(
+                child: stack,
+              ),
+            ),
           ),
         );
       },
@@ -278,6 +321,8 @@ class _VisualizerView extends StatefulWidget {
   final double waveformPadding;
   final bool hasArtworkColors;
 
+  final bool isCentered;
+
   const _VisualizerView({
     required this.kind,
     required this.opacity,
@@ -287,6 +332,7 @@ class _VisualizerView extends StatefulWidget {
     required this.waveformScale,
     required this.waveformPadding,
     required this.hasArtworkColors,
+    required this.isCentered,
   });
 
   @override
@@ -379,19 +425,39 @@ class _VisualizerCanvas extends StatelessWidget {
   });
 
   static const _spectrumOpacity = 0.3;
+  static const _centeredOpacity = 0.5;
 
   @override
   Widget build(BuildContext context) {
     final kind = view.kind;
     final fade = view.opacity;
-    final maxOpacity = kind == _VisualizerKind.particles ? 1.0 : _spectrumOpacity;
+    final isCentered = view.isCentered;
+    final spectrumOpacity = isCentered ? _centeredOpacity : _spectrumOpacity;
+    final maxOpacity = kind == _VisualizerKind.particles ? 1.0 : spectrumOpacity;
     final baseline = view.baseline;
     final repaint = Listenable.merge([driver, fade, baseline]);
     final artworkScale = view.artworkScale;
     final artworkRadius = view.artworkRadius;
     final painter = switch (kind) {
       _VisualizerKind.particles => _ParticlesPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
-      _VisualizerKind.bars => _BarsPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.bars => _BarsPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        isCentered: isCentered,
+        isMirrored: false,
+      ),
+      _VisualizerKind.mirroredBars when isCentered => _BarsPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        isCentered: true,
+        isMirrored: true,
+      ),
       _VisualizerKind.mirroredBars => _MirroredBarsPainter(
         driver: driver,
         colors: colors,
@@ -402,7 +468,14 @@ class _VisualizerCanvas extends StatelessWidget {
         waveformScale: view.waveformScale,
         waveformPadding: view.waveformPadding,
       ),
-      _VisualizerKind.waves => _WavesPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
+      _VisualizerKind.waves => _WavesPainter(
+        driver: driver,
+        colors: colors,
+        fade: fade,
+        maxOpacity: maxOpacity,
+        repaint: repaint,
+        isCentered: isCentered,
+      ),
       _VisualizerKind.edgeLights => _EdgeLightsPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint),
       _VisualizerKind.glow => _GlowPainter(driver: driver, colors: colors, fade: fade, maxOpacity: maxOpacity, repaint: repaint, artworkScale: artworkScale),
       _VisualizerKind.outline => _OutlinePainter(
@@ -513,17 +586,23 @@ class _ParticlesPainter extends _VisualizerPainter {
 }
 
 class _BarsPainter extends _VisualizerPainter {
+  final bool isCentered;
+  final bool isMirrored;
+
   _BarsPainter({
     required super.driver,
     required super.colors,
     required super.fade,
     required super.maxOpacity,
     required super.repaint,
+    required this.isCentered,
+    required this.isMirrored,
   });
 
   static const barsCount = SpectrumController.bandCount * 2 - 1;
   static const gapFraction = 0.32;
   static const _maxHeightFraction = 0.22;
+  static const _centeredHeightFraction = 0.85;
   static const _minHeight = 3.0;
 
   final _points = Float32List(barsCount * 4);
@@ -538,12 +617,15 @@ class _BarsPainter extends _VisualizerPainter {
     final presence = driver.presence;
     if (presence <= 0 || size.isEmpty) return;
 
-    final maxHeight = size.height * _maxHeightFraction;
+    final heightFraction = isCentered ? _centeredHeightFraction : _maxHeightFraction;
+    final maxHeight = size.height * heightFraction;
     final slot = size.width / (barsCount + gapFraction);
     final gap = slot * gapFraction;
     final barWidth = slot - gap;
     final capRadius = barWidth / 2;
-    final bottom = size.height;
+    final middle = size.height / 2;
+    final bottom = isCentered ? middle + maxHeight / 2 : size.height;
+    final bottomCap = isCentered ? -capRadius : capRadius;
 
     for (int i = 0; i < barsCount; i++) {
       final level = driver.levelAt(i / (barsCount - 1));
@@ -551,9 +633,16 @@ class _BarsPainter extends _VisualizerPainter {
       final x = gap + capRadius + i * slot;
       final at = i * 4;
       _points[at] = x;
-      _points[at + 1] = bottom + capRadius;
       _points[at + 2] = x;
-      _points[at + 3] = bottom - height + capRadius;
+      if (isMirrored) {
+        final reach = (height / 2 - capRadius).withMinimum(0.0);
+        _points[at + 1] = middle + reach;
+        _points[at + 3] = middle - reach;
+      } else {
+        final start = bottom + bottomCap;
+        _points[at + 1] = start;
+        _points[at + 3] = (bottom - height + capRadius).withMaximum(start);
+      }
     }
     _paint.strokeWidth = barWidth;
 
@@ -563,6 +652,12 @@ class _BarsPainter extends _VisualizerPainter {
       _shadedStrength = strength;
       if (colors.length > 1) {
         _paint.shader = buildHorizontalShader(size.width, 0.35 * strength);
+      } else if (isMirrored) {
+        final colorAtMiddle = color.withValues(alpha: 0.45 * strength);
+        final colorAtEdge = color.withValues(alpha: 0.08 * strength);
+        final from = Offset(0, middle - maxHeight / 2);
+        final to = Offset(0, middle + maxHeight / 2);
+        _paint.shader = ui.Gradient.linear(from, to, [colorAtEdge, colorAtMiddle, colorAtEdge], const [0.0, 0.5, 1.0]);
       } else {
         final colorAtBottom = color.withValues(alpha: 0.45 * strength);
         final colorAtTop = color.withValues(alpha: 0.08 * strength);
@@ -658,16 +753,20 @@ class _MirroredBarsPainter extends _VisualizerPainter {
 }
 
 class _WavesPainter extends _VisualizerPainter {
+  final bool isCentered;
+
   _WavesPainter({
     required super.driver,
     required super.colors,
     required super.fade,
     required super.maxOpacity,
     required super.repaint,
+    required this.isCentered,
   });
 
   static const _step = 14.0;
   static const _maxHeightFraction = 0.17;
+  static const _centeredHeightFraction = 0.6;
   static const _layers = [
     (rest: 0.30, ripple: 0.0085, pace: 0.55, alpha: 0.12, isMirrored: false),
     (rest: 0.20, ripple: 0.0120, pace: -0.80, alpha: 0.15, isMirrored: true),
@@ -676,6 +775,8 @@ class _WavesPainter extends _VisualizerPainter {
 
   final _path = Path();
   final _paint = Paint();
+  Float32List _xs = Float32List(0);
+  Float32List _heights = Float32List(0);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -685,31 +786,59 @@ class _WavesPainter extends _VisualizerPainter {
     final time = NamidaFloatClock.instance.seconds;
     final width = size.width;
     final bottom = size.height;
-    final maxHeight = size.height * _maxHeightFraction;
+    final middle = size.height / 2;
+    final heightFraction = isCentered ? _centeredHeightFraction : _maxHeightFraction;
+    final maxHeight = size.height * heightFraction;
     final strength = opacity * presence;
+    final samplesCount = (width / _step).ceil() + 2;
+    if (_xs.length < samplesCount) {
+      _xs = Float32List(samplesCount);
+      _heights = Float32List(samplesCount);
+    }
 
     for (int i = 0; i < _layers.length; i++) {
       final layer = _layers[i];
       final layerColor = colors[i % colors.length];
-      final firstHeight = _heightAt(0.0, width, time, layer.rest, layer.ripple, layer.pace, layer.isMirrored);
-      double previousX = 0.0;
-      double previousY = bottom - firstHeight * maxHeight * presence;
-      _path.reset();
-      _path.moveTo(0, bottom);
-      _path.lineTo(previousX, previousY);
-      for (double x = _step; x < width + _step; x += _step) {
+      int count = 0;
+      for (double x = 0.0; x < width + _step; x += _step) {
         final height = _heightAt(x, width, time, layer.rest, layer.ripple, layer.pace, layer.isMirrored);
-        final y = bottom - height * maxHeight * presence;
-        _path.quadraticBezierTo(previousX, previousY, (previousX + x) / 2, (previousY + y) / 2);
-        previousX = x;
-        previousY = y;
+        _xs[count] = x;
+        _heights[count] = height * maxHeight * presence;
+        count++;
       }
-      _path.lineTo(previousX, previousY);
-      _path.lineTo(previousX, bottom);
+      final lastX = _xs[count - 1];
+      _path.reset();
+      if (isCentered) {
+        final firstY = middle - _heights[0] / 2;
+        _path.moveTo(0, firstY);
+        _traceEdge(count, middle, -0.5, isReversed: false);
+        _traceEdge(count, middle, 0.5, isReversed: true);
+      } else {
+        _path.moveTo(0, bottom);
+        _traceEdge(count, bottom, -1.0, isReversed: false);
+        _path.lineTo(lastX, bottom);
+      }
       _path.close();
       _paint.color = layerColor.withValues(alpha: layer.alpha * strength);
       canvas.drawPath(_path, _paint);
     }
+  }
+
+  void _traceEdge(int count, double baseY, double direction, {required bool isReversed}) {
+    final firstIndex = isReversed ? count - 1 : 0;
+    final step = isReversed ? -1 : 1;
+    double previousX = _xs[firstIndex];
+    double previousY = baseY + direction * _heights[firstIndex];
+    _path.lineTo(previousX, previousY);
+    for (int k = 1; k < count; k++) {
+      final index = firstIndex + k * step;
+      final x = _xs[index];
+      final y = baseY + direction * _heights[index];
+      _path.quadraticBezierTo(previousX, previousY, (previousX + x) / 2, (previousY + y) / 2);
+      previousX = x;
+      previousY = y;
+    }
+    _path.lineTo(previousX, previousY);
   }
 
   double _heightAt(double x, double width, double time, double rest, double ripple, double pace, bool isMirrored) {
@@ -1251,6 +1380,7 @@ enum _Placement {
   player,
   panel,
   artwork,
+  lyrics,
 }
 
 enum _VisualizerKind {
