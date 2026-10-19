@@ -996,6 +996,7 @@ class NamidaButton extends StatelessWidget {
   final bool? tooltipPreferBelow;
   final bool isCentered;
   final Axis direction;
+  final CustomPainter Function(Color foregroundColor, double borderRadius)? foregroundPainterBuilder;
 
   const NamidaButton({
     super.key,
@@ -1025,6 +1026,7 @@ class NamidaButton extends StatelessWidget {
     this.tooltipPreferBelow,
     this.isCentered = true,
     this.direction = Axis.horizontal,
+    this.foregroundPainterBuilder,
   });
 
   static const double kDefaultMinHeight = 36.0;
@@ -1133,52 +1135,62 @@ class NamidaButton extends StatelessWidget {
     }
 
     final brRaw = borderRadius ?? (isCircle ? 99.0 : 20.0);
+    Widget inkWell = NamidaInkWell(
+      animationDurationMS: animatedDecoration ? 300 : 0,
+      borderRadius: brRaw,
+      onTap: onTap,
+      onLongPress: onLongPress,
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border.all(
+          width: 0.5,
+          color: borderColor,
+        ),
+        boxShadow: boxShadow,
+      ),
+      padding: padding,
+      child: Flex(
+        direction: direction,
+        mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
+        mainAxisSize: .min,
+        children: [
+          ?iconChild,
+          if (animateText)
+            Flexible(
+              child: _NamidaButtonAnimatedText(
+                text: text,
+                style: textStyle,
+                direction: direction,
+                hasIcon: iconChild != null,
+              ),
+            ),
+          if (iconChild != null && textChild != null)
+            switch (direction) {
+              Axis.horizontal => const SizedBox(width: 8.0),
+              Axis.vertical => const SizedBox(height: 2.0),
+            },
+          if (textChild != null)
+            Flexible(
+              child: textChild,
+            ),
+        ],
+      ),
+    );
+
+    final foregroundPainter = foregroundPainterBuilder?.call(foregroundColor, brRaw.multipliedRadius);
+    if (foregroundPainter != null) {
+      inkWell = CustomPaint(
+        foregroundPainter: foregroundPainter,
+        child: inkWell,
+      );
+    }
+
     Widget box = NamidaTooltip(
       message: tooltip,
       preferBelow: tooltipPreferBelow,
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: minHeight, minWidth: isCircle || isMinimumSquared ? minHeight : 0.0),
-        child: NamidaInkWell(
-          animationDurationMS: animatedDecoration ? 300 : 0,
-          borderRadius: brRaw,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          decoration: BoxDecoration(
-            color: bgColor,
-            border: Border.all(
-              width: 0.5,
-              color: borderColor,
-            ),
-            boxShadow: boxShadow,
-          ),
-          padding: padding,
-          child: Flex(
-            direction: direction,
-            mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
-            mainAxisSize: .min,
-            children: [
-              ?iconChild,
-              if (animateText)
-                Flexible(
-                  child: _NamidaButtonAnimatedText(
-                    text: text,
-                    style: textStyle,
-                    direction: direction,
-                    hasIcon: iconChild != null,
-                  ),
-                ),
-              if (iconChild != null && textChild != null)
-                switch (direction) {
-                  Axis.horizontal => const SizedBox(width: 8.0),
-                  Axis.vertical => const SizedBox(height: 2.0),
-                },
-              if (textChild != null)
-                Flexible(
-                  child: textChild,
-                ),
-            ],
-          ),
-        ),
+        child: inkWell,
       ),
     );
 
@@ -6725,65 +6737,7 @@ class QueueUtilsRow extends StatelessWidget {
         const SizedBox(width: 6.0),
         scrollQueueWidget,
         const SizedBox(width: 6.0),
-        GestureDetector(
-          onLongPressStart: (details) async {
-            Widget buildButton(String title, IconData icon, bool isShuffleAll) {
-              // final enabled = isShuffleAll == settings.player.shuffleAllTracks.value;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
-                child: NamidaInkWell(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-                  borderRadius: 10.0,
-                  // bgColor: enabled ? CurrentColor.inst.color.withOpacityExt(0.2) : null,
-                  onTap: () {
-                    // settings.player.shuffleAllTracks.save(isShuffleAll);
-                    NamidaNavigator.inst.popMenu();
-                    Player.inst.shuffleTracks(isShuffleAll);
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      StackedIcon(
-                        baseIcon: Broken.shuffle,
-                        secondaryIcon: icon,
-                        blurRadius: 8.0,
-                        secondaryIconSize: 12.0,
-                      ),
-                      const SizedBox(width: 8.0),
-                      Expanded(
-                        child: NamidaText(
-                          title,
-                          style: NText.medium,
-                        ),
-                      ),
-                      const SizedBox(width: 12.0),
-                    ],
-                  ),
-                ),
-              );
-            }
-
-            final menu = NamidaPopupWrapper(
-              children: () => [
-                buildButton(lang.shuffleNext, Broken.forward, false),
-                buildButton(lang.shuffleAll, Broken.task, true),
-              ],
-            );
-            menu.showPopupMenu(
-              context,
-            );
-          },
-          child: ObxO(
-            rx: settings.player.shuffleQueue,
-            builder: (context, shuffleQueue) => NamidaButton(
-              text: lang.shuffle,
-              icon: Broken.shuffle,
-              colors: shuffleQueue ? NamidaButtonColors.selected : NamidaButtonColors.normal,
-              // onTap: () => Player.inst.shuffleTracks(settings.player.shuffleAllTracks.value),
-              onTap: () => settings.player.shuffleQueue.save(!shuffleQueue),
-            ),
-          ),
-        ),
+        const _QueueShuffleButton(),
         const SizedBox(width: 12.0),
       ],
     );
@@ -9333,4 +9287,127 @@ class NamidaToggleCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _QueueShuffleButton extends StatelessWidget {
+  const _QueueShuffleButton();
+
+  void _onTap(BuildContext context) {
+    final mode = settings.player.shuffleButtonMode.value;
+    if (mode == null) return _showModesMenu(context);
+    Player.inst.shuffleByMode(mode);
+  }
+
+  void _showModesMenu(BuildContext context) {
+    final currentMode = settings.player.shuffleButtonMode.value;
+    final menu = NamidaPopupWrapper(
+      childrenDefault: () => ShuffleButtonMode.values.map(
+        (e) {
+          final isSelected = e == currentMode;
+          final tickIcon = isSelected
+              ? const NamidaCheckMark(
+                  active: true,
+                  size: 14.0,
+                )
+              : null;
+          return NamidaPopupItem(
+            icon: Broken.shuffle,
+            secondaryIcon: e.toSecondaryIcon(),
+            title: e.toText(),
+            selected: isSelected,
+            trailing: tickIcon,
+            onTap: () {
+              settings.player.shuffleButtonMode.save(e);
+              Player.inst.shuffleByMode(e);
+            },
+          );
+        },
+      ).toFixedList(),
+    );
+    menu.showPopupMenu(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final shuffleQueue = settings.player.shuffleQueue.valueR;
+        final mode = settings.player.shuffleButtonMode.valueR;
+        final edgesPainterBuilder = mode == null || !mode.hasEdges
+            ? null
+            : (Color foregroundColor, double borderRadius) => _ShuffleModeEdgesPainter(
+                mode: mode,
+                color: foregroundColor.withOpacityExt(0.5),
+                borderRadius: borderRadius,
+              );
+        return NamidaButton(
+          text: lang.shuffle,
+          icon: Broken.shuffle,
+          colors: shuffleQueue ? NamidaButtonColors.selected : NamidaButtonColors.normal,
+          foregroundPainterBuilder: edgesPainterBuilder,
+          onTap: () => _onTap(context),
+          onLongPress: () => _showModesMenu(context),
+        );
+      },
+    );
+  }
+}
+
+// by claude
+class _ShuffleModeEdgesPainter extends CustomPainter {
+  final ShuffleButtonMode mode;
+  final Color color;
+  final double borderRadius;
+
+  const _ShuffleModeEdgesPainter({
+    required this.mode,
+    required this.color,
+    required this.borderRadius,
+  });
+
+  static const _kFirstEdgeInset = 3.0;
+  static const _kEdgesGap = 2.6;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final bounds = Offset.zero & size;
+    final halfShortestSide = size.shortestSide / 2.0;
+    final radius = borderRadius.withMaximum(halfShortestSide);
+    final fadedColor = color.withOpacityExt(0.0);
+    final fadingGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [fadedColor, color, fadedColor],
+    );
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.1;
+    final edgesCount = math.max(mode.leftEdges, mode.rightEdges);
+    for (int i = 0; i < edgesCount; i++) {
+      final inset = _kFirstEdgeInset + i * _kEdgesGap;
+      final edge = bounds.deflate(inset);
+      final r = (radius - inset).withMinimum(0.0);
+      final corner = Radius.circular(r);
+      final path = Path();
+      if (i < mode.leftEdges) {
+        path
+          ..moveTo(edge.left + r, edge.top)
+          ..arcToPoint(Offset(edge.left, edge.top + r), radius: corner, clockwise: false)
+          ..lineTo(edge.left, edge.bottom - r)
+          ..arcToPoint(Offset(edge.left + r, edge.bottom), radius: corner, clockwise: false);
+      }
+      if (i < mode.rightEdges) {
+        path
+          ..moveTo(edge.right - r, edge.top)
+          ..arcToPoint(Offset(edge.right, edge.top + r), radius: corner)
+          ..lineTo(edge.right, edge.bottom - r)
+          ..arcToPoint(Offset(edge.right - r, edge.bottom), radius: corner);
+      }
+      paint.shader = fadingGradient.createShader(edge);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ShuffleModeEdgesPainter oldDelegate) => mode != oldDelegate.mode || color != oldDelegate.color || borderRadius != oldDelegate.borderRadius;
 }

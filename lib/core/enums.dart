@@ -1039,6 +1039,19 @@ enum NotificationButton {
   static final transportButtons = values.where((button) => button.isTransport).toFixedList();
 }
 
+enum ShuffleButtonMode {
+  toggle,
+  next(rightEdges: 2),
+  all(leftEdges: 1, rightEdges: 1),
+  ;
+
+  final int leftEdges;
+  final int rightEdges;
+  const ShuffleButtonMode({this.leftEdges = 0, this.rightEdges = 0});
+
+  bool get hasEdges => leftEdges > 0 || rightEdges > 0;
+}
+
 enum SearchType {
   localTracks,
   youtube,

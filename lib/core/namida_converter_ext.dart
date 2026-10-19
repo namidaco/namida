@@ -2788,6 +2788,20 @@ extension NotificationButtonListUtils on List<NotificationButton> {
   }
 }
 
+extension ShuffleButtonModeUtils on ShuffleButtonMode {
+  String toText() => switch (this) {
+    ShuffleButtonMode.toggle => lang.shuffleOnOff,
+    ShuffleButtonMode.next => lang.shuffleNext,
+    ShuffleButtonMode.all => lang.shuffleAll,
+  };
+
+  IconData? toSecondaryIcon() => switch (this) {
+    ShuffleButtonMode.toggle => null,
+    ShuffleButtonMode.next => Broken.forward,
+    ShuffleButtonMode.all => Broken.task,
+  };
+}
+
 extension OnYoutubeLinkOpenActionL10n on OnYoutubeLinkOpenAction {
   String toText() => switch (this) {
     OnYoutubeLinkOpenAction.showDownload => lang.download,

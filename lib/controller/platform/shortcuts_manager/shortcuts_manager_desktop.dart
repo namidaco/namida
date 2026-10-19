@@ -258,16 +258,15 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       key: LogicalKeyboardKey.keyS,
       control: true,
       shift: true,
-      callback: () {
-        // final shuffleAll = settings.player.shuffleAllTracks.value;
-        // Player.inst.shuffleTracks(shuffleAll);
-        // _showSnack(
-        //   message: "${shuffleAll ? lang.shuffleAll : lang.shuffleNext}: ${lang.done}",
-        // );
-        final shuffleQueue = !settings.player.shuffleQueue.value;
-        settings.player.shuffleQueue.save(shuffleQueue);
+      callback: () async {
+        final mode = settings.player.shuffleButtonMode.value ?? ShuffleButtonMode.toggle;
+        await Player.inst.shuffleByMode(mode);
+        final message = switch (mode) {
+          ShuffleButtonMode.toggle => "${lang.shuffle}: ${settings.player.shuffleQueue.value ? '✓' : '✗'}",
+          ShuffleButtonMode.next || ShuffleButtonMode.all => "${mode.toText()}: ${lang.done}",
+        };
         _showSnack(
-          message: "${lang.shuffle}: ${shuffleQueue ? '✓' : '✗'}",
+          message: message,
         );
       },
       title: () => lang.shuffle,

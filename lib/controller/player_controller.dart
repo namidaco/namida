@@ -551,11 +551,28 @@ class Player {
 
   FutureOr<void> shuffleTracks(bool allTracks) async {
     if (_audioHandler.partyGate?.interceptQueueRewrite(allTracks ? .shuffleAll : .shuffleNext) == true) return;
+    if (settings.player.shuffleQueue.value) {
+      // -- awaited directly, the shuffleQueue listener doesn't wait for the original order to be restored
+      await _audioHandler.setQueueShuffled(false);
+      settings.player.shuffleQueue.save(false);
+    }
     if (allTracks) {
       _audioHandler.shuffleAllItems();
       MiniPlayerController.inst.queueFollower.jumpToCurrentItem();
     } else {
       await _audioHandler.shuffleNextItems();
+    }
+  }
+
+  FutureOr<void> shuffleByMode(ShuffleButtonMode mode) {
+    switch (mode) {
+      case ShuffleButtonMode.toggle:
+        final shuffleQueue = settings.player.shuffleQueue.value;
+        settings.player.shuffleQueue.save(!shuffleQueue);
+      case ShuffleButtonMode.next:
+        return shuffleTracks(false);
+      case ShuffleButtonMode.all:
+        return shuffleTracks(true);
     }
   }
 

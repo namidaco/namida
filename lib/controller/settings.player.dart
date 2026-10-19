@@ -36,6 +36,7 @@ class _PlayerSettings extends _SettingsKeysWriter {
   late final jumpToFirstTrackAfterFinishingQueue = _key('jumpToFirstTrackAfterFinishingQueue', false);
   late final repeatMode = _keyEnum('repeatMode', PlayerRepeatMode.none, PlayerRepeatMode.values, sync: false);
   late final shuffleQueue = _key('shuffleQueue', false, sync: false);
+  late final shuffleButtonMode = _key<ShuffleButtonMode?>('shuffleButtonMode', null, codec: ShuffleButtonMode.values.asCodec());
   late final infiniyQueueOnNextPrevious = _key('infiniyQueueOnNextPrevious', true);
   late final displayRemainingDurInsteadOfTotal = _key('displayRemainingDurInsteadOfTotal', false);
   late final displayActualPositionWhenSeeking = _key('displayActualPositionWhenSeeking', false);

@@ -96,6 +96,7 @@ extension PlayerSettingsDebugKeys on _PlayerSettings {
     jumpToFirstTrackAfterFinishingQueue,
     repeatMode,
     shuffleQueue,
+    shuffleButtonMode,
     infiniyQueueOnNextPrevious,
     displayRemainingDurInsteadOfTotal,
     displayActualPositionWhenSeeking,
