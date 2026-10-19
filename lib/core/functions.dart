@@ -1226,6 +1226,7 @@ class BottomSheetTextFieldConfig {
   final String labelText;
   final int? maxLength;
   final String? Function(String? value)? validator;
+  final Widget? trailing;
 
   const BottomSheetTextFieldConfig({
     this.initalControllerText,
@@ -1233,6 +1234,7 @@ class BottomSheetTextFieldConfig {
     required this.labelText,
     this.maxLength,
     required this.validator,
+    this.trailing,
   });
 }
 
@@ -1245,6 +1247,7 @@ class BottomSheetTextFieldConfigWC extends BottomSheetTextFieldConfig {
     required super.labelText,
     super.maxLength,
     required super.validator,
+    super.trailing,
   }) : super(initalControllerText: null);
 }
 
@@ -1266,6 +1269,7 @@ Future<String?> showNamidaBottomSheetWithTextField({
   bool confirmDiscardingEdits = false,
 }) async {
   final localController = textfieldConfig is BottomSheetTextFieldConfigWC ? textfieldConfig.controller : TextEditingController(text: textfieldConfig.initalControllerText);
+  final textfieldTrailing = textfieldConfig.trailing;
   final initialText = localController.text;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
@@ -1328,19 +1332,35 @@ Future<String?> showNamidaBottomSheetWithTextField({
                           maxLength: textfieldConfig.maxLength,
                         ),
                       ),
+                      if (textfieldTrailing != null) ...[
+                        const SizedBox(width: 6.0),
+                        textfieldTrailing,
+                      ],
                     ],
                   ),
                   ...?extraTextfieldsConfig?.map(
                     (e) {
+                      final textfield = CustomTagTextField(
+                        controller: e.controller,
+                        hintText: e.hintText,
+                        labelText: e.labelText,
+                        validator: e.validator,
+                        maxLength: e.maxLength,
+                      );
+                      final trailing = e.trailing;
                       return Padding(
                         padding: const EdgeInsets.only(top: 12.0),
-                        child: CustomTagTextField(
-                          controller: e.controller,
-                          hintText: e.hintText,
-                          labelText: e.labelText,
-                          validator: e.validator,
-                          maxLength: e.maxLength,
-                        ),
+                        child: trailing == null
+                            ? textfield
+                            : Row(
+                                children: [
+                                  Expanded(
+                                    child: textfield,
+                                  ),
+                                  const SizedBox(width: 6.0),
+                                  trailing,
+                                ],
+                              ),
                       );
                     },
                   ),

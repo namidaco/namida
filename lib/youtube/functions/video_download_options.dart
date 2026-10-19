@@ -15,19 +15,15 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/widgets/yt_download_sponsorblock_tile.dart';
-import 'package:namida/youtube/yt_utils.dart';
 
 Future<void> showVideoDownloadOptionsSheet({
   required String? videoTitle,
   required String? videoUploader,
   required Map<String, String?> tagMaps,
   Map<FFMPEGTagField, String?>? tagMapsForFillingInfoOnly,
-  required void Function(String newGroupName) onDownloadGroupNameChanged,
-  required void Function(String filename) onDownloadFilenameChanged,
   required bool showSpecificFileOptions,
   Rxn<List<String>>? sponsorSegmentsCategories,
   Widget Function(TextEditingController? Function() currentControllerFn, Function(String text) onChanged)? preWidget,
-  required String? initialGroupName,
 }) async {
   final controllersMap = {for (final t in FFMPEGTagField.values) t.tagKey: TextEditingController(text: tagMaps[t.tagKey] ?? tagMapsForFillingInfoOnly?[t])};
   String? currentActiveField;
@@ -59,6 +55,14 @@ Future<void> showVideoDownloadOptionsSheet({
     );
   }
 
+  void restoreDefaultTags(Map<FFMPEGTagField, String?> defaultTags) {
+    tagMaps.clear();
+    for (final t in FFMPEGTagField.values) {
+      final defaultText = defaultTags[t] ?? '';
+      controllersMap[t.tagKey]?.text = defaultText;
+    }
+  }
+
   await NamidaNavigator.inst.showSheet(
     isScrollControlled: true,
     heightPercentage: 0.65,
@@ -68,7 +72,7 @@ Future<void> showVideoDownloadOptionsSheet({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20.0),
+            const SizedBox(height: 28.0),
             Row(
               children: [
                 const SizedBox(width: 12.0),
@@ -80,6 +84,13 @@ Future<void> showVideoDownloadOptionsSheet({
                     style: NText.large,
                   ),
                 ),
+                if (tagMapsForFillingInfoOnly != null)
+                  NamidaIconButton(
+                    tooltip: () => lang.restoreDefaults,
+                    icon: Broken.refresh,
+                    iconSize: 20.0,
+                    onPressed: () => restoreDefaultTags(tagMapsForFillingInfoOnly),
+                  ),
                 const SizedBox(width: 12.0),
               ],
             ),
@@ -132,60 +143,10 @@ Future<void> showVideoDownloadOptionsSheet({
                       YTDownloadSponsorBlockTile(
                         categoriesOverride: sponsorSegmentsCategories,
                       ),
+                    const SizedBox(height: 8.0),
+                    const NamidaContainerDivider(),
                   ],
-                  const SizedBox(height: 8.0),
-                  const NamidaContainerDivider(),
                   const SizedBox(height: 12.0),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    child: YTDownloadOptionFolderListTile(
-                      iconSize: 20.0,
-                      initialFolder: initialGroupName ?? '',
-                      playlistName: initialGroupName ?? '',
-                      onDownloadGroupNameChanged: onDownloadGroupNameChanged,
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Broken.document_code,
-                          size: 20.0,
-                        ),
-                        const SizedBox(width: 12.0),
-                        Expanded(
-                          child: ObxO(
-                            rx: settings.youtube.downloadFilenameBuilder,
-                            builder: (context, value) {
-                              if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
-                              return NamidaText(
-                                value,
-                                style: NText.small,
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 6.0),
-                        NamidaIconButton(
-                          tooltip: () => lang.output,
-                          icon: Broken.edit_2,
-                          iconSize: 20.0,
-                          onPressed: () {
-                            YTUtils.showFilenameBuilderOutputSheet(
-                              showEditTags: false,
-                              groupName: initialGroupName ?? '',
-                              onChanged: onDownloadFilenameChanged,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-                  const NamidaContainerDivider(),
                   ...[
                     getTextChip(FFMPEGTagField.title),
                     getRow([
@@ -283,57 +244,49 @@ Future<void> showVideoDownloadOptionsSheet({
   }
 }
 
-class YTDownloadOptionFolderListTile extends StatefulWidget {
-  final void Function(String newGroupName) onDownloadGroupNameChanged;
-  final void Function(String newFolderName)? onDownloadFolderAdded;
+class YTDownloadFolderPicker extends StatefulWidget {
   final String initialFolder;
   final String playlistName;
-  final String Function(String value)? subtitle;
-  final double trailingPadding;
-  final double? maxTrailingWidth;
-  final double? iconSize;
+  final double maxTextWidth;
+  final void Function(String newGroupName) onChanged;
 
-  const YTDownloadOptionFolderListTile({
+  const YTDownloadFolderPicker({
     super.key,
-    required this.onDownloadGroupNameChanged,
-    this.onDownloadFolderAdded,
-    this.initialFolder = '',
-    this.playlistName = '',
-    this.subtitle,
-    this.trailingPadding = 0,
-    this.maxTrailingWidth,
-    this.iconSize,
+    required this.initialFolder,
+    required this.playlistName,
+    required this.maxTextWidth,
+    required this.onChanged,
   });
 
   @override
-  State<YTDownloadOptionFolderListTile> createState() => YTDownloadOptionFolderListTileState();
+  State<YTDownloadFolderPicker> createState() => _YTDownloadFolderPickerState();
 }
 
-class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderListTile> {
-  final groupName = ''.obs;
-  final availableDirectoriesNames = <String, int>{};
+class _YTDownloadFolderPickerState extends State<YTDownloadFolderPicker> {
+  final _groupName = ''.obs;
+  final _availableDirectoriesNames = <String, int>{};
 
   @override
   void initState() {
-    groupName.value = widget.initialFolder;
+    _groupName.value = widget.initialFolder;
 
     // -- to put at first
-    availableDirectoriesNames[widget.playlistName] = 0;
-    availableDirectoriesNames[widget.initialFolder] = 0;
+    _availableDirectoriesNames[widget.playlistName] = 0;
+    _availableDirectoriesNames[widget.initialFolder] = 0;
 
-    initValues();
+    _initValues();
 
     super.initState();
   }
 
   @override
   void dispose() {
-    groupName.close();
+    _groupName.close();
     super.dispose();
   }
 
-  void initValues() async {
-    availableDirectoriesNames[''] = 0;
+  void _initValues() async {
+    _availableDirectoriesNames[''] = 0;
     int rootFiles = 0;
     final subfolders = <String>[];
     await for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).list()) {
@@ -345,23 +298,20 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     }
     subfolders.sort();
     for (final subfolder in subfolders) {
-      availableDirectoriesNames[subfolder] = 0;
+      _availableDirectoriesNames[subfolder] = 0;
     }
-    availableDirectoriesNames[''] = rootFiles;
+    _availableDirectoriesNames[''] = rootFiles;
     refreshState();
   }
 
-  void onGroupNameChanged(String val) {
-    groupName.value = val;
-    widget.onDownloadGroupNameChanged(val);
+  void _onGroupNameChanged(String val) {
+    _groupName.value = val;
+    widget.onChanged(val);
   }
 
-  void onFolderAdd(String name) {
-    onGroupNameChanged(name);
-    try {
-      availableDirectoriesNames[name] = 0;
-    } catch (_) {}
-    widget.onDownloadFolderAdded?.call(name);
+  void _onFolderAdd(String name) {
+    _availableDirectoriesNames[name] = 0;
+    _onGroupNameChanged(name);
   }
 
   void _onFolderAddTap() async {
@@ -381,7 +331,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
               text: lang.add,
               onTap: () {
                 if (fk.currentState?.validate() == true) {
-                  onFolderAdd(c.text);
+                  _onFolderAdd(c.text);
                   NamidaNavigator.inst.closeDialog();
                 }
               },
@@ -396,7 +346,7 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
             validator: (value) {
               if (value == null) return lang.pleaseEnterAName;
               if (value.isEmpty) return lang.emptyValue;
-              if (availableDirectoriesNames.keys.any((element) => element == value)) {
+              if (_availableDirectoriesNames.keys.any((element) => element == value)) {
                 return lang.pleaseEnterADifferentName;
               }
               return null;
@@ -407,107 +357,73 @@ class YTDownloadOptionFolderListTileState extends State<YTDownloadOptionFolderLi
     );
   }
 
+  IconData _getFolderIcon(String name) {
+    if (name == '') return Broken.folder_2;
+    if (name == widget.playlistName) return Broken.music_playlist;
+    return Broken.folder;
+  }
+
+  String _getFolderTitle(String name) {
+    final title = name == '' ? lang.defaultLabel : name;
+    final count = _availableDirectoriesNames[name];
+    final countText = count == null || count == 0 ? '' : " ($count)";
+    return "$title$countText";
+  }
+
+  List<NamidaPopupItem> _getPopupItems() => [
+    NamidaPopupItem(
+      icon: Broken.add,
+      title: lang.add,
+      onTap: _onFolderAddTap,
+    ),
+    ..._availableDirectoriesNames.keys.map(
+      (name) => NamidaPopupItem(
+        icon: _getFolderIcon(name),
+        title: _getFolderTitle(name),
+        selected: name == _groupName.value,
+        onTap: () => _onGroupNameChanged(name),
+      ),
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final subtitle = widget.subtitle?.call(groupName.value);
-    return LayoutWidthProvider(
-      builder: (context, maxWidth) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6.0),
-        child: Row(
-          children: [
-            NamidaIconButton(
-              icon: Broken.add_circle,
-              iconColor: NColors.defaultIcon(),
-              horizontalPadding: 0.0,
-              iconSize: widget.iconSize,
-              onPressed: _onFolderAddTap,
-            ),
-            const SizedBox(width: 12.0),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  NamidaText(
-                    lang.folder,
+    return NamidaPopupWrapper(
+      childrenDefault: _getPopupItems,
+      child: NContainer(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        decoration: (colors) => BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        child: Obx(
+          (context) {
+            final groupName = _groupName.valueR;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getFolderIcon(groupName),
+                  size: 16.0,
+                ),
+                const SizedBox(width: 6.0),
+                ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: widget.maxTextWidth),
+                  child: NamidaText(
+                    _getFolderTitle(groupName),
                     style: NText.medium,
-                    maxLines: subtitle != null ? 4 : 5,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (subtitle?.isNotEmpty == true)
-                    NamidaText(
-                      subtitle!,
-                      style: NText.small,
-                      maxLines: 20,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 6.0),
-            NamidaPopupWrapper(
-              childrenDefault: () => [
-                NamidaPopupItem(
-                  icon: Broken.add,
-                  title: lang.add,
-                  onTap: _onFolderAddTap,
                 ),
-                ...availableDirectoriesNames.keys.map(
-                  (name) {
-                    final title = name == '' ? lang.defaultLabel : name;
-                    final icon = name == widget.playlistName
-                        ? Broken.music_playlist
-                        : name == ''
-                        ? Broken.folder_2
-                        : Broken.folder;
-                    final count = availableDirectoriesNames[name];
-                    final countText = count == null || count == 0 ? '' : " ($count)";
-                    return NamidaPopupItem(
-                      icon: icon,
-                      title: "$title$countText",
-                      selected: name == groupName.value,
-                      onTap: () => onGroupNameChanged(name),
-                    );
-                  },
+                const SizedBox(width: 2.0),
+                const Icon(
+                  Broken.arrow_down_2,
+                  size: 14.0,
                 ),
               ],
-              child: Obx(
-                (context) {
-                  final groupName = this.groupName.valueR;
-                  final title = groupName == '' ? lang.defaultLabel : groupName;
-                  final count = availableDirectoriesNames[groupName];
-                  final countText = count == null || count == 0 ? '' : " ($count)";
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        groupName == widget.playlistName
-                            ? Broken.music_playlist
-                            : groupName == ''
-                            ? Broken.folder_2
-                            : Broken.folder,
-                        size: 18.0,
-                      ),
-                      const SizedBox(width: 6.0),
-                      Flexible(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(minWidth: 0, maxWidth: maxWidth * 0.34),
-                          child: NamidaText(
-                            "$title$countText",
-                            style: NText.medium,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: widget.trailingPadding),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

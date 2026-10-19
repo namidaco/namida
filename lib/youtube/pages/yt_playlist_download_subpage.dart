@@ -6,7 +6,6 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
-import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/controller/audio_cache_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -60,10 +59,9 @@ class YTPlaylistDownloadPage extends StatefulWidget with NamidaRouteWidget {
 class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   final _selectedList = <String>[].obs; // sometimes a yt playlist can have duplicates (yt bug) so a Set wont be useful.
   final _configMap = <String, YoutubeItemDownloadConfig>{}.obs;
-  final _groupName = DownloadTaskGroupName(groupName: '').obs;
+  late final _groupName = DownloadTaskGroupName(groupName: widget.playlistName.emptyIfHasDefaultPlaylistName()).obs;
+  final _downloadedIds = <String>{}.obs;
   final _sponsorSegmentsCategories = Rxn<List<String>>();
-
-  final _folderController = GlobalKey<YTDownloadOptionFolderListTileState>();
 
   bool useCachedVersionsIfAvailable = true;
   final preferredQuality = (settings.youtubeVideoQualities.value.firstOrNull ?? kStockVideoQualities.first).obs;
@@ -73,16 +71,34 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
   void _onItemTap(String id) => _selectedList.addOrRemove(id);
 
   void _onGroupNameChanged() {
-    if (!_didManuallyEditSelection) {
-      _addAllYTIDsToSelectedExceptAlrDownloaded();
-    }
+    _refreshDownloadedState();
+    if (!widget.cacheOnly) _validateGroupFiles();
+  }
+
+  void _refreshDownloadedState() {
+    final videoIds = widget.ids.map((e) => e.id);
+    final downloadedIds = widget.cacheOnly
+        ? videoIds.where(AudioCacheController.inst.isAvailableOffline).toSet()
+        : YoutubeController.inst.getDownloadedVideoIdsInGroup(videoIds, _groupName.value);
+    _downloadedIds.value = downloadedIds;
+    if (_didManuallyEditSelection) return;
+    final notDownloadedIds = videoIds.where((id) => !downloadedIds.contains(id));
+    _selectedList.assignAll(notDownloadedIds);
+  }
+
+  Future<void> _validateGroupFiles() async {
+    final groupName = _groupName.value;
+    final didFindMissingFiles = await YoutubeController.inst.validateDownloadedFiles(groupName);
+    if (!didFindMissingFiles || !mounted) return;
+    if (_groupName.value != groupName) return;
+    _refreshDownloadedState();
   }
 
   @override
   void initState() {
-    _groupName.addListener(_onGroupNameChanged);
-    _groupName.value = DownloadTaskGroupName(groupName: widget.playlistName.emptyIfHasDefaultPlaylistName());
     onRenameAllTasks(settings.youtube.downloadFilenameBuilder.value); // needed to provide initial data specially original indices
+    _onGroupNameChanged();
+    _groupName.addListener(_onGroupNameChanged);
     super.initState();
   }
 
@@ -92,6 +108,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _selectedList.close();
     _configMap.close();
     _groupName.close();
+    _downloadedIds.close();
     _sponsorSegmentsCategories.close();
     preferredQuality.close();
     super.dispose();
@@ -165,14 +182,61 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     _didManuallyEditSelection = false;
   }
 
-  void _addAllYTIDsToSelectedExceptAlrDownloaded() {
-    final groupName = _groupName.value;
-    _selectedList.assignAll(
-      widget.cacheOnly
-          ? widget.ids.where((e) => !AudioCacheController.inst.isAvailableOffline(e.id)).map((e) => e.id)
-          : widget.ids.where((e) => YoutubeController.inst.doesIDHasFileDownloadedInGroup(DownloadTaskVideoId(videoId: e.id), groupName) == null).map((e) => e.id),
+  void _onInvertSelectionTap() {
+    for (final e in widget.ids) {
+      _onItemTap(e.id);
+    }
+    _didManuallyEditSelection = true;
+  }
+
+  void _onSelectAllTap() {
+    if (_selectedList.length != widget.ids.length) {
+      _addAllYTIDsToSelected();
+    } else {
+      _selectedList.clear();
+    }
+  }
+
+  String? _getPreviewSampleId(List<String> selectedIds) => selectedIds.firstOrNull ?? widget.ids.firstOrNull?.id;
+
+  String _getPreviewExtension(bool audioOnly, bool preferOpus) {
+    if (!audioOnly) return 'mp4';
+    return preferOpus ? 'webm' : 'm4a';
+  }
+
+  String _buildFilenamePreview(String template, String? sampleId, String extension) {
+    if (sampleId == null) return template;
+    final config = _configMap.value[sampleId];
+    final info = widget.infoLookup[sampleId] ?? YoutubeInfoController.utils.getStreamInfoSync(sampleId);
+    final rebuilt = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+      template,
+      sampleId,
+      null,
+      null,
+      info,
+      widget.playlistInfo,
+      null,
+      null,
+      config?.originalIndex,
+      config?.totalLength,
+      fallbackExt: extension,
     );
-    _didManuallyEditSelection = false;
+    final filename = rebuilt ?? template;
+    if (filename.endsWith('.$extension')) return filename;
+    final filenameWOExt = YoutubeController.removeMediaContainerExtension(filename);
+    return '$filenameWOExt.$extension';
+  }
+
+  void _onFilenameEditTap() {
+    YTUtils.showFilenameBuilderOutputSheet(
+      groupName: _groupName.value.groupName,
+      previewBuilder: (template) {
+        final sampleId = _getPreviewSampleId(_selectedList.value);
+        final extension = _getPreviewExtension(settings.downloadAudioOnly.value, settings.youtube.preferOpusFormat.value);
+        return _buildFilenamePreview(template, sampleId, extension);
+      },
+      onChanged: onRenameAllTasks,
+    );
   }
 
   Future<void> _onEditIconTap({
@@ -219,7 +283,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     ),
   ];
 
-  void _showAllConfigDialog(BuildContext context) {
+  void _showAllConfigDialog() {
     NamidaNavigator.inst.navigateDialog(
       dialog: CustomBlurryDialog(
         horizontalInset: 32.0,
@@ -246,24 +310,8 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 12.0),
+            const SizedBox(height: 6.0),
             if (!widget.cacheOnly) ...[
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0, right: 12.0),
-                child: YTDownloadOptionFolderListTile(
-                  maxTrailingWidth: context.width * 0.2,
-                  playlistName: widget.playlistName.translatePlaylistName(),
-                  initialFolder: _groupName.value.groupName,
-                  onDownloadGroupNameChanged: (newGroupName) {
-                    _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
-                    _folderController.currentState?.onGroupNameChanged(newGroupName);
-                  },
-                  onDownloadFolderAdded: (newFolderName) {
-                    _folderController.currentState?.onFolderAdd(newFolderName);
-                  },
-                ),
-              ),
-              const SizedBox(height: 6.0),
               ObxO(
                 rx: settings.youtube.autoExtractVideoTagsFromInfo,
                 builder: (context, autoExtractVideoTagsFromInfo) => CustomSwitchListTile(
@@ -416,112 +464,107 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
     final thumHeight = _hmultiplier * Dimensions.youtubeThumbnailHeight;
     final thumWidth = thumHeight * 16 / 9;
     const cardBorderRadiusRaw = 12.0;
+    final downloadsDirPath = YoutubeController.getDownloadsDirectoryPrefix();
+    final outputLabelsWidth = _OutputCardRow.measureLabelsWidth(context, [lang.folder, lang.fileName]);
     return BackgroundWrapper(
       child: Stack(
         children: [
           Column(
             children: [
-              Obx(
-                (context) => CustomListTile(
-                  icon: Broken.music_playlist,
-                  title: widget.playlistName.translatePlaylistName(),
-                  subtitle: "${_selectedList.length.formatDecimal()}/${widget.ids.length.formatDecimal()}",
-                  trailingRaw: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      NamidaIconButton(
-                        tooltip: () => lang.invertSelection,
-                        icon: Broken.recovery_convert,
-                        onPressed: () {
-                          for (var e in widget.ids) {
-                            _onItemTap(e.id);
-                          }
-                          _didManuallyEditSelection = true;
-                        },
-                      ),
-                      Obx(
-                        (context) {
-                          final selectedCount = _selectedList.length;
-                          final isAllSelected = selectedCount > 0 && selectedCount == widget.ids.length;
-                          final isPartiallySelected = selectedCount > 0 && !isAllSelected;
-                          return NamidaIconButton(
-                            icon: null,
-                            onPressed: () {
-                              if (_selectedList.length != widget.ids.length) {
-                                _addAllYTIDsToSelected();
-                              } else {
-                                _selectedList.clear();
-                              }
-                            },
-                            child: NamidaTristateCheckMark(
-                              size: 20.0,
-                              active: isAllSelected,
-                              halfActive: isPartiallySelected,
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const NamidaContainerDivider(),
-              const SizedBox(height: 4.0),
               if (!widget.cacheOnly) ...[
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 12.0),
-                  child: YTDownloadOptionFolderListTile(
-                    key: _folderController,
-                    iconSize: 20.0,
-                    trailingPadding: 12.0,
-                    playlistName: widget.playlistName.translatePlaylistName(),
-                    initialFolder: _groupName.value.groupName,
-                    subtitle: (value) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, value),
-                    onDownloadGroupNameChanged: (newGroupName) {
-                      _groupName.value = DownloadTaskGroupName(groupName: newGroupName);
-                    },
-                  ),
-                ),
-                const SizedBox(height: 6.0),
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 12.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Broken.document_code,
-                        size: 20.0,
-                      ),
-                      const SizedBox(width: 12.0),
-                      Expanded(
-                        child: ObxO(
-                          rx: settings.youtube.downloadFilenameBuilder,
-                          builder: (context, value) {
-                            if (value.isEmpty) value = settings.youtube.defaultFilenameBuilder;
-                            return NamidaText(
-                              value,
-                              style: NText.small,
-                            );
-                          },
+                const SizedBox(height: 8.0),
+                LayoutWidthProvider(
+                  builder: (context, maxWidth) => NContainer(
+                    margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.all(2.0),
+                    decoration: (colors) => BoxDecoration(
+                      color: colors.card.withOpacityExt(0.3),
+                      borderRadius: BorderRadius.circular(14.0.multipliedRadius),
+                    ),
+                    child: Column(
+                      children: [
+                        _OutputCardRow(
+                          label: lang.folder,
+                          labelWidth: outputLabelsWidth,
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: NamidaText(
+                                  downloadsDirPath,
+                                  style: NText.small,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 4.0),
+                              YTDownloadFolderPicker(
+                                initialFolder: _groupName.value.groupName,
+                                playlistName: widget.playlistName.translatePlaylistName(),
+                                maxTextWidth: maxWidth * 0.34,
+                                onChanged: (newGroupName) => _groupName.value = DownloadTaskGroupName(groupName: newGroupName),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6.0),
-                      NamidaIconButton(
-                        tooltip: () => lang.output,
-                        icon: Broken.edit_2,
-                        iconSize: 20.0,
-                        onPressed: () {
-                          YTUtils.showFilenameBuilderOutputSheet(
-                            showEditTags: true,
-                            groupName: _groupName.value.groupName,
-                            onChanged: (text) => onRenameAllTasks(text),
-                          );
-                        },
-                      ),
-                    ],
+                        const NamidaContainerDivider(
+                          height: 1.0,
+                          margin: EdgeInsets.symmetric(horizontal: 12.0),
+                        ),
+                        _OutputCardRow(
+                          label: lang.fileName,
+                          labelWidth: outputLabelsWidth,
+                          onTap: _onFilenameEditTap,
+                          trailing: const Icon(
+                            Broken.edit_2,
+                            size: 18.0,
+                          ),
+                          child: Obx(
+                            (context) {
+                              final template = settings.youtube.downloadFilenameBuilder.valueR;
+                              final templateFinal = template.isEmpty ? settings.youtube.defaultFilenameBuilder : template;
+                              final sampleId = _getPreviewSampleId(_selectedList.valueR);
+                              final extension = _getPreviewExtension(settings.downloadAudioOnly.valueR, settings.youtube.preferOpusFormat.valueR);
+                              final filenamePreview = _buildFilenamePreview(templateFinal, sampleId, extension);
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  NamidaText(
+                                    templateFinal,
+                                    style: const NText(.small, size: .s10p5),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 2.0),
+                                  NamidaText(
+                                    filenamePreview,
+                                    style: const NText(.medium, size: .s12),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
+              const SizedBox(height: 8.0),
+              Obx(
+                (context) => _PlaylistHeaderCard(
+                  title: widget.playlistName.translatePlaylistName(),
+                  selectedCount: _selectedList.length,
+                  totalCount: widget.ids.length,
+                  downloadedCount: _downloadedIds.valueR.length,
+                  preferredQuality: preferredQuality,
+                  qualityMenuChildren: _qualityMenuChildren,
+                  onInvertTap: _onInvertSelectionTap,
+                  onSelectAllTap: _onSelectAllTap,
+                ),
+              ),
               const SizedBox(height: 8.0),
               Expanded(
                 child: NamidaScrollbarWithController(
@@ -540,12 +583,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                           return Obx(
                             (context) {
                               final isSelected = _selectedList.contains(id);
-                              final config = _configMap[id];
-                              final fileExists = widget.cacheOnly
-                                  ? AudioCacheController.inst.isAvailableOffline(id)
-                                  : config == null
-                                  ? false
-                                  : YoutubeController.inst.doesIDHasFileDownloadedInGroup(config.id, _groupName.valueR) != null;
+                              final fileExists = _downloadedIds.valueR.contains(id);
                               final cardContent = Stack(
                                 children: [
                                   Row(
@@ -695,16 +733,21 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                   NamidaFABButton(
                     dim: true,
                     icon: Broken.setting_3,
-                    onTap: () => _showAllConfigDialog(context),
+                    onTap: _showAllConfigDialog,
                   ),
                   const SizedBox(width: 8.0),
                   Obx(
-                    (context) => NamidaFABButton(
-                      enabled: _selectedList.isNotEmpty,
-                      icon: widget.cacheOnly ? Broken.document_download : Broken.import_2,
-                      text: widget.cacheOnly ? lang.cache : lang.download,
-                      onTap: widget.cacheOnly ? _onCacheTap : _onDownloadTap,
-                    ),
+                    (context) {
+                      final selectedCount = _selectedList.length;
+                      final title = widget.cacheOnly ? lang.cache : lang.download;
+                      final text = selectedCount > 0 ? '$title (${selectedCount.formatDecimal()})' : title;
+                      return NamidaFABButton(
+                        enabled: selectedCount > 0,
+                        icon: widget.cacheOnly ? Broken.document_download : Broken.import_2,
+                        text: text,
+                        onTap: widget.cacheOnly ? _onCacheTap : _onDownloadTap,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -812,6 +855,230 @@ class _VideoIdToTitleWidgetState extends State<_VideoIdToChannelNameWidget> {
       style: widget.style,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
+    );
+  }
+}
+
+class _PlaylistHeaderCard extends StatelessWidget {
+  final String title;
+  final int selectedCount;
+  final int totalCount;
+  final int downloadedCount;
+  final Rx<String> preferredQuality;
+  final List<NamidaPopupItem> Function() qualityMenuChildren;
+  final VoidCallback onInvertTap;
+  final VoidCallback onSelectAllTap;
+
+  const _PlaylistHeaderCard({
+    required this.title,
+    required this.selectedCount,
+    required this.totalCount,
+    required this.downloadedCount,
+    required this.preferredQuality,
+    required this.qualityMenuChildren,
+    required this.onInvertTap,
+    required this.onSelectAllTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final countText = '${selectedCount.formatDecimal()}/${totalCount.formatDecimal()}';
+    final isAllSelected = selectedCount > 0 && selectedCount == totalCount;
+    final isPartiallySelected = selectedCount > 0 && !isAllSelected;
+    return NContainer(
+      margin: const EdgeInsets.symmetric(horizontal: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      decoration: (colors) => BoxDecoration(
+        color: colors.card.withOpacityExt(0.3),
+        borderRadius: BorderRadius.circular(14.0.multipliedRadius),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: 12.0),
+          const Icon(
+            Broken.music_playlist,
+            size: 22.0,
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                NamidaText(
+                  title,
+                  style: NText.medium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2.0),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Broken.task_square,
+                      size: 12.0,
+                    ),
+                    const SizedBox(width: 4.0),
+                    NamidaText(
+                      countText,
+                      style: NText.small,
+                    ),
+                    if (downloadedCount > 0) ...[
+                      const SizedBox(width: 8.0),
+                      const Icon(
+                        Broken.tick_circle,
+                        size: 12.0,
+                      ),
+                      const SizedBox(width: 4.0),
+                      NamidaText(
+                        downloadedCount.formatDecimal(),
+                        style: NText.small,
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6.0),
+          _DownloadQualityChip(
+            preferredQuality: preferredQuality,
+            menuChildren: qualityMenuChildren,
+          ),
+          const SizedBox(width: 2.0),
+          NamidaIconButton(
+            tooltip: () => lang.invertSelection,
+            icon: Broken.recovery_convert,
+            onPressed: onInvertTap,
+          ),
+          NamidaIconButton(
+            icon: null,
+            onPressed: onSelectAllTap,
+            child: NamidaTristateCheckMark(
+              size: 20.0,
+              active: isAllSelected,
+              halfActive: isPartiallySelected,
+            ),
+          ),
+          const SizedBox(width: 8.0),
+        ],
+      ),
+    );
+  }
+}
+
+class _OutputCardRow extends StatelessWidget {
+  final String label;
+  final double labelWidth;
+  final Widget child;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const _OutputCardRow({
+    required this.label,
+    required this.labelWidth,
+    required this.child,
+    this.trailing,
+    this.onTap,
+  });
+
+  static double measureLabelsWidth(BuildContext context, List<String> labels) {
+    final style = NText.small.of(context);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final textDirection = Directionality.of(context);
+    double maxWidth = 0.0;
+    for (final label in labels) {
+      final painter = TextPainter(
+        text: TextSpan(text: label, style: style),
+        textDirection: textDirection,
+        textScaler: textScaler,
+        maxLines: 1,
+      )..layout();
+      if (painter.width > maxWidth) maxWidth = painter.width;
+      painter.dispose();
+    }
+    return maxWidth.ceilToDouble();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final trailing = this.trailing;
+    return NamidaInkWell(
+      onTap: onTap,
+      borderRadius: 12.0,
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      child: Row(
+        children: [
+          SizedBox(
+            width: labelWidth,
+            child: NamidaText(
+              label,
+              style: NText.small,
+              maxLines: 1,
+              softWrap: false,
+            ),
+          ),
+          const SizedBox(width: 10.0),
+          Expanded(
+            child: child,
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8.0),
+            trailing,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DownloadQualityChip extends StatelessWidget {
+  final Rx<String> preferredQuality;
+  final List<NamidaPopupItem> Function() menuChildren;
+
+  const _DownloadQualityChip({
+    required this.preferredQuality,
+    required this.menuChildren,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: menuChildren,
+      child: NContainer(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        decoration: (colors) => BoxDecoration(
+          color: colors.card,
+          borderRadius: BorderRadius.circular(8.0.multipliedRadius),
+        ),
+        child: Obx(
+          (context) {
+            final isAudioOnly = settings.downloadAudioOnly.valueR;
+            final icon = isAudioOnly ? Broken.musicnote : Broken.story;
+            final title = isAudioOnly ? lang.audio : preferredQuality.valueR;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 16.0,
+                ),
+                const SizedBox(width: 4.0),
+                NamidaText(
+                  title,
+                  style: NText.medium,
+                ),
+                const SizedBox(width: 2.0),
+                const Icon(
+                  Broken.arrow_down_2,
+                  size: 14.0,
+                ),
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }

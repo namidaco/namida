@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:intl/intl.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
@@ -62,6 +63,7 @@ import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/yt_utils.dart';
 
 part 'youtube_id_stats_manager.dart';
+part 'yt_downloaded_files_validator.dart';
 part 'yt_filename_rebuilder.dart';
 
 class _YTNotificationDataHolder {
@@ -147,6 +149,14 @@ class YoutubeController {
   /// {groupName: {filename: File}}
   final downloadedFilesMap = <DownloadTaskGroupName, Map<DownloadTaskFilename, File?>>{}.obs;
 
+  final _downloadedFilesValidator = _DownloadedFilesValidator();
+  AppLifecycleListener? _appLifecycleListener;
+
+  /// true when downloaded files were found missing from storage.
+  Future<bool> validateDownloadedFiles(DownloadTaskGroupName groupName) => _downloadedFilesValidator.validateGroup(groupName);
+
+  Future<void> validateAllDownloadedFiles() => _downloadedFilesValidator.validateAll();
+
   late final _notificationData = _YTNotificationDataHolder();
   late final _downloadTasksMainDBManager = DBWrapperMain(AppDirs.YT_DOWNLOAD_TASKS);
 
@@ -176,6 +186,11 @@ class YoutubeController {
 
   static String _getGroupDirectoryPath(DownloadTaskGroupName groupName) => FileParts.joinPath(AppDirs.YOUTUBE_DOWNLOADS, groupName.groupName);
 
+  static String getDownloadsDirectoryPrefix() {
+    final downloadsDirPath = AppDirs.YOUTUBE_DOWNLOADS;
+    return downloadsDirPath.endsWith(Platform.pathSeparator) ? downloadsDirPath : '$downloadsDirPath${Platform.pathSeparator}';
+  }
+
   static String _getTempDirectoryPath(DownloadTaskGroupName groupName, YoutubeItemDownloadConfig config) =>
       config.cacheOnly ? AppDirs.VIDEOS_CACHE_TEMP : _getGroupDirectoryPath(groupName);
 
@@ -200,7 +215,7 @@ class YoutubeController {
     return 'mp4';
   }
 
-  static String _removeMediaContainerExtension(String filename) {
+  static String removeMediaContainerExtension(String filename) {
     final dotIndex = filename.lastIndexOf('.');
     if (dotIndex <= 0) return filename;
     return switch (filename.substring(dotIndex + 1).toLowerCase()) {
@@ -581,6 +596,8 @@ class YoutubeController {
     downloadsAudioProgressMap.value = res.downloadsAudioProgressMap.._addAllEntries(downloadsAudioProgressMap.value);
     latestEditedGroupDownloadTask = res.latestEditedGroupDownloadTask..addAll(latestEditedGroupDownloadTask);
     _rebuildTasksIdsIndex();
+    _downloadedFilesValidator.seed(res.groupsDirModifiedMS);
+    _appLifecycleListener ??= AppLifecycleListener(onResume: validateAllDownloadedFiles);
     isLoadingDownloadTasks.value = false;
   }
 
@@ -621,17 +638,30 @@ class YoutubeController {
 
   File? doesIDHasFileDownloaded(DownloadTaskVideoId id) {
     final tasks = _downloadTasksIdsMap[id];
-    if (tasks == null) return null;
-    for (int i = 0; i < tasks.length; i++) {
-      final task = tasks[i];
-      if (task.$2.cacheOnly) continue;
-      final file = downloadedFilesMap.value[task.$1]?[task.$2.filename];
-      if (file != null) return file;
+    if (tasks != null) {
+      for (int i = 0; i < tasks.length; i++) {
+        final task = tasks[i];
+        if (task.$2.cacheOnly) continue;
+        final file = downloadedFilesMap.value[task.$1]?[task.$2.filename];
+        if (file != null) return file;
+      }
     }
-    return null;
+    return _getLibraryFileInsideDownloads(id.videoId);
   }
 
-  File? doesIDHasFileDownloadedInGroup(DownloadTaskVideoId id, DownloadTaskGroupName groupName) {
+  Set<String> getDownloadedVideoIdsInGroup(Iterable<String> videoIds, DownloadTaskGroupName groupName) {
+    final groupDirPath = _getGroupDirectoryPath(groupName);
+    final groupDirPathClean = groupDirPath.endsWith(Platform.pathSeparator) ? groupDirPath.substring(0, groupDirPath.length - 1) : groupDirPath;
+    final downloadedIds = <String>{};
+    for (final videoId in videoIds) {
+      final id = DownloadTaskVideoId(videoId: videoId);
+      final isDownloaded = _getTaskFileInGroup(id, groupName) != null || _hasLibraryTrackInDirectory(videoId, groupDirPathClean);
+      if (isDownloaded) downloadedIds.add(videoId);
+    }
+    return downloadedIds;
+  }
+
+  File? _getTaskFileInGroup(DownloadTaskVideoId id, DownloadTaskGroupName groupName) {
     final tasks = _downloadTasksIdsMap[id];
     if (tasks == null) return null;
     for (int i = 0; i < tasks.length; i++) {
@@ -642,6 +672,26 @@ class YoutubeController {
       }
     }
     return null;
+  }
+
+  // -- files whose download tasks were removed are only known by the library
+  File? _getLibraryFileInsideDownloads(String videoId) {
+    final tracks = Indexer.inst.allTracksMappedByYTID[videoId];
+    if (tracks == null) return null;
+    final downloadsDirPrefix = getDownloadsDirectoryPrefix();
+    for (final tr in tracks) {
+      if (tr.path.startsWith(downloadsDirPrefix)) return File(tr.path);
+    }
+    return null;
+  }
+
+  bool _hasLibraryTrackInDirectory(String videoId, String dirPath) {
+    final tracks = Indexer.inst.allTracksMappedByYTID[videoId];
+    if (tracks == null) return false;
+    for (final tr in tracks) {
+      if (tr.path.getDirectoryPath == dirPath) return true;
+    }
+    return false;
   }
 
   void _matchIDsForItemConfig({
@@ -1767,7 +1817,7 @@ class YoutubeController {
       }
 
       if (!finalFilenameTemp.endsWith('.$fileExtension')) {
-        finalFilenameTemp = '${_removeMediaContainerExtension(finalFilenameTemp)}.$fileExtension';
+        finalFilenameTemp = '${removeMediaContainerExtension(finalFilenameTemp)}.$fileExtension';
         requiresRenaming = true;
       }
 
@@ -2215,6 +2265,7 @@ class _IsolateFunctions {
     final downloadsVideoProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{};
     final downloadsAudioProgressMap = <DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>>{};
     final latestEditedGroupDownloadTask = <DownloadTaskGroupName, int>{};
+    final groupsDirModifiedMS = <DownloadTaskGroupName, int>{};
 
     final allFiles = Directory(params.tasksDatabasesPath).listSyncSafe();
     final oldJsonFiles = <File>[];
@@ -2285,6 +2336,9 @@ class _IsolateFunctions {
         final fileModified = dbFile.statSync().modified;
         youtubeDownloadTasksMap[group] = {};
         downloadedFilesMap[group] = {};
+        // -- taken before the files are checked, a later change makes the folder newer than this
+        final groupDirStat = FileStat.statSync(FileParts.joinPath(params.downloadLocation, group.groupName));
+        groupsDirModifiedMS[group] = _DownloadedFilesValidator.getModifiedMSToStore(groupDirStat);
         if (fileModified != DateTime(1970)) {
           latestEditedGroupDownloadTask[group] ??= fileModified.millisecondsSinceEpoch;
         }
@@ -2348,6 +2402,7 @@ class _IsolateFunctions {
           youtubeDownloadTasksMap.remove(group);
           downloadedFilesMap.remove(group);
           latestEditedGroupDownloadTask.remove(group);
+          groupsDirModifiedMS.remove(group);
           try {
             dbFile.deleteSync();
           } catch (_) {}
@@ -2363,6 +2418,7 @@ class _IsolateFunctions {
       downloadsVideoProgressMap: downloadsVideoProgressMap,
       downloadsAudioProgressMap: downloadsAudioProgressMap,
       latestEditedGroupDownloadTask: latestEditedGroupDownloadTask,
+      groupsDirModifiedMS: groupsDirModifiedMS,
     );
   }
 }
@@ -2373,6 +2429,7 @@ class _DownloadTaskInitWrapper {
   final Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>> downloadsVideoProgressMap;
   final Map<DownloadTaskVideoId, RxMap<DownloadTaskFilename, DownloadProgress>> downloadsAudioProgressMap;
   final Map<DownloadTaskGroupName, int> latestEditedGroupDownloadTask;
+  final Map<DownloadTaskGroupName, int> groupsDirModifiedMS;
 
   const _DownloadTaskInitWrapper({
     required this.youtubeDownloadTasksMap,
@@ -2380,6 +2437,7 @@ class _DownloadTaskInitWrapper {
     required this.downloadsVideoProgressMap,
     required this.downloadsAudioProgressMap,
     required this.latestEditedGroupDownloadTask,
+    required this.groupsDirModifiedMS,
   });
 }
 

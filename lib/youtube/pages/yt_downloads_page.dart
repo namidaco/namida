@@ -34,6 +34,12 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
   final _hiddenGroupsMap = <DownloadTaskGroupName, bool>{}.obs;
 
   @override
+  void initState() {
+    super.initState();
+    YoutubeController.inst.validateAllDownloadedFiles();
+  }
+
+  @override
   void dispose() {
     _hiddenGroupsMap.close();
     super.dispose();

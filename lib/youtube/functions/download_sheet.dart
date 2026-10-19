@@ -529,15 +529,6 @@ Future<void> showDownloadVideoBottomSheet({
                                           tagMaps: tagsMap,
                                           showSpecificFileOptions: showSpecificFileOptionsInEditTagDialog,
                                           sponsorSegmentsCategories: sponsorSegmentsCategories,
-                                          onDownloadFilenameChanged: (filename) {
-                                            updatefilenameOutput(customName: filename);
-                                            formKey.currentState?.validate();
-                                          },
-                                          onDownloadGroupNameChanged: (newGroupName) {
-                                            groupName = newGroupName;
-                                            formKey.currentState?.validate();
-                                          },
-                                          initialGroupName: initialGroupName,
                                         );
                                       },
                                     ),
@@ -709,24 +700,42 @@ Future<void> showDownloadVideoBottomSheet({
                               crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.max,
                               children: [
-                                Obx((context) {
-                                  final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.videoOnly : null;
-                                  final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.audioOnly : null;
-                                  final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null ? "${lang.video} + ${lang.audio}" : null;
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Obx((context) {
+                                        final videoOnly = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR == null ? lang.videoOnly : null;
+                                        final audioOnly = selectedVideoOnlyStream.valueR == null && selectedAudioOnlyStream.valueR != null ? lang.audioOnly : null;
+                                        final audioAndVideo = selectedVideoOnlyStream.valueR != null && selectedAudioOnlyStream.valueR != null
+                                            ? "${lang.video} + ${lang.audio}"
+                                            : null;
 
-                                  return Text.rich(
-                                    TextSpan(
-                                      text: "${lang.output}: ",
-                                      style: NText.small.of(context),
-                                      children: [
-                                        TextSpan(
-                                          text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.none,
-                                          style: NText.medium.of(context).copyWith(color: videoOnly != null ? Colors.red : null),
-                                        ),
-                                      ],
+                                        return Text.rich(
+                                          TextSpan(
+                                            text: "${lang.output}: ",
+                                            style: NText.small.of(context),
+                                            children: [
+                                              TextSpan(
+                                                text: videoOnly ?? audioOnly ?? audioAndVideo ?? lang.none,
+                                                style: NText.medium.of(context).copyWith(color: videoOnly != null ? Colors.red : null),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
                                     ),
-                                  );
-                                }),
+                                    const SizedBox(width: 8.0),
+                                    YTDownloadFolderPicker(
+                                      initialFolder: groupName,
+                                      playlistName: initialGroupName ?? '',
+                                      maxTextWidth: maxWidth * 0.34,
+                                      onChanged: (newGroupName) {
+                                        groupName = newGroupName;
+                                        formKey.currentState?.validate();
+                                      },
+                                    ),
+                                  ],
+                                ),
                                 const SizedBox(height: 18.0),
                                 Form(
                                   key: formKey,

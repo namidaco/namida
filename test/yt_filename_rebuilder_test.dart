@@ -92,6 +92,81 @@ void main() {
       }
     });
 
+    test('song lines written as title by artist give the artist after by', () {
+      const description = '''
+• Song: Rolling Stones by Timebelle
+• Anime/Game/VN: Kimetsu no Yaiba / Demon Slayers
+Follow Timebelle:
+• [https://open.spotify.com/artist/5HiW8...](https://open.spotify.com/artist/5HiW8Shh2vPcD16rE8MaBr)
+Link to image:
+• Artist: [https://mylivewallpapers.com/anime/ne...](https://mylivewallpapers.com/anime/nezuko-moon-shine-live-wallpaper/)
+''';
+      final videoItem = item(title: 'Nightcore - Rolling Stones - (Lyrics)', description: description);
+      expect(rebuild('%(artist)s', videoItem: videoItem), 'Timebelle');
+      expect(rebuild('%(title)s', videoItem: videoItem), 'Rolling Stones');
+    });
+
+    test('a video title ending in a separator before brackets still matches its song line', () {
+      final cases = {
+        'Nightcore - Need You - (Lyrics)': 'Song: Lost Sky - Need You',
+        'Nightcore - Need You | [AMV]': 'Info: Lost Sky - Need You',
+        'Nightcore - Need You – (Sped Up)': 'Lost Sky - Need You',
+      };
+      for (final MapEntry(key: title, value: songLine) in cases.entries) {
+        final videoItem = item(title: title, description: 'Subscribe!\n$songLine\nThanks for watching');
+        expect(rebuild('%(artist)s - %(title)s', videoItem: videoItem), 'Lost Sky - Need You', reason: title);
+      }
+    });
+
+    test('song lines with a dash keep reading as artist - title, even with by in them', () {
+      final videoItem = item(title: 'Nightcore - Stand By Me', description: 'Song: Ben E. King - Stand By Me');
+      expect(rebuild('%(artist)s|%(title)s', videoItem: videoItem), 'Ben E. King|Stand By Me');
+    });
+
+    test('a song line without the video title is still read when the title is unknown', () {
+      final videoItem = item(title: 'Nightcore', description: 'Some intro\nSong: Rolling Stones by Timebelle');
+      expect(rebuild('%(artist)s', videoItem: videoItem), 'Timebelle');
+    });
+
+    test('description values holding links are never used as artist or title', () {
+      const description = '''
+• Nightcore Love Playlist: https://bit.ly/3uD2Dvv
+• Artist: [https://mylivewallpapers.com/anime/ne...](https://mylivewallpapers.com/anime/nezuko-moon-shine-live-wallpaper/)
+• Title: www.example.com/some-title
+''';
+      final videoItem = item(title: 'Nightcore - Some Song', description: description);
+      expect(rebuild('%(artist)s', videoItem: videoItem), 'Nightcore');
+      expect(rebuild('%(title)s', videoItem: videoItem), 'Some Song');
+    });
+
+    test('empty description values are skipped for the next matching line', () {
+      final videoItem = item(title: 'Nightcore - Some Song', description: 'Artist:\nArtist: Real Artist');
+      expect(rebuild('%(artist)s', videoItem: videoItem), 'Real Artist');
+    });
+
+    test('titles with a real artist never read the description', () {
+      final videoItem = item(title: 'Timebelle - Rolling Stones', description: 'Song: Something Else by Someone');
+      expect(rebuild('%(artist)s|%(title)s', videoItem: videoItem), 'Timebelle|Rolling Stones');
+    });
+
+    test('ext uses the given fallback extension when no streams are known', () {
+      final rebuilt = YoutubeController.filenameBuilder.rebuildFilenameWithDecodedParams(
+        '%(id)s.%(ext)s',
+        videoId,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        fallbackExt: 'm4a',
+      );
+      expect(rebuilt, '$videoId.m4a');
+      expect(rebuild('%(id)s.%(ext)s'), '$videoId.mp4');
+    });
+
     test('playlist index and count use the original index and the total length over the playlist info', () {
       final videoItem = item(indexInPlaylist: 2);
       final playlistInfo = playlist(videosCount: 9);

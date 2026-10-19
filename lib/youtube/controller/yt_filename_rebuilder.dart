@@ -9,6 +9,11 @@ class _YtFilenameRebuilder {
   static final _artistLineRegex = RegExp('artist:(.*)', caseSensitive: false);
   static final _titleLineRegex = RegExp('title:(.*)', caseSensitive: false);
   static final _songInfoLineRegex = RegExp('^\\W*(song|info|details)(.*)', caseSensitive: false);
+  static final _linkRegex = RegExp(r'https?://|www\.', caseSensitive: false);
+  static final _trailingSeparatorsRegex = RegExp(r'[\s\-–—|]+$');
+  static final _leadingSeparatorsRegex = RegExp(r'^[\s:\-–—|•·>»]+');
+  static final _artistTitleSeparatorRegex = RegExp(r'\s[\-–—|]\s');
+  static final _titleByArtistRegex = RegExp(r'^(.+?)\s+by\s+(.+)$', caseSensitive: false);
 
   bool get fallbackExtractInfoFromDescription => settings.youtube.fallbackExtractInfoDescription.value;
 
@@ -24,6 +29,7 @@ class _YtFilenameRebuilder {
     int? originalIndex,
     int? totalLength, {
     String fallback = 'NA',
+    String fallbackExt = 'mp4',
   }) {
     bool didConvertSmth = false;
     var decodedFilename = filenameEncoded.replaceAllMapped(
@@ -43,6 +49,7 @@ class _YtFilenameRebuilder {
               audioStream,
               originalIndex,
               totalLength,
+              fallbackExt,
             );
             didConvertSmth = true; // always set to true, even if converted value is null (ex. null playlist name)
             if (converted != null) return converted;
@@ -115,6 +122,7 @@ class _YtFilenameRebuilder {
     AudioStream? audioStream,
     int? originalIndex,
     int? totalLength,
+    String fallbackExt,
   ) {
     return switch (keyword) {
       'none' => '',
@@ -159,7 +167,7 @@ class _YtFilenameRebuilder {
         }
         return null;
       }(),
-      'ext' => YoutubeController.getOutputContainer(videoStream, audioStream)?.nullifyEmpty() ?? 'mp4',
+      'ext' => YoutubeController.getOutputContainer(videoStream, audioStream)?.nullifyEmpty() ?? fallbackExt,
       'channel_fulltitle' => pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty(),
       'uploader' || 'channel' => () {
         final fullChannelName = pageResult?.channelInfo?.title?.nullifyEmpty() ?? videoItem?.channel?.title?.nullifyEmpty() ?? streamInfo?.channelName?.nullifyEmpty();
@@ -226,20 +234,24 @@ class _YtFilenameRebuilder {
     if ((info?.$1 == null && info?.$2 == null) || info?.$1?.toLowerCase() == 'nightcore') {
       final description = _getDescription(streamInfo, pageResult, videoItem);
       if (description != null) {
-        final title = info?.$2?.splitFirst('(').splitFirst('[');
+        final titleRaw = info?.$2?.splitFirst('(').splitFirst('[');
+        final title = titleRaw?.replaceFirst(_trailingSeparatorsRegex, '').nullifyEmpty();
         final titlePattern = title == null ? null : RegExp.escape(title);
         final regex = titlePattern == null ? _songInfoLineRegex : RegExp('^\\W*(song|info|details)?(.*$titlePattern.*)', caseSensitive: false);
         for (String line in description.split('\n')) {
           line = line.replaceFirst(_nightcoreRegex, '');
           final m = regex.firstMatch(line);
           try {
-            var infosLine = m?.group(2)?.splitArtistAndTitle();
+            final songInfo = m?.group(2);
+            var infosLine = songInfo == null ? null : _splitSongInfo(songInfo);
             if (infosLine == null) {
               final fallback = (_artistLineRegex.firstMatch(line)?.group(1)?.trim(), _titleLineRegex.firstMatch(line)?.group(1)?.trim());
               if (fallback.$1 != null || fallback.$2 != null) infosLine = fallback;
             }
             if (infosLine != null) {
-              final resolved = onMatch(infosLine);
+              final lineArtist = _nullifyEmptyOrLink(infosLine.$1);
+              final lineTitle = _nullifyEmptyOrLink(infosLine.$2);
+              final resolved = onMatch((lineArtist, lineTitle));
               if (resolved != null) return resolved;
             }
           } catch (_) {}
@@ -247,6 +259,27 @@ class _YtFilenameRebuilder {
       }
     }
     return null;
+  }
+
+  // -- song lines write `title by artist`, splitArtistAndTitle would flip them
+  (String?, String?) _splitSongInfo(String text) {
+    final songInfo = text.replaceFirst(_leadingSeparatorsRegex, '');
+    if (!_artistTitleSeparatorRegex.hasMatch(songInfo)) {
+      final titleByArtist = _titleByArtistRegex.firstMatch(songInfo);
+      if (titleByArtist != null) {
+        final artist = titleByArtist.group(2)?.trim();
+        final title = titleByArtist.group(1)?.trim();
+        return (artist, title);
+      }
+    }
+    return songInfo.splitArtistAndTitle();
+  }
+
+  String? _nullifyEmptyOrLink(String? text) {
+    final nonEmptyText = text?.nullifyEmpty();
+    if (nonEmptyText == null) return null;
+    if (_linkRegex.hasMatch(nonEmptyText)) return null;
+    return nonEmptyText;
   }
 
   String _removeTopicKeyword(String text) {

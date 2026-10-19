@@ -1166,7 +1166,7 @@ class YTUtils {
 
   static void showFilenameBuilderOutputSheet({
     required String groupName,
-    required bool showEditTags,
+    required String Function(String template) previewBuilder,
     required void Function(String text) onChanged,
   }) async {
     final controller = TextEditingController(text: settings.youtube.downloadFilenameBuilder.value);
@@ -1188,6 +1188,13 @@ class YTUtils {
           }
           return null;
         },
+        trailing: NamidaIconButton(
+          tooltip: () => lang.restoreDefaults,
+          icon: Broken.refresh,
+          iconSize: 20.0,
+          horizontalPadding: 4.0,
+          onPressed: () => controller.text = settings.youtube.defaultFilenameBuilder,
+        ),
       ),
       buttonText: lang.save,
       onButtonTap: (text) {
@@ -1195,51 +1202,11 @@ class YTUtils {
         settings.youtube.downloadFilenameBuilder.save(text);
         return true;
       },
-      extraPreItemsBuilder: !showEditTags
-          ? null
-          : (formState) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12.0),
-                child: CustomListTile(
-                  icon: Broken.edit,
-                  title: lang.editTags,
-                  trailing: const Icon(
-                    Broken.arrow_right_3,
-                    size: 22.0,
-                  ),
-                  onTap: () async {
-                    final tagMaps = Map.of(settings.youtube.initialDefaultMetadataTags.value);
-                    await showVideoDownloadOptionsSheet(
-                      videoTitle: null,
-                      videoUploader: null,
-                      tagMaps: tagMaps,
-                      tagMapsForFillingInfoOnly: YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value),
-                      showSpecificFileOptions: false,
-                      onDownloadFilenameChanged: (filename) {}, // not visible
-                      onDownloadGroupNameChanged: (newGroupName) {}, // not visible
-                      preWidget: (controllerFn, onChangedFn) => Padding(
-                        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                        child: YTDownloadFilenameBuilderRow(
-                          controller: null,
-                          controllerCallback: controllerFn,
-                          onChanged: onChangedFn,
-                        ),
-                      ),
-                      initialGroupName: groupName,
-                    );
-                    settings.youtube.initialDefaultMetadataTags.replace(tagMaps);
-                  },
-                ),
-              );
-            },
-      extraItemsBuilder: (formState) {
-        return Padding(
-          padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-          child: YTDownloadFilenameBuilderRow(
-            controller: controller,
-          ),
-        );
-      },
+      extraPreItemsBuilder: (formState) => const _DefaultTagsTile(),
+      extraItemsBuilder: (formState) => _FilenameBuilderOutputExtras(
+        controller: controller,
+        previewBuilder: previewBuilder,
+      ),
     );
     controller.disposeAfterAnimation();
   }
@@ -1300,6 +1267,111 @@ class _CacheStatusIcon extends StatelessWidget {
       icon,
       size: 15.0,
       color: baseColor.withValues(alpha: isCached ? 0.6 : 0.1),
+    );
+  }
+}
+
+class _DefaultTagsTile extends StatelessWidget {
+  const _DefaultTagsTile();
+
+  Future<void> _onTap() async {
+    final tagMaps = Map.of(settings.youtube.initialDefaultMetadataTags.value);
+    final defaultTagsBuilders = YTUtils.getDefaultTagsFieldsBuilders(settings.youtube.autoExtractVideoTagsFromInfo.value);
+    await showVideoDownloadOptionsSheet(
+      videoTitle: null,
+      videoUploader: null,
+      tagMaps: tagMaps,
+      tagMapsForFillingInfoOnly: defaultTagsBuilders,
+      showSpecificFileOptions: false,
+      preWidget: (controllerFn, onChangedFn) => Padding(
+        padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
+        child: YTDownloadFilenameBuilderRow(
+          controller: null,
+          controllerCallback: controllerFn,
+          onChanged: onChangedFn,
+        ),
+      ),
+    );
+    settings.youtube.initialDefaultMetadataTags.replace(tagMaps);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaInkWell(
+      bgColor: NColors.card,
+      borderRadius: 12.0,
+      margin: const EdgeInsets.only(bottom: 20.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      onTap: _onTap,
+      child: Row(
+        children: [
+          const Icon(
+            Broken.edit,
+            size: 20.0,
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            child: NamidaText(
+              lang.editTags,
+              style: NText.medium,
+            ),
+          ),
+          const Icon(
+            Broken.arrow_right_3,
+            size: 18.0,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilenameBuilderOutputExtras extends StatelessWidget {
+  final TextEditingController controller;
+  final String Function(String template) previewBuilder;
+
+  const _FilenameBuilderOutputExtras({
+    required this.controller,
+    required this.previewBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 4.0),
+        YTDownloadFilenameBuilderRow(
+          controller: controller,
+        ),
+        const SizedBox(height: 6.0),
+        Row(
+          children: [
+            const SizedBox(width: 4.0),
+            Expanded(
+              child: ValueListenableBuilder(
+                valueListenable: controller,
+                builder: (context, value, _) {
+                  final filenamePreview = previewBuilder(value.text);
+                  return Text.rich(
+                    TextSpan(
+                      text: "${lang.preview}: ",
+                      style: NText.small.of(context),
+                      children: [
+                        TextSpan(
+                          text: filenamePreview,
+                          style: NText.medium.of(context),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
