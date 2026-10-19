@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:super_hot_key/super_hot_key.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/base/audio_handler.dart';
@@ -13,6 +14,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/chapters_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';

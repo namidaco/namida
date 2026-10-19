@@ -43,9 +43,11 @@ abstract class ShortcutsManager {
   @protected
   List<ShortcutKeyActivator> get _keysToRegister;
   void init();
-  void initUserShortcutsFromSettings();
-  void setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data});
-  void dispose();
+  Future<void> initUserShortcutsFromSettings();
+
+  /// throws when the system refuses the hotkey, ex: another app owns it.
+  Future<void> setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data});
+  Future<void> dispose();
 
   void openPlayerQueue();
 }

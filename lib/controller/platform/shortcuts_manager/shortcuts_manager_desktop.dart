@@ -12,7 +12,6 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       action: HotkeyAction.play_pause,
       category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.space,
-      skipInTextFields: true,
       callback: Player.inst.togglePlayPause,
       title: () => "${lang.play}/${lang.pause}",
     ),
@@ -286,7 +285,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       title: () => lang.repeatMode,
     ),
     // -----------------
-    for (final key in const [LogicalKeyboardKey.equal, LogicalKeyboardKey.numpadAdd])
+    for (final key in const [LogicalKeyboardKey.equal, LogicalKeyboardKey.add, LogicalKeyboardKey.numpadAdd])
       ShortcutKeyActivator(
         category: ShortcutCategory.others,
         key: key,
@@ -439,7 +438,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         for (int i = 0; i < candidates.length; i++) {
           final activator = candidates[i];
           if (activator.acceptsMatchedTrigger(event, keyboard)) {
-            if (activator.skipInTextFields && ShortcutsManager.isTextFieldFocused()) return KeyEventResult.ignored;
+            if (activator.yieldsToTyping(event)) return KeyEventResult.ignored;
             activator.callback();
             return KeyEventResult.handled;
           }
@@ -449,26 +448,60 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     );
   }
 
+  final _globalHotkeys = <HotkeyAction, HotKey>{};
+
+  Future<HotKey> _createGlobalHotkey(HotkeyAction action, LogicalKeyboardKey key, ShortcutKeyData data) async {
+    final definition = HotKeyDefinition(
+      key: key,
+      control: data.ctrl,
+      shift: data.shift,
+      meta: data.meta,
+      alt: data.alt,
+    );
+    final hotkey = await HotKey.create(
+      definition: definition,
+      onPressed: action.toSimpleCallback(),
+    );
+    if (hotkey == null) throw UnsupportedError('${key.keyLabel} is not on the current keyboard layout');
+    return hotkey;
+  }
+
   @override
-  void initUserShortcutsFromSettings() async {
-    for (final s in settings.shortcuts.shortcuts.value.entries) {
-      final data = s.value;
-      data?.createHotkey(s.key.toSimpleCallback());
+  Future<void> initUserShortcutsFromSettings() async {
+    for (final MapEntry(key: action, value: data) in settings.shortcuts.shortcuts.value.entries) {
+      final key = data?.key;
+      if (data == null || key == null) continue;
+      try {
+        _globalHotkeys[action] = await _createGlobalHotkey(action, key, data);
+      } catch (e, st) {
+        logger.report(e, st);
+      }
     }
   }
 
   @override
-  void setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data}) {
-    final oldShortcut = settings.shortcuts.shortcuts.value[action];
-    oldShortcut?.disposeHotkey();
+  Future<void> setUserShortcut({required HotkeyAction action, required ShortcutKeyData? data}) async {
+    final oldHotkey = _globalHotkeys[action];
+    final oldData = settings.shortcuts.shortcuts.value[action];
+    if (oldHotkey != null && data == oldData) return;
 
-    data?.createHotkey(action.toSimpleCallback());
+    // -- registered before disposing the old one, so a refused hotkey keeps the old one
+    final key = data?.key;
+    final newHotkey = data == null || key == null ? null : await _createGlobalHotkey(action, key, data);
+    if (newHotkey == null) {
+      _globalHotkeys.remove(action);
+    } else {
+      _globalHotkeys[action] = newHotkey;
+    }
     settings.shortcuts.shortcuts.update((shortcuts) => shortcuts[action] = data);
+    await oldHotkey?.dispose();
   }
 
   @override
-  void dispose() {
+  Future<void> dispose() async {
     _attachment?.detach();
+    await Future.wait(_globalHotkeys.values.map((e) => e.dispose()));
+    _globalHotkeys.clear();
   }
 
   @override

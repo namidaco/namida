@@ -23,7 +23,6 @@ import 'package:window_manager/window_manager.dart';
 
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
-import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/backup_controller.dart';
 import 'package:namida/controller/chapters_controller.dart';
@@ -561,7 +560,7 @@ class Namida extends StatefulWidget {
     YoutubeInfoController.dispose();
     await [
       PortsProvider.disposeAll(),
-      ShortcutKeyData.disposeAllHotkeys(),
+      ShortcutsController.instance?.dispose(),
       SearchSortController.inst.disposeResources(),
       NamicoDBWrapper.dispose(),
       SMTCController.instance?.dispose(),

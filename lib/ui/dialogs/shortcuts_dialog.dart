@@ -93,14 +93,14 @@ class _ShortcutsDialogState extends State<ShortcutsDialog> {
     setState(() => _recordingAction = null);
   }
 
-  void _saveGlobalShortcut(HotkeyAction action, ShortcutKeyData data) {
-    widget.manager.setUserShortcut(action: action, data: data);
-    _stopRecording();
+  Future<void> _saveGlobalShortcut(HotkeyAction action, ShortcutKeyData data) async {
+    await widget.manager.setUserShortcut(action: action, data: data);
+    if (mounted) _stopRecording();
   }
 
-  void _deleteGlobalShortcut(HotkeyAction action) {
-    widget.manager.setUserShortcut(action: action, data: null);
-    _stopRecording();
+  Future<void> _deleteGlobalShortcut(HotkeyAction action) async {
+    await widget.manager.setUserShortcut(action: action, data: null);
+    if (mounted) _stopRecording();
   }
 
   String? _findConflictTitle(HotkeyAction action, ShortcutKeyData data) {
@@ -340,8 +340,8 @@ class _ShortcutRow extends StatelessWidget {
 class _GlobalShortcutRecorder extends StatefulWidget {
   final ShortcutKeyData? initial;
   final String? Function(ShortcutKeyData data) findConflictTitle;
-  final void Function(ShortcutKeyData data) onSave;
-  final VoidCallback? onDelete;
+  final Future<void> Function(ShortcutKeyData data) onSave;
+  final Future<void> Function()? onDelete;
   final VoidCallback onCancel;
 
   const _GlobalShortcutRecorder({
@@ -366,7 +366,7 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
 
   final _focusNode = FocusNode();
   late ShortcutKeyData? _data = widget.initial;
-  String? _conflictTitle;
+  _RecorderError? _error;
 
   @override
   void initState() {
@@ -406,54 +406,56 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
       alt: keyboard.isAltPressed,
       meta: keyboard.isMetaPressed,
     );
-    final conflictTitle = isModifier ? null : widget.findConflictTitle(data);
+    final error = isModifier ? null : _findError(data, event.character);
     setState(() {
       _data = data;
-      _conflictTitle = conflictTitle;
+      _error = error;
     });
     return KeyEventResult.handled;
+  }
+
+  /// global hotkeys are system-wide, a combo that types text would block typing it in every app.
+  _RecorderError? _findError(ShortcutKeyData data, String? typedCharacter) {
+    if (typedCharacter != null && data.canTypeText()) return _RecorderError('${lang.alreadyExists} (${lang.text.toLowerCase()}):', keyText: typedCharacter);
+    final conflictTitle = widget.findConflictTitle(data);
+    if (conflictTitle != null) return _RecorderError('${lang.alreadyExists}: $conflictTitle');
+    return null;
+  }
+
+  Future<void> _runReportingFailure(Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e) {
+      if (mounted) setState(() => _error = _RecorderError('${lang.failed}: $e'));
+    }
   }
 
   void _save() {
     final data = _data;
     if (data == null || data.key == null) return;
-    if (_conflictTitle != null) return;
-    widget.onSave(data);
+    if (_error != null) return;
+    _runReportingFailure(() => widget.onSave(data));
+  }
+
+  void _delete() {
+    final onDelete = widget.onDelete;
+    if (onDelete != null) _runReportingFailure(onDelete);
   }
 
   @override
   Widget build(BuildContext context) {
     final data = _data;
-    final conflictTitle = _conflictTitle;
-    final hasConflict = conflictTitle != null;
-    final accentRole = hasConflict ? NColorRole.error : NColorRole.primary;
-    final canSave = data?.key != null && !hasConflict;
+    final error = _error;
+    final hasError = error != null;
+    final accentRole = hasError ? NColorRole.error : NColorRole.primary;
+    final canSave = data?.key != null && !hasError;
     final keysGroup = data == null ? null : _KeysGroup.fromData(data);
-    final onDelete = widget.onDelete;
+    final hasDelete = widget.onDelete != null;
 
-    final conflictWidget = conflictTitle == null
+    final errorWidget = error == null
         ? null
-        : Padding(
-            padding: const EdgeInsets.only(top: 4.0, left: 2.0),
-            child: Row(
-              children: [
-                const NIcon(
-                  Broken.warning_2,
-                  size: 14.0,
-                  color: NColors.error,
-                ),
-                const SizedBox(
-                  width: 6.0,
-                ),
-                Expanded(
-                  child: NamidaText(
-                    '${lang.alreadyExists}: $conflictTitle',
-                    style: NText.small,
-                    color: NColors.error,
-                  ),
-                ),
-              ],
-            ),
+        : _RecorderErrorRow(
+            error: error,
           );
 
     return Focus(
@@ -491,13 +493,13 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
                     bgColor: NColors(accentRole, opacity: 0.2),
                   ),
                 const Spacer(),
-                if (onDelete != null)
+                if (hasDelete)
                   NamidaIconButton(
                     icon: Broken.trash,
                     iconSize: 18.0,
                     horizontalPadding: 4.0,
                     tooltip: () => lang.delete,
-                    onPressed: onDelete,
+                    onPressed: _delete,
                   ),
                 NBuilder(
                   builder: (context, colors) => NamidaIconButton(
@@ -512,7 +514,48 @@ class _GlobalShortcutRecorderState extends State<_GlobalShortcutRecorder> {
               ],
             ),
           ),
-          ?conflictWidget,
+          ?errorWidget,
+        ],
+      ),
+    );
+  }
+}
+
+class _RecorderErrorRow extends StatelessWidget {
+  final _RecorderError error;
+  const _RecorderErrorRow({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    final keyText = error.keyText;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0, left: 2.0),
+      child: Row(
+        children: [
+          const NIcon(
+            Broken.warning_2,
+            size: 14.0,
+            color: NColors.error,
+          ),
+          const SizedBox(
+            width: 6.0,
+          ),
+          Flexible(
+            child: NamidaText(
+              error.message,
+              style: NText.small,
+              color: NColors.error,
+            ),
+          ),
+          if (keyText != null) ...[
+            const SizedBox(
+              width: 6.0,
+            ),
+            _KeyCap(
+              text: keyText,
+              bgColor: const NColors(.error, opacity: 0.2),
+            ),
+          ],
         ],
       ),
     );
@@ -784,11 +827,18 @@ class _KeysGroup {
   }
 }
 
+class _RecorderError {
+  final String message;
+  final String? keyText;
+
+  const _RecorderError(this.message, {this.keyText});
+}
+
 class _GlobalShortcutActions {
   final void Function(HotkeyAction action) toggleRecording;
   final String? Function(HotkeyAction action, ShortcutKeyData data) findConflictTitle;
-  final void Function(HotkeyAction action, ShortcutKeyData data) save;
-  final void Function(HotkeyAction action) delete;
+  final Future<void> Function(HotkeyAction action, ShortcutKeyData data) save;
+  final Future<void> Function(HotkeyAction action) delete;
   final VoidCallback cancel;
 
   const _GlobalShortcutActions({

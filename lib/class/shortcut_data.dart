@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
-import 'package:super_hot_key/super_hot_key.dart';
-
+import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
-import 'package:namida/core/extensions.dart';
 
 class ShortcutKeyData {
   final LogicalKeyboardKey? key;
@@ -21,39 +20,9 @@ class ShortcutKeyData {
     this.alt = false,
   });
 
-  static final _createdHotkeys = <LogicalKeyboardKey, HotKey>{};
-
-  Future<void> createHotkey(VoidCallback onPressed) async {
+  bool canTypeText() {
     final key = this.key;
-    if (key != null) {
-      final createdHotkey = await HotKey.create(
-        definition: HotKeyDefinition(
-          key: key,
-          control: ctrl,
-          shift: shift,
-          meta: meta,
-          alt: alt,
-        ),
-        onPressed: onPressed,
-      );
-      if (createdHotkey != null) {
-        _createdHotkeys[key] = createdHotkey;
-      }
-    }
-  }
-
-  Future<void> disposeHotkey() async {
-    final key = this.key;
-    if (key != null) {
-      final oldHotkey = _createdHotkeys.remove(key);
-      await oldHotkey?.dispose();
-    }
-  }
-
-  static Future<void> disposeAllHotkeys() async {
-    final copies = _createdHotkeys.values.toFixedList();
-    _createdHotkeys.clear();
-    await Future.wait(copies.map((c) => c.dispose()));
+    return key != null && _canTypeText(key, control: ctrl, alt: alt, meta: meta);
   }
 
   bool isSimilarTo(ShortcutKeyData other) {
@@ -131,7 +100,6 @@ class ShortcutKeyActivator extends SingleActivator {
   final String Function() title;
   final LogicalKeyboardKey key;
   final void Function() callback;
-  final bool skipInTextFields;
 
   const ShortcutKeyActivator({
     this.action,
@@ -143,7 +111,6 @@ class ShortcutKeyActivator extends SingleActivator {
     super.meta = false,
     super.alt = false,
     super.includeRepeats = false,
-    this.skipInTextFields = false,
     required this.callback,
   }) : super(key);
 
@@ -152,6 +119,29 @@ class ShortcutKeyActivator extends SingleActivator {
     if (event is! KeyDownEvent && !(includeRepeats && event is KeyRepeatEvent)) return false;
     return control == state.isControlPressed && shift == state.isShiftPressed && alt == state.isAltPressed && meta == state.isMetaPressed;
   }
+
+  /// ex: `AltGr+1` types `|` on some layouts, but windows reports it as `Ctrl+Alt+1`.
+  bool yieldsToTyping(KeyEvent event) {
+    if (event.character == null) return false;
+    if (!_canTypeText(key, control: control, alt: alt, meta: meta)) return false;
+    if (ShortcutsManager.isTextFieldFocused()) return true;
+
+    // -- dialogs & sheets are mostly typing, a field that lost focus there shouldn't turn AltGr text into an action
+    final isModifiedCharacter = control || alt;
+    if (!isModifiedCharacter) return false;
+    final navigator = NamidaNavigator.inst;
+    return navigator.openedDialogsCount > 0 || navigator.openedSheetsCount > 0;
+  }
+}
+
+bool _canTypeText(LogicalKeyboardKey key, {required bool control, required bool alt, required bool meta}) {
+  final isCharacterKey = (key.keyId & LogicalKeyboardKey.planeMask) == LogicalKeyboardKey.unicodePlane;
+  if (!isCharacterKey || meta) return false;
+  return switch (defaultTargetPlatform) {
+    TargetPlatform.windows => control == alt, // -- AltGr is reported as Ctrl+Alt
+    TargetPlatform.macOS || TargetPlatform.iOS => !control, // -- Option types text
+    TargetPlatform.linux || TargetPlatform.android || TargetPlatform.fuchsia => !control && !alt,
+  };
 }
 
 enum ShortcutCategory {
