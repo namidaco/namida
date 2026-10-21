@@ -271,6 +271,29 @@ class SearchSortController extends SearchPortsProvider {
     return closePorts(media);
   }
 
+  /// the track ports serve one search at a time, presets apply to the global search only.
+  Future<void> onTrackSearchFilterChanged() async {
+    await disposeMediaResources(MediaType.track);
+    if (!ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      _researchTracksTabIfFiltering();
+      return;
+    }
+    _isTracksTabSearchStale = true;
+    final text = ScrollSearchController.inst.searchTextEditingController.text;
+    if (text.isEmpty) {
+      await _prepareTracksPorts();
+    } else {
+      searchTracks(text, temp: true);
+    }
+  }
+
+  bool _isTracksTabSearchStale = false;
+
+  void _researchTracksTabIfFiltering() {
+    final tracksTabText = _activeTracksTab.textSearchController?.text;
+    if (tracksTabText != null && tracksTabText.isNotEmpty) searchTracks(tracksTabText);
+  }
+
   void searchMedia(String text, MediaType? media) {
     switch (media) {
       case MediaType.track:
@@ -795,6 +818,9 @@ class SearchSortController extends SearchPortsProvider {
   Future<void> prepareResources() async {
     if (_preparedResources == true) return;
     _preparedResources = true;
+    // -- built for the tracks tab with the default fields
+    final trackPortsFilters = _trackPortsFilters;
+    if (trackPortsFilters != null && settings.trackSearchFilter.value.didChangeFrom(trackPortsFilters)) await closePorts(MediaType.track);
     final enabledSearchesList = settings.activeSearchMediaTypes;
     final enabledSearches = <MediaType, bool>{};
     for (var f in enabledSearchesList.value) {
@@ -826,6 +852,10 @@ class SearchSortController extends SearchPortsProvider {
     _runningTempSearches.clear();
     _refreshRunningSearchesCount();
     await super.disposeAll().ignoreError();
+    if (_isTracksTabSearchStale) {
+      _isTracksTabSearchStale = false;
+      _researchTracksTabIfFiltering();
+    }
   }
 
   @override
@@ -877,15 +907,19 @@ class SearchSortController extends SearchPortsProvider {
       isolateFunction: (itemsSendPort) async {
         await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
         final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
-        final params = generateTrackSearchIsolateParams(itemsSendPort, topTracksMapListens);
+        final filters = _preparedResources == true ? settings.trackSearchFilter.value : settings.trackSearchFilterDefault.value;
+        _trackPortsFilters = filters;
+        final params = generateTrackSearchIsolateParams(itemsSendPort, topTracksMapListens, filters: filters);
         await Isolate.spawn(searchTracksIsolate, params);
       },
     );
   }
 
-  TracksSearchParams generateTrackSearchIsolateParams(SendPort sendPort, ListensSortedMap<Track> topTracksMapListens) {
+  List<TrackSearchFilter>? _trackPortsFilters;
+
+  TracksSearchParams generateTrackSearchIsolateParams(SendPort sendPort, ListensSortedMap<Track> topTracksMapListens, {required List<TrackSearchFilter> filters}) {
     final tracks = _tracksInfoList.value.map((e) => e.toTrackExt());
-    return TracksSearchWrapper.generateParams(sendPort, tracks, topTracksMapListens);
+    return TracksSearchWrapper.generateParams(sendPort, tracks, topTracksMapListens, filters: filters);
   }
 
   Future<SendPortWithCachedMessage?> _preparePlaylistPorts() async {

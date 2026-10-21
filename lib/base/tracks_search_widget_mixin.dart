@@ -29,7 +29,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   Iterable<TrackExtended> getTracksExtended();
 
   /// example: sort, sortReverse
-  List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting];
+  List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting, settings.trackSearchFilterDefault];
 
   /// example: main list or map that gets updated
   RxBaseCore? listChangesListenerRx();
@@ -180,7 +180,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
-    final params = TracksSearchWrapper.generateParams(port, getTracksExtended(), topTracksMapListens);
+    final params = TracksSearchWrapper.generateParams(port, getTracksExtended(), topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
     return IsolateFunctionReturnBuild(_searchTracksIsolate, params);
   }
 }

@@ -66,9 +66,10 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
   Widget build(BuildContext context) {
     const animationMs = 300;
     final trailingWidget = NamidaIconButton(
-      icon: Broken.close_circle,
-      padding: const EdgeInsets.all(8.0),
-      iconSize: 22,
+      padding: const EdgeInsets.all(8.0 + 2.0),
+      icon: Broken.eraser,
+      iconSize: 18.0,
+      iconColor: NColors.defaultIcon(),
       onPressed: () {
         controller.clear();
         SettingsSearchController.inst.onSearchChanged('');

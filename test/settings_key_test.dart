@@ -11,6 +11,7 @@ import 'package:namida/base/settings_file_writer.dart';
 import 'package:namida/class/count_per_row.dart';
 import 'package:namida/class/player_config_preset.dart';
 import 'package:namida/class/sort_chain.dart';
+import 'package:namida/class/named_presets.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
@@ -708,7 +709,7 @@ void main() {
       settings.updateMediaItemsTrackSorting(MediaType.album, titleSorting, toDefault: true);
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.activeIndex, null);
       expect(settings.mediaItemsTrackSorting.value[MediaType.album], titleSorting);
-      expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.sorting, durationSorting);
+      expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.value, durationSorting);
 
       await loadFile(settings, settings.buildJson());
       expect(settings.mediaItemsTrackSortingPresets.value[MediaType.album]?.presets.first.name, 'b');
@@ -722,6 +723,82 @@ void main() {
       expect(settings.mediaItemsTrackSorting.value[MediaType.album], titleSorting);
       settings.removeTrackSortPreset(MediaType.album, 0);
       expect(settings.buildJson().containsKey('mediaItemsTrackSortingPresets_v2'), false);
+    });
+
+    test('track search filter presets: the active one is searched by and edited, the default fields stay', () async {
+      await loadFile(settings, {'_v': 2});
+      final defaultFilters = settings.trackSearchFilter.value;
+      settings.addTrackSearchFilterPreset('a');
+      expect(settings.trackSearchFilterPresets.value.activeIndex, 0);
+      expect(settings.trackSearchFilter.value, defaultFilters);
+
+      int filtersNotified = 0;
+      void onFilters() => filtersNotified++;
+
+      settings.trackSearchFilter.addListener(onFilters);
+      addTearDown(() => settings.trackSearchFilter.removeListener(onFilters));
+
+      const lyricsFilters = [TrackSearchFilter.title, TrackSearchFilter.lyrics];
+      settings.updateTrackSearchFilter(lyricsFilters);
+      expect(settings.trackSearchFilter.value, lyricsFilters);
+      expect(filtersNotified, 1);
+      expect(settings.buildJson().containsKey('trackSearchFilter'), false);
+
+      settings.renameTrackSearchFilterPreset(0, 'b');
+      expect(filtersNotified, 1);
+
+      settings.selectTrackSearchFilterPreset(null);
+      expect(settings.trackSearchFilter.value, defaultFilters);
+      const titleFilters = [TrackSearchFilter.title];
+      settings.updateTrackSearchFilter(titleFilters);
+      expect(settings.trackSearchFilter.value, titleFilters);
+      expect(settings.buildJson()['trackSearchFilter'], ['title']);
+      expect(settings.trackSearchFilterPresets.value.presets.first.value, lyricsFilters);
+
+      await loadFile(settings, settings.buildJson());
+      expect(settings.trackSearchFilterPresets.value.presets.first.name, 'b');
+      settings.selectTrackSearchFilterPreset(0);
+      expect(settings.trackSearchFilter.value, lyricsFilters);
+
+      settings.addTrackSearchFilterPreset('c');
+      settings.selectTrackSearchFilterPreset(0);
+      settings.removeTrackSearchFilterPreset(0);
+      expect(settings.trackSearchFilterPresets.value.activeIndex, null);
+      expect(settings.trackSearchFilter.value, titleFilters);
+      settings.removeTrackSearchFilterPreset(0);
+      expect(settings.buildJson().containsKey('trackSearchFilterPresets'), false);
+    });
+
+    test('track search filter presets json: unknown filters and an invalid active index are dropped', () {
+      const presets = TrackSearchFilterPresets(
+        presets: [
+          TrackSearchFilterPreset(name: 'a', value: [TrackSearchFilter.title]),
+          TrackSearchFilterPreset(name: 'b', value: [TrackSearchFilter.lyrics, TrackSearchFilter.year]),
+        ],
+        activeIndex: 1,
+      );
+      final codec = NamedPresetsCodec.trackSearchFilter;
+      final json = codec.encode(presets);
+      final decoded = codec.decode(json);
+      expect(codec.encode(decoded), json);
+      expect(decoded.activePreset?.value, [TrackSearchFilter.lyrics, TrackSearchFilter.year]);
+
+      final removedBefore = decoded.withRemoved(0);
+      expect(removedBefore.activeIndex, 0);
+      expect(removedBefore.activePreset?.name, 'b');
+      expect(decoded.withRemoved(1).activeIndex, null);
+
+      final corrupted = codec.decode({
+        'presets': [
+          {
+            'name': 'x',
+            'filters': ['title', 'gone'],
+          },
+        ],
+        'active': 3,
+      });
+      expect(corrupted.activeIndex, null);
+      expect(corrupted.presets.first.value, [TrackSearchFilter.title]);
     });
 
     test('grid counts fall back to auto', () async {

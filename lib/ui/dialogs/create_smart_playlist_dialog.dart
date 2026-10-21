@@ -309,7 +309,7 @@ class _CreateSmartPlaylistDialogState extends State<CreateSmartPlaylistDialog> {
     final textStyleMedium = NText.medium.of(context).copyWith(fontWeight: FontWeight.w500);
     final textStyleSmall = NText.small.of(context).copyWith(fontWeight: FontWeight.w500);
     final isForTempSearch = widget._onSearchCompleter != null;
-    final dialogTitle = isForTempSearch ? lang.search : lang.smartPlaylist;
+    final dialogTitle = isForTempSearch ? lang.smartSearch : lang.smartPlaylist;
     final ruleGroupsAreValid = _ruleGroups.isValid();
     return Form(
       key: _formKey,

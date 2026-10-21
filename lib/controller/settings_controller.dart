@@ -18,10 +18,11 @@ import 'package:namida/class/player_config_preset.dart';
 import 'package:namida/class/queue_insertion.dart';
 import 'package:namida/class/shortcut_data.dart';
 import 'package:namida/class/sort_chain.dart';
-import 'package:namida/class/track_sort_presets.dart';
+import 'package:namida/class/named_presets.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
+import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/enums.dart';
@@ -199,13 +200,26 @@ class _SettingsController extends _SettingsKeysWriter {
   late final ytPlaylistSortReversed = _key('ytPlaylistSortReversed', true);
   late final indexMinDurationInSec = _key('indexMinDurationInSec', 5, sync: false);
   late final indexMinFileSizeInB = _key('indexMinFileSizeInB', 100 * 1024, sync: false);
-  late final trackSearchFilter = _keyList(
+
+  /// used while no preset is active, searching reads [trackSearchFilter].
+  late final trackSearchFilterDefault = _keyList(
     'trackSearchFilter',
     isKuru
         ? const [TrackSearchFilter.filename, TrackSearchFilter.title, TrackSearchFilter.artist, TrackSearchFilter.album, TrackSearchFilter.comment, TrackSearchFilter.year]
         : const [TrackSearchFilter.filename, TrackSearchFilter.title, TrackSearchFilter.artist, TrackSearchFilter.album],
     item: TrackSearchFilter.values.asCodec(),
   );
+  late final trackSearchFilterPresets = _keyObject(
+    'trackSearchFilterPresets',
+    const TrackSearchFilterPresets.empty(),
+    NamedPresetsCodec.trackSearchFilter.decode,
+    NamedPresetsCodec.trackSearchFilter.encode,
+  );
+
+  /// the active preset's filters, or [trackSearchFilterDefault].
+  RxBaseCore<List<TrackSearchFilter>> get trackSearchFilter => _activeTrackSearchFilter.filters;
+
+  late final _activeTrackSearchFilter = _ActiveTrackSearchFilter(trackSearchFilterDefault, trackSearchFilterPresets);
   late final playlistSearchFilter = _keyEnumList('playlistSearchFilter_v2', PlaylistSearchFilter.values, PlaylistSearchFilter.values);
   late final directoriesToScan = _keyList<DirectoryIndex>('directoriesToScan', const [], item: const _DirectoryIndexCodec(), sync: false);
   late final directoriesToExclude = _keyList<DirectoryIndex>('directoriesToExclude', const [], item: const _DirectoryIndexCodec(), sync: false);
@@ -485,7 +499,7 @@ class _SettingsController extends _SettingsKeysWriter {
     'mediaItemsTrackSortingPresets_v2',
     const {},
     key: MediaType.values.asCodec(),
-    value: _ObjectCodec(TrackSortPresets.fromJson, (v) => v.toJson()),
+    value: _ObjectCodec(NamedPresetsCodec.trackSorting.decode, NamedPresetsCodec.trackSorting.encode),
   );
 
   /// [mediaItemsTrackSortingDefault] with each type's active preset applied.
@@ -672,7 +686,7 @@ class _SettingsController extends _SettingsKeysWriter {
     final presets = mediaItemsTrackSortingPresets.value[media];
     final hasActivePreset = presets?.activeIndex != null;
     if (presets != null && hasActivePreset && !toDefault) {
-      final newPresets = presets.withActiveSorting(sorting);
+      final newPresets = presets.withActiveValue(sorting);
       mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
       return;
     }
@@ -700,7 +714,7 @@ class _SettingsController extends _SettingsKeysWriter {
     final presets = mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
     if (!presets.canAdd) return;
     final sorting = mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
-    final preset = TrackSortPreset(name: name, sorting: sorting);
+    final preset = TrackSortPreset(name: name, value: sorting);
     final newPresets = presets.withAdded(preset);
     mediaItemsTrackSortingPresets.update((map) => map[media] = newPresets);
   }
@@ -724,6 +738,46 @@ class _SettingsController extends _SettingsKeysWriter {
         map[media] = newPresets;
       }
     });
+  }
+
+  /// writes to the active preset, or to [trackSearchFilterDefault] while none is active.
+  void updateTrackSearchFilter(List<TrackSearchFilter> filters) {
+    final presets = trackSearchFilterPresets.value;
+    if (presets.activeIndex == null) {
+      trackSearchFilterDefault.replace(filters);
+      return;
+    }
+    final newPresets = presets.withActiveValue(filters);
+    trackSearchFilterPresets.save(newPresets);
+  }
+
+  void selectTrackSearchFilterPreset(int? index) {
+    final presets = trackSearchFilterPresets.value;
+    if (presets.activeIndex == index) return;
+    final newPresets = presets.withActive(index);
+    trackSearchFilterPresets.save(newPresets);
+  }
+
+  /// saves the active filters as a new preset and selects it.
+  void addTrackSearchFilterPreset(String name) {
+    final presets = trackSearchFilterPresets.value;
+    if (!presets.canAdd) return;
+    final preset = TrackSearchFilterPreset(name: name, value: trackSearchFilter.value);
+    final newPresets = presets.withAdded(preset);
+    trackSearchFilterPresets.save(newPresets);
+  }
+
+  void renameTrackSearchFilterPreset(int index, String name) {
+    final presets = trackSearchFilterPresets.value;
+    final newPreset = presets.presets[index].copyWith(name: name);
+    final newPresets = presets.withReplaced(index, newPreset);
+    trackSearchFilterPresets.save(newPresets);
+  }
+
+  void removeTrackSearchFilterPreset(int index) {
+    final presets = trackSearchFilterPresets.value;
+    final newPresets = presets.withRemoved(index);
+    trackSearchFilterPresets.save(newPresets);
   }
 
   void updateGroupSorting(MediaType media, SortChain<GroupSortType> sorting) {
@@ -828,10 +882,31 @@ class _ActiveTrackSorting {
     for (final e in _presets.value.entries) {
       final preset = e.value.activePreset;
       if (preset == null) continue;
-      newSorting[e.key] = preset.sorting;
+      newSorting[e.key] = preset.value;
     }
     if (mapEquals(newSorting, sorting.value)) return;
     sorting.value = _ProtectedMap(newSorting);
+  }
+}
+
+class _ActiveTrackSearchFilter {
+  final _SettingsListKey<TrackSearchFilter> _defaultFilters;
+  final SettingsKey<TrackSearchFilterPresets> _presets;
+
+  final filters = Rx<List<TrackSearchFilter>>(const []);
+
+  _ActiveTrackSearchFilter(this._defaultFilters, this._presets) {
+    _rebuild();
+    _defaultFilters.addListener(_rebuild);
+    _presets.addListener(_rebuild);
+  }
+
+  void _rebuild() {
+    final presetFilters = _presets.value.activePreset?.value;
+    final newFilters = presetFilters ?? _defaultFilters.value;
+    if (listEquals(newFilters, filters.value)) return;
+    final protectedFilters = presetFilters == null ? newFilters : _ProtectedList(presetFilters);
+    filters.value = protectedFilters;
   }
 }
 

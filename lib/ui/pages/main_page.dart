@@ -746,9 +746,10 @@ class NamidaSearchBar extends StatelessWidget {
       },
     );
     final trailingWidget = NamidaIconButton(
-      padding: const EdgeInsets.all(8.0),
-      icon: Broken.close_circle,
-      iconSize: 22,
+      padding: const EdgeInsets.all(8.0 + 2.0),
+      icon: Broken.eraser,
+      iconSize: 18.0,
+      iconColor: NColors.defaultIcon(),
       onPressed: ScrollSearchController.inst.resetSearch,
     );
     return NBuilder(
@@ -757,6 +758,7 @@ class NamidaSearchBar extends StatelessWidget {
         return SearchBarAnimation(
           key: searchBarKey,
           initiallyAlwaysExpanded: settings.alwaysExpandedSearchbar.value,
+          isOpenWhileAlwaysExpanded: ScrollSearchController.inst.isGlobalSearchMenuShown,
           isSearchBoxOnRightSide: true,
           textAlignToRight: false,
           durationInMilliSeconds: 300,
@@ -777,15 +779,11 @@ class NamidaSearchBar extends StatelessWidget {
           cursorColour: colors.onSurface,
           buttonBorderColour: Colors.black45,
           cursorRadius: const Radius.circular(12.0),
-          buttonWidget: const IgnorePointer(
-            child: NamidaIconButton(
-              icon: Broken.search_normal,
-            ),
+          buttonWidget: const NamidaIconButton(
+            icon: Broken.search_normal,
           ),
-          secondaryButtonWidget: const IgnorePointer(
-            child: NamidaIconButton(
-              icon: Broken.search_status_1,
-            ),
+          secondaryButtonWidget: const NamidaIconButton(
+            icon: Broken.search_status_1,
           ),
           buttonWidgetSmallPadding: 24.0 + 8.0,
           buttonWidgetSmall: buttonWidgetSmall,

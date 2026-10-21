@@ -36,8 +36,12 @@ class TracksSearchWrapper {
     this.textCleanedMinorForSearch,
   );
 
-  static TracksSearchParams generateParams(SendPort sendPort, Iterable<TrackExtended> tracks, ListensSortedMap<Track> topTracksMapListens) {
-    final filters = settings.trackSearchFilter.value;
+  static TracksSearchParams generateParams(
+    SendPort sendPort,
+    Iterable<TrackExtended> tracks,
+    ListensSortedMap<Track> topTracksMapListens, {
+    required List<TrackSearchFilter> filters,
+  }) {
     final addDescription = filters.contains(TrackSearchFilter.description);
     final addLyrics = filters.contains(TrackSearchFilter.lyrics);
     final addMoods = filters.contains(TrackSearchFilter.moods);
@@ -137,6 +141,8 @@ class TracksSearchWrapper {
       final year = trMap.year;
       final track = Track.decide(path, isVideo);
       final folderName = sfolder ? trMap.networkFolderName ?? track.folderName : null;
+      // -- lowercase only, a full cleanup is slower and over-matches long texts
+      final description = sdescription ? trMap.description?.toLowerCase() : null;
 
       final listensCount = trMap.listensCount;
       final listensMultiplier = _listensMultiplierOf(listensCount, maxListensLog);
@@ -206,7 +212,7 @@ class TracksSearchWrapper {
                 )
               : null,
           splitComment: splitThis(trMap.comment, scomment),
-          description: !sdescription ? null : _PropertySimple.orNull(trMap.description),
+          description: _PropertySimple.orNull(description),
           splitMoods: smoods
               ? _mapListCleanedAndCleanedMinorOrNull(
                   trMap.moods,
@@ -314,7 +320,8 @@ class TracksSearchWrapper {
         }
       }
     }
-    return _PropertySimple.orNull(lyricsBuffer.toString());
+    final lyricsText = lyricsBuffer.toString().toLowerCase();
+    return _PropertySimple.orNull(lyricsText);
   }
 
   static _Property _splitTextCleanedAndCleanedMinor(

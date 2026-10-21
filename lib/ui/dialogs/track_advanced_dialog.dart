@@ -20,6 +20,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -1253,7 +1254,7 @@ class _TracksSearchTemp with PortsProvider<TracksSearchParams> {
   Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
-    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, topTracksMapListens);
+    final params = SearchSortController.inst.generateTrackSearchIsolateParams(port, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
     return IsolateFunctionReturnBuild(SearchSortController.searchTracksIsolate, params);
   }
 

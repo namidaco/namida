@@ -19,7 +19,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/class/track_sort_presets.dart';
+import 'package:namida/class/named_presets.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/eggs_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -351,6 +351,56 @@ class NamidaOnTaps {
         media: media,
         onBeforeChange: onBeforeChange,
         onChanged: onChanged,
+      ),
+    );
+  }
+
+  void onTrackSearchFilterTap() {
+    final originalFilters = settings.trackSearchFilter.value;
+
+    void refreshIfChanged() {
+      final didChange = settings.trackSearchFilter.value.didChangeFrom(originalFilters);
+      if (didChange) SearchSortController.inst.onTrackSearchFilterChanged();
+    }
+
+    NamidaNavigator.inst.navigateDialog(
+      onDismissing: refreshIfChanged,
+      dialog: CustomBlurryDialog(
+        title: lang.filterTracksBy,
+        leftAction: const _TrackSearchFilterPresetsButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Broken.refresh),
+            tooltip: lang.restoreDefaults,
+            onPressed: () => settings.updateTrackSearchFilter(settings.trackSearchFilterDefault.fallback),
+          ),
+          DoneButton(
+            additional: refreshIfChanged,
+          ),
+        ],
+        child: SizedBox(
+          width: namida.width,
+          height: namida.height * 0.6,
+          child: Column(
+            children: [
+              const _TrackSearchFilterPresetHint(),
+              Expanded(
+                child: SmoothSingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ...TrackSearchFilter.values.map(
+                        (e) => _TrackSearchFilterTile(
+                          filter: e,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2367,43 +2417,108 @@ class _TrackSortPresetsButton extends StatelessWidget {
     onBeforeChange();
     final sorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
     final initialName = sorting.types().map((e) => e.toText()).joinText(separator: ', ');
-    _TrackSortPresetNameDialog.show(
+    _PresetNameDialog.show(
       title: lang.saveAsPreset,
       initialName: initialName,
       onName: (name) => settings.addTrackSortPreset(media, name),
     );
   }
 
-  void _edit(int index, TrackSortPreset preset) {
+  void _rename(int index, String name) => settings.renameTrackSortPreset(media, index, name);
+
+  void _remove(int index) {
+    onBeforeChange();
+    settings.removeTrackSortPreset(media, index);
+    _reloadSorts();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.mediaItemsTrackSortingPresets,
+      builder: (context, presetsMap) => _NamedPresetsButton(
+        presets: presetsMap[media] ?? const TrackSortPresets.empty(),
+        defaultIcon: Broken.sort,
+        onSelect: _select,
+        onAdd: _add,
+        onRename: _rename,
+        onRemove: _remove,
+      ),
+    );
+  }
+}
+
+class _TrackSearchFilterPresetsButton extends StatelessWidget {
+  const _TrackSearchFilterPresetsButton();
+
+  void _add() {
+    final filters = settings.trackSearchFilter.value;
+    final initialName = filters.map((e) => e.toText()).joinText(separator: ', ');
+    _PresetNameDialog.show(
+      title: lang.saveAsPreset,
+      initialName: initialName,
+      onName: settings.addTrackSearchFilterPreset,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.trackSearchFilterPresets,
+      builder: (context, presets) => _NamedPresetsButton(
+        presets: presets,
+        defaultIcon: Broken.filter_search,
+        onSelect: settings.selectTrackSearchFilterPreset,
+        onAdd: _add,
+        onRename: settings.renameTrackSearchFilterPreset,
+        onRemove: settings.removeTrackSearchFilterPreset,
+      ),
+    );
+  }
+}
+
+class _NamedPresetsButton<T> extends StatelessWidget {
+  final NamedPresets<T> presets;
+  final IconData defaultIcon;
+  final void Function(int? index) onSelect;
+  final VoidCallback onAdd;
+  final void Function(int index, String name) onRename;
+  final void Function(int index) onRemove;
+
+  const _NamedPresetsButton({
+    required this.presets,
+    required this.defaultIcon,
+    required this.onSelect,
+    required this.onAdd,
+    required this.onRename,
+    required this.onRemove,
+  });
+
+  void _edit(int index, NamedPreset<T> preset) {
     NamidaNavigator.inst.popMenu();
-    _TrackSortPresetNameDialog.show(
+    _PresetNameDialog.show(
       title: lang.rename,
       initialName: preset.name,
-      onName: (name) => settings.renameTrackSortPreset(media, index, name),
-      onDelete: () {
-        onBeforeChange();
-        settings.removeTrackSortPreset(media, index);
-        _reloadSorts();
-      },
+      onName: (name) => onRename(index, name),
+      onDelete: () => onRemove(index),
     );
   }
 
   List<NamidaPopupItem> _menuItems() {
-    final presets = settings.mediaItemsTrackSortingPresets.value[media] ?? const TrackSortPresets.empty();
     final activeIndex = presets.activeIndex;
     return [
       NamidaPopupItem(
-        icon: Broken.sort,
+        icon: defaultIcon,
         title: lang.defaultLabel,
         selected: activeIndex == null,
-        onTap: () => _select(null),
+        onTap: () => onSelect(null),
       ),
       ...presets.presets.mapIndexed(
         (preset, i) => NamidaPopupItem(
           icon: Broken.layer,
           title: preset.name,
           selected: activeIndex == i,
-          onTap: () => _select(i),
+          onTap: () => onSelect(i),
           trailing: NamidaIconButton(
             horizontalPadding: 0.0,
             icon: Broken.edit_2,
@@ -2417,7 +2532,7 @@ class _TrackSortPresetsButton extends StatelessWidget {
         NamidaPopupItem(
           icon: Broken.add,
           title: lang.add,
-          onTap: _add,
+          onTap: onAdd,
         ),
     ];
   }
@@ -2429,36 +2544,102 @@ class _TrackSortPresetsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ObxO(
-      rx: settings.mediaItemsTrackSortingPresets,
-      builder: (context, presetsMap) {
-        final activePreset = presetsMap[media]?.activePreset;
-        final title = activePreset?.name ?? lang.defaultLabel;
-        return NamidaInkWell(
-          borderRadius: 6.0,
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          bgColor: const NColors(.secondary, opacity: 0.15),
-          onTap: () => _showMenu(context),
+    final title = presets.activePreset?.name ?? lang.defaultLabel;
+    return NamidaInkWell(
+      borderRadius: 6.0,
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      bgColor: const NColors(.secondary, opacity: 0.15),
+      onTap: () => _showMenu(context),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Broken.layer,
+            size: 16.0,
+          ),
+          const SizedBox(width: 4.0),
+          Flexible(
+            child: NamidaText(
+              title,
+              style: const NText(.small, weight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrackSearchFilterPresetHint extends StatelessWidget {
+  const _TrackSearchFilterPresetHint();
+
+  static bool _isPresetActive() => settings.trackSearchFilterPresets.valueR.activeIndex != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxSelect(
+      selector: _isPresetActive,
+      builder: (context, isPresetActive) => AnimatedShow(
+        show: isPresetActive,
+        duration: const Duration(milliseconds: 250),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
           child: Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Broken.layer,
+                Broken.info_circle,
                 size: 16.0,
               ),
-              const SizedBox(width: 4.0),
-              Flexible(
+              const SizedBox(
+                width: 6.0,
+              ),
+              Expanded(
                 child: NamidaText(
-                  title,
-                  style: const NText(.small, weight: FontWeight.w700),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  lang.presetOnlyAppliesToSearchPage,
+                  style: NText.small,
                 ),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackSearchFilterTile extends StatelessWidget {
+  final TrackSearchFilter filter;
+
+  const _TrackSearchFilterTile({
+    required this.filter,
+  });
+
+  void _onTap() {
+    final filters = settings.trackSearchFilter.value;
+    final isActive = filters.contains(filter);
+    if (isActive && filters.length <= 1) {
+      showMinimumItemsSnack(1);
+      return;
+    }
+    final newFilters = isActive ? filters.where((e) => e != filter).toFixedList() : [...filters, filter];
+    settings.updateTrackSearchFilter(newFilters);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(3.0),
+      child: ObxO(
+        rx: settings.trackSearchFilter,
+        builder: (context, filters) => ListTileWithCheckMark(
+          title: filter.toText(),
+          subtitle: filter.canAffectPerformance ? lang.performanceNote : '',
+          onTap: _onTap,
+          active: filters.contains(filter),
+        ),
+      ),
     );
   }
 }
@@ -2490,7 +2671,7 @@ class _SortEntryReverseButton extends StatelessWidget {
   }
 }
 
-abstract final class _TrackSortPresetNameDialog {
+abstract final class _PresetNameDialog {
   static void show({
     required String title,
     required String initialName,

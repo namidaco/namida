@@ -272,34 +272,75 @@ class _SearchFiltersHeader extends StatelessWidget {
         ),
         const SizedBox(width: 4.0),
         ObxO(
+          rx: settings.trackSearchFilterPresets,
+          builder: (context, presets) => _SearchHeaderButton(
+            isActive: presets.activeIndex != null,
+            icon: Broken.filter_search,
+            tooltip: () => lang.filterTracksBy,
+            onTap: NamidaOnTaps.inst.onTrackSearchFilterTap,
+          ),
+        ),
+        const SizedBox(width: 4.0),
+        ObxO(
           rx: isTracksFromSmartSearch,
-          builder: (context, isFromSmartSearch) => NBuilder(
-            selfAnimated: true,
-            builder: (context, colors) {
-              final secondaryColor = colors.secondary;
-              return NamidaInkWell(
-                animationDurationMS: 200,
-                borderRadius: 8.0,
-                bgColor: NColors.fixed(secondaryColor.withOpacityExt(isFromSmartSearch ? 0.3 : 0.08)),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: secondaryColor.withOpacityExt(isFromSmartSearch ? 0.8 : 0.4),
-                    width: isFromSmartSearch ? 1.5 : 1.0,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-                onTap: onSmartSearchTap,
-                onLongPress: onSmartSearchLongPress,
-                child: Icon(
-                  isFromSmartSearch ? Broken.magicpen : Broken.filter_search,
-                  size: 20.0,
-                ),
-              );
-            },
+          builder: (context, isFromSmartSearch) => _SearchHeaderButton(
+            isActive: isFromSmartSearch,
+            icon: Broken.magicpen,
+            tooltip: () => lang.smartSearch,
+            onTap: onSmartSearchTap,
+            onLongPress: onSmartSearchLongPress,
           ),
         ),
         const SizedBox(width: 4.0),
       ],
+    );
+  }
+}
+
+class _SearchHeaderButton extends StatelessWidget {
+  final bool isActive;
+  final IconData icon;
+  final String Function() tooltip;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+
+  const _SearchHeaderButton({
+    required this.isActive,
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+    this.onLongPress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final button = NBuilder(
+      selfAnimated: true,
+      builder: (context, colors) {
+        final secondaryColor = colors.secondary;
+        return NamidaInkWell(
+          animationDurationMS: 200,
+          borderRadius: 8.0,
+          bgColor: NColors.fixed(secondaryColor.withOpacityExt(isActive ? 0.3 : 0.08)),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: secondaryColor.withOpacityExt(isActive ? 0.8 : 0.4),
+              width: isActive ? 1.5 : 1.0,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: Icon(
+            icon,
+            size: 20.0,
+          ),
+        );
+      },
+    );
+    return NamidaTooltip(
+      message: tooltip,
+      child: button,
     );
   }
 }

@@ -24,6 +24,7 @@ import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
@@ -134,7 +135,8 @@ class ExtrasSettings extends SettingSubpageProvider {
     [
       SettingCustom(
         title: () => lang.filterTracksBy,
-        keys: [settings.trackSearchFilter],
+        keys: [settings.trackSearchFilterDefault, settings.trackSearchFilterPresets],
+        onReset: SearchSortController.inst.onTrackSearchFilterChanged,
         tile: (args) => _FilterTracksByTile(
           bgColor: args.bgColor,
         ),
@@ -1097,72 +1099,6 @@ class _FilterTracksByTile extends StatelessWidget {
 
   const _FilterTracksByTile({required this.bgColor});
 
-  void _onFilterTap(TrackSearchFilter type) {
-    final canRemove = settings.trackSearchFilter.value.length > 1;
-
-    if (settings.trackSearchFilter.value.contains(type)) {
-      if (canRemove) {
-        settings.trackSearchFilter.update((list) => list.remove(type));
-      } else {
-        showMinimumItemsSnack(1);
-      }
-    } else {
-      settings.trackSearchFilter.update((list) => list.addNoDuplicates(type));
-    }
-  }
-
-  void _showDialog(BuildContext context) {
-    final original = List<TrackSearchFilter>.from(settings.trackSearchFilter.value);
-
-    void refreshNecessary() {
-      final didChange = settings.trackSearchFilter.value.didChangeFrom(original);
-      if (didChange) {
-        SearchSortController.inst.disposeMediaResources(MediaType.track);
-      }
-    }
-
-    NamidaNavigator.inst.navigateDialog(
-      onDismissing: refreshNecessary,
-      dialog: CustomBlurryDialog(
-        title: lang.filterTracksBy,
-        actions: [
-          IconButton(
-            icon: const Icon(Broken.refresh),
-            tooltip: lang.restoreDefaults,
-            onPressed: settings.trackSearchFilter.reset,
-          ),
-          DoneButton(
-            additional: refreshNecessary,
-          ),
-        ],
-        child: SizedBox(
-          width: context.width,
-          height: context.height * 0.6,
-          child: SmoothSingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ...TrackSearchFilter.values.map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.all(3.0),
-                    child: Obx(
-                      (context) => ListTileWithCheckMark(
-                        title: e.toText(),
-                        subtitle: e.canAffectPerformance ? lang.performanceNote : '',
-                        onTap: () => _onFilterTap(e),
-                        active: settings.trackSearchFilter.valueR.contains(e),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return ObxO(
@@ -1172,7 +1108,7 @@ class _FilterTracksByTile extends StatelessWidget {
         icon: Broken.filter_search,
         title: lang.filterTracksBy,
         trailingText: "${trackSearchFilter.length}",
-        onTap: () => _showDialog(context),
+        onTap: NamidaOnTaps.inst.onTrackSearchFilterTap,
       ),
     );
   }
