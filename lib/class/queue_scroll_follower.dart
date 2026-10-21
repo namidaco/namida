@@ -7,7 +7,8 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 class QueueScrollFollower {
-  final double Function() currentItemStart;
+  /// null when the current item isn't in the list.
+  final double? Function() currentItemStart;
   final bool Function()? canFollow;
 
   QueueScrollFollower({required this.currentItemStart, this.canFollow}) {
@@ -57,16 +58,28 @@ class QueueScrollFollower {
   bool _isCurrentItemInComfortZone() {
     final position = scrollController.positions.lastOrNull;
     if (position == null || !position.hasContentDimensions) return false;
+    final itemStart = currentItemStart();
+    if (itemStart == null) return true;
     final viewport = position.viewportDimension;
-    final itemOffsetInViewport = currentItemStart() - position.pixels;
+    final itemOffsetInViewport = itemStart - position.pixels;
     return itemOffsetInViewport >= viewport * _kComfortZoneStart && itemOffsetInViewport <= viewport * _kComfortZoneEnd;
   }
 
+  /// jumps to the list start when the current item isn't in the list.
   void jumpToCurrentItem() {
     final position = scrollController.positions.lastOrNull;
     if (position == null || !position.hasContentDimensions) return;
     _isFollowing = true;
-    final target = _currentItemScrollOffset(position);
+    final target = _currentItemScrollOffset(position) ?? position.minScrollExtent;
+    position.jumpTo(target);
+    _updateArrowIcon();
+  }
+
+  /// [itemStart] is the item's offset in the list, it gets placed like the current item.
+  void jumpToItem(double itemStart) {
+    final position = scrollController.positions.lastOrNull;
+    if (position == null || !position.hasContentDimensions) return;
+    final target = _itemScrollOffset(itemStart, position);
     position.jumpTo(target);
     _updateArrowIcon();
   }
@@ -74,8 +87,9 @@ class QueueScrollFollower {
   Future<void> animateToCurrentItem() async {
     final position = scrollController.positions.lastOrNull;
     if (position == null || !position.hasContentDimensions) return;
-    _isFollowing = true;
     final target = _currentItemScrollOffset(position);
+    if (target == null) return;
+    _isFollowing = true;
     if (position.pixels == target) {
       _updateArrowIcon();
       return;
@@ -94,9 +108,15 @@ class QueueScrollFollower {
     if (_runningAnimations == 0) _isFollowing = arrowIcon.value == Broken.cd;
   }
 
+  double? _currentItemScrollOffset(ScrollPosition position) {
+    final itemStart = currentItemStart();
+    if (itemStart == null) return null;
+    return _itemScrollOffset(itemStart, position);
+  }
+
   /// clamped, otherwise the icon never settles on [Broken.cd] for items near the edges.
-  double _currentItemScrollOffset(ScrollPosition position) {
-    final offset = currentItemStart() - position.viewportDimension * 0.2;
+  static double _itemScrollOffset(double itemStart, ScrollPosition position) {
+    final offset = itemStart - position.viewportDimension * 0.2;
     return offset.clampDouble(position.minScrollExtent, position.maxScrollExtent);
   }
 
@@ -105,7 +125,9 @@ class QueueScrollFollower {
     if (position == null || !position.hasContentDimensions) return;
     final target = _currentItemScrollOffset(position);
     final pixels = position.pixels;
-    arrowIcon.value = pixels > target
+    arrowIcon.value = target == null
+        ? Broken.cd
+        : pixels > target
         ? Broken.arrow_up_1
         : pixels < target
         ? Broken.arrow_down

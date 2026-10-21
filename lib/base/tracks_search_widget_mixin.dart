@@ -314,24 +314,28 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
       (context) {
         final sorting = settings.mediaItemsTrackSorting.valueR[type] ?? const SortChain<SortType>([]);
         final presetName = settings.mediaItemsTrackSortingPresets.valueR[type]?.activePreset?.name;
+        final boxSorting = widget.disableSort
+            ? null
+            : TracksSearchBoxSorting(
+                sort: sorting.firstType,
+                presetName: presetName,
+                reverse: sorting.reverse,
+                onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
+                onReverseIconTap: (newSortReverse) {
+                  final newSorting = sorting.copyWith(reverse: newSortReverse);
+                  settings.updateMediaItemsTrackSorting(type, newSorting);
+                  Indexer.inst.sortMediaTracksSubLists([type]);
+                },
+              );
         return TracksSearchWidgetBoxBase(
           state: widget.state,
           leftText: widget.leftText,
-          sort: sorting.firstType,
-          presetName: presetName,
-          sortReverse: sorting.reverse,
-          disableSort: widget.disableSort,
+          sorting: boxSorting,
           onFilterIconLongPress: () => _onFilterIconLongPress(
             type: type,
             sorting: sorting,
             pageTitle: widget.pageTitle,
           ),
-          onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(type),
-          onReverseIconTap: (newSortReverse) {
-            final newSorting = sorting.copyWith(reverse: newSortReverse);
-            settings.updateMediaItemsTrackSorting(type, newSorting);
-            Indexer.inst.sortMediaTracksSubLists([type]);
-          },
         );
       },
     );
@@ -341,29 +345,29 @@ class _TracksSearchWidgetBoxState extends State<TracksSearchWidgetBox> {
 class TracksSearchWidgetBoxBase extends StatelessWidget {
   final TracksSearchWidgetMixin state;
   final String leftText;
-  final SortType? sort;
-  final String? presetName;
-  final bool sortReverse;
-  final bool disableSort;
-  final void Function() onSortTap;
-  final void Function(bool newSortReverse) onReverseIconTap;
+  final TracksSearchBoxSorting? sorting;
   final void Function()? onFilterIconLongPress;
 
   const TracksSearchWidgetBoxBase({
     super.key,
     required this.state,
     required this.leftText,
-    required this.sort,
-    this.presetName,
-    required this.sortReverse,
-    this.disableSort = false,
-    required this.onSortTap,
-    required this.onReverseIconTap,
+    required this.sorting,
     this.onFilterIconLongPress,
   });
 
   @override
   Widget build(BuildContext context) {
+    final sorting = this.sorting;
+    final sortByMenu = sorting == null
+        ? null
+        : SortByMenu(
+            title: sorting.presetName ?? sorting.sort?.toText() ?? lang.custom,
+            popupMenuChild: null,
+            onSortTap: sorting.onSortTap,
+            isCurrentlyReversed: sorting.reverse,
+            onReverseIconTap: () => sorting.onReverseIconTap(!sorting.reverse),
+          );
     return NColoredBox(
       color: NColors.scaffold,
       child: ExpandableBox(
@@ -380,16 +384,7 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
           ),
           SizedBox(width: 10.0),
         ],
-        sortByMenuWidget: SortByMenu(
-          title: presetName ?? sort?.toText() ?? lang.custom,
-          popupMenuChild: null,
-          onSortTap: onSortTap,
-          isCurrentlyReversed: sortReverse,
-          onReverseIconTap: () {
-            onReverseIconTap(!sortReverse);
-          },
-        ),
-        disableSorting: disableSort,
+        sortByMenuWidget: sortByMenu,
         textField: CustomTextField(
           focusNode: state.focusNode,
           textFieldController: state._textEditingController,
@@ -399,4 +394,20 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
       ),
     );
   }
+}
+
+class TracksSearchBoxSorting {
+  final SortType? sort;
+  final String? presetName;
+  final bool reverse;
+  final void Function() onSortTap;
+  final void Function(bool newSortReverse) onReverseIconTap;
+
+  const TracksSearchBoxSorting({
+    required this.sort,
+    this.presetName,
+    required this.reverse,
+    required this.onSortTap,
+    required this.onReverseIconTap,
+  });
 }

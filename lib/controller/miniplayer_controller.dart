@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import 'package:namida/base/queue_search.dart';
 import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -56,6 +57,7 @@ class MiniPlayerController {
   bool get _miniplayerIsWideScreen => Dimensions.inst.miniplayerIsWideScreen;
 
   late final queueFollower = QueueScrollFollower(currentItemStart: _currentItemStart, canFollow: () => isInQueue);
+  late final queueSearch = QueueSearch(onResultsChanged: _onQueueSearchResultsChanged, onResultSelected: _onQueueSearchResultSelected);
 
   Future<void> _onMiniplayerDismiss() async => await Player.inst.clearQueue();
 
@@ -287,17 +289,45 @@ class MiniPlayerController {
     queueFollower.onCurrentItemMoved();
   }
 
-  double _currentItemStart() {
-    final index = Player.inst.currentIndex.value;
+  void _onQueueSearchResultsChanged(bool isNewQuery) {
+    _mixedCurrentItemStart = null;
+    if (isNewQuery) {
+      SchedulerBinding.instance.addPostFrameCallback((_) => queueFollower.jumpToCurrentItem());
+    } else {
+      queueFollower.onCurrentItemMoved();
+    }
+  }
+
+  void _onQueueSearchResultSelected(int index) {
+    _mixedCurrentItemStart = null;
+    SchedulerBinding.instance.addPostFrameCallback((_) => queueFollower.jumpToItem(_queueItemStartOf(index)));
+  }
+
+  double _queueItemStartOf(int index) {
     if (!Dimensions.inst.isMixedPlayerQueue) return _currentItemExtent * index;
-    final cached = _mixedCurrentItemStart;
-    if (cached != null) return cached;
     final queue = Player.inst.currentQueue.value;
     int videosCount = 0;
     for (int i = 0; i < index; i++) {
       if (queue[i] is YoutubeID) videosCount++;
     }
-    return _mixedCurrentItemStart = videosCount * Dimensions.youtubeCardItemExtent + (index - videosCount) * Dimensions.inst.trackTileItemExtent;
+    return videosCount * Dimensions.youtubeCardItemExtent + (index - videosCount) * Dimensions.inst.trackTileItemExtent;
+  }
+
+  double? _currentItemStart() {
+    final index = Player.inst.currentIndex.value;
+    final results = queueSearch.results.value;
+    final position = results == null ? index : QueueSearch.positionOf(results, index);
+    if (position == null) return null;
+    if (!Dimensions.inst.isMixedPlayerQueue) return _currentItemExtent * position;
+    final cached = _mixedCurrentItemStart;
+    if (cached != null) return cached;
+    final queue = Player.inst.currentQueue.value;
+    int videosCount = 0;
+    for (int i = 0; i < position; i++) {
+      final queueIndex = results == null ? i : results[i];
+      if (queue[queueIndex] is YoutubeID) videosCount++;
+    }
+    return _mixedCurrentItemStart = videosCount * Dimensions.youtubeCardItemExtent + (position - videosCount) * Dimensions.inst.trackTileItemExtent;
   }
 
   bool onWillPop() {
@@ -496,6 +526,7 @@ class MiniPlayerController {
   void snapToExpanded({bool haptic = true}) async {
     WakelockController.inst.updateMiniplayerStatus(true);
     ScrollSearchController.inst.unfocusKeyboard();
+    queueSearch.close();
 
     _offset = maxOffset;
     if (_prevOffset < maxOffset) bounceUp = true;
@@ -508,6 +539,7 @@ class MiniPlayerController {
     if (_miniplayerIsWideScreen) return;
 
     WakelockController.inst.updateMiniplayerStatus(false);
+    queueSearch.close();
     _offset = 0;
     bounceDown = false;
     await _snap(haptic: haptic, curve: _bouncingCurve);

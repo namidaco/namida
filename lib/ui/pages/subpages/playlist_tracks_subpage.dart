@@ -782,19 +782,21 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                   tracksWithDate.displayTrackKeyword,
                   tracksWithDate.totalDurationFormatted,
                 ].join(' - '),
-                sort: sort,
-                sortReverse: sortReverse,
-                onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
-                  playlist.name,
-                  PlaylistController.inst,
-                  SortType.values,
-                  (sort) => sort.toText(),
-                  (sort) => sort.toIcon(),
+                sorting: TracksSearchBoxSorting(
+                  sort: sort,
+                  reverse: sortReverse,
+                  onSortTap: () => NamidaOnTaps.inst.onPlaylistSubPageTracksSortIconTap(
+                    playlist.name,
+                    PlaylistController.inst,
+                    SortType.values,
+                    (sort) => sort.toText(),
+                    (sort) => sort.toIcon(),
+                  ),
+                  onReverseIconTap: (newSortReverse) {
+                    PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
+                    PlaylistController.inst.resetCanReorder();
+                  },
                 ),
-                onReverseIconTap: (newSortReverse) {
-                  PlaylistController.inst.updatePropertyInPlaylist(playlist.name, itemsSortReverse: newSortReverse);
-                  PlaylistController.inst.resetCanReorder();
-                },
               ),
               itemExtent: Dimensions.inst.trackTileItemExtent,
               itemBuilder: (context, i) {

@@ -936,6 +936,16 @@ class Player {
     await _audioHandler.userSkipToQueueItem(index);
   }
 
+  /// plays an item already in the queue without the new queue checks of [playOrPause], toggles playback for the current item.
+  /// (just to improve performance, skipping process of checking new queues, etc..)
+  void playQueueItem(int index) {
+    if (index == currentIndex.value) {
+      togglePlayPause();
+    } else {
+      skipToQueueItem(index);
+    }
+  }
+
   Future<void> seek(Duration position) async {
     await _audioHandler.userSeek(position);
   }

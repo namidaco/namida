@@ -133,22 +133,24 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                         _tracks.displayTrackKeyword,
                         _tracks.totalDurationFormatted,
                       ].join(' - '),
-                      sort: smartPlaylist.sorting.firstType,
-                      sortReverse: smartPlaylist.sorting.reverse,
-                      onSortTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
-                        currentSorting: smartPlaylist.sorting,
-                        onChanged: (sorting) => _editAndRefresh(
-                          smartPlaylist,
-                          smartPlaylist.copyWith(sorting: sorting),
+                      sorting: TracksSearchBoxSorting(
+                        sort: smartPlaylist.sorting.firstType,
+                        reverse: smartPlaylist.sorting.reverse,
+                        onSortTap: () => NamidaOnTaps.inst.onTracksSortIconTap(
+                          currentSorting: smartPlaylist.sorting,
+                          onChanged: (sorting) => _editAndRefresh(
+                            smartPlaylist,
+                            smartPlaylist.copyWith(sorting: sorting),
+                          ),
                         ),
+                        onReverseIconTap: (newSortReverse) {
+                          final sorting = smartPlaylist.sorting.copyWith(reverse: newSortReverse);
+                          _editAndRefresh(
+                            smartPlaylist,
+                            smartPlaylist.copyWith(sorting: sorting),
+                          );
+                        },
                       ),
-                      onReverseIconTap: (newSortReverse) {
-                        final sorting = smartPlaylist.sorting.copyWith(reverse: newSortReverse);
-                        _editAndRefresh(
-                          smartPlaylist,
-                          smartPlaylist.copyWith(sorting: sorting),
-                        );
-                      },
                     ),
                     itemCount: searchResults?.length ?? _tracks.length,
                     itemExtent: Dimensions.inst.trackTileItemExtent,

@@ -578,12 +578,7 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
                 () {
                   YTUtils.expandMiniplayer();
                   if (properties.comingFromQueue) {
-                    final i = this.widget.index;
-                    if (i == Player.inst.currentIndex.value) {
-                      Player.inst.togglePlayPause();
-                    } else {
-                      Player.inst.skipToQueueItem(i);
-                    }
+                    Player.inst.playQueueItem(this.widget.index);
                   } else {
                     final finalList = widget.reversedList ? widget.mainList.reversed : widget.mainList;
                     if (widget.playSingle) {

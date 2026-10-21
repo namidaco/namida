@@ -18,6 +18,7 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/core/extensions.dart' show StreamFilterVideoUtils, CodecInfoUtils;
 
 import 'package:namida/base/audio_handler.dart';
+import 'package:namida/base/queue_search.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -155,7 +156,15 @@ class MiniplayerInfoData<E, S> {
 class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final (Widget, Key) Function(BuildContext context, int index, List<Playable> queue, TrackTileProperties? properties, VideoTileProperties? videoTileProperties) itemBuilder;
+  final (Widget, Key) Function(
+    BuildContext context,
+    int index,
+    List<Playable> queue,
+    TrackTileProperties? properties,
+    VideoTileProperties? videoTileProperties,
+    void Function(int index)? onResultTap,
+  )
+  itemBuilder;
   final int Function(Playable currentItem)? getDurationMS;
   final String Function(int number, Playable item) itemsKeyword;
   final void Function(Playable currentItem) onAddItemsTap;
@@ -346,11 +355,12 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
   Widget _queueItemBuilder(
     BuildContext context,
     int i,
-    List<Playable> queue, {
+    List<Playable> queue,
+    void Function(int index)? onResultTap, {
     TrackTileProperties? trackTileProperties,
     VideoTileProperties? videoTileProperties,
   }) {
-    final childWK = widget.itemBuilder(context, i, queue, trackTileProperties, videoTileProperties);
+    final childWK = widget.itemBuilder(context, i, queue, trackTileProperties, videoTileProperties, onResultTap);
     return FadeDismissible(
       key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
       onDismissed: (direction) async {
@@ -654,7 +664,15 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                     ],
                   ),
                 ),
-                child: header,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    header,
+                    QueueSearchBox(
+                      search: MiniPlayerController.inst.queueSearch,
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -662,7 +680,14 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             child: _QueueListChildWrapper(
               queueItemExtent: widget.queueItemExtent,
               queueItemExtentBuilder: widget.queueItemExtentBuilder,
-              itemBuilder: (context, index, queue) => _queueItemBuilder(context, index, queue, trackTileProperties: trackTileProperties, videoTileProperties: videoTileProperties),
+              itemBuilder: (context, index, queue, onResultTap) => _queueItemBuilder(
+                context,
+                index,
+                queue,
+                onResultTap,
+                trackTileProperties: trackTileProperties,
+                videoTileProperties: videoTileProperties,
+              ),
             ),
           ),
         ],
@@ -672,6 +697,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     final trackTileConfigs = widget.trackTileConfigs;
     final videoTileConfigs = widget.videoTileConfigs;
     final onArrowDownPressed = MiniPlayerController.inst.snapToExpanded;
+    final onSearchTap = MiniPlayerController.inst.queueSearch.toggle;
 
     Widget queueListChild;
     if (trackTileConfigs != null && videoTileConfigs != null) {
@@ -684,6 +710,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             MixedQueueChipHeaderRow(
               addLeftMargin: true,
               onArrowDownPressed: onArrowDownPressed,
+              onSearchTap: onSearchTap,
             ),
             trackTileProperties,
             videoTileProperties,
@@ -697,6 +724,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           LocalQueueChipHeaderRow(
             addLeftMargin: true,
             onArrowDownPressed: onArrowDownPressed,
+            onSearchTap: onSearchTap,
           ),
           properties,
           null,
@@ -709,6 +737,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
           YTQueueChipHeaderRow(
             addLeftMargin: true,
             onArrowDownPressed: onArrowDownPressed,
+            onSearchTap: onSearchTap,
           ),
           null,
           properties,
@@ -2450,7 +2479,7 @@ class _MPQualityButton extends StatelessWidget {
 class _QueueListChildWrapper extends StatelessWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final Widget Function(BuildContext context, int index, List<Playable> queue) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue, void Function(int index)? onResultTap) itemBuilder;
 
   const _QueueListChildWrapper({
     super.key,
@@ -2469,8 +2498,7 @@ class _QueueListChildWrapper extends StatelessWidget {
         return ObxO(
           rx: Player.inst.currentQueue,
           builder: (context, queue) {
-            final queueLength = queue.length;
-            if (queueLength == 0) return const SizedBox();
+            if (queue.isEmpty) return const SizedBox();
             // -- tiles observe the current index themselves, so a track change never rebuilds the whole list.
             final queueScrollController = MiniPlayerController.inst.queueFollower.scrollController;
             return NamidaScrollbar(
@@ -2481,15 +2509,12 @@ class _QueueListChildWrapper extends StatelessWidget {
                   const SliverPadding(
                     padding: EdgeInsets.only(top: 2.0),
                   ),
-                  NamidaSliverReorderableList(
-                    itemCount: queueLength,
+                  QueueSliverList(
+                    queue: queue,
+                    search: MiniPlayerController.inst.queueSearch,
                     itemExtent: queueItemExtent,
-                    itemExtentBuilder: queueItemExtentBuilder == null ? null : (index, d) => queueItemExtentBuilder!(queue[index]),
-                    onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                    onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                    onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                    itemBuilder: (context, i) => itemBuilder(context, i, queue),
+                    itemExtentOf: queueItemExtentBuilder == null ? null : (index) => queueItemExtentBuilder!(queue[index]),
+                    itemBuilder: itemBuilder,
                   ),
                   SliverPadding(
                     padding: padding,

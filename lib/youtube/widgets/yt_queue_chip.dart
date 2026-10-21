@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 
+import 'package:namida/base/queue_search.dart';
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/queue_scroll_follower.dart';
 import 'package:namida/class/route.dart';
@@ -61,6 +62,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   late final _queueFollower = QueueScrollFollower(currentItemStart: _currentItemStart, canFollow: () => isOpened);
   late final _canScrollQueue = true.obs;
+  late final _search = QueueSearch(onResultsChanged: _onSearchResultsChanged, onResultSelected: _onSearchResultSelected);
 
   bool get isOpened => _smallBoxAnimation.value == 1 && _bigBoxAnimation.value == 0;
   void toggleSheet() => isOpened ? dismissSheet() : openSheet();
@@ -99,6 +101,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
     Player.inst.currentQueue.removeListener(_queueFollower.onCurrentItemMoved);
     _queueFollower.dispose();
     _canScrollQueue.close();
+    _search.dispose();
     super.dispose();
   }
 
@@ -135,13 +138,32 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   }
 
   void _animateBigToSmall() {
+    _search.close();
     _animate(0, 1);
     YoutubeMiniplayerUiController.inst.startDimTimer();
     NamidaYTGenerator.inst.cleanResources();
     NamidaNavigator.inst.isQueueSheetOpen = false;
   }
 
-  double _currentItemStart() => Dimensions.youtubeCardItemExtent * Player.inst.currentIndex.value;
+  void _onSearchResultsChanged(bool isNewQuery) {
+    if (isNewQuery) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _queueFollower.jumpToCurrentItem());
+    } else {
+      _queueFollower.onCurrentItemMoved();
+    }
+  }
+
+  void _onSearchResultSelected(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _queueFollower.jumpToItem(Dimensions.youtubeCardItemExtent * index));
+  }
+
+  double? _currentItemStart() {
+    final index = Player.inst.currentIndex.value;
+    final results = _search.results.value;
+    final position = results == null ? index : QueueSearch.positionOf(results, index);
+    if (position == null) return null;
+    return Dimensions.youtubeCardItemExtent * position;
+  }
 
   double _smallBoxDrag = 1.0;
   double _bigBoxDrag = 0.0;
@@ -358,6 +380,10 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                       children: [
                         YTQueueChipHeaderRow(
                           onArrowDownPressed: _animateBigToSmall,
+                          onSearchTap: _search.toggle,
+                        ),
+                        QueueSearchBox(
+                          search: _search,
                         ),
                         Expanded(
                           child: VideoTilePropertiesProvider(
@@ -377,47 +403,54 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
                                 thumbnails: [],
                               ),
                             ),
-                            builder: (properties) => Obx(
-                              (context) {
-                                final queue = Player.inst.currentQueue.valueR;
-                                final canScroll = _canScrollQueue.valueR;
-                                return IgnorePointer(
-                                  ignoring: !canScroll,
-                                  child: NamidaListView(
-                                    listBottomPadding: 0,
-                                    scrollController: _queueFollower.scrollController,
-                                    itemCount: queue.length,
-                                    itemExtent: Dimensions.youtubeCardItemExtent,
-                                    onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
-                                    onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
-                                    onReorder: (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
-                                    onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
-                                    physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
-                                    itemBuilder: (context, i) {
-                                      final video = queue[i] as YoutubeID;
-                                      return FadeDismissible(
-                                        key: Key("Diss_${video.id}_$i"),
-                                        onDismissed: (direction) async {
-                                          await Player.inst.removeFromQueueWithUndo(i);
-                                          Player.inst.invokeQueueModifyLockRelease();
-                                        },
-                                        onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
-                                        onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
-                                        child: YTHistoryVideoCard(
-                                          key: Key("${i}_${video.id}"),
-                                          properties: properties,
-                                          videos: queue,
-                                          index: i,
-                                          day: null,
-                                          isImportantInCache: true,
-                                          thumbnailHeight: Dimensions.youtubeThumbnailHeight,
-                                          preferFetchNewInfo: true,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
+                            builder: (properties) => ObxO(
+                              rx: _search.results,
+                              builder: (context, results) => Obx(
+                                (context) {
+                                  final queue = Player.inst.currentQueue.valueR;
+                                  final canScroll = _canScrollQueue.valueR;
+                                  final onResultTap = results == null ? null : _search.selectResult;
+                                  return IgnorePointer(
+                                    ignoring: !canScroll,
+                                    child: NamidaListView(
+                                      listBottomPadding: 0,
+                                      scrollController: _queueFollower.scrollController,
+                                      itemCount: results?.length ?? queue.length,
+                                      itemExtent: Dimensions.youtubeCardItemExtent,
+                                      onReorderStart: (index) => Player.inst.invokeQueueModifyLock(),
+                                      onReorderEnd: (index) => Player.inst.invokeQueueModifyLockRelease(),
+                                      onReorder: results != null ? null : (oldIndex, newIndex) => Player.inst.reorderTrack(oldIndex, newIndex),
+                                      onReorderCancel: () => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                      physics: canScroll ? const ClampingScrollPhysicsModified() : const NeverScrollableScrollPhysics(),
+                                      itemBuilder: (context, i) {
+                                        final index = results == null ? i : results[i];
+                                        final video = queue[index] as YoutubeID;
+                                        final onTap = onResultTap == null ? null : () => onResultTap(index);
+                                        return FadeDismissible(
+                                          key: Key("Diss_${video.id}_$index"),
+                                          onDismissed: (direction) async {
+                                            await Player.inst.removeFromQueueWithUndo(index);
+                                            Player.inst.invokeQueueModifyLockRelease();
+                                          },
+                                          onDismissStart: (_) => Player.inst.invokeQueueModifyLock(),
+                                          onDismissCancel: (_) => Player.inst.invokeQueueModifyOnModifyCancel(),
+                                          child: YTHistoryVideoCard(
+                                            key: Key("${index}_${video.id}"),
+                                            properties: properties,
+                                            videos: queue,
+                                            index: index,
+                                            day: null,
+                                            isImportantInCache: true,
+                                            thumbnailHeight: Dimensions.youtubeThumbnailHeight,
+                                            preferFetchNewInfo: true,
+                                            onTap: onTap,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -486,11 +519,13 @@ class LocalQueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
   final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
+  final void Function()? onSearchTap;
   const LocalQueueChipHeaderRow({
     super.key,
     required this.addLeftMargin,
     this.showPlaybackActions = false,
     required this.onArrowDownPressed,
+    this.onSearchTap,
   });
 
   @override
@@ -500,6 +535,7 @@ class LocalQueueChipHeaderRow extends StatelessWidget {
       addLeftMargin: addLeftMargin,
       showPlaybackActions: showPlaybackActions,
       onArrowDownPressed: onArrowDownPressed,
+      onSearchTap: onSearchTap,
       durationFormatter: (items) => items.map((e) => e as Selectable).totalDurationFormatted,
     );
   }
@@ -509,11 +545,13 @@ class YTQueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
   final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
+  final void Function()? onSearchTap;
   const YTQueueChipHeaderRow({
     super.key,
     this.addLeftMargin = false,
     this.showPlaybackActions = false,
     required this.onArrowDownPressed,
+    this.onSearchTap,
   });
 
   @override
@@ -523,6 +561,7 @@ class YTQueueChipHeaderRow extends StatelessWidget {
       addLeftMargin: addLeftMargin,
       showPlaybackActions: showPlaybackActions,
       onArrowDownPressed: onArrowDownPressed,
+      onSearchTap: onSearchTap,
       durationFormatter: null,
     );
   }
@@ -532,11 +571,13 @@ class MixedQueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
   final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
+  final void Function()? onSearchTap;
   const MixedQueueChipHeaderRow({
     super.key,
     this.addLeftMargin = false,
     this.showPlaybackActions = false,
     required this.onArrowDownPressed,
+    this.onSearchTap,
   });
 
   @override
@@ -547,6 +588,7 @@ class MixedQueueChipHeaderRow extends StatelessWidget {
       addLeftMargin: addLeftMargin,
       showPlaybackActions: showPlaybackActions,
       onArrowDownPressed: onArrowDownPressed,
+      onSearchTap: onSearchTap,
       durationFormatter: null,
     );
   }
@@ -558,6 +600,7 @@ class QueueChipHeaderRow extends StatelessWidget {
   final bool addLeftMargin;
   final bool showPlaybackActions;
   final void Function()? onArrowDownPressed;
+  final void Function()? onSearchTap;
   final String Function(Iterable<Playable> items)? durationFormatter;
 
   const QueueChipHeaderRow({
@@ -567,6 +610,7 @@ class QueueChipHeaderRow extends StatelessWidget {
     required this.addLeftMargin,
     this.showPlaybackActions = false,
     required this.onArrowDownPressed,
+    this.onSearchTap,
     required this.durationFormatter,
   });
 
@@ -744,6 +788,14 @@ class QueueChipHeaderRow extends StatelessWidget {
                                   )
                                 : const SizedBox(),
                           ),
+                          if (onSearchTap != null) ...[
+                            _ActionItem(
+                              icon: Broken.filter_search,
+                              tooltip: lang.search,
+                              onTap: onSearchTap,
+                            ),
+                            const SizedBox(width: 6.0),
+                          ],
                           if (showPlaybackActions) ...[
                             RepeatModeIconButton(
                               iconSize: _ActionItem.iconSize,

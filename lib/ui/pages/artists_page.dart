@@ -141,6 +141,14 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
               final sorting = settings.groupSortingOfR(artistType);
               final sort = sorting.entries.first.type;
               final sortReverse = sorting.reverse;
+              final sortByMenu = isCustomList
+                  ? null
+                  : SortByMenu(
+                      title: sort.toText(),
+                      popupMenuChild: const SortByMenuArtists(),
+                      isCurrentlyReversed: sortReverse,
+                      onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !sortReverse),
+                    );
 
               final sortTextIsUseless =
                   sort == GroupSortType.artistsList ||
@@ -197,13 +205,7 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                         ],
                   onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
-                  disableSorting: isCustomList,
-                  sortByMenuWidget: SortByMenu(
-                    title: sort.toText(),
-                    popupMenuChild: const SortByMenuArtists(),
-                    isCurrentlyReversed: sortReverse,
-                    onReverseIconTap: () => SearchSortController.inst.sortMedia(settings.activeArtistType.value, reverse: !sortReverse),
-                  ),
+                  sortByMenuWidget: sortByMenu,
                   textField: CustomTextField(
                     textFieldController: libraryTab.textSearchControllerR,
                     textFieldHintText: lang.filterArtists,

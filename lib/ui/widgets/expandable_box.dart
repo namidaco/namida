@@ -21,11 +21,9 @@ class ExpandableBox extends StatefulWidget {
   final String leftText;
   final void Function()? onLeftTextTap;
   final void Function() onCloseButtonPressed;
-  final SortByMenu sortByMenuWidget;
+  final SortByMenu? sortByMenuWidget;
   final CustomTextField textField;
-  final bool disableSorting;
   final bool enableSearch;
-  final double? textFieldHeight;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
   final Widget? leftTextTrailing;
@@ -43,9 +41,7 @@ class ExpandableBox extends StatefulWidget {
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
     required this.textField,
-    this.disableSorting = false,
     this.enableSearch = true,
-    this.textFieldHeight = 46.0,
     this.gridWidget,
     this.leftWidgets,
     this.leftTextTrailing,
@@ -88,6 +84,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
   @override
   Widget build(BuildContext context) {
     final leftWidgets = widget.leftWidgets;
+    final sortByMenuWidget = widget.sortByMenuWidget;
     final textFieldRow = Row(
       children: [
         const SizedBox(width: 12.0),
@@ -182,8 +179,10 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                               children: [
                                 if (widget.gridWidget != null) widget.gridWidget!,
                                 const SizedBox(width: 4.0),
-                                if (!widget.disableSorting) widget.sortByMenuWidget,
-                                if (!widget.disableSorting) const SizedBox(width: 6.0),
+                                if (sortByMenuWidget != null) ...[
+                                  sortByMenuWidget,
+                                  const SizedBox(width: 6.0),
+                                ],
                                 if (widget.enableSearch)
                                   NamidaIconButton(
                                     horizontalPadding: 6.0,
