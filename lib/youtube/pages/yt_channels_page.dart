@@ -960,7 +960,7 @@ class _YoutubeChannelVideosPage extends StatelessWidget {
             text: lang.viewAll,
             onTap: _onViewAllTap,
           ),
-          headerBuilder: (_) => const SizedBox(),
+          headerBuilder: (_, _) => const SizedBox(),
           headerPadding: EdgeInsets.zero,
           isSortable: true,
           cacheReader: YoutiPie.cacheBuilder.forChannelTab(channelId: channelId, tab: ChannelTab.videos),

@@ -53,6 +53,16 @@ class _MusicItemActions {
     Player.inst.playOrPause(index, queue, queueSource);
   }
 
+  static Future<void> playPlaylist(String playlistId, String queueTitle, {required bool shuffle}) async {
+    final playlist = await YoutubeInfoController.playlist.fetchPlaylist(playlistId: playlistId);
+    if (playlist == null) return;
+    final videos = await playlist.basicInfo.fetchAllPlaylistAsYTIDs(showProgressSheet: true, playlistToFetch: playlist);
+    if (videos.isEmpty) return;
+    final queueSource = QueueSourceYoutubeID.ytMusic(queueTitle);
+    YTUtils.expandMiniplayer();
+    Player.inst.playOrPause(0, videos, queueSource, shuffle: shuffle);
+  }
+
   static Future<List<NamidaPopupItem>> menuItems(YoutubeFeed item, String queueTitle) async {
     final queueSource = QueueSourceYoutubeID.ytMusic(queueTitle);
     if (item is StreamInfoItem) {

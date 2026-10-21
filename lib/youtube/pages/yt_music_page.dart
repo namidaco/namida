@@ -65,7 +65,7 @@ class _YoutubeMusicHomePageState extends State<YoutubeMusicHomePage> {
       key: ValueKey(_endpoint),
       endpoint: _endpoint,
       title: lang.music,
-      headerBuilder: (refreshIconWidget) => Row(
+      headerBuilder: (_, refreshIconWidget) => Row(
         children: [
           const Expanded(
             child: _MusicNavPills(),
@@ -174,7 +174,7 @@ class YTMusicSearchResultsSliver extends StatelessWidget {
 class _MusicBrowseView extends StatelessWidget {
   final YoutiPieMusicBrowseEndpoint endpoint;
   final String title;
-  final Widget Function(Widget refreshIconWidget)? headerBuilder;
+  final Widget Function(Rxn<YoutiPieMusicBrowseResult> resultRx, Widget refreshIconWidget)? headerBuilder;
   final void Function(YoutiPieMusicChip chip) onChipTap;
   final void Function(YoutiPieMusicFormOption option)? onFormOptionTap;
 
@@ -190,11 +190,19 @@ class _MusicBrowseView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final onFormOptionTap = this.onFormOptionTap;
+    final headerBuilder = this.headerBuilder;
     return YoutubeMainPageFetcherAccBase<YoutiPieMusicBrowseResult, YoutiPieMusicShelf>(
       operation: YoutiPieOperation.fetchMusicBrowse,
       transparentShimmer: true,
       title: title,
-      headerBuilder: headerBuilder,
+      headerBuilder:
+          headerBuilder ??
+          (resultRx, refreshIconWidget) => _MusicPageHeader(
+            title: title,
+            resultRx: resultRx,
+            refreshIconWidget: refreshIconWidget,
+          ),
+      headerPadding: headerBuilder == null ? EdgeInsets.zero : null,
       cacheReader: YoutiPie.cacheBuilder.forMusicBrowse(endpoint: endpoint),
       networkFetcher: (details) => YoutubeInfoController.music.browse(endpoint, details: details),
       fetchTimeMapKey: ValueKey(endpoint),
@@ -208,12 +216,6 @@ class _MusicBrowseView extends StatelessWidget {
               child: _MusicFormOptionsChip(
                 options: result.formOptions,
                 onTap: onFormOptionTap,
-              ),
-            ),
-          if (result.thumbnails.isNotEmpty || result.subtitle != null)
-            SliverToBoxAdapter(
-              child: _MusicArtistHeader(
-                result: result,
               ),
             ),
           if (result.chips.isNotEmpty)
@@ -444,72 +446,155 @@ class _MusicChipsRow extends StatelessWidget {
   }
 }
 
-class _MusicArtistHeader extends StatelessWidget {
-  final YoutiPieMusicBrowseResult result;
+class _MusicPageHeader extends StatelessWidget {
+  final String title;
+  final Rxn<YoutiPieMusicBrowseResult> resultRx;
+  final Widget refreshIconWidget;
 
-  const _MusicArtistHeader({required this.result});
+  const _MusicPageHeader({required this.title, required this.resultRx, required this.refreshIconWidget});
 
   @override
   Widget build(BuildContext context) {
-    final bannerUrl = result.thumbnails.pick()?.url;
-    final subtitle = result.subtitle;
-    final channelId = result.channelId;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12.0, 0.0, 12.0, 12.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (bannerUrl != null)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth;
-                return YoutubeThumbnail(
-                  key: Key(bannerUrl),
-                  type: ThumbnailType.channel,
-                  customUrl: bannerUrl,
-                  width: width,
-                  height: width / 2.4,
-                  borderRadius: 12.0,
-                  forceSquared: false,
-                  isImportantInCache: false,
-                );
-              },
-            ),
-          const SizedBox(height: 8.0),
-          Row(
+    return ObxO(
+      rx: resultRx,
+      builder: (context, result) {
+        final isChannel = result != null && (result.avatarThumbnails.isNotEmpty || result.bannerThumbnails.isNotEmpty || result.subtitle != null);
+        if (isChannel) {
+          return _MusicChannelHeader(
+            title: title,
+            result: result,
+            refreshIconWidget: refreshIconWidget,
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
             children: [
-              if (subtitle != null)
-                Expanded(
-                  child: NamidaText(
-                    subtitle,
-                    style: NText.small,
-                  ),
+              Expanded(
+                child: NamidaText(
+                  title,
+                  style: const NText(.large, size: .s28),
                 ),
-              if (channelId != null)
-                NamidaInkWell(
-                  borderRadius: 10.0,
-                  bgColor: NColors.card,
-                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
-                  onTap: () => YTChannelSubpage(
-                    channelID: channelId,
-                  ).navigate(),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Broken.user,
-                        size: 16.0,
-                      ),
-                      const SizedBox(width: 6.0),
-                      NamidaText(
-                        lang.goToChannel,
-                        style: NText.small,
-                      ),
-                    ],
-                  ),
-                ),
+              ),
+              const SizedBox(width: 12.0),
+              refreshIconWidget,
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+class _MusicChannelHeader extends StatelessWidget {
+  final String title;
+  final YoutiPieMusicBrowseResult result;
+  final Widget refreshIconWidget;
+
+  const _MusicChannelHeader({required this.title, required this.result, required this.refreshIconWidget});
+
+  static const _avatarSize = 86.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final channelTitle = result.title.isNotEmpty ? result.title : title;
+    final avatarUrl = result.avatarThumbnails.pick()?.url;
+    final subtitle = result.subtitle;
+    final channelId = result.channelId;
+    final songsPlaylistId = result.findSongsPlaylistId();
+    final hasButtons = songsPlaylistId != null || channelId != null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 12.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              YoutubeThumbnail(
+                key: ValueKey(avatarUrl),
+                type: ThumbnailType.channel,
+                customUrl: avatarUrl,
+                width: _avatarSize,
+                isCircle: true,
+                isImportantInCache: false,
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    NamidaText(
+                      channelTitle,
+                      style: const NText(.large, size: .s22),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2.0),
+                      Row(
+                        children: [
+                          const NIcon(
+                            Broken.profile_2user,
+                            size: 13.0,
+                            color: NColors(.onSurface, opacity: 0.7),
+                          ),
+                          const SizedBox(width: 4.0),
+                          Expanded(
+                            child: NamidaText(
+                              subtitle,
+                              style: const NText(.small, size: .s12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              refreshIconWidget,
+            ],
+          ),
+          if (hasButtons) ...[
+            const SizedBox(height: 12.0),
+            Row(
+              spacing: 8.0,
+              children: [
+                if (songsPlaylistId != null) ...[
+                  Expanded(
+                    child: NamidaButton(
+                      dense: true,
+                      icon: Broken.shuffle,
+                      text: lang.shuffle,
+                      onTap: () => _MusicItemActions.playPlaylist(songsPlaylistId, channelTitle, shuffle: true),
+                    ),
+                  ),
+                  Expanded(
+                    child: NamidaButton(
+                      dense: true,
+                      icon: Broken.play,
+                      text: lang.play,
+                      onTap: () => _MusicItemActions.playPlaylist(songsPlaylistId, channelTitle, shuffle: false),
+                    ),
+                  ),
+                ],
+                if (channelId != null)
+                  Expanded(
+                    child: NamidaButton(
+                      dense: true,
+                      colors: .mid,
+                      icon: Broken.user,
+                      text: lang.channel,
+                      onTap: () => YTChannelSubpage(
+                        channelID: channelId,
+                      ).navigate(),
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

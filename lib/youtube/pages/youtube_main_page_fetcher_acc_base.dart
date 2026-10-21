@@ -46,7 +46,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final bool transparentShimmer;
   final YoutiPieOperation operation;
   final String title;
-  final Widget Function(Widget refreshIconWidget)? headerBuilder;
+  final Widget Function(Rxn<W> resultRx, Widget refreshIconWidget)? headerBuilder;
   final EdgeInsetsGeometry? headerPadding;
   final CacheDetails<W> cacheReader;
   final Future<W?> Function(CacheDetails<W> reader)? cacheReadFn;
@@ -407,7 +407,7 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     );
 
     Widget header =
-        widget.headerBuilder?.call(refreshIconWidget) ??
+        widget.headerBuilder?.call(_currentFeed, refreshIconWidget) ??
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [

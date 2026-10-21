@@ -154,14 +154,15 @@ class _MusicShelfHeader extends StatelessWidget {
               ),
             ),
             if (moreEndpoint != null)
-              NamidaInkWell(
-                borderRadius: 10.0,
-                padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 4.0),
+              NamidaButton(
+                dense: true,
+                minHeight: NamidaButton.kDefaultMinHeight * 0.5,
+                iconSize: 16.0,
+                fontSizeMultiplier: 0.9,
+                colors: .mid,
+                icon: Broken.category,
+                text: lang.viewAll,
                 onTap: () => _MusicItemActions.openEndpoint(moreEndpoint, shelf.title),
-                child: NamidaText(
-                  lang.more,
-                  style: NText.small,
-                ),
               ),
           ],
         ),
@@ -382,12 +383,7 @@ extension _MusicShelfExtents on YoutiPieMusicShelf {
   double computeBodyExtent() {
     switch (layout) {
       case YoutiPieMusicShelfLayout.carousel:
-        double maxArtHeight = 0.0;
-        for (final item in items) {
-          final artHeight = _MusicDims.cardArtSize(item, width: null).height;
-          if (artHeight > maxArtHeight) maxArtHeight = artHeight;
-        }
-        return maxArtHeight + _MusicDims.cardTextHeight;
+        return _MusicDims.cardSize + _MusicDims.cardTextHeight;
       case YoutiPieMusicShelfLayout.rows:
         final rowsCount = rowsPerColumn.withMaximum(items.length);
         final rowExtent = items.first is MusicNavigationItem ? _MusicDims.navButtonHeight + _MusicDims.navButtonSpacing : _MusicDims.rowHeight;
@@ -399,8 +395,8 @@ extension _MusicShelfExtents on YoutiPieMusicShelf {
 }
 
 class _MusicDims {
-  static const cardSize = 136.0;
-  static const videoCardHeight = 102.0;
+  static const cardSize = 124.0;
+  static const wideCardWidth = cardSize * 16 / 9;
   static const cardTextHeight = 52.0;
   static const cardSpacing = 10.0;
   static const rowHeight = 58.0;
@@ -418,11 +414,8 @@ class _MusicDims {
 
   /// [width] fits a grid cell.
   static Size cardArtSize(YoutubeFeed item, {required double? width}) {
-    if (item is StreamInfoItem && item.hasWideThumbnails) {
-      final artWidth = width ?? videoCardHeight * 16 / 9;
-      return Size(artWidth, artWidth * 9 / 16);
-    }
-    final side = width ?? cardSize;
-    return Size(side, side);
+    final isWide = item is StreamInfoItem && item.hasWideThumbnails;
+    if (width == null) return isWide ? const Size(wideCardWidth, cardSize) : const Size(cardSize, cardSize);
+    return Size(width, isWide ? width * 9 / 16 : width);
   }
 }
