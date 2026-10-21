@@ -50,13 +50,15 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
   String mainItemToSubItem(YoutubeID item) => item.id;
 
   @override
-  Future<HistoryPrepareInfo<YoutubeID, String>> prepareAllHistoryFilesFunction(String directoryPath) async {
-    return await _readHistoryFilesCompute.thready(directoryPath);
+  Future<HistoryPrepareInfo<YoutubeID, String>> prepareAllHistoryFilesFunction(String directoryPath, {bool repairDays = false}) async {
+    return await _readHistoryFilesCompute.thready((path: directoryPath, repairDays: repairDays));
   }
 
-  static HistoryPrepareInfo<YoutubeID, String> _readHistoryFilesCompute(String path) {
+  static HistoryPrepareInfo<YoutubeID, String> _readHistoryFilesCompute(({String path, bool repairDays}) params) {
+    final path = params.path;
     final map = SplayTreeMap<int, List<YoutubeID>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <String, List<int>>{};
+    final daysRepair = params.repairDays ? HistoryDaysRepair<YoutubeID>() : null;
     int totalCount = 0;
     final files = Directory(path).listSyncSafe();
     for (final f in files) {
@@ -89,11 +91,20 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
             final listVideosJson = listVideos.map((e) => e.toJson()).toFixedList();
             f.writeAsJsonSync(listVideosJson);
           }
+          daysRepair?.checkDay(dayOfVideo, listVideos);
 
           map[dayOfVideo] = listVideos;
           totalCount += listVideos.length;
         } catch (_) {}
       }
+    }
+
+    if (daysRepair != null) {
+      final droppedDuplicates = daysRepair.repair(map, path, (vid) => vid.toJson());
+      for (final vid in droppedDuplicates) {
+        tempMapTopItems[vid.id]?.remove(vid.dateAddedMS);
+      }
+      totalCount -= droppedDuplicates.length;
     }
 
     final topItems = ListensSortedMap<String>();
@@ -128,4 +139,10 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
 
   @override
   Rx<bool> get mostPlayedCustomIsStartOfDay => settings.ytMostPlayedCustomisStartOfDay;
+
+  @override
+  bool get didRepairHistoryDays => settings.ytDidRepairHistoryDays.value;
+
+  @override
+  void onHistoryDaysRepaired() => settings.ytDidRepairHistoryDays.save(true);
 }

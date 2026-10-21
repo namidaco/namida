@@ -357,10 +357,12 @@ class _SettingsController extends _SettingsKeysWriter {
   late final mostPlayedTimeRange = _keyEnum('mostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
   late final mostPlayedCustomDateRange = _keyObject('mostPlayedCustomDateRange_v2', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
   late final mostPlayedCustomisStartOfDay = _key('mostPlayedCustomisStartOfDay', true);
+  late final didRepairHistoryDays = _key('didRepairHistoryDays', false, sync: false);
 
   late final ytMostPlayedTimeRange = _keyEnum('ytMostPlayedTimeRange', MostPlayedTimeRange.allTime, MostPlayedTimeRange.values);
   late final ytMostPlayedCustomDateRange = _keyObject('ytMostPlayedCustomDateRange_v2', DateRange.dummy(), DateRange.fromJson, (v) => v.toJson());
   late final ytMostPlayedCustomisStartOfDay = _key('ytMostPlayedCustomisStartOfDay', true);
+  late final ytDidRepairHistoryDays = _key('ytDidRepairHistoryDays', false, sync: false);
 
   late final onTrackSwipeLeft = _keyEnum('onTrackSwipeLeft', TrackExecuteActions.playafter, TrackExecuteActions.values);
   late final onTrackSwipeRight = _keyEnum('onTrackSwipeRight', TrackExecuteActions.openinfo, TrackExecuteActions.values);

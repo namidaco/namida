@@ -102,13 +102,15 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
   Track mainItemToSubItem(TrackWithDate item) => item.track;
 
   @override
-  Future<HistoryPrepareInfo<TrackWithDate, Track>> prepareAllHistoryFilesFunction(String directoryPath) async {
-    return await _readHistoryFilesCompute.thready(directoryPath);
+  Future<HistoryPrepareInfo<TrackWithDate, Track>> prepareAllHistoryFilesFunction(String directoryPath, {bool repairDays = false}) async {
+    return await _readHistoryFilesCompute.thready((path: directoryPath, repairDays: repairDays));
   }
 
-  static HistoryPrepareInfo<TrackWithDate, Track> _readHistoryFilesCompute(String path) {
+  static HistoryPrepareInfo<TrackWithDate, Track> _readHistoryFilesCompute(({String path, bool repairDays}) params) {
+    final path = params.path;
     final map = SplayTreeMap<int, List<TrackWithDate>>((date1, date2) => date2.compareTo(date1));
     final tempMapTopItems = <Track, List<int>>{};
+    final daysRepair = params.repairDays ? HistoryDaysRepair<TrackWithDate>() : null;
     int totalCount = 0;
     final files = Directory(path).listSyncSafe();
     for (final f in files) {
@@ -129,11 +131,20 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
             }
           }
           if (!isNewestFirst) listTracks.sortByReverse((e) => e.dateAdded);
+          daysRepair?.checkDay(dayOfTrack, listTracks);
 
           map[dayOfTrack] = listTracks;
           totalCount += listTracks.length;
         } catch (_) {}
       }
+    }
+
+    if (daysRepair != null) {
+      final droppedDuplicates = daysRepair.repair(map, path, (twd) => twd.toJson());
+      for (final twd in droppedDuplicates) {
+        tempMapTopItems[twd.track]?.remove(twd.dateAdded);
+      }
+      totalCount -= droppedDuplicates.length;
     }
 
     final topItems = ListensSortedMap<Track>();
@@ -154,4 +165,10 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
 
   @override
   Rx<bool> get mostPlayedCustomIsStartOfDay => settings.mostPlayedCustomisStartOfDay;
+
+  @override
+  bool get didRepairHistoryDays => settings.didRepairHistoryDays.value;
+
+  @override
+  void onHistoryDaysRepaired() => settings.didRepairHistoryDays.save(true);
 }
