@@ -160,7 +160,7 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
     SmartPlaylistRuleFilterNumberSource.bitrate => track.bitrate,
     SmartPlaylistRuleFilterNumberSource.sampleRate => track.sampleRate,
     SmartPlaylistRuleFilterNumberSource.bits => track.bits,
-    SmartPlaylistRuleFilterNumberSource.bpm => track.bpm,
+    SmartPlaylistRuleFilterNumberSource.bpm => track.bpm ?? 0,
     SmartPlaylistRuleFilterNumberSource.trackNumber => track.trackNo,
     SmartPlaylistRuleFilterNumberSource.trackTotal => track.trackTo,
     SmartPlaylistRuleFilterNumberSource.discNumber => track.discNo,
@@ -182,12 +182,12 @@ final class SmartPlaylistRuleNumber extends SmartPlaylistRuleBase<int, int, Smar
   }
 
   /// tracks younger than a month are rated as a month old, otherwise a single listen on a new track would outrank everything.
-  static double? _listensPerMonth(Track track, int nowMS) {
+  static double _listensPerMonth(Track track, int nowMS) {
     final listens = SmartPlaylistRuleBase.topTracksMapListens[track];
     final firstListen = listens?.firstOrNull;
     final dateAdded = track.dateAdded;
     final startMS = firstListen != null && (dateAdded <= 0 || firstListen < dateAdded) ? firstListen : dateAdded;
-    if (startMS <= 0) return null;
+    if (startMS <= 0) return 0;
     final periodMS = (nowMS - startMS).withMinimum(_kMonthMS);
     final listensCount = listens?.length ?? 0;
     return listensCount * _kMonthMS / periodMS;

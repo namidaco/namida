@@ -207,9 +207,12 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                   builder: (context, canShowSearchBox) => AnimatedShow(
                     duration: const Duration(milliseconds: 250),
                     show: canShowSearchBox,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: textFieldRow,
+                    child: ExcludeFocusTraversal(
+                      excluding: !canShowSearchBox,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: textFieldRow,
+                      ),
                     ),
                   ),
                 ),
@@ -267,6 +270,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
       controller: widget.textFieldController,
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+        constraints: const BoxConstraints(maxHeight: 42.0),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14.0.multipliedRadius),
         ),

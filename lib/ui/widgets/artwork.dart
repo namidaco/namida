@@ -691,7 +691,7 @@ class MultiArtworks extends StatelessWidget {
   final double iconSize;
   final bool fallbackToFolderCover;
   final bool reduceQuality;
-  final File? artworkFile;
+  final File? existingArtworkFile;
   final IconData? fallbackIcon;
   final int fadeMilliSeconds;
   final bool opensInFullscreen;
@@ -707,7 +707,7 @@ class MultiArtworks extends StatelessWidget {
     this.iconSize = 24.0,
     this.fallbackToFolderCover = true,
     this.reduceQuality = false,
-    required this.artworkFile,
+    required this.existingArtworkFile,
     this.fallbackIcon,
     this.fadeMilliSeconds = ArtworkWidget.kDefaultFadeMilliSeconds,
     this.opensInFullscreen = false,
@@ -789,14 +789,14 @@ class MultiArtworks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final artworkFile = this.artworkFile;
+    final existingArtworkFile = this.existingArtworkFile;
     Widget? customArtworkWidget;
-    if (artworkFile != null && artworkFile.existsSync()) {
+    if (existingArtworkFile != null) {
       final customArtwork = ArtworkWidget(
-        key: ValueKey(artworkFile.path),
+        key: ValueKey(existingArtworkFile.path),
         fadeMilliSeconds: fadeMilliSeconds,
         thumbnailSize: thumbnailSize,
-        path: artworkFile.path,
+        path: existingArtworkFile.path,
         forceSquared: true,
         iconSize: iconSize,
         blur: 0,
@@ -810,7 +810,7 @@ class MultiArtworks extends StatelessWidget {
       customArtworkWidget = opensInFullscreen
           ? _FullscreenImageOpener(
               heroTag: heroTag,
-              imageFile: artworkFile,
+              imageFile: existingArtworkFile,
               child: customArtwork,
             )
           : customArtwork;

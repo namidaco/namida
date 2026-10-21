@@ -1370,7 +1370,7 @@ class _CompressImagesListTile extends StatelessWidget {
             ),
             Obx(
               (context) => CustomSwitchListTile(
-                icon: Broken.document_code_2,
+                icon: keepOriginalFileDates.valueR ? Broken.calendar_tick : Broken.calendar_edit,
                 title: lang.keepFileDates,
                 value: keepOriginalFileDates.valueR,
                 onChanged: (isTrue) => keepOriginalFileDates.value = !isTrue,

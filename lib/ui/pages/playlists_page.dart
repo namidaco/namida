@@ -706,7 +706,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                           ),
                         ),
                       ],
-                      const SliverPadding(padding: EdgeInsets.only(top: 10.0)),
+                      const SliverPadding(padding: EdgeInsets.only(top: 12.0)),
                       if (isInsideDialog)
                         SliverToBoxAdapter(
                           child: ObxOClass(

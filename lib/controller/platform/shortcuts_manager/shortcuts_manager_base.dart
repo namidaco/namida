@@ -39,6 +39,7 @@ abstract class ShortcutsManager {
   }
 
   Map<ShortcutActivator, Intent>? get appShortcuts;
+  Map<Type, Action<Intent>>? get appActions;
 
   @protected
   List<ShortcutKeyActivator> get _keysToRegister;

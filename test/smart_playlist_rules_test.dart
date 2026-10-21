@@ -85,7 +85,18 @@ void main() {
   Set<String> namesOf(Iterable<Track> result) => result.map((tr) => namesByTrack[tr]!).toSet();
 
   /// not added to the library list, so only tests resolving among them see them.
-  Track addTrack(String name, {String title = '', List<String> artists = const [], List<String> genres = const [], int dateAdded = 0, int year = 0, List<int> listens = const []}) {
+  Track addTrack(
+    String name, {
+    String title = '',
+    List<String> artists = const [],
+    List<String> genres = const [],
+    int dateAdded = 0,
+    int year = 0,
+    int? bpm,
+    String musicalKey = '',
+    int discNo = 0,
+    List<int> listens = const [],
+  }) {
     final path = '${dir.path}${Platform.pathSeparator}$name.mp3';
     final track = Track.explicit(path);
     namesByTrack[track] = name;
@@ -96,6 +107,9 @@ void main() {
       genresList: genres,
       dateAdded: dateAdded,
       year: year,
+      bpm: bpm,
+      musicalKey: musicalKey,
+      discNo: discNo,
       generatePathHash: false,
     );
     for (final listen in listens) {
@@ -247,6 +261,24 @@ void main() {
         relativeDuration: null,
       );
       expect((listens as SmartPlaylistRuleNumber).aggregate, SmartPlaylistNumberAggregate.sum);
+    });
+  });
+
+  group('number missing values', () {
+    test('missing tags read as 0', () {
+      final tracks = [
+        addTrack('bpm_set', bpm: 128, discNo: 1),
+        addTrack('bpm_null'),
+        addTrack('bpm_zero', bpm: 0),
+      ];
+      Set<String> numbers(SmartPlaylistRuleFilterNumberSource source, SmartPlaylistRuleFilterNumber filter) => resolveAmong(numberRule(source, filter, 0), tracks);
+      expect(numbers(.bpm, .isSame), {'bpm_null', 'bpm_zero'});
+      expect(numbers(.bpm, .isSmallerThanOrEq), {'bpm_null', 'bpm_zero'});
+      expect(numbers(.bpm, .isGreaterThan), {'bpm_set'});
+      expect(numbers(.discNumber, .isSame), {'bpm_null', 'bpm_zero'});
+    });
+    test('never played tracks without a date added have 0 listens per month', () {
+      expect(resolve(numberRule(.listenRate, .isSmallerThan, 1)), {'t2', 't3'});
     });
   });
 
@@ -465,6 +497,18 @@ void main() {
       expect(genres(.notContains, 'ro'), {'genre_empty'});
       expect(genres(.missing), {'genre_empty'});
       expect(genres(.exists), {'genre_multi'});
+    });
+
+    test('musical key as text', () {
+      final keyTracks = [
+        addTrack('key_8a', musicalKey: '8A'),
+        addTrack('key_am', musicalKey: 'Am'),
+        addTrack('key_none'),
+      ];
+      Set<String> keys(SmartPlaylistRuleFilterText filter, [String? data]) => resolveAmong(textRule(filter, data, source: .musicalKey), keyTracks);
+      expect(keys(.isSame, '8a'), {'key_8a'});
+      expect(keys(.missing), {'key_none'});
+      expect(keys(.exists), {'key_8a', 'key_am'});
     });
 
     test('regex matches the raw or the cleaned text, not matching only when neither does', () {

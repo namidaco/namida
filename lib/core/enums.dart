@@ -698,37 +698,51 @@ class QueueSourceYoutubeID extends QueueSourceBase<QueueSourceYoutubeIDEnum> {
 }
 
 enum TagField {
-  title,
-  artist,
-  album,
-  albumArtist,
-  composer,
-  genre,
-  style,
-  mood,
-  year,
-  trackNumber,
-  discNumber,
-  comment,
-  description,
-  synopsis,
-  lyrics,
-  language,
-  remixer,
-  trackTotal,
-  discTotal,
-  lyricist,
-  recordLabel,
-  releaseType,
-  country,
-  rating,
-  tags,
+  title(TagFieldMultiEdit.hidden),
+  artist(TagFieldMultiEdit.always),
+  album(TagFieldMultiEdit.always),
+  albumArtist(TagFieldMultiEdit.always),
+  composer(TagFieldMultiEdit.always),
+  genre(TagFieldMultiEdit.always),
+  style(TagFieldMultiEdit.always),
+  mood(TagFieldMultiEdit.hidden), // -- edited by TrackStatsEditSections
+  year(TagFieldMultiEdit.always, isNumeric: true),
+  trackNumber(TagFieldMultiEdit.hidden, isNumeric: true),
+  discNumber(TagFieldMultiEdit.always, isNumeric: true),
+  comment(TagFieldMultiEdit.always),
+  description(TagFieldMultiEdit.always),
+  synopsis(TagFieldMultiEdit.always),
+  lyrics(TagFieldMultiEdit.hidden),
+  language(TagFieldMultiEdit.whenHasValues),
+  remixer(TagFieldMultiEdit.whenHasValues),
+  trackTotal(TagFieldMultiEdit.always, isNumeric: true),
+  discTotal(TagFieldMultiEdit.always, isNumeric: true),
+  lyricist(TagFieldMultiEdit.whenHasValues),
+  recordLabel(TagFieldMultiEdit.whenHasValues),
+  releaseType(TagFieldMultiEdit.whenHasValues),
+  country(TagFieldMultiEdit.whenHasValues),
+  bpm(TagFieldMultiEdit.whenHasValues, isNumeric: true),
+  musicalKey(TagFieldMultiEdit.whenHasValues),
+  rating(TagFieldMultiEdit.hidden, isNumeric: true), // -- edited by TrackStatsEditSections
+  tags(TagFieldMultiEdit.hidden), // -- edited by TrackStatsEditSections
 
-  titleSort,
-  albumSort,
-  albumArtistSort,
-  artistSort,
-  composerSort,
+  titleSort(TagFieldMultiEdit.hidden),
+  albumSort(TagFieldMultiEdit.whenHasValues),
+  albumArtistSort(TagFieldMultiEdit.whenHasValues),
+  artistSort(TagFieldMultiEdit.whenHasValues),
+  composerSort(TagFieldMultiEdit.whenHasValues),
+  ;
+
+  final TagFieldMultiEdit multiEdit;
+  final bool isNumeric;
+
+  const TagField(this.multiEdit, {this.isNumeric = false});
+}
+
+enum TagFieldMultiEdit {
+  always,
+  whenHasValues,
+  hidden,
 }
 
 enum WakelockMode {

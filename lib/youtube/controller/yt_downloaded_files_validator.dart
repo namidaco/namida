@@ -6,9 +6,6 @@ part of 'youtube_controller.dart';
 class _DownloadedFilesValidator {
   _DownloadedFilesValidator();
 
-  /// modification times can be as coarse as 2 seconds (FAT), a folder modified this recently can change again without its time changing.
-  static const _kModifiedGranularityMS = 2000;
-  static const _kNotReusable = -1;
   static const _kMissing = -2;
 
   final _groupsModifiedMS = <DownloadTaskGroupName, int>{};
@@ -18,9 +15,7 @@ class _DownloadedFilesValidator {
 
   static int getModifiedMSToStore(FileStat stat) {
     if (stat.type != FileSystemEntityType.directory) return _kMissing;
-    final modifiedMS = stat.modified.millisecondsSinceEpoch;
-    final nowMS = DateTime.now().millisecondsSinceEpoch;
-    return nowMS - modifiedMS > _kModifiedGranularityMS ? modifiedMS : _kNotReusable;
+    return stat.getReusableModifiedMS();
   }
 
   Future<void> validateAll() async {
@@ -42,9 +37,10 @@ class _DownloadedFilesValidator {
     final currentModifiedMS = dirExists ? stat.modified.millisecondsSinceEpoch : _kMissing;
     if (_groupsModifiedMS[groupName] == currentModifiedMS) return false;
 
+    final modifiedMSToStore = getModifiedMSToStore(stat);
     final entryNames = dirExists ? await _listEntryNames.thready(dirPath) : const <String>{};
     if (entryNames == null) return false;
-    _groupsModifiedMS[groupName] = getModifiedMSToStore(stat);
+    _groupsModifiedMS[groupName] = modifiedMSToStore;
 
     final candidates = _getMissingCandidates(groupName, entryNames);
     if (candidates == null) return false;

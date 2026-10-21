@@ -141,7 +141,7 @@ class Indexer<T extends Track> {
   var externalTracksMappedByPath = <String, TrackExtended>{};
   final trackStatsMap = <Track, TrackStats>{}.obs;
 
-  var allFolderCovers = <Folder, String>{}; // {directoryPath, imagePath}
+  Map<Folder, String>? _allFolderCovers; // {directoryPath, imagePath}
   var allTracksMappedByYTID = <String, List<T>>{};
 
   /// Used to prevent duplicated track (by filename).
@@ -161,8 +161,10 @@ class Indexer<T extends Track> {
     return alltracks;
   }
 
+  bool get didListFolderCovers => _allFolderCovers != null;
+
   String? getFallbackFolderArtworkPath({required Folder folder}) {
-    return this.allFolderCovers[folder]; // folder hash already resolves extra/removed path separator
+    return this._allFolderCovers?[folder]; // folder hash already resolves extra/removed path separator
   }
 
   bool imageObtainedBefore(String imagePath) => _pendingArtworksCompressed[imagePath] != null || _pendingArtworksFullRes[imagePath] != null;
@@ -2202,7 +2204,7 @@ class Indexer<T extends Track> {
 
     allAudioFiles.value = allPaths;
     tracksExcludedByNoMedia.value += result.excludedByNoMedia.length;
-    allFolderCovers = result.folderCovers;
+    _allFolderCovers = result.folderCovers;
 
     printy("Paths Found: ${allPaths.length}");
     return result;

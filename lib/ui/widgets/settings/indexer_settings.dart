@@ -19,6 +19,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/video_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/dirs_file_filter.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
@@ -1964,20 +1965,20 @@ class _ChipsEditorDialog extends StatelessWidget {
 
 Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing = false}) async {
   // [didModifyFolder] was mainly used to force recheck libraries, now it will always recheck.
-  RefreshLibraryIconController.repeat();
-  final currentFiles = await Indexer.inst.getAudioFilesForRefresh();
-  RefreshLibraryIconController.fling().ignoreError().whenComplete(RefreshLibraryIconController.stop);
+  final scan = await _RefreshPromptScan.run(allowBypassing: allowBypassing);
+  if (scan == null) return;
+  final currentFiles = scan.currentFiles;
+  final pathsDifference = scan.difference;
+  if (pathsDifference == null) {
+    VideoController.inst.rescanLocalVideosPaths();
+    await Indexer.inst.refreshLibraryAndCheckForDiff(
+      currentFiles: currentFiles,
+    );
+    return;
+  }
 
   Widget? bypassWidget;
-  if (allowBypassing) {
-    if (settings.bypassRefreshPrompt.value) {
-      VideoController.inst.rescanLocalVideosPaths();
-      await Indexer.inst.refreshLibraryAndCheckForDiff(
-        currentFiles: currentFiles,
-      );
-      return;
-    }
-
+  if (scan.canBypass) {
     bypassWidget = ListTileWithCheckMark(
       icon: Broken.message_question,
       title: lang.dontAskAgain,
@@ -1986,7 +1987,6 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
     );
   }
 
-  final pathsDifference = await Indexer.inst.getPathsDifference(currentFiles);
   final newPaths = pathsDifference.newPaths;
   final modifiedPaths = pathsDifference.modifiedPaths;
   final deletedPath = pathsDifference.deletedPaths;
@@ -2125,6 +2125,41 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
         );
       },
     );
+  }
+}
+
+// by claude
+/// refresh requests made while the files are being scanned join that scan, which reruns so one dialog shows the latest files.
+class _RefreshPromptScan {
+  static bool _isRunning = false;
+  static bool _hasNewRequest = false;
+  static bool _canBypass = false;
+
+  /// null when the request joined a running scan. [difference] is null when the prompt is bypassed.
+  static Future<_RefreshPromptScanResult?> run({required bool allowBypassing}) async {
+    if (_isRunning) {
+      _hasNewRequest = true;
+      _canBypass = _canBypass && allowBypassing;
+      return null;
+    }
+    _isRunning = true;
+    _canBypass = allowBypassing;
+    RefreshLibraryIconController.repeat();
+    try {
+      while (true) {
+        _hasNewRequest = false;
+        final currentFiles = await Indexer.inst.getAudioFilesForRefresh();
+        if (_hasNewRequest) continue;
+        final isBypassed = _canBypass && settings.bypassRefreshPrompt.value;
+        if (isBypassed) return (currentFiles: currentFiles, difference: null, canBypass: true);
+        final difference = await Indexer.inst.getPathsDifference(currentFiles);
+        if (_hasNewRequest) continue;
+        return (currentFiles: currentFiles, difference: difference, canBypass: _canBypass);
+      }
+    } finally {
+      _isRunning = false;
+      RefreshLibraryIconController.fling().ignoreError().whenComplete(RefreshLibraryIconController.stop);
+    }
   }
 }
 
@@ -2724,3 +2759,4 @@ enum _SeparatorsType {
 }
 
 typedef _SeparatorsList = ({RxBaseCore<List<String>> rx, void Function(void Function(List<String> list) fn) update, void Function() reset});
+typedef _RefreshPromptScanResult = ({DirsFileFilterResult currentFiles, IndexerFilesDiff? difference, bool canBypass});

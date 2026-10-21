@@ -147,9 +147,11 @@ class _TextFieldSuggestionsDropdownState extends State<TextFieldSuggestionsDropd
 
     final fieldSize = layoutInfo.childSize;
     final invertTransform = layoutInfo.childPaintTransform.clone()..invert();
-    final overlayRect = MediaQuery.paddingOf(context).deflateRect(
-      MediaQuery.viewInsetsOf(context).deflateRect(Offset.zero & layoutInfo.overlaySize),
-    );
+    final overlayContext = Overlay.of(context).context;
+    final overlayMediaQuery = overlayContext.getInheritedWidgetOfExactType<MediaQuery>()!.data;
+    final overlayFullRect = Offset.zero & layoutInfo.overlaySize;
+    final overlayRectAboveKeyboard = overlayMediaQuery.viewInsets.deflateRect(overlayFullRect);
+    final overlayRect = overlayMediaQuery.padding.deflateRect(overlayRectAboveKeyboard);
     final overlayRectInField = MatrixUtils.transformRect(invertTransform, overlayRect);
 
     final spaceAbove = -overlayRectInField.top - _fieldGap;

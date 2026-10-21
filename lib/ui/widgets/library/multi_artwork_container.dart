@@ -114,7 +114,7 @@ class MultiArtworkContainer extends StatelessWidget {
                               thumbnailSize: innerSize,
                               fallbackToFolderCover: fallbackToFolderCover,
                               reduceQuality: reduceQuality,
-                              artworkFile: existingArtworkFile,
+                              existingArtworkFile: existingArtworkFile,
                               fallbackIcon: fallbackIcon,
                               fadeMilliSeconds: fadeMilliSeconds,
                               opensInFullscreen: scope?.opensInFullscreen ?? false,

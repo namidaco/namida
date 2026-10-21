@@ -15,11 +15,11 @@ import 'package:youtipie/core/extensions.dart' show ThumbnailPickerExt;
 
 import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/folder.dart';
+import 'package:namida/class/named_presets.dart';
 import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
-import 'package:namida/class/named_presets.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/eggs_controller.dart';
 import 'package:namida/controller/folders_controller.dart';
@@ -2550,8 +2550,9 @@ class _TrackSearchFilterPresetHint extends StatelessWidget {
         show: isPresetActive,
         duration: const Duration(milliseconds: 250),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
           child: Row(
+            mainAxisAlignment: .center,
             children: [
               const Icon(
                 Broken.info_circle,
@@ -2560,7 +2561,7 @@ class _TrackSearchFilterPresetHint extends StatelessWidget {
               const SizedBox(
                 width: 6.0,
               ),
-              Expanded(
+              Flexible(
                 child: NamidaText(
                   lang.presetOnlyAppliesToSearchPage,
                   style: NText.small,

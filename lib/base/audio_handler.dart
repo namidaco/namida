@@ -164,7 +164,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       settings.player.shuffleQueue.addListener(
         () => homeWidget.updateShuffle(settings.player.shuffleQueue.value),
       );
-      // -- quick settings tiles read these before anything is ever played.
+      // -- the widget shows these before anything is ever played.
       homeWidget.updateRepeatMode(displayRepeatMode, numberOfRepeats.value);
       homeWidget.updateShuffle(settings.player.shuffleQueue.value);
     }
@@ -927,6 +927,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   Future<void> onItemPlay(Q item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) {
     final requestedStartPosition = _takeRequestedStartPosition(item);
     _currentItemDuration.value = null;
+    cancelPlayErrorSkipTimer();
     if (!defaultGaplessEnabled) {
       // -- this was added to prevent multiple skips when spamming play/pause at the end of playback
       // -- but it's not needed for gapless, otherwise the state will stay stuck at this value
@@ -1175,7 +1176,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
           if (checkInterrupted()) return;
           try {
             duration = await setPls();
-          } catch (_) {}
+          } catch (e, st) {
+            if (checkInterrupted()) return;
+            _onTrackPlayError(tr, e, st, skipItem);
+            return;
+          }
         }
       }
     }
@@ -2862,6 +2867,10 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
         settings.player.shuffleQueue.save(!settings.player.shuffleQueue.value);
       case HomeWidgetController.actionCycleRepeat:
         userCycleRepeatMode();
+      case HomeWidgetController.actionWidgetsEnabled:
+        HomeWidgetController.instance?.setHasWidgets(true);
+      case HomeWidgetController.actionWidgetsDisabled:
+        HomeWidgetController.instance?.setHasWidgets(false);
       default:
         final isNotificationButton = await _onNotificationButtonPressed(name);
         if (!isNotificationButton) return super.customAction(name, extras);

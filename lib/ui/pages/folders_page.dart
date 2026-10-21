@@ -170,7 +170,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                       index: i,
                                       trackOrTwd: folderTracks[i],
                                       tracks: folderTracks,
-                                      bgColor: i == indexToScrollTo ? const NColors(.onSurface, opacity: 0.16) : null,
+                                      isJumpHighlighted: i == indexToScrollTo,
                                     );
                                   },
                                 ),

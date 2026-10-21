@@ -148,8 +148,7 @@ class _YoutubeHistoryPageState extends State<YoutubeHistoryPage> with HistoryDay
                                   videos: videos,
                                   index: i,
                                   day: day,
-                                  bgColor: isHighlighted ? const NColors(.onSurface, opacity: 0.16) : null,
-
+                                  isJumpHighlighted: isHighlighted,
                                   isImportantInCache: false, // long old history is lowkey useless
                                   topRightWidget: topRightWidget,
                                 );

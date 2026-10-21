@@ -333,7 +333,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
               ObxO(
                 rx: settings.downloadFilesWriteUploadDate,
                 builder: (context, downloadFilesWriteUploadDate) => CustomSwitchListTile(
-                  icon: Broken.document_code,
+                  icon: Broken.calendar_edit,
                   title: lang.setFileLastModifiedAsVideoUploadDate,
                   value: downloadFilesWriteUploadDate,
                   onChanged: (isTrue) => settings.downloadFilesWriteUploadDate.save(!isTrue),

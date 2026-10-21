@@ -95,4 +95,4 @@ class _SettingTargetHighlightState extends State<_SettingTargetHighlight> {
 }
 
 /// [page] is null outside settings.
-typedef SettingTileArgs = ({SettingEntry entry, SettingSubpageProvider? page, Color? bgColor});
+typedef SettingTileArgs = ({SettingEntry entry, SettingSubpageProvider? page, Color? bgColor, bool isLastInGroup});

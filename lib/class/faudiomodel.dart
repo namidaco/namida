@@ -350,6 +350,7 @@ class FTags {
   List<String>? _createList(String? value) => value == null ? null : List<String>.filled(1, value, growable: false);
 
   Map<String, List<String>> toTagLibMap() {
+    final bpmText = bpm == 0 ? '' : bpm?.toString();
     return <String, List<String>>{
       TagLibField.title: ?_createList(title),
       TagLibField.album: ?_createList(album),
@@ -377,7 +378,8 @@ class FTags {
       TagLibField.label: ?_createList(label),
       TagLibField.releaseType: ?_createList(releaseType),
       TagLibField.tempo: ?_createList(tempo),
-      TagLibField.bpm: ?_createList(bpm?.toString()),
+      TagLibField.bpm: ?_createList(bpmText),
+      TagLibField.initialKey: ?_createList(musicalKey),
       TagLibField.mixer: ?_createList(mixer),
       TagLibField.djmixer: ?_createList(djmixer),
       TagLibField.titleSort: ?_createList(sortInfo?.title),

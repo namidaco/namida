@@ -116,7 +116,7 @@ Future<void> showVideoDownloadOptionsSheet({
                     ),
                     Obx(
                       (context) => CustomSwitchListTile(
-                        icon: Broken.document_code,
+                        icon: Broken.calendar_edit,
                         title: lang.setFileLastModifiedAsVideoUploadDate,
                         value: settings.downloadFilesWriteUploadDate.valueR,
                         onChanged: (isTrue) => settings.downloadFilesWriteUploadDate.save(!isTrue),

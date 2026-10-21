@@ -304,6 +304,8 @@ class NamidaTaggerController {
       recordLabel: editedTags[TagField.recordLabel],
       releaseType: editedTags[TagField.releaseType],
       country: editedTags[TagField.country],
+      bpm: _bpmStringToInt(editedTags[TagField.bpm]),
+      musicalKey: editedTags[TagField.musicalKey],
       tags: editedTags[TagField.tags],
       ratingPercentage: () {
         final ratingString = editedTags[TagField.rating];
@@ -327,5 +329,12 @@ class NamidaTaggerController {
     final intval = int.tryParse(ratingString);
     if (intval == null) return null;
     return intval / 100;
+  }
+
+  /// 0 clears the tag.
+  int? _bpmStringToInt(String? bpmString) {
+    if (bpmString == null) return null;
+    if (bpmString.isEmpty) return 0;
+    return int.tryParse(bpmString);
   }
 }

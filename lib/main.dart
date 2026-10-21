@@ -50,6 +50,7 @@ import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/screenshots_driver.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -358,6 +359,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
     ].executeAllAndSilentReportErrors();
 
     QueueController.inst.prepareAllQueuesFile().catchError(logger.report);
+    RhythmController.inst.loadIfAnalyzed().catchError(logger.report);
 
     CurrentColor.inst.initialize(); // --> !can block?
 
@@ -744,6 +746,7 @@ class _NamidaState extends State<Namida> {
                       navigatorKey: namida.rootNavigatorKey,
                       title: 'Namida',
                       shortcuts: ShortcutsController.instance?.appShortcuts,
+                      actions: ShortcutsController.instance?.appActions,
                       // restorationScopeId: 'Namida',
                       // -- we use custom logic for translations, but the locale is still required for
                       // -- region-specific glyphs, ex: CJK ideographs are rendered differently per locale.

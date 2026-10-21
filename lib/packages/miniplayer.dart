@@ -21,6 +21,7 @@ import 'package:namida/controller/audio_output_controller.dart';
 import 'package:namida/controller/back_cover_controller.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
@@ -490,6 +491,24 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
     );
   }
 
+  static String _albumTopText(Playable currentItem) => (currentItem as Selectable).track.originalAlbum;
+
+  static void _onAlbumTap(Playable currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumsIdentifiersModified.firstOrNull);
+
+  static String _kuruTopText(Playable currentItem) {
+    final track = (currentItem as Selectable).track;
+    final firstListen = TrackTileManager.buildItem(TrackTileItem.firstListenDate, track);
+    return firstListen.isNotEmpty ? firstListen : track.originalAlbum;
+  }
+
+  static void _onKuruTopTextTap(Playable currentItem) {
+    final track = (currentItem as Selectable).track;
+    final listens = HistoryController.inst.topTracksMapListens.value[track];
+    final firstListen = listens?.firstOrNull;
+    if (firstListen == null) return _onAlbumTap(currentItem);
+    NamidaOnTaps.inst.onHistoryPlaylistTap(initialListen: firstListen, listensToNavigate: listens);
+  }
+
   static NamidaMiniPlayerBase getMiniPlayerBase(BuildContext context) {
     return NamidaMiniPlayerBase<Track, SortEntry<SortType>>(
       queueItemExtent: Dimensions.inst.trackTileItemExtent,
@@ -529,8 +548,8 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
       getDurationMS: (currentItem) => (currentItem as Selectable).track.durationMS,
       itemsKeyword: (number, item) => number.displayTrackKeyword,
       onAddItemsTap: (currentItem) => TracksAddOnTap().onAddTracksTap(context),
-      topText: (currentItem) => (currentItem as Selectable).track.originalAlbum,
-      onTopTextTap: (currentItem) => NamidaOnTaps.inst.onAlbumTap((currentItem as Selectable).track.albumsIdentifiersModified.firstOrNull),
+      topText: isKuru ? _kuruTopText : _albumTopText,
+      onTopTextTap: isKuru ? _onKuruTopTextTap : _onAlbumTap,
       onMenuOpen: (currentItem, _) => openMenu((currentItem as Selectable).trackWithDate, currentItem.track),
       focusedMenuOptions: (currentItem) => buildFocusedMenuOptions(context),
       imageBuilder: (item) => _AdjacentThumbnailScale(

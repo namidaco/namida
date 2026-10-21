@@ -282,8 +282,33 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
     _currentFolders.sort(_DirEntry.comparatorOf(type, reversed));
   }
 
+  static const _kEmptyFoldersTitle = 'Show empty folders';
+  static const _kHiddenFilesTitle = 'Show hidden files/folders';
+
   final _showHiddenFiles = false.obs;
   bool _showEmptyFolders = false;
+
+  void _toggleEmptyFolders() {
+    setState(() {
+      _showEmptyFolders = !_showEmptyFolders;
+      _refreshVisibleFolders();
+    });
+    NamidaToggleCard.showStateSnackbar(
+      icon: Broken.folder_open,
+      title: _kEmptyFoldersTitle,
+      value: _showEmptyFolders,
+    );
+  }
+
+  void _toggleHiddenFiles() {
+    _showHiddenFiles.toggle();
+    _fetchFiles(_currentFolderPath);
+    NamidaToggleCard.showStateSnackbar(
+      icon: Broken.eye,
+      title: _kHiddenFilesTitle,
+      value: _showHiddenFiles.value,
+    );
+  }
 
   void _refreshVisibleFolders() {
     if (_showEmptyFolders) {
@@ -863,7 +888,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                   ),
                   if (T == Directory)
                     IconButton(
-                      tooltip: lang.folder,
+                      tooltip: lang.folderPath,
                       padding: EdgeInsets.zero,
                       visualDensity: VisualDensity.compact,
                       style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
@@ -874,7 +899,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             dirController.dispose();
                           },
                           dialogBuilder: (theme) => CustomBlurryDialog(
-                            title: lang.folder,
+                            title: lang.folderPath,
                             actions: [
                               const CancelButton(),
                               NamidaButton(
@@ -894,7 +919,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                                 CustomTagTextField(
                                   controller: dirController,
                                   hintText: '',
-                                  labelText: lang.folder,
+                                  labelText: lang.folderPath,
                                   validatorMode: AutovalidateMode.always,
                                   validator: (value) {
                                     value ??= '';
@@ -919,11 +944,12 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                         );
                       },
                       icon: NIcon(
-                        Broken.wallet_1,
+                        Broken.edit_2,
                         size: 20.0,
                         color: NColors.defaultIcon(),
                       ),
                     ),
+                  const SizedBox(width: 2.0),
                   LongPressDetector(
                     onLongPress: () => _onBackupPickerLaunch(), // launching without extensions filter
                     child: IconButton(
@@ -1003,12 +1029,12 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                         ),
                       ),
                     if (T == Directory)
-                      IconButton(
-                        tooltip: lang.newDirectory,
-                        padding: EdgeInsets.zero,
-                        visualDensity: VisualDensity.compact,
-                        style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                        onPressed: () {
+                      NamidaToggleCard(
+                        icon: Broken.add_circle,
+                        title: lang.newDirectory,
+                        active: false,
+                        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                        onTap: () {
                           final dirController = TextEditingController();
                           NamidaNavigator.inst.navigateDialog(
                             onDisposing: () {
@@ -1064,47 +1090,32 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                             ),
                           );
                         },
-                        icon: NIcon(
-                          Broken.add_circle,
-                          size: 20.0,
-                          color: NColors.defaultIcon(),
-                        ),
                       ),
-                    IconButton(
-                      tooltip: 'Show empty folders',
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                      onPressed: () {
-                        setState(() {
-                          _showEmptyFolders = !_showEmptyFolders;
-                          _refreshVisibleFolders();
-                        });
-                      },
-                      icon: StackedIcon(
-                        baseIcon: Broken.folder,
-                        secondaryIcon: _showEmptyFolders ? Broken.eye : Broken.eye_slash,
-                        iconSize: 20.0,
-                        secondaryIconSize: 12.0,
-                        disableColor: _showEmptyFolders,
+                    const SizedBox(
+                      width: 6.0,
+                    ),
+                    NamidaToggleCard(
+                      icon: Broken.folder_open,
+                      title: _kEmptyFoldersTitle,
+                      active: _showEmptyFolders,
+                      padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                      onTap: _toggleEmptyFolders,
+                    ),
+                    const SizedBox(
+                      width: 6.0,
+                    ),
+                    ObxO(
+                      rx: _showHiddenFiles,
+                      builder: (context, showHiddenFiles) => NamidaToggleCard(
+                        icon: Broken.eye,
+                        title: _kHiddenFilesTitle,
+                        active: showHiddenFiles,
+                        padding: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
+                        onTap: _toggleHiddenFiles,
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Show hidden files/folders',
-                      padding: EdgeInsets.zero,
-                      visualDensity: VisualDensity.compact,
-                      style: const ButtonStyle(tapTargetSize: MaterialTapTargetSize.shrinkWrap),
-                      onPressed: () {
-                        _showHiddenFiles.toggle();
-                        _fetchFiles(_currentFolderPath);
-                      },
-                      icon: Obx(
-                        (context) => NIcon(
-                          _showHiddenFiles.valueR ? Broken.eye : Broken.eye_slash,
-                          size: 20.0,
-                          color: _showHiddenFiles.valueR ? null : NColors.defaultIcon(),
-                        ),
-                      ),
+                    const SizedBox(
+                      width: 6.0,
                     ),
                     Obx(
                       (context) => SortByMenu(

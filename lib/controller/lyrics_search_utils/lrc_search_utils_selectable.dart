@@ -465,10 +465,6 @@ class _LrcSidecarFinder {
 
   static final _listings = <String, _LrcDirectoryListing>{};
 
-  /// modification times can be as coarse as 2 seconds (FAT), a directory modified this recently can change again without its time changing.
-  static const _kModifiedGranularityMS = 2000;
-  static const _kNotReusable = -1;
-
   static void forget(String dirPath) => _listings.remove(dirPath);
 
   /// null when the directory doesn't exist.
@@ -480,10 +476,8 @@ class _LrcSidecarFinder {
     final reusable = _listings[dirPath];
     if (reusable != null && reusable.modifiedMS == modifiedMS) return reusable;
 
+    final reusableModifiedMS = stat.getReusableModifiedMS();
     final sidecars = await Isolate.run(() => _listSidecars(dirPath));
-    final nowMS = DateTime.now().millisecondsSinceEpoch;
-    final canReuse = nowMS - modifiedMS > _kModifiedGranularityMS;
-    final reusableModifiedMS = canReuse ? modifiedMS : _kNotReusable;
     final listing = _LrcDirectoryListing(reusableModifiedMS, sidecars);
     _listings[dirPath] = listing;
     return listing;
@@ -495,7 +489,7 @@ class _LrcSidecarFinder {
     if (reusable != null) return reusable;
 
     final sidecars = _listSidecars(dirPath);
-    final listing = _LrcDirectoryListing(_kNotReusable, sidecars);
+    final listing = _LrcDirectoryListing(FileStatsUtils.kNotReusableModifiedMS, sidecars);
     _listings[dirPath] = listing;
     return listing;
   }

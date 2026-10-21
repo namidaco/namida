@@ -885,6 +885,7 @@ class _SearchResultsView extends StatelessWidget {
                       heroTag: 'playlist_$playlistName',
                       showMenuFunction: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
                       onTap: () => NamidaOnTaps.inst.onNormalPlaylistTap(playlistName),
+                      artworkFile: PlaylistController.inst.getArtworkFileForPlaylist(playlistName),
                       width: 106.0,
                       height: 138.0,
                     ),

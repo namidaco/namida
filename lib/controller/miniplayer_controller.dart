@@ -524,6 +524,8 @@ class MiniPlayerController {
   }
 
   void snapToExpanded({bool haptic = true}) async {
+    if (!_screenValuesInitialized) return;
+
     WakelockController.inst.updateMiniplayerStatus(true);
     ScrollSearchController.inst.unfocusKeyboard();
     queueSearch.close();
@@ -536,7 +538,7 @@ class MiniPlayerController {
   }
 
   void snapToMini({bool haptic = true}) async {
-    if (_miniplayerIsWideScreen) return;
+    if (!_screenValuesInitialized || _miniplayerIsWideScreen) return;
 
     WakelockController.inst.updateMiniplayerStatus(false);
     queueSearch.close();
@@ -563,6 +565,7 @@ class MiniPlayerController {
   }
 
   Future<void> snapToQueue({bool animateScrollController = true, bool haptic = true}) async {
+    if (!_screenValuesInitialized) return;
     if (isInQueue && _offset >= maxOffset * 2) return;
 
     WakelockController.inst.updateMiniplayerStatus(false);

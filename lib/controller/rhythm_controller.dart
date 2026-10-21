@@ -3,6 +3,8 @@ import 'dart:isolate';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:namida_waveform/namida_rhythm.dart';
@@ -95,6 +97,12 @@ class RhythmController {
 
   Future<void> ensureLoaded() => _loading ??= _load();
 
+  /// track info and smart playlists read the analysis while beat matching is off too.
+  Future<void> loadIfAnalyzed() async {
+    final hasAnalysis = await AppPaths.TRACKS_RHYTHM_DB_INFO.file.exists();
+    if (hasAnalysis) await ensureLoaded();
+  }
+
   Future<void> _load() async {
     try {
       final rows = await _db.loadEverythingKeyedResult();
@@ -148,6 +156,37 @@ class RhythmController {
       if (tagKey >= 0) key = tagKey;
     }
     return (bpm: bpm, key: key);
+  }
+
+  /// bpm 0 and key '' for what the analysis couldn't tell.
+  RhythmAnalysis? analysisOf(Track track) {
+    final rhythm = _rhythms[track.path];
+    if (rhythm == null) return null;
+    final bpm = rhythm.hasSteadyBeat ? _conventionalBpmOf(rhythm, track.genresList) : 0;
+    final hasKey = rhythm.key >= 0 && rhythm.keyConfidence >= _minKeyConfidence;
+    final key = hasKey ? _MusicalKey.toText(rhythm.key) : '';
+    return (bpm: bpm, key: key);
+  }
+
+  /// analyzes [track] right away when it has no up to date analysis.
+  Future<RhythmAnalysis?> analyzeTrackNow(Track track) async {
+    final loading = _loading;
+    if (loading != null) {
+      await loading;
+    } else {
+      await _loadOne(track.path);
+    }
+    await _analyze(_RhythmJob(track, isScan: false));
+    return analysisOf(track);
+  }
+
+  /// a one off lookup doesn't need every analysis in memory.
+  Future<void> _loadOne(String key) async {
+    if (_rhythms.containsKey(key)) return;
+    try {
+      final row = await _db.get(key);
+      if (row != null) _rhythms[key] ??= _Rhythm.fromMap(row);
+    } catch (_) {}
   }
 
   void onItemPlaying() {
@@ -209,7 +248,8 @@ class RhythmController {
     int notAnalyzedCount = 0;
     for (final track in Indexer.inst.tracksInfoList.value) {
       if (!track.isPhysical) continue;
-      final tagBpm = track.bpm ?? 0;
+      final trExt = track.toTrackExt();
+      final tagBpm = trExt.bpm ?? 0;
       if (tagBpm > 0) continue;
       final rhythm = _rhythms[track.path];
       if (rhythm == null) {
@@ -217,10 +257,16 @@ class RhythmController {
         continue;
       }
       if (!rhythm.hasSteadyBeat) continue;
-      final bpm = rhythm.bpm.round();
+      final bpm = _conventionalBpmOf(rhythm, trExt.genresList);
       tagsPerTrack[track] = FTags.edit(path: track.path, artwork: artwork, bpm: bpm);
     }
     return (tagsPerTrack: tagsPerTrack, notAnalyzedCount: notAnalyzedCount);
+  }
+
+  /// mixing doesn't care about the octave, only what's shown and written is folded.
+  static int _conventionalBpmOf(_Rhythm rhythm, List<String> genres) {
+    final bpm = _GenreTempo.fold(rhythm.bpm, genres);
+    return bpm.round();
   }
 
   Future<void> writeBpmTags(Map<Track, FTags> tagsPerTrack) async {
@@ -436,6 +482,11 @@ class _MusicalKey {
 
   static const _noteClasses = {'c': 0, 'd': 2, 'e': 4, 'f': 5, 'g': 7, 'a': 9, 'b': 11};
 
+  static const _majorNames = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+  static const _minorNames = ['Cm', 'C#m', 'Dm', 'Ebm', 'Em', 'Fm', 'F#m', 'Gm', 'G#m', 'Am', 'Bbm', 'Bm'];
+
+  static String toText(int key) => key >= 12 ? _minorNames[key - 12] : _majorNames[key];
+
   /// reads tags like `Am`, `C#`, `Dbm`, `A minor`, camelot `8A` and open key `1d`. -1 when it can't tell.
   static int parse(String raw) {
     if (raw.isEmpty) return -1;
@@ -502,6 +553,67 @@ class _MusicalKey {
     };
   }
 }
+
+/// Genres with a strict tempo convention pick between an analyzed tempo and its half or double, which the audio alone can't tell apart.
+class _GenreTempo {
+  static const _drumAndBass = _TempoRange(155.0, 185.0);
+  static const _dubstep = _TempoRange(135.0, 150.0);
+  static const _hardstyle = _TempoRange(145.0, 160.0);
+  static const _hardcore = _TempoRange(160.0, 250.0);
+  static const _footwork = _TempoRange(150.0, 170.0);
+  static const _noConvention = _TempoRange(0.0, 0.0);
+
+  static const _containedGenres = <String, _TempoRange>{
+    'drumandbass': _drumAndBass, 'drumnbass': _drumAndBass, 'drumbass': _drumAndBass, 'dnb': _drumAndBass, //
+    'jungle': _drumAndBass, 'neurofunk': _drumAndBass, 'liquidfunk': _drumAndBass, 'jumpup': _drumAndBass, 'drumstep': _drumAndBass, //
+    'dubstep': _dubstep, 'brostep': _dubstep, //
+    'hardstyle': _hardstyle, 'rawstyle': _hardstyle, //
+    'happyhardcore': _hardcore, 'ukhardcore': _hardcore, 'hardcoretechno': _hardcore, 'frenchcore': _hardcore, //
+    'gabber': _hardcore, 'gabba': _hardcore, 'terrorcore': _hardcore, //
+    'footwork': _footwork, //
+  };
+
+  /// `db` is too short to search for, `post-hardcore` and `melodic hardcore` are rock.
+  static const _exactGenres = <String, _TempoRange>{
+    'hardcore': _hardcore, 'db': _drumAndBass, //
+  };
+
+  static final _nonAlphanumericRegex = RegExp(r'[^a-z0-9]');
+
+  static final _rangeByGenre = <String, _TempoRange>{};
+
+  static double fold(double bpm, List<String> genres) {
+    double folded = bpm;
+    for (final genre in genres) {
+      final range = _rangeByGenre[genre] ??= _rangeOf(genre);
+      if (range == _noConvention) continue;
+      if (range.contains(bpm)) return bpm;
+      if (folded != bpm) continue;
+      final doubled = bpm * 2.0;
+      final halved = bpm / 2.0;
+      if (range.contains(doubled)) {
+        folded = doubled;
+      } else if (range.contains(halved)) {
+        folded = halved;
+      }
+    }
+    return folded;
+  }
+
+  static _TempoRange _rangeOf(String genre) {
+    final lowerCase = genre.toLowerCase();
+    final normalized = lowerCase.replaceAll(_nonAlphanumericRegex, '');
+    final exactRange = _exactGenres[normalized];
+    if (exactRange != null) return exactRange;
+    for (final e in _containedGenres.entries) {
+      if (normalized.contains(e.key)) return e.value;
+    }
+    return _noConvention;
+  }
+}
+
+@visibleForTesting
+double debugFoldGenreTempo(double bpm, List<String> genres) => _GenreTempo.fold(bpm, genres);
 
 class _RhythmIsolateManager with PortsProvider<SendPort> {
   final _completers = <int, Completer<RhythmData?>>{};
@@ -636,6 +748,18 @@ class _RhythmJob {
   const _RhythmJob(this.item, {required this.isScan});
 }
 
+/// kept under an octave wide, so a tempo and its double never both fit.
+class _TempoRange {
+  final double min;
+  final double max;
+
+  const _TempoRange(this.min, this.max);
+
+  bool contains(double bpm) => bpm >= min && bpm <= max;
+}
+
 typedef RhythmFlow = ({double bpm, int key});
+
+typedef RhythmAnalysis = ({int bpm, String key});
 
 typedef RhythmTagsWritePlan = ({Map<Track, FTags> tagsPerTrack, int notAnalyzedCount});

@@ -34,9 +34,11 @@ abstract class SettingEntry {
     }
   }
 
-  bool endsWithGroup() {
+  double getBottomGap(bool isLastInGroup) {
+    if (isLastInGroup) return 0.0;
     final lastChild = children.lastOrNull;
-    return lastChild != null && lastChild.children.isNotEmpty;
+    final endsWithGroup = lastChild != null && lastChild.children.isNotEmpty;
+    return endsWithGroup ? NamidaExpansionTile.kNestedBottomGap : NamidaExpansionTile.kBottomGap;
   }
 
   bool containsDeep(SettingEntry key) {
@@ -50,8 +52,9 @@ abstract class SettingEntry {
 class SettingEntryTile extends StatelessWidget {
   final SettingEntry entry;
   final SettingSubpageProvider? page;
+  final bool isLastInGroup;
 
-  const SettingEntryTile({super.key, required this.entry, this.page});
+  const SettingEntryTile({super.key, required this.entry, this.page, this.isLastInGroup = false});
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +63,7 @@ class SettingEntryTile extends StatelessWidget {
 
     final page = this.page;
     final bgColor = page?.getBgColor(entry);
-    final args = (entry: entry, page: page, bgColor: bgColor);
+    final args = (entry: entry, page: page, bgColor: bgColor, isLastInGroup: isLastInGroup);
     final tile = entry.toTile(args);
     final shownTile = page == null || entry != page.initialItem
         ? tile
@@ -521,16 +524,19 @@ class _SettingExpansionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final page = args.page;
     final isTargetWithin = page?.isTargetWithin(entry) == true;
+    final lastChild = entry.children.lastOrNull;
     final children = entry.children
         .map(
           (e) => SettingEntryTile(
             entry: e,
             page: page,
+            isLastInGroup: e == lastChild,
           ),
         )
         .toFixedList();
     final isInitiallyExpanded = entry.initiallyExpandedWhen?.call() == true;
     final subtitle = entry.subtitle?.call();
+    final bottomGap = entry.getBottomGap(args.isLastInGroup);
     return NamidaExpansionTile(
       bgColor: args.bgColor,
       icon: entry.icon,
@@ -539,7 +545,7 @@ class _SettingExpansionTile extends StatelessWidget {
       subtitleText: subtitle,
       initiallyExpanded: isInitiallyExpanded || isTargetWithin,
       trailingBuilder: entry.trailingBuilder,
-      endsWithGroup: entry.endsWithGroup(),
+      bottomGap: bottomGap,
       children: children,
     );
   }
@@ -557,15 +563,17 @@ class _SettingToggleGroupTile extends StatelessWidget {
     final setting = entry.setting;
     final isTargetWithin = page?.isTargetWithin(entry) == true;
     final initiallyExpanded = setting.value || isTargetWithin;
+    final lastChild = entry.children.lastOrNull;
     final children = entry.children
         .map(
           (e) => SettingEntryTile(
             entry: e,
             page: page,
+            isLastInGroup: e == lastChild,
           ),
         )
         .toFixedList();
-    final endsWithGroup = entry.endsWithGroup();
+    final bottomGap = entry.getBottomGap(args.isLastInGroup);
     return Obx(
       (context) {
         final isEnabled = entry.enabledWhen?.call() ?? true;
@@ -585,7 +593,7 @@ class _SettingToggleGroupTile extends StatelessWidget {
             trailingBuilder: (_) => CustomSwitch(
               active: isOn,
             ),
-            endsWithGroup: endsWithGroup,
+            bottomGap: bottomGap,
             children: children,
           ),
         );

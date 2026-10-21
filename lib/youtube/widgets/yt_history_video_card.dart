@@ -5,6 +5,7 @@ import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
 import 'package:youtipie/class/youtipie_feed/playlist_basic_info.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/jump_highlight.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -73,23 +74,28 @@ class VideoTilePropertiesProvider extends StatelessWidget {
           rx: settings.thumbnailTapAction,
           builder: (context, thumbnailTapAction) => ObxO(
             rx: settings.thumbnailLongPressAction,
-            builder: (context, thumbnailLongPressAction) {
-              final properties = VideoTileProperties(
-                threeLines: threeLines,
-                threeLinesPlaying: threeLinesPlaying,
-                itemsColor7: itemsColor7,
-                itemsColor6: itemsColor6,
-                itemsColor5: itemsColor5,
-                comingFromQueue: comingFromQueue,
-                configs: configs,
-                canHaveDuplicates: canHaveDuplicates,
-                allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                thumbnailTapAction: thumbnailTapAction,
-                thumbnailLongPressAction: thumbnailLongPressAction,
-              );
-              return builder(properties);
-            },
+            builder: (context, thumbnailLongPressAction) => ObxOSelect(
+              rx: JumpHighlight.briefTarget,
+              selector: (briefHighlight) => briefHighlight?.inQueue == comingFromQueue ? briefHighlight : null,
+              builder: (context, briefHighlight) {
+                final properties = VideoTileProperties(
+                  threeLines: threeLines,
+                  threeLinesPlaying: threeLinesPlaying,
+                  itemsColor7: itemsColor7,
+                  itemsColor6: itemsColor6,
+                  itemsColor5: itemsColor5,
+                  comingFromQueue: comingFromQueue,
+                  configs: configs,
+                  canHaveDuplicates: canHaveDuplicates,
+                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                  thumbnailTapAction: thumbnailTapAction,
+                  thumbnailLongPressAction: thumbnailLongPressAction,
+                  briefHighlight: briefHighlight,
+                );
+                return builder(properties);
+              },
+            ),
           ),
         ),
       ),
@@ -140,6 +146,7 @@ class VideoTileProperties {
   final bool allowSwipeRight;
   final TrackExecuteActions thumbnailTapAction;
   final TrackExecuteActions thumbnailLongPressAction;
+  final JumpHighlightTarget? briefHighlight;
 
   const VideoTileProperties({
     required this.configs,
@@ -154,6 +161,7 @@ class VideoTileProperties {
     required this.allowSwipeRight,
     required this.thumbnailTapAction,
     required this.thumbnailLongPressAction,
+    required this.briefHighlight,
   });
 }
 
@@ -172,11 +180,13 @@ class YTHistoryVideoCard extends YTHistoryVideoCardBase {
     super.fadeOpacity = 0,
     super.isImportantInCache = true,
     super.bgColor,
+    super.isJumpHighlighted,
     super.topRightWidget,
     super.downloadIndex,
     super.downloadTotalLength,
     super.preferFetchNewInfo,
     super.deferNetworkFetch,
+    super.onTap,
     required super.properties,
   }) : super(
          mainList: videos,
@@ -204,6 +214,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
   final double fadeOpacity;
   final bool isImportantInCache;
   final NColors? bgColor;
+  final bool isJumpHighlighted;
   final StreamInfoItem? Function(T item)? info;
   final Widget? topRightWidget;
   final int? downloadIndex;
@@ -233,6 +244,7 @@ class YTHistoryVideoCardBase<T> extends StatefulWidget {
     this.fadeOpacity = 0,
     this.isImportantInCache = true,
     this.bgColor,
+    this.isJumpHighlighted = false,
     required this.info,
     this.topRightWidget,
     this.downloadIndex,
@@ -544,10 +556,14 @@ class _YTHistoryVideoCardBaseState<T> extends State<YTHistoryVideoCardBase<T>> w
 
         final borderRadiusRawValue = widget.minimalCard ? YTHistoryVideoCardBase.kDefaultBorderRadiusMinimalCard : YTHistoryVideoCardBase.kDefaultBorderRadius;
 
+        final briefHighlight = properties.briefHighlight;
+        final isBriefHighlighted = briefHighlight != null && index == briefHighlight.index && item == briefHighlight.item;
+
         final background = _YTHistoryCardBackgroundState(
           bgColor: widget.bgColor,
           isPlaying: isCurrentlyPlaying,
           hasHighlightLayer: !isCurrentlyPlaying && isVideoHighlighted && configs.queueSource.supportResuming,
+          hasJumpHighlightLayer: widget.isJumpHighlighted || isBriefHighlighted,
           comingFromQueue: properties.comingFromQueue,
           cardColorOpacity: widget.cardColorOpacity,
         );
@@ -752,6 +768,10 @@ class _YTHistoryCardInkWell extends StatelessWidget {
           );
         }
 
+        final jumpHighlight = background.comingFromQueue ? JumpHighlight.queueColor : JumpHighlight.color;
+        final jumpHighlightColor = background.hasJumpHighlightLayer ? jumpHighlight.resolve(colors) : null;
+        if (jumpHighlightColor != null) bgColor = Color.alphaBlend(jumpHighlightColor, bgColor);
+
         BoxDecoration decoration;
         if (settings.gradientTiles.value) {
           Color? bgColorAlt;
@@ -761,6 +781,7 @@ class _YTHistoryCardInkWell extends StatelessWidget {
               bgColorAlt = palette[0].withOpacityExt(0.4);
             }
           }
+          if (jumpHighlightColor != null && bgColorAlt != null) bgColorAlt = Color.alphaBlend(jumpHighlightColor, bgColorAlt);
           // -- has to be always gradient to animate properly
           decoration = BoxDecoration(
             gradient: LinearGradient(
@@ -799,6 +820,7 @@ class _YTHistoryCardBackgroundState {
   final NColors? bgColor;
   final bool isPlaying;
   final bool hasHighlightLayer;
+  final bool hasJumpHighlightLayer;
   final bool comingFromQueue;
   final double cardColorOpacity;
 
@@ -806,6 +828,7 @@ class _YTHistoryCardBackgroundState {
     required this.bgColor,
     required this.isPlaying,
     required this.hasHighlightLayer,
+    required this.hasJumpHighlightLayer,
     required this.comingFromQueue,
     required this.cardColorOpacity,
   });

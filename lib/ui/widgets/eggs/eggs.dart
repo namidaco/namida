@@ -539,7 +539,7 @@ extension _NamidaEggLook on NamidaEgg {
 extension _EggUnlockableText on EggUnlockable {
   String toText() => switch (this) {
     EggUnlockable.crossfade => lang.crossfade,
-    EggUnlockable.partyMode => 'Party mode',
+    EggUnlockable.partyMode => lang.enablePartyMode,
     EggUnlockable.starfield => EffectTheme.starfield.toText(),
     EggUnlockable.galaxy => EffectTheme.galaxy.toText(),
     EggUnlockable.aurora => EffectTheme.aurora.toText(),

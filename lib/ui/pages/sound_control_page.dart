@@ -1034,20 +1034,23 @@ class SoundControlPageState extends State<SoundControlPage> {
                           style: NText.medium,
                         ),
                       ),
-                      NamidaIconButton(
-                        horizontalPadding: 8.0,
-                        tooltip: () => lang.tapToSeek,
-                        icon: null,
-                        iconSize: 24.0,
-                        onPressed: () => settings.equalizer.uiTapToUpdate.save(!settings.equalizer.uiTapToUpdate.value),
-                        child: ObxO(
-                          rx: settings.equalizer.uiTapToUpdate,
-                          builder: (context, val) => StackedIcon(
-                            baseIcon: Broken.mouse_1,
-                            secondaryIcon: val ? Broken.tick_circle : Broken.close_circle,
-                            secondaryIconSize: 12.0,
-                            iconSize: 24.0,
-                          ),
+                      ObxO(
+                        rx: settings.equalizer.uiTapToUpdate,
+                        builder: (context, uiTapToUpdate) => NamidaToggleCard(
+                          icon: Broken.mouse_1,
+                          title: lang.tapToSeek,
+                          active: uiTapToUpdate,
+                          padding: const EdgeInsets.all(6.0),
+                          iconSize: 22.0,
+                          onTap: () {
+                            final isTapToSeek = !settings.equalizer.uiTapToUpdate.value;
+                            settings.equalizer.uiTapToUpdate.save(isTapToSeek);
+                            NamidaToggleCard.showStateSnackbar(
+                              icon: Broken.mouse_1,
+                              title: lang.tapToSeek,
+                              value: isTapToSeek,
+                            );
+                          },
                         ),
                       ),
                       const SizedBox(width: 12.0),

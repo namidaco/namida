@@ -1,10 +1,10 @@
 package com.msob7y.namida
 
-import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import android.support.v4.media.session.PlaybackStateCompat
 import android.view.KeyEvent
 import androidx.annotation.RequiresApi
 import com.msob7y.namida.glance.kActionShuffle
@@ -96,14 +96,14 @@ class NamidaShuffleQuickSettingsTile : TileService() {
   override fun onClick() {
     // -- shuffle has no media keycode, it goes to the audio service as a custom action,
     // -- which is a no-op while the service isnt alive, same as the home widget button.
-    if (getAudioServiceInstance() == null) return
-    val isShuffling = getIsShuffling()
+    val isShuffling = getIsShuffling() ?: return
     sendAudioServiceCustomAction(kActionShuffle)
     updateTile(!isShuffling)
   }
 
   private fun updateTile(isNowShuffling: Boolean? = null) {
-    val isShuffling = isNowShuffling ?: getIsShuffling()
+    // -- no service while the app is dead, the tile keeps its last state.
+    val isShuffling = isNowShuffling ?: getIsShuffling() ?: return
     qsTile?.apply {
       state = if (isShuffling) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
       icon = Icon.createWithResource(applicationContext, R.drawable.shuffle)
@@ -118,16 +118,8 @@ class NamidaShuffleQuickSettingsTile : TileService() {
     }
   }
 
-  // written by `_HomeWidgetsMobile` on the dart side whenever shuffle changes.
-  private fun getIsShuffling(): Boolean {
-    return try {
-      applicationContext
-        .getSharedPreferences(kHomeWidgetPreferences, Context.MODE_PRIVATE)
-        .getBoolean("shuffle", false)
-    } catch (_: Exception) {
-      false
-    }
+  private fun getIsShuffling(): Boolean? {
+    val service = getAudioServiceInstance() ?: return null
+    return service.shuffleMode != PlaybackStateCompat.SHUFFLE_MODE_NONE
   }
 }
-
-private const val kHomeWidgetPreferences = "HomeWidgetPreferences"

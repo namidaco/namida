@@ -11,6 +11,7 @@ abstract class HomeWidgets {
   }
 
   Future<bool?> init();
+  Future<void> setHasWidgets(bool hasWidgets);
   Future<void> updateIsPlaying(bool isPlaying);
   Future<void> updateIsFavourite(bool isFavourite);
   Future<void> updateRepeatMode(PlayerRepeatMode repeatMode, int repeatCount);

@@ -107,15 +107,11 @@ class _NamidaSettingSearchBarState extends State<NamidaSettingSearchBar> {
             cursorColour: colors.onSurface,
             buttonBorderColour: Colors.black45,
             cursorRadius: const Radius.circular(12.0),
-            buttonWidget: const IgnorePointer(
-              child: NamidaIconButton(
-                icon: Broken.shield_search,
-              ),
+            buttonWidget: const NamidaIconButton(
+              icon: Broken.shield_search,
             ),
-            secondaryButtonWidget: const IgnorePointer(
-              child: NamidaIconButton(
-                icon: Broken.shield_slash,
-              ),
+            secondaryButtonWidget: const NamidaIconButton(
+              icon: Broken.search_status_1,
             ),
             trailingWidget: trailingWidget,
             onTap: () => _onSearch(isOpen: true),

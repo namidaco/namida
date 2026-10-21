@@ -52,6 +52,8 @@ class MultiArtworkCard extends StatelessWidget {
     double getFontSize(double m) => (remainingVerticalSpace * m).withMaximum(15.0);
     final topRightText = this.topRightText;
     final topRightFontSize = getFontSize(0.24).withMaximum(12.0);
+    final artworkFile = this.artworkFile;
+    final hasCustomArtwork = artworkFile != null && artworkFile.existsSync();
     Widget cardStack = Stack(
       children: [
         MultiArtworks(
@@ -61,7 +63,7 @@ class MultiArtworkCard extends StatelessWidget {
           tracks: tracks.toImageTracks(),
           thumbnailSize: imageSize,
           iconSize: (12.0 * itemImagePercentageMultiplier).withMinimum(12.0),
-          artworkFile: artworkFile,
+          existingArtworkFile: hasCustomArtwork ? artworkFile : null,
         ),
         Positioned(
           left: 0.0,

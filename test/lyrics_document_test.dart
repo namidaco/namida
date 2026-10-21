@@ -324,16 +324,20 @@ List<int> _heardStartsMS(Lrc lrc, int durationMS) {
 
 String _normalized(String text) => text.trim().replaceAll(RegExp(r'\s+'), ' ');
 
-/// a word ending before it starts is saved as ending at its start.
+/// a word running past the next one is saved as ending at the next start, and one ending before it starts as ending at its start.
 List<(String, Duration, Duration)> _timedWordsOf(LrcLine line) {
   final parts = line.parts;
   if (line.type != LrcTypes.enhanced || parts == null) return const [];
-  return parts.where((e) => e.lyrics.isNotEmpty).map((e) {
+  final words = parts.where((e) => e.lyrics.isNotEmpty).toFixedList();
+  return words.mapIndexed((e, i) {
     final start = _truncatedToCentiseconds(e.startTimestamp);
-    final endPre = _truncatedToCentiseconds(e.endTimestamp);
-    final end = endPre < start ? start : endPre;
+    final nextStart = words.elementAtOrNull(i + 1)?.startTimestamp;
+    var endPre = e.endTimestamp;
+    if (nextStart != null && endPre > nextStart) endPre = nextStart;
+    final endTruncated = _truncatedToCentiseconds(endPre);
+    final end = endTruncated < start ? start : endTruncated;
     return (e.lyrics, start, end);
-  }).toList();
+  }).toFixedList();
 }
 
 List<(String, int, int)> _partsOf(List<LrcLinePart>? parts) {

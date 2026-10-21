@@ -388,9 +388,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       callback: () {
         if (NamidaWindowManager.isMiniLyricsMode.value) {
           WindowController.instance?.exitMiniLyricsMode();
-        } else {
-          NamidaNavigator.inst.back();
+          return;
         }
+        final focusedItem = _getFocusedItem();
+        if (focusedItem != null && !ShortcutsManager.isTextFieldFocused()) {
+          focusedItem.unfocus();
+          return;
+        }
+        NamidaNavigator.inst.back();
       },
       title: () => lang.exit,
     ),
@@ -398,10 +403,10 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
 
   FocusAttachment? _attachment;
 
-  /// arrow keys are mapped to [DirectionalFocusIntent]/[ScrollIntent] by [WidgetsApp.defaultShortcuts],
-  /// and since those are dispatched from the focused node upwards, they get consumed before ever
-  /// reaching our root scope handler. text fields are unaffected, they consume arrows earlier
-  /// through [DefaultTextEditingShortcuts].
+  /// ctrl+arrows are mapped to [ScrollIntent] by [WidgetsApp.defaultShortcuts], and since those are dispatched
+  /// from the focused node upwards, they get consumed before ever reaching our root scope handler.
+  /// plain arrows are gated by [_FocusedItemDirectionalAction] instead.
+  /// text fields are unaffected, they consume arrows earlier through [DefaultTextEditingShortcuts].
   static bool _isStrippedDefault(ShortcutActivator activator, Intent intent) {
     if (activator is! SingleActivator) return false;
 
@@ -413,7 +418,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         trigger == LogicalKeyboardKey.arrowDown;
     if (!isArrow) return false;
 
-    return intent is DirectionalFocusIntent || (intent is ScrollIntent && activator.control);
+    return intent is ScrollIntent && activator.control;
   }
 
   @override
@@ -422,6 +427,19 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       (e) => !_isStrippedDefault(e.key, e.value),
     ),
   );
+
+  @override
+  late final Map<Type, Action<Intent>> appActions = <Type, Action<Intent>>{
+    ...WidgetsApp.defaultActions,
+    DirectionalFocusIntent: _FocusedItemDirectionalAction(),
+  };
+
+  /// scopes and nodes that skip traversal (ex: the navigator's own node) mean nothing is focused.
+  static FocusNode? _getFocusedItem() {
+    final focus = FocusManager.instance.primaryFocus;
+    if (focus == null || focus is FocusScopeNode || focus.skipTraversal) return null;
+    return focus;
+  }
 
   @override
   void init() {
@@ -567,5 +585,14 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
     final currentRouteType = NamidaNavigator.inst.currentRoute?.route;
     final isInSettings = currentRouteType == RouteType.SETTINGS_page || currentRouteType == RouteType.SETTINGS_subpage;
     return isInSettings;
+  }
+}
+
+// by claude
+/// arrows move focus only while an item is focused (ex: after tab), otherwise they reach our root handler (seek).
+class _FocusedItemDirectionalAction extends DirectionalFocusAction {
+  @override
+  bool isEnabled(DirectionalFocusIntent intent) {
+    return _ShortcutsManagerDesktop._getFocusedItem() != null;
   }
 }

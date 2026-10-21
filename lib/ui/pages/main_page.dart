@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart' show PaintingContextCallback;
 import 'package:flutter/services.dart';
 
 import 'package:namida/base/audio_handler.dart';
+import 'package:namida/class/jump_highlight.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -566,7 +567,11 @@ class MainPageFABResumeButton extends StatelessWidget {
 
     NamidaNavigator.inst.hideStuff();
 
-    void jumpFn() => MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, routeType!);
+    final targetItem = tracks[index];
+    void jumpFn() {
+      JumpHighlight.showBriefly(targetItem, index, inQueue: false);
+      MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, routeType!);
+    }
 
     if (openTracksPage) {
       ScrollSearchController.inst.animatePageController(tracksTab!, jumpToTopIfSamePage: false);

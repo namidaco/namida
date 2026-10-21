@@ -196,7 +196,6 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
     final shownDays = filteredHistory?.days ?? historyDays;
     final shownDaysLength = shownDays.length;
 
-    const highlightColor = NColors(.onSurface, opacity: 0.16);
     final smallTextStyle = NText.small.of(context).copyWith(fontSize: 12.0);
 
     final isSearchBoxShown = _isSearchBoxShown;
@@ -369,7 +368,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                                   trackOrTwd: tr,
                                   index: i,
                                   tracks: tracks,
-                                  bgColor: isHighlightedDay && i == highlightedItem.indexOfSmallList ? highlightColor : null,
+                                  isJumpHighlighted: isHighlightedDay && i == highlightedItem.indexOfSmallList,
                                   thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
                                   topRightWidget: topRightWidget,
                                 );

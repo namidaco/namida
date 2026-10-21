@@ -30,6 +30,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/current_color.dart';
+import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -52,6 +53,7 @@ import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/ui_scale.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/main.dart';
 import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/smooth_scroll_controller.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
@@ -681,11 +683,17 @@ class CustomBlurryDialog extends StatelessWidget {
     this.frame,
   });
 
+  static const _kContentToActionsGap = 16.0;
+  static const _kActionsTopPaddingWithoutContentPadding = 12.0;
+
   @override
   Widget build(BuildContext context) {
     final ctxth = theme ?? context.theme;
     final vInsets = verticalInset;
     final double horizontalMargin = Dimensions.calculateDialogHorizontalMargin(context, horizontalInset);
+    final contentBottomPadding = contentPadding.resolve(Directionality.of(context)).bottom;
+    final actionsTopPaddingAfterContent = (_kContentToActionsGap - contentBottomPadding).withMinimum(0.0);
+    final actionsTopPadding = contentBottomPadding == 0.0 ? _kActionsTopPaddingWithoutContentPadding : actionsTopPaddingAfterContent;
     return Center(
       child: SmoothSingleChildScrollView(
         child: Dialog(
@@ -693,142 +701,144 @@ class CustomBlurryDialog extends StatelessWidget {
           surfaceTintColor: Colors.transparent,
           insetPadding: EdgeInsets.symmetric(horizontal: horizontalMargin, vertical: vInsets),
           clipBehavior: Clip.antiAlias,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: maxWidth),
-            child: TapDetector(
-              onTap: () {},
-              child: _DialogFrame(
-                frame: frame,
-                child: Container(
-                  color: Colors.transparent,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      /// Title.
-                      ?titleWidget,
-                      if (titleWidgetInPadding != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: titleWidgetInPadding,
+          child: _DialogContentNoSystemPadding(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: TapDetector(
+                onTap: () {},
+                child: _DialogFrame(
+                  frame: frame,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        /// Title.
+                        ?titleWidget,
+                        if (titleWidgetInPadding != null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: titleWidgetInPadding,
+                            ),
                           ),
-                        ),
-                      if (titleWidget == null && titleWidgetInPadding == null)
-                        normalTitleStyle
-                            ? Padding(
-                                padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
-                                child: Row(
-                                  children: [
-                                    if (icon != null || isWarning) ...[
-                                      Icon(
-                                        isWarning ? Broken.warning_2 : icon,
-                                      ),
-                                      const SizedBox(
-                                        width: 10.0,
-                                      ),
-                                    ],
-                                    Expanded(
-                                      child: NamidaText(
-                                        isWarning ? lang.warning : title ?? '',
-                                        style: NText.large,
-                                      ),
-                                    ),
-                                    ...?trailingWidgets,
-                                  ],
-                                ),
-                              )
-                            : Container(
-                                color: Color.alphaBlend(ctxth.colorScheme.primary.withOpacityExt(0.02), ctxth.cardTheme.color!),
-                                padding: const EdgeInsets.all(16),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    if (icon != null) ...[
-                                      Icon(
-                                        icon,
-                                      ),
-                                      const SizedBox(
-                                        width: 10.0,
-                                      ),
-                                    ],
-                                    Expanded(
-                                      child: NamidaText(
-                                        title ?? '',
-                                        style: NText.medium,
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                      /// Body.
-                      Padding(
-                        padding: contentPadding,
-                        child: SizedBox(
-                          width: context.width,
-                          child: bodyText != null
+                        if (titleWidget == null && titleWidgetInPadding == null)
+                          normalTitleStyle
                               ? Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: NamidaText(
-                                    bodyText!,
-                                    style: NText.medium,
-                                  ),
-                                )
-                              : child,
-                        ),
-                      ),
-
-                      /// Actions.
-                      if (actions != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                          child: LayoutWidthProvider(
-                            builder: (context, maxWidth) {
-                              final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
-                              final actionsMaxWidth = (maxWidth - leftActionMaxWidth);
-                              return SizedBox(
-                                width: maxWidth,
-                                child: Row(
-                                  mainAxisSize: .max,
-                                  children: [
-                                    if (leftAction != null) ...[
-                                      ConstrainedBox(
-                                        constraints: BoxConstraints(maxWidth: leftActionMaxWidth),
-                                        child: FittedBox(
-                                          alignment: AlignmentDirectional.centerStart,
-                                          fit: BoxFit.scaleDown,
-                                          child: leftAction!,
+                                  padding: const EdgeInsets.only(top: 28.0, left: 28.0, right: 24.0),
+                                  child: Row(
+                                    children: [
+                                      if (icon != null || isWarning) ...[
+                                        Icon(
+                                          isWarning ? Broken.warning_2 : icon,
+                                        ),
+                                        const SizedBox(
+                                          width: 10.0,
+                                        ),
+                                      ],
+                                      Expanded(
+                                        child: NamidaText(
+                                          isWarning ? lang.warning : title ?? '',
+                                          style: NText.large,
                                         ),
                                       ),
-                                      const SizedBox(width: 6.0),
+                                      ...?trailingWidgets,
                                     ],
+                                  ),
+                                )
+                              : Container(
+                                  color: Color.alphaBlend(ctxth.colorScheme.primary.withOpacityExt(0.02), ctxth.cardTheme.color!),
+                                  padding: const EdgeInsets.all(16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (icon != null) ...[
+                                        Icon(
+                                          icon,
+                                        ),
+                                        const SizedBox(
+                                          width: 10.0,
+                                        ),
+                                      ],
+                                      Expanded(
+                                        child: NamidaText(
+                                          title ?? '',
+                                          style: NText.medium,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
 
-                                    Expanded(
-                                      child: ConstrainedBox(
-                                        constraints: BoxConstraints(maxWidth: actionsMaxWidth),
-                                        child: FittedBox(
-                                          alignment: AlignmentDirectional.centerEnd,
-                                          fit: BoxFit.scaleDown,
-                                          child: Row(
-                                            mainAxisSize: .max,
-                                            mainAxisAlignment: .end,
-                                            children: [
-                                              ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
-                                            ],
+                        /// Body.
+                        Padding(
+                          padding: contentPadding,
+                          child: SizedBox(
+                            width: context.width,
+                            child: bodyText != null
+                                ? Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: NamidaText(
+                                      bodyText!,
+                                      style: NText.medium,
+                                    ),
+                                  )
+                                : child,
+                          ),
+                        ),
+
+                        /// Actions.
+                        if (actions != null)
+                          Padding(
+                            padding: EdgeInsets.only(left: 16.0, right: 16.0, top: actionsTopPadding, bottom: 12.0),
+                            child: LayoutWidthProvider(
+                              builder: (context, maxWidth) {
+                                final leftActionMaxWidth = leftAction == null ? 0.0 : maxWidth * 0.35;
+                                final actionsMaxWidth = (maxWidth - leftActionMaxWidth);
+                                return SizedBox(
+                                  width: maxWidth,
+                                  child: Row(
+                                    mainAxisSize: .max,
+                                    children: [
+                                      if (leftAction != null) ...[
+                                        ConstrainedBox(
+                                          constraints: BoxConstraints(maxWidth: leftActionMaxWidth),
+                                          child: FittedBox(
+                                            alignment: AlignmentDirectional.centerStart,
+                                            fit: BoxFit.scaleDown,
+                                            child: leftAction!,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6.0),
+                                      ],
+
+                                      Expanded(
+                                        child: ConstrainedBox(
+                                          constraints: BoxConstraints(maxWidth: actionsMaxWidth),
+                                          child: FittedBox(
+                                            alignment: AlignmentDirectional.centerEnd,
+                                            fit: BoxFit.scaleDown,
+                                            child: Row(
+                                              mainAxisSize: .max,
+                                              mainAxisAlignment: .end,
+                                              children: [
+                                                ...actions!.addSeparators(separator: const SizedBox(width: 6.0)),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -836,6 +846,24 @@ class CustomBlurryDialog extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _DialogContentNoSystemPadding extends StatelessWidget {
+  final Widget child;
+
+  const _DialogContentNoSystemPadding({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery.removePadding(
+      context: context,
+      removeLeft: true,
+      removeTop: true,
+      removeRight: true,
+      removeBottom: true,
+      child: child,
     );
   }
 }
@@ -1484,6 +1512,9 @@ class SmallListTile extends StatelessWidget {
 
 // rewritten by claude, header is a [CustomListTile], one animation drives size, fade, slide, arrow and tint, children sit on a rail.
 class NamidaExpansionTile extends StatefulWidget {
+  static const kBottomGap = 18.0;
+  static const kNestedBottomGap = 8.0;
+
   final IconData? icon;
   final Color? iconColor;
   final Widget? leading;
@@ -1498,8 +1529,7 @@ class NamidaExpansionTile extends StatefulWidget {
   /// inside the rail.
   final EdgeInsetsGeometry childrenPadding;
 
-  /// the last child is a group with its own bottom gap, so the rail adds none.
-  final bool endsWithGroup;
+  final double bottomGap;
   final bool showRail;
   final bool initiallyExpanded;
   final Widget Function(Widget arrow)? trailingBuilder;
@@ -1523,7 +1553,7 @@ class NamidaExpansionTile extends StatefulWidget {
     this.textColorScheme,
     this.children = const <Widget>[],
     this.childrenPadding = EdgeInsets.zero,
-    this.endsWithGroup = false,
+    this.bottomGap = kBottomGap,
     this.showRail = true,
     this.initiallyExpanded = false,
     this.trailingBuilder,
@@ -1675,7 +1705,7 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
                 animation: _sizeAnimation,
                 child: _ExpansionChildrenRail(
                   padding: widget.childrenPadding,
-                  endsWithGroup: widget.endsWithGroup,
+                  bottomGap: widget.bottomGap,
                   showRail: widget.showRail,
                   children: widget.children,
                 ),
@@ -1819,11 +1849,11 @@ class _ExpansionSlideIn extends AnimatedWidget {
 
 class _ExpansionChildrenRail extends StatelessWidget {
   final EdgeInsetsGeometry padding;
-  final bool endsWithGroup;
+  final double bottomGap;
   final bool showRail;
   final List<Widget> children;
 
-  const _ExpansionChildrenRail({required this.padding, required this.endsWithGroup, required this.showRail, required this.children});
+  const _ExpansionChildrenRail({required this.padding, required this.bottomGap, required this.showRail, required this.children});
 
   static const _kRailLeft = 20.0;
   static const _kChildrenIndent = 12.0;
@@ -1859,9 +1889,9 @@ class _ExpansionChildrenRail extends StatelessWidget {
         ],
       );
     }
-    final bottomSpacing = endsWithGroup ? 0.0 : 18.0;
+    if (bottomGap == 0.0) return body;
     return Padding(
-      padding: EdgeInsets.only(bottom: bottomSpacing),
+      padding: EdgeInsets.only(bottom: bottomGap),
       child: body,
     );
   }
@@ -1873,12 +1903,21 @@ class CreatePlaylistButton extends StatelessWidget {
   Future<void> promptCreate() async {
     final controller = TextEditingController();
     final exportAsM3uRx = false.obs;
+    final m3uDirectoryRx = AppDirs.M3UPlaylists.obs;
     final formKey = GlobalKey<FormState>();
+
+    Future<void> pickM3UDirectory() async {
+      final directoryPath = await NamidaFileBrowser.getDirectory(note: lang.convertToM3UPlaylist);
+      if (directoryPath == null) return;
+      m3uDirectoryRx.value = directoryPath;
+      exportAsM3uRx.value = true;
+    }
 
     await NamidaNavigator.inst.navigateDialog(
       onDisposing: () {
         controller.dispose();
         exportAsM3uRx.close();
+        m3uDirectoryRx.close();
       },
       dialog: Form(
         key: formKey,
@@ -1891,7 +1930,9 @@ class CreatePlaylistButton extends StatelessWidget {
               onTap: () async {
                 if (formKey.currentState!.validate()) {
                   final name = controller.text;
-                  final m3uPath = exportAsM3uRx.value ? PlaylistController.getUnusedM3uFilePathInStorage(name) : null;
+                  final exportAsM3u = exportAsM3uRx.value;
+                  if (exportAsM3u && !await requestManageStoragePermission()) return;
+                  final m3uPath = exportAsM3u ? PlaylistController.getUnusedM3uFilePath(name, m3uDirectoryRx.value) : null;
 
                   final pl = await PlaylistController.inst.addNewPlaylist(name, m3uPath: m3uPath);
                   if (pl != null && m3uPath != null) {
@@ -1912,14 +1953,18 @@ class CreatePlaylistButton extends StatelessWidget {
           child: Column(
             mainAxisSize: .min,
             children: [
-              ObxO(
-                rx: exportAsM3uRx,
-                builder: (context, exportAsM3u) => CustomSwitchListTile(
+              Obx(
+                (context) => CustomSwitchListTile(
                   icon: Broken.direct_send,
                   title: lang.convertToM3UPlaylist,
-                  subtitle: AppDirs.M3UPlaylists,
-                  value: exportAsM3u,
+                  subtitle: m3uDirectoryRx.valueR,
+                  value: exportAsM3uRx.valueR,
                   onChanged: (_) => exportAsM3uRx.toggle(),
+                  trailingBeforeSwitch: NamidaIconButton(
+                    icon: Broken.folder_add,
+                    tooltip: () => lang.pickFromStorage,
+                    onPressed: pickM3UDirectory,
+                  ),
                 ),
               ),
               const SizedBox(height: 12.0),
@@ -2802,18 +2847,24 @@ class NamidaIconButton extends StatefulWidget {
 class _NamidaIconButtonState extends State<NamidaIconButton> {
   bool isPressed = false;
 
+  void _onTapDown(TapDownDetails details) => setState(() => isPressed = true);
+  void _onTapUp(TapUpDetails details) => setState(() => isPressed = false);
+  void _onTapCancel() => setState(() => isPressed = false);
+
   @override
   Widget build(BuildContext context) {
+    final onPressed = widget.onPressed;
+    final isTappable = onPressed != null;
     return NamidaTooltip(
       message: widget.tooltip,
       child: NamidaMouseRegion(
-        enabled: widget.onPressed != null || widget.onLongPress != null,
+        enabled: isTappable || widget.onLongPress != null,
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
-          onTapDown: (value) => setState(() => isPressed = true),
-          onTapUp: (value) => setState(() => isPressed = false),
-          onTapCancel: () => setState(() => isPressed = false),
-          onTap: widget.onPressed,
+          onTapDown: isTappable ? _onTapDown : null,
+          onTapUp: isTappable ? _onTapUp : null,
+          onTapCancel: isTappable ? _onTapCancel : null,
+          onTap: onPressed,
           onLongPressStart: widget.onLongPressStart,
           onLongPressEnd: widget.onLongPressFinish == null ? null : (details) => widget.onLongPressFinish!(),
           onLongPressCancel: widget.onLongPressFinish,
@@ -8491,6 +8542,7 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
         ? buildPage(context, 0)
         : Focus(
             autofocus: true,
+            skipTraversal: true,
             onKeyEvent: _onKeyEvent,
             child: PageView.builder(
               controller: pageController,
@@ -9122,6 +9174,22 @@ class NamidaToggleCard extends StatelessWidget {
 
   static const _kPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0);
   static const _kDensePadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
+
+  static SnackbarController? _latestStateSnackbar;
+
+  static String toStateText(String title, bool value) {
+    final valueText = value ? lang.yes : lang.no;
+    return '$title: $valueText';
+  }
+
+  static void showStateSnackbar({required IconData icon, required String title, required bool value}) {
+    _latestStateSnackbar?.close();
+    _latestStateSnackbar = snackyy(
+      icon: icon,
+      message: toStateText(title, value),
+      displayDuration: SnackDisplayDuration.mediumLow,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

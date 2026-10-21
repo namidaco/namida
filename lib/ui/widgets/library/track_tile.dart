@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:namida/class/jump_highlight.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/current_color.dart';
@@ -79,24 +80,29 @@ class TrackTilePropertiesProvider extends StatelessWidget {
                             builder: (context, selectedTracksMap) => ObxPrefer(
                               rx: HistoryController.inst.topTracksMapListens,
                               enabled: listenToTopHistoryItems,
-                              builder: (context, _) {
-                                final properties = TrackTileProperties(
-                                  thumbnailSize: thumbnailSize,
-                                  trackTileHeight: trackTileHeight,
-                                  forceSquaredThumbnails: forceSquaredThumbnails,
-                                  displayThirdRow: displayThirdRow,
-                                  displayFavouriteIconInListTile: displayFavouriteIconInListTile,
-                                  comingFromQueue: comingFromQueue,
-                                  configs: configs,
-                                  canHaveDuplicates: canHaveDuplicates,
-                                  isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
-                                  allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
-                                  allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
-                                  thumbnailTapAction: thumbnailTapAction,
-                                  thumbnailLongPressAction: thumbnailLongPressAction,
-                                );
-                                return builder(properties);
-                              },
+                              builder: (context, _) => ObxOSelect(
+                                rx: JumpHighlight.briefTarget,
+                                selector: (briefHighlight) => briefHighlight?.inQueue == comingFromQueue ? briefHighlight : null,
+                                builder: (context, briefHighlight) {
+                                  final properties = TrackTileProperties(
+                                    thumbnailSize: thumbnailSize,
+                                    trackTileHeight: trackTileHeight,
+                                    forceSquaredThumbnails: forceSquaredThumbnails,
+                                    displayThirdRow: displayThirdRow,
+                                    displayFavouriteIconInListTile: displayFavouriteIconInListTile,
+                                    comingFromQueue: comingFromQueue,
+                                    configs: configs,
+                                    canHaveDuplicates: canHaveDuplicates,
+                                    isTrackSelected: (trOrTwd) => selectedTracksMap[trOrTwd.track] != null,
+                                    allowSwipeLeft: !comingFromQueue && onTrackSwipeLeft != TrackExecuteActions.none,
+                                    allowSwipeRight: !comingFromQueue && onTrackSwipeRight != TrackExecuteActions.none,
+                                    thumbnailTapAction: thumbnailTapAction,
+                                    thumbnailLongPressAction: thumbnailLongPressAction,
+                                    briefHighlight: briefHighlight,
+                                  );
+                                  return builder(properties);
+                                },
+                              ),
                             ),
                           ),
                         ),
@@ -159,6 +165,7 @@ class TrackTileProperties {
   final bool allowSwipeRight;
   final TrackExecuteActions thumbnailTapAction;
   final TrackExecuteActions thumbnailLongPressAction;
+  final JumpHighlightTarget? briefHighlight;
 
   const TrackTileProperties({
     required this.configs,
@@ -174,6 +181,7 @@ class TrackTileProperties {
     required this.allowSwipeRight,
     required this.thumbnailTapAction,
     required this.thumbnailLongPressAction,
+    required this.briefHighlight,
   });
 }
 
@@ -189,6 +197,7 @@ class TrackTile extends StatelessWidget {
   final VoidCallback? onPlaying;
 
   final NColors? bgColor;
+  final bool isJumpHighlighted;
   final double cardColorOpacity;
   final double fadeOpacity;
   final void Function()? onRightAreaTap;
@@ -206,6 +215,7 @@ class TrackTile extends StatelessWidget {
     this.onPlaying,
     required this.index,
     this.bgColor,
+    this.isJumpHighlighted = false,
     this.cardColorOpacity = 0.9,
     this.fadeOpacity = 0.0,
     this.onRightAreaTap,
@@ -331,11 +341,15 @@ class TrackTile extends StatelessWidget {
 
         final textColor = isTrackCurrentlyPlaying && !isTrackSelected ? Colors.white : null;
 
+        final briefHighlight = properties.briefHighlight;
+        final isBriefHighlighted = briefHighlight != null && index == briefHighlight.index && trackOrTwd == briefHighlight.item;
+
         final background = _TrackTileBackgroundState(
           bgColor: bgColor,
           isPlaying: isTrackCurrentlyPlaying,
           hasSelectionLayer: isTrackSelected && queueSource != QueueSource.selectedTracks,
           hasHighlightLayer: !isTrackCurrentlyPlaying && isTrackHighlighted && queueSource.supportResuming,
+          hasJumpHighlightLayer: isJumpHighlighted || isBriefHighlighted,
           comingFromQueue: properties.comingFromQueue,
           cardColorOpacity: cardColorOpacity,
         );
@@ -796,6 +810,8 @@ class TrackTileManager {
     return (text: _buffer.toString(), shouldNotCache: shouldNotCache);
   }
 
+  static String buildItem(TrackTileItem trackItem, Track track) => _buildChoosenTrackTileItem(trackItem, track.toTrackExt(), track);
+
   static String _buildChoosenTrackTileItem(TrackTileItem? trackItem, TrackExtended trExt, Track track) {
     if (trackItem == null || trackItem == TrackTileItem.none) return '';
 
@@ -961,6 +977,13 @@ class _TrackTileDecoration extends StatelessWidget {
       }
     }
 
+    if (state.hasJumpHighlightLayer) {
+      final jumpHighlight = state.comingFromQueue ? JumpHighlight.queueColor : JumpHighlight.color;
+      final jumpHighlightColor = jumpHighlight.resolve(colors);
+      backgroundColor = Color.alphaBlend(jumpHighlightColor, backgroundColor);
+      if (backgroundColorAlt != null) backgroundColorAlt = Color.alphaBlend(jumpHighlightColor, backgroundColorAlt);
+    }
+
     BoxDecoration decoration;
     if (settings.gradientTiles.value) {
       // -- has to be always gradient to animate properly
@@ -1034,6 +1057,7 @@ class _TrackTileBackgroundState {
   final bool isPlaying;
   final bool hasSelectionLayer;
   final bool hasHighlightLayer;
+  final bool hasJumpHighlightLayer;
   final bool comingFromQueue;
   final double cardColorOpacity;
 
@@ -1042,6 +1066,7 @@ class _TrackTileBackgroundState {
     required this.isPlaying,
     required this.hasSelectionLayer,
     required this.hasHighlightLayer,
+    required this.hasJumpHighlightLayer,
     required this.comingFromQueue,
     required this.cardColorOpacity,
   });

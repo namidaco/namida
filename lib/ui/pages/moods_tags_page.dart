@@ -297,12 +297,10 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
                         );
                       },
                     ),
-                    const IgnorePointer(
-                      child: NamidaIconButton(
-                        horizontalPadding: 6.0,
-                        icon: Broken.arrow_right_3,
-                        iconSize: 20.0,
-                      ),
+                    const NamidaIconButton(
+                      horizontalPadding: 6.0,
+                      icon: Broken.arrow_right_3,
+                      iconSize: 20.0,
                     ),
                     const SizedBox(width: 4.0),
                   ],

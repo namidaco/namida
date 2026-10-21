@@ -165,7 +165,7 @@ class FileMatcher {
     List<String> titleAndArtist;
 
     /// preferring to split by [' - '], since there are artists that has '-' in their name.
-    titleAndArtist = filenameWOEx.split(' - ');
+    titleAndArtist = _splitOutsideBrackets(filenameWOEx, ' - ') ?? _splitOutsideBrackets(filenameWOEx, '-') ?? filenameWOEx.split(' - ');
     if (titleAndArtist.length == 1) {
       titleAndArtist = filenameWOEx.split('-');
     }
@@ -180,6 +180,33 @@ class FileMatcher {
 
     return (cleanedUpTitle.isEmpty ? filenameWOEx.trimAll() : cleanedUpTitle, cleanedUpArtist.isEmpty ? UnknownTags.ARTIST : cleanedUpArtist);
   }
+
+  /// `A - B 『C - D』` => `[A, B 『C - D』]`, null when [separator] is only inside brackets or missing.
+  static List<String>? _splitOutsideBrackets(String text, String separator) {
+    if (!text.contains(separator)) return null;
+    List<String>? parts;
+    int depth = 0;
+    int partStart = 0;
+    for (int i = 0; i < text.length; i++) {
+      final codeUnit = text.codeUnitAt(i);
+      final depthChange = _bracketsDepthChange[codeUnit];
+      if (depthChange != null) {
+        if (depth > 0 || depthChange > 0) depth += depthChange;
+      } else if (depth == 0 && text.startsWith(separator, i)) {
+        (parts ??= []).add(text.substring(partStart, i));
+        partStart = i + separator.length;
+        i = partStart - 1;
+      }
+    }
+    if (parts == null) return null;
+    parts.add(text.substring(partStart));
+    return parts;
+  }
+
+  static final _bracketsDepthChange = <int, int>{
+    for (final c in '([{（［｛「『【〔〈《〖〘'.codeUnits) c: 1,
+    for (final c in ')]}）］｝」』】〕〉》〗〙'.codeUnits) c: -1,
+  };
 
   static final _bracketGroupRegex = RegExp(r'\[[^\]]*\]');
   static final _parenGroupRegex = RegExp(r'\([^)]*\)');

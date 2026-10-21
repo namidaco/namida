@@ -450,29 +450,32 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
               builder: (context, searchBoxVisible) => AnimatedShow(
                 show: searchBoxVisible,
                 duration: const Duration(milliseconds: 250),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 12.0),
-                      Expanded(
-                        child: SizedBox(
-                          height: 42.0,
-                          child: CustomTextField(
-                            focusNode: searchBoxManager.searchFocusNode,
-                            textFieldController: searchBoxManager.searchController,
-                            textFieldHintText: lang.filterPlaylists,
-                            onTextFieldValueChanged: searchBoxManager.updateSearchQuery,
+                child: ExcludeFocusTraversal(
+                  excluding: !searchBoxVisible,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 12.0),
+                        Expanded(
+                          child: SizedBox(
+                            height: 42.0,
+                            child: CustomTextField(
+                              focusNode: searchBoxManager.searchFocusNode,
+                              textFieldController: searchBoxManager.searchController,
+                              textFieldHintText: lang.filterPlaylists,
+                              onTextFieldValueChanged: searchBoxManager.updateSearchQuery,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 6.0),
-                      NamidaIconButton(
-                        onPressed: searchBoxManager.onSearchCloseButtonPressed,
-                        icon: Broken.close_circle,
-                      ),
-                      const SizedBox(width: 8.0),
-                    ],
+                        const SizedBox(width: 6.0),
+                        NamidaIconButton(
+                          onPressed: searchBoxManager.onSearchCloseButtonPressed,
+                          icon: Broken.close_circle,
+                        ),
+                        const SizedBox(width: 8.0),
+                      ],
+                    ),
                   ),
                 ),
               ),

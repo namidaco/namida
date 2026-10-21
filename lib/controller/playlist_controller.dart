@@ -393,6 +393,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
   /// the m3u file of [name] when it's already in [AppDirs.M3UPlaylists], otherwise a new one there that no other playlist or file uses.
   static String getUnusedM3uFilePathInStorage(String name) => _instance._getUnusedM3UFilePath(name, AppDirs.M3UPlaylists, const {});
 
+  /// same as [getUnusedM3uFilePathInStorage] but in [directory].
+  static String getUnusedM3uFilePath(String name, String directory) => _instance._getUnusedM3UFilePath(name, directory, const {});
+
   /// [reservedPaths] are taken by playlists that aren't saved yet.
   String _getUnusedM3UFilePath(String name, String directory, Set<String> reservedPaths) {
     final ownPath = playlistsMap.value[name]?.m3uPath;

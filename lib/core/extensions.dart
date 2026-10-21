@@ -14,6 +14,7 @@ import 'package:lrc/lrc.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -39,21 +40,38 @@ extension TracksSelectableUtils on Iterable<Selectable> {
     final collageStyle = settings.artworkCollageStyle.value;
     limit ??= collageStyle.maxImages;
     final scanLimit = limit * _kImageTracksScanMultiplier;
-    final l = <Track>[];
+    // -- album grouping shares one artwork between an album's tracks, so missing artworks aren't known there
+    final canResolveDisplayedArtwork = !settings.groupArtworksByAlbum.value && Indexer.inst.didListFolderCovers;
+    final uniqueTracks = <Track>[];
+    final tracksWithArtwork = <Track>[];
     final seenArtworks = <String>{};
     try {
       for (final Selectable p in take(scanLimit)) {
         final tr = p.track;
-        final isNewArtwork = seenArtworks.add(tr.pathToImage);
+        final artworkPath = canResolveDisplayedArtwork ? _displayedArtworkPathOf(tr) : tr.pathToImage;
+        if (artworkPath == null) continue;
+        if (tracksWithArtwork.length < limit) tracksWithArtwork.add(tr);
+        final isNewArtwork = seenArtworks.add(artworkPath);
         if (!isNewArtwork) continue;
-        l.add(tr);
-        if (l.length >= limit) break;
+        uniqueTracks.add(tr);
+        if (uniqueTracks.length >= limit) break;
       }
     } catch (_) {}
-    return l;
+    // -- fewer artworks than the collage holds looks like a shorter list, a single one is fine
+    final uniqueCount = uniqueTracks.length;
+    if (uniqueCount == limit || uniqueCount == 1) return uniqueTracks;
+    if (tracksWithArtwork.length == limit) return tracksWithArtwork;
+    return take(limit).map((e) => e.track).toFixedList();
   }
 
   static const _kImageTracksScanMultiplier = 6;
+
+  /// null when the track is known to show no artwork.
+  static String? _displayedArtworkPathOf(Track tr) {
+    final hasNoEmbeddedArtwork = tr.toTrackExtOrNull()?.hasNoEmbeddedArtwork == true;
+    if (!hasNoEmbeddedArtwork) return tr.pathToImage;
+    return Indexer.inst.getFallbackFolderArtworkPath(folder: tr.folder);
+  }
 
   List<String> toImagePaths([int? limit]) {
     return toImageTracks(limit).map((e) => e.pathToImage).toList();
@@ -961,11 +979,6 @@ extension LRCParsingUtils on String {
   bool isValidLRC() => LyricsParser.isValid(this);
 }
 
-extension TagFieldsUtils on TagField {
-  bool get isNumeric =>
-      this == TagField.trackNumber || this == TagField.trackTotal || this == TagField.discNumber || this == TagField.discTotal || this == TagField.year || this == TagField.rating;
-}
-
 extension WidgetsUtils on Widget {
   Widget animateEntrance({
     required bool showWhen,
@@ -1187,6 +1200,17 @@ final _minimumFileDateMicro = DateTime(1980).microsecondsSinceEpoch + 1;
 final _minimumFileDateMilli = DateTime(1980).millisecondsSinceEpoch + 1;
 
 extension FileStatsUtils on FileStat {
+  /// modification times can be as coarse as 2 seconds (FAT), an entry modified this recently can change again without its time changing.
+  static const _kModifiedGranularityMS = 2000;
+  static const kNotReusableModifiedMS = -1;
+
+  /// call before listing the directory, changes made during the listing can keep the same time.
+  int getReusableModifiedMS() {
+    final modifiedMS = modified.millisecondsSinceEpoch;
+    final nowMS = DateTime.now().millisecondsSinceEpoch;
+    return nowMS - modifiedMS > _kModifiedGranularityMS ? modifiedMS : kNotReusableModifiedMS;
+  }
+
   DateTime get creationDate {
     int? finalDateMicro;
     void tryAssign(int micros) {

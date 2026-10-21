@@ -14,6 +14,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/rhythm_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -188,6 +189,15 @@ Future<void> showTrackInfoDialog(
   final hasUnknownMood = TrackExtUtils.hasUnknownMoods(effectiveMoods);
   final dateAddedText = trackExt?.dateAdded.dateAndClockFormattedOriginal ?? '';
   final dateModifiedText = trackExt?.dateModified.dateAndClockFormattedOriginal ?? '';
+  final rhythmAnalysis = RhythmController.inst.analysisOf(track);
+  final tagBpm = trackExt?.bpm ?? 0;
+  final analyzedBpm = rhythmAnalysis?.bpm ?? 0;
+  final isBpmAnalyzed = tagBpm == 0 && analyzedBpm > 0;
+  final bpm = isBpmAnalyzed ? analyzedBpm : tagBpm;
+  final tagMusicalKey = trackExt?.musicalKey ?? '';
+  final analyzedMusicalKey = rhythmAnalysis?.key ?? '';
+  final isMusicalKeyAnalyzed = tagMusicalKey.isEmpty && analyzedMusicalKey.isNotEmpty;
+  final musicalKey = isMusicalKeyAnalyzed ? analyzedMusicalKey : tagMusicalKey;
 
   NamidaNavigator.inst.navigateDialog(
     onDisposing: () {
@@ -454,11 +464,20 @@ Future<void> showTrackInfoDialog(
 
                               ...trackPathDetailTilesSection,
 
-                              if (shouldShowTheField((trackExt.bpm ?? 0) == 0))
+                              if (shouldShowTheField(bpm == 0))
                                 TrackInfoListTile(
                                   title: 'BPM',
-                                  value: '${trackExt.bpm ?? 0}',
+                                  value: '$bpm',
                                   icon: Broken.alarm,
+                                  valueIcon: isBpmAnalyzed ? Broken.magicpen : null,
+                                ),
+
+                              if (shouldShowTheField(musicalKey.isEmpty))
+                                TrackInfoListTile(
+                                  title: lang.musicalKey,
+                                  value: musicalKey,
+                                  icon: Broken.musicnote,
+                                  valueIcon: isMusicalKeyAnalyzed ? Broken.magicpen : null,
                                 ),
 
                               if (shouldShowTheField(trackExt.releaseType == ''))
@@ -560,6 +579,7 @@ class TrackInfoListTile extends StatelessWidget {
   final String value;
   final List<String>? cards;
   final IconData icon;
+  final IconData? valueIcon;
   final bool hasLinks;
   final Widget? child;
 
@@ -569,6 +589,7 @@ class TrackInfoListTile extends StatelessWidget {
     required this.value,
     this.cards,
     required this.icon,
+    this.valueIcon,
     this.hasLinks = false,
     this.child,
   });
@@ -588,6 +609,17 @@ class TrackInfoListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     const iconSize = 17.0;
     const textToIconPaddingCorrector = EdgeInsets.only(top: 1.0);
+    final valueIcon = this.valueIcon;
+    final valueIconWidget = valueIcon == null
+        ? null
+        : Padding(
+            padding: textToIconPaddingCorrector,
+            child: NIcon(
+              valueIcon,
+              size: 14.0,
+              color: _valueColor,
+            ),
+          );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2.0),
       child: NamidaInkWell(
@@ -628,6 +660,7 @@ class TrackInfoListTile extends StatelessWidget {
                             color: _valueColor,
                           )),
               ),
+              ?valueIconWidget,
               ...?cards
                   ?.where((e) => e.isNotEmpty)
                   .map(

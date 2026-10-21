@@ -43,6 +43,7 @@ class TextSuggestionsProvider {
     // -- no library grouping for these, a single pass is required.
     TextSuggestionsSource.recordLabel => _buildFromTracks((trExt) => trExt.label),
     TextSuggestionsSource.releaseType => _buildFromTracks((trExt) => trExt.releaseType),
+    TextSuggestionsSource.musicalKey => _buildFromTracks((trExt) => trExt.musicalKey),
     TextSuggestionsSource.format => _buildFromTracks((trExt) => trExt.format),
     TextSuggestionsSource.channels => _buildFromTracks((trExt) => trExt.channels),
     TextSuggestionsSource.extension => _buildFromTracks((trExt) => trExt.path.getExtension),
@@ -401,6 +402,7 @@ enum TextSuggestionsSource {
   language,
   recordLabel,
   releaseType,
+  musicalKey,
   format,
   channels,
   extension,
@@ -422,6 +424,7 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
     TextSuggestionsSource.releaseType ||
+    TextSuggestionsSource.musicalKey ||
     TextSuggestionsSource.format ||
     TextSuggestionsSource.channels ||
     TextSuggestionsSource.extension ||
@@ -441,6 +444,7 @@ enum TextSuggestionsSource {
     TextSuggestionsSource.albumArtist ||
     TextSuggestionsSource.recordLabel ||
     TextSuggestionsSource.releaseType ||
+    TextSuggestionsSource.musicalKey ||
     TextSuggestionsSource.format ||
     TextSuggestionsSource.channels ||
     TextSuggestionsSource.extension ||
@@ -464,6 +468,7 @@ extension TagFieldSuggestionsUtils on TagField {
     TagField.language => TextSuggestionsSource.language,
     TagField.recordLabel => TextSuggestionsSource.recordLabel,
     TagField.releaseType => TextSuggestionsSource.releaseType,
+    TagField.musicalKey => TextSuggestionsSource.musicalKey,
     TagField.title ||
     TagField.year ||
     TagField.trackNumber ||
@@ -477,6 +482,7 @@ extension TagFieldSuggestionsUtils on TagField {
     TagField.discTotal ||
     TagField.lyricist ||
     TagField.country ||
+    TagField.bpm ||
     TagField.rating ||
     TagField.titleSort ||
     TagField.albumSort ||
@@ -499,6 +505,7 @@ extension SmartPlaylistTextSourceSuggestionsUtils on SmartPlaylistRuleFilterText
     SmartPlaylistRuleFilterTextSource.language => TextSuggestionsSource.language,
     SmartPlaylistRuleFilterTextSource.label => TextSuggestionsSource.recordLabel,
     SmartPlaylistRuleFilterTextSource.releaseType => TextSuggestionsSource.releaseType,
+    SmartPlaylistRuleFilterTextSource.musicalKey => TextSuggestionsSource.musicalKey,
     SmartPlaylistRuleFilterTextSource.format => TextSuggestionsSource.format,
     SmartPlaylistRuleFilterTextSource.channels => TextSuggestionsSource.channels,
     SmartPlaylistRuleFilterTextSource.extension => TextSuggestionsSource.extension,

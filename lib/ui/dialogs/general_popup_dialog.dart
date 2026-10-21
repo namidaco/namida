@@ -1713,24 +1713,29 @@ class _SmallUnderlinedChip extends StatelessWidget {
     this.onLongPress,
   });
 
+  static const _kLongPressDuration = Duration(seconds: 1);
+
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1.0),
-      child: NamidaInkWell(
-        borderRadius: 6.0,
-        onTap: onTap,
+      child: LongPressDetector(
+        duration: _kLongPressDuration,
         onLongPress: onLongPress,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 3.0),
-          child: Text(
-            text,
-            style: NText.small
-                .of(context)
-                .copyWith(
-                  decoration: TextDecoration.underline,
-                  fontSize: 13.5,
-                ),
+        child: NamidaInkWell(
+          borderRadius: 6.0,
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 3.0, horizontal: 3.0),
+            child: Text(
+              text,
+              style: NText.small
+                  .of(context)
+                  .copyWith(
+                    decoration: TextDecoration.underline,
+                    fontSize: 13.5,
+                  ),
+            ),
           ),
         ),
       ),
@@ -1749,17 +1754,20 @@ class _AddMoreFromPicker extends StatelessWidget {
     required this.items,
   });
 
+  void _showPicker(BuildContext context) {
+    NamidaPopupWrapper(
+      childrenDefault: items,
+    ).showPopupMenu(context);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return NamidaPopupWrapper(
-      openOnLongPress: false,
-      childrenDefault: items,
-      child: NamidaIconButton(
-        tooltip: () => tooltip,
-        icon: Broken.add,
-        iconSize: 20.0,
-        onLongPress: () => showQueueInsertionConfigDialog(insertionType, title: tooltip),
-      ),
+    return NamidaIconButton(
+      tooltip: () => tooltip,
+      icon: Broken.add,
+      iconSize: 20.0,
+      onPressed: () => _showPicker(context),
+      onLongPress: () => showQueueInsertionConfigDialog(insertionType, title: tooltip),
     );
   }
 }

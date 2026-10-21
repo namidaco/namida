@@ -14,7 +14,10 @@ extension _QueueReplaceConfirmation on Player {
     final itemsCount = shuffle ? queueList.length : queueList.length - index;
     final itemsCountText = isTracks ? itemsCount.displayTrackKeyword : itemsCount.displayVideoKeyword;
     final subtitle = [itemsCountText, source.title].joinText();
-    final action = await _pickQueueReplaceAction(subtitle: subtitle, canShowMore: isTracks);
+    final canKeepSingle = !shuffle && itemsCount > 1;
+    final keepSingleSubtitle = canKeepSingle ? _getQueueItemTitle(queueList[index]) : null;
+    final keepSubtitle = canKeepSingle ? itemsCountText : null;
+    final action = await _pickQueueReplaceAction(subtitle: subtitle, keepSubtitle: keepSubtitle, keepSingleSubtitle: keepSingleSubtitle, canShowMore: isTracks);
 
     Iterable<Playable> getItems() {
       if (!shuffle) return queueList.skip(index);
@@ -23,18 +26,23 @@ extension _QueueReplaceConfirmation on Player {
       return shuffledItems;
     }
 
+    Future<void> playKeepingQueue(Iterable<Playable> items) async {
+      final currentIndex = this.currentIndex.value;
+      if (startPosition != null) _audioHandler.requestStartPosition(items.first, startPosition);
+      _audioHandler.setPlayWhenReady(startPlaying);
+      await _audioHandler.insertInQueue(items, currentIndex);
+      await _audioHandler.userSkipToQueueItem(currentIndex);
+    }
+
     switch (action) {
       case null:
         return false;
       case _QueueReplaceAction.replace:
         return true;
       case _QueueReplaceAction.keep:
-        final items = getItems();
-        final currentIndex = this.currentIndex.value;
-        if (startPosition != null) _audioHandler.requestStartPosition(items.first, startPosition);
-        _audioHandler.setPlayWhenReady(startPlaying);
-        await _audioHandler.insertInQueue(items, currentIndex);
-        await _audioHandler.userSkipToQueueItem(currentIndex);
+        await playKeepingQueue(getItems());
+      case _QueueReplaceAction.keepSingle:
+        await playKeepingQueue([queueList[index]]);
       case _QueueReplaceAction.playNext:
         await addToQueue(getItems(), insertNext: true);
       case _QueueReplaceAction.playAfter:
@@ -54,7 +62,19 @@ extension _QueueReplaceConfirmation on Player {
     return false;
   }
 
-  Future<_QueueReplaceAction?> _pickQueueReplaceAction({required String subtitle, required bool canShowMore}) async {
+  String? _getQueueItemTitle(Playable item) {
+    return item.execute<String?>(
+      selectable: (finalItem) => [finalItem.track.artistsList.firstOrNull, finalItem.track.title].joinText(separator: ' - '),
+      youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoNameSync(finalItem.id) ?? finalItem.id,
+    );
+  }
+
+  Future<_QueueReplaceAction?> _pickQueueReplaceAction({
+    required String subtitle,
+    required String? keepSubtitle,
+    required String? keepSingleSubtitle,
+    required bool canShowMore,
+  }) async {
     final latestInsertedIndex = this.latestInsertedIndex;
     final playAfterCount = latestInsertedIndex - currentIndex.value;
     String? playAfterTitle;
@@ -63,10 +83,7 @@ extension _QueueReplaceConfirmation on Player {
       final playAfterItem = currentQueue.value[latestInsertedIndex];
       final playAfterCountText = playAfterItem is YoutubeID ? playAfterCount.displayVideoKeyword : playAfterCount.displayTrackKeyword;
       playAfterTitle = '${lang.playAfter}: $playAfterCountText';
-      playAfterSubtitle = playAfterItem.execute<String?>(
-        selectable: (finalItem) => [finalItem.track.artistsList.firstOrNull, finalItem.track.title].joinText(separator: ' - '),
-        youtubeID: (finalItem) => YoutubeInfoController.utils.getVideoNameSync(finalItem.id),
-      );
+      playAfterSubtitle = _getQueueItemTitle(playAfterItem);
     }
 
     _QueueReplaceAction? action;
@@ -79,6 +96,8 @@ extension _QueueReplaceConfirmation on Player {
     await NamidaNavigator.inst.navigateDialog(
       dialog: _QueueReplaceDialog(
         subtitle: subtitle,
+        keepSubtitle: keepSubtitle,
+        keepSingleSubtitle: keepSingleSubtitle,
         playAfterTitle: playAfterTitle,
         playAfterSubtitle: playAfterSubtitle,
         canShowMore: canShowMore,
@@ -91,6 +110,8 @@ extension _QueueReplaceConfirmation on Player {
 
 class _QueueReplaceDialog extends StatelessWidget {
   final String subtitle;
+  final String? keepSubtitle;
+  final String? keepSingleSubtitle;
   final String? playAfterTitle;
   final String? playAfterSubtitle;
   final bool canShowMore;
@@ -98,6 +119,8 @@ class _QueueReplaceDialog extends StatelessWidget {
 
   const _QueueReplaceDialog({
     required this.subtitle,
+    required this.keepSubtitle,
+    required this.keepSingleSubtitle,
     required this.playAfterTitle,
     required this.playAfterSubtitle,
     required this.canShowMore,
@@ -107,6 +130,7 @@ class _QueueReplaceDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final playAfterTitle = this.playAfterTitle;
+    final keepSingleSubtitle = this.keepSingleSubtitle;
     return CustomBlurryDialog(
       titleWidgetInPadding: Row(
         children: [
@@ -140,8 +164,16 @@ class _QueueReplaceDialog extends StatelessWidget {
           CustomListTile(
             icon: Broken.additem,
             title: '${lang.play} (${lang.keepQueue})',
+            subtitle: keepSubtitle,
             onTap: () => onPick(_QueueReplaceAction.keep),
           ),
+          if (keepSingleSubtitle != null)
+            CustomListTile(
+              icon: Broken.music_square_add,
+              title: '${lang.play} (${lang.keepQueue})',
+              subtitle: keepSingleSubtitle,
+              onTap: () => onPick(_QueueReplaceAction.keepSingle),
+            ),
           CustomListTile(
             icon: Broken.play,
             title: '${lang.play} (${lang.replaceQueue})',
@@ -180,6 +212,7 @@ class _QueueReplaceDialog extends StatelessWidget {
 enum _QueueReplaceAction {
   replace,
   keep,
+  keepSingle,
   playNext,
   playAfter,
   playLast,

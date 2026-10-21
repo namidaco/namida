@@ -121,11 +121,12 @@ class QueueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final queue = this.queue;
     final sourceText = queue?.toSourceText();
-    File? artworkFile;
+    File? existingArtworkFile;
     if (queue?.source.s == QueueSourceEnum.playlist) {
       final plName = queue?.source.title;
       if (plName != null && plName.isNotEmpty) {
-        artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(plName);
+        final artworkFile = PlaylistController.inst.getArtworkFileForPlaylist(plName);
+        if (artworkFile.existsSync()) existingArtworkFile = artworkFile;
       }
     }
 
@@ -172,7 +173,7 @@ class QueueCard extends StatelessWidget {
                   heroTag: hero,
                   borderRadius: 12.0,
                   thumbnailSize: imageSize,
-                  artworkFile: artworkFile,
+                  existingArtworkFile: existingArtworkFile,
                   tracks: queue?.tracks.toImageTracks() ?? [],
                   reduceQuality: true,
                 ),
