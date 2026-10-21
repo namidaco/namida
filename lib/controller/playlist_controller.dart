@@ -171,6 +171,30 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     return exportedCount;
   }
 
+  /// links [playlist] to a new m3u file in [AppDirs.M3UPlaylists].
+  Future<String> convertPlaylistToM3U(LocalPlaylist playlist) async {
+    final savePath = getUnusedM3uFilePathInStorage(playlist.name);
+    await exportPlaylistToM3UFile(playlist, savePath);
+    await updatePropertyInPlaylist(playlist.name, m3uPath: savePath);
+    return savePath;
+  }
+
+  /// playlists already linked to an m3u file are skipped.
+  Future<int> convertPlaylistsToM3U(List<String> playlistsNames) async {
+    int convertedCount = 0;
+    for (final name in playlistsNames) {
+      final pl = playlistsMap.value[name];
+      if (pl == null) continue;
+      final isM3U = pl.m3uPath?.isNotEmpty == true;
+      if (isM3U) continue;
+      try {
+        await convertPlaylistToM3U(pl);
+        convertedCount++;
+      } catch (_) {}
+    }
+    return convertedCount;
+  }
+
   List<Track> getUniqueTracksOf(Iterable<String> playlistsNames) {
     final tracks = <Track>[];
     final added = <Track>{};

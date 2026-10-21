@@ -602,7 +602,8 @@ class MainPageFABResumeButton extends StatelessWidget {
     );
   }
 
-  static void jumpToItem(int index, double itemExtent, RouteType routeType) async {
+  /// [position] of the target list when known, the visible one is searched otherwise.
+  static void jumpToItem(int index, double itemExtent, RouteType routeType, {ScrollPosition? position}) async {
     try {
       final topOffset = Dimensions.inst.showSubpageInfoAtSide
           ? 0.0
@@ -617,7 +618,7 @@ class MainPageFABResumeButton extends StatelessWidget {
             };
       var offset = topOffset + ((index - 2) * itemExtent);
 
-      final position = await NamidaScrollController.findVisiblePositionAfterSettle(
+      position ??= await NamidaScrollController.findVisiblePositionAfterSettle(
         withinAncestor: NamidaNavigator.inst.navKey.currentContext?.findRenderObject(),
       );
       if (position == null) return;

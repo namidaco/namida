@@ -9,6 +9,7 @@ import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/base/history_days_rebuilder.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
+import 'package:namida/class/jump_highlight.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/current_color.dart';
@@ -32,6 +33,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
 import 'package:namida/ui/dialogs/general_popup_dialog.dart';
 import 'package:namida/ui/dialogs/track_listens_dialog.dart';
+import 'package:namida/ui/pages/main_page.dart';
 import 'package:namida/ui/pages/subpages/most_played_subpage.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
@@ -661,7 +663,11 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
   final String playlistName;
   final bool disableAnimation;
   final bool isLibraryTab;
-  const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false, this.isLibraryTab = false});
+
+  /// scrolls to the first of them in the playlist & highlights it.
+  final List<Track>? focusTracks;
+
+  const NormalPlaylistTracksPage({super.key, required this.playlistName, this.disableAnimation = false, this.isLibraryTab = false, this.focusTracks});
 
   @override
   State<NormalPlaylistTracksPage> createState() => _NormalPlaylistTracksPageState();
@@ -683,6 +689,25 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
 
   late String? _playlistM3uPath = PlaylistController.inst.getPlaylist(widget.playlistName)?.m3uPath;
   late String? _playlistRemoteSourceKey = PlaylistController.inst.getPlaylist(widget.playlistName)?.remoteSource?.sourceKey;
+
+  @override
+  void initState() {
+    super.initState();
+    final focusTracks = widget.focusTracks;
+    if (focusTracks != null) WidgetsBinding.instance.addPostFrameCallback((_) => _focusFirstOf(focusTracks));
+  }
+
+  void _focusFirstOf(List<Track> focusTracks) {
+    if (!mounted) return;
+    final tracksWithDate = PlaylistController.inst.getPlaylist(widget.playlistName)?.tracks;
+    final position = scrollController.positions.lastOrNull;
+    if (tracksWithDate == null || position == null) return;
+    final focusTracksSet = focusTracks.toSet();
+    final index = tracksWithDate.indexWhere((e) => focusTracksSet.contains(e.track));
+    if (index < 0) return;
+    JumpHighlight.showBriefly(tracksWithDate[index], index, inQueue: false);
+    MainPageFABResumeButton.jumpToItem(index, Dimensions.inst.trackTileItemExtent, widget.route, position: position);
+  }
 
   @override
   Widget build(BuildContext context) {

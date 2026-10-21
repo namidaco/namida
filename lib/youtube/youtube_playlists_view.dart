@@ -138,6 +138,13 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
   void _closeDialog() => NamidaNavigator.inst.closeDialog();
 
+  void _openPlaylist(YoutubePlaylist playlist) {
+    YTNormalPlaylistSubpage(
+      playlistName: playlist.name,
+      queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name),
+    ).navigate();
+  }
+
   void _onPlaylistAddTap() {
     NamidaNavigator.inst.navigateDialog(
       dialogBuilder: (theme) => CustomBlurryDialog(
@@ -671,7 +678,16 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
 
                               return NamidaPopupWrapper(
                                 childrenDefault: disableMenu
-                                    ? null
+                                    ? () => [
+                                        NamidaPopupItem(
+                                          icon: Broken.music_playlist,
+                                          title: lang.goToPlaylist,
+                                          onTap: () {
+                                            context.safePop();
+                                            _openPlaylist(playlist);
+                                          },
+                                        ),
+                                      ]
                                     : () => YTUtils.getPlaylistMenuItems(context: context, playlist: playlist, queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name)),
                                 openOnTap: false,
                                 child: YoutubeCard(
@@ -694,10 +710,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
                                     if (idsToAdd.isNotEmpty) {
                                       _onAddToPlaylist(playlist: playlist, allIdsExist: allIdsExist == true, allowAddingEverything: true);
                                     } else {
-                                      YTNormalPlaylistSubpage(
-                                        playlistName: playlist.name,
-                                        queueSource: QueueSourceYoutubeID.ytPlaylist(playlist.name),
-                                      ).navigate();
+                                      _openPlaylist(playlist);
                                     }
                                   },
                                   smallBoxText: playlist.tracks.length.formatDecimal(),

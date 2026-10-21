@@ -22,6 +22,9 @@ class PlaylistTile extends StatelessWidget {
   final bool? checkmarkStatus;
   final String? extraText;
 
+  /// the tracks being added, its menu can open the playlist on the first one of them.
+  final List<Track>? openPlaylistFocusing;
+
   const PlaylistTile({
     super.key,
     required this.playlistName,
@@ -30,7 +33,10 @@ class PlaylistTile extends StatelessWidget {
     this.enableHero = true,
     required this.checkmarkStatus,
     this.extraText,
+    this.openPlaylistFocusing,
   });
+
+  void _showMenu() => NamidaDialogs.inst.showPlaylistDialog(playlistName, openPlaylistFocusing: openPlaylistFocusing);
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +47,7 @@ class PlaylistTile extends StatelessWidget {
       child: NamidaInkWell(
         borderRadius: 0.0,
         onTap: onTap,
-        onLongPress: onLongPress ?? () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+        onLongPress: onLongPress ?? _showMenu,
         enableSecondaryTap: true,
         padding: const EdgeInsets.symmetric(horizontal: 4.0),
         child: SizedBox(
@@ -182,7 +188,7 @@ class PlaylistTile extends StatelessWidget {
                       ],
                       MoreIcon(
                         iconSize: 20,
-                        onPressed: () => NamidaDialogs.inst.showPlaylistDialog(playlistName),
+                        onPressed: _showMenu,
                       ),
                       const SizedBox(width: 8.0),
                     ],

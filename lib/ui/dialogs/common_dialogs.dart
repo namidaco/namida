@@ -160,7 +160,7 @@ class NamidaDialogs {
   }
 
   /// Supports all playlists, (History, Most Played, Favourites & others).
-  Future<void> showPlaylistDialog(String playlistName) async {
+  Future<void> showPlaylistDialog(String playlistName, {List<Track>? openPlaylistFocusing}) async {
     if (playlistName == k_PLAYLIST_NAME_HISTORY) {
       final twds = HistoryController.inst.historyTracks.toList();
       final trs = twds.toTracks();
@@ -221,6 +221,7 @@ class NamidaDialogs {
         heroTag: 'playlist_${playlist.name}',
         forceSquared: true,
         comingFromPlaylistMenu: true,
+        openPlaylistFocusing: openPlaylistFocusing,
       );
     }
   }

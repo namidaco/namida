@@ -13,6 +13,7 @@ import 'package:youtipie/core/enum.dart';
 import 'package:youtipie/youtipie.dart';
 
 import 'package:namida/base/pull_to_refresh.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -27,6 +28,7 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
 import 'package:namida/youtube/controller/youtube_playlist_controller.dart' as pc;
 import 'package:namida/youtube/functions/yt_playlist_utils.dart';
+import 'package:namida/youtube/pages/yt_playlist_subpage.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
 import 'package:namida/youtube/youtube_playlists_view.dart';
 import 'package:namida/youtube/yt_utils.dart';
@@ -422,30 +424,47 @@ class __PlaylistsForVideoPageState extends State<_PlaylistsForVideoPage> {
             ],
           ),
         );
-        return NBuilder(
-          selfAnimated: true,
-          builder: (context, colors) {
-            late final borderSide = BorderSide(
-              width: 2.0,
-              color: colors.secondary.withOpacityExt(0.5),
-            );
-            return NamidaInkWell(
-              animationDurationMS: 200,
-              margin: const EdgeInsets.symmetric(vertical: 4.0),
-              width: widget.maxWidth,
-              bgColor: NColors.card,
-              decoration: BoxDecoration(
-                border: showBorder
-                    ? Border(
-                        left: borderSide,
-                        bottom: borderSide,
-                      )
-                    : null,
-              ),
-              onTap: loadingController.isLoading ? null : () => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
-              child: tileChild,
-            );
-          },
+        return NamidaPopupWrapper(
+          openOnTap: false,
+          childrenDefault: () => [
+            NamidaPopupItem(
+              icon: Broken.music_playlist,
+              title: lang.goToPlaylist,
+              onTap: () {
+                final userPlaylist = _playlistsLookup[pl.playlistId];
+                context.safePop();
+                YTHostedPlaylistSubpage.fromId(
+                  playlistId: pl.playlistId,
+                  userPlaylist: userPlaylist,
+                ).navigate();
+              },
+            ),
+          ],
+          child: NBuilder(
+            selfAnimated: true,
+            builder: (context, colors) {
+              late final borderSide = BorderSide(
+                width: 2.0,
+                color: colors.secondary.withOpacityExt(0.5),
+              );
+              return NamidaInkWell(
+                animationDurationMS: 200,
+                margin: const EdgeInsets.symmetric(vertical: 4.0),
+                width: widget.maxWidth,
+                bgColor: NColors.card,
+                decoration: BoxDecoration(
+                  border: showBorder
+                      ? Border(
+                          left: borderSide,
+                          bottom: borderSide,
+                        )
+                      : null,
+                ),
+                onTap: loadingController.isLoading ? null : () => _onPlaylistTap(pl, loadingController.startLoading, loadingController.stopLoading),
+                child: tileChild,
+              );
+            },
+          ),
         );
       },
     );

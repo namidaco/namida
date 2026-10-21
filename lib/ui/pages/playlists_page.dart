@@ -727,6 +727,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                   );
                                 },
                                 checkmarkStatus: allTracksExist,
+                                openPlaylistFocusing: tracksToAdd,
                               );
                             },
                           ),
@@ -845,6 +846,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                 extraTextResolver: extraTextResolver,
                                                 existingStatus: existingStatus,
                                                 onAddTap: onAddTap,
+                                                tracksToAdd: tracksToAdd,
                                                 selection: isSelecting ? _selection : null,
                                               ),
                                             );
@@ -878,6 +880,7 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                                                         extraTextResolver: extraTextResolver,
                                                         existingStatus: existingStatus,
                                                         onAddTap: onAddTap,
+                                                        tracksToAdd: tracksToAdd,
                                                         selection: isSelecting ? _selection : null,
                                                       ),
                                                   ],
@@ -1175,13 +1178,62 @@ class _PlaylistsSelection {
     );
   }
 
-  Future<void> export() async {
+  void export() {
     final names = selectedNames.value.toList();
-    final directoryPath = await NamidaFileBrowser.getDirectory(note: lang.export);
-    if (directoryPath == null) return;
+    final defaultDirectoryPath = AppDirs.M3UPlaylists;
+    NamidaNavigator.inst.navigateDialog(
+      dialog: CustomBlurryDialog(
+        title: '${lang.export} (M3U)',
+        normalTitleStyle: true,
+        icon: Broken.directbox_send,
+        actions: const [
+          CancelButton(),
+        ],
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CustomListTile(
+              icon: Broken.folder,
+              title: lang.convertToM3UPlaylist,
+              subtitle: defaultDirectoryPath,
+              trailingRaw: NamidaTooltip(
+                message: () => lang.defaultLabel,
+                child: const Icon(
+                  Broken.star_1,
+                  size: 18.0,
+                ),
+              ),
+              onTap: () {
+                NamidaNavigator.inst.closeDialog();
+                _convertToM3U(names);
+              },
+            ),
+            CustomListTile(
+              icon: Broken.folder_add,
+              title: lang.pickFromStorage,
+              onTap: () async {
+                NamidaNavigator.inst.closeDialog();
+                final directoryPath = await NamidaFileBrowser.getDirectory(note: lang.export);
+                if (directoryPath == null) return;
+                await _exportTo(names, directoryPath);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportTo(List<String> names, String directoryPath) async {
     if (!await requestManageStoragePermission()) return;
     final exportedCount = await PlaylistController.inst.exportPlaylistsToM3UFiles(names, directoryPath);
     snackyy(message: '${lang.savedIn}: $directoryPath (${exportedCount.displayPlaylistKeyword})');
+  }
+
+  Future<void> _convertToM3U(List<String> names) async {
+    if (!await requestManageStoragePermission()) return;
+    final convertedCount = await PlaylistController.inst.convertPlaylistsToM3U(names);
+    snackyy(message: '${lang.savedIn}: ${AppDirs.M3UPlaylists} (${convertedCount.displayPlaylistKeyword})');
   }
 
   void promptDelete() {
@@ -1250,6 +1302,7 @@ class _PlaylistsSliver extends StatelessWidget {
   final String? Function(LocalPlaylist playlist)? extraTextResolver;
   final Map<String, bool> existingStatus;
   final void Function(LocalPlaylist playlist, bool allTracksExist)? onAddTap;
+  final List<Track>? tracksToAdd;
   final _PlaylistsSelection? selection;
 
   const _PlaylistsSliver({
@@ -1262,6 +1315,7 @@ class _PlaylistsSliver extends StatelessWidget {
     required this.extraTextResolver,
     required this.existingStatus,
     required this.onAddTap,
+    required this.tracksToAdd,
     required this.selection,
   });
 
@@ -1298,6 +1352,7 @@ class _PlaylistsSliver extends StatelessWidget {
               onTap: onAddTap != null ? () => onAddTap(playlist, allTracksExist == true) : () => NamidaOnTaps.inst.onNormalPlaylistTap(key),
               checkmarkStatus: allTracksExist,
               extraText: extraText, // dont fallback to prevent confusion
+              openPlaylistFocusing: tracksToAdd,
             );
           }
           return AnimatingTile(

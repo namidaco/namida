@@ -83,6 +83,7 @@ Future<void> showGeneralPopupDialog(
   String? heroTag,
   IconData? trailingIcon,
   bool comingFromPlaylistMenu = false,
+  List<Track>? openPlaylistFocusing,
   bool showPlayAllReverse = false,
   SmartPlaylistWrapper? smartPlaylistWrapper,
   Folder? folder,
@@ -373,15 +374,13 @@ Future<void> showGeneralPopupDialog(
 
     if (!await requestManageStoragePermission()) return;
 
-    final savePath = PlaylistController.getUnusedM3uFilePathInStorage(pl.name);
-    await PlaylistController.inst.exportPlaylistToM3UFile(pl, savePath);
+    final savePath = await PlaylistController.inst.convertPlaylistToM3U(pl);
     snackyy(
       message: "${lang.savedIn}: $savePath",
       leftBarIndicatorColor: colorDelightened.value,
       altDesign: true,
       top: false,
     );
-    await PlaylistController.inst.updatePropertyInPlaylist(playlistName, m3uPath: savePath);
   }
 
   Future<void> exportSmartPlaylist({required bool asM3u}) async {
@@ -904,15 +903,19 @@ Future<void> showGeneralPopupDialog(
                     /// Top Widget
                     NamidaInkWell(
                       borderRadius: 0.0,
-                      onTap: () => isSingle
-                          ? showTrackInfoDialog(
-                              tracks.first,
-                              false,
-                              networkArtworkInfo: networkArtworkInfo,
-                              colorScheme: colorDelightened,
-                              heroTag: heroTag,
-                            )
-                          : null,
+                      onTap: () {
+                        if (openPlaylistFocusing != null && playlistName != null) {
+                          NamidaOnTaps.inst.onNormalPlaylistTap(playlistName, focusTracks: openPlaylistFocusing);
+                        } else if (isSingle) {
+                          showTrackInfoDialog(
+                            tracks.first,
+                            false,
+                            networkArtworkInfo: networkArtworkInfo,
+                            colorScheme: colorDelightened,
+                            heroTag: heroTag,
+                          );
+                        }
+                      },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 14.0),
                         child: Row(

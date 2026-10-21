@@ -159,10 +159,12 @@ class NamidaOnTaps {
   Future<void> onNormalPlaylistTap(
     String playlistName, {
     bool disableAnimation = false,
+    List<Track>? focusTracks,
   }) async {
     return NormalPlaylistTracksPage(
       playlistName: playlistName,
       disableAnimation: disableAnimation,
+      focusTracks: focusTracks,
     ).navigate();
   }
 
