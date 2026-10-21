@@ -3,19 +3,26 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:playlist_manager/playlist_manager.dart';
 
+import 'package:namida/class/track.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
 void main() {
   final windows = p.Context(style: p.Style.windows, current: r'C:\cwd');
   final posix = p.Context(style: p.Style.posix, current: '/cwd');
+  const otherAppHeader = [
+    '#EXTENC:UTF-8', '#PLAYLIST:Paloquequieras', '#UUID:', '#LOCKED:false', '#CATEGORY:', '#TAGS:Fav;Fiio', //
+    '#TRACKTAGS:', '#PLAYLISTSIZE:37', '#DURATION:9586.32', '#AUTHOR:Playlist-Manager-SMP', '#DESCRIPTION:A playlist for a friend', //
+  ];
 
   ({String path, bool isResolved}) resolve(String line, String m3uDirectory, p.Context context, Set<String> existingPaths) {
-    return PlaylistController.resolveM3UEntryLine(line, m3uDirectory, context, existingPaths.contains);
+    return M3UFiles.resolveEntryLine(line, m3uDirectory, context, existingPaths.contains);
   }
 
-  String exportLine(String path, String m3uDirectory, p.Context context) => PlaylistController.m3uEntryLine(path, m3uDirectory, context);
+  String exportLine(String path, String m3uDirectory, p.Context context) => M3UFiles.toEntryLine(path, m3uDirectory, context);
 
   String roundTrip(String path, String m3uDirectory, p.Context context) {
     final line = exportLine(path, m3uDirectory, context);
@@ -115,29 +122,29 @@ void main() {
 
   group('playlist names', () {
     Map<String, String> startupNames(Map<String, Map<String, dynamic>> m3uProperties, Set<String> m3uPaths, p.Context context) {
-      final savedNames = PlaylistController.getSavedM3UNamesByPath(m3uProperties, m3uPaths);
-      return PlaylistController.allocateM3UPlaylistNames(m3uPaths, savedNames, context);
+      final savedNames = M3UFiles.getSavedNamesByPath(m3uProperties, m3uPaths);
+      return M3UFiles.allocatePlaylistNames(m3uPaths, savedNames, context);
     }
 
     Map<String, dynamic> savedAt(String m3uPath) => {'m3uPath': m3uPath};
 
     test('same-named files all get their folder as a prefix', () {
-      final names = PlaylistController.allocateM3UPlaylistNames({r'C:\X\a.m3u', r'C:\Y\a.m3u', r'C:\Z\a.m3u', r'C:\X\b.m3u'}, const {}, windows);
+      final names = M3UFiles.allocatePlaylistNames({r'C:\X\a.m3u', r'C:\Y\a.m3u', r'C:\Z\a.m3u', r'C:\X\b.m3u'}, const {}, windows);
       expect(names, {r'C:\X\a.m3u': 'X - a', r'C:\Y\a.m3u': 'Y - a', r'C:\Z\a.m3u': 'Z - a', r'C:\X\b.m3u': 'b'});
     });
 
     test('same-named folders get a counter', () {
-      final names = PlaylistController.allocateM3UPlaylistNames({'/1/X/a.m3u', '/2/X/a.m3u'}, const {}, posix);
+      final names = M3UFiles.allocatePlaylistNames({'/1/X/a.m3u', '/2/X/a.m3u'}, const {}, posix);
       expect(names, {'/1/X/a.m3u': 'X - a', '/2/X/a.m3u': 'X - a (2)'});
     });
 
     test('a refreshed file keeps the name of its playlist', () {
-      final names = PlaylistController.allocateM3UPlaylistNames({r'C:\X\a.m3u'}, {r'C:\X\a.m3u': 'X - a', r'C:\Y\a.m3u': 'Y - a'}, windows);
+      final names = M3UFiles.allocatePlaylistNames({r'C:\X\a.m3u'}, {r'C:\X\a.m3u': 'X - a', r'C:\Y\a.m3u': 'Y - a'}, windows);
       expect(names, {r'C:\X\a.m3u': 'X - a'});
     });
 
     test('a new file does not take the playlist name of another file', () {
-      final names = PlaylistController.allocateM3UPlaylistNames({r'C:\Z\a.m3u'}, {r'C:\X\a.m3u': 'a'}, windows);
+      final names = M3UFiles.allocatePlaylistNames({r'C:\Z\a.m3u'}, {r'C:\X\a.m3u': 'a'}, windows);
       expect(names, {r'C:\Z\a.m3u': 'Z - a'});
     });
 
@@ -164,11 +171,200 @@ void main() {
     });
   });
 
+  group('headers', () {
+    List<String> rewrite(List<String> lines, {String name = 'n', List<String> moods = const [], List<String> tags = const [], String description = ''}) {
+      return M3UFiles.rewriteHeaderLines(lines, name: name, moods: moods, tags: tags, description: description, tracksCount: 2, computeDurationMS: () => 90500);
+    }
+
+    test('parses the values of other apps', () {
+      final header = M3UFiles.parseHeaderLines(otherAppHeader);
+      expect(header.name, 'Paloquequieras');
+      expect(header.moods, ['Fav', 'Fiio']);
+      expect(header.tags, isEmpty);
+      expect(header.description, 'A playlist for a friend');
+      expect(header.artUrl, isNull);
+    });
+
+    test('splits, trims and dedupes the lists', () {
+      final header = M3UFiles.parseHeaderLines(['#TAGS: a ; b;;a ', '#CATEGORY:x / y; z', '#EXTALBUMARTURL: cover.jpg']);
+      expect(header.moods, ['a', 'b']);
+      expect(header.tags, ['x/y', 'z']);
+      expect(header.artUrl, 'cover.jpg');
+    });
+
+    test('the first of a repeated key is used', () {
+      final header = M3UFiles.parseHeaderLines(['#PLAYLIST:first', '#PLAYLIST:second']);
+      expect(header.name, 'first');
+    });
+
+    test('rewrites the values in place and keeps the other lines', () {
+      final lines = rewrite(otherAppHeader, name: 'Paloquequieras', moods: ['Fav', 'Mine'], description: 'edited');
+      expect(lines, [
+        '#EXTENC:UTF-8', '#PLAYLIST:Paloquequieras', '#UUID:', '#LOCKED:false', '#CATEGORY:', '#TAGS:Fav;Mine', //
+        '#TRACKTAGS:', '#PLAYLISTSIZE:2', '#DURATION:90.50', '#AUTHOR:Playlist-Manager-SMP', '#DESCRIPTION:edited', //
+      ]);
+    });
+
+    test('adds the missing values that are not empty', () {
+      final lines = rewrite(['#EXTALBUMARTURL:cover.jpg'], name: 'n', tags: ['a/b', 'c']);
+      expect(lines, ['#EXTALBUMARTURL:cover.jpg', '#PLAYLIST:n', '#CATEGORY:a/b;c']);
+    });
+
+    test('size and duration are written only when the file had them', () {
+      final lines = rewrite(const []);
+      expect(lines, ['#PLAYLIST:n']);
+    });
+
+    test('parsing a rewritten header gives back the same values', () {
+      final lines = rewrite(const [], name: 'n', moods: ['m1', 'm2'], tags: ['t/1'], description: 'd');
+      final header = M3UFiles.parseHeaderLines(lines);
+      expect(header.name, 'n');
+      expect(header.moods, ['m1', 'm2']);
+      expect(header.tags, ['t/1']);
+      expect(header.description, 'd');
+      expect(rewrite(lines, name: 'n', moods: ['m1', 'm2'], tags: ['t/1'], description: 'd'), lines);
+    });
+
+    group('merging', () {
+      test('without a baseline both sides are joined', () {
+        expect(M3UFiles.mergeHeaderItems(['a', 'b'], ['b', 'c'], null), ['a', 'b', 'c']);
+        expect(M3UFiles.mergeHeaderItems(['a'], ['a'], null), isNull);
+      });
+
+      test('removing in another app sticks', () {
+        expect(M3UFiles.mergeHeaderItems(['a', 'b'], ['a'], ['a', 'b']), ['a']);
+      });
+
+      test('adding in another app is joined with what namida added', () {
+        expect(M3UFiles.mergeHeaderItems(['a', 'n'], ['a', 'x'], ['a']), ['a', 'n', 'x']);
+      });
+
+      test('removing in namida is kept while the file still has it', () {
+        expect(M3UFiles.mergeHeaderItems(['a'], ['a', 'b'], ['a', 'b']), isNull);
+      });
+
+      test('nothing changed in the file keeps namida values', () {
+        expect(M3UFiles.mergeHeaderItems(['n'], ['a'], ['a']), isNull);
+      });
+
+      test('text from the file is used only when it changed there', () {
+        expect(M3UFiles.mergeHeaderText('mine', 'old', 'old'), isNull);
+        expect(M3UFiles.mergeHeaderText('mine', 'new', 'old'), 'new');
+        expect(M3UFiles.mergeHeaderText('', 'file', null), 'file');
+        expect(M3UFiles.mergeHeaderText('mine', 'file', null), isNull);
+        expect(M3UFiles.mergeHeaderText('same', 'same', 'old'), isNull);
+      });
+    });
+  });
+
+  group('headers sync', () {
+    late Directory dir;
+
+    setUpAll(() {
+      dir = Directory.systemTemp.createTempSync('namida_m3u_headers_test');
+      AppDirs.INTERNAL_STORAGE = dir.path;
+      AppDirs.USER_DATA = dir.path;
+      Directory(AppDirs.M3UBackup).createSync(recursive: true);
+      settings.enableM3USync.save(true);
+    });
+    tearDownAll(() => dir.deleteSync(recursive: true));
+
+    test('edits from namida and from other apps both stay', () async {
+      final musicDirectory = p.join(dir.path, 'Music');
+      for (final name in ['a.flac', 'b.flac']) {
+        File(p.join(musicDirectory, name)).createSync(recursive: true);
+      }
+      final m3uPath = p.join(musicDirectory, 'friend.m3u8');
+      final m3uFile = File(m3uPath);
+      final entryLines = ['#EXTINF:249,A - a', 'a.flac', '#EXTINF:222,B - b', 'b.flac'];
+      m3uFile.writeAsStringSync(['#EXTM3U', ...otherAppHeader, ...entryLines].join('\r\n'));
+
+      final controller = PlaylistController.inst;
+      addTearDown(controller.playlistsMap.value.clear);
+      Future<LocalPlaylist> prepare() async {
+        await controller.prepareM3UPlaylists(forPaths: {m3uPath});
+        await pumpEventQueue();
+        return controller.getPlaylist('Paloquequieras')!;
+      }
+
+      var playlist = await prepare();
+      expect(playlist.moods, ['Fav', 'Fiio']);
+      expect(playlist.comment, 'A playlist for a friend');
+      expect(playlist.tracks.length, 2);
+
+      await controller.updatePlaylistsMetadata({
+        playlist.name: const PlaylistMetadataEdit(moods: ['Fav', 'Fiio', 'Mine'], tags: ['shared/friends']),
+      });
+      await Future.delayed(const Duration(milliseconds: 2500));
+      final writtenLines = m3uFile.readAsLinesSync();
+      expect(writtenLines.take(12), [
+        '#EXTM3U', '#EXTENC:UTF-8', '#PLAYLIST:Paloquequieras', '#UUID:', '#LOCKED:false', '#CATEGORY:shared/friends', //
+        '#TAGS:Fav;Fiio;Mine', '#TRACKTAGS:', '#PLAYLISTSIZE:2', '#DURATION:0.00', '#AUTHOR:Playlist-Manager-SMP', '#DESCRIPTION:A playlist for a friend', //
+      ]);
+      expect(writtenLines.where((e) => e.isNotEmpty && !e.startsWith('# ')).skip(12), entryLines);
+
+      final externallyEdited = writtenLines.map((e) => e.startsWith('#TAGS:') ? '#TAGS:Mine;Ext' : e).join('\n');
+      m3uFile.writeAsStringSync(externallyEdited);
+      playlist = await prepare();
+      expect(playlist.moods, ['Mine', 'Ext']);
+      expect(playlist.tags, ['shared/friends']);
+
+      playlist = await prepare();
+      expect(playlist.moods, ['Mine', 'Ext']);
+    });
+
+    test('a linked file outside the scanned folders stays after a full refresh', () async {
+      settings.enableM3USyncStartup.save(false);
+      final outsideDirectory = p.join(dir.path, 'Outside');
+      File(p.join(outsideDirectory, 'c.flac')).createSync(recursive: true);
+      final m3uPath = p.join(outsideDirectory, 'outside.m3u');
+      File(m3uPath).writeAsStringSync(['#EXTM3U', 'c.flac'].join('\n'));
+
+      final controller = PlaylistController.inst;
+      addTearDown(controller.playlistsMap.value.clear);
+      await controller.prepareM3UPlaylists(forPaths: {m3uPath});
+      await pumpEventQueue();
+      expect(controller.getPlaylist('outside')?.m3uPath, m3uPath);
+
+      await controller.prepareM3UPlaylists();
+      await pumpEventQueue();
+      expect(controller.getPlaylist('outside')?.m3uPath, m3uPath);
+    });
+  });
+
+  group('tracks common folder', () {
+    final windows = p.Context(style: p.Style.windows, current: r'C:\cwd');
+    final posix = p.Context(style: p.Style.posix, current: '/cwd');
+
+    String? commonOf(List<String> paths, p.Context context) {
+      final tracks = paths.map((e) => TrackWithDate(dateAdded: 0, track: Track.explicit(e))).toList();
+      return M3UFiles.getCommonTracksDirectory(tracks, context);
+    }
+
+    test('deepest folder holding all tracks', () {
+      expect(commonOf([r'C:\M\a\1.mp3', r'C:\M\b\2.mp3', r'C:\M\a\c\3.mp3'], windows), r'C:\M');
+      expect(commonOf([r'C:\M\a\1.mp3', r'C:\M\a\2.mp3'], windows), r'C:\M\a');
+      expect(commonOf(['/storage/emulated/0/Music/a.mp3', '/storage/emulated/0/Download/b.mp3'], posix), '/storage/emulated/0');
+    });
+
+    test('a folder name prefix is not a common folder', () {
+      expect(commonOf(['/m/ab/1.mp3', '/m/a/2.mp3'], posix), '/m');
+    });
+
+    test('different drives, drive roots and server tracks have none', () {
+      expect(commonOf([r'C:\M\1.mp3', r'D:\M\2.mp3'], windows), isNull);
+      expect(commonOf([r'C:\1.mp3', r'C:\M\2.mp3'], windows), isNull);
+      expect(commonOf(['/a/1.mp3', '/b/2.mp3'], posix), isNull);
+      expect(commonOf(['/m/1.mp3', 'https://server/2.mp3'], posix), isNull);
+      expect(commonOf(const [], posix), isNull);
+    });
+  });
+
   group('m3u file names', () {
-    String linuxPath(String name) => PlaylistController.getUniqueM3UFilePath(name, '/m', posix, shouldReplaceReservedChars: false, isTaken: (_) => false);
-    String androidPath(String name) => PlaylistController.getUniqueM3UFilePath(name, '/m', posix, shouldReplaceReservedChars: true, isTaken: (_) => false);
+    String linuxPath(String name) => M3UFiles.getUniqueFilePath(name, '/m', posix, shouldReplaceReservedChars: false, isTaken: (_) => false);
+    String androidPath(String name) => M3UFiles.getUniqueFilePath(name, '/m', posix, shouldReplaceReservedChars: true, isTaken: (_) => false);
     String windowsPath(String name, [Set<String> takenPaths = const {}]) {
-      return PlaylistController.getUniqueM3UFilePath(name, r'C:\m', windows, shouldReplaceReservedChars: true, isTaken: takenPaths.contains);
+      return M3UFiles.getUniqueFilePath(name, r'C:\m', windows, shouldReplaceReservedChars: true, isTaken: takenPaths.contains);
     }
 
     test('posix only replaces the separator', () {

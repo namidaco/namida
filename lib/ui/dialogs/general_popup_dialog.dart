@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
+import 'package:path/path.dart' as p;
 import 'package:playlist_manager/playlist_manager.dart';
 import 'package:rhttp/rhttp.dart';
 
@@ -188,9 +189,10 @@ Future<void> showGeneralPopupDialog(
     customArtworkManager = CustomArtworkManager.playlist(playlistName);
   }
 
-  Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget}) {
+  Widget bigIcon(IconData icon, String Function() tooltipMessage, void Function()? onTap, {String subtitle = '', Widget? iconWidget, void Function()? onLongPress}) {
     return NamidaInkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       borderRadius: 8.0,
       child: NamidaTooltip(
         message: tooltipMessage,
@@ -363,7 +365,7 @@ Future<void> showGeneralPopupDialog(
     );
   }
 
-  Future<void> convertPlaylistToM3u() async {
+  Future<void> convertPlaylistToM3u({String? directoryPath}) async {
     // function button won't be visible if playlistName == null.
     if (!shoulShowPlaylistUtils()) return;
     cancelSkipTimer();
@@ -374,12 +376,34 @@ Future<void> showGeneralPopupDialog(
 
     if (!await requestManageStoragePermission()) return;
 
-    final savePath = await PlaylistController.inst.convertPlaylistToM3U(pl);
+    final savePath = await PlaylistController.inst.convertPlaylistToM3U(pl, directoryPath: directoryPath);
     snackyy(
       message: "${lang.savedIn}: $savePath",
       leftBarIndicatorColor: colorDelightened.value,
       altDesign: true,
       top: false,
+    );
+  }
+
+  void pickDirectoryToConvertToM3u() {
+    if (!shoulShowPlaylistUtils()) return;
+    final pl = PlaylistController.inst.getPlaylist(playlistName!);
+    if (pl == null) return;
+    final tracksDirectoryPath = M3UFiles.getCommonTracksDirectory(pl.tracks, p.context);
+    openDialog(
+      (theme) => _ConvertToM3UDirectoryDialog(
+        tracksDirectoryPath: tracksDirectoryPath,
+        onDirectoryTap: (directoryPath) {
+          NamidaNavigator.inst.closeDialog();
+          convertPlaylistToM3u(directoryPath: directoryPath);
+        },
+        onPickFromStorageTap: () async {
+          NamidaNavigator.inst.closeDialog();
+          final directoryPath = await NamidaFileBrowser.getDirectory(note: lang.convertToM3UPlaylist);
+          if (directoryPath == null) return;
+          await convertPlaylistToM3u(directoryPath: directoryPath);
+        },
+      ),
     );
   }
 
@@ -725,7 +749,7 @@ Future<void> showGeneralPopupDialog(
                 )
               else
                 Expanded(
-                  child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, convertPlaylistToM3u),
+                  child: bigIcon(Broken.directbox_send, () => lang.convertToM3UPlaylist, convertPlaylistToM3u, onLongPress: pickDirectoryToConvertToM3u),
                 ),
               const SizedBox(width: 8.0),
 
@@ -2028,6 +2052,54 @@ class _ThemedDialog extends StatelessWidget {
       insetPadding: insetPadding,
       clipBehavior: Clip.antiAlias,
       child: child,
+    );
+  }
+}
+
+class _ConvertToM3UDirectoryDialog extends StatelessWidget {
+  final String? tracksDirectoryPath;
+  final void Function(String? directoryPath) onDirectoryTap;
+  final void Function() onPickFromStorageTap;
+
+  const _ConvertToM3UDirectoryDialog({
+    required this.tracksDirectoryPath,
+    required this.onDirectoryTap,
+    required this.onPickFromStorageTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final tracksDirectoryPath = this.tracksDirectoryPath;
+    return CustomBlurryDialog(
+      title: lang.convertToM3UPlaylist,
+      normalTitleStyle: true,
+      icon: Broken.directbox_send,
+      actions: const [
+        CancelButton(),
+      ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CustomListTile(
+            icon: Broken.folder,
+            title: lang.defaultLabel,
+            subtitle: AppDirs.M3UPlaylists,
+            onTap: () => onDirectoryTap(null),
+          ),
+          if (tracksDirectoryPath != null)
+            CustomListTile(
+              icon: Broken.music_library_2,
+              title: lang.tracks,
+              subtitle: tracksDirectoryPath,
+              onTap: () => onDirectoryTap(tracksDirectoryPath),
+            ),
+          CustomListTile(
+            icon: Broken.folder_add,
+            title: lang.pickFromStorage,
+            onTap: onPickFromStorageTap,
+          ),
+        ],
+      ),
     );
   }
 }
