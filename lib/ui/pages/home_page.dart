@@ -51,6 +51,7 @@ import 'package:namida/ui/widgets/library/artist_card.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/queue_card.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/stats.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -461,14 +462,14 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
         child: SizedBox(
           width: namida.width,
           height: namida.height * 0.5,
-          child: NamidaReorderableActiveListView(
-            enumValues: supportedHomePageItems,
+          child: NamidaReorderableActiveItemsList(
+            items: supportedHomePageItems,
             activeItems: homePageItemsRx.value,
             toText: (item) => item.toText(),
             toIcon: (item) => item.toMainIcon(),
             toSecondaryIcon: (item) => item.toIcon(),
             minimumItems: minimumActiveHomePageItems,
-            onSave: saveHomePageItems,
+            onChanged: saveHomePageItems,
           ),
         ),
       ),

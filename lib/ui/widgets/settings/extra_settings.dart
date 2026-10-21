@@ -35,6 +35,7 @@ import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/lyrics_karaoke_text.dart';
+import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/settings/effects_tiles.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/widgets/yt_thumbnail.dart';
@@ -1044,7 +1045,10 @@ class _LibraryTabsTile extends StatelessWidget {
     if (!tabs.contains(selectedGroup)) settings.extra.setSelectedLibraryTab(tabs.first);
   }
 
-  void _onItemRemoved(int index, List<LibraryTab> activeItems) {
+  void _onChanged(List<LibraryTab> activeItems) {
+    final didRemove = activeItems.length < settings.libraryTabs.value.length;
+    settings.libraryTabs.replace(activeItems);
+    if (!didRemove) return;
     final firstTab = settings.libraryTabs.value.first;
     settings.extra.setSelectedLibraryTab(firstTab);
   }
@@ -1061,14 +1065,13 @@ class _LibraryTabsTile extends StatelessWidget {
         child: SizedBox(
           width: namida.width,
           height: namida.height * 0.5,
-          child: NamidaReorderableActiveListView(
-            enumValues: groupHeads,
+          child: NamidaReorderableActiveItemsList(
+            items: groupHeads,
             activeItems: libraryTabs,
             toText: (item) => item.toText(),
             toIcon: (item) => item.toIcon(),
             minimumItems: 2,
-            onItemRemoved: _onItemRemoved,
-            onSave: settings.libraryTabs.replace,
+            onChanged: _onChanged,
           ),
         ),
       ),

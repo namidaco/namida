@@ -382,6 +382,7 @@ class SortOptionsCards extends StatelessWidget {
   final bool withSortKeyOptions;
   final Set<TrackSearchFilter>? prefixFilters;
   final bool showTitles;
+  final bool dense;
 
   const SortOptionsCards({
     super.key,
@@ -390,6 +391,7 @@ class SortOptionsCards extends StatelessWidget {
     required this.withSortKeyOptions,
     required this.prefixFilters,
     this.showTitles = false,
+    this.dense = false,
   });
 
   static Set<TrackSearchFilter> prefixFiltersOfTracks(Iterable<SortType> sorts) => {for (final sort in sorts) ?sort.toIgnorePrefixFilter()};
@@ -408,6 +410,7 @@ class SortOptionsCards extends StatelessWidget {
             icon: Broken.arrange_circle,
             title: lang.reverseOrder,
             showTitle: showTitles,
+            dense: dense,
             active: isReversed,
             onTap: onReverseTap,
           ),
@@ -420,6 +423,7 @@ class SortOptionsCards extends StatelessWidget {
             child: _SortIgnorePrefixCard(
               filters: prefixFilters,
               showTitle: showTitles,
+              dense: dense,
             ),
           ),
         ],
@@ -430,6 +434,7 @@ class SortOptionsCards extends StatelessWidget {
           Expanded(
             child: _SortRomanizationCard(
               showTitle: showTitles,
+              dense: dense,
             ),
           ),
         ],
@@ -499,9 +504,11 @@ class _SortAdvancedHeader extends StatelessWidget {
 
 class _SortRomanizationCard extends StatelessWidget {
   final bool showTitle;
+  final bool dense;
 
   const _SortRomanizationCard({
     required this.showTitle,
+    required this.dense,
   });
 
   void _onTap() {
@@ -517,6 +524,7 @@ class _SortRomanizationCard extends StatelessWidget {
         icon: Broken.translate,
         title: lang.romanization,
         showTitle: showTitle,
+        dense: dense,
         active: romanizeSorting,
         onTap: _onTap,
       ),
@@ -527,10 +535,12 @@ class _SortRomanizationCard extends StatelessWidget {
 class _SortIgnorePrefixCard extends StatelessWidget {
   final Set<TrackSearchFilter> filters;
   final bool showTitle;
+  final bool dense;
 
   const _SortIgnorePrefixCard({
     required this.filters,
     required this.showTitle,
+    required this.dense,
   });
 
   void _onTap(bool isAllIgnored) {
@@ -557,6 +567,7 @@ class _SortIgnorePrefixCard extends StatelessWidget {
           icon: Broken.message_remove,
           title: lang.ignorePrefixes,
           showTitle: showTitle,
+          dense: dense,
           active: isAllIgnored,
           halfActive: ignoredCount > 0 && !isAllIgnored,
           onTap: filters.isEmpty ? null : () => _onTap(isAllIgnored),

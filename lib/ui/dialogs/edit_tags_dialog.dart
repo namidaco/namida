@@ -34,6 +34,7 @@ import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/text_suggestions.dart';
 import 'package:namida/youtube/pages/yt_search_results_page.dart';
 
@@ -444,33 +445,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                 ),
                 NamidaIconButton(
                   icon: Broken.edit_2,
-                  onPressed: () => NamidaNavigator.inst.navigateDialog(
-                    scale: 1.0,
-                    dialog: NTheme(
-                      data: theme,
-                      child: CustomBlurryDialog(
-                        theme: theme,
-                        title: "${lang.tagFields} (${lang.reorderable})",
-                        actions: const [
-                          DoneButton(),
-                        ],
-                        child: SizedBox(
-                          width: namida.width,
-                          height: namida.height * 0.6,
-                          child: NamidaReorderableActiveListView(
-                            enumValues: TagField.values,
-                            activeItems: settings.tagFieldsToEdit.value,
-                            toText: (item) => item.toText(),
-                            toIcon: (item) => item.toIcon(),
-                            minimumItems: 3,
-                            onSave: (activeItems) {
-                              settings.tagFieldsToEdit.replace(activeItems);
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  onPressed: () => _showTagFieldsToEditDialog(theme),
                 ),
               ],
               actions: [
@@ -646,6 +621,40 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
           ),
         );
       },
+    ),
+  );
+}
+
+void _showTagFieldsToEditDialog(ThemeData theme) {
+  final originalFields = settings.tagFieldsToEdit.value;
+  List<TagField> newFields = originalFields;
+  NamidaNavigator.inst.navigateDialog(
+    scale: 1.0,
+    onDisposing: () {
+      final didChange = newFields.didChangeFrom(originalFields, ordered: true);
+      if (didChange) settings.tagFieldsToEdit.replace(newFields);
+    },
+    dialog: NTheme(
+      data: theme,
+      child: CustomBlurryDialog(
+        theme: theme,
+        title: "${lang.tagFields} (${lang.reorderable})",
+        actions: const [
+          DoneButton(),
+        ],
+        child: SizedBox(
+          width: namida.width,
+          height: namida.height * 0.6,
+          child: NamidaReorderableActiveItemsList(
+            items: TagField.values,
+            activeItems: originalFields,
+            toText: (item) => item.toText(),
+            toIcon: (item) => item.toIcon(),
+            minimumItems: 3,
+            onChanged: (fields) => newFields = fields,
+          ),
+        ),
+      ),
     ),
   );
 }

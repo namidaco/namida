@@ -27,6 +27,7 @@ import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/disabled_by_pill.dart';
+import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -1250,22 +1251,13 @@ class _NotificationButtonsEditorState extends State<_NotificationButtonsEditor> 
   /// android 13+ always shows previous, play/pause & next first, only the rest can be changed.
   static final _isSystemLayout = NamidaFeaturesAvailablity.android13and_plus.resolve();
   static const _kMaxButtons = 5;
-  static const _kLockedOpacity = 0.5;
+  static final _editableButtons = NotificationButton.values.where(_isEditable).toFixedList();
 
-  late final RxList<_NotificationButtonItem> _itemsRx;
-
-  @override
-  void initState() {
-    super.initState();
-    final activeButtons = settings.notificationButtons.value.ensurePlayPause();
-    final activeItems = activeButtons.where(_isEditable).map((button) => (button: button, active: true));
-    final inactiveItems = NotificationButton.values.where((button) => _isEditable(button) && !activeButtons.contains(button)).map((button) => (button: button, active: false));
-    _itemsRx = <_NotificationButtonItem>[...activeItems, ...inactiveItems].obs;
-  }
+  final _activeButtonsRx = settings.notificationButtons.value.ensurePlayPause().where(_isEditable).toList().obs;
 
   @override
   void dispose() {
-    _itemsRx.close();
+    _activeButtonsRx.close();
     super.dispose();
   }
 
@@ -1273,22 +1265,25 @@ class _NotificationButtonsEditorState extends State<_NotificationButtonsEditor> 
 
   static bool _isLocked(NotificationButton button) => _isSystemLayout ? button.isTransport : button == NotificationButton.playPause;
 
-  static List<NotificationButton> _getActiveButtons(List<_NotificationButtonItem> items) {
+  static List<NotificationButton> _getActiveButtons(List<NotificationButton> editableActiveButtons) {
     return [
       if (_isSystemLayout) ...NotificationButton.transportButtons,
-      ...items.where((item) => item.active).map((item) => item.button),
+      ...editableActiveButtons,
     ];
   }
 
-  void _save() {
-    final buttons = _getActiveButtons(_itemsRx.value);
+  static bool _hasPlaylist() => settings.notificationButtonsPlaylist.value != null || settings.notificationButtonsYTPlaylist.value != null;
+
+  void _onChanged(List<NotificationButton> editableActiveButtons) {
+    _activeButtonsRx.value = editableActiveButtons;
+    final buttons = _getActiveButtons(editableActiveButtons);
     settings.notificationButtons.replace(buttons);
   }
 
   /// shows why when the limit is reached.
   bool _canActivateOneMore() {
     final maxActive = _isSystemLayout ? _kMaxButtons - NotificationButton.transportButtons.length : _kMaxButtons;
-    final activeCount = _itemsRx.value.where((e) => e.active).length;
+    final activeCount = _activeButtonsRx.value.length;
     if (activeCount >= maxActive) {
       snackyy(title: lang.note, message: '${lang.maximum}: $maxActive');
       return false;
@@ -1301,121 +1296,68 @@ class _NotificationButtonsEditorState extends State<_NotificationButtonsEditor> 
     return true;
   }
 
-  void _setActive(int index, bool active) {
-    if (active && !_canActivateOneMore()) return;
-    final button = _itemsRx.value[index].button;
-    _itemsRx[index] = (button: button, active: active);
-    _save();
+  bool _canActivate(NotificationButton button) {
+    if (!_canActivateOneMore()) return false;
+    if (button != NotificationButton.addToPlaylist || _hasPlaylist()) return true;
+    _pickPlaylists(false);
+    return false;
   }
 
-  void _onTap(int index) {
-    final (:button, :active) = _itemsRx.value[index];
-    if (button == NotificationButton.playPause) return;
-    if (button == NotificationButton.addToPlaylist) {
-      _pickPlaylists(index, active);
-      return;
-    }
-    _setActive(index, !active);
+  bool _interceptTap(NotificationButton button, bool isActive) {
+    if (button != NotificationButton.addToPlaylist) return false;
+    if (isActive || _canActivateOneMore()) _pickPlaylists(isActive);
+    return true;
   }
 
-  void _pickPlaylists(int index, bool isActive) {
-    if (!isActive && !_canActivateOneMore()) return;
+  void _pickPlaylists(bool isActive) {
     NamidaNavigator.inst.navigateDialog(
       dialog: _NotificationPlaylistsDialog(
         onConfirm: (hasPlaylist) {
-          if (hasPlaylist != isActive) _setActive(index, hasPlaylist);
+          if (hasPlaylist != isActive) _setPlaylistButtonActive(hasPlaylist);
         },
       ),
     );
   }
 
-  void _onReorder(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) newIndex -= 1;
-    final item = _itemsRx.value.removeAt(oldIndex);
-    _itemsRx.value.insert(newIndex, item);
-    _itemsRx.refresh();
-    _save();
+  void _setPlaylistButtonActive(bool active) {
+    if (active && !_canActivateOneMore()) return;
+    const button = NotificationButton.addToPlaylist;
+    final currentButtons = _activeButtonsRx.value;
+    final buttons = active ? [...currentButtons, button] : currentButtons.where((e) => e != button).toList();
+    _onChanged(buttons);
   }
 
   @override
   Widget build(BuildContext context) {
     return ObxO(
-      rx: _itemsRx,
-      builder: (context, items) => Column(
+      rx: _activeButtonsRx,
+      builder: (context, activeButtons) => Column(
         children: [
           _NotificationButtonsPreview(
-            buttons: _getActiveButtons(items),
+            buttons: _getActiveButtons(activeButtons),
             isLocked: _isLocked,
           ),
           const SizedBox(height: 8.0),
           Expanded(
-            child: NamidaListView(
-              showScrollbarOnStart: true,
-              itemExtent: null,
-              listBottomPadding: 0,
-              itemCount: items.length,
-              onReorder: _onReorder,
-              itemBuilder: (context, i) {
-                final (:button, :active) = items[i];
-                final title = "${i + 1}. ${button.toText()}";
-                void onTap() => _onTap(i);
-                final tile = button == NotificationButton.addToPlaylist
-                    ? _NotificationPlaylistsTile(
-                        title: title,
-                        active: active,
-                        onTap: onTap,
-                      )
-                    : ListTileWithCheckMark(
-                        title: title,
-                        icon: button.toIcon(),
-                        active: active,
-                        onTap: onTap,
-                      );
-                final isLocked = _isLocked(button);
-                final shownTile = isLocked
-                    ? Opacity(
-                        opacity: _kLockedOpacity,
-                        child: tile,
-                      )
-                    : tile;
-                return Padding(
-                  key: ValueKey(button),
-                  padding: const EdgeInsets.all(3.0),
-                  child: shownTile,
+            child: Obx(
+              (context) {
+                final playlistNames = [settings.notificationButtonsPlaylist.valueR, settings.notificationButtonsYTPlaylist.valueR].nonNulls.join(', ');
+                return NamidaReorderableActiveItemsList(
+                  items: _editableButtons,
+                  activeItems: activeButtons,
+                  toText: (button) => button.toText(),
+                  toIcon: (button) => button.toIcon(),
+                  toSubtitle: (button) => button == NotificationButton.addToPlaylist ? playlistNames : '',
+                  isLocked: _isLocked,
+                  canActivate: _canActivate,
+                  interceptTap: _interceptTap,
+                  onChanged: _onChanged,
                 );
               },
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _NotificationPlaylistsTile extends StatelessWidget {
-  final String title;
-  final bool active;
-  final void Function() onTap;
-
-  const _NotificationPlaylistsTile({
-    required this.title,
-    required this.active,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final playlistNames = [settings.notificationButtonsPlaylist.valueR, settings.notificationButtonsYTPlaylist.valueR].nonNulls.join(', ');
-        return ListTileWithCheckMark(
-          title: title,
-          subtitle: playlistNames,
-          icon: NotificationButton.addToPlaylist.toIcon(),
-          active: active,
-          onTap: onTap,
-        );
-      },
     );
   }
 }
@@ -1431,7 +1373,7 @@ class _NotificationButtonsPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const lockedIconColor = NColors(.icon, opacity: _NotificationButtonsEditorState._kLockedOpacity);
+    const lockedIconColor = NColors(.icon, opacity: NamidaReorderableActiveItemsList.kLockedOpacity);
     final icons = buttons
         .map(
           (button) => NIcon(
@@ -1588,5 +1530,3 @@ class _CrossfadeModeTile extends StatelessWidget {
     );
   }
 }
-
-typedef _NotificationButtonItem = ({NotificationButton button, bool active});

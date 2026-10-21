@@ -54,6 +54,7 @@ import 'package:namida/ui/pages/subpages/queue_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/history_listens_navigation.dart';
+import 'package:namida/ui/widgets/reorderable_active_items_list.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
@@ -325,6 +326,7 @@ class NamidaOnTaps {
       MediaType.folderVideo: [SortType.filename],
     };
     SortChain<SortType> activeSorting() => settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    final initialSorting = activeSorting();
     return _onSubPageSortIconTap<SortType>(
       header: header,
       minimumItems: 1,
@@ -332,12 +334,14 @@ class NamidaOnTaps {
       sortToText: (sort) => sort.toText(),
       sortToIcon: (sort) => sort.toIcon(),
       defaultSorts: defaultSorts[media] ?? [SortType.year],
-      currentSorting: activeSorting(),
+      currentSorting: initialSorting,
       allowCustom: false,
       withSortKeyOptions: true,
       prefixFiltersOf: SortOptionsCards.prefixFiltersOfTracks,
       onSortChange: (activeSorters) {
-        final sorting = activeSorting().copyWith(entries: activeSorters);
+        final currentSorting = activeSorting();
+        final sorting = currentSorting.copyWith(entries: activeSorters);
+        if (sorting == currentSorting) return;
         settings.updateMediaItemsTrackSorting(media, sorting);
       },
       onSortReverseChange: (reverse) {
@@ -345,7 +349,8 @@ class NamidaOnTaps {
         settings.updateMediaItemsTrackSorting(media, sorting);
       },
       onDone: () {
-        Indexer.inst.sortMediaTracksSubLists([media]);
+        final didChange = activeSorting() != initialSorting;
+        if (didChange) Indexer.inst.sortMediaTracksSubLists([media]);
       },
       leftActionBuilder: (onBeforeChange, onChanged) => _TrackSortPresetsButton(
         media: media,
@@ -563,17 +568,6 @@ class NamidaOnTaps {
     final sorters = currentSorting.entries.toList().obs;
     final isReverse = currentSorting.reverse.obs;
 
-    final allSorts = allSortsList.obs;
-
-    void resortVisualItems() => allSorts.sortByReverse((e) {
-      final sortersList = sorters.value;
-      final index = sortersList.indexWhere((sorter) => sorter.type == e);
-      final isActive = index != -1;
-      return isActive ? sortersList.length - index : index;
-    });
-
-    resortVisualItems();
-
     void saveSorts() {
       final activeSorts = sorters.value.toList();
       onSortChange(activeSorts);
@@ -587,7 +581,11 @@ class NamidaOnTaps {
     void loadSorting(SortChain<S> sorting) {
       sorters.value = sorting.entries.toList();
       isReverse.value = sorting.reverse;
-      resortVisualItems();
+    }
+
+    void onActiveSortsChanged(List<S> activeSorts) {
+      final oldSorters = sorters.value;
+      sorters.value = activeSorts.map((sort) => oldSorters.firstWhereEff((e) => e.type == sort) ?? SortEntry(sort)).toList();
     }
 
     final leftAction = leftActionBuilder?.call(saveSorts, loadSorting);
@@ -597,7 +595,6 @@ class NamidaOnTaps {
       onDisposing: () {
         sorters.close();
         isReverse.close();
-        allSorts.close();
       },
       onDismissing: resortMedia,
       dialog: CustomBlurryDialog(
@@ -617,7 +614,7 @@ class NamidaOnTaps {
         ],
         child: SizedBox(
           width: namida.width,
-          height: namida.height * 0.5,
+          height: namida.height * 0.55,
           child: Column(
             children: [
               ?header,
@@ -635,62 +632,30 @@ class NamidaOnTaps {
                     withSortKeyOptions: withSortKeyOptions,
                     prefixFilters: prefixFilters,
                     showTitles: true,
+                    dense: header != null,
                   );
                 },
               ),
               const SizedBox(height: 8.0),
               Expanded(
-                child: Obx(
-                  (context) => NamidaListView(
-                    listBottomPadding: 12.0,
-                    itemCount: allSorts.length,
-                    itemExtent: null,
-                    onReorder: (oldIndex, newIndex) {
-                      if (newIndex > oldIndex) newIndex -= 1;
-                      allSorts.value.move(oldIndex, newIndex);
-                      allSorts.refresh();
-
-                      final sortersList = sorters.value;
-                      final activeSorts = allSorts.value.map((sort) => sortersList.firstWhereEff((e) => e.type == sort)).nonNulls.toList();
-                      sorters.value = activeSorts.toList();
-                      onSortChange(activeSorts);
-                    },
-                    itemBuilder: (context, i) {
-                      final sorting = allSorts[i];
-                      return Padding(
-                        key: ValueKey(i),
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 3.0),
-                        child: Obx(
-                          (context) {
-                            final entry = sorters.valueR.firstWhereEff((e) => e.type == sorting);
-                            final isActive = entry != null;
-                            final isReversed = entry?.reverse ?? false;
-                            final reverseButton = AnimatedShow(
-                              show: isActive,
-                              isHorizontal: true,
-                              child: _SortEntryReverseButton(
-                                isReversed: isReversed,
-                                onTap: () => sorters.replaceSingleWhere((e) => e.type == sorting, (e) => e.toggled()),
-                              ),
-                            );
-                            return ListTileWithCheckMark(
-                              icon: sortToIcon(sorting),
-                              title: "${i + 1}. ${sortToText(sorting)}",
-                              active: isActive,
-                              trailing: reverseButton,
-                              onTap: () {
-                                if (isActive && sorters.length <= minimumItems) {
-                                  showMinimumItemsSnack(minimumItems);
-                                  return;
-                                }
-                                if (isActive) {
-                                  sorters.removeWhere((e) => e.type == sorting);
-                                } else {
-                                  sorters.insertSafe(i, SortEntry(sorting));
-                                }
-                              },
-                            );
-                          },
+                child: ObxO(
+                  rx: sorters,
+                  builder: (context, sortersList) => NamidaReorderableActiveItemsList<S>(
+                    items: allSortsList,
+                    activeItems: sortersList.map((e) => e.type).toFixedList(),
+                    minimumItems: minimumItems,
+                    toText: sortToText,
+                    toIcon: sortToIcon,
+                    onChanged: onActiveSortsChanged,
+                    trailingBuilder: (sort, isActive) {
+                      final entry = sortersList.firstWhereEff((e) => e.type == sort);
+                      final isReversed = entry?.reverse ?? false;
+                      return AnimatedShow(
+                        show: isActive,
+                        isHorizontal: true,
+                        child: _SortEntryReverseButton(
+                          isReversed: isReversed,
+                          onTap: () => sorters.replaceSingleWhere((e) => e.type == sort, (e) => e.toggled()),
                         ),
                       );
                     },

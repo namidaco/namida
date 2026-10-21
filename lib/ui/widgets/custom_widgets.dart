@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui';
@@ -4842,123 +4841,6 @@ class NamidaCircularPercentage extends StatelessWidget {
   }
 }
 
-class NamidaReorderableActiveListView<E> extends StatefulWidget {
-  final List<E> enumValues;
-  final List<E> activeItems;
-  final String Function(E item) toText;
-  final IconData Function(E item) toIcon;
-  final IconData? Function(E item)? toSecondaryIcon;
-  final void Function(List<E> activeItems) onSave;
-  final void Function(int i, List<E> activeItems)? onItemRemoved;
-  final int minimumItems;
-
-  const NamidaReorderableActiveListView({
-    super.key,
-    required this.enumValues,
-    required this.activeItems,
-    required this.toText,
-    required this.toIcon,
-    this.toSecondaryIcon,
-    required this.onSave,
-    this.onItemRemoved,
-    this.minimumItems = 3,
-  });
-
-  @override
-  State<NamidaReorderableActiveListView<E>> createState() => _NamidaReorderableActiveListViewState<E>();
-}
-
-class _NamidaReorderableActiveListViewState<E> extends State<NamidaReorderableActiveListView<E>> {
-  late final RxList<({E item, bool active})> _itemsRx;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeList();
-  }
-
-  void _initializeList() {
-    final combined = LinkedHashSet<({E item, bool active})>(equals: (p0, p1) => p0.item == p1.item, hashCode: (p0) => p0.item.hashCode);
-    for (final e in widget.activeItems) {
-      combined.add((item: e, active: true));
-    }
-    for (final e in widget.enumValues) {
-      combined.add((item: e, active: false));
-    }
-
-    _itemsRx = combined.toList().obs;
-  }
-
-  @override
-  void dispose() {
-    _itemsRx.close();
-    super.dispose();
-  }
-
-  List<E> getActiveItems() => _itemsRx.value.where((e) => e.active).map((e) => e.item).toList();
-
-  void _onTap(int i) {
-    final (:item, :active) = _itemsRx.value[i];
-    if (active) {
-      if (_itemsRx.value.where((e) => e.active).length <= widget.minimumItems) {
-        showMinimumItemsSnack(widget.minimumItems);
-        return;
-      }
-    }
-    _itemsRx[i] = (item: item, active: !active);
-    final newItems = getActiveItems();
-    widget.onSave(newItems);
-
-    if (!_itemsRx.value[i].active) {
-      widget.onItemRemoved?.call(i, newItems);
-    }
-  }
-
-  void _onReorder(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) newIndex -= 1;
-    final entry = _itemsRx.value.removeAt(oldIndex);
-    _itemsRx.value.insert(newIndex, entry);
-    _itemsRx.refresh();
-    widget.onSave(getActiveItems());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ObxO(
-      rx: _itemsRx,
-      builder: (context, items) => NamidaListView(
-        showScrollbarOnStart: true,
-        itemExtent: null,
-        listBottomPadding: 0,
-        itemCount: items.length,
-        onReorder: _onReorder,
-        itemBuilder: (context, i) {
-          final (:item, :active) = items[i];
-          final mainIcon = widget.toIcon(item);
-          final secondaryIcon = widget.toSecondaryIcon?.call(item);
-          return Padding(
-            key: ValueKey(item),
-            padding: const EdgeInsets.all(3.0),
-            child: ListTileWithCheckMark(
-              title: "${i + 1}. ${widget.toText(item)}",
-              icon: secondaryIcon == null ? mainIcon : null,
-              leading: secondaryIcon == null
-                  ? null
-                  : StackedIcon(
-                      baseIcon: mainIcon,
-                      secondaryIcon: secondaryIcon,
-                      disableColor: true,
-                    ),
-              active: active,
-              onTap: () => _onTap(i),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class NamidaListView extends StatelessWidget {
   final Widget Function(Widget list)? listBuilder;
   final Widget Function(BuildContext context, int i) itemBuilder;
@@ -9221,8 +9103,9 @@ class NamidaToggleCard extends StatelessWidget {
   final bool active;
   final bool halfActive;
   final VoidCallback? onTap;
-  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? padding;
   final double iconSize;
+  final bool dense;
 
   const NamidaToggleCard({
     super.key,
@@ -9232,12 +9115,20 @@ class NamidaToggleCard extends StatelessWidget {
     required this.active,
     this.halfActive = false,
     required this.onTap,
-    this.padding = const EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0),
+    this.padding,
     this.iconSize = 20.0,
+    this.dense = false,
   });
+
+  static const _kPadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 10.0);
+  static const _kDensePadding = EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0);
 
   @override
   Widget build(BuildContext context) {
+    final defaultPadding = dense ? _kDensePadding : _kPadding;
+    final padding = this.padding ?? defaultPadding;
+    final titleIconSize = dense ? 18.0 : 22.0;
+    final titleIconGap = dense ? 3.0 : 4.0;
     final colors = NColorsData.targetOf(context);
     final tileOpacity = context.isDarkMode ? 0.02 : 0.08;
     final inactiveColor = Color.alphaBlend(colors.onSurface.withOpacityExt(tileOpacity), colors.cardTheme);
@@ -9263,10 +9154,10 @@ class NamidaToggleCard extends StatelessWidget {
                 if (icon != null) ...[
                   Icon(
                     icon,
-                    size: 22.0,
+                    size: titleIconSize,
                   ),
-                  const SizedBox(
-                    height: 4.0,
+                  SizedBox(
+                    height: titleIconGap,
                   ),
                 ],
                 NamidaText(
