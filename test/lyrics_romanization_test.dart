@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/controller/romanizer/romanizer.dart';
+import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 
@@ -89,5 +90,48 @@ void main() {
   test('a sibling mixing japanese with the romanization still counts', () {
     const sibling = 'いturururu (kataku saikai o)';
     expect(displayedLines('[00:01.00]かたくさいかいを\n[00:01.00]$sibling\n[00:05.00]さくら'), ['かたくさいかいを', sibling, 'iturururu (kataku saikai o)', 'さくら', 'sakura']);
+  });
+
+  group('script toggles', () {
+    const samples = <RomanizationScript, (String, String)>{
+      RomanizationScript.japanese: ('さくら', 'sakura'),
+      RomanizationScript.korean: ('안녕', 'annyeong'),
+      RomanizationScript.greek: ('Γεια', 'Geia'),
+      RomanizationScript.cyrillic: ('Привет', 'Privet'),
+      RomanizationScript.armenian: ('Բարեւ', 'Barew'),
+      RomanizationScript.georgian: ('გამარჯობა', 'gamarjoba'),
+    };
+    final text = samples.values.map((e) => e.$1).join(' ');
+
+    String romanizeWithout(List<RomanizationScript> disabled, String text, {bool chinese = false}) {
+      final engine = RomanizerEngine()..setDisabledScripts(disabled);
+      return engine.romanize(text, chinese: chinese);
+    }
+
+    test('every script is romanized by default', () {
+      final expected = samples.values.map((e) => e.$2).join(' ');
+      expect(romanizeWithout(const [], text), expected);
+    });
+
+    for (final script in samples.keys) {
+      test('a disabled ${script.name} keeps only its own text', () {
+        final expected = samples.entries.map((e) => e.key == script ? e.value.$1 : e.value.$2).join(' ');
+        expect(romanizeWithout([script], text), expected);
+      });
+    }
+
+    test('everything disabled returns the same text', () {
+      final romanized = romanizeWithout(RomanizationScript.values, text);
+      expect(identical(romanized, text), true);
+    });
+
+    test('disabled japanese keeps kana and the han next to it, chinese lyrics too', () {
+      const japanese = 'さくら東京';
+      expect(romanizeWithout(const [RomanizationScript.japanese], japanese, chinese: true), japanese);
+    });
+
+    test('disabled chinese keeps kana romanized', () {
+      expect(romanizeWithout(const [RomanizationScript.chinese], 'さくら', chinese: true), 'sakura');
+    });
   });
 }

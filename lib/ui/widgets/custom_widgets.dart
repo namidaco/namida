@@ -9214,7 +9214,8 @@ class _PlayableTitleSubtitleWidgetState extends State<PlayableTitleSubtitleWidge
 }
 
 class NamidaToggleCard extends StatelessWidget {
-  final IconData icon;
+  /// null shows the [title] alone.
+  final IconData? icon;
   final String title;
   final bool showTitle;
   final bool active;
@@ -9225,7 +9226,7 @@ class NamidaToggleCard extends StatelessWidget {
 
   const NamidaToggleCard({
     super.key,
-    required this.icon,
+    this.icon,
     required this.title,
     this.showTitle = false,
     required this.active,
@@ -9247,23 +9248,27 @@ class NamidaToggleCard extends StatelessWidget {
         ? Color.alphaBlend(activeColor.withOpacityExt(0.4), inactiveColor)
         : inactiveColor;
     final isEnabled = onTap != null;
+    final icon = this.icon;
+    final isTitleShown = showTitle || icon == null;
     final card = NamidaInkWell(
       borderRadius: 10.0,
       padding: padding,
       animationDurationMS: 200,
       bgColor: NColors.fixed(bgColor),
       onTap: onTap,
-      child: showTitle
+      child: isTitleShown
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  size: 22.0,
-                ),
-                const SizedBox(
-                  height: 4.0,
-                ),
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    size: 22.0,
+                  ),
+                  const SizedBox(
+                    height: 4.0,
+                  ),
+                ],
                 NamidaText(
                   title,
                   style: const NText(.small, size: .s12),
@@ -9282,7 +9287,7 @@ class NamidaToggleCard extends StatelessWidget {
       opacity: isEnabled ? 1.0 : 0.4,
       duration: const Duration(milliseconds: 200),
       child: NamidaTooltip(
-        message: showTitle ? null : () => title,
+        message: isTitleShown ? null : () => title,
         child: card,
       ),
     );

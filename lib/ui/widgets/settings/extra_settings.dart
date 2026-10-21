@@ -16,6 +16,7 @@ import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
+import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -155,7 +156,7 @@ class ExtrasSettings extends SettingSubpageProvider {
       SettingCustom(
         title: () => lang.romanization,
         aliases: () => [lang.dictionary],
-        keys: [settings.romanizeLyrics, settings.romanizeSorting],
+        keys: [settings.romanizeLyrics, settings.romanizeSorting, settings.romanizationDisabledScripts],
         tile: (args) => _RomanizationTile(
           bgColor: args.bgColor,
         ),
@@ -1387,7 +1388,19 @@ class _RomanizationTile extends StatelessWidget {
   const _RomanizationTile({required this.bgColor});
 
   void _showDialog() {
+    final originalDisabledScripts = settings.romanizationDisabledScripts.value;
+    final disabledScriptsRx = Rx<List<RomanizationScript>>(originalDisabledScripts);
+
+    // -- once the dialog is gone, any way it was closed
+    void saveIfChanged() {
+      final newDisabledScripts = disabledScriptsRx.value;
+      disabledScriptsRx.close();
+      final didChange = newDisabledScripts.didChangeFrom(originalDisabledScripts);
+      if (didChange) settings.romanizationDisabledScripts.replace(newDisabledScripts);
+    }
+
     NamidaNavigator.inst.navigateDialog(
+      onDisposing: saveIfChanged,
       dialog: CustomBlurryDialog(
         title: lang.romanization,
         actions: const [
@@ -1414,6 +1427,9 @@ class _RomanizationTile extends StatelessWidget {
                 value: romanizeSorting,
                 onChanged: (isTrue) => Romanizer.inst.setSortingEnabled(!isTrue),
               ),
+            ),
+            _RomanizationScriptsWrap(
+              disabledScriptsRx: disabledScriptsRx,
             ),
             const NamidaContainerDivider(
               margin: EdgeInsets.symmetric(vertical: 4.0),
@@ -1473,6 +1489,42 @@ class _RomanizationDictionaryTile extends StatelessWidget {
             onTap: () => _onTap(isDictionaryInstalled, downloadProgress),
           );
         },
+      ),
+    );
+  }
+}
+
+class _RomanizationScriptsWrap extends StatelessWidget {
+  final Rx<List<RomanizationScript>> disabledScriptsRx;
+
+  const _RomanizationScriptsWrap({required this.disabledScriptsRx});
+
+  void _toggle(RomanizationScript script) {
+    final disabledScripts = disabledScriptsRx.value;
+    final isDisabled = disabledScripts.contains(script);
+    disabledScriptsRx.value = isDisabled ? disabledScripts.where((e) => e != script).toFixedList() : [...disabledScripts, script];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+      child: ObxO(
+        rx: disabledScriptsRx,
+        builder: (context, disabledScripts) => Wrap(
+          spacing: 4.0,
+          runSpacing: 4.0,
+          children: RomanizationScript.values
+              .map(
+                (e) => NamidaToggleCard(
+                  title: e.toText(),
+                  active: !disabledScripts.contains(e),
+                  onTap: () => _toggle(e),
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+                ),
+              )
+              .toFixedList(),
+        ),
       ),
     );
   }

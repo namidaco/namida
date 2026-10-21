@@ -39,6 +39,7 @@ import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/romanizer/romanizer_engine.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -3370,5 +3371,17 @@ extension LyricsIntegrationUtils on LyricsIntegration {
     LyricsIntegration.lyricInfo => Broken.mobile,
     LyricsIntegration.superLyric => Broken.status,
     LyricsIntegration.flymeTicker => Broken.notification_status,
+  };
+}
+
+extension RomanizationScriptL10n on RomanizationScript {
+  String toText() => switch (this) {
+    RomanizationScript.japanese => '日本語',
+    RomanizationScript.chinese => '中文',
+    RomanizationScript.korean => '한국어',
+    RomanizationScript.greek => 'Ελληνικά',
+    RomanizationScript.cyrillic => 'Кириллица',
+    RomanizationScript.armenian => 'Հայերեն',
+    RomanizationScript.georgian => 'ქართული',
   };
 }

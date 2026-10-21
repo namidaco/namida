@@ -294,6 +294,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final embeddedLyricsPriority = _keyEnum('embeddedLyricsPriority', EmbeddedLyricsPriority.onlyWhenSynced, EmbeddedLyricsPriority.values);
   late final romanizeLyrics = _key('romanizeLyrics', false);
   late final romanizeSorting = _key('romanizeSorting', false);
+  late final romanizationDisabledScripts = _keyList('romanizationDisabledScripts', const <RomanizationScript>[], item: RomanizationScript.values.asCodec(), isUnique: true);
   late final swipeableDrawer = _key('swipeableDrawer', true);
   late final dismissibleMiniplayer = _key('dismissibleMiniplayer', true);
   late final enableClipboardMonitoring = _key('enableClipboardMonitoring', false, sync: false);

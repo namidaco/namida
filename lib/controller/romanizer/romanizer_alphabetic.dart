@@ -26,15 +26,23 @@ const _alphabeticTable = <int, String>{
 const _greekOmicron = 0x03BF;
 const _greekUpsilon = 0x03C5;
 
-bool _isAlphabeticScript(int c) => (c >= 0x0370 && c <= 0x058F) || (c >= 0x10D0 && c <= 0x10FF);
+int _alphabeticScriptOf(int c) {
+  if (c < 0x0370) return 0;
+  if (c < 0x0400) return RomanizerEngine._greek;
+  if (c < 0x0530) return RomanizerEngine._cyrillic;
+  if (c < 0x0590) return RomanizerEngine._armenian;
+  if (c >= 0x10D0 && c <= 0x10FF) return RomanizerEngine._georgian;
+  return 0;
+}
 
-String _romanizeAlphabetic(String text) {
+String _romanizeAlphabetic(String text, int enabledScripts) {
   final buffer = StringBuffer();
   final length = text.length;
   var previousLower = 0;
   for (var i = 0; i < length; i++) {
     final c = text.codeUnitAt(i);
-    if (!_isAlphabeticScript(c)) {
+    final script = _alphabeticScriptOf(c);
+    if (script & enabledScripts == 0) {
       buffer.writeCharCode(c);
       previousLower = 0;
       continue;
@@ -57,7 +65,7 @@ String _romanizeAlphabetic(String text) {
       buffer.write(romanized);
     } else {
       final next = i + 1 < length ? text.codeUnitAt(i + 1) : 0;
-      final isAllCaps = romanized.length > 1 && _isAlphabeticScript(next) && _alphabeticTable[next] == null;
+      final isAllCaps = romanized.length > 1 && _alphabeticScriptOf(next) != 0 && _alphabeticTable[next] == null;
       buffer.write(isAllCaps ? romanized.toUpperCase() : romanized[0].toUpperCase() + romanized.substring(1));
     }
     previousLower = lower;

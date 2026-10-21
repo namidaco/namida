@@ -338,6 +338,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     embeddedLyricsPriority,
     romanizeLyrics,
     romanizeSorting,
+    romanizationDisabledScripts,
     swipeableDrawer,
     dismissibleMiniplayer,
     enableClipboardMonitoring,

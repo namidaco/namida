@@ -18,7 +18,10 @@ import 'package:namida/core/utils.dart';
 // by claude
 class Romanizer {
   static final inst = Romanizer._();
-  Romanizer._();
+  Romanizer._() {
+    _engine.setDisabledScripts(settings.romanizationDisabledScripts.value);
+    settings.romanizationDisabledScripts.addListener(_onDisabledScriptsChanged);
+  }
 
   // hosted bundle (`ipadic/` + `pinyin.bin`, see scripts/gen_pinyin_table.dart).
   static const _bundleUrl = 'https://files.namida.app/romanization_v1.zip';
@@ -149,6 +152,15 @@ class Romanizer {
     settings.romanizeSorting.save(enabled);
     if (enabled && !isDictionaryInstalled.value && sortingNeedsDictionary) downloadDictionary();
     Indexer.inst.resortAllAfterSortKeysChange();
+  }
+
+  void _onDisabledScriptsChanged() {
+    final changedScripts = _engine.setDisabledScripts(settings.romanizationDisabledScripts.value);
+    if (changedScripts == 0) return;
+    _sortingCache.removeWhere((text, _) => RomanizerEngine.hasAnyScript(text, changedScripts));
+    _refreshLyrics();
+    final isLibraryAffected = SortKey.seenScripts & changedScripts != 0;
+    if (isLibraryAffected) _resortIfSortingEnabled();
   }
 
   void _resortIfSortingEnabled() {
