@@ -45,6 +45,11 @@ abstract class EggHunt {
     collect(NamidaEgg.secretWord);
   }
 
+  static void onAddToPlaylistDialogOpened(int openedDialogsCount) {
+    if (!EggsController.inst.isDeathLoopDepth(openedDialogsCount)) return;
+    collect(NamidaEgg.deathLoop);
+  }
+
   static void announceFound(List<NamidaEgg> eggs) {
     if (eggs.isEmpty) return;
     final names = eggs.map((egg) => egg.toText()).join(', ');
@@ -492,6 +497,7 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.lucky => 'Lucky',
     NamidaEgg.goodnight => 'Goodnight',
     NamidaEgg.twins => 'Twins',
+    NamidaEgg.deathLoop => 'Death loop',
     NamidaEgg.colorful => 'Colorful',
   };
 
@@ -517,6 +523,7 @@ extension _NamidaEggText on NamidaEgg {
     NamidaEgg.lucky => 'sometimes she just feels generous',
     NamidaEgg.goodnight => 'let the sleep timer tuck you in',
     NamidaEgg.twins => 'sync with another device',
+    NamidaEgg.deathLoop => 'playlist in a playlist in a playlist in a pl-',
     NamidaEgg.colorful => 'find every other egg',
   };
 }

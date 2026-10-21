@@ -11,9 +11,14 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/pages/playlists_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/eggs/eggs.dart';
 
-void showAddToPlaylistDialog(List<Track> tracks) {
-  NamidaNavigator.inst.navigateDialog(
+int _openedDialogsCount = 0;
+
+void showAddToPlaylistDialog(List<Track> tracks) async {
+  _openedDialogsCount++;
+  EggHunt.onAddToPlaylistDialogOpened(_openedDialogsCount);
+  await NamidaNavigator.inst.navigateDialog(
     dialog: CustomBlurryDialog(
       horizontalInset: 30.0,
       verticalInset: 30.0,
@@ -84,4 +89,5 @@ void showAddToPlaylistDialog(List<Track> tracks) {
       ),
     ),
   );
+  _openedDialogsCount--;
 }

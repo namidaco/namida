@@ -32,6 +32,7 @@ class EggsController {
   static const _kChipmunkSpeed = 2.0;
   static const _kChipmunkPitch = 1.5;
   static const _kLuckyOneIn = 50;
+  static const _kDeathLoopDepth = 4;
   static const _kSecretWords = {'uwu', 'kechi', 'baka', 'sussy baka'};
   static final _tearsRegex = RegExp('namida|tears|涙|なみだ|ナミダ', caseSensitive: false);
   static final _luckyRandom = math.Random();
@@ -109,6 +110,8 @@ class EggsController {
     final word = text.trim().toLowerCase();
     return _kSecretWords.contains(word);
   }
+
+  bool isDeathLoopDepth(int openedDialogsCount) => openedDialogsCount == _kDeathLoopDepth;
 
   bool unlock(EggUnlockable item) {
     final data = settings.eggs.value;

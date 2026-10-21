@@ -119,6 +119,7 @@ enum NamidaEgg {
   lucky(1),
   goodnight(1),
   twins(1),
+  deathLoop(1),
   colorful(1),
   ;
 
