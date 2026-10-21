@@ -482,6 +482,17 @@ class _ExtrasFlagsOptions extends StatelessWidget {
     );
   }
 
+  static Iterable<NamidaPopupItem> _getExternalFileOpenActionChildren() {
+    return OnExternalFileOpenAction.values.map(
+      (e) => NamidaPopupItem(
+        icon: e.toIcon(),
+        title: e.toText(),
+        selected: e == settings.onExternalFileOpen.value,
+        onTap: () => settings.onExternalFileOpen.save(e),
+      ),
+    );
+  }
+
   static Iterable<NamidaPopupItem> _getSearchTypeChildren([void Function()? onSave]) {
     return SearchType.values.map(
       (e) => NamidaPopupItem(
@@ -752,6 +763,24 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                   onChanged: (isTrue) => settings.askBeforeReplacingQueue.save(!isTrue),
                   title: 'ask_before_replacing_queue'.toUpperCase(),
                   subtitle: 'when playing something else while manually queued items are still pending',
+                ),
+              ),
+              NamidaPopupWrapper(
+                childrenDefault: _getExternalFileOpenActionChildren,
+                child: CustomListTile(
+                  icon: Broken.document_forward,
+                  title: 'on_external_media_file_open'.toUpperCase(),
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: _getExternalFileOpenActionChildren,
+                    child: ObxO(
+                      rx: settings.onExternalFileOpen,
+                      builder: (context, action) => NamidaText(
+                        action.toText(),
+                        style: NText.medium,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ),
                 ),
               ),
               ObxO(

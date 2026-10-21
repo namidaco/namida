@@ -350,6 +350,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     alwaysExpandedSearchbar,
     mixedQueue,
     askBeforeReplacingQueue,
+    onExternalFileOpen,
     bypassRefreshPrompt,
     desktopTitlebar,
     desktopTitlebarType,

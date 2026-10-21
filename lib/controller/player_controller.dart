@@ -953,9 +953,13 @@ class Player {
   bool isCurrentItem(Playable item) {
     final current = _audioHandler.currentItem.value;
     if (current == null) return false;
+    return _isSameItem(item, current);
+  }
+
+  static bool _isSameItem(Playable item, Playable other) {
     final isSame = item.execute(
-      selectable: (finalItem) => current is Selectable && current.track == finalItem.track,
-      youtubeID: (finalItem) => current is YoutubeID && current.id == finalItem.id,
+      selectable: (finalItem) => other is Selectable && other.track == finalItem.track,
+      youtubeID: (finalItem) => other is YoutubeID && other.id == finalItem.id,
     );
     return isSame == true;
   }
@@ -1020,6 +1024,31 @@ class Player {
     }
     final shouldReplace = await _askBeforeReplacingQueue(queueList, index, source, shuffle: false, startPlaying: true, startPosition: null);
     if (shouldReplace) await playOrPause(index, queueList, source, canAskBeforeReplacing: false);
+  }
+
+  /// plays [queue] inside the current queue, a single item that's already in it is skipped to instead of being added again.
+  Future<void> playKeepingQueue(List<Playable> queue, QueueSourceBase source) async {
+    if (queue.isEmpty) return;
+    if (_audioHandler.partyGate != null || currentQueue.value.isEmpty) {
+      await playOrPause(0, queue, source);
+      return;
+    }
+    final currentIndex = this.currentIndex.value;
+    if (queue.length == 1) {
+      final item = queue.first;
+      final existingIndex = currentQueue.value.indexWhere((e) => _isSameItem(item, e));
+      if (existingIndex == currentIndex) {
+        if (!isPlaying.value) await play();
+        return;
+      }
+      if (existingIndex >= 0) {
+        await skipToQueueItem(existingIndex);
+        return;
+      }
+    }
+    _audioHandler.setPlayWhenReady(true);
+    await _audioHandler.insertInQueue(queue, currentIndex);
+    await _audioHandler.userSkipToQueueItem(currentIndex);
   }
 
   Future<void> playOrPause(

@@ -319,6 +319,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final alwaysExpandedSearchbar = _key('alwaysExpandedSearchbar', isKuru ? true : false);
   late final mixedQueue = _key('mixedQueue', false);
   late final askBeforeReplacingQueue = _key('askBeforeReplacingQueue', false);
+  late final onExternalFileOpen = _keyEnum('onExternalFileOpen', OnExternalFileOpenAction.replaceQueue, OnExternalFileOpenAction.values);
   late final bypassRefreshPrompt = _key('bypassRefreshPrompt_v2', false);
   late final desktopTitlebar = _key('desktopTitlebar', true, sync: false);
   late final desktopTitlebarType = _keyEnum('desktopTitlebarType', DesktopTitlebarIconsType.auto, DesktopTitlebarIconsType.values, sync: false);

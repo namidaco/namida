@@ -89,6 +89,7 @@ import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
 import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
 import 'package:namida/youtube/controller/youtube_history_controller.dart';
@@ -947,13 +948,31 @@ class NamidaReceiveIntentManager {
       if (files.isNotEmpty) {
         final paths = <String>[];
         final m3uPaths = <String>{};
+        final textFilesPaths = <String>[];
         final unresolved = <String>[];
+
+        bool addLinks(String text) {
+          bool didAdd = false;
+          for (final e in text.split('\n')) {
+            final parts = e.split('https://');
+            for (int i = 1; i < parts.length; i++) {
+              final line = parts[i].trim();
+              if (line.isEmpty) continue;
+              paths.add("https://$line");
+              didAdd = true;
+            }
+          }
+          return didAdd;
+        }
+
         for (var f in files) {
           final realPath = realPathCallback(f);
           if (realPath != null) {
             final path = Platform.isAndroid ? realPath.replaceAll(r'\', '') : realPath;
             if (NamidaFileExtensionsWrapper.m3u.isPathValid(path)) {
               m3uPaths.add(path);
+            } else if (NamidaFileExtensionsWrapper.txt.isPathValid(path)) {
+              textFilesPaths.add(path);
             } else {
               paths.add(path);
             }
@@ -963,21 +982,29 @@ class NamidaReceiveIntentManager {
               if (value.startsWith('content://') || value.startsWith('file://')) {
                 unresolved.add(value);
               } else {
-                for (final e in value.split('\n')) {
-                  final parts = e.split('https://');
-                  for (int i = 1; i < parts.length; i++) {
-                    final line = parts[i];
-                    if (line.isNotEmpty) paths.add("https://$line");
-                  }
-                }
+                addLinks(value);
               }
             }
           }
         }
 
+        final textFilesWithoutLinks = <String>[];
+        for (final path in textFilesPaths) {
+          String text;
+          try {
+            text = await File(path).readAsString();
+          } catch (_) {
+            unresolved.add(path);
+            continue;
+          }
+          final didAddLinks = addLinks(text);
+          if (!didAddLinks) textFilesWithoutLinks.add(path);
+        }
+
         if (m3uPaths.isNotEmpty) {
           final allTracks = await PlaylistController.inst.readM3UFiles(m3uPaths);
-          final err = await _extractAndPlayExternalFiles(allTracks.map((e) => e.path), dropZone);
+          final action = dropZone?.toExternalFileAction() ?? OnExternalFileOpenAction.replaceQueue;
+          final err = await _extractAndPlayExternalFiles(allTracks.map((e) => e.path), action);
           if (err != null) showErrorPlayingFileSnackbar(error: err);
         } else if (paths.isNotEmpty) {
           final youtubeIds = paths.map((e) {
@@ -989,8 +1016,11 @@ class NamidaReceiveIntentManager {
             return matchPlId;
           }).whereType<String>();
           if (youtubeIds.isNotEmpty) {
-            final youtubeAction = dropZone?.toYoutubeAction() ?? settings.youtube.onYoutubeLinkOpen.value;
-            youtubeAction.execute(youtubeIds);
+            if (dropZone != null) {
+              dropZone.openYoutubeIds(youtubeIds);
+            } else {
+              settings.youtube.onYoutubeLinkOpen.value.execute(youtubeIds);
+            }
           } else if (ytPlaylistsIds.isNotEmpty) {
             for (final plid in ytPlaylistsIds) {
               YTHostedPlaylistSubpage.fromId(playlistId: plid, userPlaylist: null).navigate();
@@ -1009,12 +1039,16 @@ class NamidaReceiveIntentManager {
             if (existing.isEmpty) {
               showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
             } else {
-              final err = await _extractAndPlayExternalFiles(existing, dropZone);
+              final action = dropZone?.toExternalFileAction() ?? settings.onExternalFileOpen.value;
+              final err = await _extractAndPlayExternalFiles(existing, action);
               if (err != null) showErrorPlayingFileSnackbar(error: err);
             }
           }
         } else if (unresolved.isNotEmpty) {
           showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
+        } else if (textFilesWithoutLinks.isNotEmpty) {
+          final pathsText = textFilesWithoutLinks.join(', ');
+          showErrorPlayingFileSnackbar(error: 'No links found: $pathsText');
         }
       }
     });
@@ -1029,16 +1063,22 @@ class NamidaReceiveIntentManager {
     return buffer.toString();
   }
 
-  static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths, _DropZone? dropZone) async {
+  static Future<String?> _extractAndPlayExternalFiles(Iterable<String> paths, OnExternalFileOpenAction action) async {
     try {
       final trs = await Indexer.inst.convertPathsToExternalTracks(paths);
       if (trs.isNotEmpty) {
-        switch (dropZone) {
-          case null || _DropZone.play:
+        switch (action) {
+          case OnExternalFileOpenAction.replaceQueue:
             await Player.inst.playOrPause(0, trs, QueueSource.externalFile);
-          case _DropZone.playLast:
+          case OnExternalFileOpenAction.keepQueue:
+            await Player.inst.playKeepingQueue(trs, QueueSource.externalFile);
+          case OnExternalFileOpenAction.playNext:
+            await Player.inst.addToQueue(trs, insertNext: true);
+          case OnExternalFileOpenAction.playLast:
             await Player.inst.addToQueue(trs);
-          case _DropZone.more:
+          case OnExternalFileOpenAction.alwaysAsk:
+            await Player.inst.playWithOptions(0, trs, QueueSource.externalFile);
+          case OnExternalFileOpenAction.showMenu:
             _showExternalTracksDialog(trs);
         }
         return null;
@@ -1257,7 +1297,7 @@ class _DropZoneBox extends StatelessWidget {
 
 enum _DropZone {
   play(flex: 5),
-  playLast(flex: 2),
+  choose(flex: 2),
   more(flex: 1),
   ;
 
@@ -1293,19 +1333,31 @@ enum _DropZone {
 
   String toText() => switch (this) {
     _DropZone.play => lang.play,
-    _DropZone.playLast => lang.playLast,
+    _DropZone.choose => '${lang.play} (${lang.choose})',
     _DropZone.more => lang.more,
   };
 
   IconData toIcon() => switch (this) {
     _DropZone.play => Broken.play,
-    _DropZone.playLast => Broken.play_cricle,
+    _DropZone.choose => Broken.row_vertical,
     _DropZone.more => Broken.more,
   };
 
-  OnYoutubeLinkOpenAction toYoutubeAction() => switch (this) {
-    _DropZone.play => OnYoutubeLinkOpenAction.play,
-    _DropZone.playLast => OnYoutubeLinkOpenAction.playLast,
-    _DropZone.more => OnYoutubeLinkOpenAction.alwaysAsk,
+  OnExternalFileOpenAction toExternalFileAction() => switch (this) {
+    _DropZone.play => OnExternalFileOpenAction.replaceQueue,
+    _DropZone.choose => OnExternalFileOpenAction.alwaysAsk,
+    _DropZone.more => OnExternalFileOpenAction.showMenu,
   };
+
+  Future<void> openYoutubeIds(Iterable<String> ids) async {
+    switch (this) {
+      case _DropZone.play:
+        await OnYoutubeLinkOpenAction.play.execute(ids);
+      case _DropZone.choose:
+        final videos = ids.map((id) => YoutubeID(id: id, playlistID: null)).toFixedList();
+        await Player.inst.playWithOptions(0, videos, QueueSourceYoutubeID.ytExternalLink);
+      case _DropZone.more:
+        await OnYoutubeLinkOpenAction.alwaysAsk.execute(ids);
+    }
+  }
 }

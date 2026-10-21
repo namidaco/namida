@@ -1076,6 +1076,15 @@ enum OnYoutubeLinkOpenAction {
   alwaysAsk,
 }
 
+enum OnExternalFileOpenAction {
+  replaceQueue,
+  keepQueue,
+  playNext,
+  playLast,
+  alwaysAsk,
+  showMenu,
+}
+
 enum PerformanceMode {
   highPerformance,
   balanced,

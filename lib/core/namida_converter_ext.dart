@@ -2827,6 +2827,26 @@ extension OnYoutubeLinkOpenActionL10n on OnYoutubeLinkOpenAction {
   };
 }
 
+extension OnExternalFileOpenActionL10n on OnExternalFileOpenAction {
+  String toText() => switch (this) {
+    OnExternalFileOpenAction.replaceQueue => '${lang.play} (${lang.replaceQueue})',
+    OnExternalFileOpenAction.keepQueue => '${lang.play} (${lang.keepQueue})',
+    OnExternalFileOpenAction.playNext => lang.playNext,
+    OnExternalFileOpenAction.playLast => lang.playLast,
+    OnExternalFileOpenAction.alwaysAsk => lang.alwaysAsk,
+    OnExternalFileOpenAction.showMenu => lang.more,
+  };
+
+  IconData toIcon() => switch (this) {
+    OnExternalFileOpenAction.replaceQueue => Broken.play,
+    OnExternalFileOpenAction.keepQueue => Broken.additem,
+    OnExternalFileOpenAction.playNext => Broken.next,
+    OnExternalFileOpenAction.playLast => Broken.play_cricle,
+    OnExternalFileOpenAction.alwaysAsk => Broken.message_question,
+    OnExternalFileOpenAction.showMenu => Broken.more,
+  };
+}
+
 extension PerformanceModeL10n on PerformanceMode {
   String toText() => switch (this) {
     PerformanceMode.highPerformance => lang.highPerformance,
