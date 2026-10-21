@@ -1986,7 +1986,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
     );
   }
 
-  final pathsDifference = Indexer.inst.getPathsDifference(currentFiles);
+  final pathsDifference = await Indexer.inst.getPathsDifference(currentFiles);
   final newPaths = pathsDifference.newPaths;
   final modifiedPaths = pathsDifference.modifiedPaths;
   final deletedPath = pathsDifference.deletedPaths;

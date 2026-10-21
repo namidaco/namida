@@ -855,6 +855,7 @@ class AppPaths {
   static final VIDEOS_LOCAL_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'local_videos');
   static final VIDEOS_CACHE_DB_INFO = DbWrapperFileInfo(directory: _USER_DATA, dbName: 'cache_videos');
   static final LATEST_QUEUE = _join(_USER_DATA, 'latest_queue.json');
+  static final TRACKS_FILTERED = _join(_USER_DATA, 'tracks_filtered.json');
 
   // -- obsolete
   static final TRACKS_OLD = _join(_USER_DATA, 'tracks.json');
