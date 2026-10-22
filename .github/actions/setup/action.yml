@@ -1,0 +1,47 @@
+name: Setup
+description: Git credentials, flutter, dependencies and the docs bundle for a build job
+
+inputs:
+  org-token:
+    description: token for github.com/namidaco
+    required: true
+  user-token:
+    description: token for github.com/MSOB7YY
+    required: true
+  install-flutter:
+    description: false when the job installs flutter on its own
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Git credentials
+      shell: bash
+      env:
+        ORG_TOKEN: ${{ inputs.org-token }}
+        USER_TOKEN: ${{ inputs.user-token }}
+      run: |
+        # no insteadOf url tokens, git drops them with curl 8.23+
+        org_auth=$(printf 'x-access-token:%s' "$ORG_TOKEN" | base64 -w0)
+        user_auth=$(printf 'x-access-token:%s' "$USER_TOKEN" | base64 -w0)
+        echo "::add-mask::$org_auth"
+        echo "::add-mask::$user_auth"
+        git config --global http.https://github.com/namidaco/.extraheader "AUTHORIZATION: basic $org_auth"
+        git config --global http.https://github.com/MSOB7YY/.extraheader "AUTHORIZATION: basic $user_auth"
+
+    - name: Install Flutter
+      if: inputs.install-flutter == 'true'
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version-file: pubspec.yaml
+
+    - name: Dependencies
+      shell: bash
+      run: |
+        git submodule update --init --remote --recursive
+        flutter pub upgrade
+
+    - uses: actions/download-artifact@v7
+      with:
+        name: namida-docs
+        path: assets

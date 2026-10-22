@@ -197,11 +197,8 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
+          persist-credentials: false
           fetch-depth: 0 # all history for changelog
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
 
       - name: free disk space
         continue-on-error: true
@@ -250,16 +247,10 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/zig
           sudo rm -rf /opt/hostedtoolcache/azcopy
 
-      - name: setup credentials
-        run: |
-          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
-
-      - name: Setup dependencies
-        run: |
-          flutter clean
-          git submodule update --init --remote --recursive
-          flutter pub upgrade
+      - uses: ./.github/actions/setup
+        with:
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
 
       - uses: actions/setup-java@v5
         with:
@@ -274,11 +265,6 @@ jobs:
       - name: Patch package ID for clone
         if: matrix.is_clone
         run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
-
-      - uses: actions/download-artifact@v7
-        with:
-          name: namida-docs
-          path: assets
 
       - name: Build APKs
         run: |
@@ -320,12 +306,7 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
-
-      - name: Install Flutter (x64)
-        if: matrix.arch == 'x64'
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: pubspec.yaml
+          persist-credentials: false
 
       - name: Install Flutter (arm64)
         if: matrix.arch == 'arm64'
@@ -364,16 +345,11 @@ jobs:
           # Download arm64 engine artifacts (windows-arm64, -release, -profile, -debug)
           C:\flutter\bin\flutter.bat precache --windows
 
-      - name: Setup credentials
-        run: |
-          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
-
-      - name: Setup dependencies
-        run: |
-          flutter clean
-          git submodule update --init --remote --recursive
-          flutter pub upgrade
+      - uses: ./.github/actions/setup
+        with:
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
+          install-flutter: ${{ matrix.arch == 'x64' }}
 
       - name: Rust diagnostics (arm64 only)
         if: matrix.arch == 'arm64'
@@ -383,11 +359,6 @@ jobs:
           rustc --version --verbose
           cargo --version
           rustup target list --installed
-
-      - uses: actions/download-artifact@v7
-        with:
-          name: namida-docs
-          path: assets
 
       - name: Build Windows App
         run: |
@@ -462,14 +433,13 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
+          persist-credentials: false
 
       - name: Fix git ownership
         run: git config --global --add safe.directory /__w/namida/namida
 
-      - name: Setup Git credentials
+      - name: Setup Git user
         run: |
-          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
           # needed for AUR cloning
           git config --global user.name "MSOB7YY"
           git config --global user.email "${{ secrets.EMAIL }}"
@@ -490,30 +460,22 @@ jobs:
           source $HOME/.cargo/env
           rustup show
 
-      - name: Setup Flutter dependencies
-        run: |
-          export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
-          flutter clean
-          git submodule update --init --remote --recursive
-          flutter pub upgrade
+      - uses: ./.github/actions/setup
+        with:
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
+          install-flutter: false
 
       - name: Install fastforge
         run: |
-          export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$PATH"
           dart pub global deactivate fastforge_workspace || true
           dart pub global deactivate fastforge || true
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git
           dart pub global activate --source git https://github.com/MSOB7YY/fastforge.git --git-path "packages/fastforge"
           echo "PATH=$HOME/.pub-cache/bin:$PATH" >> $GITHUB_ENV
 
-      - uses: actions/download-artifact@v7
-        with:
-          name: namida-docs
-          path: assets
-
       - name: Build Linux deb/rpm/tar.gz
         run: |
-          export PATH="/opt/flutter/bin:/opt/dart-sdk/bin:$HOME/.pub-cache/bin:$PATH"
           dart ./scripts/bundle.dart --no-aur
           mkdir -p build_final
           mv ./scripts/bundle_output/* build_final/ || echo "No files to move"
@@ -633,6 +595,7 @@ jobs:
         with:
           token: ${{ secrets.PAT }}
           submodules: recursive
+          persist-credentials: false
 
       - name: Install build dependencies
         run: |
@@ -641,25 +604,10 @@ jobs:
             clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libstdc++-12-dev \
             libmpv-dev libasound2-dev libepoxy-dev libwebkit2gtk-4.1-dev curl
 
-      - uses: subosito/flutter-action@v2
+      - uses: ./.github/actions/setup
         with:
-          flutter-version-file: pubspec.yaml
-
-      - name: Setup credentials
-        run: |
-          git config --global url.https://${{ secrets.PAT_ORG }}@github.com/namidaco/.insteadOf https://github.com/namidaco/
-          git config --global url.https://${{ secrets.PAT }}@github.com/MSOB7YY/.insteadOf https://github.com/MSOB7YY/
-
-      - name: Setup dependencies
-        run: |
-          flutter clean
-          git submodule update --init --remote --recursive
-          flutter pub upgrade
-
-      - uses: actions/download-artifact@v7
-        with:
-          name: namida-docs
-          path: assets
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
 
       - name: Build Linux App
         run: |
