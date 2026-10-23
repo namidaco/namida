@@ -5,7 +5,7 @@ class _NamidaStorageLinux extends NamidaStorage {
 
   @override
   String getUserDataDirectory(List<String> appDataDirectories) {
-    return NamidaPlatformBuilder.linuxNamidaHome ?? appDataDirectories.firstOrNull ?? '';
+    return NamidaPlatformBuilder.unixNamidaHome ?? appDataDirectories.firstOrNull ?? '';
   }
 
   @override
@@ -68,7 +68,7 @@ class _NamidaStorageLinux extends NamidaStorage {
   }) async {
     final all = <String>{};
 
-    final home = NamidaPlatformBuilder.linuxUserHome;
+    final home = NamidaPlatformBuilder.unixUserHome;
     if (home != null) all.add(home);
 
     final lines = LineSplitter.split(res.stdout as String).map((line) => line.trim()).where((line) => line.isNotEmpty);

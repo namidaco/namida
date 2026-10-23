@@ -6,15 +6,19 @@ abstract class NamidaChannel {
   static NamidaChannel _platform() {
     return NamidaPlatformBuilder.init(
       android: _NamidaChannelAndroid._init,
+      ios: _NamidaChannelIOS._init,
       windows: _NamidaChannelWindows._internal,
       linux: _NamidaChannelLinux._internal,
+      macos: _NamidaChannelMacOS._init,
     );
   }
 
   static NamidaAppIcons get defaultAppIconForPlatform => NamidaPlatformBuilder.initValue(
     android: NamidaAppIcons.namida,
+    ios: NamidaAppIcons.namida,
     windows: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
     linux: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
+    macos: NamidaJellys.enabled ? NamidaAppIcons.jellyda : NamidaAppIcons.namida,
   );
   static const defaultLayerIconForPlatform = 'assets/namida.png';
 
@@ -36,26 +40,29 @@ abstract class NamidaChannel {
   bool get canOpenFileInExplorer;
   Future<void>? openFileInExplorer(String filePath, {bool isDirectory = false});
 
-  bool get supportsAppIcons;
-  Future<bool?> isAppIconEnabled(NamidaAppIcons type);
+  bool get supportsAppIcons => false;
+  Future<bool?> isAppIconEnabled(NamidaAppIcons type) async => false;
 
-  Future<void> changeAppIcon(NamidaAppIcons type);
+  Future<void> changeAppIcon(NamidaAppIcons type) async {}
 
-  Future<void> updatePipRatio({int? width, int? height});
+  Future<void> updatePipRatio({int? width, int? height}) async {}
 
-  Future<void> setCanEnterPip(bool canEnter);
+  Future<void> setCanEnterPip(bool canEnter) async {}
 
-  Future<void> showToast({required String message, required SnackDisplayDuration duration});
+  /// an in-app snackbar where the system has no toasts.
+  Future<void> showToast({required String message, required SnackDisplayDuration duration}) async {
+    snackyy(message: message, displayDuration: duration);
+  }
 
-  Future<int> getPlatformSdk();
+  Future<int> getPlatformSdk() async => 1;
 
-  Future<bool> setMonoAudio(bool? enabled);
+  Future<bool> setMonoAudio(bool? enabled) async => false;
 
-  Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types});
+  Future<bool> setMusicAs({required String path, required List<SetMusicAsAction> types}) async => false;
 
-  Future<bool> openSystemEqualizer(int? sessionId, {String? package});
+  Future<bool> openSystemEqualizer(int? sessionId, {String? package}) async => false;
 
-  Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined);
+  Future<bool> openNamidaSync(String backupFolder, String musicFoldersJoined) async => false;
 
   Future<bool> openHomeWidgetSettings() async => false;
 
@@ -78,7 +85,8 @@ abstract class NamidaChannel {
   Future<void> sendBroadcast(String action, Map<String, Object?> extras) async {}
 
   /// null [text] sends a stop. false when the SuperLyric module isn't active.
-  Future<bool> sendSuperLyric({required String? title, required String? artist, required String? album, required String? text, required int startMS, required int endMS}) async => false;
+  Future<bool> sendSuperLyric({required String? title, required String? artist, required String? album, required String? text, required int startMS, required int endMS}) async =>
+      false;
 
   Future<void> releaseSuperLyric() async {}
 
@@ -86,6 +94,20 @@ abstract class NamidaChannel {
   Future<void> setUsbDacHandlerEnabled(bool enabled) async {}
 
   Future<bool> shareFiles(List<String> paths) async => false;
+
+  /// files and links the system opened namida with, ex: "open in" or an oauth redirect. file urls arrive as paths.
+  /// android & desktop get them through intents and launch args instead.
+  Future<void> listenOpenedUrls(void Function(List<String> items) onItems) async {}
+
+  /// ios resamples to the audio session rate, matching it to the source keeps the output bit-perfect.
+  Future<void> setPreferredSampleRate(int sampleRate) async {}
+
+  /// ios suspends the app shortly after leaving it unless audio plays, this asks for the time to finish ongoing work.
+  /// sent again for every new batch the user starts, it renews what the system let expire.
+  Future<void> setKeepRunningInBackground(bool keepRunning) async {}
+
+  /// progress shown by ios for the work kept running by [setKeepRunningInBackground].
+  Future<void> updateBackgroundWorkProgress({required int progress, required int totalProgress, required int itemsCount}) async {}
 
   Future<void> logPreviousAbnormalExits() async {}
 

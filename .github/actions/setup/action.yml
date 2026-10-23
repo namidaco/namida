@@ -11,6 +11,9 @@ inputs:
   install-flutter:
     description: false when the job installs flutter on its own
     default: "true"
+  with-docs:
+    description: false for builds without the offline docs (no bundle_docs job in the run), the app opens them online
+    default: "true"
 
 runs:
   using: composite
@@ -22,8 +25,9 @@ runs:
         USER_TOKEN: ${{ inputs.user-token }}
       run: |
         # no insteadOf url tokens, git drops them with curl 8.23+
-        org_auth=$(printf 'x-access-token:%s' "$ORG_TOKEN" | base64 -w0)
-        user_auth=$(printf 'x-access-token:%s' "$USER_TOKEN" | base64 -w0)
+        # -- no -w0, macos' base64 doesn't have it
+        org_auth=$(printf 'x-access-token:%s' "$ORG_TOKEN" | base64 | tr -d '\n')
+        user_auth=$(printf 'x-access-token:%s' "$USER_TOKEN" | base64 | tr -d '\n')
         echo "::add-mask::$org_auth"
         echo "::add-mask::$user_auth"
         git config --global http.https://github.com/namidaco/.extraheader "AUTHORIZATION: basic $org_auth"
@@ -42,6 +46,7 @@ runs:
         flutter pub upgrade
 
     - uses: actions/download-artifact@v7
+      if: inputs.with-docs == 'true'
       with:
         name: namida-docs
         path: assets

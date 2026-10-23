@@ -12,6 +12,6 @@ import 'package:namida/class/media_info.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/extensions.dart';
 
-part 'ffmpeg_executer_android.dart';
 part 'ffmpeg_executer_base.dart';
 part 'ffmpeg_executer_desktop.dart';
+part 'ffmpeg_executer_mobile.dart';

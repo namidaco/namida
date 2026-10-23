@@ -10,6 +10,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
+import 'package:namida/controller/platform/window_manager/window_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -565,10 +566,13 @@ class NamidaDesktopAppBar extends StatefulWidget {
 }
 
 class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowListener {
+  static const _kNativeWindowButtonsWidth = 72.0;
+
   @override
   void initState() {
     windowManager.addListener(this);
     super.initState();
+    if (NamidaWindowManager.usesNativeWindowButtons) windowManager.isFullScreen().then(_onFullScreenChanged);
   }
 
   @override
@@ -592,6 +596,20 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     // setState(() {});
   }
 
+  /// the traffic lights hide in fullscreen, their space goes with them.
+  bool _isFullScreen = false;
+
+  @override
+  void onWindowEnterFullScreen() => _onFullScreenChanged(true);
+
+  @override
+  void onWindowLeaveFullScreen() => _onFullScreenChanged(false);
+
+  void _onFullScreenChanged(bool isFullScreen) {
+    if (!NamidaWindowManager.usesNativeWindowButtons || !mounted) return;
+    setState(() => _isFullScreen = isFullScreen);
+  }
+
   @override
   Widget build(BuildContext context) {
     const title = 'Namida';
@@ -609,7 +627,9 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
     const logoImgPath = NamidaChannel.defaultLayerIconForPlatform;
     final logoBgColor = isDarkMode ? const Color(0x40262729) : const Color(0x063c3f46);
 
-    final buttonsRow = Platform.isWindows
+    final Widget? buttonsRow = NamidaWindowManager.usesNativeWindowButtons
+        ? null
+        : Platform.isWindows
         ? Row(
             mainAxisAlignment: MainAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -715,7 +735,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onPanStart: (_) => windowManager.startDragging(),
-                onSecondaryTap: windowManager.popUpWindowMenu,
+                onSecondaryTap: NamidaWindowManager.hasTitleBarWindowMenu ? windowManager.popUpWindowMenu : null,
                 onDoubleTap: () async {
                   bool isMaximized = await windowManager.isMaximized();
                   if (!isMaximized) {
@@ -736,6 +756,10 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        if (NamidaWindowManager.usesNativeWindowButtons && !_isFullScreen)
+                          const SizedBox(
+                            width: _kNativeWindowButtonsWidth,
+                          ),
                         Flexible(
                           child: GestureDetector(
                             behavior: HitTestBehavior.translucent,
@@ -857,7 +881,7 @@ class NamidaDesktopAppBarState extends State<NamidaDesktopAppBar> with WindowLis
                     ),
                   ),
                 ),
-                buttonsRow,
+                ?buttonsRow,
               ],
             ),
             // -- juust slight dim

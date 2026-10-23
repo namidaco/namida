@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/shortcuts_manager/shortcuts_manager.dart';
+import 'package:namida/core/extensions.dart';
 
 class ShortcutKeyData {
   final LogicalKeyboardKey? key;
@@ -65,12 +66,14 @@ class ShortcutKeyData {
     LogicalKeyboardKey.numpadAdd: '+', LogicalKeyboardKey.numpadSubtract: '-', //
   };
 
+  /// apple keyboards print symbols on their modifier keys.
   List<String> buildModifierLabels() {
+    final isAppleKeyboard = HardwareKeyboardUtils.isPrimaryModifierMeta;
     return [
-      if (ctrl) 'Ctrl',
-      if (shift) 'Shift',
+      if (ctrl) isAppleKeyboard ? '⌃' : 'Ctrl',
+      if (shift) isAppleKeyboard ? '⇧' : 'Shift',
       if (meta) '⌘',
-      if (alt) 'Alt',
+      if (alt) isAppleKeyboard ? '⌥' : 'Alt',
     ];
   }
 
@@ -101,18 +104,27 @@ class ShortcutKeyActivator extends SingleActivator {
   final LogicalKeyboardKey key;
   final void Function() callback;
 
-  const ShortcutKeyActivator({
+  /// [control] is the primary modifier, cmd on apple keyboards.
+  /// [isControlLiteral] keeps ctrl there, for keys where cmd belongs to the system (quit, hide, spotlight, app switcher).
+  ShortcutKeyActivator({
     this.action,
     required this.category,
     required this.title,
     required this.key,
-    super.control = false,
+    bool control = false,
+    bool isControlLiteral = false,
     super.shift = false,
-    super.meta = false,
+    bool meta = false,
     super.alt = false,
     super.includeRepeats = false,
     required this.callback,
-  }) : super(key);
+  }) : super(
+         key,
+         control: control && !_isControlMappedToMeta(control, isControlLiteral),
+         meta: meta || _isControlMappedToMeta(control, isControlLiteral),
+       );
+
+  static bool _isControlMappedToMeta(bool control, bool isControlLiteral) => control && !isControlLiteral && HardwareKeyboardUtils.isPrimaryModifierMeta;
 
   /// better alternative to [SingleActivator.accepts]. the main key itself should be matched outside
   bool acceptsMatchedTrigger(KeyEvent event, HardwareKeyboard state) {

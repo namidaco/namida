@@ -18,8 +18,10 @@ class NotificationManager {
   static NotificationManager _platform() {
     return NamidaPlatformBuilder.initValue(
       android: const NotificationManager._(),
+      ios: const _NotificationManagerSuppressed._(),
       windows: const _NotificationManagerSuppressed._(),
       linux: const _NotificationManagerSuppressed._(),
+      macos: const _NotificationManagerSuppressed._(),
     );
   }
 
@@ -38,6 +40,13 @@ class NotificationManager {
   static const _serverCachePayload = 'server_cache';
   static const _serverCacheTag = 'server_cache';
 
+  /// requested once a notification is about to be shown, see [ensurePermissionGranted].
+  static const _darwinInitializationSettings = DarwinInitializationSettings(
+    requestAlertPermission: false,
+    requestBadgePermission: false,
+    requestSoundPermission: false,
+  );
+
   static Future<bool?> init() {
     final didInit = _flutterLocalNotificationsPlugin.initialize(
       settings: InitializationSettings(
@@ -51,6 +60,8 @@ class NotificationManager {
         linux: const LinuxInitializationSettings(
           defaultActionName: 'namidaco.namida.notification',
         ),
+        iOS: _darwinInitializationSettings,
+        macOS: _darwinInitializationSettings,
       ),
       onDidReceiveBackgroundNotificationResponse: _onDidReceiveLocalNotification,
       onDidReceiveNotificationResponse: _onDidReceiveLocalNotification,
@@ -113,6 +124,9 @@ class NotificationManager {
       // payload: payload,
     );
   }
+
+  /// false when [downloadYoutubeNotification] shows nothing, its title & image don't need to be fetched.
+  bool get postsDownloadProgress => true;
 
   void downloadYoutubeNotification({
     required DownloadTaskFilename filenameWrapper,
@@ -367,6 +381,9 @@ class _NotificationManagerSuppressed extends NotificationManager {
   const _NotificationManagerSuppressed._() : super._();
 
   DownloadNotifications get _downloadNotifications => settings.youtube.downloadNotifications.value;
+
+  @override
+  bool get postsDownloadProgress => false;
 
   @override
   void downloadYoutubeNotification({

@@ -32,6 +32,14 @@ class NamidaSyncManagerPage extends StatefulWidget with NamidaRouteWidget {
 }
 
 class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
+  Future<void> _startServer() async {
+    try {
+      await SyncDiscovery.server.startServer();
+    } catch (e) {
+      snackyy(title: lang.error, message: e.toString(), isError: true);
+    }
+  }
+
   final _sizesMap = <SyncDataItem, int>{}.obs;
 
   @override
@@ -203,7 +211,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
               NamidaNavigator.inst.closeDialog();
 
               // -- restart to broadcast the new name
-              if (SyncDiscovery.server.serverWrapper != null) await SyncDiscovery.server.startServer();
+              if (SyncDiscovery.server.serverWrapper != null) await _startServer();
             },
           ),
         ],
@@ -261,7 +269,7 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
                                   deviceName: customDeviceName?.nullifyEmpty() ?? fallbackDeviceNameSnapshot.data,
                                 ) ??
                                 lang.startServerToLetOtherDevicesConnectToThisDevice,
-                            onTap: server.startServer,
+                            onTap: _startServer,
                             trailing: AnimatedShow(
                               isHorizontal: true,
                               show: server.serverWrapper != null,

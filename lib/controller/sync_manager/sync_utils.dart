@@ -196,14 +196,11 @@ class SyncUtils {
   }
 
   static Future<Stream<ServiceEntry>> _queryServers(NetworkInterface? preferredInterface, {void Function(String message)? logger}) {
-    return MDNSClient.query(
-      QueryParams(
-        service: kDefaultServiceType,
-        timeout: const Duration(seconds: 3),
-        networkInterface: preferredInterface,
-        wantUnicastResponse: true, // -- replies come directly to us, bypassing routers that filter multicast
-        logger: logger,
-      ),
+    return LanServiceDiscovery.inst.query(
+      kDefaultServiceType,
+      timeout: const Duration(seconds: 3),
+      networkInterface: preferredInterface,
+      logger: logger,
     );
   }
 

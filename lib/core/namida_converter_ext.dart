@@ -3137,7 +3137,7 @@ extension AudioOutputForcedOffCauseUtils on AudioOutputForcedOffCause {
   bool isAvailable() => switch (this) {
     AudioOutputForcedOffCause.bitPerfect => true,
     AudioOutputForcedOffCause.usbDirect => Platform.isAndroid,
-    AudioOutputForcedOffCause.exclusiveMode => !Platform.isAndroid,
+    AudioOutputForcedOffCause.exclusiveMode => NamidaFeaturesVisibility.showExclusiveMode,
   };
 }
 
@@ -3387,6 +3387,8 @@ extension LyricsIntegrationL10n on LyricsIntegration {
     LyricsIntegration.lyricInfo => 'ColorOS & HyperLyric',
     LyricsIntegration.superLyric => 'SuperLyric',
     LyricsIntegration.flymeTicker => 'Flyme & Lyricon',
+    LyricsIntegration.menuBar => 'macOS menu bar',
+    LyricsIntegration.liveActivity => 'Live Activity',
   };
 }
 
@@ -3395,6 +3397,8 @@ extension LyricsIntegrationUtils on LyricsIntegration {
     LyricsIntegration.lyricInfo => Broken.mobile,
     LyricsIntegration.superLyric => Broken.status,
     LyricsIntegration.flymeTicker => Broken.notification_status,
+    LyricsIntegration.menuBar => Broken.monitor,
+    LyricsIntegration.liveActivity => Broken.lock,
   };
 }
 

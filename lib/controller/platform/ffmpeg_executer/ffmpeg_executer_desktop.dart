@@ -49,11 +49,11 @@ class _FFMPEGExecuterDesktop extends FFMPEGExecuter {
   }
 
   @override
-  Future<bool> supportsWebDAV() async {
+  Future<bool> supportsWebDAV({required bool isHttps}) async {
     final output = await ffprobeExecute([
       "-protocols",
     ]);
-    if (output != null && FFMPEGExecuter.testWebDAVProtocol(output)) return true;
+    if (output != null && FFMPEGExecuter.testWebDAVProtocol(output, isHttps: isHttps)) return true;
     return false;
   }
 

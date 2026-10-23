@@ -97,6 +97,8 @@ class BenchmarkExecutionTimeWithLogger extends BenchmarkExecutionTime {
         android: () => '/storage/emulated/0/Documents/',
         windows: () => Directory.systemTemp.path,
         linux: () => Directory.systemTemp.path,
+        ios: () => Directory.systemTemp.path,
+        macos: () => Directory.systemTemp.path,
       );
 
       final file = FileParts.join(dirPath, filename);

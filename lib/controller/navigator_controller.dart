@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
@@ -716,7 +717,7 @@ class NamidaNavigator {
 
   DateTime _currentBackPressTime = DateTime(0);
   Future<bool> _doubleTapToExit() async {
-    if (isDesktop) return false;
+    if (!Platform.isAndroid) return false;
 
     final now = DateTime.now();
     if (now.difference(_currentBackPressTime) > const Duration(seconds: 2)) {

@@ -5,12 +5,14 @@ import 'package:audio_service/audio_service.dart';
 import 'package:lrc/lrc.dart';
 
 import 'package:namida/base/audio_handler.dart';
+import 'package:namida/controller/home_widget_controller.dart';
 import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
+import 'package:namida/controller/platform/home_widgets/home_widgets.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
-import 'package:namida/core/constants.dart';
+import 'package:namida/controller/tray_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -22,16 +24,24 @@ class LyricsIntegrations {
   static bool get isActive => _instance != null;
 
   /// media items go through here before being published, to get the `lyricInfo` extra when available.
-  static MediaItem prepareMediaItem(MediaItem media) => _instance?._attachLyricInfo(media) ?? media;
+  static MediaItem prepareMediaItem(MediaItem media) {
+    final instance = _instance;
+    if (instance == null) return media;
+    for (final sink in instance._lineSinks) {
+      sink.onMediaItem(media);
+    }
+    return instance._attachLyricInfo(media);
+  }
 
   static void init() {
-    if (!NamidaFeaturesVisibility.showAndroidIntegrations) return;
+    if (LyricsIntegration.valuesForPlatform.isEmpty) return;
     settings.lyricsIntegrations.addListener(_onSettingsChanged);
     _onSettingsChanged(isInit: true);
   }
 
   static void _onSettingsChanged({bool isInit = false}) {
-    final enabled = settings.lyricsIntegrations.value;
+    // -- a backup or sync from another platform can bring integrations that don't exist here
+    final enabled = settings.lyricsIntegrations.value.where((e) => e.isForCurrentPlatform).toSet();
     final current = _instance;
     if (enabled.isEmpty) {
       current?._dispose();
@@ -51,11 +61,13 @@ class LyricsIntegrations {
   LyricsIntegrations._() {
     Lyrics.inst.currentLyricsLRC.addListener(_onLyricsChanged);
     settings.visualDelayMS.addListener(_onLyricsChanged);
+    Player.inst.currentItem.addListener(_onCurrentItemChanged);
   }
 
   void _dispose() {
     Lyrics.inst.currentLyricsLRC.removeListener(_onLyricsChanged);
     settings.visualDelayMS.removeListener(_onLyricsChanged);
+    Player.inst.currentItem.removeListener(_onCurrentItemChanged);
     for (final sink in _lineSinks) {
       sink.dispose();
     }
@@ -118,10 +130,21 @@ class LyricsIntegrations {
     LyricsIntegration.lyricInfo => null,
     LyricsIntegration.superLyric => const _SuperLyricSink(),
     LyricsIntegration.flymeTicker => const _FlymeTickerSink(),
+    LyricsIntegration.menuBar => const _MenuBarSink(),
+    LyricsIntegration.liveActivity => _LiveActivitySink(),
   };
+
+  /// published items come through [prepareMediaItem], only the queue being cleared needs telling.
+  void _onCurrentItemChanged() {
+    if (Player.inst.currentItem.value != null) return;
+    for (final sink in _lineSinks) {
+      sink.onMediaCleared();
+    }
+  }
 
   void _dropLineSink(_LyricsLineSink sink) {
     if (!_lineSinks.remove(sink)) return;
+    sink.dispose();
     _refreshPositionListening();
   }
 
@@ -244,6 +267,11 @@ abstract class _LyricsLineSink {
   /// null [text] clears. resolves to false when the target isn't available on this system.
   Future<bool> send(MediaItem? media, String? text, int startMS, int endMS);
 
+  /// every media item published, including tracks without lyrics.
+  void onMediaItem(MediaItem media) {}
+
+  void onMediaCleared() {}
+
   void dispose();
 }
 
@@ -286,6 +314,101 @@ class _FlymeTickerSink extends _LyricsLineSink {
   @override
   void dispose() {
     AudioService.setNotificationTicker(null);
+  }
+}
+
+/// the lock screen & dynamic island keep showing the playing item, the line follows the lyrics.
+/// started by playback only, a paused item restored at launch stays off the lock screen.
+class _LiveActivitySink extends _LyricsLineSink {
+  _LiveActivitySink() {
+    Player.inst.playWhenReady.addListener(_onPlayWhenReadyChanged);
+    _onPlayWhenReadyChanged();
+  }
+
+  String? _shownTitle;
+  String? _shownArtist;
+
+  /// kept across items, the next item's lyrics can be loaded before the item itself is published.
+  String? _line;
+
+  @override
+  LyricsIntegration get type => LyricsIntegration.liveActivity;
+
+  @override
+  Future<bool> send(MediaItem? media, String? text, int startMS, int endMS) async {
+    final widgets = HomeWidgetController.instance;
+    if (widgets == null) return false;
+    _line = text;
+    if (media == null) {
+      await _end(widgets);
+      return true;
+    }
+    return _show(widgets, media);
+  }
+
+  void _onPlayWhenReadyChanged() {
+    if (_shownTitle != null || !Player.inst.playWhenReady.value) return;
+    final media = Player.inst.currentMediaItem;
+    if (media != null) onMediaItem(media);
+  }
+
+  @override
+  void onMediaCleared() {
+    final widgets = HomeWidgetController.instance;
+    if (widgets != null) _end(widgets);
+  }
+
+  /// also catches the same item republished with its info, ex: a youtube video whose title arrives later.
+  @override
+  void onMediaItem(MediaItem media) {
+    if (media.title == _shownTitle && media.artist == _shownArtist) return;
+    final widgets = HomeWidgetController.instance;
+    if (widgets != null) _show(widgets, media);
+  }
+
+  Future<bool> _show(HomeWidgets widgets, MediaItem media) async {
+    // -- a late publish or line after the queue was cleared
+    if (Player.inst.currentItem.value == null) return true;
+    final isShown = _shownTitle != null;
+    if (!isShown && !Player.inst.playWhenReady.value) return true;
+    final title = media.title;
+    final artist = media.artist;
+    _shownTitle = title;
+    _shownArtist = artist;
+    return widgets.updateLiveActivity(title: title, artist: artist, line: _line);
+  }
+
+  Future<void> _end(HomeWidgets widgets) {
+    _shownTitle = null;
+    _shownArtist = null;
+    _line = null;
+    return widgets.endLiveActivity();
+  }
+
+  @override
+  void dispose() {
+    Player.inst.playWhenReady.removeListener(_onPlayWhenReadyChanged);
+    HomeWidgetController.instance?.endLiveActivity();
+  }
+}
+
+class _MenuBarSink extends _LyricsLineSink {
+  const _MenuBarSink();
+
+  @override
+  LyricsIntegration get type => LyricsIntegration.menuBar;
+
+  @override
+  Future<bool> send(MediaItem? media, String? text, int startMS, int endMS) async {
+    final tray = TrayController.instance;
+    if (tray == null) return false;
+    await tray.setLyricsLine(text);
+    return true;
+  }
+
+  @override
+  void dispose() {
+    TrayController.instance?.setLyricsLine(null);
   }
 }
 

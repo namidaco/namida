@@ -37,7 +37,7 @@ class OfflineDocs {
     }
 
     final localUrl = server.toLocalUrl(link);
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isIOS) {
       NamidaNavigator.inst.navigateToRoot(
         _OfflineDocsPage(url: localUrl),
         transition: Transition.native,

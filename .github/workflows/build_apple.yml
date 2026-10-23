@@ -1,0 +1,214 @@
+name: build_apple
+
+# macOS (dmg + zip) and iOS (ipa for sideloading) builds, with the ffmpeg binaries & frameworks committed in external/ffmpeg_build.
+#   run by hand: builds only, the files are attached to the run as artifacts.
+#   called by release_beta: the files are also uploaded to its release, and the ios job updates the AltStore source.
+on:
+  workflow_dispatch:
+    inputs:
+      macos:
+        type: boolean
+        default: true
+      ios:
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      macos:
+        type: boolean
+        default: true
+      ios:
+        type: boolean
+        default: true
+      is_beta:
+        type: boolean
+        default: true
+      version_name:
+        description: names the files, empty reads it from pubspec.yaml
+        type: string
+        default: ""
+      with_docs:
+        description: bundles the offline docs, needs a bundle_docs job in the calling run
+        type: boolean
+        default: false
+      release_repo:
+        description: repository of the release to upload to, empty uploads nothing
+        type: string
+        default: ""
+      release_tag:
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build_macos:
+    if: ${{ inputs.macos }}
+    runs-on: macos-26
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup_apple
+        id: setup
+        with:
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
+          with-docs: ${{ inputs.with_docs && 'true' || 'false' }}
+          version-name: ${{ inputs.version_name }}
+
+      - name: Build macOS App
+        run: flutter build macos --release
+
+      - name: Package dmg & zip
+        env:
+          NAME: Namida-macos-universal-${{ steps.setup.outputs.version-name }}
+        run: |
+          APP="build/macos/Build/Products/Release/Namida.app"
+          DMG="build_final/$NAME.dmg"
+          # -- the build only warns when external/ffmpeg_build/macos lacks them, a release can't go out without
+          for bin in ffmpeg ffprobe; do
+            if [ ! -x "$APP/Contents/Helpers/$bin" ]; then
+              echo "::error::$bin is missing from the app, commit external/ffmpeg_build/macos first"
+              exit 1
+            fi
+          done
+          mkdir -p build_final dmg_stage
+          cp -R "$APP" dmg_stage/
+          ln -s /Applications dmg_stage/Applications
+          # -- hdiutil fails now and then with "Resource busy" on the runners
+          for attempt in 1 2 3; do
+            hdiutil create -volname Namida -srcfolder dmg_stage -ov -format ULMO "$DMG" && break
+            if [ "$attempt" = 3 ]; then exit 1; fi
+            sleep 10
+          done
+          ditto -c -k --keepParent "$APP" "build_final/$NAME.zip"
+          ls -la build_final
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: namida-macos
+          path: build_final/*
+          retention-days: 7
+
+      - name: Upload to release
+        if: ${{ inputs.release_tag }}
+        uses: softprops/action-gh-release@v3
+        with:
+          repository: ${{ inputs.release_repo }}
+          make_latest: true
+          draft: ${{ !inputs.is_beta }}
+          tag_name: ${{ inputs.release_tag }}
+          files: |
+            build_final/*
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+
+  build_ios:
+    if: ${{ inputs.ios }}
+    runs-on: macos-26
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.PAT }}
+          submodules: recursive
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup_apple
+        id: setup
+        with:
+          org-token: ${{ secrets.PAT_ORG }}
+          user-token: ${{ secrets.PAT }}
+          with-docs: ${{ inputs.with_docs && 'true' || 'false' }}
+          version-name: ${{ inputs.version_name }}
+
+      # -- the widget extension can't take the app down with it: when every compiler error is in widget code, the app is
+      # -- built again without the extension (ios/scripts/remove_widget_extension.rb), any other failure fails the job
+      - name: Build iOS App
+        env:
+          BUILD_LOG: ${{ runner.temp }}/build_ios.log
+          WIDGET_SOURCES: '/ios/(NamidaWidgets/|Shared/NamidaWidgetsShared\.swift|Runner/NamidaWidgetsPlugin\.swift)'
+        run: |
+          set -o pipefail
+          if flutter build ios --release --no-codesign 2>&1 | tee "$BUILD_LOG"; then
+            exit 0
+          fi
+          ERROR_LINES=$(grep -E '^[[:space:]]*/[^ :]+:[0-9]+(:[0-9]+)?(: (fatal )?error:.*)?$' "$BUILD_LOG" || true)
+          ERROR_FILES=$(sed -E 's/^[[:space:]]*([^:]+):.*/\1/' <<< "$ERROR_LINES" | sort -u)
+          OTHER_ERROR_FILES=$(grep -vE "$WIDGET_SOURCES" <<< "$ERROR_FILES" || true)
+          if [ -z "$ERROR_FILES" ] || [ -n "$OTHER_ERROR_FILES" ]; then
+            exit 1
+          fi
+          WIDGET_ERROR_FILES=$(sed "s|^$GITHUB_WORKSPACE/||" <<< "$ERROR_FILES" | paste -sd' ' -)
+          echo "::warning title=iOS widgets::the widget extension failed to build ($WIDGET_ERROR_FILES), this ipa ships without widgets, live activities & controls"
+          ruby ios/scripts/remove_widget_extension.rb
+          # -- the failed build may have embedded the extension already
+          rm -rf build/ios/Release-iphoneos/Runner.app build/ios/iphoneos/Runner.app
+          flutter build ios --release --no-codesign
+
+      # -- sideloading tools keep the entitlements they find in the signature, an unsigned app would lose its app group
+      - name: Package ipa
+        env:
+          IPA_NAME: Namida-ios-${{ steps.setup.outputs.version-name }}.ipa
+        run: |
+          APP="build/ios/iphoneos/Runner.app"
+          WIDGETS="$APP/PlugIns/NamidaWidgets.appex"
+          find "$APP/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -exec codesign --force --sign - --timestamp=none {} +
+          if [ -d "$WIDGETS" ]; then
+            codesign --force --sign - --timestamp=none --entitlements ios/NamidaWidgets/NamidaWidgets.entitlements "$WIDGETS"
+          fi
+          codesign --force --sign - --timestamp=none --entitlements ios/Runner/Runner.entitlements "$APP"
+          mkdir -p build_final Payload
+          cp -R "$APP" Payload/
+          zip -qry "build_final/$IPA_NAME" Payload
+          echo "IPA_NAME=$IPA_NAME" >> "$GITHUB_ENV"
+          ls -la build_final
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: namida-ios
+          path: build_final/*
+          retention-days: 7
+
+      - name: Upload to release
+        if: ${{ inputs.release_tag }}
+        uses: softprops/action-gh-release@v3
+        with:
+          repository: ${{ inputs.release_repo }}
+          make_latest: true
+          draft: ${{ !inputs.is_beta }}
+          tag_name: ${{ inputs.release_tag }}
+          files: |
+            build_final/*
+          token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+
+      # -- users add https://<owner>.github.io/<repo>/altstore-source.json to SideStore / AltStore, served from the gh-pages
+      # -- branch of the release repo. Written only here, after the ipa is up, so a release without ios keeps the last one
+      - name: Publish AltStore source
+        if: ${{ inputs.release_tag }}
+        env:
+          GH_TOKEN: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+          RELEASE_REPO: ${{ inputs.release_repo }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          TAG_ENCODED=$(python3 -c "import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=''))" "$RELEASE_TAG")
+          DOWNLOAD_URL="https://github.com/$RELEASE_REPO/releases/download/$TAG_ENCODED/$IPA_NAME"
+          python3 scripts/gen_altstore_source.py --app Payload/Runner.app --ipa "build_final/$IPA_NAME" --download-url "$DOWNLOAD_URL" --out altstore-source.json
+          # -- the first publish creates the branch, pages still has to be enabled on it once in the repo settings
+          if ! gh api "repos/$RELEASE_REPO/branches/gh-pages" --silent 2>/dev/null; then
+            PAGES_TREE=$(gh api -X POST "repos/$RELEASE_REPO/git/trees" -f 'tree[][path]=.nojekyll' -f 'tree[][mode]=100644' -f 'tree[][type]=blob' -f 'tree[][content]=namida' --jq .sha)
+            PAGES_COMMIT=$(gh api -X POST "repos/$RELEASE_REPO/git/commits" -f message="gh-pages" -f tree="$PAGES_TREE" --jq .sha)
+            gh api -X POST "repos/$RELEASE_REPO/git/refs" -f ref=refs/heads/gh-pages -f sha="$PAGES_COMMIT" --silent
+            echo "::notice::created gh-pages in $RELEASE_REPO, enable pages for it in the repo settings (Pages > Deploy from a branch > gh-pages / root)"
+          fi
+          SOURCE_API="repos/$RELEASE_REPO/contents/altstore-source.json"
+          SOURCE_CONTENT=$(base64 < altstore-source.json | tr -d '\n')
+          PUBLISHED_SHA=$(gh api "$SOURCE_API?ref=gh-pages" --jq .sha 2>/dev/null) || PUBLISHED_SHA=""
+          REPLACE_ARGS=()
+          if [ -n "$PUBLISHED_SHA" ]; then REPLACE_ARGS=(-f "sha=$PUBLISHED_SHA"); fi
+          gh api -X PUT "$SOURCE_API" -f branch=gh-pages -f message="altstore source for $RELEASE_TAG" -f content="$SOURCE_CONTENT" "${REPLACE_ARGS[@]}" --silent

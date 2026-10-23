@@ -27,7 +27,8 @@ class NamidaFFMPEG {
   NamidaFFMPEG._internal();
 
   static Future<void> configure() async {
-    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
+    // -- ffmpeg-kit runs in process on mobile, desktop spawns the bundled binaries
+    if (Platform.isAndroid || Platform.isIOS) {
       await [
         FFmpegKitConfig.disableLogs(),
         FFmpegKitConfig.setSessionHistorySize(900),
@@ -37,7 +38,7 @@ class NamidaFFMPEG {
 
   final _executer = FFMPEGExecuter.platform()..init();
 
-  Future<bool> supportsWebDAV() => _executer.supportsWebDAV();
+  Future<bool> supportsWebDAV({required bool isHttps}) => _executer.supportsWebDAV(isHttps: isHttps);
   Future<bool> supportsSMB() => _executer.supportsSMB();
 
   final currentOperations = <OperationType, Rx<OperationProgress>>{

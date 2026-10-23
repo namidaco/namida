@@ -1686,6 +1686,7 @@ class _ScanFolderTile extends StatelessWidget {
             onTap: () {
               settings.directoriesToScan.update((list) => list.remove(dir));
               if (dir is DirectoryIndexServer) MusicWebServerAuthDetails.manager.deleteFromDb(dir);
+              if (dir.type == DirectoryIndexType.local) NamidaStorage.inst.releaseLibraryDirectory(dir.sourceRaw).ignoreError();
               NamidaNavigator.inst.closeDialog();
               host._maybeShowRefreshPromptDialog(true);
             },

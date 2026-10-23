@@ -13,6 +13,8 @@ void main() {
       title: () => '',
       key: key,
       control: control,
+      // -- these cases are about the ctrl key itself, a mac host would map it to cmd
+      isControlLiteral: true,
       alt: alt,
       shift: shift,
       callback: () {},

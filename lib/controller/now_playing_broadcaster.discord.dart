@@ -86,8 +86,11 @@ abstract class _DiscordPresenceTransport {
 
   const _DiscordPresenceTransport({required this.supportsImageUrls});
 
+  /// mobile has no discord client to talk to, the gateway session logs in on its own.
+  static final usesGateway = Platform.isAndroid || Platform.isIOS;
+
   static _DiscordPresenceTransport platform() {
-    if (Platform.isAndroid) return _DiscordGatewayTransport();
+    if (usesGateway) return _DiscordGatewayTransport();
     return _DiscordIpcTransport();
   }
 

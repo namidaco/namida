@@ -375,6 +375,9 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     );
   }
 
+  /// files linked playlists are kept in sync with, they can live outside the library folders.
+  Set<String> getLinkedM3UPaths() => _m3uProperties.getSavedPaths();
+
   Future<void> prepareAllPlaylists() async {
     await Future.wait([
       super.prepareAllPlaylistsFile(),

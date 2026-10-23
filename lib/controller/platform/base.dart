@@ -72,6 +72,10 @@ class NamidaPlatformBuilder {
           return p.join(processDir, 'bin');
         }
       },
+      macos: () {
+        final processDir = p.dirname(Platform.resolvedExecutable);
+        return p.normalize(p.join(processDir, '..', 'Helpers'));
+      },
     );
   }
 
@@ -80,6 +84,7 @@ class NamidaPlatformBuilder {
       android: '',
       windows: '$name.exe',
       linux: name,
+      macos: name,
     );
 
     final fullPathBundled = p.join(executablesDirPath, exeName);
@@ -105,7 +110,9 @@ class NamidaPlatformBuilder {
             resolvedSystemPath = name;
           }
         }
-      } else if (Platform.isLinux || Platform.isMacOS) {
+      } else if (Platform.isMacOS) {
+        resolvedSystemPath = _findMacOSSystemExecutable(name);
+      } else if (Platform.isLinux) {
         final result = Process.runSync('which', [name]);
         if (result.exitCode == 0) {
           try {
@@ -126,11 +133,25 @@ class NamidaPlatformBuilder {
     return fullPathBundled; // could be non-existent atp
   }
 
+  /// apps opened from finder get a minimal PATH, without the folders package managers install into.
+  static String? _findMacOSSystemExecutable(String name) {
+    final pathVariable = Platform.environment['PATH'];
+    final pathDirectories = pathVariable?.split(':') ?? const <String>[];
+    for (final directory in [...pathDirectories, ..._kMacOSPackageManagersBinDirectories]) {
+      final path = p.join(directory, name);
+      if (File(path).existsSync()) return path;
+    }
+    return null;
+  }
+
+  /// homebrew on apple silicon, homebrew on intel, macports.
+  static const _kMacOSPackageManagersBinDirectories = ['/opt/homebrew/bin', '/usr/local/bin', '/opt/local/bin'];
+
   static bool _testFFmpegBuildIfHasBetterSupport(String path) {
     try {
       final res = Process.runSync(path, ['-protocols']);
       final output = res.stdout as String;
-      return FFMPEGExecuter.testWebDAVProtocol(output) || FFMPEGExecuter.testSMBProtocol(output);
+      return FFMPEGExecuter.testWebDAVProtocol(output, isHttps: false) || FFMPEGExecuter.testSMBProtocol(output);
     } catch (_) {
       return false;
     }
@@ -163,9 +184,9 @@ class NamidaPlatformBuilder {
 
   static final String linuxAppId = Platform.environment['FLATPAK_ID'] ?? 'com.msob7y.namida';
 
-  static String? get linuxUserHome => Platform.environment['HOME'] ?? Platform.environment['XDG_DATA_HOME'];
-  static String? get linuxNamidaHome {
-    final home = linuxUserHome;
+  static String? get unixUserHome => Platform.environment['HOME'] ?? Platform.environment['XDG_DATA_HOME'];
+  static String? get unixNamidaHome {
+    final home = unixUserHome;
     if (home == null) return null;
     return FileParts.joinPath(home, '.namida');
   }

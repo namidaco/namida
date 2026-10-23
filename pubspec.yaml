@@ -117,6 +117,7 @@ dependencies:
   namico_db_wrapper:
     git:
       url: https://github.com/namidaco/namico_db_wrapper
+  sqlite3: ^3.5.0
   flutter_native_splash: ^2.4.8
 
   # ---- Web Servers ----
@@ -142,6 +143,7 @@ dependencies:
       url: https://github.com/MSOB7YY/audio_service
       path: audio_service/
       ref: minor
+  audio_session: ^0.2.0
   media_kit:
     git:
       url: https://github.com/media-kit/media-kit
@@ -149,6 +151,10 @@ dependencies:
   media_kit_video: ^2.0.1
   media_kit_libs_linux: ^1.2.1
   media_kit_libs_macos_video: ^1.1.4
+  media_kit_libs_ios_video: # -- 1.1.5 (libmpv 0.7.2) lets namida own the ios audio session
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: libs/ios/media_kit_libs_ios_video
   media_kit_libs_windows_video: ^1.0.11
   http_cache_stream: ^0.2.0
   namida_waveform:
@@ -271,6 +277,8 @@ hooks:
     # - Android: ignored, links ffmpeg-kit's FFmpeg.
     namida_waveform:
       prebuilt_dir: external/ffmpeg_build
+      # -- iOS links the ffmpeg-kit frameworks built by external/ffmpeg_build/build_ios_ffmpegkit.sh
+      ffmpeg_kit_ios_dir: external/ffmpeg_build/ios/ffmpeg-kit
 
 flutter_native_splash:
   image: assets/namida_icon.png

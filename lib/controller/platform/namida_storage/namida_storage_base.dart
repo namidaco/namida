@@ -8,8 +8,10 @@ abstract class NamidaStorage {
   static NamidaStorage _platform() {
     return NamidaPlatformBuilder.init(
       android: _NamidaStorageAndroid._init,
+      ios: _NamidaStorageIOS._init,
       windows: () => isWindowsPortable ? _NamidaStorageWindowsPortable() : const _NamidaStorageWindowsInstallation(),
       linux: () => const _NamidaStorageLinux(),
+      macos: () => const _NamidaStorageMacOS(),
     );
   }
 
@@ -34,6 +36,36 @@ abstract class NamidaStorage {
   });
 
   Future<String?> pickDirectory({String? note, String? initialDirectory});
+
+  /// runs once the user data folders exist, before anything reads them. ex: rewrites stored paths whose folder moved since the last launch.
+  Future<void> prepareUserData() async {}
+
+  /// written next to a backup's entries, tells [prepareRestoredUserData] where the backed up paths lived.
+  Future<File?> writeBackupStorageOrigin(String directoryPath) async => null;
+
+  /// runs on restored user data before it's merged in. ex: rewrites the paths of the container the backup was made in.
+  Future<void> prepareRestoredUserData(String directoryPath) async {}
+
+  /// once settings are ready: keeps the library folders downloaded.
+  Future<void> initPickedDirectories() async {}
+
+  /// a folder the user removed from the library, its access goes unless something else still points into it.
+  Future<void> releaseLibraryDirectory(String path) async {}
+
+  @visibleForTesting
+  static String? debugRewriteMovedPaths(String text, Map<String, String> moves) {
+    final migrator = _StoragePathsMigrator.create(moves);
+    return migrator?.rewriteText(text);
+  }
+
+  @visibleForTesting
+  static ({int changedCount, List<String> failedFiles}) debugMigrateMovedPaths(String directoryPath, Map<String, String> moves, {Set<String> skippedDirectories = const {}}) {
+    final migrator = _StoragePathsMigrator.create(moves);
+    final result = migrator?.migrateDirectorySync(directoryPath, skippedDirectories: skippedDirectories);
+    final changedCount = result?.changedCount ?? 0;
+    final failedFiles = result?.failedFiles ?? const <String>[];
+    return (changedCount: changedCount, failedFiles: failedFiles);
+  }
 
   Future<bool> safHasAccess(String path) async => false;
   Future<bool> safRequestAccess(String path, {String? note}) async => false;

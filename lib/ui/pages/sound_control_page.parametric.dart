@@ -1654,23 +1654,24 @@ class _AudioOutputSection extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: Obx(
-            (context) {
-              final selectedKey = settings.player.audioOutputDevice.valueR;
-              final devices = output.devices.valueR;
-              final shown = devices.firstWhereEff((d) => d.key == selectedKey) ?? devices.firstWhereEff((d) => d.isRouted);
-              return CustomListTile(
-                icon: shown?.type.toIcon() ?? Broken.sound,
-                title: lang.outputDevice,
-                subtitle: selectedKey == null ? lang.systemDefault : null,
-                trailingText: shown?.name ?? lang.systemDefault,
-                onTap: _openDevicePicker,
-              );
-            },
+        if (NamidaFeaturesVisibility.showOutputDevicePicker)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+            child: Obx(
+              (context) {
+                final selectedKey = settings.player.audioOutputDevice.valueR;
+                final devices = output.devices.valueR;
+                final shown = devices.firstWhereEff((d) => d.key == selectedKey) ?? devices.firstWhereEff((d) => d.isRouted);
+                return CustomListTile(
+                  icon: shown?.type.toIcon() ?? Broken.sound,
+                  title: lang.outputDevice,
+                  subtitle: selectedKey == null ? lang.systemDefault : null,
+                  trailingText: shown?.name ?? lang.systemDefault,
+                  onTap: _openDevicePicker,
+                );
+              },
+            ),
           ),
-        ),
         const SizedBox(height: 4.0),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -1710,7 +1711,7 @@ class _AudioOutputSection extends StatelessWidget {
                       },
                     ),
                   ),
-                ] else ...[
+                ] else if (NamidaFeaturesVisibility.showExclusiveMode) ...[
                   const SizedBox(width: 8.0),
                   Expanded(
                     child: Obx(

@@ -39,6 +39,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -425,12 +426,16 @@ class YoutubeController {
       }
     }
 
+    final postsProgress = NotificationManager.instance.postsDownloadProgress;
     for (final (videoId, filename) in downloading) {
-      final title = await _notificationData.titleCallback(videoId);
-      final image = await _notificationData.imageCallback(videoId);
-
-      // -- re-checking since it could have finished while awaiting
-      if (isDownloading.value[videoId]?.value[filename] != true) continue;
+      String? title;
+      File? image;
+      if (postsProgress) {
+        title = await _notificationData.titleCallback(videoId);
+        image = await _notificationData.imageCallback(videoId);
+        // -- re-checking since it could have finished while awaiting
+        if (isDownloading.value[videoId]?.value[filename] != true) continue;
+      }
       final progressInfo = progressMaps[videoId]?.value[filename];
       if (progressInfo == null) continue;
 
@@ -450,6 +455,7 @@ class YoutubeController {
         speedsMap[filename] = speedB;
       }
 
+      if (!postsProgress) continue;
       _postProgressNotification(
         videoId: videoId,
         filename: filename,
@@ -522,6 +528,30 @@ class YoutubeController {
   DateTime? _downloadNotificationStartTime;
   final activeRawDownloadsCount = 0.obs;
 
+  /// ios 26 keeps downloads running after leaving the app with a system progress ui, a task that stops reporting is ended.
+  static final _reportsBackgroundWorkProgress = Platform.isIOS;
+
+  void _reportBackgroundWorkProgress() {
+    int progress = 0;
+    int totalProgress = 0;
+    for (final entry in isDownloading.value.entries) {
+      final videoId = entry.key;
+      final audioProgressMap = downloadsAudioProgressMap.value[videoId]?.value;
+      final videoProgressMap = downloadsVideoProgressMap.value[videoId]?.value;
+      for (final filename in entry.value.value.keys) {
+        final progressInfo = audioProgressMap?[filename] ?? videoProgressMap?[filename];
+        if (progressInfo == null) continue;
+        progress += progressInfo.progress;
+        totalProgress += progressInfo.totalProgress;
+      }
+    }
+    NamidaChannel.inst.updateBackgroundWorkProgress(
+      progress: progress,
+      totalProgress: totalProgress,
+      itemsCount: activeRawDownloadsCount.value,
+    );
+  }
+
   void _startNotificationTimer() {
     if (_downloadNotificationTimer != null) return;
     NotificationManager.instance.ensurePermissionGranted();
@@ -538,6 +568,7 @@ class YoutubeController {
     try {
       await _postDownloadingNotifications(isAudio: false);
       await _postDownloadingNotifications(isAudio: true);
+      if (_reportsBackgroundWorkProgress) _reportBackgroundWorkProgress();
     } finally {
       if (activeRawDownloadsCount.value > 0) {
         _scheduleNotificationTick();
@@ -1268,6 +1299,8 @@ class YoutubeController {
       return skip;
     }
 
+    // -- asked here, the user's action, ios only grants the continued work for one. the queue lets go once it's empty
+    if (itemsConfig.isNotEmpty) NamidaChannel.inst.setKeepRunningInBackground(true);
     await Future.wait(
       itemsConfig.map(
         (config) => YoutubeParallelDownloadsHandler.inst.add(

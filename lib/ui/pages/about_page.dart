@@ -577,6 +577,8 @@ class _IssueReporter {
       android: () => 'Android',
       windows: () => 'Windows',
       linux: () => 'Linux',
+      ios: () => 'iOS',
+      macos: () => 'macOS',
     );
     final fields = <String, String>{
       'platforms': platformName,

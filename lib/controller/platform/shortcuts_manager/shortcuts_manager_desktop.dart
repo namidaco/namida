@@ -74,6 +74,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.space,
       control: true,
+      isControlLiteral: true,
       callback: () {
         final isStopping = Player.inst.toggleStopAfterCurrent();
         _showSnack(message: "${lang.stopAfterThisTrack}: ${isStopping ? '✓' : '✗'}");
@@ -100,6 +101,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       category: ShortcutCategory.track,
       key: LogicalKeyboardKey.keyH,
       control: true,
+      isControlLiteral: true,
       callback: () async {
         final currentItem = Player.inst.currentItem.value;
         if (currentItem is YoutubeID && Player.inst.displayFavouriteButtonAsLike) {
@@ -205,6 +207,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       category: ShortcutCategory.others,
       key: LogicalKeyboardKey.keyQ,
       control: true,
+      isControlLiteral: true,
       callback: openPlayerQueue,
       title: () => lang.openQueue,
     ),
@@ -275,6 +278,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
       category: ShortcutCategory.playback,
       key: LogicalKeyboardKey.tab,
       control: true,
+      isControlLiteral: true,
       callback: () {
         final e = Player.inst.cycleRepeatMode();
         _showSnack(
@@ -418,7 +422,7 @@ class _ShortcutsManagerDesktop extends ShortcutsManager {
         trigger == LogicalKeyboardKey.arrowDown;
     if (!isArrow) return false;
 
-    return intent is ScrollIntent && activator.control;
+    return intent is ScrollIntent && (activator.control || activator.meta);
   }
 
   @override

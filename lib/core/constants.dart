@@ -892,8 +892,8 @@ class AppPaths {
       await deviceInfoFile.writeAsString(deviceInfo);
       existingPaths.add(deviceInfoFile);
     } catch (_) {}
-    if (Platform.isLinux) {
-      // -- permissions not supported on linux
+    if (Platform.isLinux || Platform.isMacOS) {
+      // -- permissions not supported on linux & macos
     } else {
       final permissionsInfoFile = FileParts.join(tmpDirPath, 'permissions.txt');
       try {
@@ -981,12 +981,21 @@ class AppPaths {
         if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
         return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
       },
-      linux: () {
-        final home = NamidaPlatformBuilder.linuxNamidaHome;
-        if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
+      linux: _getUnixFallbackLogsFilePath,
+      // -- documents always exists and the files app shows it, the user can still reach it when namida can't open
+      ios: () {
+        final home = NamidaPlatformBuilder.unixUserHome;
+        if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Documents', 'namida_logs.txt');
         return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
       },
+      macos: _getUnixFallbackLogsFilePath,
     );
+  }
+
+  static String _getUnixFallbackLogsFilePath() {
+    final home = NamidaPlatformBuilder.unixNamidaHome;
+    if (home != null && home.isNotEmpty) return FileParts.joinPath(home, 'Logs', 'namida_logs.txt');
+    return FileParts.joinPath(Directory.systemTemp.path, 'namida_logs.txt');
   }
 
   static Future<String> _getPermissionsInfo() async {
@@ -1321,6 +1330,13 @@ class AppDirs {
     YT_DOWNLOAD_TASKS,
     // Internal Storage Directories are created on demand
   ];
+
+  /// rebuilt or redownloaded when missing. artists & albums artworks can be picked by the user,
+  /// youtipie's cache holds what offline youtube history shows.
+  static final List<String> regenerableCaches = [
+    VIDEOS_CACHE, AUDIOS_CACHE, SERVERS_CACHE, THUMBNAILS, YT_THUMBNAILS, YT_THUMBNAILS_CHANNELS, //
+    ARTWORKS, PALETTES, YT_PALETTES, //
+  ];
 }
 
 class AppSocial {
@@ -1602,6 +1618,8 @@ class NamidaFeaturesAvailablityGroup extends NamidaFeaturesAvailablityBase {
 
   const NamidaFeaturesAvailablityGroup({required this.items});
 
+  static const mobile = NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.ios]);
+
   @override
   String get text => items.join(' | ');
 
@@ -1613,8 +1631,10 @@ class NamidaFeaturesAvailablityGroup extends NamidaFeaturesAvailablityBase {
 
 enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
   android('Android'),
+  ios('iOS'),
   windows('Windows'),
   linux('Linux'),
+  macos('macOS'),
   android13and_plus('Android 13+'), // >= 33
   android12and_plus('Android S/12+'), // >= 31
   android12and_below('Android <= 12'), // <= 32
@@ -1631,8 +1651,10 @@ enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
     final isAndroid = NamidaFeaturesVisibility._isAndroid;
     return switch (this) {
       NamidaFeaturesAvailablity.android => isAndroid,
+      NamidaFeaturesAvailablity.ios => NamidaFeaturesVisibility._isIOS,
       NamidaFeaturesAvailablity.windows => NamidaFeaturesVisibility._isWindows,
       NamidaFeaturesAvailablity.linux => NamidaFeaturesVisibility._isLinux,
+      NamidaFeaturesAvailablity.macos => NamidaFeaturesVisibility._isMacOS,
       NamidaFeaturesAvailablity.android13and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 33,
       NamidaFeaturesAvailablity.android12and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 31,
       NamidaFeaturesAvailablity.android12and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 32,
@@ -1645,8 +1667,12 @@ enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
 class NamidaFeaturesVisibility {
   static final _platform = defaultTargetPlatform;
   static final _isAndroid = _platform == TargetPlatform.android;
+  static final _isIOS = _platform == TargetPlatform.iOS;
   static final _isWindows = _platform == TargetPlatform.windows;
   static final _isLinux = _platform == TargetPlatform.linux;
+  static final _isMacOS = _platform == TargetPlatform.macOS;
+  static final _isMobile = _isAndroid || _isIOS;
+  static final _isDesktop = _isWindows || _isLinux || _isMacOS;
 
   static final wallpaperColors = NamidaFeaturesAvailablity.android12and_plus.resolve();
   static final displayArtworkOnLockscreen = NamidaFeaturesAvailablity.android12and_below.resolve();
@@ -1657,11 +1683,11 @@ class NamidaFeaturesVisibility {
   static final showAndroidIntegrations = _isAndroid;
   static final showToggleMediaStore = onAudioQueryAvailable;
   static final showToggleImmersiveMode = _isAndroid;
-  static final showRotateScreenInFullScreen = _isAndroid;
-  static final deviceOrientationSensorAvailable = _isAndroid;
-  static final fullScreenChangesScreenSize = _isAndroid;
-  static final floatingArtworkEffect = _isAndroid;
-  static final mediaWaveHaptic = _isAndroid;
+  static final showRotateScreenInFullScreen = _isMobile;
+  static final deviceOrientationSensorAvailable = _isMobile;
+  static final fullScreenChangesScreenSize = _isMobile;
+  static final floatingArtworkEffect = _isMobile;
+  static final mediaWaveHaptic = _isMobile;
   static const accessibilitySemantics = true;
 
   static final methodSetCanEnterPip = _isAndroid;
@@ -1672,18 +1698,19 @@ class NamidaFeaturesVisibility {
 
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
-  static final changeApplicationBrightness = _isAndroid;
+  static final changeApplicationBrightness = _isMobile;
   static final skipSilenceAvailable = PlayerConfig.isSkipSilenceSupported;
   static final equalizerAvailable = PlayerConfig.isEqualizerSupported;
   static final loudnessEnhancerAvailable = PlayerConfig.isLoudnessEnhancerSupported;
   static final soundEffectsAvailable = _isAndroid;
+  static final showOutputDevicePicker = !_isIOS; // -- ios routes through the system picker only
+  static final showExclusiveMode = _isDesktop;
 
-  static final showDownloadNotifications = _isWindows || _isLinux;
-  static final showDiscordPresence = _isAndroid || _isWindows || _isLinux;
-  static final showVideoControlsOnHover = _isWindows || _isLinux;
-  static final tiltingCardsEffect = _isWindows || _isLinux;
-  static final smoothScrolling = _isWindows || _isLinux;
+  static final showVideoControlsOnHover = _isDesktop;
+  static final tiltingCardsEffect = _isDesktop;
+  static final smoothScrolling = _isDesktop;
 
-  static final isStoragePermissionNotRequired = _isWindows || _isLinux;
-  static final recieveDragAndDrop = _isWindows || _isLinux;
+  static final isStoragePermissionNotRequired = !_isAndroid;
+  static final fileBrowserPrefersSystemPicker = !_isAndroid; // -- ios folders outside the app are only reachable through the system picker
+  static final recieveDragAndDrop = _isDesktop;
 }

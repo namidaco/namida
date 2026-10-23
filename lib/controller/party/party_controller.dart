@@ -21,6 +21,7 @@ import 'package:namida/controller/party/party_host.dart';
 import 'package:namida/controller/party/party_player_binder.dart';
 import 'package:namida/controller/party/party_protocol.dart';
 import 'package:namida/controller/party/party_state.dart';
+import 'package:namida/controller/platform/lan_service_discovery/lan_service_discovery.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';

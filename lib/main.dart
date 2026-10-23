@@ -233,6 +233,8 @@ Future<bool> _mainAppInitialization() async {
     // -- creating directories
     await AppDirs.values.map((p) => Directory(p).create(recursive: true)).executeAllAndSilentReportErrors();
 
+    await NamidaStorage.inst.prepareUserData().ignoreError();
+
     if (NamidaFeaturesVisibility.isStoragePermissionNotRequired) {
       if (!shouldShowOnBoarding) {
         final settingsExist = await File(AppPaths.SETTINGS).exists().ignoreError() ?? false;
@@ -241,6 +243,7 @@ Future<bool> _mainAppInitialization() async {
     }
 
     await settings.prepareAllSettings();
+    NamidaStorage.inst.initPickedDirectories().ignoreError();
     Language.initialize(); // should be done as early as possible
     TrackTileManager.initialize();
     ShortcutsController.instance?.initUserShortcutsFromSettings();
@@ -313,6 +316,7 @@ Future<bool> _mainAppInitialization() async {
     } catch (e, st) {
       logger.error('', e: e, st: st);
     }
+    HomeWidgetController.onPlayerReady().ignoreError();
 
     if (SMTCController.instance != null) {
       Player.inst.refreshNotification();
@@ -395,6 +399,12 @@ Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) asy
     } catch (_) {}
   }
 
+  if (Platform.isIOS) {
+    // -- the files app only exposes the documents folder, music dropped anywhere in it counts.
+    addDirToScan(paths[0], ignoreExists: true);
+    return dirsToScanDefault;
+  }
+
   for (final sp in kStoragePaths) {
     addDirToScan(FileParts.joinPath(sp, 'Music'), ignoreExists: !isDesktop);
   }
@@ -403,13 +413,13 @@ Future<Set<DirectoryIndex>> _getDefaultDirectoriesToScan(List<String> paths) asy
       final p = Process.runSync('xdg-user-dir', ['MUSIC']);
       if (p.exitCode == 0) {
         final outputPath = (p.stdout as String).split('\n').first.trim();
-        if (outputPath.isNotEmpty && outputPath != NamidaPlatformBuilder.linuxUserHome) {
+        if (outputPath.isNotEmpty && outputPath != NamidaPlatformBuilder.unixUserHome) {
           addDirToScan(outputPath);
         }
       }
     } catch (_) {}
   }
-  if (!isDesktop) {
+  if (Platform.isAndroid) {
     // -- its more common to find music in downloads for phones, unlike desktop.
     final downloadsFolder = FileParts.joinPath(paths[0], 'Download'); // pp.getDownloadsDirectory() returns app specific downloads, not what we want here
     addDirToScan(downloadsFolder, ignoreExists: true);
@@ -513,6 +523,11 @@ void _initializeIntenties() {
       onError: (err) => NamidaReceiveIntentManager.showErrorPlayingFileSnackbar(error: err.toString()),
     );
   }
+
+  // -- ios & macos: opened files arrive as absolute paths, links keep their scheme
+  NamidaChannel.inst.listenOpenedUrls(
+    (items) => NamidaReceiveIntentManager.executeReceivedItems(items, (f) => f, (f) => f.startsWith('/') ? f : null),
+  );
 }
 
 Future<bool> requestManageStoragePermission({bool request = true, bool showError = true, String? directoryToCreate}) async {

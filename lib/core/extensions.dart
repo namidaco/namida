@@ -5,6 +5,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
@@ -1556,4 +1557,14 @@ extension DirectoryIndexServerUtils on DirectoryIndex {
       },
     );
   }
+}
+
+extension HardwareKeyboardUtils on HardwareKeyboard {
+  /// apple keyboards (macos & ipad) use cmd where others use ctrl.
+  static final isPrimaryModifierMeta = Platform.isMacOS || Platform.isIOS;
+
+  bool get isPrimaryModifierPressed => isPrimaryModifierMeta ? isMetaPressed : isControlPressed;
+
+  /// [key] with the primary modifier.
+  static SingleActivator primaryActivator(LogicalKeyboardKey key) => SingleActivator(key, control: !isPrimaryModifierMeta, meta: isPrimaryModifierMeta);
 }

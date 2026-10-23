@@ -7217,7 +7217,7 @@ class ScaleDetectorState extends State<ScaleDetector> {
   void reset() => widget.onScaleReset?.call();
 
   void _onPointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent && HardwareKeyboard.instance.isControlPressed) {
+    if (event is PointerScrollEvent && HardwareKeyboard.instance.isPrimaryModifierPressed) {
       GestureBinding.instance.pointerSignalResolver.register(event, _onScaleScroll);
     }
   }
@@ -8497,7 +8497,7 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
     if (event is! KeyDownEvent && event is! KeyRepeatEvent) return KeyEventResult.ignored;
     final pageController = _pageController;
     if (pageController == null) return KeyEventResult.ignored;
-    if (HardwareKeyboard.instance.isControlPressed) return KeyEventResult.ignored;
+    if (HardwareKeyboard.instance.isPrimaryModifierPressed) return KeyEventResult.ignored;
 
     final key = event.logicalKey;
     final isLeft = key == LogicalKeyboardKey.arrowLeft;

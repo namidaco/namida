@@ -8,6 +8,7 @@ abstract class NamidaSMTCManager {
       ios: () => null,
       windows: _SMTCManagerWindows.new,
       linux: _SMTCManagerLinux.new,
+      macos: () => null,
     );
   }
 

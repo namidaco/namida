@@ -1,0 +1,47 @@
+name: Setup Apple
+description: Pinned Xcode, the shared setup and the version name, for the macOS & iOS build jobs
+
+inputs:
+  org-token:
+    description: token for github.com/namidaco
+    required: true
+  user-token:
+    description: token for github.com/MSOB7YY
+    required: true
+  with-docs:
+    description: false for builds without the offline docs (no bundle_docs job in the run), the app opens them online
+    default: "true"
+  version-name:
+    description: names the built files, empty reads it from pubspec.yaml
+    default: ""
+
+outputs:
+  version-name:
+    description: the version name the built files are named with
+    value: ${{ steps.version.outputs.version-name }}
+
+runs:
+  using: composite
+  steps:
+    # -- xcode 26 for the ios 26 apis behind `#if compiler(>=6.2)`, an exact version so a runner image update can't swap the toolchain
+    - uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: "26.6"
+
+    - uses: ./.github/actions/setup
+      with:
+        org-token: ${{ inputs.org-token }}
+        user-token: ${{ inputs.user-token }}
+        with-docs: ${{ inputs.with-docs }}
+
+    - name: Version
+      id: version
+      shell: bash
+      env:
+        VERSION_NAME: ${{ inputs.version-name }}
+      run: |
+        if [ -z "$VERSION_NAME" ]; then
+          VERSION=$(grep -o '^version:.*' pubspec.yaml | awk '{print $2}')
+          VERSION_NAME="${VERSION%%+*}"
+        fi
+        echo "version-name=$VERSION_NAME" >> "$GITHUB_OUTPUT"

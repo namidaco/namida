@@ -15,7 +15,7 @@ class ReplayGainData {
   });
 
   static const double kDefaultFallbackVolume = 1.0;
-  static final double kMaxPlatformVolume = Platform.isAndroid || Platform.isIOS ? 1.0 : 1.3; // mpv is up to 130% (without distortion i think).
+  static final double kMaxPlatformVolume = Platform.isAndroid ? 1.0 : 1.3; // mpv is up to 130% (without distortion i think).
   static final RegExp _dBUnitRegex = RegExp(r'\s*db\s*$', caseSensitive: false);
 
   double? get gainToUse => trackGain ?? albumGain;

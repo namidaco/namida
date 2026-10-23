@@ -147,7 +147,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     }
     await windowManager.setTitleBarStyle(
       usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
-      windowButtonVisibility: !usingCustomWindowTitleBar,
+      windowButtonVisibility: NamidaWindowManager.usesNativeWindowButtons || !usingCustomWindowTitleBar,
     );
     await ensurePositionRestored(restoreBounds: true);
   }

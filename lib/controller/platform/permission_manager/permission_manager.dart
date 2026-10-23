@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:namida/controller/navigator_controller.dart';
@@ -20,6 +21,7 @@ class PermissionManager {
   }
 
   Future<bool> requestNotificationsPermission() async {
+    if (Platform.isIOS || Platform.isMacOS) return _requestNotificationsPermissionDarwin();
     try {
       final status = await Permission.notification.request();
       return status.isGranted;
@@ -27,10 +29,27 @@ class PermissionManager {
     return false;
   }
 
+  /// permission_handler has no macOS side, flutter_local_notifications asks on both.
+  Future<bool> _requestNotificationsPermissionDarwin() async {
+    final plugin = FlutterLocalNotificationsPlugin();
+    try {
+      final bool? granted;
+      if (Platform.isIOS) {
+        final ios = plugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+        granted = await ios?.requestPermissions(alert: true, sound: true);
+      } else {
+        final macos = plugin.resolvePlatformSpecificImplementation<MacOSFlutterLocalNotificationsPlugin>();
+        granted = await macos?.requestPermissions(alert: true, sound: true);
+      }
+      return granted == true;
+    } catch (_) {}
+    return false;
+  }
+
   /// Granting Storage Permission.
   /// [request] will prompt dialog if not granted.
   Future<bool> requestStoragePermission({bool request = true}) async {
-    if (Platform.isLinux || Platform.isWindows) return true;
+    if (NamidaFeaturesVisibility.isStoragePermissionNotRequired) return true;
 
     bool granted = false;
 
@@ -63,7 +82,7 @@ class PermissionManager {
   }
 
   Future<bool> requestIgnoreBatteryOptimizations() async {
-    if (!(Platform.isAndroid || Platform.isIOS)) return true;
+    if (!Platform.isAndroid) return true;
 
     final granted = await Permission.ignoreBatteryOptimizations.isGranted;
     if (granted) return true;

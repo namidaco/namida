@@ -16,7 +16,7 @@ class _WebDAVServer extends MusicWebServer {
   // -- it's safe to assume that webdav(http) is supported for all platforms, however it's kept
   // -- in case the system one was picked and didn't support it.
   // -- only used for files taglib can't read.
-  late final Future<bool> _ffmpegSupportsWebDAV = NamidaFFMPEG.inst.supportsWebDAV();
+  late final Future<bool> _ffmpegSupportsWebDAV = NamidaFFMPEG.inst.supportsWebDAV(isHttps: _serverUri.isScheme('https'));
 
   _WebDAVServer.init(super.authDetails) {
     _authInfo = authDetails.auth.toBasicAuthModel();

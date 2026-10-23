@@ -9,6 +9,8 @@ name: release_beta
 #   linux    -> build_linux (deb/rpm/tar.gz + AUR)
 #   appimage -> build_linux (build only) + build_appimage
 #   flatpak  -> build_linux_portable + build_flatpak
+#   macos    -> build_apple.yml (dmg + zip, beta only, not in the downloads table yet)
+#   ios      -> build_apple.yml (ipa for sideloading, beta only, not in the downloads table yet)
 # source_run_id skips the builds and takes their artifacts from that run instead, to re-package only.
 on:
   workflow_dispatch:
@@ -34,6 +36,14 @@ on:
         description: beta only
         type: boolean
         default: true
+      macos:
+        description: beta only
+        type: boolean
+        default: true
+      ios:
+        description: beta only
+        type: boolean
+        default: true
       source_run_id:
         description: reuse the linux build artifacts from this run id instead of building (appimage/flatpak only)
         type: string
@@ -56,6 +66,12 @@ on:
         type: boolean
         default: true
       flatpak:
+        type: boolean
+        default: true
+      macos:
+        type: boolean
+        default: true
+      ios:
         type: boolean
         default: true
       source_run_id:
@@ -683,3 +699,18 @@ jobs:
             Namida-x86_64-*.flatpak
             build_final/Namida-x86_64-*-flatpak-payload.tar.gz
           token: ${{ inputs.is_beta && secrets.SNAPSHOTS_REPO_SECRET || secrets.GITHUB_TOKEN }}
+
+  # -- macos dmg/zip & ios ipa, build_apple.yml also runs on its own for builds that release nothing
+  build_apple:
+    if: ${{ inputs.is_beta && (inputs.macos || inputs.ios) && inputs.source_run_id == '' }}
+    needs: [create_release, bundle_docs]
+    uses: ./.github/workflows/build_apple.yml
+    with:
+      macos: ${{ inputs.macos }}
+      ios: ${{ inputs.ios }}
+      is_beta: ${{ inputs.is_beta }}
+      version_name: ${{ needs.create_release.outputs.version_name }}
+      with_docs: true
+      release_repo: ${{ needs.create_release.outputs.target_repo }}
+      release_tag: ${{ needs.create_release.outputs.tag }}
+    secrets: inherit

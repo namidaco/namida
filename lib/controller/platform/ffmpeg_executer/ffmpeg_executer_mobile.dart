@@ -1,6 +1,6 @@
 part of 'ffmpeg_executer.dart';
 
-class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
+class _FFMPEGExecuterMobile extends FFMPEGExecuter {
   final _ffmpegKitQueue = Queue(parallel: 10); // -- ffmpeg-kit runs 10 sessions at a time, extra ones would wait there and eat into the timeout
 
   Future<T?> _enqueue<T>(Future<T?> Function() fn, {bool noTimeout = false}) async {
@@ -79,14 +79,14 @@ class _FFMPEGExecuterAndroid extends FFMPEGExecuter {
   }
 
   @override
-  Future<bool> supportsWebDAV() async {
+  Future<bool> supportsWebDAV({required bool isHttps}) async {
     final session = await FFprobeKit.executeWithArguments([
       "-protocols",
     ]);
     final logs = await session.getLogs();
     for (final log in logs) {
       final output = log.getMessage();
-      if (FFMPEGExecuter.testWebDAVProtocol(output)) return true;
+      if (FFMPEGExecuter.testWebDAVProtocol(output, isHttps: isHttps)) return true;
     }
     return false;
   }

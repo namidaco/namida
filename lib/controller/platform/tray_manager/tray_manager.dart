@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show StringCharacters;
 
 import 'package:dart_xdg_status_notifier_item/dart_xdg_status_notifier_item.dart';
 import 'package:dbus/dbus.dart';

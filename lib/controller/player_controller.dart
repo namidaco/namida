@@ -244,7 +244,8 @@ class Player {
   StreamSubscription? _notificationClickedSub;
 
   Future<void> initializePlayer() async {
-    if (Platform.isAndroid || Platform.isIOS) {
+    // -- macos gets now playing & media keys from audio_service, windows/linux go through [SMTCController].
+    if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS) {
       final handler = NamidaAudioVideoHandler<Playable>();
       _audioHandler = handler;
       await AudioService.init(

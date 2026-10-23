@@ -6,7 +6,7 @@ class _PartyLanAdvertiser {
 
   static const kServiceType = '_namida-party._tcp';
 
-  MDNSServer? _server;
+  LanServiceAdvertisement? _advertisement;
   bool _isStopped = false;
 
   static _PartyLanAdvertiser start({required int port, required String code}) {
@@ -31,18 +31,15 @@ class _PartyLanAdvertiser {
         txt: MDNSService.createTXTRecords({'c': code}),
       );
       if (_isStopped) return;
-      final server = MDNSServer(
-        MDNSServerConfig(
-          zone: service,
-          networkInterface: preferredInterface,
-        ),
+      final advertisement = await LanServiceDiscovery.inst.advertise(
+        service,
+        networkInterface: preferredInterface,
       );
-      await server.start();
       if (_isStopped) {
-        await server.stop();
+        await advertisement.stop();
         return;
       }
-      _server = server;
+      _advertisement = advertisement;
     } catch (e, st) {
       NamidaChannel.inst.setMulticastLock(.partyHost, false);
       logger.error('party lan advertising failed', e: e, st: st);
@@ -52,8 +49,8 @@ class _PartyLanAdvertiser {
   void stop() {
     _isStopped = true;
     NamidaChannel.inst.setMulticastLock(.partyHost, false);
-    _server?.stop();
-    _server = null;
+    _advertisement?.stop();
+    _advertisement = null;
   }
 }
 
@@ -74,13 +71,10 @@ abstract final class _PartyLanScanner {
     NamidaChannel.inst.setMulticastLock(.partyScan, true);
     try {
       final preferredInterface = await SyncUtils.getPreferredInterface();
-      final stream = await MDNSClient.query(
-        QueryParams(
-          service: _PartyLanAdvertiser.kServiceType,
-          timeout: _queryTimeout,
-          networkInterface: preferredInterface,
-          wantUnicastResponse: true,
-        ),
+      final stream = await LanServiceDiscovery.inst.query(
+        _PartyLanAdvertiser.kServiceType,
+        timeout: _queryTimeout,
+        networkInterface: preferredInterface,
       );
       await for (final entry in stream) {
         final address = entry.addrV4?.address;

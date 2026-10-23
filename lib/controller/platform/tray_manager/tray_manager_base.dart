@@ -13,7 +13,7 @@ abstract class NamidaTrayManager {
       ios: () => null,
       windows: () => _TrayManagerDesktop(TrayIcons.windows.appIcon),
       linux: _TrayManagerLinuxDBus.new,
-      macos: () => const _TrayManagerDesktop(''),
+      macos: () => const _TrayManagerDesktop('assets/icons/tray_macos_template.png'),
     );
   }
 
@@ -81,6 +81,9 @@ abstract class NamidaTrayManager {
 
   Future<void> init();
   Future<void> update(TrayMenu menu, String playingItemTitle);
+
+  /// the lyrics line shown next to the icon, null clears it.
+  Future<void> setLyricsLine(String? line) async {}
   Future<void> dispose();
 }
 

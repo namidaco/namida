@@ -149,7 +149,9 @@ class PlaybackSettings extends SettingSubpageProvider {
       ),
       SettingChoice(
         settings.player.killAfterDismissingApp,
-        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux]),
+        availability: const NamidaFeaturesAvailablityGroup(
+          items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux, NamidaFeaturesAvailablity.macos],
+        ),
         values: KillAppMode.values,
         valueToText: (e) => e.toText(),
         icon: Broken.forbidden_2,
@@ -311,7 +313,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         ),
       ),
       SettingExpansion(
-        availability: NamidaFeaturesAvailablity.android,
+        availability: NamidaFeaturesAvailablityGroup.mobile,
         icon: Broken.notification_bing,
         title: () => lang.onInterruption,
         children: [
@@ -336,7 +338,7 @@ class PlaybackSettings extends SettingSubpageProvider {
         ],
       ),
       SettingExpansion(
-        availability: NamidaFeaturesAvailablity.android,
+        availability: NamidaFeaturesAvailablityGroup.mobile,
         icon: Broken.electricity,
         title: () => lang.onDeviceConnect,
         children: [

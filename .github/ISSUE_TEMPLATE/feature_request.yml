@@ -58,6 +58,8 @@ body:
         - Android
         - Windows
         - Linux
+        - iOS
+        - macOS
   - type: textarea
     id: alternatives
     attributes:

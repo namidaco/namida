@@ -1,7 +1,7 @@
 part of 'sync_manager.dart';
 
 class ServerWrapper {
-  final MDNSServer broadcast;
+  final LanServiceAdvertisement broadcast;
   final ServerSocket serverSocket;
   final MDNSService info;
 
@@ -28,17 +28,15 @@ class ServerWrapper {
       }),
     );
 
-    final broadcast = MDNSServer(
-      MDNSServerConfig(
-        zone: service,
-        networkInterface: preferredInterface,
-        logger: SyncDiagnostics._onServerLog,
-      ),
-    );
     SyncDiagnostics._serverStartLog.clear();
     SyncDiagnostics._isServerStarting = true;
+    final LanServiceAdvertisement broadcast;
     try {
-      await broadcast.start();
+      broadcast = await LanServiceDiscovery.inst.advertise(
+        service,
+        networkInterface: preferredInterface,
+        logger: SyncDiagnostics._onServerLog,
+      );
     } finally {
       SyncDiagnostics._isServerStarting = false;
     }

@@ -129,7 +129,16 @@ class _ServerSide extends RxNotifier {
     final serverSocket = await ServerSocket.bind(InternetAddress.anyIPv4, SyncUtils.kDefaultNamidaPort);
     serverSocket.listen(_onClientSocket);
 
-    _serverWrapper = await ServerWrapper.startBroadcast(serverSocket);
+    final ServerWrapper serverWrapper;
+    try {
+      serverWrapper = await ServerWrapper.startBroadcast(serverSocket);
+    } catch (_) {
+      // -- already accepting clients, it can't stay open behind a server shown as stopped
+      await serverSocket.close();
+      await stopServer();
+      rethrow;
+    }
+    _serverWrapper = serverWrapper;
     SyncDiscovery.serverRunning.value = true;
     SyncDiscovery._updateMulticastLock();
 

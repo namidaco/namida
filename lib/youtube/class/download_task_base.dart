@@ -5,7 +5,7 @@ import 'package:namida/core/extensions.dart';
 class DownloadTaskFilename {
   static final int _fullPathLimit = Platform.isWindows
       ? 258
-      : Platform.isMacOS
+      : Platform.isMacOS || Platform.isIOS
       ? 1024
       : 4096;
 

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -46,6 +47,8 @@ class YoutubeParallelDownloadsHandler {
       return existing.completer.future.then((_) => add(config: config, shouldSkip: shouldSkip, download: download));
     }
 
+    // -- a restarted task is added again right after the queue emptied and let go
+    if (_tasks.isEmpty) NamidaChannel.inst.setKeepRunningInBackground(true);
     final task = _tasks[filename] = _ParallelDownloadTask(config, shouldSkip, download);
     _queue.add(task);
     _startQueued();
@@ -79,6 +82,7 @@ class YoutubeParallelDownloadsHandler {
   void _finish(_ParallelDownloadTask task) {
     _tasks.remove(task.config.filename);
     task.completer.complete();
+    if (_tasks.isEmpty) NamidaChannel.inst.setKeepRunningInBackground(false);
   }
 }
 

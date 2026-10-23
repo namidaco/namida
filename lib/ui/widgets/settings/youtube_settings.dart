@@ -279,7 +279,9 @@ class YoutubeSettings extends SettingSubpageProvider {
       ),
       SettingChoice(
         settings.youtube.downloadNotifications,
-        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux]),
+        availability: const NamidaFeaturesAvailablityGroup(
+          items: [NamidaFeaturesAvailablity.ios, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux, NamidaFeaturesAvailablity.macos],
+        ),
         values: DownloadNotifications.values,
         valueToText: (e) => e.toText(),
         icon: Broken.notification_bing,

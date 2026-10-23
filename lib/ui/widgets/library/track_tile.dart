@@ -267,7 +267,7 @@ class TrackTile extends StatelessWidget {
       if (HardwareKeyboard.instance.isShiftPressed) {
         shouldSelect = true;
         shouldSelectRanged = true;
-      } else if (HardwareKeyboard.instance.isControlPressed) {
+      } else if (HardwareKeyboard.instance.isPrimaryModifierPressed) {
         shouldSelect = true;
       } else if (SelectedTracksController.inst.selectedTracks.value.isNotEmpty) {
         shouldSelect = true;

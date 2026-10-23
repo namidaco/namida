@@ -41,6 +41,8 @@ body:
         - Android
         - Windows
         - Linux
+        - iOS
+        - macOS
     validations:
       required: true
   - type: input
@@ -66,6 +68,8 @@ body:
         - deb / rpm
         - winget
         - portable / tarball
+        - AltStore / SideStore (ipa)
+        - dmg / zip
         - somewhere else
   - type: dropdown
     id: yt_problem
@@ -142,6 +146,8 @@ body:
         - **Android:** `Android/data/com.msob7y.namida/files/Logs` (needs a file manager that can open `Android/data`), or `Documents/namida_logs.txt` for startup errors
         - **Windows:** `%USERPROFILE%\.namida\Logs`
         - **Linux:** `~/.namida/Logs`
+        - **macOS:** `~/.namida/Logs`
+        - **iOS:** the Files app, in **On My iPhone > Namida**, has `namida_logs.txt` for startup errors
       options:
         - label: i can't get the logs at all
   - type: textarea

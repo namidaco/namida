@@ -1969,8 +1969,8 @@ class _SelectionShortcuts extends StatelessWidget {
       builder: (context, isSelecting) {
         final bindings = <ShortcutActivator, VoidCallback>{
           if (isSelecting) ...{
-            const SingleActivator(LogicalKeyboardKey.keyA, control: true): selection.selectAll,
-            const SingleActivator(LogicalKeyboardKey.keyI, control: true): selection.invert,
+            HardwareKeyboardUtils.primaryActivator(LogicalKeyboardKey.keyA): selection.selectAll,
+            HardwareKeyboardUtils.primaryActivator(LogicalKeyboardKey.keyI): selection.invert,
             const SingleActivator(LogicalKeyboardKey.delete): selection.promptDelete,
             const SingleActivator(LogicalKeyboardKey.escape): onClose,
           },

@@ -467,7 +467,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   // -- mouse scroll
   void _onPointerSignal(dynamic _) {
-    if (HardwareKeyboard.instance.isControlPressed) return;
+    if (HardwareKeyboard.instance.isPrimaryModifierPressed) return;
     _onPointerDown(null);
     _onPointerUp(null);
   }

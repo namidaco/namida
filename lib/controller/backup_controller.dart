@@ -18,6 +18,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -240,11 +241,13 @@ class BackupController {
         await _zipManager.createZip(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 
+      final storageOrigin = await NamidaStorage.inst.writeBackupStorageOrigin(stagingDirPath);
       final allFiles = [
         ?tempAllLocal,
         ?tempAllYoutube,
         ...compressedDirectories,
         ?stagedSyncSettings,
+        ?storageOrigin,
       ];
       await _zipManager.createZip(sourceDir: stagingDir, files: allFiles, zipFile: partialBackupFile);
       await partialBackupFile.rename(backupFilePath);
@@ -422,6 +425,7 @@ class BackupController {
 
       await _zipManager.extractZip(zipFile: backupzip, destinationDir: Directory(AppDirs.USER_DATA));
       await extractBackupInnerZips();
+      await NamidaStorage.inst.prepareRestoredUserData(AppDirs.USER_DATA).ignoreError();
       await _keepSyncIdentity();
     });
   }
@@ -442,6 +446,7 @@ class BackupController {
       await _zipManager.extractZip(zipFile: backupzip, destinationDir: stagingDir);
       final merger = _BackupMerger('$stagingDirPath${Platform.pathSeparator}');
       await _extractInnerZips(merger.pathOf);
+      await NamidaStorage.inst.prepareRestoredUserData(stagingDirPath).ignoreError();
       return await merger.merge();
     } finally {
       await stagingDir.delete(recursive: true).ignoreError();

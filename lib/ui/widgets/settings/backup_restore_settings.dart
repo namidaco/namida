@@ -202,7 +202,7 @@ class BackupAndRestore extends SettingSubpageProvider {
   //       final commonPaths = [
   //         '/usr/local/bin/namida_sync',
   //         '/usr/bin/namida_sync',
-  //         '${NamidaPlatformBuilder.linuxUserHome ?? '~'}/.local/bin/namida_sync',
+  //         '${NamidaPlatformBuilder.unixUserHome ?? '~'}/.local/bin/namida_sync',
   //       ];
 
   //       for (final path in commonPaths) {

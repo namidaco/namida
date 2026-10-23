@@ -73,9 +73,6 @@ class ExtrasSettings extends SettingSubpageProvider {
         children: [
           SettingToggleGroup(
             settings.discordPresence,
-            availability: const NamidaFeaturesAvailablityGroup(
-              items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows, NamidaFeaturesAvailablity.linux],
-            ),
             icon: Broken.game,
             title: () => lang.discordRichPresence,
             onChanged: (isEnabled) => _DiscordAccountTile.onPresenceToggled(isEnabled),
@@ -290,7 +287,7 @@ class ExtrasSettings extends SettingSubpageProvider {
         subtitle: () => lang.enableClipboardMonitoringSubtitle,
       ),
       SettingCustom(
-        availability: NamidaFeaturesAvailablity.android,
+        availability: NamidaFeaturesAvailablityGroup.mobile,
         title: () => lang.vibrationType,
         aliases: () => [lang.vibration, lang.hapticFeedback],
         keys: [settings.vibrationType],
@@ -659,7 +656,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                     title: 'show_desktop_title_bar'.toUpperCase(),
                   ),
                 ),
-                if (!Platform.isWindows)
+                if (Platform.isLinux)
                   NamidaPopupWrapper(
                     children: _getTitlebarIconsTypeChildren,
                     child: CustomListTile(
@@ -1939,7 +1936,7 @@ class _DiscordAccountTileState extends State<_DiscordAccountTile> {
   @override
   Widget build(BuildContext context) {
     final broadcaster = NowPlayingBroadcaster.inst;
-    final signOutButton = Platform.isAndroid
+    final signOutButton = broadcaster.discordRequiresLogin
         ? NamidaIconButton(
             icon: Broken.logout,
             tooltip: () => lang.signOut,
@@ -2088,8 +2085,8 @@ class _IntegrationsFlagsOptions extends StatelessWidget {
                 onChanged: (isTrue) => settings.nowPlayingBroadcast.save(!isTrue),
               ),
             ),
-            const _LyricsIntegrationsListTile(),
           ],
+          if (LyricsIntegration.valuesForPlatform.isNotEmpty) const _LyricsIntegrationsListTile(),
           const _WebhookListTile(),
           ObxO(
             rx: settings.reportPlaybackToServers,
@@ -2118,7 +2115,7 @@ class _LyricsIntegrationsListTile extends StatelessWidget {
 
   List<NamidaPopupItem> _items() {
     final enabled = settings.lyricsIntegrations.value;
-    return LyricsIntegration.values
+    return LyricsIntegration.valuesForPlatform
         .map(
           (e) => NamidaPopupItem(
             selected: enabled.contains(e),
@@ -2138,14 +2135,17 @@ class _LyricsIntegrationsListTile extends StatelessWidget {
       refreshListenable: settings.lyricsIntegrations,
       child: ObxO(
         rx: settings.lyricsIntegrations,
-        builder: (context, enabled) => CustomListTile(
-          icon: Broken.message_text,
-          title: 'status_bar_lyrics'.toUpperCase(),
-          trailing: NamidaText(
-            '${enabled.length}/${LyricsIntegration.values.length}',
-            style: NText.medium,
-          ),
-        ),
+        builder: (context, enabled) {
+          final enabledCount = enabled.where((e) => e.isForCurrentPlatform).length;
+          return CustomListTile(
+            icon: Broken.message_text,
+            title: 'status_bar_lyrics'.toUpperCase(),
+            trailing: NamidaText(
+              '$enabledCount/${LyricsIntegration.valuesForPlatform.length}',
+              style: NText.medium,
+            ),
+          );
+        },
       ),
     );
   }

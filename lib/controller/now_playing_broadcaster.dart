@@ -33,7 +33,7 @@ class NowPlayingBroadcaster {
     settings.webhookEvents.addListener(_rebuildSinks);
     settings.reportPlaybackToServers.addListener(_rebuildSinks);
     settings.directoriesToScan.addListener(_rebuildSinks);
-    if (NamidaFeaturesVisibility.showDiscordPresence) settings.discordPresence.addListener(_rebuildSinks);
+    settings.discordPresence.addListener(_rebuildSinks);
     _rebuildSinks();
   }
 
@@ -54,7 +54,7 @@ class NowPlayingBroadcaster {
     } else {
       _serverReporter.end();
     }
-    if (NamidaFeaturesVisibility.showDiscordPresence && settings.discordPresence.value) {
+    if (settings.discordPresence.value) {
       final discordSink = _discordSink ??= _createDiscordSink();
       _sinks.add(discordSink);
     } else {
@@ -78,10 +78,12 @@ class NowPlayingBroadcaster {
   RxBaseCore<DiscordAccount?> get discordAccount => _DiscordPresenceReport.inst.account;
   RxBaseCore<bool> get isDiscordSharing => _DiscordPresenceReport.inst.isSharing;
 
-  /// only android logs in, desktop goes through the discord app.
+  /// only mobile logs in, desktop goes through the discord app.
+  bool get discordRequiresLogin => _DiscordPresenceTransport.usesGateway;
+
   /// false when the login was cancelled, throws when it failed.
   Future<bool> ensureDiscordLogin() async {
-    if (!Platform.isAndroid) return true;
+    if (!_DiscordPresenceTransport.usesGateway) return true;
     final oauth = _DiscordOAuth.inst;
     final hasLogin = await oauth.hasLogin();
     if (hasLogin) return true;

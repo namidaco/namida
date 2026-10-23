@@ -36,6 +36,8 @@ body:
         - Android
         - Windows
         - Linux
+        - iOS
+        - macOS
   - type: textarea
     id: logs
     attributes:

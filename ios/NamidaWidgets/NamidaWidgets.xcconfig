@@ -1,0 +1,2 @@
+// -- the app's version & build number, the extension's must match them
+#include "../Flutter/Generated.xcconfig"

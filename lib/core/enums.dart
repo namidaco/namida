@@ -3,6 +3,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/class/queue.dart';
@@ -1380,7 +1382,7 @@ enum InternalPlayerType {
   static List<InternalPlayerType> getAvailableForCurrentPlatform() {
     final nativePlayers = NamidaPlatformBuilder.initValue(
       android: const [InternalPlayerType.exoplayer, InternalPlayerType.exoplayer_sw],
-      ios: const [InternalPlayerType.exoplayer],
+      ios: const [InternalPlayerType.mpv],
       windows: const [InternalPlayerType.mpv],
       macos: const [InternalPlayerType.mpv],
       linux: const [InternalPlayerType.mpv],
@@ -1396,7 +1398,7 @@ enum InternalPlayerType {
   factory InternalPlayerType._getForPlatform() {
     return NamidaPlatformBuilder.initValue(
       android: InternalPlayerType.exoplayer,
-      ios: InternalPlayerType.exoplayer,
+      ios: InternalPlayerType.mpv,
       windows: InternalPlayerType.mpv,
       macos: InternalPlayerType.mpv,
       linux: InternalPlayerType.mpv,
@@ -1434,7 +1436,8 @@ enum ReplayGainType {
   final bool _isValidMode;
   const ReplayGainType(this._isValidMode);
 
-  static ReplayGainType getPlatformDefault() => NamidaFeaturesVisibility.loudnessEnhancerAvailable && (!Platform.isWindows && !Platform.isLinux) ? loudness_enhancer : volume;
+  /// mpv's own volume goes past 100%, only android has a separate loudness effect.
+  static ReplayGainType getPlatformDefault() => Platform.isAndroid ? loudness_enhancer : volume;
 
   bool get isLoudnessEnhancerEnabled => this == loudness_enhancer || (this == platform_default && getPlatformDefault() == loudness_enhancer);
   bool get isVolumeEnabled => this == volume || (this == platform_default && getPlatformDefault() == volume);
@@ -1543,13 +1546,20 @@ enum DiscordPresenceStatus {
 }
 
 enum LyricsIntegration {
-  lyricInfo,
-  superLyric(sendsPerLine: true),
-  flymeTicker(sendsPerLine: true),
+  lyricInfo(platform: TargetPlatform.android),
+  superLyric(platform: TargetPlatform.android, sendsPerLine: true),
+  flymeTicker(platform: TargetPlatform.android, sendsPerLine: true),
+  menuBar(platform: TargetPlatform.macOS, sendsPerLine: true),
+  liveActivity(platform: TargetPlatform.iOS, sendsPerLine: true),
   ;
 
+  final TargetPlatform platform;
   final bool sendsPerLine;
-  const LyricsIntegration({this.sendsPerLine = false});
+  const LyricsIntegration({required this.platform, this.sendsPerLine = false});
+
+  bool get isForCurrentPlatform => platform == defaultTargetPlatform;
+
+  static final valuesForPlatform = values.where((e) => e.isForCurrentPlatform).toFixedList();
 }
 
 enum SoundEffectType {
