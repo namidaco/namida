@@ -3,8 +3,7 @@
 # The app itself is taken as a PREBUILT flutter bundle (namida-linux.tar.gz, produced by
 # `flutter build linux --release` in the release workflow and copied next to this file).
 # libmpv is not part of any runtime, so libass / libplacebo / ffmpeg / mpv are built here.
-# The same ffmpeg build also provides the ffmpeg + ffprobe binaries the app shells out to
-# (the ones bundled in the tarball are replaced - they are built against a newer glibc than the runtime).
+# The app's own ffmpeg (lib/libffmpegkit.so in the tarball) runs in process and is used as is.
 #
 # Local build (needs flatpak-builder + org.gnome.Sdk//51):
 #   cp <namida tarball> linux/packaging/flatpak/namida-linux.tar.gz
@@ -91,7 +90,7 @@ modules:
           type: git
           tag-pattern: ^v([\d.]+)$
 
-  # LGPL build (no --enable-gpl): shared libs for libmpv + the ffmpeg/ffprobe CLIs used by the app.
+  # LGPL build (no --enable-gpl): shared libs for libmpv, the app no longer runs the ffmpeg/ffprobe CLIs.
   # The external codec libs below all ship in org.freedesktop.Sdk 26.08 (io.mpv.Mpv relies on the same).
   - name: ffmpeg
     config-opts:
@@ -99,7 +98,7 @@ modules:
       - --disable-static
       - --disable-debug
       - --disable-doc
-      - --disable-ffplay
+      - --disable-programs
       - --enable-pic
       - --enable-network
       - --enable-gnutls
@@ -159,10 +158,11 @@ modules:
       # the flutter bundle keeps its own layout under /app/namida (namida, lib/, data/, bin/)
       - mkdir -p /app/namida
       - cp -a namida lib data /app/namida/
-      - mkdir -p /app/namida/bin
-      # ffmpeg/ffprobe: use the ones built above (the tarball's need a newer glibc than the runtime)
-      - ln -sf /app/bin/ffmpeg /app/namida/bin/ffmpeg
-      - ln -sf /app/bin/ffprobe /app/namida/bin/ffprobe
+      # -- obsolete: the app ran the ffmpeg/ffprobe executables, ffmpeg is lib/libffmpegkit.so now
+      # - mkdir -p /app/namida/bin
+      # # ffmpeg/ffprobe: use the ones built above (the tarball's need a newer glibc than the runtime)
+      # - ln -sf /app/bin/ffmpeg /app/namida/bin/ffmpeg
+      # - ln -sf /app/bin/ffprobe /app/namida/bin/ffprobe
       - install -Dm755 namida-launcher /app/bin/namida
       - cp -a share /app/
       # the window takes its app id from FLATPAK_ID, the bundle's StartupWMClass would point at the old one

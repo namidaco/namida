@@ -1,6 +1,6 @@
 name: build_apple
 
-# macOS (dmg + zip) and iOS (ipa for sideloading) builds, with the ffmpeg binaries & frameworks committed in external/ffmpeg_build.
+# macOS (dmg + zip) and iOS (ipa for sideloading) builds.
 #   run by hand: builds only, the files are attached to the run as artifacts.
 #   called by release_beta: the files are also uploaded to its release, and the ios job updates the AltStore source.
 on:
@@ -12,6 +12,10 @@ on:
       ios:
         type: boolean
         default: true
+      dependency_locks:
+        description: also attaches the Podfile.lock & Package.resolved files the build resolved, to commit them
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       macos:
@@ -71,13 +75,6 @@ jobs:
         run: |
           APP="build/macos/Build/Products/Release/Namida.app"
           DMG="build_final/$NAME.dmg"
-          # -- the build only warns when external/ffmpeg_build/macos lacks them, a release can't go out without
-          for bin in ffmpeg ffprobe; do
-            if [ ! -x "$APP/Contents/Helpers/$bin" ]; then
-              echo "::error::$bin is missing from the app, commit external/ffmpeg_build/macos first"
-              exit 1
-            fi
-          done
           mkdir -p build_final dmg_stage
           cp -R "$APP" dmg_stage/
           ln -s /Applications dmg_stage/Applications
@@ -94,6 +91,16 @@ jobs:
         with:
           name: namida-macos
           path: build_final/*
+          retention-days: 7
+
+      # -- the pods & swift packages this build resolved, committed into macos/ they pin the next builds
+      - uses: actions/upload-artifact@v6
+        if: ${{ inputs.dependency_locks }}
+        with:
+          name: macos-dependency-locks
+          path: |
+            macos/Podfile.lock
+            macos/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved
           retention-days: 7
 
       - name: Upload to release
@@ -173,6 +180,16 @@ jobs:
         with:
           name: namida-ios
           path: build_final/*
+          retention-days: 7
+
+      # -- the pods & swift packages this build resolved, committed into ios/ they pin the next builds
+      - uses: actions/upload-artifact@v6
+        if: ${{ inputs.dependency_locks }}
+        with:
+          name: ios-dependency-locks
+          path: |
+            ios/Podfile.lock
+            ios/Runner.xcworkspace/xcshareddata/swiftpm/Package.resolved
           retention-days: 7
 
       - name: Upload to release

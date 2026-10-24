@@ -2,10 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
-import 'package:path/path.dart' as p;
-
 import 'package:namida/class/file_parts.dart';
-import 'package:namida/controller/platform/ffmpeg_executer/ffmpeg_executer.dart';
 
 class NamidaPlatformBuilder {
   static T init<T>({
@@ -46,135 +43,6 @@ class NamidaPlatformBuilder {
     };
   }
 
-  static String getExecutablesDirectoryPath() {
-    return NamidaPlatformBuilder.init(
-      android: () => '',
-      windows: () {
-        var processDir = p.dirname(Platform.resolvedExecutable);
-        if (kDebugMode) {
-          var midway = r'../../../../../external/ffmpeg_build/windows';
-          return p.normalize(p.join(processDir, midway));
-        } else {
-          return p.join(processDir, 'bin');
-        }
-      },
-      linux: () {
-        final appDir = Platform.environment['APPDIR'];
-        if (appDir != null && appDir.isNotEmpty) {
-          // for AppImage
-          return p.join(appDir, 'bin');
-        }
-        var processDir = p.dirname(Platform.resolvedExecutable);
-        if (kDebugMode) {
-          var midway = r'../../../../../external/ffmpeg_build/linux';
-          return p.normalize(p.join(processDir, midway));
-        } else {
-          return p.join(processDir, 'bin');
-        }
-      },
-      macos: () {
-        final processDir = p.dirname(Platform.resolvedExecutable);
-        return p.normalize(p.join(processDir, '..', 'Helpers'));
-      },
-    );
-  }
-
-  static String _getExecutablePath(String executablesDirPath, String name, {bool fallbackToSystemPath = false, bool Function(String path)? systemPathTester}) {
-    final exeName = NamidaPlatformBuilder.initValue(
-      android: '',
-      windows: '$name.exe',
-      linux: name,
-      macos: name,
-    );
-
-    final fullPathBundled = p.join(executablesDirPath, exeName);
-    if (File(fullPathBundled).existsSync()) {
-      if (Platform.isLinux || Platform.isMacOS) {
-        try {
-          // -- ensure permissions given
-          Process.runSync('chmod', ['+x', fullPathBundled]);
-        } catch (_) {}
-      }
-      return fullPathBundled;
-    }
-
-    String? resolvedSystemPath;
-    if (fallbackToSystemPath) {
-      if (Platform.isWindows) {
-        final result = Process.runSync('where', [name]);
-        if (result.exitCode == 0) {
-          try {
-            final systemPath = (result.stdout as String).trim().split('\n').first.trim();
-            if (systemPath.isNotEmpty) resolvedSystemPath = systemPath;
-          } catch (_) {
-            resolvedSystemPath = name;
-          }
-        }
-      } else if (Platform.isMacOS) {
-        resolvedSystemPath = _findMacOSSystemExecutable(name);
-      } else if (Platform.isLinux) {
-        final result = Process.runSync('which', [name]);
-        if (result.exitCode == 0) {
-          try {
-            final systemPath = (result.stdout as String).trim();
-            if (systemPath.isNotEmpty) resolvedSystemPath = systemPath;
-          } catch (_) {
-            resolvedSystemPath = name;
-          }
-        }
-      }
-    }
-
-    if (resolvedSystemPath != null) {
-      final good = systemPathTester?.call(resolvedSystemPath) ?? true;
-      if (good) return resolvedSystemPath;
-    }
-
-    return fullPathBundled; // could be non-existent atp
-  }
-
-  /// apps opened from finder get a minimal PATH, without the folders package managers install into.
-  static String? _findMacOSSystemExecutable(String name) {
-    final pathVariable = Platform.environment['PATH'];
-    final pathDirectories = pathVariable?.split(':') ?? const <String>[];
-    for (final directory in [...pathDirectories, ..._kMacOSPackageManagersBinDirectories]) {
-      final path = p.join(directory, name);
-      if (File(path).existsSync()) return path;
-    }
-    return null;
-  }
-
-  /// homebrew on apple silicon, homebrew on intel, macports.
-  static const _kMacOSPackageManagersBinDirectories = ['/opt/homebrew/bin', '/usr/local/bin', '/opt/local/bin'];
-
-  static bool _testFFmpegBuildIfHasBetterSupport(String path) {
-    try {
-      final res = Process.runSync(path, ['-protocols']);
-      final output = res.stdout as String;
-      return FFMPEGExecuter.testWebDAVProtocol(output, isHttps: false) || FFMPEGExecuter.testSMBProtocol(output);
-    } catch (_) {
-      return false;
-    }
-  }
-
-  static String getFFmpegExecutablePath(String executablesDirPath) {
-    return _getExecutablePath(
-      executablesDirPath,
-      'ffmpeg',
-      fallbackToSystemPath: true,
-      systemPathTester: _testFFmpegBuildIfHasBetterSupport,
-    );
-  }
-
-  static String getFFprobeExecutablePath(String executablesDirPath) {
-    return _getExecutablePath(
-      executablesDirPath,
-      'ffprobe',
-      fallbackToSystemPath: true,
-      systemPathTester: _testFFmpegBuildIfHasBetterSupport,
-    );
-  }
-
   static String? get windowsUserHome => Platform.environment['USERPROFILE'] ?? Platform.environment['HOME'];
   static String? get windowsNamidaHome {
     final home = windowsUserHome;
@@ -191,3 +59,114 @@ class NamidaPlatformBuilder {
     return FileParts.joinPath(home, '.namida');
   }
 }
+
+// -- obsolete, see _FFMPEGExecuterFFI
+// class _FFmpegUtilsObsolete {
+//   static String getExecutablesDirectoryPath() {
+//     return NamidaPlatformBuilder.init(
+//       android: () => '',
+//       windows: () {
+//         var processDir = p.dirname(Platform.resolvedExecutable);
+//         if (kDebugMode) {
+//           var midway = r'../../../../../external/ffmpeg_build/obsolete/windows';
+//           return p.normalize(p.join(processDir, midway));
+//         } else {
+//           return p.join(processDir, 'bin');
+//         }
+//       },
+//       linux: () {
+//         final appDir = Platform.environment['APPDIR'];
+//         if (appDir != null && appDir.isNotEmpty) {
+//           // for AppImage
+//           return p.join(appDir, 'bin');
+//         }
+//         var processDir = p.dirname(Platform.resolvedExecutable);
+//         if (kDebugMode) {
+//           var midway = r'../../../../../external/ffmpeg_build/obsolete/linux';
+//           return p.normalize(p.join(processDir, midway));
+//         } else {
+//           return p.join(processDir, 'bin');
+//         }
+//       },
+//     );
+//   }
+
+//   static String _getExecutablePath(String executablesDirPath, String name, {bool fallbackToSystemPath = false, bool Function(String path)? systemPathTester}) {
+//     final exeName = NamidaPlatformBuilder.initValue(
+//       android: '',
+//       windows: '$name.exe',
+//       linux: name,
+//     );
+
+//     final fullPathBundled = p.join(executablesDirPath, exeName);
+//     if (File(fullPathBundled).existsSync()) {
+//       if (Platform.isLinux) {
+//         try {
+//           // -- ensure permissions given
+//           Process.runSync('chmod', ['+x', fullPathBundled]);
+//         } catch (_) {}
+//       }
+//       return fullPathBundled;
+//     }
+
+//     String? resolvedSystemPath;
+//     if (fallbackToSystemPath) {
+//       if (Platform.isWindows) {
+//         final result = Process.runSync('where', [name]);
+//         if (result.exitCode == 0) {
+//           try {
+//             final systemPath = (result.stdout as String).trim().split('\n').first.trim();
+//             if (systemPath.isNotEmpty) resolvedSystemPath = systemPath;
+//           } catch (_) {
+//             resolvedSystemPath = name;
+//           }
+//         }
+//       } else if (Platform.isLinux) {
+//         final result = Process.runSync('which', [name]);
+//         if (result.exitCode == 0) {
+//           try {
+//             final systemPath = (result.stdout as String).trim();
+//             if (systemPath.isNotEmpty) resolvedSystemPath = systemPath;
+//           } catch (_) {
+//             resolvedSystemPath = name;
+//           }
+//         }
+//       }
+//     }
+
+//     if (resolvedSystemPath != null) {
+//       final good = systemPathTester?.call(resolvedSystemPath) ?? true;
+//       if (good) return resolvedSystemPath;
+//     }
+
+//     return fullPathBundled; // could be non-existent atp
+//   }
+
+//   static bool _testFFmpegBuildIfHasBetterSupport(String path) {
+//     try {
+//       final res = Process.runSync(path, ['-protocols']);
+//       final output = res.stdout as String;
+//       return FFMPEGExecuter.testWebDAVProtocol(output, isHttps: false) || FFMPEGExecuter.testSMBProtocol(output);
+//     } catch (_) {
+//       return false;
+//     }
+//   }
+
+//   static String getFFmpegExecutablePath(String executablesDirPath) {
+//     return _getExecutablePath(
+//       executablesDirPath,
+//       'ffmpeg',
+//       fallbackToSystemPath: true,
+//       systemPathTester: _testFFmpegBuildIfHasBetterSupport,
+//     );
+//   }
+
+//   static String getFFprobeExecutablePath(String executablesDirPath) {
+//     return _getExecutablePath(
+//       executablesDirPath,
+//       'ffprobe',
+//       fallbackToSystemPath: true,
+//       systemPathTester: _testFFmpegBuildIfHasBetterSupport,
+//     );
+//   }
+// }

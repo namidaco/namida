@@ -122,14 +122,15 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/${APPLICATION_ID}.metainfo.xml"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo/"
 )
 
-# bundle required binaries
-# named rather than globbed: the same directory also holds the waveform library,
-# which ships as a native asset under lib/ and has no business in bin/
-install(PROGRAMS
-  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/ffmpeg"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/linux/ffprobe"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-)
+# -- obsolete: ffmpeg is the libffmpegkit native asset from ffmpeg_kit_extended_flutter now, this bundled the old ffmpeg & ffprobe executables
+# # bundle required binaries
+# # named rather than globbed: the same directory also holds the waveform library,
+# # which ships as a native asset under lib/ and has no business in bin/
+# install(PROGRAMS
+#   "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/obsolete/linux/ffmpeg"
+#   "${CMAKE_CURRENT_SOURCE_DIR}/../external/ffmpeg_build/obsolete/linux/ffprobe"
+#   DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+# )
 
 
 install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"

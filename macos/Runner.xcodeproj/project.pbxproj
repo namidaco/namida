@@ -218,7 +218,6 @@
 				33CC10EA2044A3C60003C045 /* Frameworks */,
 				33CC10EB2044A3C60003C045 /* Resources */,
 				33CC110E2044A8840003C045 /* Bundle Framework */,
-				1B90E79F721267A3AA9D7014 /* Bundle FFmpeg */,
 				3399D490228B24CF009A79C7 /* ShellScript */,
 			);
 			buildRules = (
@@ -308,25 +307,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1B90E79F721267A3AA9D7014 /* Bundle FFmpeg */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Bundle FFmpeg";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# -- desktop namida runs ffmpeg & ffprobe as processes, external/ffmpeg_build/build_macos.sh builds them\nsrc=\"$PROJECT_DIR/../external/ffmpeg_build/macos\"\ndst=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Helpers\"\nmkdir -p \"$dst\"\nidentity=\"${EXPANDED_CODE_SIGN_IDENTITY:--}\"\noptions=\"\"\nif [ \"$ENABLE_HARDENED_RUNTIME\" = \"YES\" ]; then options=\"--options runtime\"; fi\nfor bin in ffmpeg ffprobe; do\n  if [ ! -f \"$src/$bin\" ]; then\n    echo \"warning: $src/$bin is missing, namida looks for a system one (homebrew, macports) instead\"\n    continue\n  fi\n  cp -f \"$src/$bin\" \"$dst/$bin\"\n  chmod +x \"$dst/$bin\"\n  codesign --force --sign \"$identity\" $options --timestamp=none \"$dst/$bin\"\ndone\n";
-		};
 		3399D490228B24CF009A79C7 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;

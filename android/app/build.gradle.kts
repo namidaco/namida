@@ -39,7 +39,8 @@ android {
         abi {
             isEnable = true
             reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            // -- no x86: ffmpeg_kit_extended_flutter ships no 32-bit x86 library
+            include("armeabi-v7a", "arm64-v8a", "x86_64")
             isUniversalApk = true
         }
     }
@@ -52,7 +53,7 @@ android {
 
     defaultConfig {
         applicationId = "com.msob7y.namida"
-        minSdk = 24
+        minSdk = 26 // -- ffmpeg_kit_extended_flutter needs 26
         targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName

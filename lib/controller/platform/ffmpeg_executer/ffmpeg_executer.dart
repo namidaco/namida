@@ -1,17 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
-import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter/ffprobe_kit.dart';
-import 'package:namico_db_wrapper/namico_db_wrapper.dart';
+import 'package:ffmpeg_kit_extended_flutter/ffmpeg_kit_extended_flutter.dart';
 import 'package:queue/queue.dart';
 
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
-import 'package:namida/controller/platform/base.dart';
 import 'package:namida/core/extensions.dart';
 
 part 'ffmpeg_executer_base.dart';
-part 'ffmpeg_executer_desktop.dart';
-part 'ffmpeg_executer_mobile.dart';
+part 'ffmpeg_executer_ffi.dart';

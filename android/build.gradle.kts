@@ -3,9 +3,10 @@ allprojects {
         google()
         mavenCentral()
         maven("https://jitpack.io")
-        maven {
-          url = project(":app").file("repo").toURI()
-        }
+        // -- the old ffmpeg-kit fork's aar, ffmpeg now comes from ffmpeg_kit_extended_flutter
+        // maven {
+        //   url = project(":app").file("repo").toURI()
+        // }
     }
 }
 

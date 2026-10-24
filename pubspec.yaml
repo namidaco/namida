@@ -1,7 +1,7 @@
 name: namida
 description: A Beautiful and Feature-rich Music Player, With YouTube & Video Support Built in Flutter
 publish_to: "none"
-version: 8.4.0-beta+261021218
+version: 8.5.0-beta+261024142
 
 environment:
   sdk: ">=3.13.7 <4.0.0"
@@ -9,6 +9,9 @@ environment:
 
 dependency_overrides:
   intl: ^0.20.2
+  # -- ffmpeg_kit_extended_flutter needs 2.x, mecab_for_dart & android_libcpp_shared still ask for 1.x.
+  # -- their hooks build fine on 2.x, which only stopped OS/Architecture working in const maps and sets.
+  code_assets: ^2.1.0
 
   on_audio_query_platform_interface:
     git:
@@ -173,10 +176,16 @@ dependencies:
       path: packages/on_audio_query
 
   # ---- Video Indexing & Playback ----
-  ffmpeg_kit_flutter:
+  # -- ffmpeg & ffprobe run in process through FFI on every platform, external/ffmpeg_build/README.md has why
+  ffmpeg_kit_extended_flutter:
     git:
-      url: https://github.com/MSOB7YY/ffmpeg-kit
-      path: flutter/flutter
+      url: https://github.com/MSOB7YY/ffmpeg-kit-extended
+      ref: namida
+      path: flutter
+  # ffmpeg_kit_flutter:
+  #   git:
+  #     url: https://github.com/MSOB7YY/ffmpeg-kit
+  #     path: flutter/flutter
   youtipie:
     git:
       url: https://github.com/namidaco/youtipie
@@ -271,14 +280,19 @@ hooks:
   user_defines:
     sqlite3:
       source: sqlite3mc
-    # Prebuilt waveform library dir (desktop):
+    # Prebuilt waveform library dir (windows & linux):
     # - built by external/ffmpeg_build/build_waveform.sh with a static decode-only FFmpeg (no system deps).
     # - if missing, builds from source against system FFmpeg (dev only, not for release).
-    # - Android: ignored, links ffmpeg-kit's FFmpeg.
+    # - Android, iOS & macOS: ignored, links the libffmpegkit ffmpeg_kit_extended_flutter ships.
     namida_waveform:
       prebuilt_dir: external/ffmpeg_build
-      # -- iOS links the ffmpeg-kit frameworks built by external/ffmpeg_build/build_ios_ffmpegkit.sh
-      ffmpeg_kit_ios_dir: external/ffmpeg_build/ios/ffmpeg-kit
+    # -- libffmpegkit bundles kept in external/ffmpeg_build by its fetch_ffmpegkit.sh, so nothing is downloaded while building
+    ffmpeg_kit_extended_flutter:
+      android: external/ffmpeg_build/ffmpegkit/bundle-namida-shared-small-lgpl-release.aar
+      ios: external/ffmpeg_build/ffmpegkit/bundle-namida-ios-universal-small-lgpl.xcframework.zip
+      macos: external/ffmpeg_build/ffmpegkit/bundle-namida-macos-universal-small-lgpl.xcframework.zip
+      linux: external/ffmpeg_build/ffmpegkit/bundle-namida-linux-x86_64-shared-small-lgpl.zip
+      windows: external/ffmpeg_build/ffmpegkit/bundle-namida-windows-x86_64-shared-small-lgpl.zip
 
 flutter_native_splash:
   image: assets/namida_icon.png

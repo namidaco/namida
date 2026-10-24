@@ -43,10 +43,10 @@ flatpak build-bundle linux/packaging/flatpak/repo Namida-x86_64.flatpak app.nami
 
 A Flatpak cannot depend on host packages: inside the sandbox only the runtime
 (`org.freedesktop.Platform`) and what the manifest installs exist, so "use the
-system ffmpeg" never resolves there, and the runtime ships neither libmpv nor
-the ffmpeg CLI. The custom ffmpeg/ffprobe binaries from `external/ffmpeg_build`
-are built against a newer glibc than the runtime, so the manifest compiles
-ffmpeg (LGPL config) and links `/app/namida/bin/ffmpeg{,probe}` to it.
+system ffmpeg" never resolves there, and the runtime doesn't ship libmpv. The
+manifest compiles ffmpeg (LGPL config, libraries only) and mpv for that.
+The app's own ffmpeg is `lib/libffmpegkit.so` from the tarball, which runs in
+process and needs nothing from the runtime besides glibc and libstdc++.
 
 ## Flathub
 

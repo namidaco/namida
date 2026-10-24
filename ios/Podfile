@@ -29,9 +29,6 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
-  # -- ffmpeg-kit's binaries were taken down, external/ffmpeg_build/build_ios_ffmpegkit.sh builds the pod ffmpeg_kit_flutter depends on
-  pod 'ffmpeg-kit-ios-https', :path => File.join(__dir__, '..', 'external', 'ffmpeg_build', 'ios', 'ffmpeg-kit')
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

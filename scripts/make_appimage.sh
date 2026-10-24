@@ -56,13 +56,15 @@ fi
 
 echo "==> Deploying with quick-sharun"
 # quick-sharun silently skips binaries without the executable bit
-chmod +x "$BUNDLE_DIR/namida" "$BUNDLE_DIR/bin/ffmpeg" "$BUNDLE_DIR/bin/ffprobe"
-# ffmpeg/ffprobe are our own builds from external/ffmpeg_build, libmpv and webkit2gtk are
-# dlopen'ed at runtime so they are listed explicitly, lib/ carries libapp.so and the plugins
+chmod +x "$BUNDLE_DIR/namida"
+# -- obsolete: the ffmpeg/ffprobe executables from external/ffmpeg_build were bundled in bin/, ffmpeg is lib/libffmpegkit.so now
+# chmod +x "$BUNDLE_DIR/bin/ffmpeg" "$BUNDLE_DIR/bin/ffprobe"
+#   "$BUNDLE_DIR/bin/ffmpeg" \
+#   "$BUNDLE_DIR/bin/ffprobe" \
+# libmpv and webkit2gtk are dlopen'ed at runtime so they are listed explicitly,
+# lib/ carries libapp.so and the plugins (libffmpegkit.so included)
 quick-sharun \
   "$BUNDLE_DIR/namida" \
-  "$BUNDLE_DIR/bin/ffmpeg" \
-  "$BUNDLE_DIR/bin/ffprobe" \
   "$BUNDLE_DIR/lib" \
   /usr/lib/libmpv.so* \
   /usr/lib/libwebkit2gtk-4.1.so*

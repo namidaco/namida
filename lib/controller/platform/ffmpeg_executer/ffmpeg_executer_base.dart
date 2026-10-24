@@ -2,13 +2,12 @@ part of 'ffmpeg_executer.dart';
 
 abstract class FFMPEGExecuter {
   static FFMPEGExecuter platform() {
-    return NamidaPlatformBuilder.init(
-      android: _FFMPEGExecuterMobile.new,
-      ios: _FFMPEGExecuterMobile.new,
-      windows: _FFMPEGExecuterDesktop.new,
-      linux: _FFMPEGExecuterDesktop.new,
-      macos: _FFMPEGExecuterDesktop.new,
-    );
+    return _FFMPEGExecuterFFI();
+    // return NamidaPlatformBuilder.init(
+    //   android: _FFMPEGExecuterMobile.new,
+    //   windows: _FFMPEGExecuterDesktop.new,
+    //   linux: _FFMPEGExecuterDesktop.new,
+    // );
   }
 
   FutureOr<void> init();
