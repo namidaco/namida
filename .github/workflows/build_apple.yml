@@ -65,6 +65,7 @@ jobs:
           user-token: ${{ secrets.PAT }}
           with-docs: ${{ inputs.with_docs && 'true' || 'false' }}
           version-name: ${{ inputs.version_name }}
+          rust-targets: aarch64-apple-darwin x86_64-apple-darwin
 
       - name: Build macOS App
         run: flutter build macos --release
@@ -133,6 +134,7 @@ jobs:
           user-token: ${{ secrets.PAT }}
           with-docs: ${{ inputs.with_docs && 'true' || 'false' }}
           version-name: ${{ inputs.version_name }}
+          rust-targets: aarch64-apple-ios
 
       # -- the widget extension can't take the app down with it: when every compiler error is in widget code, the app is
       # -- built again without the extension (ios/scripts/remove_widget_extension.rb), any other failure fails the job

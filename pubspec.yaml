@@ -151,9 +151,16 @@ dependencies:
     git:
       url: https://github.com/media-kit/media-kit
       path: media_kit
-  media_kit_video: ^2.0.1
+  # -- git cuz pub ones dont have swift pkg yet
+  media_kit_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: media_kit_video
   media_kit_libs_linux: ^1.2.1
-  media_kit_libs_macos_video: ^1.1.4
+  media_kit_libs_macos_video:
+    git:
+      url: https://github.com/media-kit/media-kit
+      path: libs/macos/media_kit_libs_macos_video
   media_kit_libs_ios_video: # -- 1.1.5 (libmpv 0.7.2) lets namida own the ios audio session
     git:
       url: https://github.com/media-kit/media-kit

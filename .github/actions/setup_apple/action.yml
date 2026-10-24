@@ -14,6 +14,9 @@ inputs:
   version-name:
     description: names the built files, empty reads it from pubspec.yaml
     default: ""
+  rust-targets:
+    description: the rust targets the build compiles the cargokit plugins for
+    required: true
 
 outputs:
   version-name:
@@ -27,6 +30,13 @@ runs:
     - uses: maxim-lobanov/setup-xcode@v1
       with:
         xcode-version: "26.6"
+
+    # -- the cargokit plugins build in parallel and each one adds a missing target itself, racing on the same rustup download
+    - name: Rust targets
+      shell: bash
+      env:
+        RUST_TARGETS: ${{ inputs.rust-targets }}
+      run: rustup target add --toolchain stable $RUST_TARGETS
 
     - uses: ./.github/actions/setup
       with:
