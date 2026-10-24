@@ -48,9 +48,9 @@ double inverseAboveOne(double n) {
 }
 
 double velpy({
-  required final double a,
-  required final double b,
-  required final double c,
+  required double a,
+  required double b,
+  required double c,
 }) {
   return c * (b - a) + a;
 }

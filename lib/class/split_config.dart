@@ -37,9 +37,9 @@ class ArtistsSplitConfig extends SplitterConfig {
   });
 
   factory ArtistsSplitConfig.settings({
-    final bool? addFeatArtist,
-    final List<String>? separators,
-    final List<String>? separatorsBlacklist,
+    bool? addFeatArtist,
+    List<String>? separators,
+    List<String>? separatorsBlacklist,
   }) {
     return ArtistsSplitConfig(
       addFeatArtist: addFeatArtist ?? settings.extractFeatArtistFromTitle.value,
@@ -72,8 +72,8 @@ class GenresSplitConfig extends SplitterConfig {
   });
 
   factory GenresSplitConfig.settings({
-    final List<String>? separators,
-    final List<String>? separatorsBlacklist,
+    List<String>? separators,
+    List<String>? separatorsBlacklist,
   }) {
     return GenresSplitConfig(
       separators: separators ?? settings.trackGenresSeparators.value,

@@ -369,11 +369,11 @@ class _ArtworkWidgetState extends State<ArtworkWidget> with LoadingItemsDelayMix
 
   Widget _getStockWidget({
     Key? key,
-    required final double? boxWidth,
-    required final double? boxHeight,
-    required final bool stackWithOnTopWidgets,
-    required final BoxShape shape,
-    required final BorderRadiusGeometry? borderRadius,
+    required double? boxWidth,
+    required double? boxHeight,
+    required bool stackWithOnTopWidgets,
+    required BoxShape shape,
+    required BorderRadiusGeometry? borderRadius,
   }) {
     final icon = Icon(
       widget.displayIcon ? widget.icon ?? (widget.track is Video ? Broken.video : Broken.musicnote) : null,

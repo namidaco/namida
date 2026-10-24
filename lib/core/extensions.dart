@@ -1244,7 +1244,7 @@ extension ScrollerPerf on ScrollController {
     double offset, {
     required Duration duration,
     required Curve curve,
-    final double jumpitator = 800.0,
+    double jumpitator = 800.0,
   }) async {
     try {
       await this.positions.last.animateToEff(
@@ -1265,7 +1265,7 @@ extension ScrollPositionPerf on ScrollPosition {
     double offset, {
     required Duration duration,
     required Curve curve,
-    final double jumpitator = 800.0,
+    double jumpitator = 800.0,
   }) async {
     try {
       final diff = offset - this.pixels;

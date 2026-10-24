@@ -226,11 +226,11 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   Widget getQualityChipBase({
-    final double? height,
-    final double? width,
-    final NColors? bgColor,
-    required final Color? selectedColor,
-    final double verticalPadding = 8.0,
+    double? height,
+    double? width,
+    NColors? bgColor,
+    required Color? selectedColor,
+    double verticalPadding = 8.0,
     required void Function() onTap,
     required Widget? child,
   }) {
@@ -269,12 +269,12 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   Widget getQualityButton({
-    required final String title,
-    final String subtitle = '',
-    required final bool cacheExists,
-    required final bool selected,
-    final double horizontalPadding = 8.0,
-    final double verticalPadding = 8.0,
+    required String title,
+    String subtitle = '',
+    required bool cacheExists,
+    required bool selected,
+    double horizontalPadding = 8.0,
+    double verticalPadding = 8.0,
     required void Function() onTap,
   }) {
     final selectedColor = colorScheme!;
@@ -321,15 +321,15 @@ Future<void> showDownloadVideoBottomSheet({
   }
 
   Widget getTextWidget({
-    required final String title,
-    required final String? subtitle,
-    final IconData? icon,
-    final Widget? leading,
-    final NText? style,
-    required final bool hasWebm,
-    required final bool webmIconEnabled,
-    required final void Function()? onSussyIconTap,
-    required final void Function() onCloseIconTap,
+    required String title,
+    required String? subtitle,
+    IconData? icon,
+    Widget? leading,
+    NText? style,
+    required bool hasWebm,
+    required bool webmIconEnabled,
+    required void Function()? onSussyIconTap,
+    required void Function() onCloseIconTap,
   }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),

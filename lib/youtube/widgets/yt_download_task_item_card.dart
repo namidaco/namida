@@ -131,10 +131,10 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
   }
 
   void _showInfoDialog(
-    final BuildContext context,
-    final YoutubeItemDownloadConfig item,
-    final StreamInfoItem? info,
-    final DownloadTaskGroupName groupName,
+    BuildContext context,
+    YoutubeItemDownloadConfig item,
+    StreamInfoItem? info,
+    DownloadTaskGroupName groupName,
   ) async {
     final itemLocalInfoWidgets = await _getItemLocalInfoWidgets(context: context);
     await NamidaNavigator.inst.navigateDialog(

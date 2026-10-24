@@ -942,7 +942,7 @@ class YTUtils {
 
   void showVideoClearDialog(
     String videoId, {
-    final void Function(Map<String, bool> pathsDeleted)? afterDeleting,
+    void Function(Map<String, bool> pathsDeleted)? afterDeleting,
     List<NamidaClearDialogExpansionTile<dynamic>> Function(RxMap<String, bool> pathsToDelete, Rx<int> totalSizeToDelete, Rx<bool> allSelected)? extraTiles,
   }) async {
     final pathsToDelete = <String, bool>{}.obs;

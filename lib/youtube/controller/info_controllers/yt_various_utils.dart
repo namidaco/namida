@@ -115,7 +115,9 @@ class _YoutubeInfoUtils {
               _lazyResolvedMissingIds.add(videoId);
             }
           },
-          onError: (_) => _lazyResolvedMissingIds.add(videoId),
+          onError: (_) {
+            _lazyResolvedMissingIds.add(videoId);
+          },
         )
         .whenComplete(() => _lazyResolvingIds.remove(videoId));
   }

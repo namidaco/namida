@@ -4,8 +4,8 @@ publish_to: "none"
 version: 8.4.0-beta+261021218
 
 environment:
-  sdk: ">=3.12.2 <4.0.0"
-  flutter: 3.44.8
+  sdk: ">=3.13.7 <4.0.0"
+  flutter: 3.47.8
 
 dependency_overrides:
   intl: ^0.20.2
@@ -130,7 +130,7 @@ dependencies:
   smb_connect:
     git:
       url: https://github.com/MSOB7YY/smb_connect
-  dartssh2: ^2.14.0
+  dartssh2: ^2.22.5
 
   # ---- Audio Indexing & Playback ----
   just_audio:
