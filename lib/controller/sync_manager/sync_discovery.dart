@@ -761,14 +761,8 @@ class _FrameDispatcher {
       if (msg is BinaryPayloadMessage) {
         // -- execution is deferred until its binary payload frame arrives
         _pendingBinaryMessage = msg;
-      } else if (msg.type.carriesSenderPaths && !SyncPathResolver.hasFingerprintsFor(msg.messageInfo.senderDeviceId)) {
-        // -- we can't translate their paths yet (ex: we restarted while they
-        // -- still think we have their fingerprints), request & defer execution
-        SyncPathResolver.stashUntilFingerprints(msg);
       } else {
-        msg.executeOnReceivedWithQueue().catchError((e, st) {
-          logger.error('Error executing json payload message', e: e, st: st);
-        });
+        _execute(msg, 'Error executing json payload message');
       }
       if (_kEnableSyncDebug) _debugNotify('✔ Received | ${msg.runtimeType}(${data.length.fileSizeFormatted}):\n${msg.toRawInfo()}');
     } on NonAllowedMessageException catch (e) {
@@ -793,11 +787,21 @@ class _FrameDispatcher {
     // -- no copy needed, the reader detaches its buffer for binary frames
     pending.binaryPayload = data;
 
-    pending.executeOnReceivedWithQueue().catchError((e, st) {
-      logger.error('Error executing binary payload message', e: e, st: st);
-    });
+    _execute(pending, 'Error executing binary payload message');
 
     if (_kEnableSyncDebug) _debugNotify('✔ Received binary payload (${data.length.fileSizeFormatted}) for ${pending.runtimeType}');
+  }
+
+  void _execute(BaseMessage msg, String errorMessage) {
+    if (msg.carriesSenderPaths && !SyncPathResolver.hasFingerprintsFor(msg.messageInfo.senderDeviceId)) {
+      // -- we can't translate their paths yet (ex: we restarted while they
+      // -- still think we have their fingerprints), request & defer execution
+      SyncPathResolver.stashUntilFingerprints(msg);
+      return;
+    }
+    msg.executeOnReceivedWithQueue().catchError((e, st) {
+      logger.error(errorMessage, e: e, st: st);
+    });
   }
 }
 

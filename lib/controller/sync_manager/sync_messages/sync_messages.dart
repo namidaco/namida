@@ -31,6 +31,9 @@ sealed class BaseMessage {
   final BaseMessageInfo messageInfo;
   const BaseMessage(this.type, {required this.messageInfo});
 
+  /// waits for the sender's fingerprints before executing, see [SyncPathResolver.stashUntilFingerprints].
+  bool get carriesSenderPaths => type.carriesSenderPaths;
+
   // because it would execute as soon as manifest info is received,
   // causing minor inconveniences like progress flashing for different items
   static final _queue = Queue(parallel: 1);

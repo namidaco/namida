@@ -97,13 +97,36 @@ abstract final class SyncPathResolver {
   static _LocalFingerprintIndex _buildLocalIndexSync(Map<String, TrackExtended> source) {
     final full = <int, Track>{};
     final core = <int, Track>{};
+    final uniqueByFileName = <String, Track>{};
+    final duplicatesByFileName = <String, List<Track>>{};
     for (final trExt in source.values) {
       if (trExt.isNetwork) continue; // network paths are universal, no matching needed
       final track = trExt.asTrack();
       full[SyncTrackFingerprint.fullOf(trExt)] ??= track;
       core[SyncTrackFingerprint.coreOf(trExt)] ??= track;
+
+      final fileName = _LocalFingerprintIndex.fileNameKeyOf(track.path);
+      final duplicates = duplicatesByFileName[fileName];
+      if (duplicates != null) {
+        duplicates.add(track);
+        continue;
+      }
+      final existing = uniqueByFileName[fileName];
+      if (existing == null) {
+        uniqueByFileName[fileName] = track;
+      } else {
+        uniqueByFileName.remove(fileName);
+        duplicatesByFileName[fileName] = [existing, track];
+      }
     }
-    return _LocalFingerprintIndex(full: full, core: core, builtForSourceId: identityHashCode(source), builtForCount: source.length);
+    return _LocalFingerprintIndex(
+      full: full,
+      core: core,
+      uniqueByFileName: uniqueByFileName,
+      duplicatesByFileName: duplicatesByFileName,
+      builtForSourceId: identityHashCode(source),
+      builtForCount: source.length,
+    );
   }
 
   /// entries of the local library to be sent to other devices, each as `[path, fullHash, coreHash]`.
@@ -176,10 +199,11 @@ abstract final class SyncPathResolver {
     for (final entry in entries) {
       final list = entry as List;
       final senderPath = list[0] as String;
-      final local = index.full[list[1] as int] ?? index.core[list[2] as int];
+      final local = index.full[list[1] as int] ?? index.core[list[2] as int] ?? index.byPathEnd(senderPath);
       if (local != null && local.path != senderPath) map[senderPath] = local;
     }
     _deviceMaps[senderDeviceId] = map;
+    _unresolvedPathsByDevice.remove(senderDeviceId);
 
     final pending = _pendingMessagesByDevice.remove(senderDeviceId);
     if (pending != null) {
@@ -195,6 +219,7 @@ abstract final class SyncPathResolver {
 
   static void clearForDevice(String deviceId) {
     _deviceMaps.remove(deviceId);
+    _unresolvedPathsByDevice.remove(deviceId);
     _pendingMessagesByDevice.remove(deviceId);
   }
 
@@ -229,7 +254,29 @@ abstract final class SyncPathResolver {
     }
   }
 
-  static Track? resolveTrackByPath(String senderDeviceId, String senderPath) => _deviceMaps[senderDeviceId]?[senderPath];
+  static Track? resolveTrackByPath(String senderDeviceId, String senderPath) {
+    final map = _deviceMaps[senderDeviceId];
+    if (map == null) return null;
+    return map[senderPath] ?? _resolveByPathEnd(senderDeviceId, map, senderPath);
+  }
+
+  /// sender paths [_resolveByPathEnd] matched nothing for, so they aren't looked up again.
+  static final _unresolvedPathsByDevice = <String, Set<String>>{};
+
+  /// sender paths missing from its fingerprints (ex: listens of a file it no longer has), or that the fingerprints didn't match.
+
+  static Track? _resolveByPathEnd(String senderDeviceId, Map<String, Track> map, String senderPath) {
+    if (Indexer.inst.allTracksMappedByPath.containsKey(senderPath)) return null;
+    final unresolvedPaths = _unresolvedPathsByDevice[senderDeviceId] ??= <String>{};
+    if (unresolvedPaths.contains(senderPath)) return null;
+    final local = _localIndex?.byPathEnd(senderPath);
+    if (local == null) {
+      unresolvedPaths.add(senderPath);
+      return null;
+    }
+    map[senderPath] = local;
+    return local;
+  }
 
   static String? resolvePath(String senderDeviceId, String senderPath) => resolveTrackByPath(senderDeviceId, senderPath)?.path;
 
@@ -253,15 +300,86 @@ abstract final class SyncPathResolver {
 class _LocalFingerprintIndex {
   final Map<int, Track> full;
   final Map<int, Track> core;
+
+  /// lowercase file name keys, see [byPathEnd].
+  final Map<String, Track> uniqueByFileName;
+  final Map<String, List<Track>> duplicatesByFileName;
+
   final int builtForSourceId;
   final int builtForCount;
 
   const _LocalFingerprintIndex({
     required this.full,
     required this.core,
+    required this.uniqueByFileName,
+    required this.duplicatesByFileName,
     required this.builtForSourceId,
     required this.builtForCount,
   });
+
+  /// file name + parent folder at least.
+  static const _kMinSharedSegments = 2;
+
+  /// the local track whose path ends like [path] (ex: same folders inside a synced music folder), for tracks the fingerprints miss.
+  /// the most shared trailing folders win, a tie matches nothing.
+  Track? byPathEnd(String path) {
+    final fileName = fileNameKeyOf(path);
+    final unique = uniqueByFileName[fileName];
+    if (unique != null) {
+      final sharedSegments = _sharedTrailingSegments(path, unique.path);
+      return sharedSegments >= _kMinSharedSegments ? unique : null;
+    }
+    final duplicates = duplicatesByFileName[fileName];
+    if (duplicates == null) return null;
+    Track? best;
+    int bestSharedSegments = _kMinSharedSegments - 1;
+    bool isTie = false;
+    for (final track in duplicates) {
+      final sharedSegments = _sharedTrailingSegments(path, track.path);
+      if (sharedSegments > bestSharedSegments) {
+        best = track;
+        bestSharedSegments = sharedSegments;
+        isTie = false;
+      } else if (sharedSegments == bestSharedSegments) {
+        isTie = true;
+      }
+    }
+    return isTie ? null : best;
+  }
+
+  static String fileNameKeyOf(String path) {
+    final slashIndex = path.lastIndexOf('/');
+    final backslashIndex = path.lastIndexOf('\\');
+    final separatorIndex = slashIndex > backslashIndex ? slashIndex : backslashIndex;
+    return path.substring(separatorIndex + 1).toLowerCase();
+  }
+
+  /// whole path segments [a] and [b] end with, ignoring ascii case and separator kind.
+  static int _sharedTrailingSegments(String a, String b) {
+    int i = a.length - 1;
+    int j = b.length - 1;
+    int segments = 0;
+    while (i >= 0 && j >= 0) {
+      final charA = a.codeUnitAt(i);
+      final charB = b.codeUnitAt(j);
+      final isSeparatorA = _isSeparator(charA);
+      if (isSeparatorA != _isSeparator(charB)) return segments;
+      if (isSeparatorA) {
+        segments++;
+      } else if (_toLowerAscii(charA) != _toLowerAscii(charB)) {
+        return segments;
+      }
+      i--;
+      j--;
+    }
+    final isBoundaryA = i < 0 || _isSeparator(a.codeUnitAt(i));
+    final isBoundaryB = j < 0 || _isSeparator(b.codeUnitAt(j));
+    return isBoundaryA && isBoundaryB ? segments + 1 : segments;
+  }
+
+  static bool _isSeparator(int char) => char == 0x2F || char == 0x5C;
+
+  static int _toLowerAscii(int char) => char >= 0x41 && char <= 0x5A ? char + 0x20 : char;
 
   /// the library map gets replaced on a reload, a same sized one can still hold other tracks.
   bool isBuiltFor(Map<String, TrackExtended> source) => builtForSourceId == identityHashCode(source) && builtForCount == source.length;

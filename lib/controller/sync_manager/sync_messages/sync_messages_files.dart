@@ -23,6 +23,19 @@ abstract final class _DirFilesSyncUtils {
   /// prevents path traversal outside the target dir.
   static bool isSafeFileName(String name) => name.isNotEmpty && !name.contains('/') && !name.contains('\\') && !name.contains('..');
 
+  /// control characters are allowed in android/linux file names (ex: artist artworks), windows replaces them like [DownloadTaskFilename.cleanupFilenameRegex].
+  static final _windowsInvalidCharsRegex = RegExp(r'[\x00-\x1F]');
+
+  static String toLocalFileName(String name) => Platform.isWindows ? name.replaceAll(_windowsInvalidCharsRegex, '_') : name;
+
+  /// a windows receiver lists files under [toLocalFileName].
+  static Object? findInManifest(Map<String, dynamic> manifest, String name) {
+    final info = manifest[name];
+    if (info != null || !_windowsInvalidCharsRegex.hasMatch(name)) return info;
+    final windowsName = name.replaceAll(_windowsInvalidCharsRegex, '_');
+    return manifest[windowsName];
+  }
+
   /// `{fileName: [size, mtimeMS]}` for top-level files of the dir.
   static Future<Map<String, dynamic>> buildManifest(AppPathsBackupEnum subtype) async {
     final result = <String, dynamic>{};
@@ -172,7 +185,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
       }
 
       final mtimeMS = stat.modified.millisecondsSinceEpoch;
-      final other = files[name];
+      final other = _DirFilesSyncUtils.findInManifest(files, name);
       if (other is List && other.length >= 2) {
         final otherSize = other[0] as int? ?? -1;
         final otherMtimeMS = other[1] as int? ?? 0;
@@ -545,6 +558,10 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
     binaryPayload = bytes;
   }
 
+  /// queue files list the sender's track paths.
+  @override
+  bool get carriesSenderPaths => subtype == AppPathsBackupEnum.QUEUES;
+
   /// filesystems keep mtimes at different precisions (fat: 2s), a copy written with the sender's mtime can read back slightly off.
   static const _kMtimeToleranceMS = 2000;
 
@@ -613,7 +630,8 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
     }
 
     try {
-      final file = FileParts.join(subtype.resolve(), fileName);
+      final localFileName = _DirFilesSyncUtils.toLocalFileName(fileName);
+      final file = FileParts.join(subtype.resolve(), localFileName);
       final stat = await file.stat();
       if (stat.type != FileSystemEntityType.notFound) {
         final existingMtimeMS = stat.modified.millisecondsSinceEpoch;
@@ -627,13 +645,16 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
         );
         if (!isTheirsNewer) return;
       }
+      final isQueue = subtype == AppPathsBackupEnum.QUEUES;
+      final senderDeviceId = messageInfo.senderDeviceId;
+      final bytesToWrite = isQueue ? QueueController.resolveQueueFileBytes(bytes, (track) => SyncPathResolver.resolveTrack(senderDeviceId, track)) : bytes;
       await file.create(recursive: true);
-      await file.writeAsBytes(bytes);
+      await file.writeAsBytes(bytesToWrite);
       // -- keep the sender's mtime so future manifests compare correctly
       await file.setLastModified(DateTime.fromMillisecondsSinceEpoch(mtime));
 
       if (subtype == AppPathsBackupEnum.AUDIOS_CACHE) AudioCacheController.inst.addFileToCacheMap(file);
-      if (subtype == AppPathsBackupEnum.QUEUES) _reloadQueuesSoon();
+      if (isQueue) _reloadQueuesSoon();
 
       final info = this.info;
       if (info != null && subtype == AppPathsBackupEnum.VIDEOS_CACHE) VideoController.inst.importSyncedCacheVideoInfo(fileName, info);

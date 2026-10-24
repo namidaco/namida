@@ -9,7 +9,10 @@ class DownloadTaskFilename {
       ? 1024
       : 4096;
 
-  static final RegExp cleanupFilenameRegex = RegExp(r'[*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8]', caseSensitive: false);
+  static const _kInvalidFilenameChars = r'*#\$|/\\!^:"\?%<>\u2F38\u2044\u29F8';
+
+  /// control characters are valid in file names everywhere except windows.
+  static final RegExp cleanupFilenameRegex = RegExp(Platform.isWindows ? '[$_kInvalidFilenameChars' r'\x00-\x1F]' : '[$_kInvalidFilenameChars]', caseSensitive: false);
   static String cleanupFilename(String filename, {required String parentDirPath}) {
     final cleaned = filename.replaceAll(cleanupFilenameRegex, '_');
     final maxLength = 255.withMaximum(_fullPathLimit - parentDirPath.length);

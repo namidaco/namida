@@ -1072,6 +1072,9 @@ class Player {
 
     /// false when the play options were already picked, see [playWithOptions].
     bool canAskBeforeReplacing = true,
+
+    /// false leaves the player as is when it already plays [queue] at [index], instead of toggling play/pause.
+    bool shouldToggleIfSame = true,
   }) async {
     if (gentlePlay) {
       if (index == 0 && queue.hasSingleItem()) {
@@ -1145,7 +1148,7 @@ class Player {
       playAtIndex: index,
       queue: queue,
       maximumItems: maximumItems,
-      onIndexAndQueueSame: togglePlayPauseExclusive,
+      onIndexAndQueueSame: shouldToggleIfSame ? togglePlayPauseExclusive : null,
       onQueueDifferent: (finalizedQueue, originalIndices) {
         if (updateQueue) {
           QueueController.inst.updateLatestQueue(

@@ -14,7 +14,7 @@ enum SyncDataItem {
   smartPlaylists(needsFingerprints: false, isHeavy: false),
   videosPriority(needsFingerprints: false, isHeavy: false),
   subscriptionsYt(needsFingerprints: false, isHeavy: false),
-  queues(needsFingerprints: false, isHeavy: false),
+  queues(needsFingerprints: true, isHeavy: false),
   lyrics(needsFingerprints: false, isHeavy: true),
   videosCache(needsFingerprints: false, isHeavy: true),
   audiosCache(needsFingerprints: false, isHeavy: true),

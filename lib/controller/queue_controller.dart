@@ -397,26 +397,49 @@ class QueueController {
           f.renameSync(targetPath);
           continue;
         }
-        final q = _readQueueFile(sourceDirPath, date);
-        if (q == null) continue;
-        final tracks = q.tracks.map((tr) => resolvedTracks[tr.path] ?? tr).toFixedList();
-        final bytes = _QueueSerializer.encode(tracks, meta: q.metaToJson());
+        final bytes = f.readAsBytesSync();
+        final resolvedBytes = resolveQueueFileBytes(bytes, (tr) => resolvedTracks[tr.path]);
         final tempFile = File('$targetPath$_kTempFileSuffix');
-        tempFile.writeAsBytesSync(bytes, flush: true);
+        tempFile.writeAsBytesSync(resolvedBytes, flush: true);
         tempFile.renameSync(targetPath);
       } catch (_) {}
     }
   }
 
+  /// [bytes] of a queue file from another device, with the tracks [resolveTrack] gives a local track for replaced.
+  /// returns [bytes] itself when nothing changes or it can't be read.
+  static Uint8List resolveQueueFileBytes(Uint8List bytes, Track? Function(Track track) resolveTrack) {
+    final Queue? queue;
+    try {
+      queue = _decodeQueueFile(bytes);
+    } catch (_) {
+      return bytes;
+    }
+    if (queue == null) return bytes;
+    final tracks = queue.tracks;
+    List<Track>? resolvedTracks;
+    for (int i = 0; i < tracks.length; i++) {
+      final resolved = resolveTrack(tracks[i]);
+      if (resolved == null) continue;
+      (resolvedTracks ??= tracks.toList())[i] = resolved;
+    }
+    if (resolvedTracks == null) return bytes;
+    return _QueueSerializer.encode(resolvedTracks, meta: queue.metaToJson());
+  }
+
   static Queue? _readQueueFile(String dirPath, int date) {
     try {
       final bytes = File('$dirPath$date.json').readAsBytesSync();
-      if (bytes[0] != _QueueSerializer._kMagic) return Queue.fromJson(jsonDecodeUtf8(bytes));
-      final decoded = _QueueSerializer.decode<Track>(bytes);
-      final meta = decoded.meta;
-      return meta == null ? null : Queue.fromMeta(meta, decoded.items);
+      return _decodeQueueFile(bytes);
     } catch (_) {}
     return null;
+  }
+
+  static Queue? _decodeQueueFile(Uint8List bytes) {
+    if (bytes[0] != _QueueSerializer._kMagic) return Queue.fromJson(jsonDecodeUtf8(bytes));
+    final decoded = _QueueSerializer.decode<Track>(bytes);
+    final meta = decoded.meta;
+    return meta == null ? null : Queue.fromMeta(meta, decoded.items);
   }
 
   Future<void> emptyLatestQueue() async {
@@ -646,6 +669,8 @@ class QueueController {
         resolvedItems,
         QueueSource.playerQueue,
         originalIndices: originalIndices,
+        startPlaying: false,
+        shouldToggleIfSame: false,
       );
     } finally {
       _playerQueueModifiedTime = queueModifiedTime;
