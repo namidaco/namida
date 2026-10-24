@@ -415,6 +415,8 @@ class VideoController {
         await playVideoCurrent(video: nv, track: track);
         return nv;
       } else {
+        // -- the config carries it, the player can still be on another item
+        if (returnEarly) return null;
         // -- also re set it if network
         await Player.inst.setVideo(
           source: await track.toAudioSource(0, 0, null),

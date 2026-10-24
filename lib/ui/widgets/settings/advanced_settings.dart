@@ -176,6 +176,22 @@ class _PerformanceModeTile extends StatelessWidget {
 
   const _PerformanceModeTile({required this.bgColor});
 
+  static Iterable<NamidaPopupItem> _getModeItems() => PerformanceMode.values.map(
+    (e) {
+      void onTap() {
+        e.executeAndSave();
+        NamidaNavigator.inst.popMenu();
+      }
+
+      return NamidaPopupItem(
+        selected: e == settings.performanceMode.value,
+        icon: e.toIcon(),
+        title: e.toText(),
+        onTap: onTap,
+      );
+    },
+  );
+
   void _onTap(BuildContext context) {
     const artworkPartsMultiplier = 100;
     NamidaNavigator.inst.navigateDialog(
@@ -190,33 +206,23 @@ class _PerformanceModeTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 12.0),
-              CustomListTile(
-                icon: Broken.cpu_setting,
-                title: lang.performanceMode,
-                trailing: NamidaPopupWrapper(
-                  childrenDefault: () => PerformanceMode.values.map(
-                    (e) {
-                      void onTap() {
-                        e.executeAndSave();
-                        NamidaNavigator.inst.popMenu();
-                      }
-
-                      return NamidaPopupItem(
-                        selected: e == settings.performanceMode.value,
-                        icon: e.toIcon(),
-                        title: e.toText(),
-                        onTap: onTap,
-                      );
-                    },
-                  ),
-                  child: ObxO(
-                    rx: settings.performanceMode,
-                    builder: (context, performanceMode) => NamidaText(
-                      performanceMode.toText(),
-                      style: NText.medium,
-                      textAlign: TextAlign.end,
+              NamidaPopupWrapper(
+                childrenDefault: _getModeItems,
+                childBuilder: (openMenu) => CustomListTile(
+                  icon: Broken.cpu_setting,
+                  title: lang.performanceMode,
+                  trailing: NamidaPopupWrapper(
+                    childrenDefault: _getModeItems,
+                    child: ObxO(
+                      rx: settings.performanceMode,
+                      builder: (context, performanceMode) => NamidaText(
+                        performanceMode.toText(),
+                        style: NText.medium,
+                        textAlign: TextAlign.end,
+                      ),
                     ),
                   ),
+                  onTap: openMenu,
                 ),
               ),
               const SizedBox(height: 6.0),

@@ -796,7 +796,7 @@ def cmd_beta(args):
         tag = git("describe", "--tags", "--abbrev=0", check=False).strip()
         rev = "%s..HEAD" % tag if tag else None
     commits = load_commits(rev_range=rev, after=after)
-    cross_repo = bool(args.repo) and args.repo != MAIN_REPO
+    cross_repo = (args.repo or SNAPSHOTS_REPO) != MAIN_REPO
     shown = sorted(
         (c for c in reversed(commits) if c.prefix in CHANGELOG_PREFIXES and c.effective_score > 0),
         key=lambda c: (CHANGELOG_PREFIXES.index(c.prefix), -c.effective_score),
@@ -804,7 +804,7 @@ def cmd_beta(args):
     lines, closed, referenced = [], {}, {}
     for c in shown:
         prefix = "%s(%s)" % (c.prefix, c.platform) if c.platform else c.prefix
-        commit_link = "[%s](%s%s)" % (c.hash[:7], COMMIT_URL, c.hash)
+        commit_link = "[`%s`](%s%s)" % (c.hash[:7], COMMIT_URL, c.hash)
         lines.append("- %s: %s | %s" % (prefix, c.override or c.text, commit_link))
     for c in commits:
         closed.update(dict.fromkeys(c.closes))
@@ -812,21 +812,22 @@ def cmd_beta(args):
     for issue in closed:
         referenced.pop(issue, None)
     render = (lambda i: i) if cross_repo else short_issue
-    footer = []
     if closed:
-        footer.append("closes %s" % ", ".join(render(i) for i in sorted(closed, key=issue_key)))
+        closed_text = ", ".join(render(i) for i in sorted(closed, key=issue_key))
+        lines += details_block("Resolved Issues", "closes %s" % closed_text)
     if referenced:
-        footer.append("ref %s" % ", ".join(render(i) for i in sorted(referenced, key=issue_key)))
-    if footer:
-        lines += ["", "<details><summary>Issues</summary>", ""]
-        lines += ["- %s" % line for line in footer]
-        lines += ["", "</details>"]
+        referenced_text = ", ".join(render(i) for i in sorted(referenced, key=issue_key))
+        lines += details_block("Related Issues", "ref %s" % referenced_text)
     text = "\n".join(lines) + "\n"
     if args.dry_run:
         sys.stdout.write(text)
     else:
         write(os.path.join(root, args.out), text)
     print("%d of %d commits since %s" % (len(shown), len(commits), after or rev or "start"), file=sys.stderr)
+
+
+def details_block(summary, line):
+    return ["", "<details><summary>%s</summary>" % summary, "", "- %s" % line, "", "</details>"]
 
 
 def comment_char():

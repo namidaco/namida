@@ -5,7 +5,6 @@ class _DiscordPresenceSink extends _NowPlayingSink {
   _DiscordPresenceSink();
 
   static const _kApplicationId = '1560427410451599420';
-  static const _kLargeImageAssetKey = 'namida_icon_full';
   static const _kActivityTypeListening = 2;
   static const _kTextMaxLength = 128;
 
@@ -43,18 +42,18 @@ class _DiscordPresenceSink extends _NowPlayingSink {
   void _flush() {
     final event = _latestEvent;
     if (event == null) return;
-    final activity = event.isPlaying ? _buildActivity(event, _latestEventTimeMS, _transport.supportsImageUrls) : null;
+    final activity = event.isPlaying ? _buildActivity(event, _latestEventTimeMS, _transport) : null;
     _transport.setActivity(activity);
   }
 
-  static Map<String, dynamic> _buildActivity(_NowPlayingEvent event, int eventTimeMS, bool supportsImageUrls) {
+  static Map<String, dynamic> _buildActivity(_NowPlayingEvent event, int eventTimeMS, _DiscordPresenceTransport transport) {
     final media = event.media;
     final startMS = eventTimeMS - event.positionMS;
     final durationMS = media.duration?.inMilliseconds;
     final endMS = durationMS != null && durationMS > 0 ? startMS + durationMS : null;
     final videoId = media.extras?[NowPlayingExtras.videoId] as String?;
-    final thumbnailUrl = videoId != null && supportsImageUrls ? 'https://i.ytimg.com/vi/$videoId/mqdefault.jpg' : null;
-    final largeImage = thumbnailUrl ?? _kLargeImageAssetKey;
+    final thumbnailUrl = videoId != null && transport.supportsImageUrls ? 'https://i.ytimg.com/vi/$videoId/mqdefault.jpg' : null;
+    final largeImage = thumbnailUrl ?? transport.iconAsset;
     final videoUrl = videoId == null ? null : 'https://www.youtube.com/watch?v=$videoId';
     final details = _fitText(media.title);
     final state = _fitText(media.artist);
@@ -101,11 +100,19 @@ abstract class _DiscordPresenceTransport {
   void probe();
 
   void close();
+
+  /// a discord client resolves asset keys to ids, a direct gateway session sends the id itself.
+  String get iconAsset;
 }
 
 /// the local discord client ipc, the official desktop way: no token, no login.
 class _DiscordIpcTransport extends _DiscordPresenceTransport {
   _DiscordIpcTransport() : super(supportsImageUrls: true);
+
+  static const _kIconAssetKey = 'namida_icon_full';
+
+  @override
+  String get iconAsset => _kIconAssetKey;
 
   static const _kConnectRetryCooldownMS = 30 * 1000;
 

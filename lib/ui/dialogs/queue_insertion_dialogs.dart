@@ -495,11 +495,12 @@ class _FilterTile extends StatelessWidget {
           );
     return NamidaPopupWrapper(
       children: _buildSortChoices,
-      child: CustomListTile(
+      childBuilder: (openMenu) => CustomListTile(
         icon: Broken.filter,
         title: lang.filterBy,
         subtitleWidget: _PickerSubtitle(pickedText: sortText, trailingText: countText),
         trailing: wheelWidget,
+        onTap: openMenu,
       ),
     );
   }
@@ -612,7 +613,7 @@ class _ShuffleExclusionTile extends StatelessWidget {
         final sortText = sort.toText();
         return NamidaPopupWrapper(
           children: _buildSortChildren,
-          child: CustomListTile(
+          childBuilder: (openMenu) => CustomListTile(
             icon: Broken.forbidden_2,
             title: lang.exclude,
             subtitleWidget: _PickerSubtitle(
@@ -625,6 +626,7 @@ class _ShuffleExclusionTile extends StatelessWidget {
               onValueChanged: settings.shuffleExcludeCount.save,
               text: excludeCount > 0 ? excludeCount.displayTrackKeyword : lang.none,
             ),
+            onTap: openMenu,
           ),
         );
       },

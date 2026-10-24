@@ -1,9 +1,15 @@
 // by claude
 part of 'now_playing_broadcaster.dart';
 
-/// android has no local discord ipc, presence goes through a gateway session of an oauth token limited to presence.
+/// mobile has no local discord ipc, presence goes through a gateway session of an oauth token limited to presence.
 class _DiscordGatewayTransport extends _DiscordPresenceTransport {
   _DiscordGatewayTransport() : super(supportsImageUrls: false);
+
+  /// id of the `namida_icon_full` asset, changes if it gets re-uploaded.
+  static const _kIconAssetId = '1560434531691929701';
+
+  @override
+  String get iconAsset => _kIconAssetId;
 
   static const _kGatewayUrl = 'wss://gateway.discord.gg/?v=10&encoding=json';
   static const _kAppName = 'Namida';
@@ -141,7 +147,7 @@ class _DiscordGatewayTransport extends _DiscordPresenceTransport {
     _send(_kOpIdentify, {
       'token': 'Bearer $token',
       'intents': 0,
-      'properties': {'os': 'android', 'browser': _kAppName, 'device': _kAppName},
+      'properties': {'os': Platform.operatingSystem, 'browser': _kAppName, 'device': _kAppName},
     });
   }
 
@@ -159,7 +165,7 @@ class _DiscordGatewayTransport extends _DiscordPresenceTransport {
     _send(_kOpPresenceUpdate, {
       'since': null,
       'activities': [
-        if (activity != null) {'name': _kAppName, ...activity},
+        if (activity != null) {'name': _kAppName, 'application_id': _DiscordPresenceSink._kApplicationId, ...activity},
       ],
       'status': 'online',
       'afk': false,

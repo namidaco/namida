@@ -60,7 +60,7 @@ class EffectThemeTile extends StatelessWidget {
     final subtitle = _isOverlay ? lang.overlayEffectSubtitle : lang.seasonalEffectsSubtitle;
     return NamidaPopupWrapper(
       childrenDefault: _getItems,
-      child: CustomListTile(
+      childBuilder: (openMenu) => CustomListTile(
         bgColor: bgColor,
         icon: _isOverlay ? Broken.layer : Broken.magic_star,
         title: _isOverlay ? lang.overlayEffect : lang.backgroundEffect,
@@ -76,6 +76,7 @@ class EffectThemeTile extends StatelessWidget {
             ),
           ),
         ),
+        onTap: openMenu,
       ),
     );
   }
@@ -203,7 +204,7 @@ class VisualizerTile extends StatelessWidget {
     return NamidaPopupWrapper(
       childrenDefault: _getItems,
       refreshListenable: refreshListenable,
-      child: CustomListTile(
+      childBuilder: (openMenu) => CustomListTile(
         bgColor: bgColor,
         icon: Broken.chart_2,
         title: lang.visualizer,
@@ -213,6 +214,7 @@ class VisualizerTile extends StatelessWidget {
           refreshListenable: refreshListenable,
           child: const _EnabledVisualizersText(),
         ),
+        onTap: openMenu,
       ),
     );
   }
@@ -545,7 +547,7 @@ class _LyricsBackgroundOptions extends StatelessWidget {
               ),
             NamidaPopupWrapper(
               childrenDefault: _getVisualizerItems,
-              child: CustomListTile(
+              childBuilder: (openMenu) => CustomListTile(
                 icon: Broken.chart_2,
                 title: lang.visualizer,
                 trailing: NamidaPopupWrapper(
@@ -556,6 +558,7 @@ class _LyricsBackgroundOptions extends StatelessWidget {
                     textAlign: TextAlign.end,
                   ),
                 ),
+                onTap: openMenu,
               ),
             ),
           ],

@@ -1958,6 +1958,11 @@ class _SelectionShortcuts extends StatelessWidget {
     required this.child,
   });
 
+  static final _kSelectAllActivator = HardwareKeyboardUtils.primarySingleActivator(LogicalKeyboardKey.keyA);
+  static final _kInvertActivator = HardwareKeyboardUtils.primarySingleActivator(LogicalKeyboardKey.keyI);
+  static const _kDeleteActivator = SingleActivator(LogicalKeyboardKey.delete);
+  static const _kCloseActivator = SingleActivator(LogicalKeyboardKey.escape);
+
   @override
   Widget build(BuildContext context) {
     final focusChild = Focus(
@@ -1969,10 +1974,10 @@ class _SelectionShortcuts extends StatelessWidget {
       builder: (context, isSelecting) {
         final bindings = <ShortcutActivator, VoidCallback>{
           if (isSelecting) ...{
-            HardwareKeyboardUtils.primaryActivator(LogicalKeyboardKey.keyA): selection.selectAll,
-            HardwareKeyboardUtils.primaryActivator(LogicalKeyboardKey.keyI): selection.invert,
-            const SingleActivator(LogicalKeyboardKey.delete): selection.promptDelete,
-            const SingleActivator(LogicalKeyboardKey.escape): onClose,
+            _kSelectAllActivator: selection.selectAll,
+            _kInvertActivator: selection.invert,
+            _kDeleteActivator: selection.promptDelete,
+            _kCloseActivator: onClose,
           },
         };
         return CallbackShortcuts(

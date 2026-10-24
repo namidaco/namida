@@ -492,7 +492,8 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
           final info = e.value;
           final m3uPath = info.path;
           final trs = info.tracks;
-          final headerValues = _M3UHeaderValues.fromHeader(info.header);
+          final header = info.header;
+          final headerValues = _M3UHeaderValues.fromHeader(header);
           final headerBaseline = addAsM3U ? _m3uHeadersBaselines.valuesOf(m3uPath) : null;
           final stat = await File(m3uPath).stat();
           final creationDate = stat.creationDate.millisecondsSinceEpoch;
@@ -507,7 +508,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
           }
           final plAlreadyExisting = playlistsMap.value[plName];
           if (plAlreadyExisting != null) {
-            final merged = headerValues.mergeInto(plAlreadyExisting, headerBaseline);
+            final merged = header.mergeInto(plAlreadyExisting, headerBaseline);
             final mergedTags = merged.tags ?? plAlreadyExisting.tags;
             final tags = _combineTags(mergedTags, tagsToAdd);
             this.updatePropertyInPlaylist(
@@ -523,7 +524,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
               tracksFromNewSource: true,
             );
           } else if (properties != null) {
-            final merged = headerValues.mergeInto(properties, headerBaseline);
+            final merged = header.mergeInto(properties, headerBaseline);
             int dateAdded = currentTimeMS;
             final tracks = trs.map((tr) => TrackWithDate(dateAdded: dateAdded++, track: tr)).toList();
             final restored = properties.copyWith(
@@ -552,10 +553,11 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
             );
           }
 
-          final isBaselineChanged = headerBaseline == null || !headerValues.isSameAs(headerBaseline);
-          if (addAsM3U && isBaselineChanged) _m3uHeadersBaselines.set(m3uPath, headerValues);
+          final newBaseline = headerBaseline?.withLinesOf(header) ?? headerValues;
+          final isBaselineChanged = headerBaseline == null || !newBaseline.isSameAs(headerBaseline);
+          if (addAsM3U && isBaselineChanged) _m3uHeadersBaselines.set(m3uPath, newBaseline);
           _m3uHeaderLinesByPath[m3uPath] = info.headerLines;
-          _ensureM3UArtUrlObtained(plName, m3uPath, info.header.artUrl);
+          _ensureM3UArtUrlObtained(plName, m3uPath, header.artUrl);
         } catch (_) {}
       }
       if (didRestoreAny) sortPlaylists();

@@ -1065,7 +1065,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
             ),
             NamidaPopupWrapper(
               children: _getFilterTypeChildren,
-              child: CustomListTile(
+              childBuilder: (openMenu) => CustomListTile(
                 icon: Broken.filter_square,
                 title: lang.filterType,
                 trailing: NamidaPopupWrapper(
@@ -1074,12 +1074,13 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                     filter: selectedRule?.filter,
                   ),
                 ),
+                onTap: openMenu,
               ),
             ),
             if (selectedRule is SmartPlaylistRuleNumber && selectedRule.source.supportsScope) ...[
               NamidaPopupWrapper(
                 children: _getScopeChildren,
-                child: CustomListTile(
+                childBuilder: (openMenu) => CustomListTile(
                   icon: Broken.category,
                   title: lang.per,
                   trailing: NamidaPopupWrapper(
@@ -1090,12 +1091,13 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                       filterText: selectedRule.scope.toText(),
                     ),
                   ),
+                  onTap: openMenu,
                 ),
               ),
               if (selectedRule.isScoped && !selectedRule.source.requiresScope)
                 NamidaPopupWrapper(
                   children: _getAggregateChildren,
-                  child: CustomListTile(
+                  childBuilder: (openMenu) => CustomListTile(
                     icon: Broken.calculator,
                     title: lang.calculation,
                     trailing: NamidaPopupWrapper(
@@ -1106,6 +1108,7 @@ class _AddEditRuleDialogState extends State<_AddEditRuleDialog> {
                         filterText: selectedRule.aggregate.toText(),
                       ),
                     ),
+                    onTap: openMenu,
                   ),
                 ),
             ],

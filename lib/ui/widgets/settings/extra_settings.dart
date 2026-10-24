@@ -659,7 +659,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                 if (Platform.isLinux)
                   NamidaPopupWrapper(
                     children: _getTitlebarIconsTypeChildren,
-                    child: CustomListTile(
+                    childBuilder: (openMenu) => CustomListTile(
                       icon: Broken.close_circle,
                       title: 'desktop_title_bar_icons_type'.toUpperCase(),
                       trailing: NamidaPopupWrapper(
@@ -673,6 +673,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                           ),
                         ),
                       ),
+                      onTap: openMenu,
                     ),
                   ),
               ],
@@ -716,7 +717,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
               ),
               NamidaPopupWrapper(
                 childrenDefault: _getSearchTypeChildren,
-                child: CustomListTile(
+                childBuilder: (openMenu) => CustomListTile(
                   icon: Broken.search_favorite,
                   title: 'preferred_search_tab'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
@@ -730,6 +731,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                       ),
                     ),
                   ),
+                  onTap: openMenu,
                 ),
               ),
               ObxO(
@@ -764,7 +766,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
               ),
               NamidaPopupWrapper(
                 childrenDefault: _getExternalFileOpenActionChildren,
-                child: CustomListTile(
+                childBuilder: (openMenu) => CustomListTile(
                   icon: Broken.document_forward,
                   title: 'on_external_media_file_open'.toUpperCase(),
                   trailing: NamidaPopupWrapper(
@@ -778,6 +780,7 @@ class _ExtrasFlagsOptions extends StatelessWidget {
                       ),
                     ),
                   ),
+                  onTap: openMenu,
                 ),
               ),
               ObxO(
@@ -938,7 +941,7 @@ class _ArtworkCollageStyleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaPopupWrapper(
       childrenDefault: _getChildren,
-      child: CustomListTile(
+      childBuilder: (openMenu) => CustomListTile(
         icon: Broken.picture_frame,
         title: 'artwork_collage_style'.toUpperCase(),
         subtitle: 'Covers built from several tracks.',
@@ -953,6 +956,7 @@ class _ArtworkCollageStyleTile extends StatelessWidget {
             ),
           ),
         ),
+        onTap: openMenu,
       ),
     );
   }
@@ -1028,34 +1032,30 @@ class _DefaultLibraryTabTile extends StatelessWidget {
     }
   }
 
-  void _showMenu(BuildContext context) {
-    const menu = NamidaPopupWrapper(
-      childrenDefault: _getMenuItems,
-    );
-    menu.showPopupMenu(context);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      (context) {
-        final valueText = settings.extra.autoLibraryTab.valueR ? lang.auto : settings.extra.staticLibraryTab.valueR.toText();
-        return CustomListTile(
-          bgColor: bgColor,
-          icon: Broken.receipt_1,
-          title: lang.defaultLibraryTab,
-          trailing: NamidaPopupWrapper(
-            childrenDefault: _getMenuItems,
-            child: NamidaText(
-              valueText,
-              style: NText.medium,
-              color: const NColors(.onSurface, opacity: 0.78),
-              maxLines: 1,
-            ),
+    return NamidaPopupWrapper(
+      childrenDefault: _getMenuItems,
+      childBuilder: (openMenu) => CustomListTile(
+        bgColor: bgColor,
+        icon: Broken.receipt_1,
+        title: lang.defaultLibraryTab,
+        trailing: NamidaPopupWrapper(
+          childrenDefault: _getMenuItems,
+          child: Obx(
+            (context) {
+              final valueText = settings.extra.autoLibraryTab.valueR ? lang.auto : settings.extra.staticLibraryTab.valueR.toText();
+              return NamidaText(
+                valueText,
+                style: NText.medium,
+                color: const NColors(.onSurface, opacity: 0.78),
+                maxLines: 1,
+              );
+            },
           ),
-          onTap: () => _showMenu(context),
-        );
-      },
+        ),
+        onTap: openMenu,
+      ),
     );
   }
 }
@@ -1449,7 +1449,7 @@ class _RomanizationDictionaryTile extends StatelessWidget {
           return CustomListTile(
             icon: Broken.book,
             title: lang.dictionary,
-            subtitle: '日本語 (漢字) • 中文',
+            subtitle: '日本語 (Japanese, 漢字) • 中文 (Chinese)',
             trailingText: trailingText,
             onTap: () => _onTap(isDictionaryInstalled, downloadProgress),
           );
@@ -1793,24 +1793,28 @@ class _VibrationTypeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      bgColor: bgColor,
-      leading: const StackedIcon(
-        baseIcon: Broken.alarm,
-        secondaryIcon: Broken.wind_2,
-        secondaryIconSize: 13.0,
-      ),
-      title: lang.vibrationType,
-      trailing: NamidaPopupWrapper(
-        childrenDefault: _getChildren,
-        child: ObxO(
-          rx: settings.vibrationType,
-          builder: (context, vibrationType) => NamidaText(
-            vibrationType.toText(),
-            style: NText.small,
-            textAlign: TextAlign.end,
+    return NamidaPopupWrapper(
+      childrenDefault: _getChildren,
+      childBuilder: (openMenu) => CustomListTile(
+        bgColor: bgColor,
+        leading: const StackedIcon(
+          baseIcon: Broken.alarm,
+          secondaryIcon: Broken.wind_2,
+          secondaryIconSize: 13.0,
+        ),
+        title: lang.vibrationType,
+        trailing: NamidaPopupWrapper(
+          childrenDefault: _getChildren,
+          child: ObxO(
+            rx: settings.vibrationType,
+            builder: (context, vibrationType) => NamidaText(
+              vibrationType.toText(),
+              style: NText.small,
+              textAlign: TextAlign.end,
+            ),
           ),
         ),
+        onTap: openMenu,
       ),
     );
   }
@@ -2233,7 +2237,7 @@ class _WebhookListTile extends StatelessWidget {
               NamidaPopupWrapper(
                 childrenDefault: eventItems,
                 refreshListenable: eventsListenable,
-                child: CustomListTile(
+                childBuilder: (openMenu) => CustomListTile(
                   icon: Broken.notification_status,
                   title: 'Events',
                   trailing: Obx(
@@ -2248,6 +2252,7 @@ class _WebhookListTile extends StatelessWidget {
                       );
                     },
                   ),
+                  onTap: openMenu,
                 ),
               ),
             ],

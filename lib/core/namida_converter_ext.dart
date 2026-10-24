@@ -3404,12 +3404,12 @@ extension LyricsIntegrationUtils on LyricsIntegration {
 
 extension RomanizationScriptL10n on RomanizationScript {
   String toText() => switch (this) {
-    RomanizationScript.japanese => '日本語',
-    RomanizationScript.chinese => '中文',
-    RomanizationScript.korean => '한국어',
-    RomanizationScript.greek => 'Ελληνικά',
-    RomanizationScript.cyrillic => 'Кириллица',
-    RomanizationScript.armenian => 'Հայերեն',
-    RomanizationScript.georgian => 'ქართული',
+    RomanizationScript.japanese => '日本語 (Japanese)',
+    RomanizationScript.chinese => '中文 (Chinese)',
+    RomanizationScript.korean => '한국어 (Korean)',
+    RomanizationScript.greek => 'Ελληνικά (Greek)',
+    RomanizationScript.cyrillic => 'Кириллица (Cyrillic)',
+    RomanizationScript.armenian => 'Հայերեն (Armenian)',
+    RomanizationScript.georgian => 'ქართული (Georgian)',
   };
 }

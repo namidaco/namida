@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -15,6 +16,9 @@ part '../../../packages/custom_popup.dart';
 
 class NamidaPopupWrapper extends StatelessWidget {
   final Widget child;
+
+  /// takes the place of [child], for a child that handles its own taps (keeps its hover and press feedback).
+  final Widget Function(VoidCallback openMenu)? childBuilder;
   final PopupMenuController? controller;
   final FutureOr<Iterable<Widget>> Function()? children;
   final FutureOr<Iterable<NamidaPopupItem>> Function()? childrenDefault;
@@ -30,6 +34,7 @@ class NamidaPopupWrapper extends StatelessWidget {
     super.key,
     this.controller,
     this.child = const MoreIcon(),
+    this.childBuilder,
     this.children,
     this.childrenAfterChildrenDefault = true,
     this.childrenDefault,
@@ -236,6 +241,7 @@ class NamidaPopupWrapper extends StatelessWidget {
       onAfterPopup: () => popMenu(handleClosing: false),
       content: () => _getMenuContent(context),
       refreshListenable: refreshListenable,
+      childBuilder: childBuilder,
       child: child,
     );
   }

@@ -868,7 +868,7 @@ class _TrackActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return NamidaPopupWrapper(
       childrenDefault: _getItems,
-      child: CustomListTile(
+      childBuilder: (openMenu) => CustomListTile(
         extraDense: true,
         bgColor: bgColor,
         icon: icon,
@@ -884,6 +884,7 @@ class _TrackActionTile extends StatelessWidget {
             ),
           ),
         ),
+        onTap: openMenu,
       ),
     );
   }

@@ -8,6 +8,13 @@ const MIN_TITLE_LENGTH = 2;
 const MIN_PASTED_LOGS_LENGTH = 300;
 const APP_LOGS_ZIP_PREFILL = '📦 attach ';
 const NO_RESPONSE = '_No response_';
+const SECTION_HEADING_PREFIX = '### ';
+const CODE_FENCE_REGEX = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+const FOLD_OPEN = '<details><!-- namida-meta -->';
+const FOLD_CLOSE = '</details><!-- /namida-meta -->';
+const FOLD_SUMMARY_REGEX = /^<summary>.*<\/summary>$/;
+const FOLD_SUMMARY_SEPARATOR = ' · ';
+const FOLD_FALLBACK_SUMMARY = 'details';
 const MAX_SEARCH_WORDS = 6;
 const MAX_DUPLICATES = 3;
 const MIN_DUPLICATE_SCORE = 0.5;
@@ -15,17 +22,49 @@ const MAINTAINER_ASSOCIATIONS = new Set(['OWNER', 'MEMBER', 'COLLABORATOR']);
 const BETA_REPO = { owner: 'namidaco', repo: 'namida-snapshots' };
 
 const FIELD = {
+  checks: 'before we start',
   version: 'namida version',
   platforms: 'platforms',
+  os: 'os version',
+  device: 'device',
+  source: 'installed from',
   severity: 'how bad is it',
   area: 'where does it happen',
   featureArea: 'where in the app',
   ytProblem: "what's broken on youtube",
+  ytScope: 'which videos',
+  ytSignedIn: 'signed in?',
+  ytRegion: 'country',
   idea: 'your idea',
   question: 'what is it cutie',
   logs: 'logs',
   noLogs: "can't share logs?",
 };
+
+// -- the forms' other labels, only used to end a code fence the user left open
+const OTHER_FORM_HEADINGS = [
+  'any idea how to fix it?', 'anything else', 'apps that do this well', 'error message', 'how to make it happen', //
+  'other ways you thought of', 'screenshots / video', 'video links', 'what did you expect instead', 'what happened', //
+  "what's bugging you", //
+];
+const FIELD_HEADINGS = new Set([...Object.values(FIELD), ...OTHER_FORM_HEADINGS]);
+
+const FOLDED_FIELDS = new Set([
+  FIELD.checks,
+  FIELD.version,
+  FIELD.platforms,
+  FIELD.os,
+  FIELD.device,
+  FIELD.source,
+  FIELD.severity,
+  FIELD.area,
+  FIELD.featureArea,
+  FIELD.ytProblem,
+  FIELD.ytScope,
+  FIELD.ytSignedIn,
+  FIELD.ytRegion,
+  FIELD.noLogs,
+]);
 
 const LABEL = {
   bug: 'bug',
@@ -50,6 +89,8 @@ const PLATFORM_LABELS = {
   Android: 'android',
   Windows: 'windows',
   Linux: 'linux',
+  iOS: 'ios',
+  macOS: 'macos',
 };
 
 const SEVERITY_LABELS = {
@@ -84,6 +125,8 @@ const LABEL_COLORS = {
   android: '3ddc84',
   windows: '0078d4',
   linux: 'f9d0c4',
+  ios: 'a2aaad',
+  macos: '5e5e5e',
   crash: 'b60205',
   [LABEL.needsLogs]: 'fbca04',
   [LABEL.outdated]: 'd4c5f9',
@@ -117,7 +160,10 @@ const COMMENT_FOOTER_FINAL = "<sub>i'm a bot 🤖</sub>";
 
 module.exports = async ({ github, context, core }) => {
   const issue = context.payload.issue;
-  const fields = parseForm(issue.body ?? '');
+  const rawBody = issue.body ?? '';
+  const body = toLf(rawBody);
+  const parsedBody = parseBody(body);
+  const fields = parseForm(parsedBody.sections);
   if (fields.size === 0) {
     core.info('not created from a form, skipping');
     return;
@@ -174,7 +220,10 @@ module.exports = async ({ github, context, core }) => {
   if (shouldCloseAsIncomplete || shouldKeepIncompleteLabel) desiredLabels.add(LABEL.incomplete);
 
   const canReopen = !isIncomplete && !isOpen && wasIncomplete;
-  const shouldReopen = canReopen && (await isClosedByBot(github, owner, repo, issue.number));
+  const payloadFoldedBody = foldBody(body, parsedBody);
+  const needsLatestIssue = canReopen || payloadFoldedBody != null;
+  const latestIssue = needsLatestIssue ? await fetchIssue(github, owner, repo, issue.number, core) : null;
+  const shouldReopen = canReopen && latestIssue?.closed_by?.type === 'Bot';
   const isClosedIncomplete = shouldCloseAsIncomplete || (shouldKeepIncompleteLabel && !isOpen);
 
   const shouldFindDuplicates = !isMaintainer && authorDuplicate == null;
@@ -182,29 +231,154 @@ module.exports = async ({ github, context, core }) => {
   const comment = renderComment({ notes, duplicates, authorDuplicate, isClosedIncomplete });
 
   const titleUpdate = title === issue.title ? null : { title };
+  const bodyUpdate = payloadFoldedBody == null ? null : buildBodyUpdate(latestIssue);
   const stateUpdate = buildStateUpdate({ authorDuplicate, shouldCloseAsIncomplete, shouldReopen });
-  const issueUpdate = { ...titleUpdate, ...stateUpdate };
+  const issueUpdate = { ...titleUpdate, ...bodyUpdate, ...stateUpdate };
 
   await syncLabels(github, owner, repo, issue, desiredLabels);
   await upsertComment(github, owner, repo, issue.number, comment, isNewIssue);
   await updateIssue(github, owner, repo, issue.number, issueUpdate);
 };
 
-function parseForm(body) {
+function parseForm(sections) {
   const fields = new Map();
-  const sections = body.split(/^### /m).slice(1);
-
   for (const section of sections) {
-    const newLine = section.indexOf('\n');
-    const hasValue = newLine !== -1;
-    const rawHeading = hasValue ? section.slice(0, newLine) : section;
-    const rawValue = hasValue ? section.slice(newLine + 1).trim() : '';
-    const heading = rawHeading.trim().toLowerCase();
-    const value = rawValue === NO_RESPONSE ? '' : rawValue;
-    fields.set(heading, value);
+    const value = section.isNoResponse ? '' : section.value.trim();
+    fields.set(section.key, value);
+  }
+  return fields;
+}
+
+function parseBody(body) {
+  const lines = body.split('\n');
+  const preambleLines = [];
+  const sectionsLines = [];
+  let targetLines = preambleLines;
+  let fence = null;
+  let postambleStart = lines.length;
+
+  // -- the fold markers and the form's own headings end a fence the user left open, so it can't swallow the fields after it
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line === FOLD_CLOSE) {
+      postambleStart = i + 1;
+      break;
+    }
+    const nextLine = lines[i + 1] ?? '';
+    const isFoldOpen = line === FOLD_OPEN && FOLD_SUMMARY_REGEX.test(nextLine);
+    if (isFoldOpen) {
+      fence = null;
+      i++;
+      continue;
+    }
+    const isHeading = line.startsWith(SECTION_HEADING_PREFIX);
+    const isSectionHeading = isHeading && (fence == null || isFormFieldHeading(line));
+    if (isSectionHeading) {
+      fence = null;
+      targetLines = [line.slice(SECTION_HEADING_PREFIX.length)];
+      sectionsLines.push(targetLines);
+      continue;
+    }
+    fence = nextCodeFence(line, fence);
+    targetLines.push(line);
   }
 
-  return fields;
+  const postambleLines = lines.slice(postambleStart);
+  const sections = sectionsLines.map(parseSection);
+  const preamble = trimBlankLines(preambleLines.join('\n'));
+  const postamble = trimBlankLines(postambleLines.join('\n'));
+  return { preamble, sections, postamble };
+}
+
+function isFormFieldHeading(line) {
+  const heading = line.slice(SECTION_HEADING_PREFIX.length).trim().toLowerCase();
+  return FIELD_HEADINGS.has(heading);
+}
+
+function nextCodeFence(line, fence) {
+  const match = CODE_FENCE_REGEX.exec(line);
+  if (match == null) return fence;
+
+  const [, marker, rest] = match;
+  if (fence == null) {
+    const hasBacktickInInfo = marker[0] === '`' && rest.includes('`');
+    return hasBacktickInInfo ? null : marker;
+  }
+  const isClosing = marker[0] === fence[0] && marker.length >= fence.length && rest.trim() === '';
+  return isClosing ? null : fence;
+}
+
+function parseSection(sectionLines) {
+  const [rawHeading, ...valueLines] = sectionLines;
+  const rawValue = valueLines.join('\n');
+
+  const heading = rawHeading.trim();
+  const key = heading.toLowerCase();
+  const value = trimBlankLines(rawValue);
+  const isNoResponse = value.trim() === NO_RESPONSE;
+  return { heading, key, value, isNoResponse };
+}
+
+function buildBodyUpdate(latestIssue) {
+  if (latestIssue == null) return null;
+
+  const rawLatestBody = latestIssue.body ?? '';
+  const latestBody = toLf(rawLatestBody);
+  const latestParsedBody = parseBody(latestBody);
+  const foldedBody = foldBody(latestBody, latestParsedBody);
+  return foldedBody == null ? null : { body: foldedBody };
+}
+
+function foldBody(body, parsedBody) {
+  const { preamble, sections, postamble } = parsedBody;
+  const visibleSections = [];
+  const foldedSections = [];
+  for (const section of sections) {
+    const isFolded = section.isNoResponse || FOLDED_FIELDS.has(section.key);
+    const targetSections = isFolded ? foldedSections : visibleSections;
+    targetSections.push(section);
+  }
+  if (foldedSections.length === 0) return null;
+
+  const blocks = [];
+  if (preamble) blocks.push(preamble);
+  for (const section of visibleSections) blocks.push(renderSection(section));
+  blocks.push(renderFold(foldedSections));
+  if (postamble) blocks.push(postamble);
+
+  const foldedBody = blocks.join('\n\n');
+  return foldedBody === body ? null : foldedBody;
+}
+
+function renderFold(sections) {
+  const summaryValues = sections.filter(isSummarySection).map((s) => s.value.trim());
+  const summary = summaryValues.join(FOLD_SUMMARY_SEPARATOR) || FOLD_FALLBACK_SUMMARY;
+  const escapedSummary = escapeHtml(summary);
+  const foldHead = `${FOLD_OPEN}\n<summary>${escapedSummary}</summary>`;
+  const renderedSections = sections.map(renderSection);
+  return [foldHead, ...renderedSections, FOLD_CLOSE].join('\n\n');
+}
+
+function renderSection(section) {
+  return section.value ? `### ${section.heading}\n\n${section.value}` : `### ${section.heading}`;
+}
+
+function isSummarySection(section) {
+  const value = section.value;
+  const isCheckboxList = value.startsWith('- [');
+  return value !== '' && !section.isNoResponse && !isCheckboxList && !value.includes('\n');
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function trimBlankLines(text) {
+  return text.replace(/^(?:[ \t]*\n)+/, '').trimEnd();
+}
+
+function toLf(text) {
+  return text.replace(/\r\n/g, '\n');
 }
 
 function collectFieldLabels(fields) {
@@ -386,9 +560,14 @@ function isAuthorDuplicateCandidate(item, criteria) {
   return isSimilarTitle || itemLacksDetails;
 }
 
-async function isClosedByBot(github, owner, repo, issueNumber) {
-  const response = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
-  return response.data.closed_by?.type === 'Bot';
+async function fetchIssue(github, owner, repo, issueNumber, core) {
+  try {
+    const response = await github.rest.issues.get({ owner, repo, issue_number: issueNumber });
+    return response.data;
+  } catch (error) {
+    core.warning(`couldn't fetch the issue, it isn't reopened or folded this run: ${error.message}`);
+    return null;
+  }
 }
 
 function titleWords(title) {

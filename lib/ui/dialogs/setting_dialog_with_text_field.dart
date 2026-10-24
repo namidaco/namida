@@ -25,6 +25,7 @@ Future<void> showSettingDialogWithTextField({
 }) async {
   final controller = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  final isTextValue = dateTimeFormat || trackTileSeparator || trackArtistsDisplaySeparator;
 
   if (dateTimeFormat) {
     controller.text = settings.dateTimeFormat.value;
@@ -158,21 +159,16 @@ Future<void> showSettingDialogWithTextField({
             Padding(
               padding: const EdgeInsets.only(top: 14.0),
               child: CustomTagTextField(
-                keyboardType: dateTimeFormat || trackTileSeparator || trackArtistsDisplaySeparator ? TextInputType.text : TextInputType.number,
+                keyboardType: isTextValue ? TextInputType.text : TextInputType.number,
                 controller: controller,
                 hintText: lang.value,
                 labelText: '',
                 validator: (value) {
-                  if (fontScaleFactor) {
-                    if ((double.parse(value!) < 50 || double.parse(value) > 200)) {
-                      return lang.valueBetween50200;
-                    }
-                  }
-                  if (borderRadiusMultiplier) {
-                    if ((double.parse(value!) < 0 || double.parse(value) > 5)) {
-                      return '0.0-5.0';
-                    }
-                  }
+                  if (isTextValue) return null;
+                  final number = double.tryParse(value ?? '');
+                  if (number == null) return lang.number;
+                  if (fontScaleFactor && (number < 50 || number > 200)) return lang.valueBetween50200;
+                  if (borderRadiusMultiplier && (number < 0 || number > 5)) return '0.0-5.0';
                   return null;
                 },
               ),

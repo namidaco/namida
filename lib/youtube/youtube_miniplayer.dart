@@ -581,7 +581,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     visible: !isCollapsed,
                                     child: child!,
                                   ),
-                                  child: miniplayerBody,
+                                  child: MediaQuery.removePadding(
+                                    context: context,
+                                    removeTop: true,
+                                    child: miniplayerBody,
+                                  ),
                                 ),
                               ),
                               LayoutId(
@@ -594,7 +598,11 @@ class YoutubeMiniPlayerState extends State<YoutubeMiniPlayer> {
                                     visible: !isCollapsed,
                                     child: child!,
                                   ),
-                                  child: queueChipLayer,
+                                  child: MediaQuery.removePadding(
+                                    context: context,
+                                    removeTop: true,
+                                    child: queueChipLayer,
+                                  ),
                                 ),
                               ),
                               LayoutId(

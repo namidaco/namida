@@ -192,6 +192,18 @@ void main() {
       expect(header.artUrl, 'cover.jpg');
     });
 
+    test('missing lines are null and empty lines are empty', () {
+      final missing = M3UFiles.parseHeaderLines(['#PLAYLIST:n', '#UUID:x']);
+      expect(missing.moods, isNull);
+      expect(missing.tags, isNull);
+      expect(missing.description, isNull);
+
+      final empty = M3UFiles.parseHeaderLines(['#TAGS:', '#CATEGORY: ; ', '#DESCRIPTION:']);
+      expect(empty.moods, isEmpty);
+      expect(empty.tags, isEmpty);
+      expect(empty.description, '');
+    });
+
     test('the first of a repeated key is used', () {
       final header = M3UFiles.parseHeaderLines(['#PLAYLIST:first', '#PLAYLIST:second']);
       expect(header.name, 'first');
@@ -254,6 +266,18 @@ void main() {
         expect(M3UFiles.mergeHeaderText('mine', 'file', null), isNull);
         expect(M3UFiles.mergeHeaderText('same', 'same', 'old'), isNull);
       });
+
+      test('a missing line keeps namida values', () {
+        expect(M3UFiles.mergeHeaderItems(['a', 'b'], null, ['a', 'b']), isNull);
+        expect(M3UFiles.mergeHeaderItems(['a'], null, null), isNull);
+        expect(M3UFiles.mergeHeaderText('mine', null, 'mine'), isNull);
+        expect(M3UFiles.mergeHeaderText('', null, null), isNull);
+      });
+
+      test('an empty line clears what the file had', () {
+        expect(M3UFiles.mergeHeaderItems(['a', 'b'], const [], ['a', 'b']), isEmpty);
+        expect(M3UFiles.mergeHeaderText('mine', '', 'mine'), '');
+      });
     });
   });
 
@@ -311,6 +335,51 @@ void main() {
 
       playlist = await prepare();
       expect(playlist.moods, ['Mine', 'Ext']);
+    });
+
+    test('lines dropped by other apps keep namida values, empty lines clear them', () async {
+      final musicDirectory = p.join(dir.path, 'Converted');
+      File(p.join(musicDirectory, 'a.flac')).createSync(recursive: true);
+      final m3uPath = p.join(musicDirectory, 'converted.m3u8');
+      final m3uFile = File(m3uPath);
+      const entryLines = ['#EXTINF:249,A - a', 'a.flac'];
+      void writeFile(List<String> headerLines) => m3uFile.writeAsStringSync(['#EXTM3U', ...headerLines, ...entryLines].join('\n'));
+      writeFile(const []);
+
+      final controller = PlaylistController.inst;
+      addTearDown(controller.playlistsMap.value.clear);
+      Future<LocalPlaylist> prepare() async {
+        await controller.prepareM3UPlaylists(forPaths: {m3uPath});
+        await pumpEventQueue();
+        return controller.getPlaylist('converted')!;
+      }
+
+      void expectNamidaValues(LocalPlaylist playlist) {
+        expect(playlist.moods, ['Chill', 'Night']);
+        expect(playlist.tags, ['mine/weekly']);
+        expect(playlist.comment, 'set in namida');
+      }
+
+      var playlist = await prepare();
+      await controller.updatePlaylistsMetadata({
+        playlist.name: const PlaylistMetadataEdit(moods: ['Chill', 'Night'], tags: ['mine/weekly'], comment: 'set in namida'),
+      });
+      await Future.delayed(const Duration(milliseconds: 2500));
+      expect(m3uFile.readAsLinesSync(), containsAll(['#TAGS:Chill;Night', '#CATEGORY:mine/weekly', '#DESCRIPTION:set in namida']));
+
+      writeFile(const ['#PLAYLIST:converted']);
+      playlist = await prepare();
+      expectNamidaValues(playlist);
+
+      controller.playlistsMap.value.clear();
+      playlist = await prepare();
+      expectNamidaValues(playlist);
+
+      writeFile(const ['#TAGS:', '#CATEGORY:other']);
+      playlist = await prepare();
+      expect(playlist.moods, isEmpty);
+      expect(playlist.tags, ['other']);
+      expect(playlist.comment, 'set in namida');
     });
 
     test('a linked file outside the scanned folders stays after a full refresh', () async {

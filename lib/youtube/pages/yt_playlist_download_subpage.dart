@@ -387,7 +387,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
             ],
             NamidaPopupWrapper(
               childrenDefault: _qualityMenuChildren,
-              child: CustomListTile(
+              childBuilder: (openMenu) => CustomListTile(
                 icon: Broken.story,
                 title: lang.videoQuality,
                 trailing: NamidaPopupWrapper(
@@ -399,6 +399,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                     ),
                   ),
                 ),
+                onTap: openMenu,
               ),
             ),
           ],

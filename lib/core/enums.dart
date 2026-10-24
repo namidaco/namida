@@ -785,7 +785,7 @@ enum RouteType {
   PAGE_stats,
   PAGE_yourYear,
   PAGE_about(isOpenableFromSettings: true),
-  PAGE_Sync(isOpenableFromSettings: true),
+  PAGE_Sync(isOpenableFromSettings: true, isSettingsSubpage: true),
   PAGE_party(isOpenableFromSettings: true),
 
   // ----- Subpages -----
@@ -810,7 +810,7 @@ enum RouteType {
 
   // ----- Subpages -----
   SETTINGS_page(isOpenableFromSettings: true),
-  SETTINGS_subpage(isOpenableFromSettings: true),
+  SETTINGS_subpage(isOpenableFromSettings: true, isSettingsSubpage: true),
 
   // ----- Search Results -----
   SEARCH_albumResults,
@@ -846,7 +846,8 @@ enum RouteType {
 
   final bool isDrawerEdgeSwipeOnly;
   final bool isOpenableFromSettings;
-  const RouteType({this.isDrawerEdgeSwipeOnly = false, this.isOpenableFromSettings = false});
+  final bool isSettingsSubpage;
+  const RouteType({this.isDrawerEdgeSwipeOnly = false, this.isOpenableFromSettings = false, this.isSettingsSubpage = false});
 }
 
 /// Used for search and sort.

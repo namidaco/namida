@@ -381,15 +381,6 @@ class _SettingChoiceTile<E extends Enum> extends StatelessWidget {
     entry.onChanged?.call(value);
   }
 
-  void _onTap(BuildContext context) {
-    final valueToSubtitle = entry.valueToSubtitle;
-    if (valueToSubtitle == null) {
-      _showMenu(context);
-    } else {
-      _showDialog(valueToSubtitle);
-    }
-  }
-
   Iterable<NamidaPopupItem> _getMenuItems() => entry.values.map(
     (e) => NamidaPopupItem(
       icon: entry.valueToIcon?.call(e) ?? entry.icon,
@@ -401,13 +392,6 @@ class _SettingChoiceTile<E extends Enum> extends StatelessWidget {
       },
     ),
   );
-
-  void _showMenu(BuildContext context) {
-    final menu = NamidaPopupWrapper(
-      childrenDefault: _getMenuItems,
-    );
-    menu.showPopupMenu(context);
-  }
 
   void _showDialog(String Function(E value) valueToSubtitle) {
     NamidaNavigator.inst.navigateDialog(
@@ -454,9 +438,23 @@ class _SettingChoiceTile<E extends Enum> extends StatelessWidget {
         final isEnabled = entry.enabledWhen?.call() ?? true;
         final isValueInSubtitle = entry.isValueInSubtitle;
         final title = entry.title();
-        final hasMenu = entry.valueToSubtitle == null;
-        final valueMenu = hasMenu && !isValueInSubtitle
-            ? NamidaPopupWrapper(
+        final shownTitle = isValueInSubtitle ? '$title:' : title;
+        final subtitle = isValueInSubtitle ? valueText : null;
+        final valueToSubtitle = entry.valueToSubtitle;
+        if (valueToSubtitle != null) {
+          return CustomListTile(
+            bgColor: bgColor,
+            enabled: isEnabled,
+            icon: entry.icon,
+            title: shownTitle,
+            subtitle: subtitle,
+            trailingText: isValueInSubtitle ? null : valueText,
+            onTap: () => _showDialog(valueToSubtitle),
+          );
+        }
+        final valueMenu = isValueInSubtitle
+            ? null
+            : NamidaPopupWrapper(
                 childrenDefault: _getMenuItems,
                 child: NamidaText(
                   valueText,
@@ -464,18 +462,20 @@ class _SettingChoiceTile<E extends Enum> extends StatelessWidget {
                   color: const NColors(.onSurface, opacity: 0.78),
                   maxLines: 1,
                 ),
-              )
-            : null;
-        final trailingText = isValueInSubtitle || hasMenu ? null : valueText;
-        return CustomListTile(
-          bgColor: bgColor,
-          enabled: isEnabled,
-          icon: entry.icon,
-          title: isValueInSubtitle ? '$title:' : title,
-          subtitle: isValueInSubtitle ? valueText : null,
-          trailing: valueMenu,
-          trailingText: trailingText,
-          onTap: () => _onTap(context),
+              );
+        return NamidaPopupWrapper(
+          childrenDefault: _getMenuItems,
+          openOnTap: isEnabled,
+          openOnLongPress: isEnabled,
+          childBuilder: (openMenu) => CustomListTile(
+            bgColor: bgColor,
+            enabled: isEnabled,
+            icon: entry.icon,
+            title: shownTitle,
+            subtitle: subtitle,
+            trailing: valueMenu,
+            onTap: openMenu,
+          ),
         );
       },
     );

@@ -676,25 +676,23 @@ class _LocalVideoMatchingTile extends StatelessWidget {
         ],
         child: Column(
           children: [
-            Obx(
-              (context) => CustomListTile(
+            NamidaPopupWrapper(
+              childrenDefault: _getMatchingTypeItems,
+              childBuilder: (openMenu) => CustomListTile(
                 icon: Broken.video_tick,
                 title: lang.matchingType,
                 trailing: NamidaPopupWrapper(
                   childrenDefault: _getMatchingTypeItems,
-                  child: NamidaText(
-                    settings.localVideoMatchingType.valueR.toText(),
-                    style: NText.medium,
-                    color: const NColors(.onSurface, opacity: 0.78),
-                    maxLines: 1,
+                  child: Obx(
+                    (context) => NamidaText(
+                      settings.localVideoMatchingType.valueR.toText(),
+                      style: NText.medium,
+                      color: const NColors(.onSurface, opacity: 0.78),
+                      maxLines: 1,
+                    ),
                   ),
                 ),
-                onTap: () {
-                  const menu = NamidaPopupWrapper(
-                    childrenDefault: _getMatchingTypeItems,
-                  );
-                  menu.showPopupMenu(context);
-                },
+                onTap: openMenu,
               ),
             ),
             Obx(
@@ -828,40 +826,46 @@ class _ReplayGainTile extends StatelessWidget {
 
   const _ReplayGainTile({required this.bgColor});
 
-  void _onTypeTap(ReplayGainType e) {
+  static void _onTypeTap(ReplayGainType e) {
     NamidaNavigator.inst.popMenu();
     settings.player.replayGainType.save(e);
     PlaybackSettings._applyReplayGainType();
   }
 
+  static Iterable<NamidaPopupItem> _getTypeItems() => ReplayGainType.valuesForPlatform.map(
+    (e) => NamidaPopupItem(
+      icon: Broken.airpods,
+      secondaryIcon: Broken.voice_cricle,
+      selected: e == settings.player.replayGainType.value,
+      title: e.toText(),
+      onTap: () => _onTypeTap(e),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      bgColor: bgColor,
-      leading: const StackedIcon(
-        baseIcon: Broken.airpods,
-        secondaryIcon: Broken.voice_cricle,
-      ),
-      title: lang.normalizeAudio,
-      subtitle: lang.normalizeAudioSubtitle,
-      trailing: NamidaPopupWrapper(
-        childrenDefault: () => ReplayGainType.valuesForPlatform.map(
-          (e) => NamidaPopupItem(
-            icon: Broken.airpods,
-            secondaryIcon: Broken.voice_cricle,
-            selected: e == settings.player.replayGainType.value,
-            title: e.toText(),
-            onTap: () => _onTypeTap(e),
+    return NamidaPopupWrapper(
+      childrenDefault: _getTypeItems,
+      childBuilder: (openMenu) => CustomListTile(
+        bgColor: bgColor,
+        leading: const StackedIcon(
+          baseIcon: Broken.airpods,
+          secondaryIcon: Broken.voice_cricle,
+        ),
+        title: lang.normalizeAudio,
+        subtitle: lang.normalizeAudioSubtitle,
+        trailing: NamidaPopupWrapper(
+          childrenDefault: _getTypeItems,
+          child: ObxO(
+            rx: settings.player.replayGainType,
+            builder: (context, replayGainType) => NamidaText(
+              "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
+              style: NText.medium,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
-        child: ObxO(
-          rx: settings.player.replayGainType,
-          builder: (context, replayGainType) => NamidaText(
-            "${replayGainType.toText()}${replayGainType == ReplayGainType.platform_default ? '\n(${ReplayGainType.getPlatformDefault().toText()})' : ''}",
-            style: NText.medium,
-            textAlign: TextAlign.center,
-          ),
-        ),
+        onTap: openMenu,
       ),
     );
   }
@@ -1047,31 +1051,37 @@ class _InterruptionActionTile extends StatelessWidget {
 
   const _InterruptionActionTile({required this.type, required this.bgColor});
 
+  Iterable<NamidaPopupItem> _getActionItems() => InterruptionAction.values.map(
+    (action) => NamidaPopupItem(
+      icon: action.toIcon(),
+      title: action.toText(),
+      selected: action == settings.player.onInterrupted.value[type],
+      onTap: () => settings.player.onInterrupted.update((actions) => actions[type] = action),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
-    return CustomListTile(
-      bgColor: bgColor,
-      icon: type.toIcon(),
-      title: type.toText(),
-      subtitle: type.toSubtitle(),
-      trailing: NamidaPopupWrapper(
-        childrenDefault: () => InterruptionAction.values.map(
-          (action) => NamidaPopupItem(
-            icon: action.toIcon(),
-            title: action.toText(),
-            selected: action == settings.player.onInterrupted.value[type],
-            onTap: () => settings.player.onInterrupted.update((actions) => actions[type] = action),
+    return NamidaPopupWrapper(
+      childrenDefault: _getActionItems,
+      childBuilder: (openMenu) => CustomListTile(
+        bgColor: bgColor,
+        icon: type.toIcon(),
+        title: type.toText(),
+        subtitle: type.toSubtitle(),
+        trailing: NamidaPopupWrapper(
+          childrenDefault: _getActionItems,
+          child: Obx(
+            (context) {
+              final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
+              return NamidaText(
+                actionInSetting.toText(),
+                style: NText.medium,
+              );
+            },
           ),
         ),
-        child: Obx(
-          (context) {
-            final actionInSetting = settings.player.onInterrupted.valueR[type] ?? InterruptionAction.pause;
-            return NamidaText(
-              actionInSetting.toText(),
-              style: NText.medium,
-            );
-          },
-        ),
+        onTap: openMenu,
       ),
     );
   }
@@ -1500,33 +1510,32 @@ class _CrossfadeModeTile extends StatelessWidget {
     ),
   );
 
-  void _showModes(BuildContext context) {
-    const menu = NamidaPopupWrapper(
-      childrenDefault: _getModeItems,
-    );
-    menu.showPopupMenu(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Obx(
       (context) {
         final mode = settings.player.crossfadeMode.valueR;
-        return CustomListTile(
-          bgColor: bgColor,
-          enabled: RhythmController.inst.hasAutoTransitionsR,
-          icon: Broken.brush_3,
-          title: lang.style,
-          trailing: NamidaPopupWrapper(
-            childrenDefault: _getModeItems,
-            child: NamidaText(
-              mode.toText(),
-              style: NText.medium,
-              color: const NColors(.onSurface, opacity: 0.78),
-              maxLines: 1,
+        final isEnabled = RhythmController.inst.hasAutoTransitionsR;
+        return NamidaPopupWrapper(
+          childrenDefault: _getModeItems,
+          openOnTap: isEnabled,
+          openOnLongPress: isEnabled,
+          childBuilder: (openMenu) => CustomListTile(
+            bgColor: bgColor,
+            enabled: isEnabled,
+            icon: Broken.brush_3,
+            title: lang.style,
+            trailing: NamidaPopupWrapper(
+              childrenDefault: _getModeItems,
+              child: NamidaText(
+                mode.toText(),
+                style: NText.medium,
+                color: const NColors(.onSurface, opacity: 0.78),
+                maxLines: 1,
+              ),
             ),
+            onTap: openMenu,
           ),
-          onTap: () => _showModes(context),
         );
       },
     );

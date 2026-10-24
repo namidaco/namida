@@ -194,7 +194,7 @@ class _TagsExtractorTagLib extends TagsExtractor {
       remaining--;
       if (remaining == 0) {
         // for (final pathKey in pathKeys) {
-          // currentPathsBeingExtracted.remove(pathKey);
+        // currentPathsBeingExtracted.remove(pathKey);
         // }
         controller.close();
       }

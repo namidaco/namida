@@ -294,7 +294,10 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
     // -- stable per highlight state, so repeated ticks don't refresh the list
     final positionMS = didOverlapEnd ? _overlapEndMS : newLineDuration.inMilliseconds;
 
+    final scheduledLyrics = lyrics;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // -- [newIndex] belongs to the lyrics shown when this was scheduled
+      if (!mounted || !identical(lyrics, scheduledLyrics)) return;
       _overlapEndMS = _nextOverlapEndMS(newIndex, positionMS);
       _latestUpdatedLineInfo.value = (newLineDuration, newIndex, positionMS);
 
@@ -302,11 +305,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
         _currentIndex = newIndex;
         final list = _list;
         if (list != null && list.canScrollTo(newIndex)) list.scrollToIndex(newIndex, jump: jump);
-        try {
-          _currentLine = lyrics[newIndex].lyrics;
-        } catch (_) {
-          _currentLine = '';
-        }
+        _currentLine = lyrics[newIndex].lyrics;
         if (_updateOpacityForEmptyLines) {
           final line = _currentLine;
           late final emptyLine = _checkIfTextEmpty(_currentLine);
@@ -420,6 +419,7 @@ class LyricsLRCParsedViewState extends State<LyricsLRCParsedView> with SingleTic
 
   @override
   void dispose() {
+    _scrollTimer?.cancel();
     _mountedViews.remove(this);
     _fontScaleListenable.removeListener(_onFontScaleSettingChanged);
     _effectsKey.removeListener(_onEffectsSettingChanged);

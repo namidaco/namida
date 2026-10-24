@@ -81,6 +81,7 @@ class NamidaNavigator {
 
   static const _defaultRouteAnimationDurMS = 400;
   static const kDefaultDialogDurationMS = 300;
+  static const _kDialogDismissBlockDurationMS = 700;
 
   Future<T?> showMenu<T>({required PopupRoute<T> route}) async {
     ScrollSearchController.inst.unfocusKeyboard();
@@ -173,6 +174,9 @@ class NamidaNavigator {
   static bool? _latestSystemUIImmersive;
   static List<SystemUiOverlay>? _latestSystemUIOverlays;
 
+  // -- edgeToEdge is a no-op below android 10
+  static final _canUseEdgeToEdgeMode = !Platform.isAndroid || NamidaDeviceInfo.sdkVersion >= 29;
+
   /// Raw access to system UI mode. For more accurate results, use [MiniPlayerController.setImmersiveMode].
   static Future<void> setSystemUIImmersiveMode(bool immersive, {List<SystemUiOverlay> overlays = SystemUiOverlay.values}) async {
     final isImmersive = immersive || (kScreenshotsMode && ScreenshotsDriver.inst.hidesSystemBars);
@@ -182,8 +186,9 @@ class NamidaNavigator {
     _latestSystemUIImmersive = isImmersive;
     _latestSystemUIOverlays = overlays;
 
-    final mode = isImmersive ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge;
-    return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
+    if (isImmersive) return SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (_canUseEdgeToEdgeMode) return SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    return SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: overlays);
   }
 
   static void setDefaultSystemUIOverlayStyle({bool semiTransparent = false}) {
@@ -391,13 +396,17 @@ class NamidaNavigator {
     final bool lighterDialogColor = true,
     final double scale = 0.96,
     final bool blackBg = false,
+    final bool shouldBlockTapsOnOpen = false,
     final void Function()? onDisposing,
   }) async {
     ScrollSearchController.inst.unfocusKeyboard();
     _openedNumbersManager.incrementDialogs();
 
+    final dismissBlockStopwatch = shouldBlockTapsOnOpen ? (Stopwatch()..start()) : null;
+
     Future<bool> onWillPop() async {
       if (tapToDismiss != null && tapToDismiss() == false) return false;
+      if (dismissBlockStopwatch != null && dismissBlockStopwatch.elapsedMilliseconds < _kDialogDismissBlockDurationMS) return false;
 
       if (_openedNumbersManager._currentDialogNumber > 0) {
         closeDialog();
@@ -410,6 +419,27 @@ class NamidaNavigator {
 
     theme ??= AppThemes.inst.getAppTheme(colorScheme, null, lighterDialogColor);
 
+    final dialogWithBarrier = TapDetector(
+      onTap: onWillPop,
+      child: Container(
+        color: Colors.black.withOpacityExt(blackBg ? 1.0 : 0.45),
+        child: Transform.scale(
+          scale: scale,
+          child: NTheme(
+            data: theme,
+            child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
+          ),
+        ),
+      ),
+    );
+
+    final dialogPage = shouldBlockTapsOnOpen
+        ? _DialogOpenTapsBlocker(
+            durationMS: durationInMs,
+            child: dialogWithBarrier,
+          )
+        : dialogWithBarrier;
+
     final res = await _rootNav.currentState?.pushPage<T>(
       NamidaPopScope(
         onWillPop: onWillPop,
@@ -417,19 +447,7 @@ class NamidaNavigator {
           child: NamidaBgBlur(
             blur: 5.0,
             enabled: _openedNumbersManager._currentDialogNumber == 1,
-            child: TapDetector(
-              onTap: onWillPop,
-              child: Container(
-                color: Colors.black.withOpacityExt(blackBg ? 1.0 : 0.45),
-                child: Transform.scale(
-                  scale: scale,
-                  child: NTheme(
-                    data: theme,
-                    child: dialogBuilder == null ? dialog! : dialogBuilder(theme),
-                  ),
-                ),
-              ),
-            ),
+            child: dialogPage,
           ),
         ),
       ),
@@ -616,7 +634,7 @@ class NamidaNavigator {
     } else if (_openedNumbersManager._currentSheetNumber > 0) {
       _rootNav.currentState?.maybePop();
     } else if (_openedNumbersManager._currentDialogNumber > 0) {
-      closeDialog();
+      _rootNav.currentState?.maybePop();
     } else {
       popPage();
     }
@@ -870,5 +888,45 @@ class _CustomModalBottomSheetRoute<T> extends ModalBottomSheetRoute<T> {
       );
     }
     return child;
+  }
+}
+
+class _DialogOpenTapsBlocker extends StatefulWidget {
+  final int durationMS;
+  final Widget child;
+
+  const _DialogOpenTapsBlocker({
+    required this.durationMS,
+    required this.child,
+  });
+
+  @override
+  State<_DialogOpenTapsBlocker> createState() => _DialogOpenTapsBlockerState();
+}
+
+class _DialogOpenTapsBlockerState extends State<_DialogOpenTapsBlocker> {
+  bool _isBlocking = true;
+  late final Timer _unblockTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _unblockTimer = Timer(Duration(milliseconds: widget.durationMS), _unblock);
+  }
+
+  void _unblock() => refreshState(() => _isBlocking = false);
+
+  @override
+  void dispose() {
+    _unblockTimer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AbsorbPointer(
+      absorbing: _isBlocking,
+      child: widget.child,
+    );
   }
 }

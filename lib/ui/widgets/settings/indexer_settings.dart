@@ -2101,6 +2101,7 @@ Future<void> showRefreshPromptDialog(bool didModifyFolder, {bool allowBypassing 
     bodyWidgets.removeLast(); // remove extra bottom padding
 
     NamidaNavigator.inst.navigateDialog(
+      shouldBlockTapsOnOpen: true,
       dialogBuilder: (theme) {
         return CustomBlurryDialog(
           title: lang.confirm,

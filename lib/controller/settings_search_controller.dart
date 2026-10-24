@@ -256,8 +256,8 @@ class SettingsSearchController {
   }) async {
     onSearchTap(isOpen: false);
 
-    if (NamidaNavigator.inst.currentRoute?.route == RouteType.SETTINGS_subpage) {
-      // -- navigate back if inside subpage.
+    while (NamidaNavigator.inst.currentRoute?.route.isSettingsSubpage == true) {
+      // -- navigate back if inside subpage (nested ones too).
       // -- we can skip and just jump, but we
       // -- need the blink animation & bgColor to update.
       await NamidaNavigator.inst.popPage(waitForAnimation: true);

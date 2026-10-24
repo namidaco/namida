@@ -73,7 +73,13 @@ class BackupAndRestore extends SettingSubpageProvider {
     [
       SettingCustom(
         title: () => lang.sync,
-        aliases: () => [lang.syncAppDataBetweenYourDevices],
+        aliases: () => [
+          lang.syncAppDataBetweenYourDevices,
+          lang.deviceName,
+          '${lang.auto} ${lang.reconnect}',
+          lang.autoSyncInterval,
+          lang.dataToSendAndReceive,
+        ],
         tile: (args) => _SyncTile(
           bgColor: args.bgColor,
         ),

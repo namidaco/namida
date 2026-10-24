@@ -352,13 +352,14 @@ abstract final class M3UFiles {
   }
 
   /// `#TAGS:` are the playlist moods and `#CATEGORY:` are the playlist tags, both joined by `;`.
+  /// values without a line are null, namida keeps its own for them.
   @visibleForTesting
-  static ({String? name, String? artUrl, List<String> moods, List<String> tags, String description}) parseHeaderLines(List<String> headerLines) {
+  static ({String? name, String? artUrl, List<String>? moods, List<String>? tags, String? description}) parseHeaderLines(List<String> headerLines) {
     String? name;
     String? artUrl;
-    var moods = const <String>[];
-    var tags = const <String>[];
-    var description = '';
+    List<String>? moods;
+    List<String>? tags;
+    String? description;
     final parsedKeys = <_M3UHeaderKey>{};
     for (final headerLine in headerLines) {
       final key = _M3UHeaderKey.ofHeaderLine(headerLine);
@@ -426,9 +427,10 @@ abstract final class M3UFiles {
   }
 
   /// edits of [header] since [baseline] (the header when last read or written) applied over [current], a null [baseline] joins both.
-  /// null when [current] stays the same.
+  /// null when [current] stays the same, or when the file has no such line ([header] is null).
   @visibleForTesting
-  static List<String>? mergeHeaderItems(List<String> current, List<String> header, List<String>? baseline) {
+  static List<String>? mergeHeaderItems(List<String> current, List<String>? header, List<String>? baseline) {
+    if (header == null) return null;
     List<String>? merged;
     if (baseline != null) {
       for (final item in baseline) {
@@ -449,7 +451,8 @@ abstract final class M3UFiles {
 
   /// same as [mergeHeaderItems], a null [baseline] fills [current] only when it's empty.
   @visibleForTesting
-  static String? mergeHeaderText(String current, String header, String? baseline) {
+  static String? mergeHeaderText(String current, String? header, String? baseline) {
+    if (header == null) return null;
     final isEditedInHeader = baseline == null ? current.isEmpty : header != baseline;
     if (!isEditedInHeader || header == current) return null;
     return header;
@@ -607,6 +610,7 @@ class _M3UPlaylistTempInfo {
 
 // by claude
 /// the m3u header values namida edits, [description] is kept in one line.
+/// a value without a line in the file is empty.
 class _M3UHeaderValues {
   final List<String> moods;
   final List<String> tags;
@@ -629,10 +633,13 @@ class _M3UHeaderValues {
   }
 
   factory _M3UHeaderValues.fromHeader(_M3UHeader header) {
+    final moods = header.moods ?? const <String>[];
+    final tags = header.tags ?? const <String>[];
+    final description = header.description ?? '';
     return _M3UHeaderValues(
-      moods: header.moods,
-      tags: header.tags,
-      description: header.description,
+      moods: moods,
+      tags: tags,
+      description: description,
     );
   }
 
@@ -652,10 +659,24 @@ class _M3UHeaderValues {
     };
   }
 
+  /// values without a line in [header] stay as they are, the file didn't change them.
+  _M3UHeaderValues withLinesOf(_M3UHeader header) {
+    final moods = header.moods ?? this.moods;
+    final tags = header.tags ?? this.tags;
+    final description = header.description ?? this.description;
+    return _M3UHeaderValues(
+      moods: moods,
+      tags: tags,
+      description: description,
+    );
+  }
+
   bool isSameAs(_M3UHeaderValues other) {
     return description == other.description && listEquals(moods, other.moods) && listEquals(tags, other.tags);
   }
+}
 
+extension _M3UHeaderMerging on _M3UHeader {
   /// edits of this header since [baseline] applied over [playlist], null fields stay as they are.
   ({List<String>? moods, List<String>? tags, String? comment}) mergeInto(LocalPlaylist playlist, _M3UHeaderValues? baseline) {
     return (
@@ -689,4 +710,4 @@ enum _M3UHeaderKey {
 }
 
 typedef _M3UEntry = ({String path, String info});
-typedef _M3UHeader = ({String? name, String? artUrl, List<String> moods, List<String> tags, String description});
+typedef _M3UHeader = ({String? name, String? artUrl, List<String>? moods, List<String>? tags, String? description});

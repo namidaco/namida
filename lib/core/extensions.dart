@@ -1566,5 +1566,5 @@ extension HardwareKeyboardUtils on HardwareKeyboard {
   bool get isPrimaryModifierPressed => isPrimaryModifierMeta ? isMetaPressed : isControlPressed;
 
   /// [key] with the primary modifier.
-  static SingleActivator primaryActivator(LogicalKeyboardKey key) => SingleActivator(key, control: !isPrimaryModifierMeta, meta: isPrimaryModifierMeta);
+  static SingleActivator primarySingleActivator(LogicalKeyboardKey key) => SingleActivator(key, control: !isPrimaryModifierMeta, meta: isPrimaryModifierMeta);
 }
