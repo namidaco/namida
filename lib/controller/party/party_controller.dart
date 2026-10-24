@@ -137,6 +137,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   PartyRoomOpts? _opts;
   List<PartyBan> _bans = const [];
   bool _synced = false;
+  bool _isNewRoom = false;
+  bool _didHandOver = false;
+  bool _missedBroadcast = false;
   final _relayMembers = <int, String>{};
   final _joinRequests = <String, PartyJoinRequest>{};
   int _lastDeniedNoticeMS = 0;
@@ -217,9 +220,11 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   Future<void> rejoin(PartyRoomMemory room, {required bool listening}) async {
-    if (isActive.value) return;
-    _seedWithPlayerQueue = false;
-    await _connect(server: room.server, code: room.code, token: room.token, password: null, listening: listening);
+    await _startSession(() async {
+      _seedWithPlayerQueue = false;
+      await _connect(server: room.server, code: room.code, token: room.token, password: null, listening: listening, isNewRoom: false);
+      return null;
+    });
   }
 
   /// closes a room we host from outside of it, used to free a slot when the rooms limit is hit.
@@ -233,6 +238,23 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
 
   // ------------------------------------------------------------ create / join / leave
 
+  static const _kAlreadyInParty = 'already_in_party';
+
+  bool _isStarting = false;
+  Future<void>? _previousSessionEnding;
+
+  /// one party at a time. returns a relay error code on failure.
+  Future<String?> _startSession(Future<String?> Function() start) async {
+    if (isActive.value || _isStarting) return _kAlreadyInParty;
+    _isStarting = true;
+    try {
+      await _previousSessionEnding;
+      return await start();
+    } finally {
+      _isStarting = false;
+    }
+  }
+
   /// returns a relay error code on failure.
   Future<String?> createRoom({
     Uri? server,
@@ -243,40 +265,41 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     String? password,
     String? serverPassword,
     bool seedWithPlayerQueue = true,
-  }) async {
-    if (isActive.value) return 'already_in_party';
-    server ??= defaultServer;
-    final name = await SyncUtils.currentDeviceName;
-    final deviceId = await SyncUtils.currentDeviceId;
-    final Map<String, dynamic> response;
-    try {
-      response = await _postJson(server.resolve('/v1/rooms'), {
-        'pv': kPartyVersion,
-        'name': _displayName(name),
-        'did': deviceId,
-        'auth': serverPassword != null ? {'kind': 'password', 'password': serverPassword} : await _membershipProof(),
-        'opts': {'approval': approval, 'password': password, 'public': isPublic},
-      });
-    } catch (e, st) {
-      logger.error('party create failed', e: e, st: st);
-      return 'unreachable';
-    }
-    final error = response['error'];
-    if (error != null) return error.toString();
-    final code = response['code'];
-    final token = response['token'];
-    if (code is! String || token is! String) return 'unreachable';
+  }) {
+    return _startSession(() async {
+      final relayServer = server ?? defaultServer;
+      final name = await SyncUtils.currentDeviceName;
+      final deviceId = await SyncUtils.currentDeviceId;
+      final Map<String, dynamic> response;
+      try {
+        response = await _postJson(relayServer.resolve('/v1/rooms'), {
+          'pv': kPartyVersion,
+          'name': _displayName(name),
+          'did': deviceId,
+          'auth': serverPassword != null ? {'kind': 'password', 'password': serverPassword} : await _membershipProof(),
+          'opts': {'approval': approval, 'password': password, 'public': isPublic},
+        });
+      } catch (e, st) {
+        logger.error('party create failed', e: e, st: st);
+        return 'unreachable';
+      }
+      final error = response['error'];
+      if (error != null) return error.toString();
+      final code = response['code'];
+      final token = response['token'];
+      if (code is! String || token is! String) return 'unreachable';
 
-    final serverToRemember = server == defaultServer ? null : server.toString();
-    if (settings.party.serverUrl.value != serverToRemember) {
-      settings.party.serverUrl.save(serverToRemember);
-    }
+      final serverToRemember = relayServer == defaultServer ? null : relayServer.toString();
+      if (settings.party.serverUrl.value != serverToRemember) {
+        settings.party.serverUrl.save(serverToRemember);
+      }
 
-    _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
-    _seedWithPlayerQueue = seedWithPlayerQueue;
-    _pendingPublic = isPublic;
-    await _connect(server: server, code: code, token: token, password: null, listening: listening);
-    return null;
+      _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
+      _seedWithPlayerQueue = seedWithPlayerQueue;
+      _pendingPublic = isPublic;
+      await _connect(server: relayServer, code: code, token: token, password: null, listening: listening, isNewRoom: true);
+      return null;
+    });
   }
 
   /// hosts the relay on this device, for parties over the local network (or a forwarded port).
@@ -287,56 +310,64 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     bool isPublic = false,
     String? password,
     bool seedWithPlayerQueue = true,
-  }) async {
-    if (isActive.value) return 'already_in_party';
-    final name = await SyncUtils.currentDeviceName;
-    final deviceId = await SyncUtils.currentDeviceId;
-    final PartyRelayServer relay;
-    try {
-      relay = await PartyRelayServer.start(
-        port: _lanRelayPort,
-        config: _lanRelayConfig,
-      ).catchError((_) => PartyRelayServer.start(config: _lanRelayConfig));
-    } catch (e, st) {
-      logger.error('party lan relay failed to start', e: e, st: st);
-      return 'unreachable';
-    }
-    final created = relay.createRoom(name: _displayName(name), did: deviceId, pv: kPartyVersion, approval: approval, password: password, public: isPublic);
-    final lanAddress = (await SyncUtils.getPreferredInterface())?.addresses.firstOrNull?.address;
+  }) {
+    return _startSession(() async {
+      final name = await SyncUtils.currentDeviceName;
+      final deviceId = await SyncUtils.currentDeviceId;
+      final PartyRelayServer relay;
+      try {
+        relay = await PartyRelayServer.start(
+          port: _lanRelayPort,
+          config: _lanRelayConfig,
+        ).catchError((_) => PartyRelayServer.start(config: _lanRelayConfig));
+      } catch (e, st) {
+        logger.error('party lan relay failed to start', e: e, st: st);
+        return 'unreachable';
+      }
+      final created = relay.createRoom(name: _displayName(name), did: deviceId, pv: kPartyVersion, approval: approval, password: password, public: isPublic);
+      final lanAddress = (await SyncUtils.getPreferredInterface())?.addresses.firstOrNull?.address;
 
-    _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
-    _seedWithPlayerQueue = seedWithPlayerQueue;
-    _pendingPublic = isPublic;
-    await _connect(
-      server: Uri(scheme: 'http', host: '127.0.0.1', port: relay.port),
-      code: created.code,
-      token: created.token,
-      password: null,
-      listening: listening,
-      lanRelay: relay,
-      inviteServer: lanAddress == null ? null : Uri(scheme: 'http', host: lanAddress, port: relay.port),
-    );
-    return null;
+      _pendingRoomName = roomName.trim().isEmpty ? _displayName(name) : roomName.trim();
+      _seedWithPlayerQueue = seedWithPlayerQueue;
+      _pendingPublic = isPublic;
+      await _connect(
+        server: Uri(scheme: 'http', host: '127.0.0.1', port: relay.port),
+        code: created.code,
+        token: created.token,
+        password: null,
+        listening: listening,
+        isNewRoom: true,
+        lanRelay: relay,
+        inviteServer: lanAddress == null ? null : Uri(scheme: 'http', host: lanAddress, port: relay.port),
+      );
+      return null;
+    });
   }
 
   Future<void> joinRoom({Uri? server, required String code, String? password, required bool listening}) async {
-    if (isActive.value) return;
-    _seedWithPlayerQueue = false;
-    await _connect(server: server ?? defaultServer, code: code.toUpperCase(), token: null, password: password, listening: listening);
+    await _startSession(() async {
+      _seedWithPlayerQueue = false;
+      final relayServer = server ?? defaultServer;
+      await _connect(server: relayServer, code: code.toUpperCase(), token: null, password: password, listening: listening, isNewRoom: false);
+      return null;
+    });
   }
 
+  /// [isNewRoom] means we just created it, so there is no state anywhere yet.
   Future<void> _connect({
     required Uri server,
     required String code,
     required String? token,
     required String? password,
     required bool listening,
+    required bool isNewRoom,
     PartyRelayServer? lanRelay,
     Uri? inviteServer,
   }) async {
     final name = await SyncUtils.currentDeviceName;
     final deviceId = await SyncUtils.currentDeviceId;
     _resetSession();
+    _isNewRoom = isNewRoom;
     _lanRelay = lanRelay;
     _inviteServer = inviteServer;
     _server = server;
@@ -361,12 +392,28 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   Future<void> leave({bool closeRoom = false}) async {
     final connection = _connection;
     if (connection == null) return;
-    // -- our own relay dies with us, tell everyone instead of leaving them reconnecting
-    if ((closeRoom || isLanParty) && isHost) connection.closeRoom();
+    // -- our own relay dies with us, so the room is gone for everyone either way
+    final isLan = isLanParty;
+    final isClosingRoom = (closeRoom || isLan) && isHost;
+    final isRoomGone = isClosingRoom || isLan;
+    final memory = _currentRoomMemory();
+    var isCloseSent = false;
+    if (isClosingRoom) isCloseSent = connection.closeRoom();
     await connection.leave();
-    await _cleanup();
+    await _endSession();
+    if (memory == null || !isRoomGone) return;
+    forgetRoom(memory);
+    // -- the close never left while reconnecting
+    if (isClosingRoom && !isCloseSent && !isLan) unawaited(closeRemoteRoom(memory));
   }
 
+  Future<void> _endSession() {
+    final ending = _cleanup();
+    _previousSessionEnding = ending;
+    return ending;
+  }
+
+  /// state is reset before [isActive] drops, so a party started right after never sees this one's leftovers.
   Future<void> _cleanup() async {
     _connection = null;
     _summaryTimer?.cancel();
@@ -380,14 +427,14 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _host = null;
     final binder = _binder;
     _binder = null;
-    isActive.value = false;
-    status.value = .closed;
-    await binder?.unbind(restoreQueue: true);
     _lanAdvertiser?.stop();
     _lanAdvertiser = null;
     final lanRelay = _lanRelay;
     _lanRelay = null;
     _resetSession();
+    isActive.value = false;
+    status.value = .closed;
+    await binder?.unbind(restoreQueue: true);
     await lanRelay?.close();
   }
 
@@ -401,6 +448,11 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _opts = null;
     _bans = const [];
     _synced = false;
+    _syncRetryTimer?.cancel();
+    _syncRetryTimer = null;
+    _isNewRoom = false;
+    _didHandOver = false;
+    _missedBroadcast = false;
     _relayMembers.clear();
     _joinRequests.clear();
     _server = null;
@@ -421,8 +473,10 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   static String _displayName(String name) {
     name = name.trim();
     if (name.isEmpty) return 'Namida';
-    return name.length > 32 ? name.substring(0, 32) : name;
+    return _cappedText(name, 32);
   }
+
+  static String _cappedText(String text, int maxLength) => text.length > maxLength ? text.substring(0, maxLength) : text;
 
   Future<Map<String, dynamic>?> _membershipProof() async {
     final membership = YoutubeAccountController.membership;
@@ -470,6 +524,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   // ------------------------------------------------------------ directory
 
   static const _summaryMinIntervalMS = 20000;
+  static const _summaryNameMaxLength = 48;
+  static const _summaryTextMaxLength = 80;
   static final _serverInfoCache = <String, Map<String, dynamic>>{};
 
   /// `/v1/info` of [server], null when it could not be reached.
@@ -545,21 +601,23 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     }
   }
 
-  void _rememberCurrentRoom() {
+  PartyRoomMemory? _currentRoomMemory() {
     final server = _inviteServer ?? _server;
     final code = _code;
-    final token = _connection?.token;
-    if (server == null || code == null) return;
-    _rememberRoom(
-      PartyRoomMemory(
-        code: code,
-        server: server,
-        token: token,
-        name: _state.roomName,
-        hosted: isHost,
-        atMS: DateTime.now().millisecondsSinceEpoch,
-      ),
+    if (server == null || code == null) return null;
+    return PartyRoomMemory(
+      code: code,
+      server: server,
+      token: _connection?.token,
+      name: _state.roomName,
+      hosted: isHost,
+      atMS: DateTime.now().millisecondsSinceEpoch,
     );
+  }
+
+  void _rememberCurrentRoom() {
+    final memory = _currentRoomMemory();
+    if (memory != null) _rememberRoom(memory);
   }
 
   /// saves what played into a local playlist, a youtube one, or both. returns how many entries landed.
@@ -596,12 +654,15 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   void _pushSummary({bool force = false}) {
-    if (!isHost || _opts?.isPublic != true) return;
-    final name = _state.roomName;
+    if (_host == null || _opts?.isPublic != true) return;
+    // -- the relay refuses longer ones instead of cutting them
+    final name = _cappedText(_state.roomName, _summaryNameMaxLength);
     // -- without it the summary only changes with the room itself, which is a handful of pushes per party
     final entry = settings.party.sharePlaying.value ? _state.currentEntry : null;
-    final title = entry?.title ?? '';
-    final artist = entry?.artist ?? '';
+    final fullTitle = entry?.title ?? '';
+    final fullArtist = entry?.artist ?? '';
+    final title = _cappedText(fullTitle, _summaryTextMaxLength);
+    final artist = _cappedText(fullArtist, _summaryTextMaxLength);
     if (!force && name == _sentSummaryName && title == _sentSummaryTitle && artist == _sentSummaryArtist) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -668,7 +729,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   }
 
   void answerJoinRequest(String requestId, bool accept) {
-    _connection?.approve(requestId, accept);
+    final isSent = _connection?.approve(requestId, accept) ?? false;
+    // -- the relay sends the request again once we are back
+    if (!isSent) return;
     if (_joinRequests.remove(requestId) != null) requestsTick.value++;
   }
 
@@ -730,8 +793,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _relayMembers
       ..clear()
       ..addAll(welcome.members);
+    // -- the relay sends both again to whoever is host
+    _clearHostOnlyState();
     infoTick.value++;
-    _rememberCurrentRoom();
 
     if (isHost) {
       _becomeHost(isFirstWelcome: _host == null);
@@ -739,8 +803,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       _host?.dispose();
       _host = null;
       _synced = false;
-      if (_hostOnline) _connection?.sendData(PartyRoute.toHost, PartyMsg.hello(listening: isListening.value).encode());
+      if (_hostOnline) _requestSync(PartyMsg.hello(listening: isListening.value));
     }
+    _rememberCurrentRoom();
     _ensureBinder();
     if (isHost) {
       if (_pendingPublic && _opts?.isPublic != true) {
@@ -754,15 +819,22 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   void _becomeHost({required bool isFirstWelcome}) {
     final existing = _host;
     if (existing != null) {
-      // -- we reconnected, catch up with who came & went meanwhile
+      // -- we reconnected, what we changed meanwhile never left & members came and went
+      if (_missedBroadcast) {
+        _missedBroadcast = false;
+        existing.broadcastSnapshot();
+      }
       for (final n in _state.members.keys.toList()) {
-        if (!_relayMembers.containsKey(n)) existing.onMemberLeft(n);
+        // -- how they left was missed, so no role is kept for them
+        if (!_relayMembers.containsKey(n)) existing.onMemberLeft(n, lost: false);
       }
       for (final e in _relayMembers.entries) {
         if (!_state.members.containsKey(e.key)) existing.onMemberJoined(e.key, e.value);
       }
+      existing.pushSuccessors();
       return;
     }
+    if (_state.epoch == 0 && !_isNewRoom && _handOverToMember()) return;
     _synced = true;
     if (_state.epoch == 0) {
       final repeat = PartyRepeat(mode: settings.player.repeatMode.value, times: Player.inst.numberOfRepeats.value);
@@ -787,6 +859,20 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     }
   }
 
+  /// host without the room state (rejoined as host, or promoted before our snapshot) while others hold it.
+  /// starting over would wipe it for everyone. only once, in case they have nothing either.
+  bool _handOverToMember() {
+    if (_didHandOver) return false;
+    int? target;
+    for (final n in _relayMembers.keys) {
+      if (n != _myN && (target == null || n < target)) target = n;
+    }
+    if (target == null) return false;
+    _didHandOver = true;
+    _connection?.transferHost(target);
+    return true;
+  }
+
   void _seedQueueFromPlayer() {
     _seedWithPlayerQueue = false;
     final player = Player.inst;
@@ -803,6 +889,13 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     );
   }
 
+  void _clearHostOnlyState() {
+    _bans = const [];
+    if (_joinRequests.isEmpty) return;
+    _joinRequests.clear();
+    requestsTick.value++;
+  }
+
   @override
   void onMemberJoined(int n, String name) {
     _relayMembers[n] = name;
@@ -812,16 +905,16 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   @override
   void onMemberLeft(int n, String reason) {
     _relayMembers.remove(n);
-    _host?.onMemberLeft(n);
+    _host?.onMemberLeft(n, lost: reason == 'lost');
   }
 
   @override
   void onHostChanged(int n, bool online) {
     final wasHost = isHost;
-    final hostChanged = _hostN != n;
     _hostN = n;
     _hostOnline = online;
     infoTick.value++;
+    if (isHost != wasHost) _rememberCurrentRoom();
     if (isHost) {
       if (!wasHost) _becomeHost(isFirstWelcome: false);
       return;
@@ -829,11 +922,10 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     if (wasHost) {
       _host?.dispose();
       _host = null;
+      _clearHostOnlyState();
     }
-    if (online && !hostChanged && !_synced) {
-      // -- the host came back while we were waiting for a snapshot
-      _connection?.sendData(PartyRoute.toHost, const PartyMsg.sync().encode());
-    }
+    // -- a host came back or took over while we were waiting for a snapshot
+    if (online && !_synced) _requestSync(PartyMsg.hello(listening: isListening.value));
   }
 
   @override
@@ -884,14 +976,42 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       notifyDenied(reason is int && reason < PartyDenyReason.values.length ? PartyDenyReason.values[reason] : .invalid);
       return;
     }
-    if (!_synced && event.type != PartyMsgType.snapshot && !_state.isLoading) return;
+    final isSnapshot = event.type == PartyMsgType.snapshot;
+    if (!_synced && !isSnapshot && !_state.isLoading) return;
+    final previousRoomName = _state.roomName;
     if (_state.apply(event)) {
       _synced = true;
+      if (isSnapshot) {
+        // -- chat & the room name only come with snapshots
+        chatTick.value++;
+        if (_state.roomName != previousRoomName) _rememberCurrentRoom();
+      }
       return;
     }
     if (!_synced) return;
     _synced = false;
-    _connection?.sendData(PartyRoute.toHost, const PartyMsg.sync().encode());
+    _requestSync(const PartyMsg.sync());
+  }
+
+  static const _syncRetryBaseMS = 5000;
+  static const _syncRetryMaxMS = 30000;
+  Timer? _syncRetryTimer;
+  int _syncRetries = 0;
+
+  /// keeps asking until a snapshot lands, one dropped frame would otherwise leave us stuck.
+  void _requestSync(PartyMsg request, {bool isRetry = false}) {
+    if (!isRetry) _syncRetries = 0;
+    final payload = request.encode();
+    _connection?.sendData(PartyRoute.toHost, payload);
+    final delayMS = (_syncRetryBaseMS << _syncRetries).withMaximum(_syncRetryMaxMS);
+    if (delayMS < _syncRetryMaxMS) _syncRetries++;
+    _syncRetryTimer?.cancel();
+    _syncRetryTimer = Timer(Duration(milliseconds: delayMS), () {
+      _syncRetryTimer = null;
+      final isSynced = _synced && !_state.isLoading;
+      if (isSynced || isHost || !_hostOnline) return;
+      _requestSync(const PartyMsg.sync(), isRetry: true);
+    });
   }
 
   @override
@@ -903,13 +1023,10 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   void onFatal(String code, Map<String, dynamic> details) {
     final wasActive = isActive.value;
     if (_isGoneForGood(code)) {
-      final server = _inviteServer ?? _server;
-      final code = _code;
-      if (server != null && code != null) {
-        forgetRoom(PartyRoomMemory(code: code, server: server, token: null, name: '', hosted: false, atMS: 0));
-      }
+      final memory = _currentRoomMemory();
+      if (memory != null) forgetRoom(memory);
     }
-    _cleanup();
+    _endSession();
     if (!wasActive) return;
     snackyy(
       icon: Broken.warning_2,
@@ -945,7 +1062,11 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
   // ------------------------------------------------------------ PartyHostDelegate
 
   @override
-  void broadcast(PartyMsg event) => _connection?.sendData(PartyRoute.broadcast, event.encode());
+  void broadcast(PartyMsg event) {
+    final payload = event.encode();
+    final isSent = _connection?.sendData(PartyRoute.broadcast, payload) ?? false;
+    if (!isSent) _missedBroadcast = true;
+  }
 
   @override
   void sendTo(int n, PartyMsg event) {
@@ -987,6 +1108,8 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
         final entry = _fallbackQueue.removeFirst();
         if (_state.entryById(entry.id) == null) continue;
         final ytId = await _searchYoutubeMatch(entry);
+        // -- the room moved on to another host or another party while searching
+        if (!identical(_host, host)) break;
         if (ytId != null) host.setFallback(entry.id, ytId, approximate: true);
       }
     } finally {

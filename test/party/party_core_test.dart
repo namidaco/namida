@@ -263,8 +263,25 @@ void main() {
     expect(room.kicked, [3]);
     room.send(2, PartyMsg.role(3, PartyRole.admin));
     expect(room.hostState.members[3]!.role, PartyRole.guest);
-    room.host.onMemberLeft(3);
+    room.host.onMemberLeft(3, lost: false);
     room.members.remove(3);
+    room.expectConverged();
+  });
+
+  test('an admin keeps the role across a dropped connection, not after leaving', () {
+    final room = _Room();
+    room.join(2);
+    room.send(1, PartyMsg.role(2, PartyRole.admin));
+
+    room.host.onMemberLeft(2, lost: true);
+    expect(room.successors.last, isEmpty);
+    room.join(2);
+    expect(room.hostState.members[2]!.role, PartyRole.admin);
+    expect(room.successors.last, [2]);
+
+    room.host.onMemberLeft(2, lost: false);
+    room.join(2);
+    expect(room.hostState.members[2]!.role, PartyRole.guest);
     room.expectConverged();
   });
 
@@ -443,8 +460,9 @@ void main() {
 
     final takeover = _Room();
     takeover.members.clear();
+    final oldEpoch = guest.epoch;
     final newHost = PartyHost.takeOver(state: guest, selfN: 2, connected: {2: 'm2', 3: 'm3'}, delegate: takeover);
-    expect(guest.epoch, 2);
+    expect(guest.epoch, greaterThan(oldEpoch));
     expect(guest.members[2]!.role, PartyRole.host);
     expect(guest.members[3]!.role, PartyRole.admin);
     expect(guest.members.containsKey(1), false);
@@ -455,7 +473,7 @@ void main() {
     expect(guest.entries.last.id, 3);
 
     final stale = PartyMsg.snapshot(
-      epoch: 1,
+      epoch: oldEpoch,
       roomName: 'old',
       members: const [],
       perms: const PartyPermissions(),

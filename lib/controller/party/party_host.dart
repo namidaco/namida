@@ -36,6 +36,9 @@ class PartyHost {
   final _fallbackRequested = <int>{};
   final _lastReactionMS = <int, int>{};
 
+  /// a dropped connection keeps the member number, so the role waits for it to come back.
+  final _lostAdmins = <int>{};
+
   factory PartyHost.create({
     required PartyState state,
     required int selfN,
@@ -45,8 +48,9 @@ class PartyHost {
     required PartyRepeat repeat,
     required PartyHostDelegate delegate,
   }) {
+    // -- epochs follow the relay clock, so a room started over always wins over what members still hold
     final snapshot = PartyMsg.snapshot(
-      epoch: 1,
+      epoch: delegate.nowMS(),
       roomName: roomName,
       members: [PartyMember(n: selfN, name: selfName, role: .host, listening: listening)],
       perms: const PartyPermissions(),
@@ -80,8 +84,10 @@ class PartyHost {
       }
       members.add(PartyMember(n: e.key, name: e.value, role: role, listening: old?.listening ?? true));
     }
+    final nextEpoch = state.epoch + 1;
+    final nowMS = delegate.nowMS();
     final snapshot = PartyMsg.snapshot(
-      epoch: state.epoch + 1,
+      epoch: nowMS > nextEpoch ? nowMS : nextEpoch,
       roomName: state.roomName,
       members: members,
       perms: state.perms,
@@ -93,9 +99,9 @@ class PartyHost {
     );
     state.apply(snapshot);
     final host = PartyHost._(state, selfN, delegate);
-    host._broadcastSnapshot();
+    host.broadcastSnapshot();
     host._scheduleAdvance();
-    host._pushSuccessors();
+    host.pushSuccessors();
     return host;
   }
 
@@ -108,21 +114,26 @@ class PartyHost {
 
   void onMemberJoined(int n, String name) {
     final existing = state.members[n];
+    final wasLostAdmin = _lostAdmins.remove(n);
     final member = PartyMember(
       n: n,
       name: name,
-      role: existing?.role ?? .guest,
+      role: existing?.role ?? (wasLostAdmin ? .admin : .guest),
       listening: existing?.listening ?? true,
     );
     _emit(PartyMsg.member(member));
+    if (wasLostAdmin) pushSuccessors();
   }
 
-  void onMemberLeft(int n) {
-    if (!state.members.containsKey(n)) return;
-    final wasAdmin = state.members[n]!.role == PartyRole.admin;
+  /// [lost] is a dropped connection, anything else (leaving, kicked) starts over as a guest.
+  void onMemberLeft(int n, {required bool lost}) {
+    final member = state.members[n];
+    if (member == null) return;
+    final wasAdmin = member.role == PartyRole.admin;
+    if (wasAdmin && lost) _lostAdmins.add(n);
     _lastReactionMS.remove(n);
     _emit(PartyMsg.memberGone(n));
-    if (wasAdmin) _pushSuccessors();
+    if (wasAdmin) pushSuccessors();
   }
 
   void setFallback(int entryId, String ytId, {required bool approximate}) {
@@ -262,7 +273,7 @@ class PartyHost {
         if (target == null || target.role == PartyRole.host || role == PartyRole.host) return .invalid;
         if (target.role == role) return null;
         _emit(PartyMsg.member(PartyMember(n: target.n, name: target.name, role: role, listening: target.listening)));
-        _pushSuccessors();
+        pushSuccessors();
 
       case PartyMsgType.perms:
         if (member.role != PartyRole.host) return .permission;
@@ -505,7 +516,7 @@ class PartyHost {
     _delegate.broadcast(withRev);
   }
 
-  void _pushSuccessors() {
+  void pushSuccessors() {
     final admins = <int>[];
     for (final m in state.members.values) {
       if (m.role == PartyRole.admin) admins.add(m.n);
@@ -518,7 +529,7 @@ class PartyHost {
     _forEachSnapshotChunk((msg) => _delegate.sendTo(n, msg));
   }
 
-  void _broadcastSnapshot() => _forEachSnapshotChunk(_delegate.broadcast);
+  void broadcastSnapshot() => _forEachSnapshotChunk(_delegate.broadcast);
 
   void _forEachSnapshotChunk(void Function(PartyMsg msg) send) {
     final entries = state.entries;

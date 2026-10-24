@@ -93,7 +93,7 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
   @override
   void onMemberLeft(int n, String reason) {
     relayMembers.remove(n);
-    host?.onMemberLeft(n);
+    host?.onMemberLeft(n, lost: reason == 'lost');
   }
 
   @override
@@ -298,17 +298,19 @@ void main() {
     final clockSkew = (guest.connection.nowMS() - host.connection.nowMS()).abs();
     expect(clockSkew < 250, true, reason: 'relay clock offset, got $clockSkew');
 
+    final firstEpoch = host.state.epoch;
     host.connection.dispose();
     host.host!.dispose();
     await _until(() => guest.isHost, reason: 'promotion after host grace');
-    expect(guest.state.epoch, 2);
+    final takeoverEpoch = guest.state.epoch;
+    expect(takeoverEpoch, greaterThan(firstEpoch));
     expect(guest.state.entries.length, 1201);
     guest.send(const PartyMsg.play());
     expect(guest.state.anchor.playing, true);
 
     final late = _Peer('late');
     await late.connect(relay.port, room.code);
-    await _until(() => late.synced && late.state.entries.length == 1201 && late.state.epoch == 2, reason: 'joins the new host');
+    await _until(() => late.synced && late.state.entries.length == 1201 && late.state.epoch == takeoverEpoch, reason: 'joins the new host');
     expect(late.state.members[guest.myN]?.role, PartyRole.host);
 
     guest.host!.dispose();

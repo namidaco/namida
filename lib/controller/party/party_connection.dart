@@ -281,6 +281,7 @@ class PartyConnection {
   // ------------------------------------------------------------
 
   void _onFrame(dynamic frame) {
+    if (_disposed) return;
     if (frame is String) {
       Map<String, dynamic> map;
       try {
@@ -377,10 +378,15 @@ class PartyConnection {
 
   // ------------------------------------------------------------
 
-  void _sendControl(Map<String, dynamic> map) {
+  bool _sendControl(Map<String, dynamic> map) {
+    final ws = _ws;
+    if (ws == null) return false;
     try {
-      _ws?.add(jsonEncode(map));
-    } catch (_) {}
+      ws.add(jsonEncode(map));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// returns false when not connected.
@@ -404,7 +410,7 @@ class PartyConnection {
 
   void kick(int n, {required bool ban}) => _sendControl({'t': 'kick', 'n': n, 'ban': ban});
   void unban(String banId) => _sendControl({'t': 'unban', 'id': banId});
-  void approve(String requestId, bool ok) => _sendControl({'t': 'approve', 'r': requestId, 'ok': ok});
+  bool approve(String requestId, bool ok) => _sendControl({'t': 'approve', 'r': requestId, 'ok': ok});
   void transferHost(int n) => _sendControl({'t': 'transfer', 'n': n});
   void setSuccessors(List<int> ns) => _sendControl({'t': 'successors', 'ns': ns});
 
@@ -419,7 +425,7 @@ class PartyConnection {
     });
   }
 
-  void closeRoom() => _sendControl({'t': 'close'});
+  bool closeRoom() => _sendControl({'t': 'close'});
 
   /// what the directory shows for this room, host only.
   void sendSummary({required String name, String? title, String? artist}) {
