@@ -164,7 +164,7 @@ class NamidaMiniPlayerBase<E, S> extends StatefulWidget {
     List<Playable> queue,
     TrackTileProperties? properties,
     VideoTileProperties? videoTileProperties,
-    void Function(int index)? onResultTap,
+    QueueSearchResults? searchResults,
   )
   itemBuilder;
   final int Function(Playable currentItem)? getDurationMS;
@@ -358,11 +358,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
     BuildContext context,
     int i,
     List<Playable> queue,
-    void Function(int index)? onResultTap, {
+    QueueSearchResults? searchResults, {
     TrackTileProperties? trackTileProperties,
     VideoTileProperties? videoTileProperties,
   }) {
-    final childWK = widget.itemBuilder(context, i, queue, trackTileProperties, videoTileProperties, onResultTap);
+    final childWK = widget.itemBuilder(context, i, queue, trackTileProperties, videoTileProperties, searchResults);
     return FadeDismissible(
       key: Key("Diss_${i}_${childWK.$2}_${queue.length}"), // queue length only for when removing current item and next is the same.
       onDismissed: (direction) async {
@@ -700,11 +700,11 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             child: _QueueListChildWrapper(
               queueItemExtent: widget.queueItemExtent,
               queueItemExtentBuilder: widget.queueItemExtentBuilder,
-              itemBuilder: (context, index, queue, onResultTap) => _queueItemBuilder(
+              itemBuilder: (context, index, queue, searchResults) => _queueItemBuilder(
                 context,
                 index,
                 queue,
-                onResultTap,
+                searchResults,
                 trackTileProperties: trackTileProperties,
                 videoTileProperties: videoTileProperties,
               ),
@@ -2502,7 +2502,7 @@ class _MPQualityButton extends StatelessWidget {
 class _QueueListChildWrapper extends StatelessWidget {
   final double? queueItemExtent;
   final double? Function(Playable item)? queueItemExtentBuilder;
-  final Widget Function(BuildContext context, int index, List<Playable> queue, void Function(int index)? onResultTap) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue, QueueSearchResults? searchResults) itemBuilder;
 
   const _QueueListChildWrapper({
     super.key,

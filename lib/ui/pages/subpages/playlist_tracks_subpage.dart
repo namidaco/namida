@@ -18,6 +18,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -68,9 +69,15 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
   List<Track> _searchableTracks = const [];
 
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    _searchableTracks = HistoryController.inst.topTracksMapListens.value.keysSortedByValue.toFixedList();
-    return _searchableTracks.map((e) => e.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return _searchableTracks = HistoryController.inst.topTracksMapListens.value.keysSortedByValue.toFixedList();
+  }
+
+  @override
+  Iterable<Selectable> getFilteredTracks(List<int> searchResults) {
+    final filteredHistory = _getFilteredHistory();
+    if (filteredHistory == null) return const [];
+    return filteredHistory.days.expand((day) => filteredHistory.dayItems[day] ?? const []);
   }
 
   /// new listens arrive while playing, the filter stays as typed and [_onHistoryChanged] re-reads the listens.
@@ -300,6 +307,11 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                 ObxO(
                   rx: HistoryController.inst.historyMap,
                   builder: (context, history) {
+                    List<TrackWithDate>? dayItemsAt(int dayPosition) {
+                      final day = shownDays[dayPosition];
+                      return filteredHistory?.dayItems[day] ?? history[day];
+                    }
+
                     // -- refresh sublist when history change
                     return ObxO(
                       rx: HistoryController.inst.highlightedItem,
@@ -314,7 +326,8 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                         itemBuilder: (context, index) {
                           final day = shownDays[index];
                           final dayInMs = super.dayToMillis(day);
-                          final tracks = filteredHistory?.dayItems[day] ?? history[day] ?? [];
+                          final tracks = dayItemsAt(index) ?? [];
+                          final rangeOrder = SectionedRangeOrder(index, shownDaysLength, dayItemsAt);
                           final isHighlightedDay = !isFiltering && highlightedItem != null && day == highlightedItem.dayToHighLight;
 
                           final dayHeaderMenu = NamidaIconButton(
@@ -368,6 +381,7 @@ class _HistoryTracksPageState extends State<HistoryTracksPage>
                                   trackOrTwd: tr,
                                   index: i,
                                   tracks: tracks,
+                                  rangeOrder: rangeOrder,
                                   isJumpHighlighted: isHighlightedDay && i == highlightedItem.indexOfSmallList,
                                   thirdLineText: tr.dateAdded.dateAndClockFormattedOriginal,
                                   topRightWidget: topRightWidget,
@@ -675,9 +689,8 @@ class NormalPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
 class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
     with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<NormalPlaylistTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    final playlist = PlaylistController.inst.getPlaylist(widget.playlistName);
-    return playlist?.tracks.map((e) => e.track.toTrackExt()) ?? [];
+  List<Selectable> getSearchableTracks() {
+    return PlaylistController.inst.getPlaylist(widget.playlistName)?.tracks ?? const <TrackWithDate>[];
   }
 
   @override
@@ -729,6 +742,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
           if (tracksWithDate.isEmpty) return EmptyPlaylistSubpage(playlist: playlist);
 
           final searchResults = this.searchResults;
+          final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
 
           final sort = playlist.sortsType?.firstOrNull?.type;
           final sortReverse = playlist.sortReverse;
@@ -820,6 +834,7 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                       index: index,
                       trackOrTwd: trackWithDate,
                       tracks: tracksWithDate,
+                      rangeOrder: rangeOrder,
                     ),
                   ),
                 );

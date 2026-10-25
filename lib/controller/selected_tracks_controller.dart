@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_rx_value_getter_outside_obx
+import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -67,8 +68,7 @@ class SelectedTracksController {
   // bool isTrackSelected(Selectable twd) => _tracksOrTwdList.contains(twd);
   bool isTrackSelected(Selectable twd) => _allTracksHashCodes[twd.track] != null;
 
-  void selectOrUnselect(Selectable track, int index, QueueSourceBase source, String? playlistName, {bool ranged = false, List<Selectable>? tracksOverride}) {
-    playlistName ??= '';
+  void selectOrUnselect(Selectable track, QueueSourceBase source, String? playlistName) {
     final rawTrack = track.track;
     if (isTrackSelected(track)) {
       _allTracksHashCodes.remove(rawTrack);
@@ -76,39 +76,66 @@ class SelectedTracksController {
       if (indexInList != -1) _tracksOrTwdList.removeAt(indexInList);
       selectedPlaylistsNames.remove(rawTrack);
     } else {
-      void selectSingle() {
-        _onSelectingFrom(source);
-        _allTracksHashCodes[rawTrack] = true;
-        _tracksOrTwdList.add(track);
-        selectedPlaylistsNames[rawTrack] = playlistName!;
-      }
-
-      if (ranged && _tracksOrTwdList.value.isNotEmpty) {
-        int largestSelectedIndex = -1;
-        final currentInfo = _getCurrentActiveTracksList(queueSource: source, tracksOverride: tracksOverride);
-        final tracks = currentInfo.$1 ?? [];
-        final queueSource = currentInfo.$2;
-        // -- find the largest selected index by reverse looping tracks list and breaking on first match
-        final startIndex = index.withMaximum(tracks.length - 1);
-        for (int i = startIndex; i >= 0; i--) {
-          final tr = tracks[i].track;
-          final isSelected = _allTracksHashCodes[tr] != null;
-          if (isSelected && i > largestSelectedIndex) {
-            largestSelectedIndex = i;
-            break;
-          }
-        }
-        if (largestSelectedIndex > -1 && index > largestSelectedIndex) {
-          selectAllTracks(range: (largestSelectedIndex, index), source: queueSource, tracksOverride: tracksOverride);
-        } else {
-          selectSingle();
-        }
-      } else {
-        selectSingle();
-      }
+      _onSelectingFrom(source);
+      _allTracksHashCodes[rawTrack] = true;
+      _tracksOrTwdList.add(track);
+      selectedPlaylistsNames[rawTrack] = playlistName ?? '';
     }
 
     bottomPadding.value = _tracksOrTwdList.isEmpty ? 0.0 : 102.0;
+  }
+
+  /// ranges up to the nearest selected item above, or down to the nearest one below when none is above.
+  /// [index] points into [tracks], and [rangeOrder] is their shown order when it's not the list order.
+  void selectOrUnselectRanged(Selectable track, int index, List<Playable> tracks, SelectionRangeOrder? rangeOrder, QueueSourceBase source, String? playlistName) {
+    final isSelected = isTrackSelected(track);
+    final hasSelection = _tracksOrTwdList.value.isNotEmpty;
+    if (isSelected || !hasSelection) return selectOrUnselect(track, source, playlistName);
+
+    final order = rangeOrder ?? const _ListRangeOrder();
+    final hashMap = _allTracksHashCodes.value;
+    final distanceAbove = _distanceToSelected(order.itemsAbove(tracks, index), hashMap);
+    final distanceBelow = distanceAbove == -1 ? _distanceToSelected(order.itemsBelow(tracks, index), hashMap) : -1;
+    if (distanceAbove == -1 && distanceBelow == -1) return selectOrUnselect(track, source, playlistName);
+
+    _onSelectingFrom(source);
+    final pln = playlistName ?? '';
+    final trMainList = _tracksOrTwdList.value;
+    void addItem(Playable item) {
+      if (item is! Selectable) return;
+      final tr = item.track;
+      if (hashMap[tr] != null) return;
+      trMainList.add(item);
+      hashMap[tr] = true;
+      selectedPlaylistsNames[tr] = pln;
+    }
+
+    if (distanceAbove != -1) {
+      final itemsAbove = order.itemsAbove(tracks, index).take(distanceAbove).toFixedList();
+      for (int i = itemsAbove.length - 1; i >= 0; i--) {
+        addItem(itemsAbove[i]);
+      }
+      addItem(track);
+    } else {
+      addItem(track);
+      final itemsBelow = order.itemsBelow(tracks, index).take(distanceBelow);
+      for (final item in itemsBelow) {
+        addItem(item);
+      }
+    }
+
+    _allTracksHashCodes.refresh();
+    _tracksOrTwdList.refresh();
+  }
+
+  /// items before the nearest selected one, -1 when none is selected.
+  static int _distanceToSelected(Iterable<Playable> items, Map<Track, bool> hashMap) {
+    int distance = 0;
+    for (final item in items) {
+      if (item is Selectable && hashMap[item.track] != null) return distance;
+      distance++;
+    }
+    return -1;
   }
 
   void reorderTracks(int oldIndex, int newIndex) {
@@ -134,30 +161,28 @@ class SelectedTracksController {
     bottomPadding.value = 0.0;
   }
 
-  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList({QueueSourceBase? queueSource, List<Selectable>? tracksOverride}) {
-    List<Selectable>? tracks;
-
-    NamidaRoute? routeTracks; // if the tracks are obtained from route
-    if (tracksOverride != null) {
-      tracks = tracksOverride;
-    } else if (queueSource == QueueSource.playerQueue || (MiniPlayerController.inst.isInQueue && !Dimensions.inst.miniplayerIsWideScreen)) {
-      tracks = Player.inst.currentQueue.value.whereType<Selectable>().toList();
-      queueSource ??= QueueSource.playerQueue;
-    } else if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
-      tracks = SearchSortController.inst.trackSearchTemp.value;
-      queueSource ??= QueueSource.search;
-    } else {
-      final currentRoute = this._currentRoute;
-      tracks = currentRoute?.tracksListInside();
-      routeTracks = currentRoute;
-      queueSource ??= currentRoute?.toQueueSource();
+  (List<Selectable>?, QueueSourceBase?, NamidaRoute?) _getCurrentActiveTracksList() {
+    if (MiniPlayerController.inst.isInQueue && !Dimensions.inst.miniplayerIsWideScreen) {
+      final queue = Player.inst.currentQueue.value;
+      final searchResults = MiniPlayerController.inst.queueSearch.results.value;
+      final shownQueue = searchResults == null ? queue : searchResults.map((i) => queue[i]);
+      final tracks = shownQueue.whereType<Selectable>().toFixedList();
+      return (tracks, QueueSource.playerQueue, null);
     }
-    queueSource ??= QueueSource.others(ScrollSearchController.inst.searchTextEditingController.text);
-    return (tracks, queueSource, routeTracks);
+
+    if (ScrollSearchController.inst.isGlobalSearchMenuShown.value) {
+      return (SearchSortController.inst.trackSearchTemp.value, QueueSource.search, null);
+    }
+
+    final currentRoute = this._currentRoute;
+    if (currentRoute == null) return (null, null, null);
+    final filteredTracks = TracksSearchWidgetMixin.filteredTracksOfRoute(currentRoute);
+    final tracks = filteredTracks?.toFixedList() ?? currentRoute.tracksListInside();
+    return (tracks, currentRoute.toQueueSource(), currentRoute);
   }
 
-  void selectAllTracks({(int, int)? range, QueueSourceBase? source, List<Selectable>? tracksOverride}) {
-    final currentInfo = _getCurrentActiveTracksList(queueSource: source, tracksOverride: tracksOverride);
+  void selectAllTracks({(int, int)? range}) {
+    final currentInfo = _getCurrentActiveTracksList();
     final tracks = currentInfo.$1;
     final routeTracks = currentInfo.$3;
 
@@ -247,4 +272,85 @@ class SelectedTracksController {
     //   _allTracksHashCodes[e.track] = true;
     // }
   }
+}
+
+// by claude
+abstract class SelectionRangeOrder {
+  const SelectionRangeOrder();
+
+  /// shown items above [index] of [tracks], nearest first.
+  Iterable<Playable> itemsAbove(List<Playable> tracks, int index);
+
+  /// shown items below [index] of [tracks], nearest first.
+  Iterable<Playable> itemsBelow(List<Playable> tracks, int index);
+}
+
+class FilteredRangeOrder extends SelectionRangeOrder {
+  final List<int> shownIndices;
+
+  const FilteredRangeOrder(this.shownIndices);
+
+  @override
+  Iterable<Playable> itemsAbove(List<Playable> tracks, int index) sync* {
+    final position = shownIndices.indexOf(index);
+    for (int p = position - 1; p >= 0; p--) {
+      final i = shownIndices[p];
+      yield tracks[i];
+    }
+  }
+
+  @override
+  Iterable<Playable> itemsBelow(List<Playable> tracks, int index) sync* {
+    final position = shownIndices.indexOf(index);
+    if (position == -1) return;
+    for (int p = position + 1; p < shownIndices.length; p++) {
+      final i = shownIndices[p];
+      yield tracks[i];
+    }
+  }
+}
+
+/// for lists split into consecutive sections, each tile list being one section (ex: history days).
+class SectionedRangeOrder extends SelectionRangeOrder {
+  final int sectionPosition;
+  final int sectionsCount;
+  final List<Playable>? Function(int sectionPosition) sectionAt;
+
+  const SectionedRangeOrder(this.sectionPosition, this.sectionsCount, this.sectionAt);
+
+  @override
+  Iterable<Playable> itemsAbove(List<Playable> tracks, int index) sync* {
+    yield* const _ListRangeOrder().itemsAbove(tracks, index);
+    for (int s = sectionPosition - 1; s >= 0; s--) {
+      final section = sectionAt(s);
+      if (section == null) continue;
+      for (int i = section.length - 1; i >= 0; i--) {
+        yield section[i];
+      }
+    }
+  }
+
+  @override
+  Iterable<Playable> itemsBelow(List<Playable> tracks, int index) sync* {
+    yield* const _ListRangeOrder().itemsBelow(tracks, index);
+    for (int s = sectionPosition + 1; s < sectionsCount; s++) {
+      final section = sectionAt(s);
+      if (section == null) continue;
+      yield* section;
+    }
+  }
+}
+
+class _ListRangeOrder extends SelectionRangeOrder {
+  const _ListRangeOrder();
+
+  @override
+  Iterable<Playable> itemsAbove(List<Playable> tracks, int index) sync* {
+    for (int i = index - 1; i >= 0; i--) {
+      yield tracks[i];
+    }
+  }
+
+  @override
+  Iterable<Playable> itemsBelow(List<Playable> tracks, int index) => tracks.skip(index + 1);
 }

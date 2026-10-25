@@ -8,6 +8,7 @@ import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -44,8 +45,8 @@ class GenreTracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<GenreTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return widget.tracks.map((e) => e.track.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.tracks;
   }
 
   @override
@@ -56,6 +57,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
     final name = widget.name;
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
     final queueSource = switch (widget.type) {
       MediaType.style => QueueSource.style(name),
       MediaType.language => QueueSource.language(name),
@@ -114,6 +116,7 @@ class _GenreTracksPageState extends State<GenreTracksPage> with PortsProvider<Tr
                       index: index,
                       trackOrTwd: track,
                       tracks: tracks,
+                      rangeOrder: rangeOrder,
                     ),
                   );
                 },

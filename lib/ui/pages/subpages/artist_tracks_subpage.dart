@@ -13,6 +13,7 @@ import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -67,8 +68,8 @@ class ArtistTracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<ArtistTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return widget.tracks.map((e) => e.track.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.tracks;
   }
 
   @override
@@ -85,6 +86,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
         : QueueSource.artist(name);
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
     final heroTag = 'artist_$name';
     return AnimationLimiter(
       child: BackgroundWrapper(
@@ -198,6 +200,7 @@ class _ArtistTracksPageState extends State<ArtistTracksPage> with PortsProvider<
                       index: index,
                       trackOrTwd: track,
                       tracks: tracks,
+                      rangeOrder: rangeOrder,
                     ),
                   );
                 },

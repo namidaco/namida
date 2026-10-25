@@ -100,7 +100,7 @@ class _QueueListBase extends StatefulWidget {
   final bool addPageBottomPadding;
   final Widget Function(void Function() onSearchTap)? headerBuilder;
   final Widget Function(Widget scrollQueueWidget)? utilsRowBuilder;
-  final Widget Function(BuildContext context, int index, List<Playable> queue, void Function(int index)? onResultTap) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue, QueueSearchResults? searchResults) itemBuilder;
 
   const _QueueListBase({
     required this.itemExtent,
@@ -381,13 +381,13 @@ class _LocalQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue, onResultTap) => _localQueueItem(context, i, queue, properties, onResultTap),
+        itemBuilder: (context, i, queue, searchResults) => _localQueueItem(context, i, queue, properties, searchResults),
       ),
     );
   }
 }
 
-Widget _localQueueItem(BuildContext context, int i, List<Playable> queue, TrackTileProperties properties, void Function(int index)? onResultTap) {
+Widget _localQueueItem(BuildContext context, int i, List<Playable> queue, TrackTileProperties properties, QueueSearchResults? searchResults) {
   final track = queue[i] as Selectable;
   final key = Key("${i}_${track.track.path}");
   return _dismissibleWrapper(
@@ -402,12 +402,13 @@ Widget _localQueueItem(BuildContext context, int i, List<Playable> queue, TrackT
         index: i,
         trackOrTwd: track,
         tracks: queue,
+        rangeOrder: searchResults,
         fadeOpacity: isPlayed ? 0.3 : 0.0,
         onPlaying: () {
-          if (onResultTap == null) {
+          if (searchResults == null) {
             Player.inst.playQueueItem(i);
           } else {
-            onResultTap(i);
+            searchResults.onResultTap(i);
           }
         },
       ),
@@ -450,16 +451,16 @@ class _YoutubeQueueList extends StatelessWidget {
                 scrollQueueWidget: scrollQueueWidget,
               )
             : null,
-        itemBuilder: (context, i, queue, onResultTap) => _youtubeQueueItem(context, i, queue, properties, onResultTap),
+        itemBuilder: (context, i, queue, searchResults) => _youtubeQueueItem(context, i, queue, properties, searchResults),
       ),
     );
   }
 }
 
-Widget _youtubeQueueItem(BuildContext context, int i, List<Playable> queue, VideoTileProperties properties, void Function(int index)? onResultTap) {
+Widget _youtubeQueueItem(BuildContext context, int i, List<Playable> queue, VideoTileProperties properties, QueueSearchResults? searchResults) {
   final video = queue[i] as YoutubeID;
   final key = Key("${i}_${video.id}");
-  final onTap = onResultTap == null ? null : () => onResultTap(i);
+  final onTap = searchResults == null ? null : () => searchResults.onResultTap(i);
   return _dismissibleWrapper(
     index: i,
     childKey: key,
@@ -526,9 +527,9 @@ class _MixedQueueList extends StatelessWidget {
                   scrollQueueWidget: scrollQueueWidget,
                 )
               : null,
-          itemBuilder: (context, i, queue, onResultTap) => queue[i] is Selectable
-              ? _localQueueItem(context, i, queue, trackTileProperties, onResultTap)
-              : _youtubeQueueItem(context, i, queue, videoTileProperties, onResultTap),
+          itemBuilder: (context, i, queue, searchResults) => queue[i] is Selectable
+              ? _localQueueItem(context, i, queue, trackTileProperties, searchResults)
+              : _youtubeQueueItem(context, i, queue, videoTileProperties, searchResults),
         ),
       ),
     );

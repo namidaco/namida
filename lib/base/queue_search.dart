@@ -12,6 +12,7 @@ import 'package:namida/class/jump_highlight.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/translations/language.dart';
@@ -351,7 +352,7 @@ class QueueSliverList extends StatelessWidget {
   final QueueSearch? search;
   final double? itemExtent;
   final double? Function(int index)? itemExtentOf;
-  final Widget Function(BuildContext context, int index, List<Playable> queue, void Function(int index)? onResultTap) itemBuilder;
+  final Widget Function(BuildContext context, int index, List<Playable> queue, QueueSearchResults? searchResults) itemBuilder;
 
   const QueueSliverList({
     super.key,
@@ -368,24 +369,27 @@ class QueueSliverList extends StatelessWidget {
     if (search == null) {
       return _QueueSliverListContent(
         list: this,
-        results: null,
+        searchResults: null,
       );
     }
     return ObxO(
       rx: search.results,
-      builder: (context, results) => _QueueSliverListContent(
-        list: this,
-        results: results,
-      ),
+      builder: (context, results) {
+        final searchResults = results == null ? null : QueueSearchResults(results, search.selectResult);
+        return _QueueSliverListContent(
+          list: this,
+          searchResults: searchResults,
+        );
+      },
     );
   }
 }
 
 class _QueueSliverListContent extends StatelessWidget {
   final QueueSliverList list;
-  final List<int>? results;
+  final QueueSearchResults? searchResults;
 
-  const _QueueSliverListContent({required this.list, required this.results});
+  const _QueueSliverListContent({required this.list, required this.searchResults});
 
   @override
   Widget build(BuildContext context) {
@@ -393,9 +397,9 @@ class _QueueSliverListContent extends StatelessWidget {
     final itemExtent = list.itemExtent;
     final itemExtentOf = list.itemExtentOf;
     final itemBuilder = list.itemBuilder;
-    final results = this.results;
+    final searchResults = this.searchResults;
 
-    if (results == null) {
+    if (searchResults == null) {
       return NamidaSliverReorderableList(
         itemCount: queue.length,
         itemExtent: itemExtent,
@@ -408,9 +412,9 @@ class _QueueSliverListContent extends StatelessWidget {
       );
     }
 
-    final onResultTap = list.search?.selectResult;
+    final results = searchResults.shownIndices;
     final resultsLength = results.length;
-    Widget resultBuilder(BuildContext context, int i) => itemBuilder(context, results[i], queue, onResultTap);
+    Widget resultBuilder(BuildContext context, int i) => itemBuilder(context, results[i], queue, searchResults);
     if (itemExtent != null) {
       return SliverFixedExtentList.builder(
         itemCount: resultsLength,
@@ -464,4 +468,10 @@ class _QueueSearchFieldRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class QueueSearchResults extends FilteredRangeOrder {
+  final void Function(int index) onResultTap;
+
+  const QueueSearchResults(super.shownIndices, this.onResultTap);
 }

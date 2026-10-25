@@ -132,9 +132,6 @@ class TrackTilePropertiesConfigs {
   final String? playlistName;
   final Rx<bool>? reorderableRx;
 
-  /// for ranged selection when the list isn't the current route's, ex: inside dialogs.
-  final List<Selectable>? rangeSelectionTracks;
-
   const TrackTilePropertiesConfigs({
     required this.queueSource,
     this.selectable,
@@ -145,7 +142,6 @@ class TrackTilePropertiesConfigs {
     this.horizontalGestures = true,
     this.playlistName,
     this.reorderableRx,
-    this.rangeSelectionTracks,
   });
 }
 
@@ -191,6 +187,7 @@ class TrackTile extends StatelessWidget {
   final int index;
   final Selectable trackOrTwd;
   final List<Playable> tracks;
+  final SelectionRangeOrder? rangeOrder;
   final TrackTileProperties properties;
   final HomePageItems? homePageItem;
   final VoidCallback? onTap;
@@ -211,6 +208,7 @@ class TrackTile extends StatelessWidget {
     this.homePageItem,
     required this.trackOrTwd,
     required this.tracks,
+    this.rangeOrder,
     this.onTap,
     this.onPlaying,
     required this.index,
@@ -248,15 +246,15 @@ class TrackTile extends StatelessWidget {
     heroTag: _heroTag,
   );
 
-  void _selectTrack({required bool ranged}) =>
-      SelectedTracksController.inst.selectOrUnselect(
-        trackOrTwd,
-        index,
-        properties.configs.queueSource,
-        properties.configs.playlistName,
-        ranged: ranged,
-        tracksOverride: properties.configs.rangeSelectionTracks,
-      );
+  void _selectTrack({required bool ranged}) {
+    final queueSource = properties.configs.queueSource;
+    final playlistName = properties.configs.playlistName;
+    if (ranged) {
+      SelectedTracksController.inst.selectOrUnselectRanged(trackOrTwd, index, tracks, rangeOrder, queueSource, playlistName);
+    } else {
+      SelectedTracksController.inst.selectOrUnselect(trackOrTwd, queueSource, playlistName);
+    }
+  }
 
   bool _trySelectOnTap() {
     if (properties.configs.queueSource == QueueSource.selectedTracks) return false;

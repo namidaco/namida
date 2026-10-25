@@ -11,6 +11,7 @@ import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -110,8 +111,8 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
   }
 
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return widget.tracks.map((e) => e.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.tracks;
   }
 
   @override
@@ -136,6 +137,7 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
   Widget build(BuildContext context) {
     final tracks = widget.tracks;
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
     return AnimationLimiter(
       child: BackgroundWrapper(
         child: TrackTilePropertiesProvider(
@@ -190,6 +192,7 @@ class _MoodsTagsTracksPageState extends State<_MoodsTagsTracksPage> with PortsPr
                   index: index,
                   trackOrTwd: track,
                   tracks: tracks,
+                  rangeOrder: rangeOrder,
                 ),
               );
             },

@@ -16,6 +16,7 @@ import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -97,9 +98,8 @@ class _FoldersPageState<T extends Track, F extends Folder> extends State<Folders
   ScrollController? get providedScrollController => widget.tab.scrollController;
 
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    final tracks = widget.foldersController.currentFolderTracksList ?? const <Track>[];
-    return tracks.map((e) => e.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.foldersController.currentFolderTracksList ?? const <Track>[];
   }
 
   @override
@@ -193,6 +193,7 @@ class _FoldersPageState<T extends Track, F extends Folder> extends State<Folders
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
     final filteredFolders = _filteredFolders;
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
 
     return BackgroundWrapper(
       child: ObxO(
@@ -267,6 +268,7 @@ class _FoldersPageState<T extends Track, F extends Folder> extends State<Folders
                                       index: index,
                                       trackOrTwd: folderTracks[index],
                                       tracks: folderTracks,
+                                      rangeOrder: rangeOrder,
                                       isJumpHighlighted: index == indexToScrollTo,
                                     );
                                   },

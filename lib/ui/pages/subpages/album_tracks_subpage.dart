@@ -11,6 +11,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/edit_delete_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -48,8 +49,8 @@ class AlbumTracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<AlbumTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return widget.tracks.map((e) => e.track.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.tracks;
   }
 
   @override
@@ -63,6 +64,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
     final queueSource = QueueSource.album(widget.albumIdentifier, name);
     final heroTag = 'album_${widget.albumIdentifier}';
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
 
     return BackgroundWrapper(
       child: AnimationLimiter(
@@ -307,6 +309,7 @@ class _AlbumTracksPageState extends State<AlbumTracksPage> with PortsProvider<Tr
                                   index: index,
                                   trackOrTwd: track,
                                   tracks: tracks, // all tracks even if in disc section
+                                  rangeOrder: rangeOrder,
                                 ),
                               );
                             },

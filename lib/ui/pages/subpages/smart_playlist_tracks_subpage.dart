@@ -8,6 +8,7 @@ import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/base/tracks_search_widget_mixin.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/controller/smart_playlists/smart_playlists_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -42,8 +43,8 @@ class SmartPlaylistTracksPage extends StatefulWidget with NamidaRouteWidget {
 class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
     with TickerProviderStateMixin, PullToRefreshMixin, PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<SmartPlaylistTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return _tracks.map((e) => e.track.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return _tracks;
   }
 
   @override
@@ -84,6 +85,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
     final name = widget.name;
     final queueSource = QueueSource.smartPlaylist(name);
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
     return BackgroundWrapper(
       child: AnimationLimiter(
         child: TrackTilePropertiesProvider(
@@ -165,6 +167,7 @@ class _SmartPlaylistTracksPageState extends State<SmartPlaylistTracksPage>
                           index: index,
                           trackOrTwd: track,
                           tracks: _tracks,
+                          rangeOrder: rangeOrder,
                         ),
                       );
                     },

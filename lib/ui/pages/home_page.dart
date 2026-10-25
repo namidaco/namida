@@ -2005,9 +2005,8 @@ class _MixesCardState extends State<_MixesCard> {
                         borderRadius: BorderRadius.circular(18.0.multipliedRadius),
                       ),
                       child: TrackTilePropertiesProvider(
-                        configs: TrackTilePropertiesConfigs(
+                        configs: const TrackTilePropertiesConfigs(
                           queueSource: QueueSource.homePageItem,
-                          rangeSelectionTracks: widget.tracks,
                         ),
                         builder: (properties) => SuperSmoothListView.builder(
                           itemExtent: Dimensions.inst.trackTileItemExtent,

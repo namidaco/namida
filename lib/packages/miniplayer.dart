@@ -158,11 +158,11 @@ class NamidaMiniPlayerMixed extends StatelessWidget {
       queueItemExtentBuilder: (item) {
         return item is Selectable ? trackConfig.queueItemExtent : ytConfig.queueItemExtent;
       },
-      itemBuilder: (context, index, queue, trackTileProperties, videoTileProperties, onResultTap) {
+      itemBuilder: (context, index, queue, trackTileProperties, videoTileProperties, searchResults) {
         final item = queue[index];
         return item is Selectable
-            ? trackConfig.itemBuilder(context, index, queue, trackTileProperties, videoTileProperties, onResultTap)
-            : ytConfig.itemBuilder(context, index, queue, trackTileProperties, videoTileProperties, onResultTap);
+            ? trackConfig.itemBuilder(context, index, queue, trackTileProperties, videoTileProperties, searchResults)
+            : ytConfig.itemBuilder(context, index, queue, trackTileProperties, videoTileProperties, searchResults);
       },
       getDurationMS: (currentItem) {
         return (currentItem is Selectable ? trackConfig.getDurationMS?.call(currentItem) : ytConfig.getDurationMS?.call(currentItem)) ?? 0;
@@ -518,7 +518,7 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
         horizontalGestures: false,
         queueSource: QueueSource.playerQueue,
       ),
-      itemBuilder: (context, i, queue, properties, _, onResultTap) {
+      itemBuilder: (context, i, queue, properties, _, searchResults) {
         final track = queue[i] as Selectable;
         final key = Key("${i}_${track.track.path}");
         return (
@@ -531,13 +531,14 @@ class NamidaMiniPlayerTrack extends StatelessWidget {
               index: i,
               trackOrTwd: track,
               tracks: queue,
+              rangeOrder: searchResults,
               cardColorOpacity: 0.5,
               fadeOpacity: isPlayed ? 0.3 : 0.0,
               onPlaying: () {
-                if (onResultTap == null) {
+                if (searchResults == null) {
                   Player.inst.playQueueItem(i);
                 } else {
-                  onResultTap(i);
+                  searchResults.onResultTap(i);
                 }
               },
             ),
@@ -788,10 +789,10 @@ class NamidaMiniPlayerYoutubeID extends StatelessWidget {
         queueSource: QueueSourceYoutubeID.ytPlayerQueue,
         showMoreIcon: true,
       ),
-      itemBuilder: (context, i, queue, _, properties, onResultTap) {
+      itemBuilder: (context, i, queue, _, properties, searchResults) {
         final video = queue[i] as YoutubeID;
         final key = Key("${i}_${video.id}");
-        final onTap = onResultTap == null ? null : () => onResultTap(i);
+        final onTap = searchResults == null ? null : () => searchResults.onResultTap(i);
         return (
           ObxOSelect(
             rx: Player.inst.currentIndex,

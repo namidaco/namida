@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 
 import 'package:namida/base/tracks_search_wrapper.dart';
+import 'package:namida/class/route.dart';
 import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/history_controller.dart';
@@ -26,7 +27,23 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
 mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvider<TracksSearchParams> {
-  Iterable<TrackExtended> getTracksExtended();
+  static final _ofRoute = Expando<TracksSearchWidgetMixin>();
+
+  static Iterable<Selectable>? filteredTracksOfRoute(NamidaRoute route) {
+    final state = _ofRoute[route];
+    if (state == null) return null;
+    final searchResults = state._searchResults;
+    if (searchResults == null) return null;
+    return state.getFilteredTracks(searchResults);
+  }
+
+  /// the list [searchResults] point into.
+  List<Selectable> getSearchableTracks();
+
+  Iterable<Selectable> getFilteredTracks(List<int> searchResults) {
+    final tracks = getSearchableTracks();
+    return searchResults.map((i) => tracks[i]);
+  }
 
   /// example: sort, sortReverse
   List<RxBaseCore> _listChangesListenersInstantRx() => [settings.mediaItemsTrackSorting, settings.trackSearchFilterDefault];
@@ -65,6 +82,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
     _scrollController = providedScrollController ?? NamidaScrollController.create();
     _textEditingController = TextEditingController();
     _focusNode = FocusNode();
+    _ofRoute[widget] = this;
     for (final l in _listChangesListenersInstantRx()) {
       l.addListener(_restartSearchPortIfNecessary);
     }
@@ -75,6 +93,7 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
 
   @override
   void dispose() {
+    _ofRoute[widget] = null;
     for (final l in _listChangesListenersInstantRx()) {
       l.removeListener(_restartSearchPortIfNecessary);
     }
@@ -180,7 +199,8 @@ mixin TracksSearchWidgetMixin<W extends StatefulWidget> on State<W>, PortsProvid
   Future<IsolateFunctionReturnBuild<TracksSearchParams>> isolateFunction(SendPort port) async {
     await HistoryController.inst.waitForHistoryAndMostPlayedLoad;
     final topTracksMapListens = HistoryController.inst.topTracksMapListens.value;
-    final params = TracksSearchWrapper.generateParams(port, getTracksExtended(), topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
+    final tracksExtended = getSearchableTracks().map((e) => e.track.toTrackExt());
+    final params = TracksSearchWrapper.generateParams(port, tracksExtended, topTracksMapListens, filters: settings.trackSearchFilterDefault.value);
     return IsolateFunctionReturnBuild(_searchTracksIsolate, params);
   }
 }

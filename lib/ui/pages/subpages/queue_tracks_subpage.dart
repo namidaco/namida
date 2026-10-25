@@ -9,6 +9,7 @@ import 'package:namida/class/queue.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/selected_tracks_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
@@ -35,8 +36,8 @@ class QueueTracksPage extends StatefulWidget with NamidaRouteWidget {
 
 class _QueueTracksPageState extends State<QueueTracksPage> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<QueueTracksPage> {
   @override
-  Iterable<TrackExtended> getTracksExtended() {
-    return widget.queue.tracks.map((e) => e.toTrackExt());
+  List<Selectable> getSearchableTracks() {
+    return widget.queue.tracks;
   }
 
   @override
@@ -47,6 +48,7 @@ class _QueueTracksPageState extends State<QueueTracksPage> with PortsProvider<Tr
     final queue = widget.queue;
     final tracks = queue.tracks;
     final searchResults = this.searchResults;
+    final rangeOrder = searchResults == null ? null : FilteredRangeOrder(searchResults);
     final queueSource = QueueSource.queuePage(queue);
     final heroTag = 'queue_${queue.date}';
     final tracksInfoText = [
@@ -99,6 +101,7 @@ class _QueueTracksPageState extends State<QueueTracksPage> with PortsProvider<Tr
                   index: index,
                   trackOrTwd: track,
                   tracks: tracks,
+                  rangeOrder: rangeOrder,
                 ),
               );
             },
