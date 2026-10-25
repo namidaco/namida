@@ -34,6 +34,10 @@ class CustomMPVPlayer implements AVPlayer {
     // -- sidecar files are discovered by us so mpv must not auto load them.
     _setMpvProperty('sid', 'no');
     _setMpvProperty('sub-auto', 'no');
+    // -- a busy device keeps the file loaded, mpv would otherwise fail it and jump to the queued next item.
+    _setMpvProperty('audio-fallback-to-null', 'yes');
+    final nativePlayer = _player.platform as mk.NativePlayer;
+    nativePlayer.observeProperty('current-ao', _onAudioDriverChanged).ignoreError();
     _playerHeightStreamSub = _player.stream.height.listen((event) {
       final resolved = _dimensionResolver(event, null);
       if (resolved != null) _videoControllerListener(height: resolved);
@@ -748,17 +752,20 @@ class CustomMPVPlayer implements AVPlayer {
   bool _playRequested = false;
 
   @override
-  Future<void> play() {
+  Future<void> play() async {
     _playRequested = true;
+    await _syncAudioDeviceRelease();
+    await _retryUnavailableAudioDevice();
     return _startPlayback();
   }
 
   Future<void> _startPlayback() => _player.play();
 
   @override
-  Future<void> pause() {
+  Future<void> pause() async {
     _playRequested = false;
-    return _player.pause();
+    await _player.pause();
+    await _syncAudioDeviceRelease();
   }
 
   // -- when the video is a non-looped external track, seeking past its end leaves a frozen frame,
@@ -921,6 +928,7 @@ class CustomMPVPlayer implements AVPlayer {
     if (isExclusiveApplied != _exclusive) {
       _exclusive = isExclusiveApplied;
       await _setMpvProperty('audio-exclusive', isExclusiveApplied ? 'yes' : 'no');
+      await _syncAudioDeviceRelease();
     }
     if (bitPerfect == _bitPerfect) return;
     _bitPerfect = bitPerfect;
@@ -931,6 +939,41 @@ class CustomMPVPlayer implements AVPlayer {
       _applyVolume(),
     ].execute();
     if (!bitPerfect) _audioFilters.refresh();
+  }
+
+  static const _kNullAudioDriver = 'null';
+  static const _kAutoAudioDriver = '';
+
+  bool get _canReleaseAudioDevice => true;
+
+  bool _isAudioDeviceReleased = false;
+  bool _isAudioDeviceUnavailable = false;
+
+  /// async command, closing an exclusive stream blocks the caller for up to a few hundred ms.
+  Future<void> _syncAudioDeviceRelease() async {
+    final shouldRelease = _exclusive && !_playRequested && _canReleaseAudioDevice;
+    if (shouldRelease == _isAudioDeviceReleased) return;
+    _isAudioDeviceReleased = shouldRelease;
+    _isAudioDeviceUnavailable = false;
+    final driver = shouldRelease ? _kNullAudioDriver : _kAutoAudioDriver;
+    final player = _player.platform as mk.NativePlayer;
+    await player.command(['set', 'ao', driver]).catchError((_) {});
+  }
+
+  Future<void> _retryUnavailableAudioDevice() async {
+    if (!_isAudioDeviceUnavailable) return;
+    _isAudioDeviceUnavailable = false;
+    final player = _player.platform as mk.NativePlayer;
+    await player.command(['ao-reload']).catchError((_) {});
+  }
+
+  Future<void> _onAudioDriverChanged(String driver) async {
+    if (_disposed) return;
+    final isUnavailable = driver == _kNullAudioDriver && !_isAudioDeviceReleased;
+    _isAudioDeviceUnavailable = isUnavailable;
+    if (isUnavailable && _playRequested) {
+      _playbackEventStreamController.addError(const AudioOutputUnavailableException());
+    }
   }
 
   // -- the `volume` filter is absent from most mpv builds, mpv's own volume can go past 100% instead.
@@ -1084,6 +1127,10 @@ class _CustomMPVPlayerIOS extends CustomMPVPlayer {
   bool _isSyncingVideoSuspension = false;
 
   int? _sourceSampleRate;
+
+  /// the audio unit is never exclusive, bit-perfect only matches the session rate.
+  @override
+  bool get _canReleaseAudioDevice => false;
 
   /// a video added while away waits for the app to be active again to be selected.
   @override

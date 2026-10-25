@@ -726,7 +726,7 @@ class _SourceCard extends StatelessWidget {
     return NBuilder(
       selfAnimated: true,
       builder: (context, colors) => AnimatedContainer(
-        duration: const Duration(milliseconds: 400),
+        duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 400)),
         curve: Curves.easeOutQuart,
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
         decoration: BoxDecoration(

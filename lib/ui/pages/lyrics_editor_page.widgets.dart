@@ -411,7 +411,7 @@ class _LineRow extends StatelessWidget {
             builder: (context, colors) {
               final accentColor = colors.secondary;
               return AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
+                duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 150)),
                 decoration: BoxDecoration(
                   color: isPlaying ? accentColor.withOpacityExt(0.14) : Colors.transparent,
                   borderRadius: BorderRadius.circular(10.0.multipliedRadius),
@@ -826,7 +826,7 @@ class _StampButtonState extends State<_StampButton> {
       child: NBuilder(
         selfAnimated: true,
         builder: (context, colors) => AnimatedContainer(
-          duration: const Duration(milliseconds: 80),
+          duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 80)),
           height: 46.0,
           decoration: BoxDecoration(
             color: colors.secondary.withOpacityExt(_isPressed ? 0.6 : 0.3),

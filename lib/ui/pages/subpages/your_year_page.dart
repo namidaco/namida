@@ -813,7 +813,7 @@ class _YourYearPageState extends State<YourYearPage> {
                   (i) => TapDetector(
                     onTap: () => _pageController.animateToPage(i, duration: const Duration(milliseconds: 500), curve: Curves.fastEaseInToSlowEaseOut),
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                      duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 250)),
                       margin: const EdgeInsets.symmetric(horizontal: 3.0),
                       width: i == _currentPage ? 18.0 : 6.0,
                       height: 6.0,

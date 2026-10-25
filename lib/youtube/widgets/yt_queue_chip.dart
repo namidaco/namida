@@ -146,11 +146,18 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
   }
 
   void _onSearchResultsChanged(bool isNewQuery) {
-    if (isNewQuery) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _queueFollower.jumpToCurrentItem());
-    } else {
+    if (!isNewQuery) {
       _queueFollower.onCurrentItemMoved();
+      return;
     }
+    final isFiltering = _search.results.value != null;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (isFiltering) {
+        _queueFollower.jumpToItem(0.0);
+      } else {
+        _queueFollower.jumpToCurrentItem();
+      }
+    });
   }
 
   void _onSearchResultSelected(int index) {
@@ -159,8 +166,7 @@ class YTMiniplayerQueueChipState extends State<YTMiniplayerQueueChip> with Ticke
 
   double? _currentItemStart() {
     final index = Player.inst.currentIndex.value;
-    final results = _search.results.value;
-    final position = results == null ? index : QueueSearch.positionOf(results, index);
+    final position = _search.positionOf(index);
     if (position == null) return null;
     return Dimensions.youtubeCardItemExtent * position;
   }

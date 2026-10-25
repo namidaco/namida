@@ -364,7 +364,7 @@ class _CheckTileIcon extends StatelessWidget {
     final color = isSelected ? colors.secondary : unselectedColor;
     return TweenAnimationBuilder<Color?>(
       tween: ColorTween(end: color),
-      duration: const Duration(milliseconds: 200),
+      duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 200)),
       builder: (context, color, _) => Icon(
         icon,
         size: size,

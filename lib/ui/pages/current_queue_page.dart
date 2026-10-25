@@ -147,13 +147,18 @@ class _QueueListBaseState extends State<_QueueListBase> {
     _queueFollower.onCurrentItemMoved();
   }
 
+  void _jumpToStart(Duration _) {
+    if (mounted) _queueFollower.jumpToItem(0.0);
+  }
+
   void _onSearchResultsChanged(bool isNewQuery) {
     _mixedCurrentItemStart = null;
-    if (isNewQuery) {
-      WidgetsBinding.instance.addPostFrameCallback(_jumpToCurrentItem);
-    } else {
+    if (!isNewQuery) {
       _queueFollower.onCurrentItemMoved();
+      return;
     }
+    final isFiltering = _search?.results.value != null;
+    WidgetsBinding.instance.addPostFrameCallback(isFiltering ? _jumpToStart : _jumpToCurrentItem);
   }
 
   void _onSearchResultSelected(int index) {
@@ -175,8 +180,9 @@ class _QueueListBaseState extends State<_QueueListBase> {
 
   double? _currentItemStart() {
     final index = Player.inst.currentIndex.value;
-    final results = _search?.results.value;
-    final position = results == null ? index : QueueSearch.positionOf(results, index);
+    final search = _search;
+    final results = search?.results.value;
+    final position = search == null ? index : search.positionOf(index);
     if (position == null) return null;
     final itemExtentOf = widget.itemExtentOf;
     if (itemExtentOf == null) return widget.itemExtent * position;

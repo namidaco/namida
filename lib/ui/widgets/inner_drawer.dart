@@ -271,4 +271,11 @@ class _DrawerDragGestureRecognizer extends HorizontalDragGestureRecognizer {
 
   @override
   bool isPointerPanZoomAllowed(PointerPanZoomStartEvent event) => super.isPointerPanZoomAllowed(event) && canAcceptPointer(event);
+
+  // -- 2x slop so inner scrollables and text selection win first
+  @override
+  bool hasSufficientGlobalDistanceToAccept(PointerDeviceKind pointerDeviceKind, double? deviceTouchSlop) {
+    final panSlop = computePanSlop(pointerDeviceKind, gestureSettings);
+    return globalDistanceMoved.abs() > panSlop;
+  }
 }

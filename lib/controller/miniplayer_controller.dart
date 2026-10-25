@@ -291,11 +291,18 @@ class MiniPlayerController {
 
   void _onQueueSearchResultsChanged(bool isNewQuery) {
     _mixedCurrentItemStart = null;
-    if (isNewQuery) {
-      SchedulerBinding.instance.addPostFrameCallback((_) => queueFollower.jumpToCurrentItem());
-    } else {
+    if (!isNewQuery) {
       queueFollower.onCurrentItemMoved();
+      return;
     }
+    final isFiltering = queueSearch.results.value != null;
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      if (isFiltering) {
+        queueFollower.jumpToItem(0.0);
+      } else {
+        queueFollower.jumpToCurrentItem();
+      }
+    });
   }
 
   void _onQueueSearchResultSelected(int index) {
@@ -316,7 +323,7 @@ class MiniPlayerController {
   double? _currentItemStart() {
     final index = Player.inst.currentIndex.value;
     final results = queueSearch.results.value;
-    final position = results == null ? index : QueueSearch.positionOf(results, index);
+    final position = queueSearch.positionOf(index);
     if (position == null) return null;
     if (!Dimensions.inst.isMixedPlayerQueue) return _currentItemExtent * position;
     final cached = _mixedCurrentItemStart;

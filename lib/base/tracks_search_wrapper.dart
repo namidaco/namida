@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:isolate';
 import 'dart:math' as math;
-import 'dart:typed_data' show Uint32List;
+import 'dart:typed_data' show Int32List, Uint32List;
 
 import 'package:history_manager/history_manager.dart';
 import 'package:lrc/lrc.dart';
@@ -521,6 +521,20 @@ class TracksSearchWrapper {
     void onMatch(_CustomTrackExtended trExt) => result.add(trExt.ogIndex);
     _filter(text, onMatch, onMatch);
     return result;
+  }
+
+  /// rank of each track by its index, 1 is the best match and 0 is no match.
+  /// less relevant tracks rank after all relevant ones, like [filterSplitByRelevance].
+  ({Int32List ranks, int matchesCount}) filterRanks(String text) {
+    final ranks = Int32List(_tracksExtended.length);
+    final lessRelevant = <_CustomTrackExtended>[];
+    int matchesCount = 0;
+    void onRelevantMatch(_CustomTrackExtended trExt) => ranks[trExt.ogIndex] = ++matchesCount;
+    _filter(text, onRelevantMatch, lessRelevant.add);
+    for (final trExt in lessRelevant) {
+      ranks[trExt.ogIndex] = ++matchesCount;
+    }
+    return (ranks: ranks, matchesCount: matchesCount);
   }
 
   void _filter(

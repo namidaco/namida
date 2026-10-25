@@ -430,7 +430,7 @@ class _TrackTypesChip extends StatelessWidget {
           colorForce: secondaryColor.filterChipBorder(false),
         );
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 200)),
           margin: _kFilterChipMargin,
           decoration: BoxDecoration(
             color: secondaryColor.filterChipBg(bothActive),

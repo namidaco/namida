@@ -98,7 +98,7 @@ class StatsPeriodChip extends StatelessWidget {
         child: NBuilder(
           selfAnimated: true,
           builder: (context, colors) => AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 250)),
             padding: EdgeInsets.symmetric(horizontal: dense ? 8.0 : 12.0, vertical: 6.0),
             decoration: BoxDecoration(
               color: isActive ? CurrentColor.inst.currentColorScheme.withOpacityExt(0.63) : colors.card,

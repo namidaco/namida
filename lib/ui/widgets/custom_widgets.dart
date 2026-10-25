@@ -5492,24 +5492,27 @@ class NamidaInkWell extends StatelessWidget {
         ),
       ),
     );
-    return animationDurationMS > 0
-        ? AnimatedContainer(
-            alignment: alignment,
-            margin: margin,
-            duration: Duration(milliseconds: animationDurationMS),
-            decoration: decorationFinal,
-            foregroundDecoration: foregroundDecorationFinal,
-            clipBehavior: Clip.none,
-            child: childFinal,
-          )
-        : Container(
-            alignment: alignment,
-            margin: margin,
-            decoration: decorationFinal,
-            foregroundDecoration: foregroundDecorationFinal,
-            clipBehavior: Clip.none,
-            child: childFinal,
-          );
+    if (animationDurationMS > 0) {
+      final animationDuration = Duration(milliseconds: animationDurationMS);
+      final animationDurationFinal = NColorsData.targetDurationOf(context, animationDuration);
+      return AnimatedContainer(
+        alignment: alignment,
+        margin: margin,
+        duration: animationDurationFinal,
+        decoration: decorationFinal,
+        foregroundDecoration: foregroundDecorationFinal,
+        clipBehavior: Clip.none,
+        child: childFinal,
+      );
+    }
+    return Container(
+      alignment: alignment,
+      margin: margin,
+      decoration: decorationFinal,
+      foregroundDecoration: foregroundDecorationFinal,
+      clipBehavior: Clip.none,
+      child: childFinal,
+    );
   }
 }
 
@@ -6408,7 +6411,7 @@ class NamidaScrollbar extends StatelessWidget {
         scrollStep: scrollStep,
         thicknessWhileDragging: 8.5,
         minInteractiveSize: easyScrollbarGrab == true ? 96.0 : 60.0,
-        pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 80),
+        pressDuration: isDesktop ? const Duration(milliseconds: 50) : const Duration(milliseconds: 120),
         tapToScroll: () => settings.tapToScroll.value ?? false,
         enhancedDragToScroll: () => settings.enhancedDragToScroll.value ?? true,
         instantThumbGrab: () => settings.easyScrollbarGrab.value ?? false,

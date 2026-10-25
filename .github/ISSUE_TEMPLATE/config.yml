@@ -6,6 +6,9 @@ contact_links:
   - name: 🧪 Beta Version
     url: https://github.com/namidaco/namida-snapshots/releases
     about: fixes land here first, your problem might be gone already
+  - name: 🍎 iOS & macOS Testing
+    url: https://github.com/namidaco/namida/discussions/new?category=apple-testing
+    about: tried the iOS or macOS beta? fill the checklist so we know what works
   - name: 📚 Documentation
     url: https://docs.namida.app
     about: lots of answers live here

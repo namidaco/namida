@@ -428,6 +428,10 @@ class AudioSignalFormat {
   });
 }
 
+class AudioOutputUnavailableException implements Exception {
+  const AudioOutputUnavailableException();
+}
+
 enum AudioSignalOutputType {
   androidMixer,
   bitPerfectMixer,

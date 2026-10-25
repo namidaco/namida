@@ -284,7 +284,10 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
                 child: AnimatedOpacity(
                   opacity: (!_switcher) ? _SBDimensions.d0 : _SBDimensions.d1,
                   duration: const Duration(milliseconds: _SBDimensions.t700),
-                  child: widget.trailingWidget,
+                  child: _EmptyTextDimmer(
+                    controller: widget.textEditingController,
+                    child: widget.trailingWidget,
+                  ),
                 ),
               ),
               AnimatedPositioned(
@@ -530,6 +533,59 @@ class SearchBarAnimationState extends State<SearchBarAnimation> with SingleTicke
   }
 }
 
+class _EmptyTextDimmer extends StatefulWidget {
+  final TextEditingController controller;
+  final Widget child;
+
+  const _EmptyTextDimmer({required this.controller, required this.child});
+
+  @override
+  State<_EmptyTextDimmer> createState() => _EmptyTextDimmerState();
+}
+
+class _EmptyTextDimmerState extends State<_EmptyTextDimmer> {
+  late bool _isEmpty = widget.controller.text.isEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EmptyTextDimmer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller == widget.controller) return;
+    oldWidget.controller.removeListener(_onTextChanged);
+    widget.controller.addListener(_onTextChanged);
+    _onTextChanged();
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onTextChanged);
+    super.dispose();
+  }
+
+  void _onTextChanged() {
+    final isEmpty = widget.controller.text.isEmpty;
+    if (isEmpty == _isEmpty) return;
+    setState(() => _isEmpty = isEmpty);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: _isEmpty,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: _SBDimensions.t400),
+        opacity: _isEmpty ? 0.5 : 1.0,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
 /// Colours for searchbar widget
 class _SBColor {
   static const Color transparent = Colors.transparent;
@@ -564,6 +620,7 @@ class _SBDimensions {
 
   /// Time values
   static const int t200 = 200;
+  static const int t400 = 200;
   static const int t700 = 700;
   static const int t1000 = 1000;
 }

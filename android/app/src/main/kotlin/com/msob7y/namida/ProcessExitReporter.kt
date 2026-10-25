@@ -4,6 +4,7 @@ package com.msob7y.namida
 import android.app.ActivityManager
 import android.app.ApplicationExitInfo
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.annotation.RequiresApi
 import java.io.File
@@ -18,6 +19,7 @@ object ProcessExitReporter {
   private const val MAX_BACKTRACE_FRAMES = 64
   private const val MAX_ANR_LINES = 80
   private const val JAVA_CRASH_MATCH_WINDOW_MS = 10_000L
+  private const val OWN_UPDATE_MATCH_WINDOW_MS = 10_000L
 
   private var isJavaCrashRecorderInstalled = false
 
@@ -40,8 +42,9 @@ object ProcessExitReporter {
     var javaCrash = consumeJavaCrash(context)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      val packageName = context.packageName
       for (info in consumeExitInfos(context)) {
-        if (!isAbnormal(info)) continue
+        if (!isOwnProcess(info, packageName) || !isAbnormal(info, context)) continue
         var details = describe(info)
         if (javaCrash != null && info.reason == ApplicationExitInfo.REASON_CRASH && abs(info.timestamp - javaCrash.timestamp) <= JAVA_CRASH_MATCH_WINDOW_MS) {
           details += "\n${javaCrash.trace}"
@@ -83,8 +86,17 @@ object ProcessExitReporter {
     return infos.filter { it.timestamp > lastTimestamp }.sortedBy { it.timestamp }
   }
 
+  // -- webview sandbox processes are listed under our uid too
   @RequiresApi(Build.VERSION_CODES.R)
-  private fun isAbnormal(info: ApplicationExitInfo): Boolean {
+  private fun isOwnProcess(info: ApplicationExitInfo, packageName: String): Boolean {
+    val processName = info.processName
+    if (!processName.startsWith(packageName)) return false
+    val isMainProcess = processName.length == packageName.length
+    return isMainProcess || processName[packageName.length] == ':'
+  }
+
+  @RequiresApi(Build.VERSION_CODES.R)
+  private fun isAbnormal(info: ApplicationExitInfo, context: Context): Boolean {
     return when (info.reason) {
       ApplicationExitInfo.REASON_CRASH,
       ApplicationExitInfo.REASON_CRASH_NATIVE,
@@ -99,8 +111,28 @@ object ProcessExitReporter {
       ApplicationExitInfo.REASON_OTHER,
       ApplicationExitInfo.REASON_UNKNOWN -> info.importance < ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED
 
+      // -- dependency updates (ex: webview) kill us too, the description names the package
+      ApplicationExitInfo.REASON_PACKAGE_UPDATED -> {
+        val wasCached = info.importance >= ActivityManager.RunningAppProcessInfo.IMPORTANCE_CACHED
+        if (wasCached) false else !isOwnUpdate(info, context)
+      }
+
       else -> false
     }
+  }
+
+  @RequiresApi(Build.VERSION_CODES.R)
+  private fun isOwnUpdate(info: ApplicationExitInfo, context: Context): Boolean {
+    val packageManager = context.packageManager
+    val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val flags = PackageManager.PackageInfoFlags.of(0)
+      packageManager.getPackageInfo(context.packageName, flags)
+    } else {
+      @Suppress("DEPRECATION")
+      packageManager.getPackageInfo(context.packageName, 0)
+    }
+    val updateGapMS = abs(info.timestamp - packageInfo.lastUpdateTime)
+    return updateGapMS <= OWN_UPDATE_MATCH_WINDOW_MS
   }
 
   @RequiresApi(Build.VERSION_CODES.R)
@@ -156,6 +188,7 @@ object ProcessExitReporter {
       ApplicationExitInfo.REASON_INITIALIZATION_FAILURE -> "INITIALIZATION_FAILURE"
       ApplicationExitInfo.REASON_EXCESSIVE_RESOURCE_USAGE -> "EXCESSIVE_RESOURCE_USAGE"
       ApplicationExitInfo.REASON_DEPENDENCY_DIED -> "DEPENDENCY_DIED"
+      ApplicationExitInfo.REASON_PACKAGE_UPDATED -> "PACKAGE_UPDATED"
       ApplicationExitInfo.REASON_OTHER -> "OTHER"
       else -> "UNKNOWN($reason)"
     }

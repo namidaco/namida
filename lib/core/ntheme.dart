@@ -24,6 +24,13 @@ class NTheme extends StatefulWidget {
     required this.child,
   });
 
+  /// true in the frame a hidden subtree is shown again with a newer theme, widgets animating theme colors jump to them instead.
+  static bool isRevealing(BuildContext context) {
+    final revealScope = context.getInheritedWidgetOfExactType<_NThemeRevealScope>();
+    if (revealScope == null) return false;
+    return revealScope.state._isRevealing;
+  }
+
   @override
   State<NTheme> createState() => _NThemeState();
 }
@@ -38,7 +45,8 @@ class _NThemeState extends State<NTheme> with SingleTickerProviderStateMixin {
     super.didUpdateWidget(oldWidget);
     if (identical(widget.data, oldWidget.data)) return;
     final target = NColorsData._fromTheme(widget.data);
-    if (!settings.animatedTheme.value) {
+    final shouldJump = !settings.animatedTheme.value || NTheme.isRevealing(context);
+    if (shouldJump) {
       _lerpController?.stop();
       _lerp = null;
       _colors.value = target;
@@ -91,6 +99,7 @@ class NThemeFrozenWhileHidden extends StatefulWidget {
 class _NThemeFrozenWhileHiddenState extends State<NThemeFrozenWhileHidden> {
   _NThemeScope? _visibleScope;
   ValueNotifier<NColorsData>? _frozenColors;
+  bool _isRevealing = false;
 
   @override
   void dispose() {
@@ -98,26 +107,42 @@ class _NThemeFrozenWhileHiddenState extends State<NThemeFrozenWhileHidden> {
     super.dispose();
   }
 
+  void _endReveal(Duration _) => _isRevealing = false;
+
   @override
   Widget build(BuildContext context) {
     final scope = _NThemeScope._of(context);
     final isVisible = TickerMode.valuesOf(context).enabled;
     final visibleScope = _visibleScope;
     if (visibleScope == null || isVisible) {
+      final frozenColors = _frozenColors;
+      if (frozenColors != null) {
+        frozenColors.dispose();
+        _frozenColors = null;
+        final didThemeChange = !identical(visibleScope?.data, scope.data);
+        if (didThemeChange) {
+          _isRevealing = true;
+          WidgetsBinding.instance.addPostFrameCallback(_endReveal);
+        }
+      }
       _visibleScope = scope;
-      _frozenColors?.dispose();
-      _frozenColors = null;
-      return _NThemeLayers(
-        data: scope.data,
-        colors: scope.colors,
-        child: widget.child,
+      return _NThemeRevealScope(
+        state: this,
+        child: _NThemeLayers(
+          data: scope.data,
+          colors: scope.colors,
+          child: widget.child,
+        ),
       );
     }
     final frozenColors = _frozenColors ??= ValueNotifier(visibleScope.colors.value);
-    return _NThemeLayers(
-      data: visibleScope.data,
-      colors: frozenColors,
-      child: widget.child,
+    return _NThemeRevealScope(
+      state: this,
+      child: _NThemeLayers(
+        data: visibleScope.data,
+        colors: frozenColors,
+        child: widget.child,
+      ),
     );
   }
 }
@@ -146,6 +171,18 @@ class _NThemeLayers extends StatelessWidget {
       ),
     );
   }
+}
+
+class _NThemeRevealScope extends InheritedWidget {
+  final _NThemeFrozenWhileHiddenState state;
+
+  const _NThemeRevealScope({
+    required this.state,
+    required super.child,
+  });
+
+  @override
+  bool updateShouldNotify(_NThemeRevealScope oldWidget) => false;
 }
 
 class _NTextScopeProvider extends StatelessWidget {

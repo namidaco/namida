@@ -418,7 +418,7 @@ enum SmartPlaylistRuleFilterNumberSource with SmartPlaylistRuleFilterSource {
     SmartPlaylistRuleFilterNumberSource.discNumber => lang.discNumber,
     SmartPlaylistRuleFilterNumberSource.discTotal => lang.discNumberTotal,
     SmartPlaylistRuleFilterNumberSource.playlistsCount => lang.playlistsCount,
-    SmartPlaylistRuleFilterNumberSource.tracksCount => lang.totalTracks,
+    SmartPlaylistRuleFilterNumberSource.tracksCount => lang.numberOfTracks,
   };
 
   @override

@@ -69,6 +69,9 @@ final class NColorsData {
     return _ofTheme[theme] ??= NColorsData._fromTheme(theme);
   }
 
+  /// [duration] for widgets animating to [targetOf] themselves, zero while [NTheme.isRevealing].
+  static Duration targetDurationOf(BuildContext context, Duration duration) => NTheme.isRevealing(context) ? Duration.zero : duration;
+
   final Color card;
   final Color cardTheme;
   final Color scaffold;

@@ -31,23 +31,28 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
 
   final _isOpen = false.obso;
 
-  /// ascending queue indices of the matching items, null while not filtering.
+  /// queue indices of the matching items by relevance, null while not filtering.
   final results = RxnO<List<int>>();
+
+  /// position of each queue index in [results], -1 when it didn't match.
+  Int32List? _resultPositions;
 
   TextEditingController? _textController;
   FocusNode? _focusNode;
 
-  static final _kNoMatches = Uint8List(0);
+  static final _kNoMatches = Int32List(0);
 
   String _query = '';
   String _queryLower = '';
   bool _isAwaitingQueryResult = false;
 
-  /// append-only during a session, so indices in [_localMatchFlags] stay valid after queue changes.
+  /// append-only during a session, so indices in [_localMatchRanks] stay valid after queue changes.
   Map<Track, int>? _localIndexOf;
   int _isolateTracksCount = 0;
 
-  Uint8List? _localMatchFlags;
+  /// 1 is the best match and 0 is no match.
+  Int32List? _localMatchRanks;
+  int _localMatchesCount = 0;
 
   /// local index of each queue item, -1 for videos.
   Int32List? _queueLocalIndices;
@@ -57,20 +62,13 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
   bool get _hasLocalTracks => _localIndexOf?.isNotEmpty == true;
   bool get _isolateLacksTracks => (_localIndexOf?.length ?? 0) > _isolateTracksCount;
 
-  static int? positionOf(List<int> results, int index) {
-    int low = 0;
-    int high = results.length - 1;
-    while (low <= high) {
-      final mid = (low + high) >> 1;
-      final value = results[mid];
-      if (value == index) return mid;
-      if (value < index) {
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-    return null;
+  /// position of the queue [index] in the shown list, null when it's filtered out.
+  int? positionOf(int index) {
+    final resultPositions = _resultPositions;
+    if (resultPositions == null) return index;
+    if (index >= resultPositions.length) return null;
+    final position = resultPositions[index];
+    return position < 0 ? null : position;
   }
 
   void toggle() {
@@ -115,8 +113,9 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     _focusNode?.unfocus();
     _isOpen.value = false;
     if (selectedIndex == null) {
-      _setResults(null, isNewQuery: true);
+      _setResults(null, null, isNewQuery: true);
     } else {
+      _resultPositions = null;
       results.value = null;
       onResultSelected(selectedIndex);
     }
@@ -131,7 +130,8 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     _isAwaitingQueryResult = false;
     _localIndexOf = null;
     _isolateTracksCount = 0;
-    _localMatchFlags = null;
+    _localMatchRanks = null;
+    _localMatchesCount = 0;
     _queueLocalIndices = null;
     _videoTextsLower = null;
   }
@@ -143,8 +143,9 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     _queryLower = query.toLowerCase();
     if (query.isEmpty) {
       _isAwaitingQueryResult = false;
-      _localMatchFlags = null;
-      _setResults(null, isNewQuery: true);
+      _localMatchRanks = null;
+      _localMatchesCount = 0;
+      _setResults(null, null, isNewQuery: true);
       return;
     }
 
@@ -197,28 +198,55 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     return _queueLocalIndices = queueLocalIndices;
   }
 
+  /// counting sort by rank so it stays linear. repeated tracks and videos keep their queue order.
   void _applyResults({required bool isNewQuery}) {
     final queue = Player.inst.currentQueue.value;
     final queueLocalIndices = _queueLocalIndices ?? _mapQueue();
-    final localMatchFlags = _localMatchFlags ?? _kNoMatches;
-    final localMatchFlagsLength = localMatchFlags.length;
+    final localMatchRanks = _localMatchRanks ?? _kNoMatches;
+    final localMatchRanksLength = localMatchRanks.length;
+    final videosRank = _localMatchesCount + 1;
     final queryLower = _queryLower;
     final queueLength = queueLocalIndices.length;
-    final matchedIndices = Int32List(queueLength);
+
+    // -- holds each item's rank first, then its position in the results
+    final resultPositions = Int32List(queueLength);
+    final rankOffsets = Int32List(videosRank + 1);
     int matchedCount = 0;
     for (int i = 0; i < queueLength; i++) {
       final localIndex = queueLocalIndices[i];
-      final bool isMatch;
+      int rank = 0;
       if (localIndex >= 0) {
-        isMatch = localIndex < localMatchFlagsLength && localMatchFlags[localIndex] == 1;
+        if (localIndex < localMatchRanksLength) rank = localMatchRanks[localIndex];
       } else {
         final item = queue[i];
-        isMatch = item is YoutubeID && _isVideoMatch(item.id, queryLower);
+        if (item is YoutubeID && _isVideoMatch(item.id, queryLower)) rank = videosRank;
       }
-      if (isMatch) matchedIndices[matchedCount++] = i;
+      resultPositions[i] = rank;
+      if (rank > 0) {
+        rankOffsets[rank]++;
+        matchedCount++;
+      }
     }
-    final matchedResults = Int32List.sublistView(matchedIndices, 0, matchedCount);
-    _setResults(matchedResults, isNewQuery: isNewQuery);
+
+    int offset = 0;
+    for (int rank = 1; rank <= videosRank; rank++) {
+      final rankCount = rankOffsets[rank];
+      rankOffsets[rank] = offset;
+      offset += rankCount;
+    }
+
+    final matchedIndices = Int32List(matchedCount);
+    for (int i = 0; i < queueLength; i++) {
+      final rank = resultPositions[i];
+      if (rank == 0) {
+        resultPositions[i] = -1;
+        continue;
+      }
+      final position = rankOffsets[rank]++;
+      matchedIndices[position] = i;
+      resultPositions[i] = position;
+    }
+    _setResults(matchedIndices, resultPositions, isNewQuery: isNewQuery);
   }
 
   bool _isVideoMatch(String videoId, String queryLower) {
@@ -234,18 +262,20 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     return textLower.contains(queryLower);
   }
 
-  void _setResults(List<int>? newResults, {required bool isNewQuery}) {
+  void _setResults(List<int>? newResults, Int32List? newResultPositions, {required bool isNewQuery}) {
     if (newResults == null && results.value == null) return;
+    _resultPositions = newResultPositions;
     results.value = newResults;
     onResultsChanged(isNewQuery);
   }
 
   @override
   void onResult(dynamic result) {
-    if (result is! (Uint8List, String)) return;
-    final (matchFlags, text) = result;
+    if (result is! (Int32List, int, String)) return;
+    final (matchRanks, matchesCount, text) = result;
     if (text != _query) return;
-    _localMatchFlags = matchFlags;
+    _localMatchRanks = matchRanks;
+    _localMatchesCount = matchesCount;
     final isNewQuery = _isAwaitingQueryResult;
     _isAwaitingQueryResult = false;
     _applyResults(isNewQuery: isNewQuery);
@@ -268,7 +298,6 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
     final receivePort = ReceivePort();
     sendPort.send(receivePort.sendPort);
 
-    final tracksCount = params.tracks.length;
     final searchWrapper = TracksSearchWrapper.init(params);
 
     StreamSubscription? streamSub;
@@ -279,11 +308,8 @@ class QueueSearch with PortsProvider<TracksSearchParams> {
         return;
       }
       if (p is! String) return;
-      final matchFlags = Uint8List(tracksCount);
-      for (final index in searchWrapper.filterIndicesAsList(p)) {
-        matchFlags[index] = 1;
-      }
-      sendPort.send((matchFlags, p));
+      final result = searchWrapper.filterRanks(p);
+      sendPort.send((result.ranks, result.matchesCount, p));
     });
 
     sendPort.send(PortsProviderMessages.prepared);

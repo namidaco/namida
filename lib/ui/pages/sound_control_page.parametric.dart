@@ -1891,7 +1891,7 @@ class _ForcedOffChip extends StatelessWidget {
     final possibleCauseColor = colors.icon.withOpacityExt(0.5);
     return Center(
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: NColorsData.targetDurationOf(context, const Duration(milliseconds: 200)),
         padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
         decoration: BoxDecoration(
           color: baseColor.withOpacityExt(0.15),

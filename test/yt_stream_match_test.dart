@@ -29,6 +29,7 @@ void main() {
       sig: null,
       nsig: null,
       audioTrack: audioTrack,
+      requestedWithCookies: false,
     );
   }
 
@@ -49,6 +50,7 @@ void main() {
       height: height,
       fps: fps,
       qualityLabel: '${height}p',
+      requestedWithCookies: false,
     );
   }
 

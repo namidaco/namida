@@ -1018,6 +1018,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   @override
   void onPlaybackError(Object e, StackTrace st) {
+    // -- no skipping, every item would fail the same
+    if (e is AudioOutputUnavailableException) {
+      snackyy(title: lang.error, message: lang.outputDeviceUnavailable, top: false, isError: true);
+      return;
+    }
     final item = currentItem.value;
     item?.execute(
       selectable: (finalItem) => _onTrackPlayError(finalItem.track, e, st, skipToNext),

@@ -1,0 +1,120 @@
+title: "testing: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        heyy thanks for testing 🤎 the iOS & macOS builds will soon be in the [beta releases](https://github.com/namidaco/namida-snapshots/releases)
+
+        mark each result with ✅ (works), ⚠️ (works with problems) or ❌ (broken). leave it empty if you didn't try it, and clear the table of the platform you don't have
+  - type: input
+    id: version
+    attributes:
+      label: namida version
+      description: |
+        the exact version from **Settings > About**, ex: `7.4.0-beta`
+        please do NOT type "latest", it changes every few days
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: device
+      description: model and system version, ex `iPhone 13, iOS 18.2` or `MacBook Air M2, macOS 15.1`
+    validations:
+      required: true
+  - type: textarea
+    id: ios
+    attributes:
+      label: iOS
+      value: |
+        | feature | what to try | result |
+        | --- | --- | :-: |
+        | install | Sideload the ipa with SideStore, AltStore or Sideloadly, then open the app. | |
+        | update source | Add `https://namidaco.github.io/namida-snapshots/altstore-source.json` as a source in SideStore or AltStore. Namida shows up with its version. | |
+        | update | Install a newer build (or re-sign the app). Library, playlists, history and settings are still there. | |
+        | app folder in Files | Copy music into On My iPhone > Namida with the Files app. It shows up after a library refresh. | |
+        | folder outside the app | Add a folder from iCloud Drive or another app. Restart namida and check its tracks still play. | |
+        | remove a folder | Remove that folder from the library. Its tracks go away after a refresh. | |
+        | playback | Play, pause, skip and seek. Try a few formats (mp3, flac, m4a, opus). | |
+        | crossfade | Turn on crossfade and let a track end. The next one fades in with sound. | |
+        | equalizer | Change the equalizer while a track plays. The sound changes. | |
+        | bit-perfect | Turn on bit-perfect output. Play tracks with different sample rates (44.1 kHz and 96 kHz). They play without noise, a short gap between them is fine. | |
+        | system controls | Use the lock screen and Control Center player, and the buttons on your headphones. | |
+        | background play | Lock the phone while a track plays. Playback keeps going. | |
+        | interruptions | Take a call or use Siri while a track plays. Playback resumes with sound after it. Unplugging headphones or disconnecting bluetooth pauses it. | |
+        | video | Play a local video. Pull down Control Center and close it, the video keeps going. Lock the phone, the audio keeps going and the app doesn't close. | |
+        | youtube | Search, play a video and sign in. | |
+        | youtube downloads | Download a few videos, then leave the app. They finish (iOS 26 shows their progress in the system). | |
+        | waveform | The seekbar shows the track's waveform. | |
+        | tags | Edit a track's tags and cover. The changes stay after a library refresh. | |
+        | lyrics | Open synced lyrics while a track plays. | |
+        | romanization | Turn on romanization and open Japanese lyrics. The romaji line shows. | |
+        | open with namida | Open an audio file with namida from the Files app or another app's share sheet. It plays. | |
+        | show in Files | Use a track's "open in folder" action. The Files app opens at that folder. | |
+        | sync | Sync with another device on the same network. Allow the local network prompt. | |
+        | listening party | Host or join a party on the same network. Open an invite link, it opens the party in namida. | |
+        | backup & restore | Make a backup, then restore it. Playlists and history come back. | |
+        | icloud backup | In Settings > your name > iCloud > Manage Storage > Backups, namida's size stays small (its caches are left out). | |
+        | home widget | Add the Namida widget (iOS 17+). It shows the track and its buttons work, also when namida was closed. | |
+        | control center button | Add the Namida play/pause control (iOS 18+) and use it. | |
+        | lock screen lyrics | Turn on status bar lyrics > Live Activity. The line follows the song on the lock screen and the Dynamic Island. | |
+        | app icon | Change the app icon in the settings. | |
+        | discord | Turn on Discord presence and log in. Your status shows the track. | |
+        | notifications | Finish a download. A notification shows after you allow them. | |
+        | settings | Open every settings page. No option is broken or does nothing. | |
+        | smoothness | On a 120 Hz iPhone, scrolling is smooth. | |
+        | report an issue | Use About > report an issue. The form has iOS selected. | |
+  - type: textarea
+    id: macos
+    attributes:
+      label: macOS
+      value: |
+        | feature | what to try | result |
+        | --- | --- | :-: |
+        | install | Open the dmg and drag Namida to Applications. Open it, then allow it in Privacy & Security > Open Anyway. | |
+        | mac type | Note whether your Mac is Intel or Apple silicon. Namida runs on both. | |
+        | update | Install a newer build over the old one. Library, playlists, history and settings are still there. | |
+        | library | The Music folder in your home is scanned. Add another folder with the folder dialog. | |
+        | playback | Play, pause, skip and seek. Try a few formats (mp3, flac, m4a, opus). | |
+        | crossfade | Turn on crossfade and let a track end. The next one fades in with sound. | |
+        | equalizer | Change the equalizer while a track plays. The sound changes. | |
+        | exclusive & bit-perfect | Turn on exclusive mode or bit-perfect output (best with a DAC). Other apps go silent and tracks play without noise. | |
+        | system controls | Use the Now Playing widget in Control Center and the media keys. | |
+        | background play | Hide the window while a track plays. Playback keeps going. | |
+        | video | Play a local video. Moving the mouse over it shows the controls. | |
+        | youtube | Search, play a video and sign in. | |
+        | youtube downloads | Download a few videos. They finish. | |
+        | waveform | The seekbar shows the track's waveform. | |
+        | tags | Edit a track's tags and cover. The changes stay after a library refresh. | |
+        | lyrics | Open synced lyrics while a track plays. | |
+        | romanization | Turn on romanization and open Japanese lyrics. The romaji line shows. | |
+        | open with namida | Open an audio file from Finder with namida, also while namida is already open. It plays in the same window. | |
+        | show in Finder | Use a track's "open in folder" action. Finder opens with the file selected. | |
+        | file dialogs | Pick a backup location and import a file. The dialogs open and work. | |
+        | drag & drop | Drop audio files on the window. They play. | |
+        | sync | Sync with another device on the same network. Allow the local network prompt (macOS 15+). | |
+        | listening party | Host or join a party on the same network. Open an invite link, it opens the party in namida. | |
+        | backup & restore | Make a backup, then restore it. Playlists and history come back. | |
+        | discord | Turn on Discord presence with the Discord app running. Your status shows the track. | |
+        | notifications | Finish a download. A notification shows after you allow them. | |
+        | window | Use the traffic lights and fullscreen. The title bar leaves room for the traffic lights, and none in fullscreen. | |
+        | menu bar | Click the menu bar icon, its menu opens. Hide the window and click the dock icon, it comes back. | |
+        | menu bar lyrics | Turn on status bar lyrics > macOS menu bar. The line shows next to the icon. | |
+        | shortcuts | Try Cmd+F (search), Cmd+←/→ (previous/next), Cmd+↑/↓ (volume), Ctrl+Q (queue) and Ctrl+Space (stop after this track). | |
+        | mouse & keyboard | Cmd+click selects several tracks. Cmd+scroll zooms a cover. Scrolling is smooth. | |
+        | settings | Open every settings page. No option is broken or does nothing. | |
+        | report an issue | Use About > report an issue. The form has macOS selected. | |
+  - type: textarea
+    id: problems
+    attributes:
+      label: what went wrong
+      description: the ⚠️ and ❌ ones, a few words each is enough. a quick screen recording helps a lot
+  - type: textarea
+    id: logs
+    attributes:
+      label: logs
+      description: |
+        **Settings > About > Share Logs** gives you a zip, drag it right here 📦
+        private stuff (device name, ids, your user folder) gets stripped out automatically 🔒
+      placeholder: drop the zip here

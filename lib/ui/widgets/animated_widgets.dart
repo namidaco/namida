@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/ntheme.dart';
 
 class AnimatedDecoration extends ImplicitlyAnimatedWidget {
   final Widget? child;
@@ -26,7 +27,7 @@ class AnimatedDecoration extends ImplicitlyAnimatedWidget {
   AnimatedWidgetBaseState<AnimatedDecoration> createState() => _AnimatedDecorationState();
 }
 
-class _AnimatedDecorationState extends AnimatedWidgetBaseState<AnimatedDecoration> {
+class _AnimatedDecorationState extends AnimatedWidgetBaseState<AnimatedDecoration> with _JumpWhileThemeRevealing {
   DecorationTween? _decoration;
   Matrix4Tween? _transform;
 
@@ -62,7 +63,7 @@ class AnimatedColoredBox extends ImplicitlyAnimatedWidget {
   AnimatedWidgetBaseState<AnimatedColoredBox> createState() => _AnimatedColoredBoxState();
 }
 
-class _AnimatedColoredBoxState extends AnimatedWidgetBaseState<AnimatedColoredBox> {
+class _AnimatedColoredBoxState extends AnimatedWidgetBaseState<AnimatedColoredBox> with _JumpWhileThemeRevealing {
   ColorTween? _color;
 
   @override
@@ -104,7 +105,7 @@ class AnimatedSizedBox extends ImplicitlyAnimatedWidget {
   AnimatedWidgetBaseState<AnimatedSizedBox> createState() => _AnimatedSizedBoxState();
 }
 
-class _AnimatedSizedBoxState extends AnimatedWidgetBaseState<AnimatedSizedBox> {
+class _AnimatedSizedBoxState extends AnimatedWidgetBaseState<AnimatedSizedBox> with _JumpWhileThemeRevealing {
   DecorationTween? _decoration;
   DoubleTween? _width;
   DoubleTween? _height;
@@ -153,7 +154,7 @@ class AnimatedColor extends ImplicitlyAnimatedWidget {
   AnimatedWidgetBaseState<AnimatedColor> createState() => __AnimatedColorState();
 }
 
-class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> {
+class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> with _JumpWhileThemeRevealing {
   ColorTween? _colorTween;
 
   @override
@@ -167,6 +168,14 @@ class __AnimatedColorState extends AnimatedWidgetBaseState<AnimatedColor> {
       color: _colorTween?.evaluate(animation) ?? Colors.transparent,
       child: widget.child,
     );
+  }
+}
+
+mixin _JumpWhileThemeRevealing<T extends ImplicitlyAnimatedWidget> on ImplicitlyAnimatedWidgetState<T> {
+  @override
+  void didUpdateWidget(T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (controller.isAnimating && NTheme.isRevealing(context)) controller.value = 1.0;
   }
 }
 
