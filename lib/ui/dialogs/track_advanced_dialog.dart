@@ -31,6 +31,7 @@ import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
+import 'package:namida/ui/dialogs/color_picker_dialog.dart';
 import 'package:namida/ui/dialogs/track_clear_dialog.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -38,7 +39,6 @@ import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
-import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 void showTrackAdvancedDialog({
   required List<Selectable> tracks,
@@ -758,12 +758,21 @@ void _showTrackColorPaletteDialog({
           trackColor.palette.getRandomSample(10),
         ];
 
+  List<Color> getSuggestedPaletteColors() {
+    final palette = allPaletteColor.value;
+    final mixedColors = defaultMixes?.map(NamidaColor.mixIntColors) ?? const <Color>[];
+    return removedColors.value.followedBy(mixedColors).where((c) => !palette.contains(c)).toFixedList();
+  }
+
   void showAddNewColorPaletteDialog() {
+    final suggestedColors = getSuggestedPaletteColors();
     NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => NamidaColorPickerDialog(
         initialColor: allPaletteColor.value.lastOrNull ?? Colors.black,
         doneText: lang.add,
+        isAlphaAllowed: false,
+        suggestedColors: suggestedColors,
         onDonePressed: (color) {
           allPaletteColor.add(color);
           didChangeOriginalPalette.value = true;

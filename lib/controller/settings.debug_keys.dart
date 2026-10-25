@@ -28,6 +28,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     ytHomeSectionSources,
     recentSearchesEnabled,
     recentSearches,
+    recentColors,
     floatingArtworkEffect,
     tiltingCardsEffect,
     reduceAnimations,

@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:flex_color_picker/flex_color_picker.dart';
-
 import 'package:namida/base/setting_subpage_provider.dart';
 import 'package:namida/class/lang.dart';
 import 'package:namida/controller/current_color.dart';
@@ -20,6 +18,7 @@ import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/arb/app_localizations.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/color_picker_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -279,139 +278,6 @@ class _ToggleThemeModeContainerState extends State<ToggleThemeModeContainer> {
   }
 }
 
-class NamidaColorPickerDialog extends StatefulWidget {
-  final String doneText;
-  final VoidCallback? onRefreshButtonPressed;
-  final ValueChanged<Color>? onColorChanged;
-  final bool colorChangedDebouncer;
-  final bool themeFollowsColor;
-  final void Function(Color color) onDonePressed;
-  final bool cancelButton;
-  final Color initialColor;
-
-  const NamidaColorPickerDialog({
-    super.key,
-    required this.doneText,
-    this.onRefreshButtonPressed,
-    this.onColorChanged,
-    this.colorChangedDebouncer = false,
-    this.themeFollowsColor = false,
-    required this.onDonePressed,
-    required this.cancelButton,
-    required this.initialColor,
-  });
-
-  @override
-  State<NamidaColorPickerDialog> createState() => _NamidaColorPickerDialogState();
-}
-
-class _NamidaColorPickerDialogState extends State<NamidaColorPickerDialog> {
-  late Color _currentColor;
-  Timer? colorChangedDebouncer;
-  void _onColorChanged(Color color) {
-    if (widget.themeFollowsColor) {
-      setState(() => _currentColor = color);
-    } else {
-      _currentColor = color;
-    }
-
-    final onColorChanged = widget.onColorChanged;
-    if (onColorChanged != null) {
-      if (widget.colorChangedDebouncer) {
-        colorChangedDebouncer?.cancel();
-        colorChangedDebouncer = Timer(
-          const Duration(milliseconds: 300),
-          () => onColorChanged(color),
-        );
-      } else {
-        onColorChanged(color);
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    _currentColor = widget.initialColor;
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    colorChangedDebouncer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = widget.themeFollowsColor ? AppThemes.inst.getAppTheme(_currentColor) : context.theme;
-    Widget pickerWidget = CustomBlurryDialog(
-      actions: [
-        if (widget.onRefreshButtonPressed != null)
-          IconButton(
-            icon: const Icon(Broken.refresh),
-            tooltip: lang.restoreDefaults,
-            onPressed: widget.onRefreshButtonPressed,
-          ),
-        if (widget.cancelButton) const CancelButton(),
-        NamidaButton(
-          text: widget.doneText,
-          onTap: () => widget.onDonePressed(_currentColor),
-        ),
-      ],
-      child: ColorPicker(
-        color: _currentColor,
-        onColorChanged: _onColorChanged,
-        hasBorder: true,
-        enableTonalPalette: true,
-        enableOpacity: true,
-        showMaterialName: false,
-        showColorCode: true,
-        colorCodeHasColor: true,
-        focusedEditHasNoColor: true,
-        showEditIconButton: false,
-        editIcon: Broken.edit_2,
-        wheelSquarePadding: 12.0,
-        wheelDiameter: 224.0,
-        wheelWidth: 24.0,
-        borderRadius: 8.0.multipliedRadius,
-        opacityThumbRadius: 16.0,
-        opacityTrackHeight: 12.0,
-        selectedPickerTypeColor: theme.colorScheme.secondary.withOpacityExt(0.4),
-        pickersEnabled: const {
-          ColorPickerType.wheel: true,
-          ColorPickerType.both: true,
-          ColorPickerType.customSecondary: false,
-          ColorPickerType.custom: false,
-          ColorPickerType.primary: false,
-          ColorPickerType.accent: false,
-          ColorPickerType.bw: false,
-        },
-        pickerTypeTextStyle: NText.medium.of(context),
-        colorNameTextStyle: NText.small.of(context),
-        materialNameTextStyle: NText.small.of(context),
-        colorCodePrefixStyle: NText.small.of(context).copyWith(fontWeight: FontWeight.w300),
-        colorCodeTextStyle: NText.medium.of(context).copyWith(fontWeight: FontWeight.w400),
-        copyPasteBehavior: const ColorPickerCopyPasteBehavior(
-          copyFormat: ColorPickerCopyFormat.hexAARRGGBB,
-          ctrlC: true,
-          ctrlV: true,
-          editFieldCopyButton: true,
-          copyIcon: Broken.copy,
-        ),
-      ),
-    );
-
-    if (widget.themeFollowsColor) {
-      pickerWidget = NTheme(
-        data: theme,
-        child: pickerWidget,
-      );
-    }
-
-    return pickerWidget;
-  }
-}
-
 class _ThemeModeTile extends StatelessWidget {
   final Color? bgColor;
 
@@ -534,13 +400,15 @@ class _DefaultColorTile extends StatelessWidget {
 
   void _showPicker() {
     final initialColor = isDark ? playerStaticColorDark : playerStaticColorLight;
+    final suggestedColors = CurrentColor.inst.getSuggestedColors();
     NamidaNavigator.inst.navigateDialog(
       dialog: NamidaColorPickerDialog(
         initialColor: initialColor,
         doneText: lang.done,
-        onColorChanged: _updateColor,
-        colorChangedDebouncer: true,
+        onColorChangeEnd: _updateColor,
         themeFollowsColor: true,
+        isAlphaAllowed: false,
+        suggestedColors: suggestedColors,
         onDonePressed: _onDone,
         onRefreshButtonPressed: _onRestoreDefault,
         cancelButton: false,

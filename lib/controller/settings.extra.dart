@@ -33,6 +33,10 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   static const _maxRecentSearches = 20;
 
+  late final recentColors = _keyList<int>('recentColors', const []);
+
+  static const _maxRecentColors = 12;
+
   late final floatingArtworkEffect = _key<bool?>('floatingArtworkEffect', null);
   late final tiltingCardsEffect = _key<bool?>('tiltingCardsEffect', null);
   late final reduceAnimations = _key<bool?>('reduceAnimations', null);
@@ -99,6 +103,17 @@ class _ExtraSettings extends _SettingsKeysWriter {
 
   void clearRecentSearches() {
     recentSearches.reset();
+  }
+
+  void addRecentColor(int color) {
+    if (recentColors.value.firstOrNull == color) return;
+    recentColors.update(
+      (list) {
+        list.remove(color);
+        list.insert(0, color);
+        if (list.length > _maxRecentColors) list.length = _maxRecentColors;
+      },
+    );
   }
 
   @override

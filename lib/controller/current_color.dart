@@ -240,22 +240,46 @@ class CurrentColor {
     bool stillPlaying() => ytIdItem == Player.inst.currentItem.value;
 
     _updatePlayerColorFromItem(
-      getColorPalette: () async {
-        if (_colorsMapYTID[id] != null) return _colorsMapYTID[id]!;
-
-        final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id, type: ThumbnailType.video);
-        if (image != null && stillPlaying()) {
-          final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES));
-          if (color != null && stillPlaying()) {
-            _colorsMapYTID[id] = color; // saving in memory
-            return color;
-          }
-        }
-        return null;
-      },
+      getColorPalette: () => _getYoutubeIDColors(id, stillPlaying: stillPlaying),
       stillPlaying: stillPlaying,
       itemKey: id,
     );
+  }
+
+  Future<NamidaColor?> _getYoutubeIDColors(String id, {required bool Function() stillPlaying}) async {
+    final cached = _colorsMapYTID[id];
+    if (cached != null) return cached;
+
+    final image = await ThumbnailManager.inst.getYoutubeThumbnailAndCache(id: id, type: ThumbnailType.video);
+    if (image != null && stillPlaying()) {
+      final color = await CurrentColor.inst.extractPaletteFromImage(image.path, paletteSaveDirectory: Directory(AppDirs.YT_PALETTES));
+      if (color != null && stillPlaying()) {
+        _colorsMapYTID[id] = color; // saving in memory
+        return color;
+      }
+    }
+    return null;
+  }
+
+  /// works while auto coloring is off too.
+  Future<List<Color>> getSuggestedColors() async {
+    final colors = <Color>[];
+    final wallpaperAccent = await _getDeviceWallpaperColorAccent();
+    if (wallpaperAccent != null) colors.add(wallpaperAccent);
+    final itemColors = await _getCurrentItemColors();
+    if (itemColors != null) colors.addAll(itemColors.palette);
+    return colors;
+  }
+
+  Future<NamidaColor?> _getCurrentItemColors() async {
+    final currentItem = Player.inst.currentItem.value;
+    final itemColors = switch (currentItem) {
+      Selectable() => await getTrackColors(currentItem.track, networkArtworkInfo: null, delightnedAndAlpha: false),
+      YoutubeID() => await _getYoutubeIDColors(currentItem.id, stillPlaying: () => true),
+      _ => null,
+    };
+    if (itemColors == null || _checkDummyColor(itemColors)) return null;
+    return itemColors;
   }
 
   /// Re-extracts the colors of whatever is playing, for when the source of the colors changed

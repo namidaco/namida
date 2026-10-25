@@ -8,11 +8,11 @@ import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
+import 'package:namida/ui/dialogs/color_picker_dialog.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/pages/subpages/playlist_tracks_subpage.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/library/playlist_tags_chips_row.dart';
-import 'package:namida/ui/widgets/settings/theme_settings.dart';
 
 void showPlaylistTagsManagerDialog(PlaylistManager manager) {
   NamidaNavigator.inst.navigateDialog(
@@ -113,11 +113,13 @@ class _TagActions {
     final filter = manager.tagsFilter;
     final currentColor = filter.colorOf(path);
     final initialColor = currentColor == null ? namida.theme.colorScheme.secondaryContainer : Color(currentColor);
+    final suggestedColors = filter.usedColors.map(Color.new).toFixedList();
     NamidaNavigator.inst.navigateDialog(
       dialog: NamidaColorPickerDialog(
         cancelButton: true,
         doneText: lang.save,
         initialColor: initialColor,
+        suggestedColors: suggestedColors,
         onDonePressed: (color) {
           filter.setColor(path, color.intValue);
           NamidaNavigator.inst.closeDialog();

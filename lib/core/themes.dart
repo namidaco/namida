@@ -115,6 +115,12 @@ class AppThemes {
     return _cache[key] = _buildAppTheme(color, light, lighterDialog, pitchBlackLevel);
   }
 
+  /// for short lived previews (ex: dragging in a color picker), so they don't push the real themes out of the cache.
+  ThemeData buildAppThemeUncached(Color color) {
+    final light = namida.brightness == Brightness.light;
+    return _buildAppTheme(color, light, true, _pitchBlackLevel);
+  }
+
   ThemeData _buildAppTheme(Color color, bool light, bool lighterDialog, int pitchBlackLevel) {
     const pitchBlack = Color.fromARGB(255, 0, 0, 0);
     final pitchBlend = _PitchBlackBlend(light ? 0.0 : pitchBlackLevel / pitchBlackMaxLevel);
