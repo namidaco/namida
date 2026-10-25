@@ -89,6 +89,11 @@ class CustomMPVPlayer implements AVPlayer {
     _playerAudioDevicesStreamSub = _player.stream.audioDevices.listen((devices) => outputDevices.value = devices);
 
     _playerPlaylistStreamSub = _player.stream.playlist.listen(_onPlaylistChanged);
+
+    _playerBufferStreamSub = _player.stream.buffer.listen((buffer) {
+      final isAdvancing = _player.state.playing && _processingState == ProcessingState.ready;
+      _liveWindowTracker.onBuffer(buffer, position, isAdvancing: isAdvancing);
+    });
   }
 
   /// mpv moving to this item is the only reliable sign of a gapless transition.
@@ -149,6 +154,8 @@ class CustomMPVPlayer implements AVPlayer {
   StreamSubscription? _playerLogStreamSub;
   StreamSubscription? _playerAudioDevicesStreamSub;
   StreamSubscription? _playerPlaylistStreamSub;
+  StreamSubscription? _playerBufferStreamSub;
+  late final _liveWindowTracker = _MPVLiveWindowTracker(_player);
   final _playbackEventStreamController = StreamController<PlaybackEvent>();
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
   final _playerPositionStreamController = StreamController<Duration>();
@@ -272,6 +279,8 @@ class CustomMPVPlayer implements AVPlayer {
   Stream<double> get pitchStream => _player.stream.pitch;
   @override
   Stream<bool> get playingStream => _player.stream.playing;
+  @override
+  Stream<LiveWindow?> get liveWindowStream => _liveWindowTracker.stream;
 
   @override
   int? get androidAudioSessionId => null;
@@ -297,6 +306,8 @@ class CustomMPVPlayer implements AVPlayer {
   double get pitch => _pitch;
   @override
   bool get playing => _player.state.playing;
+  @override
+  LiveWindow? get liveWindow => _liveWindowTracker.window;
 
   /// media_kit rebuilds the whole filter chain on every rate change.
   @override
@@ -319,6 +330,9 @@ class CustomMPVPlayer implements AVPlayer {
 
     _processingState = ProcessingState.loading;
     _updateProcessingState();
+
+    final isLive = _checkIsSourceLive(config.source) || _checkIsSourceLive(config.videoOptions?.source);
+    _liveWindowTracker.reset(isLive: isLive);
 
     await _prepareSubtitlesForNewSource();
 
@@ -379,7 +393,7 @@ class CustomMPVPlayer implements AVPlayer {
 
     _restoreExternalSubtitle();
 
-    if (_checkIsSourceLive(config.source) || _checkIsSourceLive(config.videoOptions?.source)) {
+    if (isLive) {
       // -- not waiting for duration
       completeDuration(null);
       return null;
@@ -754,7 +768,8 @@ class CustomMPVPlayer implements AVPlayer {
   @override
   Future<void> seek(Duration? position) async {
     if (_kSkipSeekWhenLoopNotApplied && !_loopingVideoApplied && _videoOptions?.loop == true) return;
-    final target = position ?? Duration.zero;
+    if (position != null) _liveWindowTracker.onSeek();
+    final target = position ?? _liveWindowTracker.window?.edge ?? Duration.zero;
     _position = target;
     _sincePositionReport.reset();
     return _player.seek(target);
@@ -786,6 +801,7 @@ class CustomMPVPlayer implements AVPlayer {
       _playerLogStreamSub?.cancel(),
       _playerAudioDevicesStreamSub?.cancel(),
       _playerPlaylistStreamSub?.cancel(),
+      _playerBufferStreamSub?.cancel(),
     ].execute();
 
     // -- not awaited, closing a controller that was never listened to never completes (temp players).
@@ -795,6 +811,7 @@ class CustomMPVPlayer implements AVPlayer {
     _playerPositionStreamController.close();
     _audioTracksStreamController.close();
     _textTracksStreamController.close();
+    _liveWindowTracker.dispose();
 
     _videoControllerRaw?.id.removeListener(_videoControllerListener);
     _videoControllerRaw?.rect.removeListener(_videoControllerListener);
@@ -1354,6 +1371,110 @@ class _MPVAudioFilters {
     try {
       await (_player.platform as mk.NativePlayer).setProperty(name, value);
     } catch (_) {}
+  }
+}
+
+// by claude
+/// ffmpeg can't seek live playlists, so the window is whatever mpv keeps in its demuxer cache.
+class _MPVLiveWindowTracker {
+  final mk.Player _player;
+  _MPVLiveWindowTracker(this._player);
+
+  static const _kSeekableStartRefreshIntervalMS = 5000;
+  static const _kJoinOffsetSamplingMS = 20000;
+
+  final _streamController = StreamController<LiveWindow?>();
+  Stream<LiveWindow?> get stream => _streamController.stream;
+
+  LiveWindow? _window;
+  LiveWindow? get window => _window;
+
+  bool _isLive = false;
+
+  /// how far behind the newest cached data playback settles after joining, the edge keeps that distance.
+  /// the distance shrinks between segments, so the largest one seen while sampling is kept.
+  Duration? _joinOffset;
+  bool _isSamplingJoinOffset = false;
+  final _sinceJoin = Stopwatch();
+  Duration? _seekableStart;
+  final _sinceSeekableStartRefresh = Stopwatch();
+  bool _isRefreshingSeekableStart = false;
+
+  void reset({required bool isLive}) {
+    _isLive = isLive;
+    _joinOffset = null;
+    _isSamplingJoinOffset = isLive;
+    _sinceJoin
+      ..stop()
+      ..reset();
+    _seekableStart = null;
+    _sinceSeekableStartRefresh
+      ..stop()
+      ..reset();
+    _setWindow(null);
+  }
+
+  void onBuffer(Duration buffer, Duration position, {required bool isAdvancing}) {
+    if (!_isLive || buffer <= Duration.zero) return;
+
+    if (_isSamplingJoinOffset && isAdvancing && position > Duration.zero) {
+      _sampleJoinOffset(buffer - position);
+    }
+    _refreshSeekableStartIfDue();
+
+    // -- whole seconds, so the window reports once a second at most while data keeps coming
+    final edgeExact = buffer - (_joinOffset ?? Duration.zero);
+    final edge = Duration(seconds: edgeExact.inSeconds);
+    final startRaw = _seekableStart ?? position;
+    final start = startRaw > edge ? edge : startRaw;
+    _setWindow(LiveWindow(start: start, edge: edge, offset: Duration.zero));
+  }
+
+  void _sampleJoinOffset(Duration ahead) {
+    if (!_sinceJoin.isRunning) _sinceJoin.start();
+    final joinOffset = _joinOffset;
+    if (joinOffset == null || ahead > joinOffset) _joinOffset = ahead > Duration.zero ? ahead : Duration.zero;
+    if (_sinceJoin.elapsedMilliseconds >= _kJoinOffsetSamplingMS) _isSamplingJoinOffset = false;
+  }
+
+  /// a seek away from the edge makes the distance to it say nothing about the join.
+  void onSeek() => _isSamplingJoinOffset = false;
+
+  void _refreshSeekableStartIfDue() {
+    if (_isRefreshingSeekableStart) return;
+    final isDue = !_sinceSeekableStartRefresh.isRunning || _sinceSeekableStartRefresh.elapsedMilliseconds >= _kSeekableStartRefreshIntervalMS;
+    if (!isDue) return;
+    _sinceSeekableStartRefresh
+      ..reset()
+      ..start();
+    _isRefreshingSeekableStart = true;
+    _readSeekableStart().then((start) {
+      _isRefreshingSeekableStart = false;
+      if (start != null && _isLive) _seekableStart = start;
+    });
+  }
+
+  Future<Duration?> _readSeekableStart() async {
+    try {
+      final stateText = await (_player.platform as mk.NativePlayer).getProperty('demuxer-cache-state');
+      final state = jsonDecode(stateText) as Map;
+      final ranges = state['seekable-ranges'] as List;
+      final firstRange = ranges.first as Map;
+      final startSeconds = firstRange['start'] as num;
+      return Duration(microseconds: (startSeconds * 1000000).round());
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _setWindow(LiveWindow? window) {
+    if (window == _window) return;
+    _window = window;
+    _streamController.add(window);
+  }
+
+  void dispose() {
+    _streamController.close();
   }
 }
 

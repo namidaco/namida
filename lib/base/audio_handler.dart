@@ -9,6 +9,7 @@ import 'package:playlist_manager/module/playlist_id.dart';
 import 'package:windows_taskbar/windows_taskbar.dart';
 import 'package:youtipie/class/execute_details.dart';
 import 'package:youtipie/class/streams/audio_stream.dart';
+import 'package:youtipie/class/streams/hls_variant.dart';
 import 'package:youtipie/class/streams/video_stream.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
@@ -18,7 +19,9 @@ import 'package:namida/base/yt_video_like_manager.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
 import 'package:namida/class/eggs_data.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/func_execute_limiter.dart';
+import 'package:namida/class/progress_span.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
@@ -1267,6 +1270,26 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     currentVideoStream.value = stream;
     currentCachedVideo.value = null;
 
+    final liveStreams = mainStreams ?? YoutubeInfoController.current.currentYTStreams.value;
+    final isLiveNow = liveStreams?.info?.isLiveNow == true;
+    if (isLiveNow && liveStreams != null) {
+      // -- a dash live source adapts its quality by itself
+      final liveHlsManifestUrl = liveStreams.hlsManifestUrl;
+      final isPlayingLiveDash = _getPlayableLiveDashUrl(liveStreams) != null;
+      if (!isPlayingLiveDash && liveHlsManifestUrl != null && stream != null) {
+        final hlsUri = await _resolveLiveHlsUri(liveHlsManifestUrl, stream.height);
+        await setSource(
+          AudioVideoSource.file(''),
+          index: currentIndex.value,
+          item: currentItem.value,
+          videoOptions: VideoSourceOptions(source: HlsSource(hlsUri), loop: false, videoOnly: true),
+          keepOldVideoSource: false,
+        );
+      }
+      if (_willPlayWhenReady) onPlayRaw();
+      return;
+    }
+
     if (useCache && cachedFile != null && await cachedFile.exists()) {
       currentCachedVideo.value = videoItem;
       await setVideoSource(source: AudioVideoSource.file(cachedFile.path), isFile: true);
@@ -1633,10 +1656,11 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     bool isAudioFromCache = false;
     AudioVideoSource? finalVideoSource;
 
+    final isLiveNow = streamsResult.info?.isLiveNow == true;
+
     bool useMixedStream = false;
-    if (audiostreams.isEmpty) {
+    if (!isLiveNow && audiostreams.isEmpty) {
       if (mixedStreams.isEmpty) {
-        // -- live videos has only mixedStreams
         if (showErrors) {
           final playabilty = streamsResult.playability;
           final extraReasons = [playabilty.reason, ...?playabilty.messages].whereType<String>();
@@ -1666,15 +1690,20 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
         if (showErrors) snackyy(title: lang.error, message: 'Failed to get mixed source', top: false, isError: true);
         return null;
       }
-    } else if (streamsResult.info?.isLive == true) {
+    } else if (isLiveNow) {
       UriSource? finalLiveSource;
-      if (streamsResult.hlsManifestUrl != null) {
-        finalLiveSource = HlsSource(Uri.parse(streamsResult.hlsManifestUrl!));
-      } else if (streamsResult.dashManifestUrl != null) {
-        finalLiveSource = DashSource(Uri.parse(streamsResult.dashManifestUrl!));
+      final hlsManifestUrl = streamsResult.hlsManifestUrl;
+      final dashManifestUrl = _getPlayableLiveDashUrl(streamsResult);
+      if (dashManifestUrl != null) {
+        finalLiveSource = DashSource(Uri.parse(dashManifestUrl));
+      } else if (hlsManifestUrl != null) {
+        final preferredStream = YoutubeController.getPreferredStreamQuality(videoStreams, preferIncludeWebm: false);
+        videoStream = preferredStream;
+        final hlsUri = await _resolveLiveHlsUri(hlsManifestUrl, preferredStream?.height);
+        finalLiveSource = HlsSource(hlsUri);
       }
       if (finalLiveSource == null) {
-        // -- fallback to mixed streams for when live stream has already ended
+        // -- fallback for clients without manifests
         final prefferedMixedStream = YoutubeController.getPreferredStreamQuality(mixedStreams, preferIncludeWebm: false);
         videoStream = prefferedMixedStream;
         if (prefferedMixedStream != null) {
@@ -1776,6 +1805,47 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
       updatedInfo: streamsResult.info,
       isAudioFromCache: isAudioFromCache,
     );
+  }
+
+  /// mpv's dash demuxer crashes on youtube live manifests. a client offering both has its hls refused after a few segments.
+  String? _getPlayableLiveDashUrl(VideoStreamsResult streamsResult) {
+    if (currentPlayer is CustomMPVPlayer) return null;
+    return streamsResult.dashManifestUrl;
+  }
+
+  ({String masterUrl, HlsMasterPlaylist master})? _latestLiveHlsMaster;
+
+  /// a local master with one quality, every quality's playlist lists the whole dvr window and players would load them all.
+  Future<Uri> _resolveLiveHlsUri(String masterUrl, int? preferredHeight) async {
+    final latest = _latestLiveHlsMaster;
+    HlsMasterPlaylist? master = latest != null && latest.masterUrl == masterUrl ? latest.master : null;
+    if (master == null) {
+      master = await YoutubeInfoController.video.fetchHlsMasterPlaylist(masterUrl);
+      if (master != null) _latestLiveHlsMaster = (masterUrl: masterUrl, master: master);
+    }
+    final variants = master?.variants;
+    if (master == null || variants == null || variants.isEmpty) return Uri.parse(masterUrl);
+
+    HlsVariant? largestFitting;
+    HlsVariant smallest = variants.first;
+    for (final variant in variants) {
+      if (variant.height < smallest.height) smallest = variant;
+      final fitsPreferred = preferredHeight == null || variant.height <= preferredHeight;
+      if (!fitsPreferred) continue;
+      final current = largestFitting;
+      final isBetter = current == null || variant.height > current.height || (variant.height == current.height && variant.bandwidth > current.bandwidth);
+      if (isBetter) largestFitting = variant;
+    }
+    final picked = largestFitting ?? smallest;
+    final masterText = master.buildSingleVariantMaster(picked);
+    // -- players read it once on open, so the next live item can overwrite it while this one plays
+    final masterFile = File(FileParts.joinPath(Directory.systemTemp.path, 'namida_live_stream.m3u8'));
+    try {
+      await masterFile.writeAsString(masterText);
+    } catch (_) {
+      return Uri.parse(masterUrl);
+    }
+    return Uri.file(masterFile.path);
   }
 
   Future<_ItemPrepareConfigYoutubeID<Q, UriSource>?> _itemToPrepareConfigYoutubeID(
@@ -2657,8 +2727,27 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   Future<void> userTogglePlayPause() => playWhenReady.value ? userPause() : userPlay();
 
   Future<void> userSeek(Duration position) {
+    final liveWindow = currentLiveWindow.value;
+    if (liveWindow != null && liveWindow.isAtEdge(position.inMilliseconds)) return userSeekToLiveEdge();
     if (partyGate?.interceptSeek(position) == true) return Future.value();
     return seek(position);
+  }
+
+  Future<void> userSeekToLiveEdge() {
+    final edge = currentLiveWindow.value?.edge;
+    if (edge != null && partyGate?.interceptSeek(edge) == true) return Future.value();
+    return seekToLiveEdge();
+  }
+
+  @override
+  Future<void> seekToLiveEdge() {
+    final edge = currentLiveWindow.value?.edge;
+    if (edge != null) {
+      seekCount++;
+      lastSeekPositionMS = edge.inMilliseconds;
+      NowPlayingBroadcaster.inst.onSeek(lastSeekPositionMS);
+    }
+    return super.seekToLiveEdge();
   }
 
   Future<void> userSkipToNext({bool jumpChapters = true}) {
@@ -3141,7 +3230,10 @@ extension YoutubeIDToMediaItem on YoutubeID {
     final videoTitle = videoInfo?.title ?? await YoutubeInfoController.utils.getVideoName(videoId);
     final artistAndTitle = videoTitle?.splitArtistAndTitle();
     final videoChannelTitle = videoInfo?.channelName ?? await YoutubeInfoController.utils.getVideoChannelName(videoId);
-    final videoDuration = duration ?? videoInfo?.durSeconds?.seconds ?? await YoutubeInfoController.utils.getVideoDurationSeconds(videoId).then((value) => value?.seconds);
+    final isLiveNow = videoInfo?.isLiveNow == true;
+    final videoDuration = isLiveNow
+        ? null
+        : duration ?? videoInfo?.durSeconds?.seconds ?? await YoutubeInfoController.utils.getVideoDurationSeconds(videoId).then((value) => value?.seconds);
 
     final title = artistAndTitle?.$2?.keepFeatKeywordsOnly() ?? videoTitle ?? '';
     String? artistName = artistAndTitle?.$1;
@@ -3169,7 +3261,8 @@ extension YoutubeIDToMediaItem on YoutubeID {
         NowPlayingExtras.queueIndex: currentIndex,
         NowPlayingExtras.queueLength: queueLength,
       },
-      duration: videoDuration ?? Duration.zero,
+      duration: isLiveNow ? null : videoDuration ?? Duration.zero,
+      isLive: isLiveNow,
       artUri: _fileToContentUri(imagePathToUse ?? AppPaths.NAMIDA_LOGO_LAYER),
     );
   }

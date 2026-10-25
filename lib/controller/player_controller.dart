@@ -16,6 +16,7 @@ import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/class/audio_cache_detail.dart';
 import 'package:namida/class/custom_mpv_player.dart';
+import 'package:namida/class/progress_span.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/audio_output_controller.dart';
@@ -165,6 +166,21 @@ class Player {
   }
 
   RxBaseCore<Duration> get buffered => _audioHandler.buffered;
+
+  /// null when the current item is not live.
+  RxBaseCore<LiveWindow?> get currentLiveWindow => _audioHandler.currentLiveWindow;
+  Duration? get liveJoinPosition => _audioHandler.liveJoinPosition;
+
+  ProgressSpan getProgressSpan(int durationMS) {
+    final window = currentLiveWindow.value;
+    return window == null ? ProgressSpan.item(durationMS) : ProgressSpan.live(window);
+  }
+
+  ProgressSpan getProgressSpanR(int durationMS) {
+    final window = currentLiveWindow.valueR;
+    return window == null ? ProgressSpan.item(durationMS) : ProgressSpan.live(window);
+  }
+
   RxBaseCore<int> get numberOfRepeats => _audioHandler.numberOfRepeats;
   int get latestInsertedIndex => _audioHandler.latestInsertedIndex;
 
@@ -950,6 +966,8 @@ class Player {
   Future<void> seek(Duration position) async {
     await _audioHandler.userSeek(position);
   }
+
+  Future<void> seekToLiveEdge() => _audioHandler.userSeekToLiveEdge();
 
   bool isCurrentItem(Playable item) {
     final current = _audioHandler.currentItem.value;

@@ -7,6 +7,7 @@ import 'package:youtipie/class/streams/stream_segments.dart';
 import 'package:youtipie/class/videos/video_heat_map.dart';
 import 'package:youtipie/youtipie.dart';
 
+import 'package:namida/class/progress_span.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
 import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
@@ -15,6 +16,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/vibrator_controller.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
+import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
@@ -111,15 +113,15 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   }
 
   void _onSeekDragUpdateSimple(double deltax) {
-    final dur = ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
-    if (dur == 0) return;
+    final span = _progressSpan();
+    if (span.isEmpty) return;
 
     final timeChangeMs = deltax * 200;
 
-    final currentPositionMs = _seekPercentage.value * dur;
+    final currentPositionMs = span.positionAt(_seekPercentage.value);
     final newPositionMs = currentPositionMs + timeChangeMs;
 
-    _seekPercentage.value = (newPositionMs / dur).clampDouble(0.0, 1.0);
+    _seekPercentage.value = span.fractionOf(newPositionMs.round());
   }
 
   void _onSeekDragUpdate(double positionx, double maxWidth) {
@@ -129,10 +131,16 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
 
   Duration get _currentDurationR => (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR);
 
+  ProgressSpan _progressSpan() {
+    final durMS = (Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds;
+    return Player.inst.getProgressSpan(durMS);
+  }
+
   void _onSeekEnd() async {
     widget.onDraggingChange?.call(false);
-    final newSeek = _seekPercentage.value * ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
-    await Player.inst.seek(Duration(milliseconds: newSeek.round()));
+    final span = _progressSpan();
+    final newSeek = span.positionAt(_seekPercentage.value);
+    await Player.inst.seek(Duration(milliseconds: newSeek));
   }
 
   void _onDragStartSimple({bool fromTap = false}) {
@@ -200,9 +208,8 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
   void onHorizontalDragStartSimple() {
     if (!_canDragToSeek) return;
 
-    final dur = ((Player.inst.currentItemDuration.value ?? Player.inst.getCurrentVideoDuration).inMilliseconds);
-    final perc = dur > 0 ? Player.inst.nowPlayingPosition.value / dur : 0.0;
-    _seekPercentage.value = perc;
+    final span = _progressSpan();
+    _seekPercentage.value = span.fractionOf(Player.inst.nowPlayingPosition.value);
     _onDragStartSimple();
   }
 
@@ -448,14 +455,21 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   child: Obx(
                     (context) {
                       final itemDurMS = _currentDurationR.inMilliseconds;
+                      final liveWindow = Player.inst.currentLiveWindow.valueR;
+                      final span = Player.inst.getProgressSpanR(itemDurMS);
                       final seekPercentage = _seekPercentage.valueR;
-                      final seek = (seekPercentage * itemDurMS).round();
+                      final seek = span.positionAt(seekPercentage);
                       // ignore: non_reactive_value_inside_obx
                       final displayActualPosition = settings.player.displayActualPositionWhenSeeking.value;
+
+                      final isSeekAtLiveEdge = _currentSeekStuckWord == '' && liveWindow != null && liveWindow.isAtEdge(seek);
 
                       String finalText;
                       if (_currentSeekStuckWord != '') {
                         finalText = _currentSeekStuckWord;
+                      } else if (liveWindow != null) {
+                        final behindMS = liveWindow.behindEdgeMS(seek);
+                        finalText = " -${behindMS.milliSecondsLabel} ";
                       } else if (displayActualPosition) {
                         int seekClamped = seek;
                         seekClamped = seekClamped.withMinimum(0);
@@ -515,6 +529,11 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                         ),
                                       ],
                                     )
+                                  : isSeekAtLiveEdge
+                                  ? const Icon(
+                                      Broken.radar_1,
+                                      size: 14.0,
+                                    )
                                   : FittedBox(
                                       child: NamidaText(
                                         finalText,
@@ -552,6 +571,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                   animation: _animation,
                   child: Obx((context) {
                     final durMS = (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR).inMilliseconds;
+                    final span = Player.inst.getProgressSpanR(durMS);
                     final buffered = Player.inst.buffered.valueR;
                     final videoCached = Player.inst.currentCachedVideo.valueR != null;
                     final audioCached = widget.isLocal || Player.inst.currentCachedAudio.valueR != null;
@@ -621,8 +641,8 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                                       maxWidth *
                                       ((videoCached && audioCached) || (audioCached && settings.youtube.isAudioOnlyMode.valueR)
                                           ? 1.0
-                                          : buffered > Duration.zero && durMS > 0
-                                          ? buffered.inMilliseconds / durMS
+                                          : buffered > Duration.zero
+                                          ? span.fractionOf(buffered.inMilliseconds)
                                           : 0.0),
                                 ),
                               ),
@@ -651,7 +671,7 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                               child: ObxO(
                                 rx: Player.inst.nowPlayingPosition,
                                 builder: (context, currentPositionMS) => SizedBox(
-                                  width: durMS == 0 ? 0 : (maxWidth * (currentPositionMS / durMS)),
+                                  width: maxWidth * span.fractionOf(currentPositionMS),
                                 ),
                               ),
                             ),
@@ -677,8 +697,9 @@ class SeekReadyWidgetState extends State<SeekReadyWidget> with SingleTickerProvi
                 child: Obx(
                   (context) {
                     final durMS = (Player.inst.currentItemDuration.valueR ?? Player.inst.getCurrentVideoDurationR).inMilliseconds;
+                    final span = Player.inst.getProgressSpanR(durMS);
                     final currentPositionMS = Player.inst.nowPlayingPositionR;
-                    final pos = durMS == 0 ? 0.0 : (maxWidth * (currentPositionMS / durMS));
+                    final pos = maxWidth * span.fractionOf(currentPositionMS);
                     final clampedEdge = clampCircleEdges ? halfCircle / 2 : 0.0;
                     return Transform.translate(
                       offset: Offset(-halfCircle / 2 + pos.clampDouble(clampedEdge, maxWidth - clampedEdge), (barHeight / 4)),

@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:audio_service/audio_service.dart';
 import 'package:crypto/crypto.dart';
 
+import 'package:namida/class/progress_span.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
@@ -68,7 +69,7 @@ class NowPlayingBroadcaster {
     final media = _lastMedia;
     if (media != null) {
       final isPlaying = Player.inst.isPlaying.value;
-      final positionMS = Player.inst.nowPlayingPosition.value;
+      final positionMS = _reportedPositionMS(media, Player.inst.nowPlayingPosition.value);
       sink.send(_NowPlayingEvent(media, WebhookEvent.trackChanged, isPlaying, positionMS));
     }
     return sink;
@@ -117,17 +118,33 @@ class NowPlayingBroadcaster {
 
   void onItemChanged(MediaItem media, {required bool isPlaying, required int positionMS}) {
     _lastMedia = media;
-    _send(media, WebhookEvent.trackChanged, isPlaying, positionMS);
+    final reportedPositionMS = _reportedPositionMS(media, positionMS);
+    _send(media, WebhookEvent.trackChanged, isPlaying, reportedPositionMS);
   }
 
   void onPlayingChanged(bool isPlaying, {required int positionMS}) {
     final media = _lastMedia;
     if (media == null) return;
     final type = isPlaying ? WebhookEvent.play : WebhookEvent.pause;
-    _send(media, type, isPlaying, positionMS);
+    final reportedPositionMS = _reportedPositionMS(media, positionMS);
+    _send(media, type, isPlaying, reportedPositionMS);
   }
 
-  void onSeek(int positionMS) => _discordSink?.onSeek(positionMS);
+  void onSeek(int positionMS) {
+    final discordSink = _discordSink;
+    final media = _lastMedia;
+    if (discordSink == null || media == null) return;
+    final reportedPositionMS = _reportedPositionMS(media, positionMS);
+    discordSink.onSeek(reportedPositionMS);
+  }
+
+  /// a live position sits somewhere in the stream window (hours in on android), so it goes out as the time watched.
+  static int _reportedPositionMS(MediaItem media, int positionMS) {
+    if (media.isLive != true) return positionMS;
+    final liveWindow = Player.inst.currentLiveWindow.value;
+    if (liveWindow == null) return 0;
+    return liveWindow.watchedMS(positionMS, Player.inst.liveJoinPosition);
+  }
 
   void _send(MediaItem media, WebhookEvent type, bool isPlaying, int positionMS) {
     if (_sinks.isEmpty) return;

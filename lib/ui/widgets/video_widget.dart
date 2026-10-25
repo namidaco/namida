@@ -40,6 +40,7 @@ import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/dialogs/edit_tags_dialog.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/live_progress.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings/youtube_settings.dart';
 import 'package:namida/ui/widgets/subtitle_overlay.dart';
@@ -1453,9 +1454,10 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                   var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                   var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
 
+                  final sizeInBytes = element.sizeInBytes;
                   return _getQualityChip(
                     title: element.qualityLabel,
-                    subtitle: " • ${element.sizeInBytes.fileSizeFormatted}",
+                    subtitle: sizeInBytes > 0 ? " • ${sizeInBytes.fileSizeFormatted}" : null,
                     thirdLine: "${element.bitrateText()}$codecIdentifierText",
                     onPlay: (isSelected) {
                       if (!isSelected || Player.inst.videoPlayerInfo.value?.isInitialized != true) {
@@ -2115,33 +2117,52 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
                                                 onTap: () {
                                                   settings.player.displayRemainingDurInsteadOfTotal.save(!settings.player.displayRemainingDurInsteadOfTotal.value);
                                                 },
-                                                child: Row(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    Obx(
-                                                      (context) => NamidaText(
-                                                        "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
-                                                        style: const NText(.medium, size: .s13p5),
-                                                        color: NColors.fixed(itemsColor),
-                                                      ),
-                                                    ),
-                                                    Obx(
-                                                      (context) {
-                                                        int totalDurMs = Player.inst.getCurrentVideoDurationR.inMilliseconds;
-                                                        String prefix = '';
-                                                        if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
-                                                          totalDurMs = totalDurMs - Player.inst.nowPlayingPositionR;
-                                                          prefix = '-';
-                                                        }
+                                                child: ObxO(
+                                                  rx: Player.inst.currentLiveWindow,
+                                                  builder: (context, liveWindow) => liveWindow != null
+                                                      ? Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            LivePositionText(
+                                                              window: liveWindow,
+                                                              style: const NText(.medium, size: .s13p5),
+                                                              color: NColors.fixed(itemsColor),
+                                                            ),
+                                                            const SizedBox(width: 6.0),
+                                                            LiveEdgeChip(
+                                                              window: liveWindow,
+                                                              color: NColors.fixed(itemsColor),
+                                                            ),
+                                                          ],
+                                                        )
+                                                      : Row(
+                                                          mainAxisSize: MainAxisSize.min,
+                                                          children: [
+                                                            Obx(
+                                                              (context) => NamidaText(
+                                                                "${Player.inst.nowPlayingPositionR.milliSecondsLabel}/",
+                                                                style: const NText(.medium, size: .s13p5),
+                                                                color: NColors.fixed(itemsColor),
+                                                              ),
+                                                            ),
+                                                            Obx(
+                                                              (context) {
+                                                                int totalDurMs = Player.inst.getCurrentVideoDurationR.inMilliseconds;
+                                                                String prefix = '';
+                                                                if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
+                                                                  totalDurMs = totalDurMs - Player.inst.nowPlayingPositionR;
+                                                                  prefix = '-';
+                                                                }
 
-                                                        return NamidaText(
-                                                          "$prefix${totalDurMs.milliSecondsLabel}",
-                                                          style: const NText(.medium, size: .s13p5),
-                                                          color: NColors.fixed(itemsColor),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ],
+                                                                return NamidaText(
+                                                                  "$prefix${totalDurMs.milliSecondsLabel}",
+                                                                  style: const NText(.medium, size: .s13p5),
+                                                                  color: NColors.fixed(itemsColor),
+                                                                );
+                                                              },
+                                                            ),
+                                                          ],
+                                                        ),
                                                 ),
                                               ),
                                             ),

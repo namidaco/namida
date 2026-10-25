@@ -20,6 +20,7 @@ import 'package:youtipie/core/extensions.dart' show StreamFilterVideoUtils, Code
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/queue_search.dart';
 import 'package:namida/base/yt_video_like_manager.dart';
+import 'package:namida/class/progress_span.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/bookmarks_controller.dart';
@@ -57,6 +58,7 @@ import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
 import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/live_progress.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
@@ -512,8 +514,18 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
         firstChild: Obx(
           (context) {
             final seek = seekNull ?? 0;
+            final liveWindow = Player.inst.currentLiveWindow.valueR;
+            if (liveWindow != null && liveWindow.isAtEdge(seek)) {
+              return const Icon(
+                Broken.radar_1,
+                size: 16.0,
+              );
+            }
             String finalText;
-            if (settings.player.displayActualPositionWhenSeeking.valueR) {
+            if (liveWindow != null) {
+              final behindMS = liveWindow.behindEdgeMS(seek);
+              finalText = '-${behindMS.milliSecondsLabel}';
+            } else if (settings.player.displayActualPositionWhenSeeking.valueR) {
               final itemDur = Player.inst.currentItemDuration.valueR?.inMilliseconds;
               int seekClamped = seek;
               seekClamped = seekClamped.withMinimum(0);
@@ -542,11 +554,19 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12.0),
         child: ObxO(
-          rx: Player.inst.nowPlayingPosition,
-          builder: (context, nowPlayingPosition) => NamidaText(
-            nowPlayingPosition.milliSecondsLabel,
-            style: const NText(.small, size: .s13),
-          ),
+          rx: Player.inst.currentLiveWindow,
+          builder: (context, liveWindow) => liveWindow != null
+              ? LivePositionText(
+                  window: liveWindow,
+                  style: const NText(.small, size: .s13),
+                )
+              : ObxO(
+                  rx: Player.inst.nowPlayingPosition,
+                  builder: (context, nowPlayingPosition) => NamidaText(
+                    nowPlayingPosition.milliSecondsLabel,
+                    style: const NText(.small, size: .s13),
+                  ),
+                ),
         ),
       ),
     );
@@ -975,6 +995,8 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                       tag: 'MINIPLAYER_DURATION',
                       child: Obx(
                         (context) {
+                          final liveWindow = Player.inst.currentLiveWindow.valueR;
+                          if (liveWindow != null) return LiveEdgeChip(window: liveWindow);
                           int toSubtract = 0;
                           String prefix = '';
                           if (settings.player.displayRemainingDurInsteadOfTotal.valueR) {
@@ -2246,8 +2268,9 @@ class WaveformMiniplayer extends StatelessWidget {
   void onSeekDragUpdate(double deltax, double maxWidth) {
     if (!_canDragToSeekLatest) return;
     final percentageSwiped = deltax / maxWidth;
-    final newSeek = percentageSwiped * _currentDurationInMS;
-    MiniPlayerController.inst.seekValue.value = newSeek.toInt();
+    final span = Player.inst.getProgressSpan(_currentDurationInMS);
+    final newSeek = span.positionAt(percentageSwiped);
+    MiniPlayerController.inst.seekValue.value = newSeek;
   }
 
   void onSeekEnd({bool allowSeek = true, bool allowMagnet = true}) {
@@ -3224,7 +3247,8 @@ class PlayerVideoAudioChip extends StatelessWidget {
                           final cacheExists = cacheFile != null;
                           var codecIdentifier = element.codecInfo.codecIdentifierIfCustom();
                           var codecIdentifierText = codecIdentifier != null ? ' (${codecIdentifier.toUpperCase()})' : '';
-                          final title = "${element.qualityLabel} • ${element.sizeInBytes.fileSizeFormatted}";
+                          final sizeInBytes = element.sizeInBytes;
+                          final title = sizeInBytes > 0 ? "${element.qualityLabel} • ${sizeInBytes.fileSizeFormatted}" : element.qualityLabel;
                           final subtitle = "${element.codecInfo.container} • ${element.bitrateText()}$codecIdentifierText";
 
                           void onTap() => focusedMenuOptions.onStreamVideoTap(currentItem, currentId, element, cacheFile, focusedMenuOptions.streams.value);

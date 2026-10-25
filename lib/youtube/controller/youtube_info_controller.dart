@@ -19,6 +19,7 @@ import 'package:youtipie/class/result_wrapper/search_result.dart';
 import 'package:youtipie/class/search_filters.dart';
 import 'package:youtipie/class/search_suggestion_info.dart';
 import 'package:youtipie/class/stream_info_item/stream_info_item.dart';
+import 'package:youtipie/class/streams/hls_variant.dart';
 import 'package:youtipie/class/streams/video_stream_info.dart';
 import 'package:youtipie/class/streams/video_streams_result.dart';
 import 'package:youtipie/class/thumbnail.dart';

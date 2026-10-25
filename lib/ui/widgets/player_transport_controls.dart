@@ -15,6 +15,7 @@ import 'package:namida/packages/miniplayer_base.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/live_progress.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 
 /// Used in fullscreen lyrics & widescreen player
@@ -101,11 +102,19 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                           child: ObxO(
-                            rx: Player.inst.nowPlayingPosition,
-                            builder: (context, currentMS) => NamidaText(
-                              currentMS.milliSecondsLabel,
-                              style: NText.small,
-                            ),
+                            rx: Player.inst.currentLiveWindow,
+                            builder: (context, liveWindow) => liveWindow != null
+                                ? LivePositionText(
+                                    window: liveWindow,
+                                    style: NText.small,
+                                  )
+                                : ObxO(
+                                    rx: Player.inst.nowPlayingPosition,
+                                    builder: (context, currentMS) => NamidaText(
+                                      currentMS.milliSecondsLabel,
+                                      style: NText.small,
+                                    ),
+                                  ),
                           ),
                         ),
                       ),
@@ -138,46 +147,51 @@ class _PlayerTransportControlsState extends State<PlayerTransportControls> {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
                           child: ObxO(
-                            rx: settings.player.displayRemainingDurInsteadOfTotal,
-                            builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
-                                ? ObxO(
-                                    rx: _currentItemDurationMS,
-                                    builder: (context, durMS) {
-                                      int finalDurMS = durMS ?? 0;
-                                      return ObxO(
-                                        rx: Player.inst.currentItem,
-                                        builder: (context, currentItem) {
-                                          if (finalDurMS == 0 && currentItem is Selectable) {
-                                            finalDurMS = currentItem.track.durationMS;
-                                          }
-                                          return ObxO(
-                                            rx: Player.inst.nowPlayingPosition,
-                                            builder: (context, toSubtract) => NamidaText(
-                                              "- ${(finalDurMS - toSubtract).milliSecondsLabel}",
-                                              style: NText.small,
-                                            ),
-                                          );
-                                        },
-                                      );
-                                    },
-                                  )
+                            rx: Player.inst.currentLiveWindow,
+                            builder: (context, liveWindow) => liveWindow != null
+                                ? LiveEdgeChip(window: liveWindow)
                                 : ObxO(
-                                    rx: _currentItemDurationMS,
-                                    builder: (context, milliseconds) {
-                                      if (milliseconds == null || milliseconds == 0) {
-                                        return ObxO(
-                                          rx: Player.inst.currentItem,
-                                          builder: (context, currentItem) => NamidaText(
-                                            (currentItem is Selectable ? currentItem.track.durationMS : 0).milliSecondsLabel,
-                                            style: NText.small,
+                                    rx: settings.player.displayRemainingDurInsteadOfTotal,
+                                    builder: (context, displayRemainingDurInsteadOfTotal) => displayRemainingDurInsteadOfTotal
+                                        ? ObxO(
+                                            rx: _currentItemDurationMS,
+                                            builder: (context, durMS) {
+                                              int finalDurMS = durMS ?? 0;
+                                              return ObxO(
+                                                rx: Player.inst.currentItem,
+                                                builder: (context, currentItem) {
+                                                  if (finalDurMS == 0 && currentItem is Selectable) {
+                                                    finalDurMS = currentItem.track.durationMS;
+                                                  }
+                                                  return ObxO(
+                                                    rx: Player.inst.nowPlayingPosition,
+                                                    builder: (context, toSubtract) => NamidaText(
+                                                      "- ${(finalDurMS - toSubtract).milliSecondsLabel}",
+                                                      style: NText.small,
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          )
+                                        : ObxO(
+                                            rx: _currentItemDurationMS,
+                                            builder: (context, milliseconds) {
+                                              if (milliseconds == null || milliseconds == 0) {
+                                                return ObxO(
+                                                  rx: Player.inst.currentItem,
+                                                  builder: (context, currentItem) => NamidaText(
+                                                    (currentItem is Selectable ? currentItem.track.durationMS : 0).milliSecondsLabel,
+                                                    style: NText.small,
+                                                  ),
+                                                );
+                                              }
+                                              return NamidaText(
+                                                milliseconds.milliSecondsLabel,
+                                                style: NText.small,
+                                              );
+                                            },
                                           ),
-                                        );
-                                      }
-                                      return NamidaText(
-                                        milliseconds.milliSecondsLabel,
-                                        style: NText.small,
-                                      );
-                                    },
                                   ),
                           ),
                         ),

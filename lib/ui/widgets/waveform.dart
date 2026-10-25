@@ -151,7 +151,8 @@ class WaveformComponentState extends State<WaveformComponent> with TickerProvide
                           builder: (context, nowPlayingPosition) {
                             final position = seekNull ?? nowPlayingPosition;
                             final durInMs = _currentDurationInMSR;
-                            final percentage = durInMs <= 0 ? 0.0 : (position / durInMs).clampDouble(0.0, 1.0);
+                            final span = Player.inst.getProgressSpan(durInMs);
+                            final percentage = span.fractionOf(position);
                             return _NamidaWaveBars(
                               heightPercentage: _animation.value,
                               barColor: barColorFront,
@@ -495,8 +496,8 @@ class _WaveformJelly extends ChangeNotifier {
 
   static double _toFraction(int positionMS) {
     final durationMS = _currentDurationInMS();
-    if (durationMS <= 0) return 0.0;
-    return (positionMS / durationMS).clampDouble(0.0, 1.0);
+    final span = Player.inst.getProgressSpan(durationMS);
+    return span.fractionOf(positionMS);
   }
 
   static int _currentDurationInMS() {
