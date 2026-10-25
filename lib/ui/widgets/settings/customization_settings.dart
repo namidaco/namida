@@ -581,7 +581,7 @@ class CustomizationSettings extends SettingSubpageProvider {
         ],
       ),
       SettingCustom(
-        availability: NamidaFeaturesAvailablity.android,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.windows]),
         title: () => lang.appIcon,
         tile: (args) => _AppIconsTile(
           bgColor: args.bgColor,

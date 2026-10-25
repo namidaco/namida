@@ -1,8 +1,8 @@
 # by claude
-"""Generates the android, ios and macos app icons from the launcher icons in assets/.
+"""Generates the android, ios, macos and windows app icons from the launcher icons in assets/.
 
-Silhouettes have no edge of their own, so they sit on a set color instead of their edge color. Round icons that were cut from a bigger
-image fill the whole shape from that image instead (on android and ios).
+Silhouettes have no edge of their own, so they sit on a set color instead of their edge color. Round icons that were
+cut from a bigger image fill the whole shape from that image instead (on android and ios).
 
 android: each alternate icon becomes an adaptive icon. Its background is a slight gradient made from the edge color.
 Its art is cut into a circle as the foreground (full square icons fill the whole shape instead), and silhouettes stay
@@ -11,6 +11,10 @@ whole. Themed icons use the default monochrome glyph. The default icon keeps its
 ios: ios masks its own rounded square and refuses transparency, so each icon is laid on its background color.
 
 macos: macos draws the shape as is, so its icon keeps the transparency inside the standard margin.
+
+windows: each alternate icon becomes an .ico embedded in the exe after the default one, so explorer keeps showing the
+default for the exe itself. Round art is cut into a full circle like the default icon, and silhouettes sit on a
+gradient circle. The runner reads the resource ids from the generated app_icons.h.
 
     python scripts/gen_app_icons.py
 """
@@ -37,6 +41,10 @@ SILHOUETTE_BACKGROUNDS = {
 FULL_BLEED_SOURCES = {
     'jellyda': ('assets/jellyda/jellyda_v2.webp', (517, 106, 1262, 851)),
 }
+FULL_SQUARE_ICONS = {'cutsie'}
+TOP_LEFT_LIGHTNESS_FACTOR = 1.1
+BOTTOM_RIGHT_LIGHTNESS_FACTOR = 0.8
+CIRCLE_MASK_SUPERSAMPLE = 4
 
 ANDROID_RES = ROOT / 'android/app/src/main/res'
 ANDROID_ADAPTIVE_DIR = ANDROID_RES / 'mipmap-anydpi-v26'
@@ -47,10 +55,6 @@ ANDROID_LAYER_DP = 108
 ANDROID_VISIBLE_DP = 72
 ANDROID_CIRCLE_DP = 64
 ANDROID_SILHOUETTE_DP = 58
-ANDROID_FULL_SQUARE_ICONS = {'cutsie'}
-ANDROID_TOP_LEFT_LIGHTNESS_FACTOR = 1.1
-ANDROID_BOTTOM_RIGHT_LIGHTNESS_FACTOR = 0.8
-ANDROID_CIRCLE_MASK_SUPERSAMPLE = 4
 ANDROID_WEBP_QUALITY = 90
 
 IOS_ASSETS = ROOT / 'ios/Runner/Assets.xcassets'
@@ -62,6 +66,17 @@ MACOS_ICONSET = ROOT / 'macos/Runner/Assets.xcassets/AppIcon.appiconset'
 # -- macos big sur grid: the shape is 824 of 1024
 MACOS_ART_RATIO = 824 / 1024
 MACOS_SIZES = [16, 32, 64, 128, 256, 512, 1024]
+
+WINDOWS_RUNNER = ROOT / 'windows/runner'
+WINDOWS_RESOURCES = WINDOWS_RUNNER / 'resources'
+WINDOWS_ICONS_HEADER = WINDOWS_RUNNER / 'app_icons.h'
+WINDOWS_ICONS_RC = WINDOWS_RUNNER / 'app_icons.rc2'
+# -- the biggest ico size, and the size Image.linear_gradient makes
+WINDOWS_SIZE = 256
+WINDOWS_ICO_SIZES = [16, 20, 24, 32, 40, 48, 64, 96, 128, 256]
+# -- IDI_APP_ICON (101) is the default
+WINDOWS_FIRST_RESOURCE_ID = 102
+WINDOWS_SILHOUETTE_RATIO = ANDROID_SILHOUETTE_DP / ANDROID_VISIBLE_DP
 
 
 def read_icons() -> dict[str, str]:
@@ -144,6 +159,44 @@ def full_bleed_square(name: str, art_ratio: float, side_px: int) -> Image.Image:
     return square.resize((side_px, side_px), Image.LANCZOS)
 
 
+def gradient_colors(base: tuple[int, int, int]) -> tuple[tuple[int, int, int], tuple[int, int, int]]:
+    normalized = (c / 255 for c in base)
+    hue, lightness, saturation = colorsys.rgb_to_hls(*normalized)
+
+    def shade(factor: float) -> tuple[int, int, int]:
+        shaded_lightness = min(1.0, lightness * factor)
+        rgb = colorsys.hls_to_rgb(hue, shaded_lightness, saturation)
+        return tuple(round(c * 255) for c in rgb)
+
+    return shade(TOP_LEFT_LIGHTNESS_FACTOR), shade(BOTTOM_RIGHT_LIGHTNESS_FACTOR)
+
+
+def circle_mask(side: int) -> Image.Image:
+    big_side = side * CIRCLE_MASK_SUPERSAMPLE
+    mask = Image.new('L', (big_side, big_side), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, big_side - 1, big_side - 1), fill=255)
+    return mask.resize((side, side), Image.LANCZOS)
+
+
+def cover_square(art: Image.Image, side: int) -> Image.Image:
+    scale = side / min(art.size)
+    scaled_size = (round(art.width * scale), round(art.height * scale))
+    scaled = art.resize(scaled_size, Image.LANCZOS)
+    left = (scaled.width - side) // 2
+    top = (scaled.height - side) // 2
+    return scaled.crop((left, top, left + side, top + side))
+
+
+def circle_art(art: Image.Image, side: int) -> Image.Image:
+    square = cover_square(art, side)
+    art_alpha = square.getchannel('A')
+    mask = circle_mask(side)
+    circle_alpha = ImageChops.multiply(art_alpha, mask)
+    square.putalpha(circle_alpha)
+    return square
+
+
 # ---------------- android ----------------
 
 
@@ -153,26 +206,6 @@ def android_foreground_name(name: str) -> str:
 
 def android_background_name(name: str) -> str:
     return f'ic_launcher_{name}_background'
-
-
-def android_gradient_colors(base: tuple[int, int, int]) -> tuple[tuple[int, int, int], tuple[int, int, int]]:
-    normalized = (c / 255 for c in base)
-    hue, lightness, saturation = colorsys.rgb_to_hls(*normalized)
-
-    def shade(factor: float) -> tuple[int, int, int]:
-        shaded_lightness = min(1.0, lightness * factor)
-        rgb = colorsys.hls_to_rgb(hue, shaded_lightness, saturation)
-        return tuple(round(c * 255) for c in rgb)
-
-    return shade(ANDROID_TOP_LEFT_LIGHTNESS_FACTOR), shade(ANDROID_BOTTOM_RIGHT_LIGHTNESS_FACTOR)
-
-
-def android_circle_mask(side: int) -> Image.Image:
-    big_side = side * ANDROID_CIRCLE_MASK_SUPERSAMPLE
-    mask = Image.new('L', (big_side, big_side), 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0, big_side - 1, big_side - 1), fill=255)
-    return mask.resize((side, side), Image.LANCZOS)
 
 
 def android_foreground(name: str, art: Image.Image, layer_px: int) -> Image.Image:
@@ -187,19 +220,10 @@ def android_foreground(name: str, art: Image.Image, layer_px: int) -> Image.Imag
         layer.alpha_composite(fitted, centered_offset(layer_px, fitted))
         return layer
 
-    is_full_square = name in ANDROID_FULL_SQUARE_ICONS
+    is_full_square = name in FULL_SQUARE_ICONS
     side_dp = ANDROID_VISIBLE_DP if is_full_square else ANDROID_CIRCLE_DP
     side = round(layer_px * side_dp / ANDROID_LAYER_DP)
-    scale = side / min(art.size)
-    scaled_size = (round(art.width * scale), round(art.height * scale))
-    scaled = art.resize(scaled_size, Image.LANCZOS)
-    left = (scaled.width - side) // 2
-    top = (scaled.height - side) // 2
-    square = scaled.crop((left, top, left + side, top + side))
-    if not is_full_square:
-        art_alpha = square.getchannel('A')
-        circle_alpha = ImageChops.multiply(art_alpha, android_circle_mask(side))
-        square.putalpha(circle_alpha)
+    square = cover_square(art, side) if is_full_square else circle_art(art, side)
     layer.alpha_composite(square, centered_offset(layer_px, square))
     return layer
 
@@ -238,7 +262,7 @@ def remove_android_generated() -> None:
 
 
 def write_android_icon(name: str, art: Image.Image, base_color: tuple[int, int, int]) -> None:
-    top_left, bottom_right = android_gradient_colors(base_color)
+    top_left, bottom_right = gradient_colors(base_color)
     background_path = ANDROID_BACKGROUND_DIR / f'{android_background_name(name)}.xml'
     background_path.write_text(android_background_xml(top_left, bottom_right), encoding='utf-8', newline='\n')
     adaptive_path = ANDROID_ADAPTIVE_DIR / f'ic_launcher_{name}.xml'
@@ -309,23 +333,118 @@ def write_macos_iconset(art: Image.Image) -> None:
     write_contents_json(MACOS_ICONSET, contents)
 
 
+# ---------------- windows ----------------
+
+
+def windows_ico_name(name: str) -> str:
+    return f'app_icon_{name}.ico'
+
+
+def windows_resource_define(name: str) -> str:
+    return f'IDI_APP_ICON_{name.upper()}'
+
+
+def windows_gradient(top_left: tuple[int, int, int], bottom_right: tuple[int, int, int]) -> Image.Image:
+    vertical = Image.linear_gradient('L')
+    horizontal = vertical.transpose(Image.Transpose.ROTATE_90)
+    diagonal = ImageChops.add(vertical, horizontal, scale=2.0)
+    start = Image.new('RGBA', (WINDOWS_SIZE, WINDOWS_SIZE), top_left + (255,))
+    end = Image.new('RGBA', (WINDOWS_SIZE, WINDOWS_SIZE), bottom_right + (255,))
+    return Image.composite(end, start, diagonal)
+
+
+def windows_icon(name: str, art: Image.Image, base_color: tuple[int, int, int]) -> Image.Image:
+    if name in FULL_SQUARE_ICONS:
+        canvas = Image.new('RGBA', (WINDOWS_SIZE, WINDOWS_SIZE), (0, 0, 0, 0))
+        fitted = fit(art, WINDOWS_SIZE)
+        canvas.alpha_composite(fitted, centered_offset(WINDOWS_SIZE, fitted))
+        return canvas
+    if name not in SILHOUETTE_BACKGROUNDS:
+        return circle_art(art, WINDOWS_SIZE)
+
+    top_left, bottom_right = gradient_colors(base_color)
+    canvas = windows_gradient(top_left, bottom_right)
+    canvas.putalpha(circle_mask(WINDOWS_SIZE))
+    silhouette_side = round(WINDOWS_SIZE * WINDOWS_SILHOUETTE_RATIO)
+    fitted = fit(art, silhouette_side)
+    canvas.alpha_composite(fitted, centered_offset(WINDOWS_SIZE, fitted))
+    return canvas
+
+
+def remove_windows_generated() -> None:
+    for old in WINDOWS_RESOURCES.glob('app_icon_*.ico'):
+        old.unlink()
+
+
+def write_windows_icon(name: str, art: Image.Image, base_color: tuple[int, int, int]) -> None:
+    icon = windows_icon(name, art, base_color)
+    ico_sizes = [(size, size) for size in WINDOWS_ICO_SIZES]
+    ico_path = WINDOWS_RESOURCES / windows_ico_name(name)
+    icon.save(ico_path, format='ICO', sizes=ico_sizes)
+
+
+def windows_header(names: list[str]) -> str:
+    defines = '\n'.join(f'#define {windows_resource_define(name)} {WINDOWS_FIRST_RESOURCE_ID + i}' for i, name in enumerate(names))
+    table = '\n'.join(f'    {{"{name}", {windows_resource_define(name)}}},' for name in names)
+    return f'''// generated by scripts/gen_app_icons.py
+#ifndef RUNNER_APP_ICONS_H_
+#define RUNNER_APP_ICONS_H_
+
+{defines}
+
+#ifndef RC_INVOKED
+struct AppIconResource {{
+  const char* key;
+  int resource_id;
+}};
+
+inline constexpr AppIconResource kAppIconResources[] = {{
+{table}
+}};
+#endif  // RC_INVOKED
+
+#endif  // RUNNER_APP_ICONS_H_
+'''
+
+
+def windows_rc(names: list[str]) -> str:
+    icons = '\n'.join(f'{windows_resource_define(name)} ICON "resources\\\\{windows_ico_name(name)}"' for name in names)
+    return f'''// generated by scripts/gen_app_icons.py
+#include "app_icons.h"
+
+{icons}
+'''
+
+
+def write_windows_resources(names: list[str]) -> None:
+    header = windows_header(names)
+    rc = windows_rc(names)
+    WINDOWS_ICONS_HEADER.write_text(header, encoding='utf-8', newline='\r\n')
+    WINDOWS_ICONS_RC.write_text(rc, encoding='utf-8', newline='\r\n')
+
+
 def main() -> None:
     icons = read_icons()
     remove_android_generated()
+    remove_windows_generated()
     for name, asset in icons.items():
         art = cropped_art(ROOT / asset)
         base_color = background_color(name, art)
         is_default = name == DEFAULT_ICON
         if not is_default:
             write_android_icon(name, art, base_color)
+            write_windows_icon(name, art, base_color)
         iconset_name = 'AppIcon' if is_default else name
         write_ios_iconset(iconset_name, name, art, base_color)
-        print(f'{name}: android, ios {iconset_name}')
+        print(f'{name}: android, windows, ios {iconset_name}')
     default_art = cropped_art(ROOT / icons[DEFAULT_ICON])
     write_macos_iconset(default_art)
     print('macos AppIcon')
-    alternates = ' '.join(name for name in icons if name != DEFAULT_ICON)
-    print(f'ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "{alternates}"')
+    alternates = [name for name in icons if name != DEFAULT_ICON]
+    write_windows_resources(alternates)
+    print('windows app_icons.h, app_icons.rc2')
+    alternates_text = ' '.join(alternates)
+    print(f'ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES = "{alternates_text}"')
 
 
 if __name__ == '__main__':

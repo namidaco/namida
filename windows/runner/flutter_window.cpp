@@ -1,8 +1,11 @@
 #include "flutter_window.h"
 
 #include <dwmapi.h>
+#include <flutter/standard_method_codec.h>
 
 #include <optional>
+#include <string>
+#include <variant>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -29,6 +32,16 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  app_icon_switcher_ = std::make_unique<AppIconSwitcher>(GetHandle());
+  app_icon_switcher_->ApplySaved();
+  namida_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "namida",
+          &flutter::StandardMethodCodec::GetInstance());
+  namida_channel_->SetMethodCallHandler([this](const auto& call, auto result) {
+    HandleNamidaCall(call, std::move(result));
+  });
+
   // Dart positions, maximizes and shows the window. Maximizing makes it
   // visible, so it stays cloaked until it has a frame to present.
   BOOL cloak = TRUE;
@@ -46,11 +59,36 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  namida_channel_ = nullptr;
+  app_icon_switcher_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
 
   Win32Window::OnDestroy();
+}
+
+void FlutterWindow::HandleNamidaCall(
+    const flutter::MethodCall<flutter::EncodableValue>& call,
+    std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  const auto* arguments = std::get_if<flutter::EncodableMap>(call.arguments());
+  const std::string* key = nullptr;
+  if (arguments) {
+    const auto found = arguments->find(flutter::EncodableValue("key"));
+    if (found != arguments->end()) {
+      key = std::get_if<std::string>(&found->second);
+    }
+  }
+  const std::string& method = call.method_name();
+  if (method == "isAppIconEnabled" && key) {
+    const bool is_enabled = app_icon_switcher_->IsEnabled(*key);
+    result->Success(flutter::EncodableValue(is_enabled));
+  } else if (method == "changeAppIcon" && key) {
+    app_icon_switcher_->Change(*key);
+    result->Success();
+  } else {
+    result->NotImplemented();
+  }
 }
 
 LRESULT
