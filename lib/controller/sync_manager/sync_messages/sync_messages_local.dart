@@ -22,12 +22,13 @@ class HistoryListensMessage extends BaseMessage {
   String toRawInfo() => 'HistoryListens(${listens.length} listens)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     final resolved = listens.resolveItems(messageInfo.senderDeviceId);
     if (SyncUtils.kAllowModification) {
       return HistoryController.inst.addTracksToHistoryImportPreventDuplicates(resolved);
     } else {
       snackyy(message: 'Importing ${resolved.length} listen | ${resolved.take(10).map((e) => e.track).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -65,8 +66,9 @@ class TracksDbFingerprintsMessage extends BaseMessage {
   String toRawInfo() => 'TracksDbFingerprints(${entries.length} tracks)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     SyncPathResolver.buildForDevice(messageInfo.senderDeviceId, entries);
+    return 0;
   }
 }
 
@@ -113,18 +115,19 @@ class PlayerQueueMessage extends BaseMessage {
   String toRawInfo() => 'PlayerQueue(${items.length} items @$currentIndex)';
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     if (!SyncUtils.kAllowModification) {
       snackyy(message: 'Importing player queue of ${items.length} items');
-      return;
+      return 0;
     }
     final senderDeviceId = messageInfo.senderDeviceId;
-    await QueueController.inst.importPlayerQueue(items, queueModifiedTime, currentIndex, senderDeviceId);
+    final didImport = await QueueController.inst.importPlayerQueue(items, queueModifiedTime, currentIndex, senderDeviceId);
     // -- a playback state may have arrived earlier & requested this queue, apply it now
     final pendingPlayback = PlaybackStateMessage._pendingByDevice.remove(senderDeviceId);
     if (pendingPlayback != null && pendingPlayback.queueModifiedTime == queueModifiedTime) {
       await pendingPlayback._apply();
     }
+    return didImport ? 1 : 0;
   }
 }
 
@@ -184,11 +187,12 @@ class PlaybackStateMessage extends BaseMessage {
   @override
   String toRawInfo() => 'PlaybackState(@$queueIndex, ${positionMS}ms, playing: $isPlaying)';
 
+  /// counts as a change even while waiting for the queue, it gets applied once the queue arrives.
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     if (!SyncUtils.kAllowModification) {
       snackyy(message: 'Importing playback state @$queueIndex (${positionMS}ms, playing: $isPlaying)');
-      return;
+      return 0;
     }
     if (QueueController.inst.playerQueueModifiedTime != queueModifiedTime) {
       // -- our queue is not the sender's queue, request theirs first
@@ -201,9 +205,10 @@ class PlaybackStateMessage extends BaseMessage {
         batchRef: null,
       );
       await SyncDiscovery.sendMessage(msg, senderDeviceId);
-      return;
+      return 1;
     }
     await _apply();
+    return 1;
   }
 
   Future<void> _apply() async {
@@ -260,11 +265,12 @@ class TrackStatsMessage extends BaseMessage {
   String toRawInfo() => 'TrackStats(${stats.length} entries)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return Indexer.inst.importTrackStats(stats, messageInfo.senderDeviceId);
     } else {
       snackyy(message: 'Importing ${stats.length} track stats');
+      return 0;
     }
   }
 }
@@ -291,15 +297,16 @@ class FavouritesMessage extends BaseMessage {
   String toRawInfo() => 'Favourites(${tracks.length} tracks)';
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final resolved = tracks.resolveItems(messageInfo.senderDeviceId);
     if (SyncUtils.kAllowModification) {
-      await PlaylistController.inst.importTracksToPlaylist(
+      return PlaylistController.inst.importTracksToPlaylist(
         PlaylistController.inst.favouritesPlaylist.value,
         resolved,
       );
     } else {
       snackyy(message: 'Importing ${resolved.length} favourites | ${resolved.take(10).map((e) => e.track).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -344,11 +351,12 @@ class LatestPlayedForSourceMessage extends BaseMessage {
   String toRawInfo() => 'LatestPlayedForSource(${entries.length} entries)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return QueueController.latestPlayedForSourceManager.import(entries, messageInfo.senderDeviceId);
     } else {
       snackyy(message: 'Importing ${entries.length} latest played entries');
+      return 0;
     }
   }
 }
@@ -393,11 +401,12 @@ class AudioConfigsMessage extends BaseMessage {
   String toRawInfo() => 'AudioConfigs(${configs.length} entries)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return Player.audioConfigs.import(configs, messageInfo.senderDeviceId);
     } else {
       snackyy(message: 'Importing ${configs.length} audio configs');
+      return 0;
     }
   }
 }
@@ -446,11 +455,12 @@ class SmartPlaylistsMessage extends BaseMessage {
   String toRawInfo() => 'SmartPlaylists(${playlists.length} playlists)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return SmartPlaylistsController.inst.import(playlists, order: order);
     } else {
       snackyy(message: 'Importing ${playlists.length} smart playlists | ${playlists.map((e) => e.key).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -496,11 +506,12 @@ class SettingsMessage extends BaseMessage {
   String toRawInfo() => 'Settings(${item.name}, ${(delta['m'] as Map).length} keys)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
-      settings.syncWriterOf(item).applySyncDelta(delta);
+      return settings.syncWriterOf(item).applySyncDelta(delta);
     } else {
       snackyy(message: 'Importing ${(delta['m'] as Map).length} ${item.name} keys');
+      return 0;
     }
   }
 }
@@ -526,15 +537,16 @@ class PlaylistsMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final senderDeviceId = messageInfo.senderDeviceId;
     final resolved = playlists.map(
       (pl) => pl.copyWithConvertedTracks((twd) => SyncPathResolver.resolveTrackWithDate(senderDeviceId, twd)),
     );
     if (SyncUtils.kAllowModification) {
-      await PlaylistController.inst.importSyncedPlaylists(resolved);
+      return PlaylistController.inst.importSyncedPlaylists(resolved);
     } else {
       snackyy(message: 'Importing ${resolved.length} playlists | ${resolved.map((e) => e.name).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -561,15 +573,18 @@ class PlaylistsManifestResponseMessage extends BaseMessage {
   Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
 
   @override
-  FutureOr<void> executeOnReceived() => PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
-    messageInfo: messageInfo,
-    available: available,
-    playlistsManager: PlaylistController.inst,
-    tracksArePaths: true,
-    batchRef: batchRef,
-    createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => PlaylistsMessage(
-      playlists: playlistsToSend,
-      messageInfo: createdMessageInfo,
-    ),
-  );
+  FutureOr<int> executeOnReceived() async {
+    await PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
+      messageInfo: messageInfo,
+      available: available,
+      playlistsManager: PlaylistController.inst,
+      tracksArePaths: true,
+      batchRef: batchRef,
+      createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => PlaylistsMessage(
+        playlists: playlistsToSend,
+        messageInfo: createdMessageInfo,
+      ),
+    );
+    return 0;
+  }
 }

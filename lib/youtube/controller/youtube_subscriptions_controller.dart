@@ -201,9 +201,10 @@ class YoutubeSubscriptionsController {
 
   Iterable<YoutubeSubscription> buildSyncEntries() => _availableChannels.value.values;
 
-  Future<void> import(Iterable<YoutubeSubscription> incomingChannels) async {
+  /// returns how many channels got added or updated.
+  Future<int> import(Iterable<YoutubeSubscription> incomingChannels) async {
     await _didLoadCompleter.future;
-    bool anyChanged = false;
+    int changedCount = 0;
     bool anyAdded = false;
     for (final incoming in incomingChannels) {
       final channelID = incoming.channelID;
@@ -212,7 +213,7 @@ class YoutubeSubscriptionsController {
       final local = _availableChannels.value[channelID];
       if (local == null) {
         _availableChannels.value[channelID] = incoming;
-        anyChanged = true;
+        changedCount++;
         anyAdded = true;
         continue;
       }
@@ -236,13 +237,14 @@ class YoutubeSubscriptionsController {
         groups: groups,
         lastFetched: local.lastFetched,
       );
-      anyChanged = true;
+      changedCount++;
     }
-    if (anyChanged) {
+    if (changedCount > 0) {
       if (anyAdded) _sortByLastFetched();
       _availableChannels.refresh();
       await saveFile();
     }
+    return changedCount;
   }
 
   Future<List<String>> readAllGroups() async {
@@ -258,18 +260,19 @@ class YoutubeSubscriptionsController {
     return [];
   }
 
-  Future<void> importGroups(List<String> incoming) async {
+  Future<int> importGroups(List<String> incoming) async {
     final current = await readAllGroups();
-    bool changed = false;
+    int addedCount = 0;
     for (final group in incoming) {
       if (!current.contains(group)) {
         current.add(group);
-        changed = true;
+        addedCount++;
       }
     }
-    if (changed) {
+    if (addedCount > 0) {
       _allGroups.refresh();
       await _saveGroupsFile();
     }
+    return addedCount;
   }
 }

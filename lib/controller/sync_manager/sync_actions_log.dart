@@ -58,54 +58,13 @@ class SyncActionsLog extends RxNotifier {
       _activeEntries[key] = entry;
       _ensureSweepTimer();
     }
-    final item = _itemOfMessage(message);
+    final item = message._toSyncItem();
     if (item != null) entry.items.add(item);
     entry.sizeBytes += sizeBytes;
     if (!isExtraPayload) entry.count++;
     entry.status = SyncActionStatus.inProgress;
     entry.lastActivityMS = currentTimeMS;
     _refreshThrottled();
-  }
-
-  static final _itemBySubtype = <AppPathsBackupEnum, SyncDataItem>{
-    for (final item in SyncDataItem.values)
-      for (final subtype in item.backupPaths) subtype: item,
-  };
-
-  /// the sync item a message belongs to, null for internal transfers.
-  static SyncDataItem? _itemOfMessage(BaseMessage message) {
-    return switch (message) {
-      DirFileMessage m => _itemBySubtype[m.subtype],
-      DbFileMessage m => _itemBySubtype[m.subtype],
-      DbEntriesMessage m => _itemBySubtype[m.subtype],
-      HistoryListensMessage() => SyncDataItem.history,
-      YTHistoryListensMessage() => SyncDataItem.historyYt,
-      PlaylistsMessage() => SyncDataItem.playlists,
-      YTPlaylistsMessage() => SyncDataItem.playlistsYt,
-      FavouritesMessage() => SyncDataItem.favourites,
-      YTLikesMessage() => SyncDataItem.favouritesYt,
-      TrackStatsMessage() => SyncDataItem.stats,
-      LatestPlayedForSourceMessage() => SyncDataItem.latestPlayedForSource,
-      PlayerQueueMessage() => SyncDataItem.playerQueue,
-      PlaybackStateMessage() => SyncDataItem.playback,
-      AudioConfigsMessage() => SyncDataItem.audioConfigs,
-      SmartPlaylistsMessage() => SyncDataItem.smartPlaylists,
-      SettingsMessage m => m.item,
-      YTSubscriptionsMessage() || YTSubscriptionsGroupsMessage() => SyncDataItem.subscriptionsYt,
-      PingMessage() ||
-      ConnectionRequestMessage() ||
-      RequestMessage() ||
-      BatchInfoMessage() ||
-      SyncItemsRequestMessage() ||
-      TracksDbFingerprintsMessage() ||
-      PlaylistsManifestResponseMessage() ||
-      YTPlaylistsManifestResponseMessage() ||
-      DirFilesManifestRequestMessage() ||
-      DirFilesManifestResponseMessage() ||
-      DbManifestRequestMessage() ||
-      DbManifestResponseMessage() ||
-      BinaryPayloadMessage() => null,
-    };
   }
 
   void markFailed(SyncActionType type, String deviceId) {

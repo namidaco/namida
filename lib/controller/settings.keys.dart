@@ -199,13 +199,13 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
 
   /// newest modification wins per key.
   @override
-  void applySyncDelta(Map delta) {
-    if (!syncable) return;
+  int applySyncDelta(Map delta) {
+    if (!syncable) return 0;
     final Map values = delta['v'];
     final Map incoming = delta['m'];
     _createAllKeys();
     final Map modified = _raw['_m'] ??= <String, dynamic>{};
-    bool didChange = false;
+    int appliedCount = 0;
     for (final e in incoming.entries) {
       final String name = e.key;
       final key = _keys[name];
@@ -220,9 +220,10 @@ sealed class _SettingsKeysWriter with SettingsFileWriter {
       }
       modified[name] = ms;
       key._loadFromPeer(json);
-      didChange = true;
+      appliedCount++;
     }
-    if (didChange) writeToStorage();
+    if (appliedCount > 0) writeToStorage();
+    return appliedCount;
   }
 
   /// [json] is this file from a backup, a key it sets or reset wins. a key the backup never touched keeps ours.

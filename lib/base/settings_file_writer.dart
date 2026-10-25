@@ -10,7 +10,8 @@ mixin SettingsFileWriter {
   Map<String, dynamic> buildJson();
   Future<void> prepareSettingsFile();
   Map<String, dynamic>? syncDelta(int sinceMS);
-  void applySyncDelta(Map delta);
+  /// returns how many keys got applied.
+  int applySyncDelta(Map delta);
   Duration get delay => const Duration(seconds: 2);
 
   @visibleForTesting

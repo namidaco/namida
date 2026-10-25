@@ -85,7 +85,7 @@ class DirFilesManifestRequestMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final manifest = _DirFilesSyncUtils.isAllowedSubtype(subtype) ? await _DirFilesSyncUtils.buildManifest(subtype) : const <String, dynamic>{};
     final msg = DirFilesManifestResponseMessage(
       subtype: subtype,
@@ -94,6 +94,7 @@ class DirFilesManifestRequestMessage extends BaseMessage {
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
     await SyncDiscovery.sendMessage(msg, messageInfo.senderDeviceId);
+    return 0;
   }
 }
 
@@ -132,7 +133,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
 
   /// we requested this manifest earlier, now send the files the other device needs.
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final batchRef = this.batchRef;
     batchRef?.markTransferring();
     try {
@@ -142,6 +143,7 @@ class DirFilesManifestResponseMessage extends BaseMessage {
       // -- would never complete & progress would hang forever.
       batchRef?.markDone();
     }
+    return 0;
   }
 
   Future<void> _sendRequiredFiles(SyncBatchRef? batchRef) async {
@@ -296,14 +298,14 @@ class DbFileMessage extends BaseMessage with BinaryPayloadMessage {
   }
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final bytes = binaryPayload;
-    if (bytes == null) return; // -- binary payload frame never arrived
-    if (!isAllowedSubtype(subtype)) return;
+    if (bytes == null) return 0; // -- binary payload frame never arrived
+    if (!isAllowedSubtype(subtype)) return 0;
 
     if (!SyncUtils.kAllowModification) {
       snackyy(message: 'Importing db file ${subtype.name} (${bytes.length.fileSizeFormatted})');
-      return;
+      return 0;
     }
 
     final dbPath = subtype.resolve();
@@ -319,8 +321,10 @@ class DbFileMessage extends BaseMessage with BinaryPayloadMessage {
         _ => Future.value(0),
       };
       if (_kEnableSyncDebug) _debugNotify('==> db file merged[${subtype.name}]: $changed entries');
+      return changed;
     } catch (e, st) {
       logger.error('Error merging synced db file ${subtype.name}', e: e, st: st);
+      return 0;
     } finally {
       await tempDir.delete(recursive: true).ignoreError();
     }
@@ -367,7 +371,7 @@ class DbManifestRequestMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     // -- the response is sent back even for a rejected subtype, otherwise
     // -- the origin's batch item would stay pending until it times out.
     final manifest = await switch (subtype) {
@@ -382,6 +386,7 @@ class DbManifestRequestMessage extends BaseMessage {
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
     await SyncDiscovery.sendMessage(msg, messageInfo.senderDeviceId);
+    return 0;
   }
 }
 
@@ -424,7 +429,7 @@ class DbManifestResponseMessage extends BaseMessage {
 
   /// we requested this manifest earlier, now send the entries the other device needs.
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final batchRef = this.batchRef;
     batchRef?.markTransferring();
     try {
@@ -434,6 +439,7 @@ class DbManifestResponseMessage extends BaseMessage {
       // -- would never complete & progress would hang forever.
       batchRef?.markDone();
     }
+    return 0;
   }
 
   Future<void> _sendRequiredEntries(SyncBatchRef? batchRef) async {
@@ -508,12 +514,12 @@ class DbEntriesMessage extends BaseMessage {
   String toRawInfo() => 'DbEntries(${subtype.name}: ${entries.length} entries)';
 
   @override
-  FutureOr<void> executeOnReceived() async {
-    if (!DbFileMessage.isAllowedSubtype(subtype)) return;
+  FutureOr<int> executeOnReceived() async {
+    if (!DbFileMessage.isAllowedSubtype(subtype)) return 0;
 
     if (!SyncUtils.kAllowModification) {
       snackyy(message: 'Importing ${entries.length} db entries [${subtype.name}]');
-      return;
+      return 0;
     }
 
     final changed = await switch (subtype) {
@@ -522,6 +528,7 @@ class DbEntriesMessage extends BaseMessage {
       _ => Future.value(0),
     };
     if (_kEnableSyncDebug) _debugNotify('==> db entries merged[${subtype.name}]: $changed/${entries.length}');
+    return changed;
   }
 }
 
@@ -617,16 +624,16 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
   }
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final bytes = binaryPayload;
-    if (bytes == null) return; // -- binary payload frame never arrived
+    if (bytes == null) return 0; // -- binary payload frame never arrived
 
-    if (!_DirFilesSyncUtils.isAllowedSubtype(subtype)) return;
-    if (!_DirFilesSyncUtils.isSafeFileName(fileName)) return;
+    if (!_DirFilesSyncUtils.isAllowedSubtype(subtype)) return 0;
+    if (!_DirFilesSyncUtils.isSafeFileName(fileName)) return 0;
 
     if (!SyncUtils.kAllowModification) {
       // snackyy(message: 'Importing file ${subtype.name}/$fileName (${bytes.length.fileSizeFormatted})');
-      return;
+      return 0;
     }
 
     try {
@@ -643,7 +650,7 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
           incomingSize: bytes.length,
           incomingMtimeMS: mtime,
         );
-        if (!isTheirsNewer) return;
+        if (!isTheirsNewer) return 0;
       }
       final isQueue = subtype == AppPathsBackupEnum.QUEUES;
       final senderDeviceId = messageInfo.senderDeviceId;
@@ -658,8 +665,10 @@ class DirFileMessage extends BaseMessage with BinaryPayloadMessage {
 
       final info = this.info;
       if (info != null && subtype == AppPathsBackupEnum.VIDEOS_CACHE) VideoController.inst.importSyncedCacheVideoInfo(fileName, info);
+      return 1;
     } catch (e, st) {
       logger.error('Error writing synced file ${subtype.name}/$fileName', e: e, st: st);
+      return 0;
     }
   }
 }

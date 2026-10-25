@@ -22,12 +22,13 @@ class YTHistoryListensMessage extends BaseMessage {
   String toRawInfo() => 'YTHistoryListens(${listens.length} listens)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     final videos = listens.toItems();
     if (SyncUtils.kAllowModification) {
       return YoutubeHistoryController.inst.addTracksToHistoryImportPreventDuplicates(videos);
     } else {
       snackyy(message: 'Importing ${videos.length} yt listen | ${videos.take(10).map((e) => e.id).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -53,11 +54,12 @@ class YTPlaylistsMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     if (SyncUtils.kAllowModification) {
-      await YoutubePlaylistController.inst.importPlaylistsIfNewer(playlists);
+      return YoutubePlaylistController.inst.importPlaylistsIfNewer(playlists);
     } else {
       snackyy(message: 'Importing ${playlists.length} yt playlists | ${playlists.map((e) => e.name).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -101,11 +103,12 @@ class YTSubscriptionsMessage extends BaseMessage {
   String toRawInfo() => 'YTSubscriptions(${channels.length} channels)';
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return YoutubeSubscriptionsController.inst.import(channels);
     } else {
       snackyy(message: 'Importing ${channels.length} yt subscriptions');
+      return 0;
     }
   }
 }
@@ -138,11 +141,12 @@ class YTSubscriptionsGroupsMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     if (SyncUtils.kAllowModification) {
       return YoutubeSubscriptionsController.inst.importGroups(groups);
     } else {
       snackyy(message: 'Importing ${groups.length} yt subscription groups');
+      return 0;
     }
   }
 }
@@ -169,12 +173,12 @@ class YTLikesMessage extends BaseMessage {
   String toRawInfo() => 'YTLikes(${likes.length} videos)';
 
   @override
-  FutureOr<void> executeOnReceived() async {
+  FutureOr<int> executeOnReceived() async {
     final videos = likes.toItems();
     if (SyncUtils.kAllowModification) {
       final favouritesPlaylist = YoutubePlaylistController.inst.favouritesPlaylist.value;
       // -- adds only missing videos, keeping their original date added
-      await YoutubePlaylistController.inst.importTracksToPlaylist(
+      return YoutubePlaylistController.inst.importTracksToPlaylist(
         favouritesPlaylist,
         videos.map(
           (e) => YoutubeID(
@@ -186,6 +190,7 @@ class YTLikesMessage extends BaseMessage {
       );
     } else {
       snackyy(message: 'Importing ${videos.length} yt likes | ${videos.take(10).map((e) => e.id).toFixedList()}');
+      return 0;
     }
   }
 }
@@ -212,15 +217,18 @@ class YTPlaylistsManifestResponseMessage extends BaseMessage {
   Map<String, dynamic> _encodeToMap() => PlaylistsManifestResponseMessageUtils.encodeToMap(available, batchRef);
 
   @override
-  FutureOr<void> executeOnReceived() => PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
-    messageInfo: messageInfo,
-    available: available,
-    playlistsManager: YoutubePlaylistController.inst,
-    tracksArePaths: false,
-    batchRef: batchRef,
-    createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => YTPlaylistsMessage(
-      playlists: playlistsToSend,
-      messageInfo: createdMessageInfo,
-    ),
-  );
+  FutureOr<int> executeOnReceived() async {
+    await PlaylistsManifestResponseMessageUtils.sendRequiredPlaylists(
+      messageInfo: messageInfo,
+      available: available,
+      playlistsManager: YoutubePlaylistController.inst,
+      tracksArePaths: false,
+      batchRef: batchRef,
+      createPlaylistsMessage: (playlistsToSend, createdMessageInfo) => YTPlaylistsMessage(
+        playlists: playlistsToSend,
+        messageInfo: createdMessageInfo,
+      ),
+    );
+    return 0;
+  }
 }

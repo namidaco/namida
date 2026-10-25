@@ -197,8 +197,8 @@ class SmartPlaylistsController {
   Map<String, dynamic>? buildSyncOrder() => _orderModifiedDate > 0 ? _buildOrderRow() : null;
 
   /// [incomingWins] skips the newest wins check, ex: restoring a backup.
-  Future<void> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order, bool incomingWins = false}) async {
-    bool anyChanged = false;
+  Future<int> import(Iterable<SmartPlaylist> incomingPlaylists, {Map<String, dynamic>? order, bool incomingWins = false}) async {
+    int importedCount = 0;
     bool orderChanged = false;
     for (final incoming in incomingPlaylists) {
       final key = incoming.key;
@@ -211,7 +211,7 @@ class SmartPlaylistsController {
         _add(incoming);
         orderChanged = true;
       }
-      anyChanged = true;
+      importedCount++;
       await _dBManager.put(key, incoming.toMap());
     }
     final incomingOrderKeys = order?['keys'] as List?;
@@ -219,11 +219,11 @@ class SmartPlaylistsController {
     if (incomingOrderKeys != null && (incomingWins || incomingOrderModifiedDate > _orderModifiedDate)) {
       _orderModifiedDate = incomingOrderModifiedDate;
       _applyOrder(incomingOrderKeys);
-      anyChanged = true;
       orderChanged = true;
     }
-    if (anyChanged) _refresh();
+    if (importedCount > 0 || orderChanged) _refresh();
     if (orderChanged) await _saveOrder();
+    return importedCount;
   }
 
   /// rows of a backup's smart playlists db, they win over ours.

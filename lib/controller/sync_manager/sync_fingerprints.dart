@@ -207,11 +207,14 @@ abstract final class SyncPathResolver {
 
     final pending = _pendingMessagesByDevice.remove(senderDeviceId);
     if (pending != null) {
-      for (final msg in pending) {
+      for (final stashed in pending) {
+        final msg = stashed.msg;
         try {
-          await msg.executeOnReceived();
+          final changedCount = await msg.executeOnReceived();
+          stashed.completer.complete(changedCount);
         } catch (e, st) {
           logger.error('Error executing stashed message ${msg.runtimeType}', e: e, st: st);
+          stashed.completer.complete(0);
         }
       }
     }
@@ -220,7 +223,8 @@ abstract final class SyncPathResolver {
   static void clearForDevice(String deviceId) {
     _deviceMaps.remove(deviceId);
     _unresolvedPathsByDevice.remove(deviceId);
-    _pendingMessagesByDevice.remove(deviceId);
+    final pending = _pendingMessagesByDevice.remove(deviceId);
+    pending?.loop((stashed) => stashed.completer.complete(0));
   }
 
   static bool hasFingerprintsFor(String senderDeviceId) => _deviceMaps.containsKey(senderDeviceId);
@@ -228,17 +232,20 @@ abstract final class SyncPathResolver {
   /// `{senderPath: localTrack}` of [senderDeviceId], only paths that differ here.
   static Map<String, Track> resolvedTracksFor(String senderDeviceId) => _deviceMaps[senderDeviceId] ?? const {};
 
-  static final _pendingMessagesByDevice = <String, List<BaseMessage>>{};
+  static final _pendingMessagesByDevice = <String, List<_StashedMessage>>{};
 
-  static void stashUntilFingerprints(BaseMessage msg) {
+  /// completes with what [msg] changed once it gets executed, see [BaseMessage.executeOnReceived].
+  static Future<int> stashUntilFingerprints(BaseMessage msg) {
     final senderDeviceId = msg.messageInfo.senderDeviceId;
+    final stashed = _StashedMessage(msg);
     final pending = _pendingMessagesByDevice[senderDeviceId];
     if (pending != null) {
-      pending.add(msg);
-      return;
+      pending.add(stashed);
+    } else {
+      _pendingMessagesByDevice[senderDeviceId] = [stashed];
+      _requestFingerprints(senderDeviceId);
     }
-    _pendingMessagesByDevice[senderDeviceId] = [msg];
-    _requestFingerprints(senderDeviceId);
+    return stashed.completer.future;
   }
 
   static void _requestFingerprints(String senderDeviceId) async {
@@ -383,4 +390,11 @@ class _LocalFingerprintIndex {
 
   /// the library map gets replaced on a reload, a same sized one can still hold other tracks.
   bool isBuiltFor(Map<String, TrackExtended> source) => builtForSourceId == identityHashCode(source) && builtForCount == source.length;
+}
+
+class _StashedMessage {
+  final BaseMessage msg;
+  final completer = Completer<int>();
+
+  _StashedMessage(this.msg);
 }

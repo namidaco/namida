@@ -623,12 +623,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
   }
 
   /// [playlists] tracks must be already resolved for this device, their m3uPath is only checked for existence.
-  Future<void> importSyncedPlaylists(Iterable<LocalPlaylist> playlists) async {
+  Future<int> importSyncedPlaylists(Iterable<LocalPlaylist> playlists) async {
     final newM3UPaths = <String>{};
     final preparing = playlists.map((pl) => _prepareSyncedPlaylist(pl, newM3UPaths));
     final prepared = await Future.wait(preparing);
     final toImport = prepared.nonNulls;
-    if (toImport.isNotEmpty) await importPlaylistsIfNewer(toImport);
+    if (toImport.isEmpty) return 0;
+    return importPlaylistsIfNewer(toImport);
   }
 
   Future<LocalPlaylist?> _prepareSyncedPlaylist(LocalPlaylist incoming, Set<String> newM3UPaths) async {

@@ -100,11 +100,13 @@ class SyncBatch {
 
   /// a batch that got no update for this long is considered dead & gets
   /// finalized, so a peer that went silent mid round trip can't hang it forever.
+  /// the peer gets told too, in case it's still alive & showing the progress.
   static const _kInactivityTimeout = Duration(minutes: 2);
 
   final String id;
   final String deviceId;
   final List<SyncDataItem> items;
+  final bool isManual;
   final BaseMessageInfo _messageInfo;
 
   final _doneItems = <SyncDataItem>{};
@@ -126,16 +128,18 @@ class SyncBatch {
     required this.id,
     required this.deviceId,
     required this.items,
+    required this.isManual,
     required this._messageInfo,
   });
 
-  static Future<SyncBatch> start(String deviceId, List<SyncDataItem> items) async {
+  static Future<SyncBatch> start(String deviceId, List<SyncDataItem> items, {required bool isManual}) async {
     final messageInfo = await SyncUtils.createMessageInfo(.manifest);
     final batch = SyncBatch._(
       id: '${messageInfo.senderDeviceId}_${currentTimeMS}_${_idCounter++}',
       deviceId: deviceId,
       // -- progress is a done-set, a duplicated item would make it never reach the total
       items: items.toSet().toFixedList(),
+      isManual: isManual,
       messageInfo: messageInfo,
     );
     _alive[batch.id] = batch;
@@ -202,6 +206,7 @@ class SyncBatch {
     activeItems: _activeItems.toFixedList(),
     itemProgress: _itemProgress,
     finished: _finished,
+    isManual: isManual,
   );
 
   // ==================== notifying ====================
@@ -212,7 +217,7 @@ class SyncBatch {
 
   void _notify({bool force = false}) {
     _inactivityTimer?.cancel();
-    _inactivityTimer = Timer(_kInactivityTimeout, () => finish(notifyPeer: false));
+    _inactivityTimer = Timer(_kInactivityTimeout, finish);
 
     if (force) {
       _throttleTimer?.cancel();

@@ -1347,7 +1347,7 @@ class _AudioConfigsManager {
   Iterable<MapEntry<String, PlayerConfigOverrides>> buildSyncEntries() => _mapRx.value.entries;
 
   /// [incomingWins] skips the newest wins check, ex: restoring a backup.
-  Future<void> import(Iterable<MapEntry<String, PlayerConfigOverrides>> incomingConfigs, String senderDeviceId, {bool incomingWins = false}) async {
+  Future<int> import(Iterable<MapEntry<String, PlayerConfigOverrides>> incomingConfigs, String senderDeviceId, {bool incomingWins = false}) async {
     final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final e in incomingConfigs) {
       final incoming = e.value;
@@ -1357,9 +1357,10 @@ class _AudioConfigsManager {
       _mapRx.value[key] = incoming;
       dbEntries.add(MapEntry(key, incoming.toMap()));
     }
-    if (dbEntries.isEmpty) return;
+    if (dbEntries.isEmpty) return 0;
     _mapRx.refresh();
     await _dBManager.putAll(dbEntries, (e) => e);
+    return dbEntries.length;
   }
 
   final _dirtyKeys = <String>{};

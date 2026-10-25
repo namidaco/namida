@@ -39,9 +39,9 @@ sealed class BaseMessage {
   static final _queue = Queue(parallel: 1);
 
   /// calls [executeOnReceived]. if [type] is a manifest response, it adds [executeOnReceived] to a queue first.
-  Future<void> executeOnReceivedWithQueue() async {
+  Future<int> executeOnReceivedWithQueue() async {
     // -- screenshots connect for the devices list only, the seeded data must not change or leave
-    if (kScreenshotsMode && (type.isDataTransfer || type.isManifestRequest || type == MessageType.syncItemsRequest)) return;
+    if (kScreenshotsMode && (type.isDataTransfer || type.isManifestRequest || type == MessageType.syncItemsRequest)) return 0;
     if (type.isManifestResponse) {
       return _queue.add(() async => executeOnReceived());
     }
@@ -53,8 +53,51 @@ sealed class BaseMessage {
   /// Code to execute on receiving this message.
   ///
   /// ex: show snackbar, update database, add to history, etc...
+  ///
+  /// returns how many entries it changed here, 0 for messages carrying no data. see [SyncIncomingSummary].
   @visibleForOverriding
-  FutureOr<void> executeOnReceived();
+  FutureOr<int> executeOnReceived();
+
+  static final _itemBySubtype = <AppPathsBackupEnum, SyncDataItem>{
+    for (final item in SyncDataItem.values)
+      for (final subtype in item.backupPaths) subtype: item,
+  };
+
+  /// the sync item this message belongs to, null for internal transfers.
+  SyncDataItem? _toSyncItem() {
+    return switch (this) {
+      DirFileMessage m => _itemBySubtype[m.subtype],
+      DbFileMessage m => _itemBySubtype[m.subtype],
+      DbEntriesMessage m => _itemBySubtype[m.subtype],
+      HistoryListensMessage() => SyncDataItem.history,
+      YTHistoryListensMessage() => SyncDataItem.historyYt,
+      PlaylistsMessage() => SyncDataItem.playlists,
+      YTPlaylistsMessage() => SyncDataItem.playlistsYt,
+      FavouritesMessage() => SyncDataItem.favourites,
+      YTLikesMessage() => SyncDataItem.favouritesYt,
+      TrackStatsMessage() => SyncDataItem.stats,
+      LatestPlayedForSourceMessage() => SyncDataItem.latestPlayedForSource,
+      PlayerQueueMessage() => SyncDataItem.playerQueue,
+      PlaybackStateMessage() => SyncDataItem.playback,
+      AudioConfigsMessage() => SyncDataItem.audioConfigs,
+      SmartPlaylistsMessage() => SyncDataItem.smartPlaylists,
+      SettingsMessage m => m.item,
+      YTSubscriptionsMessage() || YTSubscriptionsGroupsMessage() => SyncDataItem.subscriptionsYt,
+      PingMessage() ||
+      ConnectionRequestMessage() ||
+      RequestMessage() ||
+      BatchInfoMessage() ||
+      SyncItemsRequestMessage() ||
+      TracksDbFingerprintsMessage() ||
+      PlaylistsManifestResponseMessage() ||
+      YTPlaylistsManifestResponseMessage() ||
+      DirFilesManifestRequestMessage() ||
+      DirFilesManifestResponseMessage() ||
+      DbManifestRequestMessage() ||
+      DbManifestResponseMessage() ||
+      BinaryPayloadMessage() => null,
+    };
+  }
 
   String toRawInfo() => _encodeToMap().toString();
 
@@ -167,9 +210,7 @@ class PingMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() {
-    // -- do nothing
-  }
+  FutureOr<int> executeOnReceived() => 0;
 }
 
 class RequestMessage extends BaseMessage {
@@ -197,14 +238,15 @@ class RequestMessage extends BaseMessage {
   };
 
   @override
-  FutureOr<void> executeOnReceived() {
-    return switch (msgRequestType) {
+  FutureOr<int> executeOnReceived() async {
+    await switch (msgRequestType) {
       MessageRequestType.playlistsManifest => _sendPlaylistsManifest(PlaylistController.inst),
       MessageRequestType.ytPlaylistsManifest => _sendPlaylistsManifest(YoutubePlaylistController.inst),
       MessageRequestType.playerQueue => _sendPlayerQueue(),
       // -- they lost our fingerprints (ex: restarted), force resend even if we think they have them
       MessageRequestType.tracksDbFingerprints => SyncSender.inst.resendFingerprints(messageInfo.senderDeviceId),
     };
+    return 0;
   }
 
   Future<void> _sendPlaylistsManifest(PlaylistManager plManager) async {
@@ -251,14 +293,19 @@ class RequestMessage extends BaseMessage {
 class SyncItemsRequestMessage extends BaseMessage {
   final List<SyncDataItem> items;
 
+  /// the user asked for it, the batch we send back is manual too.
+  final bool isManual;
+
   const SyncItemsRequestMessage({
     required this.items,
+    required this.isManual,
     required super.messageInfo,
   }) : super(MessageType.syncItemsRequest);
 
-  static Future<SyncItemsRequestMessage> createForCurrentDevice(List<SyncDataItem> items) async {
+  static Future<SyncItemsRequestMessage> createForCurrentDevice(List<SyncDataItem> items, {required bool isManual}) async {
     return SyncItemsRequestMessage(
       items: items,
+      isManual: isManual,
       messageInfo: await SyncUtils.createMessageInfo(.manifest),
     );
   }
@@ -266,6 +313,7 @@ class SyncItemsRequestMessage extends BaseMessage {
   factory SyncItemsRequestMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
     return SyncItemsRequestMessage(
       items: (map['items'] as List).map((e) => SyncDataItem.lookupMap[e]).nonNulls.toList(),
+      isManual: map['m'] as bool? ?? false,
       messageInfo: messageInfo,
     );
   }
@@ -273,15 +321,17 @@ class SyncItemsRequestMessage extends BaseMessage {
   @override
   Map<String, dynamic> _encodeToMap() => {
     'items': items.map((e) => e.name).toFixedList(),
+    'm': isManual,
   };
 
   @override
   String toRawInfo() => 'SyncItemsRequest(${items.map((e) => e.name).join(', ')})';
 
   @override
-  FutureOr<void> executeOnReceived() {
-    if (items.isEmpty) return null;
-    return SyncSender.inst.sendItemsToDevice(items, messageInfo.senderDeviceId);
+  FutureOr<int> executeOnReceived() async {
+    if (items.isEmpty) return 0;
+    await SyncSender.inst.sendItemsToDevice(items, messageInfo.senderDeviceId, isManual: isManual);
+    return 0;
   }
 }
 
@@ -306,6 +356,9 @@ class BatchInfoMessage extends BaseMessage {
   /// the batch ended (finished or aborted), the receiver drops it.
   final bool finished;
 
+  /// the user started it, the receiver shows a summary once it ends. see [SyncIncomingSummary].
+  final bool isManual;
+
   const BatchInfoMessage({
     required super.messageInfo,
     required this.batchId,
@@ -314,6 +367,7 @@ class BatchInfoMessage extends BaseMessage {
     required this.activeItems,
     required this.itemProgress,
     required this.finished,
+    required this.isManual,
   }) : super(MessageType.batchInfo);
 
   factory BatchInfoMessage.fromMap(Map<String, dynamic> map, BaseMessageInfo messageInfo) {
@@ -324,6 +378,7 @@ class BatchInfoMessage extends BaseMessage {
       activeItems: (map['ai'] as List?)?.map((e) => SyncDataItem.lookupMap[e]).nonNulls.toList() ?? const [],
       itemProgress: SyncItemProgress.fromList(map['ip']),
       finished: map['f'] as bool? ?? false,
+      isManual: map['m'] as bool? ?? false,
       messageInfo: messageInfo,
     );
   }
@@ -336,6 +391,7 @@ class BatchInfoMessage extends BaseMessage {
     'ai': activeItems.map((e) => e.name).toFixedList(),
     'ip': ?itemProgress?.toList(),
     'f': finished,
+    'm': isManual,
   };
 
   @override
@@ -356,8 +412,10 @@ class BatchInfoMessage extends BaseMessage {
   }
 
   @override
-  FutureOr<void> executeOnReceived() {
+  FutureOr<int> executeOnReceived() {
     SyncDiscovery.batchProgressIncomingRx[messageInfo.senderDeviceId] = finished ? null : this;
+    SyncIncomingSummary.inst.onBatchInfo(this);
+    return 0;
   }
 }
 
@@ -438,7 +496,7 @@ class ConnectionRequestMessage extends BaseMessage {
 
   /// the handshake belongs to its socket, [_FrameDispatcher] hands these to the socket's [_PairingSession] instead.
   @override
-  FutureOr<void> executeOnReceived() {}
+  FutureOr<int> executeOnReceived() => 0;
 }
 
 abstract class PlaylistsManifestResponseMessageUtils {

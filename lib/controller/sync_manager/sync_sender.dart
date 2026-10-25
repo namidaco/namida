@@ -25,8 +25,8 @@ enum SyncDataItem {
   artworksAlbums(needsFingerprints: false, isHeavy: true),
   thumbnailsYt(needsFingerprints: false, isHeavy: true),
   thumbnailsChannelsYt(needsFingerprints: false, isHeavy: true),
-  playerQueue(needsFingerprints: true, isHeavy: false),
-  playback(needsFingerprints: false, isHeavy: false),
+  playerQueue(needsFingerprints: true, isHeavy: false, isPlaybackTakeover: true),
+  playback(needsFingerprints: false, isHeavy: false, isPlaybackTakeover: true),
   settingsGeneral(needsFingerprints: false, isHeavy: false),
   settingsPlayer(needsFingerprints: false, isHeavy: false),
   settingsYoutube(needsFingerprints: false, isHeavy: false),
@@ -40,9 +40,13 @@ enum SyncDataItem {
   /// (dir-based items loop all their files & can carry lots of data).
   final bool isHeavy;
 
+  /// replaces what's playing instead of adding entries, so it has nothing to count.
+  final bool isPlaybackTakeover;
+
   const SyncDataItem({
     required this.needsFingerprints,
     required this.isHeavy,
+    this.isPlaybackTakeover = false,
   });
 
   /// default items to sync. file-based items (except queues) are excluded,
@@ -124,6 +128,7 @@ class SyncSender extends RxNotifier {
     // -- releases anything still awaiting something from us
     SyncBatch.abortForDevice(deviceId);
     SyncDiscovery.clearProgressFor(deviceId);
+    SyncIncomingSummary.inst.clearForDevice(deviceId);
   }
 
   /// sends local tracks db fingerprints once per connection, so the receiver
@@ -144,16 +149,16 @@ class SyncSender extends RxNotifier {
     }
   }
 
-  Future<void> sendItemsToAllConnected(List<SyncDataItem> items) async {
+  Future<void> sendItemsToAllConnected(List<SyncDataItem> items, {required bool isManual}) async {
     final deviceIds = SyncDiscovery.getAllConnectedDeviceIdsSet();
-    await Future.wait(deviceIds.map((deviceId) => sendItemsToDevice(items, deviceId)));
+    await Future.wait(deviceIds.map((deviceId) => sendItemsToDevice(items, deviceId, isManual: isManual)));
   }
 
   /// asks [deviceId] to send us [items], see [SyncItemsRequestMessage].
-  Future<void> requestItemsFromDevice(List<SyncDataItem> items, String deviceId) async {
+  Future<void> requestItemsFromDevice(List<SyncDataItem> items, String deviceId, {required bool isManual}) async {
     if (items.isEmpty) return;
     try {
-      final msg = await SyncItemsRequestMessage.createForCurrentDevice(items);
+      final msg = await SyncItemsRequestMessage.createForCurrentDevice(items, isManual: isManual);
       await SyncDiscovery.sendMessage(msg, deviceId);
     } catch (e, st) {
       final deviceName = settings.sync.deviceIdNames.value[deviceId] ?? deviceId;
@@ -164,9 +169,9 @@ class SyncSender extends RxNotifier {
 
   /// both directions: requests [items] from the device first (so their sending
   /// overlaps ours), then sends our [items] to them.
-  Future<void> syncWithDevice(List<SyncDataItem> items, String deviceId) async {
-    await requestItemsFromDevice(items, deviceId);
-    await sendItemsToDevice(items, deviceId);
+  Future<void> syncWithDevice(List<SyncDataItem> items, String deviceId, {required bool isManual}) async {
+    await requestItemsFromDevice(items, deviceId, isManual: isManual);
+    await sendItemsToDevice(items, deviceId, isManual: isManual);
   }
 
   // ==================== auto sync ====================
@@ -189,15 +194,16 @@ class SyncSender extends RxNotifier {
     if (items.isEmpty) return;
     for (final deviceId in deviceIds) {
       if (isSendingTo(deviceId)) continue; // -- a manual send is already running
-      await syncWithDevice(items, deviceId);
+      await syncWithDevice(items, deviceId, isManual: false);
     }
   }
 
-  Future<void> sendItemsToDevice(List<SyncDataItem> items, String deviceId) async {
+  /// [isManual] makes the receiver show a summary once done, see [SyncIncomingSummary].
+  Future<void> sendItemsToDevice(List<SyncDataItem> items, String deviceId, {required bool isManual}) async {
     if (items.isEmpty) return;
     _sendingToDeviceIds.add(deviceId);
     _refresh();
-    final batch = await SyncBatch.start(deviceId, items);
+    final batch = await SyncBatch.start(deviceId, items, isManual: isManual);
     try {
       for (final item in batch.items) {
         batch.markItemActive(item);

@@ -641,7 +641,8 @@ class QueueController {
     return (items, _playerQueueModifiedTime, Player.inst.currentIndex.value);
   }
 
-  Future<void> importPlayerQueue(Iterable<dynamic> items, int queueModifiedTime, int currentIndex, String senderDeviceId) async {
+  /// returns false when no item could be read.
+  Future<bool> importPlayerQueue(Iterable<dynamic> items, int queueModifiedTime, int currentIndex, String senderDeviceId) async {
     final resolvedItems = <Playable>[];
     List<int>? originalIndices = <int>[];
     for (final e in items) {
@@ -659,7 +660,7 @@ class QueueController {
         }
       }
     }
-    if (resolvedItems.isEmpty) return;
+    if (resolvedItems.isEmpty) return false;
     if (currentIndex < 0 || currentIndex >= resolvedItems.length) currentIndex = 0;
 
     _pendingSyncQueueTimestamp = queueModifiedTime;
@@ -676,6 +677,7 @@ class QueueController {
       _playerQueueModifiedTime = queueModifiedTime;
       _pendingSyncQueueTimestamp = null;
     }
+    return true;
   }
 }
 
@@ -864,7 +866,7 @@ class _LatestPlayedForSourceManager {
   }
 
   /// [incomingWins] skips the newest wins check, ex: restoring a backup.
-  Future<void> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId, {bool incomingWins = false}) async {
+  Future<int> import(Iterable<MapEntry<String, Map<String, dynamic>>> incomingEntries, String senderDeviceId, {bool incomingWins = false}) async {
     final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final entry in incomingEntries) {
       final incoming = entry.value;
@@ -890,10 +892,11 @@ class _LatestPlayedForSourceManager {
       };
       dbEntries.add(MapEntry(source.toDbKey(), row));
     }
-    if (dbEntries.isEmpty) return;
+    if (dbEntries.isEmpty) return 0;
     _mapRx.refresh();
     _markAllSortsDirty();
     await _dBManager.putAll(dbEntries, (e) => e);
+    return dbEntries.length;
   }
 
   // -- lists sorted by last played reorder on the next page change, never while being viewed.

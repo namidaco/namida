@@ -793,15 +793,18 @@ class _FrameDispatcher {
   }
 
   void _execute(BaseMessage msg, String errorMessage) {
+    final Future<int> applying;
     if (msg.carriesSenderPaths && !SyncPathResolver.hasFingerprintsFor(msg.messageInfo.senderDeviceId)) {
       // -- we can't translate their paths yet (ex: we restarted while they
       // -- still think we have their fingerprints), request & defer execution
-      SyncPathResolver.stashUntilFingerprints(msg);
-      return;
+      applying = SyncPathResolver.stashUntilFingerprints(msg);
+    } else {
+      applying = msg.executeOnReceivedWithQueue().catchError((e, st) {
+        logger.error(errorMessage, e: e, st: st);
+        return 0;
+      });
     }
-    msg.executeOnReceivedWithQueue().catchError((e, st) {
-      logger.error(errorMessage, e: e, st: st);
-    });
+    SyncIncomingSummary.inst.onMessageApplying(msg, applying);
   }
 }
 

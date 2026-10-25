@@ -120,22 +120,22 @@ class _NamidaSyncManagerPageState extends State<NamidaSyncManagerPage> {
 
   void _sendToDevice(SyncDeviceView device) {
     if (!_ensureItemsSelected()) return;
-    SyncSender.inst.sendItemsToDevice(_selectedItemsSorted, device.deviceId);
+    SyncSender.inst.sendItemsToDevice(_selectedItemsSorted, device.deviceId, isManual: true);
   }
 
   void _receiveFromDevice(SyncDeviceView device) {
     if (!_ensureItemsSelected()) return;
-    SyncSender.inst.requestItemsFromDevice(_selectedItemsSorted, device.deviceId);
+    SyncSender.inst.requestItemsFromDevice(_selectedItemsSorted, device.deviceId, isManual: true);
   }
 
   void _syncWithDevice(SyncDeviceView device) {
     if (!_ensureItemsSelected()) return;
-    SyncSender.inst.syncWithDevice(_selectedItemsSorted, device.deviceId);
+    SyncSender.inst.syncWithDevice(_selectedItemsSorted, device.deviceId, isManual: true);
   }
 
   void _sendToAll() {
     if (!_ensureItemsSelected()) return;
-    SyncSender.inst.sendItemsToAllConnected(_selectedItemsSorted);
+    SyncSender.inst.sendItemsToAllConnected(_selectedItemsSorted, isManual: true);
   }
 
   void _openRecentActionsLog() {
@@ -996,6 +996,8 @@ class SyncStatusIconWrapper extends StatelessWidget {
     this.showDisconnectedDot = true,
   });
 
+  static const _kActivityRingInset = 4.0;
+
   @override
   Widget build(BuildContext context) {
     final color = this.color ?? NColorsData.of(context).secondary;
@@ -1021,26 +1023,33 @@ class SyncStatusIconWrapper extends StatelessWidget {
                     color: color,
                   );
             final showDot = connected || (showDisconnectedDot && anySessionDevice);
-            if (!showDot) return iconWidget;
             return Stack(
               clipBehavior: Clip.none,
               children: [
                 iconWidget,
-                Positioned(
-                  top: 0.0,
-                  right: 0.0,
-                  child: NDecoratedBox(
-                    decoration: (colors) => BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: connected ? Colors.green.withOpacityExt(0.8) : colors.onSurface.withOpacityExt(0.4),
-                      border: Border.all(
-                        color: colors.scaffold,
-                        width: 1.0,
-                      ),
-                    ),
-                    child: const SizedBox(width: 7.0, height: 7.0),
-                  ),
+                Positioned.fill(
+                  left: -_kActivityRingInset,
+                  top: -_kActivityRingInset,
+                  right: -_kActivityRingInset,
+                  bottom: -_kActivityRingInset,
+                  child: _SyncActivityRing(color: color),
                 ),
+                if (showDot)
+                  Positioned(
+                    top: 0.0,
+                    right: 0.0,
+                    child: NDecoratedBox(
+                      decoration: (colors) => BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: connected ? Colors.green.withOpacityExt(0.8) : colors.onSurface.withOpacityExt(0.4),
+                        border: Border.all(
+                          color: colors.scaffold,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: const SizedBox(width: 7.0, height: 7.0),
+                    ),
+                  ),
               ],
             );
           },
@@ -1747,6 +1756,50 @@ class _SyncDiagnosticsDialogState extends State<_SyncDiagnosticsDialog> {
           ),
         );
       },
+    );
+  }
+}
+
+// by claude
+/// fills with the progress of every batch being sent or received, hidden while idle.
+class _SyncActivityRing extends StatelessWidget {
+  final Color color;
+
+  const _SyncActivityRing({required this.color});
+
+  /// null when nothing is running.
+  static double? _averageFraction(Iterable<BatchInfoMessage?> batches) {
+    double fractionsSum = 0.0;
+    int count = 0;
+    for (final info in batches) {
+      if (info == null) continue;
+      fractionsSum += info.overallFraction ?? 0.0;
+      count++;
+    }
+    if (count == 0) return null;
+    return fractionsSum / count;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: SyncDiscovery.batchProgressOutgoingRx,
+      builder: (context, outgoing) => ObxO(
+        rx: SyncDiscovery.batchProgressIncomingRx,
+        builder: (context, incoming) {
+          final batches = outgoing.values.followedBy(incoming.values);
+          final fraction = _averageFraction(batches);
+          if (fraction == null) return const SizedBox();
+          return NBuilder(
+            builder: (context, colors) => CircularProgressIndicator(
+              value: fraction,
+              strokeWidth: 1.5,
+              color: color.withOpacityExt(0.67),
+              backgroundColor: colors.onSurface.withOpacityExt(0.1),
+            ),
+          );
+        },
+      ),
     );
   }
 }

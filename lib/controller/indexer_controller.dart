@@ -1639,7 +1639,7 @@ class Indexer<T extends Track> {
   }
 
   /// [incomingWins] skips the newest wins check, ex: restoring a backup.
-  Future<void> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId, {bool incomingWins = false}) async {
+  Future<int> importTrackStats(Iterable<TrackStats> incomingStats, String senderDeviceId, {bool incomingWins = false}) async {
     final dbEntries = <MapEntry<String, Map<String, dynamic>>>[];
     for (final incoming in incomingStats) {
       final resolvedTrack = SyncPathResolver.resolveTrackByPath(senderDeviceId, incoming.track.path);
@@ -1664,9 +1664,10 @@ class Indexer<T extends Track> {
       if (track is Video) json['v'] = true;
       dbEntries.add(MapEntry(track.path, json));
     }
-    if (dbEntries.isEmpty) return;
+    if (dbEntries.isEmpty) return 0;
     trackStatsMap.refresh();
     await _trackStatsDBManager.putAll(dbEntries, (e) => e);
+    return dbEntries.length;
   }
 
   /// stats of another stats db (ex: an extracted backup), [oldJsonFilePath] is its pre-db json if any.
