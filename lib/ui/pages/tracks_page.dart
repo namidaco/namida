@@ -63,6 +63,19 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
     return isVideo ? videosLength : allTracksLength - videosLength;
   }
 
+  String _countToText(int count) => widget.tab.isVideoFilter == true ? count.displayVideoKeyword : count.displayTrackKeyword;
+
+  static Iterable<NamidaPopupItem> _getStatsItems() {
+    return [
+      NamidaPopupItem(
+        icon: LibraryTab.stats.toIcon(),
+        title: lang.stats,
+        hasDividerAbove: true,
+        onTap: const StatsPage(isYoutube: false).navigate,
+      ),
+    ];
+  }
+
   void _onAddFolderTap(BuildContext context) {
     SettingsSearchController.inst
         .onResultTap(
@@ -121,12 +134,21 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
             (context) {
               final finalTracksLength = SearchSortController.inst.trackSearchList.valueR.length;
               final totalTracksLength = _totalTracksLengthR();
-              String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${totalTracksLength.displayTrackKeyword}' : finalTracksLength.displayTrackKeyword;
+              String leftText = finalTracksLength != totalTracksLength ? '$finalTracksLength/${_countToText(totalTracksLength)}' : _countToText(finalTracksLength);
               final isIndexingR = Indexer.inst.isIndexing.valueR;
               final presetName = settings.mediaItemsTrackSortingPresets.valueR[MediaType.track]?.activePreset?.name;
               final sorting = settings.mediaItemsTrackSorting.valueR[MediaType.track];
               final sortReverse = sorting?.reverse == true;
               final sortTitle = presetName ?? sorting?.firstType?.toText() ?? '';
+              final variants = libraryTab.availableVariants(settings.includeVideos.valueR);
+              final variantChip = variants.isEmpty
+                  ? null
+                  : LibraryTabVariantChip(
+                      tab: libraryTab,
+                      variants: variants,
+                      label: leftText,
+                      extraItems: _getStatsItems,
+                    );
               return ExpandableBox(
                 enableHero: false,
                 isBarVisible: libraryTab.isBarVisible.valueR,
@@ -148,9 +170,10 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                     horizontalPadding: 2.0,
                   ),
                   const SizedBox(width: 10.0),
+                  ?variantChip,
                 ],
-                leftText: leftText,
-                leftTextTrailing: LibraryTabVariantChip(tab: libraryTab),
+                leftText: variantChip == null ? leftText : '',
+                leftTextIcon: libraryTab.toIcon(),
                 onLeftTextTap: const StatsPage(isYoutube: false).navigate,
                 onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                 onCloseButtonPressed: () {

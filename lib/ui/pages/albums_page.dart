@@ -17,7 +17,6 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
@@ -61,7 +60,6 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
     const libraryTab = LibraryTab.albums;
     final scrollController = libraryTab.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
-    const artistTypeColor = NColors(.onSecondaryContainer, opacity: 0.8);
     final isCustomList = albumIdentifiers != null;
 
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
@@ -100,29 +98,19 @@ class AlbumsPage extends StatelessWidget with NamidaRouteWidget {
                         )
                       : null,
                   isBarVisible: libraryTab.isBarVisible.valueR,
-                  leftText: '',
+                  leftText: enableHeader ? '' : leftText,
+                  leftTextIcon: MediaType.album.toIcon(),
                   leftWidgets: [
-                    NamidaPopupWrapper(
-                      openOnTap: enableHeader,
-                      openOnLongPress: enableHeader,
-                      children: _getSinglesAndAlbumsToggles,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const NIcon(
-                            Broken.arrange_circle,
-                            size: 14.0,
-                            color: artistTypeColor,
-                          ),
-                          const SizedBox(width: 4.0),
-                          NamidaText(
-                            leftText,
-                            style: NText.medium,
-                            color: artistTypeColor,
-                          ),
-                        ],
+                    if (enableHeader)
+                      NamidaPopupWrapper(
+                        children: _getSinglesAndAlbumsToggles,
+                        childBuilder: (openMenu) => ExpandableBoxChip(
+                          icon: MediaType.album.toIcon(),
+                          label: leftText,
+                          showArrow: true,
+                          onTap: openMenu,
+                        ),
                       ),
-                    ),
                   ],
                   onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                   onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),

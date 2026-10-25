@@ -202,6 +202,7 @@ class _MoodsOrTagsPageState extends State<_MoodsOrTagsPage> {
           enableHero: false,
           isBarVisible: libraryTab.isBarVisible.valueR,
           leftText: leftText,
+          leftTextIcon: widget.icon,
           onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
           onCloseButtonPressed: _onSearchClosed,
           sortByMenuWidget: SortByMenu(

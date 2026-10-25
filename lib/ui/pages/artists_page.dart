@@ -166,26 +166,17 @@ class ArtistsPage extends StatelessWidget with NamidaRouteWidget {
                       : null,
                   isBarVisible: libraryTab.isBarVisible.valueR,
                   leftText: customType != null ? artistLeftText : '',
+                  leftTextIcon: artistType.toIcon(),
                   leftWidgets: customType != null
                       ? null
                       : [
                           NamidaPopupWrapper(
                             childrenDefault: _getTypeChooserChildren,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const NIcon(
-                                  Broken.arrange_circle,
-                                  size: 14.0,
-                                  color: artistTypeColor,
-                                ),
-                                const SizedBox(width: 4.0),
-                                NamidaText(
-                                  artistLeftText,
-                                  style: NText.medium,
-                                  color: artistTypeColor,
-                                ),
-                              ],
+                            childBuilder: (openMenu) => ExpandableBoxChip(
+                              icon: artistType.toIcon(),
+                              label: artistLeftText,
+                              showArrow: true,
+                              onTap: openMenu,
                             ),
                           ),
                           const SizedBox(width: 4.0),

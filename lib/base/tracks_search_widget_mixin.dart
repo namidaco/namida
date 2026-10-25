@@ -374,16 +374,10 @@ class TracksSearchWidgetBoxBase extends StatelessWidget {
         enableHero: false,
         isBarVisible: true,
         leftText: leftText,
+        leftTextIcon: Broken.musicnote,
         onSearchBoxVisibilityChange: state.onSearchBoxVisibilityChange,
         onCloseButtonPressed: state.clearSearch,
         onFilterIconLongPress: onFilterIconLongPress,
-        leftWidgets: const [
-          Icon(
-            Broken.musicnote,
-            size: 18.0,
-          ),
-          SizedBox(width: 10.0),
-        ],
         sortByMenuWidget: sortByMenu,
         textField: CustomTextField(
           focusNode: state.focusNode,

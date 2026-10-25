@@ -19,6 +19,7 @@ class ExpandableBox extends StatefulWidget {
   final bool displayloadingIndicator;
   final bool Function(bool newShow) onSearchBoxVisibilityChange;
   final String leftText;
+  final IconData? leftTextIcon;
   final void Function()? onLeftTextTap;
   final void Function() onCloseButtonPressed;
   final SortByMenu? sortByMenuWidget;
@@ -26,7 +27,6 @@ class ExpandableBox extends StatefulWidget {
   final bool enableSearch;
   final ChangeGridCountWidget? gridWidget;
   final List<Widget>? leftWidgets;
-  final Widget? leftTextTrailing;
   final void Function()? onFilterIconLongPress;
   final bool enableHero;
 
@@ -37,6 +37,7 @@ class ExpandableBox extends StatefulWidget {
     this.displayloadingIndicator = false,
     required this.onSearchBoxVisibilityChange,
     required this.leftText,
+    this.leftTextIcon,
     this.onLeftTextTap,
     required this.onCloseButtonPressed,
     required this.sortByMenuWidget,
@@ -44,7 +45,6 @@ class ExpandableBox extends StatefulWidget {
     this.enableSearch = true,
     this.gridWidget,
     this.leftWidgets,
-    this.leftTextTrailing,
     this.onFilterIconLongPress,
     required this.enableHero,
   });
@@ -126,7 +126,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                       mainAxisSize: MainAxisSize.max,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const SizedBox(width: 18.0),
+                        const SizedBox(width: 12.0),
                         Expanded(
                           child: ConstrainedBox(
                             constraints: BoxConstraints(maxWidth: partWidthLeftTextOrWidgets),
@@ -139,26 +139,12 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                 children: [
                                   ...?leftWidgets,
                                   if (widget.leftText.isNotEmpty)
-                                    widget.onLeftTextTap != null
-                                        ? TapDetector(
-                                            onTap: widget.onLeftTextTap,
-                                            child: NamidaText(
-                                              widget.leftText,
-                                              style: NText.medium,
-                                              softWrap: false,
-                                              overflow: TextOverflow.fade,
-                                            ),
-                                          )
-                                        : NamidaText(
-                                            widget.leftText,
-                                            style: NText.medium,
-                                            softWrap: false,
-                                            overflow: TextOverflow.fade,
-                                          ),
-                                  if (widget.leftTextTrailing != null) ...[
-                                    const SizedBox(width: 6.0),
-                                    widget.leftTextTrailing!,
-                                  ],
+                                    ExpandableBoxChip(
+                                      icon: widget.leftTextIcon,
+                                      label: widget.leftText,
+                                      showArrow: false,
+                                      onTap: widget.onLeftTextTap,
+                                    ),
                                   if (widget.displayloadingIndicator) ...[
                                     const SizedBox(width: 8.0),
                                     const LoadingIndicator(),
@@ -177,11 +163,14 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                               mainAxisSize: MainAxisSize.min,
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                if (widget.gridWidget != null) widget.gridWidget!,
+                                if (widget.gridWidget != null) ...[
+                                  widget.gridWidget!,
+                                  const SizedBox(width: 2.0),
+                                ],
                                 const SizedBox(width: 4.0),
                                 if (sortByMenuWidget != null) ...[
                                   sortByMenuWidget,
-                                  const SizedBox(width: 6.0),
+                                  const SizedBox(width: 4.0),
                                 ],
                                 if (widget.enableSearch)
                                   NamidaIconButton(
@@ -191,7 +180,7 @@ class _ExpandableBoxState extends State<ExpandableBox> with SingleTickerProvider
                                     onLongPress: widget.onFilterIconLongPress,
                                     iconSize: 20.0,
                                   ),
-                                const SizedBox(width: 6.0),
+                                const SizedBox(width: 8.0),
                               ],
                             ),
                           ),
@@ -309,30 +298,125 @@ class SortByMenu extends StatelessWidget {
     required this.isCurrentlyReversed,
   });
 
+  static const _kHeight = 31.0;
+
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4.0),
-          child: NamidaTextButton(
-            minHeight: kExpandableBoxHeight * 0.5,
-            onTap:
-                onSortTap ??
-                () => NamidaPopupWrapper(
-                  children: () => popupMenuChild?.children(context) ?? [],
-                ).showPopupMenu(context),
-            text: title,
-            fontSizeMultiplier: 0.95,
+    final nColors = NColorsData.targetOf(context);
+    final palette = NamidaButton.resolvePalette(nColors, colors: NamidaButtonColors.dimmed);
+    final borderRadius = Radius.circular(20.0.multipliedRadius);
+    final sortBorderRadius = BorderRadius.horizontal(left: borderRadius);
+    final reverseBorderRadius = BorderRadius.horizontal(right: borderRadius);
+    final textStyle = NText.medium.of(context).copyWith(color: palette.foreground, fontSize: 0.95 * 15.0);
+    final onSortTap =
+        this.onSortTap ??
+        () => NamidaPopupWrapper(
+          children: () => popupMenuChild?.children(context) ?? [],
+        ).showPopupMenu(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: palette.bg,
+          border: Border.all(width: 0.5, color: palette.border),
+          borderRadius: BorderRadius.all(borderRadius),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NamidaInkWell(
+              decoration: BoxDecoration(borderRadius: sortBorderRadius),
+              height: _kHeight,
+              padding: const EdgeInsets.only(left: 13.0, right: 8.0, top: 7.0, bottom: 7.0),
+              onTap: onSortTap,
+              child: Center(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    title,
+                    style: textStyle,
+                    softWrap: false,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 0.5,
+              height: 16.0,
+              child: ColoredBox(
+                color: palette.border,
+              ),
+            ),
+            NamidaInkWell(
+              decoration: BoxDecoration(borderRadius: reverseBorderRadius),
+              height: _kHeight,
+              padding: const EdgeInsets.only(left: 6.0, right: 10.0),
+              onTap: onReverseIconTap,
+              child: Center(
+                child: Icon(
+                  isCurrentlyReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
+                  size: 16.0,
+                  color: palette.foreground,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ExpandableBoxChip extends StatelessWidget {
+  final IconData? icon;
+  final String label;
+  final bool showArrow;
+  final VoidCallback? onTap;
+
+  const ExpandableBoxChip({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.showArrow,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = this.icon;
+    return NamidaInkWell(
+      bgColor: const NColors(.secondary, opacity: 0.12),
+      borderRadius: 10.0,
+      padding: showArrow ? const EdgeInsets.only(left: 8.0, right: 6.0, top: 7.0, bottom: 7.0) : const EdgeInsets.symmetric(horizontal: 8.0, vertical: 7.0),
+      onTap: onTap,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            NIcon(
+              icon,
+              size: 16.0,
+            ),
+            const SizedBox(
+              width: 5.0,
+            ),
+          ],
+          NamidaText(
+            label,
+            style: NText.medium,
+            softWrap: false,
           ),
-        ),
-        NamidaIconButton(
-          horizontalPadding: 0.0,
-          icon: isCurrentlyReversed ? Broken.arrow_up_3 : Broken.arrow_down_2,
-          iconSize: 20.0,
-          onPressed: onReverseIconTap,
-        ),
-      ],
+          if (showArrow) ...[
+            const SizedBox(
+              width: 3.0,
+            ),
+            const NIcon(
+              Broken.arrow_right_3,
+              size: 11.0,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -372,13 +456,15 @@ class ChangeGridCountWidget extends StatelessWidget {
       builder: (context, mediaGridCounts) {
         final currentCount = mediaGridCounts.get(tab);
         final count = currentCount.resolve(context);
-        String? secondaryText;
-        IconData? secondaryIcon;
-        if (currentCount.isAuto) {
-          secondaryIcon = Broken.autobrightness;
-        } else {
-          secondaryText = "$count";
-        }
+        final isAuto = currentCount.isAuto;
+        final secondaryIcon = isAuto ? Broken.autobrightness : null;
+        final countBadge = isAuto
+            ? null
+            : NamidaText(
+                "$count",
+                style: const NText(.small, size: .s11p5),
+                color: NColors.secondary,
+              );
         final baseIcon = _resolveIcon(count);
 
         return NamidaPopupWrapper(
@@ -403,16 +489,14 @@ class ChangeGridCountWidget extends StatelessWidget {
             ];
           },
           onTap: () => _onTap(currentCount.getNext()),
-          child: NBuilder(
-            builder: (context, colors) => StackedIcon(
-              baseIcon: baseIcon,
-              secondaryText: secondaryText,
-              secondaryIcon: secondaryIcon,
-              baseIconColor: NColors.fixed(colors.secondary),
-              secondaryIconColor: NColors.fixed(colors.secondary),
-              iconSize: 20.0,
-              secondaryIconSize: 13.0,
-            ),
+          child: StackedIcon(
+            baseIcon: baseIcon,
+            secondaryIcon: secondaryIcon,
+            smallChild: countBadge,
+            baseIconColor: NColors.secondary,
+            secondaryIconColor: NColors.secondary,
+            iconSize: 19.0,
+            secondaryIconSize: 12.0,
           ),
         );
       },

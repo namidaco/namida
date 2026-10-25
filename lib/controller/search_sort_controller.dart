@@ -1278,11 +1278,31 @@ class SearchSortController extends SearchPortsProvider {
       case MediaType.tag:
         _saveMoodsTagsSorting(media, sorting: groupSorting, reverse: reverse);
         break;
+      case MediaType.folder:
+      case MediaType.folderMusic:
+      case MediaType.folderVideo:
+        _sortSubListsTracks(media, sortBy: sortBy, reverse: reverse, forceSingleSorting: forceSingleSorting);
+        break;
 
       default:
         null;
     }
     SearchSortController.inst.refreshPortsIfNecessary();
+  }
+
+  void _sortSubListsTracks(MediaType media, {SortType? sortBy, bool? reverse, bool forceSingleSorting = false}) {
+    final currentSorting = settings.mediaItemsTrackSorting.value[media] ?? const SortChain<SortType>([]);
+    final effectiveReverse = reverse ?? currentSorting.reverse;
+    final List<SortEntry<SortType>> entries;
+    if (forceSingleSorting) {
+      final entry = sortBy == null ? currentSorting.entries.firstOrNull : SortEntry(sortBy);
+      entries = [?entry];
+    } else {
+      entries = sortBy == null || currentSorting.hasType(sortBy) ? currentSorting.entries : [SortEntry(sortBy), ...currentSorting.entries];
+    }
+    final sorting = SortChain(entries, reverse: effectiveReverse);
+    settings.updateMediaItemsTrackSorting(media, sorting, toDefault: forceSingleSorting);
+    Indexer.inst.sortMediaTracksSubLists([media]);
   }
 
   SortChain<GroupSortType> _effectiveGroupSorting(MediaType media, SortChain<GroupSortType>? sorting, bool? reverse) {

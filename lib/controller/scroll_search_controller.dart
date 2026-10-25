@@ -102,19 +102,32 @@ class ScrollSearchController {
 
     if (tab.group == LibraryTab.tracks) SearchSortController.inst.setActiveTracksTab(tab);
 
+    final currentTab = settings.extra.selectedLibraryTab.value;
+    var isVariantSwitch = false;
+    if (tab.group == currentTab.group) {
+      final currentTabPage = currentTab.toWidget();
+      isVariantSwitch = NamidaNavigator.inst.currentRoute?.isSameRouteAs(currentTabPage) == true;
+    }
     final isVertical = Dimensions.inst.showNavigationAtSide;
-    final isPageNext = tab.toInt() > settings.extra.selectedLibraryTab.value.toInt();
-    final transition = isVertical
+    final isPageNext = tab.toInt() > currentTab.toInt();
+    final transition = isVariantSwitch
+        ? Transition.noTransition
+        : isVertical
         ? isPageNext
               ? Transition.downToUp
               : Transition.upToDown
         : isPageNext
         ? Transition.rightToLeft
         : Transition.leftToRight;
+    final durationMs = isVariantSwitch
+        ? 0
+        : isVertical
+        ? 300
+        : 400;
 
-    _updateScrollPositions(settings.extra.selectedLibraryTab.value, tab, restoreNewTabPosition: restoreScrollPosition);
+    _updateScrollPositions(currentTab, tab, restoreNewTabPosition: restoreScrollPosition);
     settings.extra.setSelectedLibraryTab(tab);
-    NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: isVertical ? 300 : 400);
+    NamidaNavigator.inst.navigateOffAll(w, transition: transition, durationMs: durationMs);
   }
 
   CountPerRow animateChangingGridSize(LibraryTab tab, CountPerRow gridCount) {

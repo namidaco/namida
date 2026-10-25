@@ -3,28 +3,36 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import 'package:namico_db_wrapper/namico_db_wrapper.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
+import 'package:namida/base/tracks_search_widget_mixin.dart';
+import 'package:namida/base/tracks_search_wrapper.dart';
 import 'package:namida/class/folder.dart';
 import 'package:namida/class/route.dart';
+import 'package:namida/class/sort_chain.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/scroll_search_controller.dart';
+import 'package:namida/controller/search_sort_controller.dart';
+import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/functions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
+import 'package:namida/ui/widgets/expandable_box.dart';
 import 'package:namida/ui/widgets/library/folder_tile.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
+import 'package:namida/ui/widgets/sort_by_button.dart';
 
-class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget with NamidaRouteWidget {
+class FoldersPage<T extends Track, F extends Folder> extends StatefulWidget with NamidaRouteWidget {
   @override
   String? get name => foldersController.currentFolder.value?.path;
 
@@ -76,41 +84,115 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
     config: FoldersPageConfig.videos(),
   );
 
-  Widget _getSortDialogHeader() {
-    return Column(
-      mainAxisSize: .min,
-      children: [
-        ObxO(
-          rx: config.enableFoldersHierarchy,
-          builder: (context, enabled) => CustomSwitchListTile(
-            visualDensity: VisualDensity.compact,
-            icon: Broken.folder_open,
-            title: lang.enableFoldersHierarchy,
-            value: enabled,
-            onChanged: (_) => config.toggleFoldersHierarchy(),
-            trailingBeforeSwitch: enabled
-                ? ObxO(
-                    rx: config.skipSingleSubfolder,
-                    builder: (context, skipSingleSubfolder) => _SkipSingleSubfolderIcon(
-                      enabled: skipSingleSubfolder,
-                      onTap: config.toggleSkipSingleSubfolder,
-                    ),
-                  )
-                : null,
-          ),
-        ),
-        const NamidaContainerDivider(
-          margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-        ),
-      ],
-    );
+  @override
+  State<FoldersPage<T, F>> createState() => _FoldersPageState<T, F>();
+}
+
+class _FoldersPageState<T extends Track, F extends Folder> extends State<FoldersPage<T, F>> with PortsProvider<TracksSearchParams>, TracksSearchWidgetMixin<FoldersPage<T, F>> {
+  List<Folder>? _visibleFolders;
+  KeysSearchWrapper<Folder>? _foldersSearchWrapper;
+  List<Folder>? _filteredFolders;
+
+  @override
+  ScrollController? get providedScrollController => widget.tab.scrollController;
+
+  @override
+  Iterable<TrackExtended> getTracksExtended() {
+    final tracks = widget.foldersController.currentFolderTracksList ?? const <Track>[];
+    return tracks.map((e) => e.toTrackExt());
+  }
+
+  @override
+  RxBaseCore listChangesListenerRx() => widget.foldersController.currentFolder;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.foldersController.currentFolder.addListener(_onFoldersChanged);
+    widget.config.enableFoldersHierarchy.addListener(_onFoldersChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.foldersController.currentFolder.removeListener(_onFoldersChanged);
+    widget.config.enableFoldersHierarchy.removeListener(_onFoldersChanged);
+    super.dispose();
+  }
+
+  void _onFoldersChanged() {
+    _visibleFolders = null;
+    _foldersSearchWrapper = null;
+    final isFiltering = _filteredFolders != null || isSearching || textEditingController.text.isNotEmpty;
+    if (!isFiltering) return;
+    clearSearch();
+    setState(() => _filteredFolders = null);
+  }
+
+  void _onSearchChanged(String text) {
+    searchTracks(text);
+    _filterFolders(text);
+  }
+
+  void _onSearchClosed() {
+    clearSearch();
+    _filterFolders('');
+  }
+
+  void _filterFolders(String text) {
+    List<Folder>? filteredFolders;
+    if (text.isNotEmpty) {
+      final searchWrapper = _foldersSearchWrapper ??= _createFoldersSearchWrapper();
+      filteredFolders = searchWrapper.filter(text);
+    }
+    setState(() => _filteredFolders = filteredFolders);
+  }
+
+  KeysSearchWrapper<Folder> _createFoldersSearchWrapper() {
+    final visibleFolders = _getVisibleFolders();
+    final cleanup = settings.enableSearchCleanup.value;
+    return KeysSearchWrapper.init(visibleFolders, title: (folder) => folder.folderNameRaw, cleanup: cleanup);
+  }
+
+  List<Folder> _getVisibleFolders() => _visibleFolders ??= _computeVisibleFolders();
+
+  List<Folder> _computeVisibleFolders() {
+    final foldersController = widget.foldersController;
+    if (widget.config.enableFoldersHierarchy.value) return foldersController.currentFolderslist.value;
+    if (foldersController.isInside.value) return const [];
+    final foldersMap = foldersController.foldersMap.value;
+    return foldersMap.entries.where((e) => e.value.isNotEmpty).map((e) => e.key).toFixedList();
+  }
+
+  String _getHeaderLabel(List<Track> folderTracks) {
+    final visibleFolders = _getVisibleFolders();
+    final shownFoldersCount = _filteredFolders?.length;
+    final foldersText = visibleFolders.isEmpty ? null : _countText(shownFoldersCount, visibleFolders.length, (count) => count.displayFolderKeyword);
+    if (foldersText != null && folderTracks.isEmpty) return foldersText;
+    final shownTracksCount = searchResults?.length;
+    final isVideos = widget.tab.isVideoFilter == true;
+    String tracksCountToText(int count) => isVideos ? count.displayVideoKeyword : count.displayTrackKeyword;
+    final tracksText = _countText(shownTracksCount, folderTracks.length, tracksCountToText);
+    if (foldersText == null) return tracksText;
+    return '$foldersText - $tracksText';
+  }
+
+  static String _countText(int? shownCount, int totalCount, String Function(int count) countToText) {
+    final totalText = countToText(totalCount);
+    if (shownCount == null || shownCount == totalCount) return totalText;
+    return '$shownCount/$totalText';
   }
 
   @override
   Widget build(BuildContext context) {
+    final foldersController = widget.foldersController;
+    final config = widget.config;
+    final tab = widget.tab;
+    final mediaType = widget.mediaType();
     final ScrollController scrollController = tab.scrollController;
     const scrollToIconSize = 24.0;
     const scrollToiconBottomPaddingSliver = SliverPadding(padding: EdgeInsets.only(bottom: scrollToIconSize * 2));
+    final filteredFolders = _filteredFolders;
+    final searchResults = this.searchResults;
 
     return BackgroundWrapper(
       child: ObxO(
@@ -122,9 +204,11 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
             builder: (context, currentFolder) {
               final folderTracks = foldersController.folderToTracks(currentFolder) ?? [];
               final highlightedFolder = lastVisitedFolderMap[currentFolder];
+              final headerLabel = _getHeaderLabel(folderTracks);
+              final jumpIndex = searchResults == null ? indexToScrollTo : null;
               return TrackTilePropertiesProvider(
                 configs: TrackTilePropertiesConfigs(
-                  queueSource: _queueSource(currentFolder?.path),
+                  queueSource: widget._queueSource(currentFolder?.path),
                 ),
                 builder: (properties) => Stack(
                   children: [
@@ -135,13 +219,18 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                           child: _FoldersHeaderTile(
                             foldersController: foldersController,
                             config: config,
-                            tab: tab,
                             currentFolder: currentFolder,
-                            onSortTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(
-                              mediaType(),
-                              header: _getSortDialogHeader(),
-                            ),
                           ),
+                        ),
+                        _FoldersExpandableBox(
+                          tab: tab,
+                          mediaType: mediaType,
+                          label: headerLabel,
+                          textEditingController: textEditingController,
+                          focusNode: focusNode,
+                          onSearchBoxVisibilityChange: onSearchBoxVisibilityChange,
+                          onCloseButtonPressed: _onSearchClosed,
+                          onSearchChanged: _onSearchChanged,
                         ),
                         Expanded(
                           child: NamidaScrollbar(
@@ -149,28 +238,36 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                             child: SmoothCustomScrollView(
                               controller: scrollController,
                               slivers: [
+                                SliverToBoxAdapter(
+                                  child: ExpandableBoxEmptyAnimatedPadding(
+                                    tab: tab,
+                                  ),
+                                ),
                                 ObxO(
                                   rx: config.enableFoldersHierarchy,
                                   builder: (context, enableFoldersHierarchy) => enableFoldersHierarchy
                                       ? _HierarchyFoldersSliver(
                                           foldersController: foldersController,
                                           highlightedFolder: highlightedFolder,
+                                          filteredFolders: filteredFolders,
                                         )
                                       : _AllFoldersSliver(
                                           foldersController: foldersController,
                                           highlightedFolder: highlightedFolder,
+                                          filteredFolders: filteredFolders,
                                         ),
                                 ),
                                 SliverFixedExtentList.builder(
-                                  itemCount: folderTracks.length,
+                                  itemCount: searchResults?.length ?? folderTracks.length,
                                   itemExtent: Dimensions.inst.trackTileItemExtent,
                                   itemBuilder: (context, i) {
+                                    final index = searchResults == null ? i : searchResults[i];
                                     return TrackTile(
                                       properties: properties,
-                                      index: i,
-                                      trackOrTwd: folderTracks[i],
+                                      index: index,
+                                      trackOrTwd: folderTracks[index],
                                       tracks: folderTracks,
-                                      isJumpHighlighted: i == indexToScrollTo,
+                                      isJumpHighlighted: index == indexToScrollTo,
                                     );
                                   },
                                 ),
@@ -182,7 +279,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                         ),
                       ],
                     ),
-                    indexToScrollTo != null
+                    jumpIndex != null
                         ? Obx(
                             (context) => Positioned(
                               bottom: Dimensions.inst.globalBottomPaddingEffectiveR + 6.0,
@@ -191,7 +288,7 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
                                 foldersController: foldersController,
                                 iconSize: scrollToIconSize,
                                 controller: scrollController,
-                                indexToScrollTo: indexToScrollTo,
+                                indexToScrollTo: jumpIndex,
                               ),
                             ),
                           )
@@ -207,19 +304,80 @@ class FoldersPage<T extends Track, F extends Folder> extends StatelessWidget wit
   }
 }
 
+class _FoldersExpandableBox extends StatelessWidget {
+  final LibraryTab tab;
+  final MediaType mediaType;
+  final String label;
+  final TextEditingController textEditingController;
+  final FocusNode? focusNode;
+  final bool Function(bool newShow) onSearchBoxVisibilityChange;
+  final VoidCallback onCloseButtonPressed;
+  final void Function(String value) onSearchChanged;
+
+  const _FoldersExpandableBox({
+    required this.tab,
+    required this.mediaType,
+    required this.label,
+    required this.textEditingController,
+    required this.focusNode,
+    required this.onSearchBoxVisibilityChange,
+    required this.onCloseButtonPressed,
+    required this.onSearchChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final sorting = settings.mediaItemsTrackSorting.valueR[mediaType] ?? const SortChain<SortType>([]);
+        final sortReverse = sorting.reverse;
+        final presetName = settings.mediaItemsTrackSortingPresets.valueR[mediaType]?.activePreset?.name;
+        final sortTitle = presetName ?? sorting.firstType?.toText() ?? lang.custom;
+        final variants = tab.availableVariants(settings.includeVideos.valueR);
+        final variantChip = variants.isEmpty
+            ? null
+            : LibraryTabVariantChip(
+                tab: tab,
+                variants: variants,
+                label: label,
+              );
+        return ExpandableBox(
+          enableHero: false,
+          isBarVisible: tab.isBarVisible.valueR,
+          leftText: variantChip == null ? label : '',
+          leftTextIcon: tab.toIcon(),
+          leftWidgets: [
+            ?variantChip,
+          ],
+          onSearchBoxVisibilityChange: onSearchBoxVisibilityChange,
+          onCloseButtonPressed: onCloseButtonPressed,
+          sortByMenuWidget: SortByMenu(
+            title: sortTitle,
+            popupMenuChild: SortByMenuTracks(media: mediaType),
+            isCurrentlyReversed: sortReverse,
+            onReverseIconTap: () => SearchSortController.inst.sortMedia(mediaType, reverse: !sortReverse),
+          ),
+          textField: CustomTextField(
+            focusNode: focusNode,
+            textFieldController: textEditingController,
+            textFieldHintText: lang.search,
+            onTextFieldValueChanged: onSearchChanged,
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _FoldersHeaderTile extends StatefulWidget {
   final FoldersController foldersController;
   final FoldersPageConfig config;
-  final LibraryTab tab;
   final Folder? currentFolder;
-  final VoidCallback onSortTap;
 
   const _FoldersHeaderTile({
     required this.foldersController,
     required this.config,
-    required this.tab,
     required this.currentFolder,
-    required this.onSortTap,
   });
 
   @override
@@ -265,8 +423,9 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
           trailingRaw: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              LibraryTabVariantChip(tab: widget.tab),
-              const SizedBox(width: 4.0),
+              _FoldersHierarchyButton(
+                config: config,
+              ),
               ObxO(
                 rx: config.enableFoldersHierarchy,
                 builder: (context, enableFoldersHierarchy) => !enableFoldersHierarchy
@@ -277,7 +436,7 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
                           final isDefaultFolderEmpty = defaultFolderStartupLocation == null || defaultFolderStartupLocation.isEmpty;
                           return NamidaIconButton(
                             verticalPadding: 8.0,
-                            horizontalPadding: 4.0,
+                            horizontalPadding: 6.0,
                             tooltip: () => lang.setAsDefault,
                             icon: (isDefaultFolderEmpty && isHome)
                                 ? Broken.archive_tick
@@ -290,13 +449,6 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
                         },
                       ),
               ),
-              const SizedBox(width: 4.0),
-              NamidaIconButton(
-                verticalPadding: 8.0,
-                horizontalPadding: 4.0,
-                icon: Broken.sort,
-                onPressed: widget.onSortTap,
-              ),
             ],
           ),
         );
@@ -308,10 +460,12 @@ class _FoldersHeaderTileState extends State<_FoldersHeaderTile> {
 class _HierarchyFoldersSliver extends StatelessWidget {
   final FoldersController foldersController;
   final Folder? highlightedFolder;
+  final List<Folder>? filteredFolders;
 
   const _HierarchyFoldersSliver({
     required this.foldersController,
     required this.highlightedFolder,
+    required this.filteredFolders,
   });
 
   @override
@@ -320,24 +474,27 @@ class _HierarchyFoldersSliver extends StatelessWidget {
       rx: foldersController.isHome,
       builder: (context, isHome) => ObxO(
         rx: foldersController.currentFolderslist,
-        builder: (context, currentFolderslist) => SuperSliverList.builder(
-          itemCount: currentFolderslist.length,
-          itemBuilder: (context, i) {
-            final folder = currentFolderslist[i];
-            const isTracksRecursive = true;
-            final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
-            final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
-            return FolderTile(
-              folder: folder,
-              highlightedFolder: highlightedFolder,
-              controller: foldersController,
-              tracks: tracks,
-              isTracksRecursive: isTracksRecursive,
-              dirInsideCount: dirInsideCount,
-              isHome: isHome,
-            );
-          },
-        ),
+        builder: (context, currentFolderslist) {
+          final folders = filteredFolders ?? currentFolderslist;
+          return SuperSliverList.builder(
+            itemCount: folders.length,
+            itemBuilder: (context, i) {
+              final folder = folders[i];
+              const isTracksRecursive = true;
+              final tracks = foldersController.getNodeTracks(folder, recursive: isTracksRecursive);
+              final dirInsideCount = foldersController.currentNodeFoldersCount(folder, preferRecursiveForRootFolders: true) ?? 0;
+              return FolderTile(
+                folder: folder,
+                highlightedFolder: highlightedFolder,
+                controller: foldersController,
+                tracks: tracks,
+                isTracksRecursive: isTracksRecursive,
+                dirInsideCount: dirInsideCount,
+                isHome: isHome,
+              );
+            },
+          );
+        },
       ),
     );
   }
@@ -346,10 +503,12 @@ class _HierarchyFoldersSliver extends StatelessWidget {
 class _AllFoldersSliver extends StatelessWidget {
   final FoldersController foldersController;
   final Folder? highlightedFolder;
+  final List<Folder>? filteredFolders;
 
   const _AllFoldersSliver({
     required this.foldersController,
     required this.highlightedFolder,
+    required this.filteredFolders,
   });
 
   @override
@@ -361,7 +520,7 @@ class _AllFoldersSliver extends StatelessWidget {
           : ObxO(
               rx: foldersController.foldersMap,
               builder: (context, mainMap) {
-                final mainMapFoldersKeys = mainMap.keys.toFixedList();
+                final mainMapFoldersKeys = filteredFolders ?? mainMap.keys.toFixedList();
                 return SuperSliverList.builder(
                   itemCount: mainMapFoldersKeys.length,
                   itemBuilder: (context, i) {
@@ -503,25 +662,56 @@ class __SmolIconFolderScrollState extends State<_SmolIconFolderScroll> with Tick
   }
 }
 
-class _SkipSingleSubfolderIcon extends StatelessWidget {
-  final bool enabled;
-  final void Function() onTap;
+class _FoldersHierarchyButton extends StatelessWidget {
+  final FoldersPageConfig config;
 
-  const _SkipSingleSubfolderIcon({
-    required this.enabled,
-    required this.onTap,
+  const _FoldersHierarchyButton({
+    required this.config,
   });
+
+  List<Widget> _getMenuChildren() {
+    return [
+      Padding(
+        padding: const EdgeInsets.all(3.0),
+        child: ListTileWithCheckMark(
+          dense: true,
+          icon: Broken.hierarchy_square_2,
+          title: lang.enableFoldersHierarchy,
+          activeRx: config.enableFoldersHierarchy,
+          onTap: config.toggleFoldersHierarchy,
+        ),
+      ),
+      ObxO(
+        rx: config.enableFoldersHierarchy,
+        builder: (context, enableFoldersHierarchy) => AnimatedShow(
+          show: enableFoldersHierarchy,
+          child: Padding(
+            padding: const EdgeInsets.all(3.0),
+            child: ListTileWithCheckMark(
+              dense: true,
+              icon: Broken.forward,
+              title: lang.skipSingleSubfolders,
+              activeRx: config.skipSingleSubfolder,
+              onTap: config.toggleSkipSingleSubfolder,
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colors = NColorsData.of(context);
-    final iconColor = enabled ? colors.secondary : colors.onSurface.withOpacityExt(0.4);
-    return NamidaIconButton(
-      tooltip: () => lang.skipSingleSubfolders,
-      icon: Broken.forward,
-      iconSize: 20.0,
-      iconColor: NColors.fixed(iconColor),
-      onPressed: onTap,
+    return NamidaPopupWrapper(
+      children: _getMenuChildren,
+      childBuilder: (openMenu) => NamidaIconButton(
+        verticalPadding: 8.0,
+        horizontalPadding: 6.0,
+        tooltip: () => lang.enableFoldersHierarchy,
+        icon: Broken.hierarchy_square_2,
+        iconSize: 23.0,
+        onPressed: openMenu,
+      ),
     );
   }
 }

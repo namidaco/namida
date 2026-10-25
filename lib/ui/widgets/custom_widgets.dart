@@ -1058,9 +1058,7 @@ class NamidaButton extends StatelessWidget {
 
   static const double kDefaultMinHeight = 36.0;
 
-  @override
-  Widget build(BuildContext context) {
-    final nColors = NColorsData.targetOf(context);
+  static NamidaButtonPalette resolvePalette(NColorsData nColors, {required NamidaButtonColors colors, Color? colorScheme, bool opaqueBG = false}) {
     final (double colorSchemeOpacity, double bgOpacity, double borderOpacity, double foregroundOpacity) = switch (colors) {
       NamidaButtonColors.selected => (0.8, 0.8, 0.8, 0.8),
       NamidaButtonColors.fab => (0.5, 0.2, 0.6, 0.85),
@@ -1070,17 +1068,30 @@ class NamidaButton extends StatelessWidget {
       NamidaButtonColors.dimmed => (0.1, 0.2, 0.6, 0.85),
     };
 
-    final colorScheme = (this.colorScheme ?? nColors.primary).withOpacityExt(colorSchemeOpacity);
+    final colorSchemeBase = colorScheme ?? nColors.primary;
+    final colorSchemeFinal = colorSchemeBase.withOpacityExt(colorSchemeOpacity);
 
     bool whiteForeground = switch (colors) {
       .selected => true,
       _ => false,
     };
 
-    var bgColor = colorScheme.withOpacityExt(colorScheme.a * bgOpacity);
+    var bgColor = colorSchemeFinal.withOpacityExt(colorSchemeFinal.a * bgOpacity);
     if (opaqueBG) bgColor = Color.alphaBlend(bgColor, nColors.scaffold);
-    final borderColor = colorScheme.withOpacityExt(colorScheme.a * borderOpacity);
-    final foregroundColor = (whiteForeground ? Colors.white : NColors.defaultIcon(mainColor: colorScheme).resolve(nColors)).withOpacityExt(foregroundOpacity);
+    final borderColor = colorSchemeFinal.withOpacityExt(colorSchemeFinal.a * borderOpacity);
+    final foregroundBase = whiteForeground ? Colors.white : NColors.defaultIcon(mainColor: colorSchemeFinal).resolve(nColors);
+    final foregroundColor = foregroundBase.withOpacityExt(foregroundOpacity);
+    return (colorScheme: colorSchemeFinal, bg: bgColor, border: borderColor, foreground: foregroundColor);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final nColors = NColorsData.targetOf(context);
+    final palette = resolvePalette(nColors, colors: colors, colorScheme: this.colorScheme, opaqueBG: opaqueBG);
+    final colorScheme = palette.colorScheme;
+    final bgColor = palette.bg;
+    final borderColor = palette.border;
+    final foregroundColor = palette.foreground;
 
     final text = this.text;
     final icon = this.icon;
@@ -9375,3 +9386,5 @@ class _ShuffleModeEdgesPainter extends CustomPainter {
   @override
   bool shouldRepaint(_ShuffleModeEdgesPainter oldDelegate) => mode != oldDelegate.mode || color != oldDelegate.color || borderRadius != oldDelegate.borderRadius;
 }
+
+typedef NamidaButtonPalette = ({Color colorScheme, Color bg, Color border, Color foreground});

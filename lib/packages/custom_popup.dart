@@ -456,7 +456,8 @@ class _PopupRoute extends PopupRoute<void> {
     if (rightEdge > _viewportRect.right) {
       leftEdge -= rightEdge - _viewportRect.right;
     }
-    final center = _anchorX - leftEdge - arrowRect.center.dx;
+    final targetCenterX = _target.center.dx;
+    final center = targetCenterX - leftEdge - arrowRect.center.dx;
 
     final leftSafeZone = (contentRadius ?? 0) + 15.0;
     final rightSafeZone = (contentRadius ?? 0) + 15.0;

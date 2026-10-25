@@ -80,6 +80,7 @@ class LanguagesPage extends StatelessWidget with NamidaRouteWidget {
                 ),
                 isBarVisible: libraryTab.isBarVisible.valueR,
                 leftText: leftText,
+                leftTextIcon: libraryTab.toIcon(),
                 onSearchBoxVisibilityChange: (newShow) => ScrollSearchController.inst.onSearchBoxVisibiltyChange(libraryTab, newShow),
                 onCloseButtonPressed: () => ScrollSearchController.inst.clearSearchTextField(libraryTab),
                 sortByMenuWidget: SortByMenu(

@@ -13,9 +13,7 @@ import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
 import 'package:namida/core/functions.dart';
-import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/namida_converter_ext.dart';
-import 'package:namida/core/ntheme.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/dialogs/common_dialogs.dart';
@@ -76,7 +74,6 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
     const libraryTab = LibraryTab.genres;
     final scrollController = libraryTab.scrollController;
     final countPerRowResolved = countPerRow.resolve(context);
-    const genreTypeColor = NColors(.onSecondaryContainer, opacity: 0.8);
 
     const listHeader = ExpandableBoxEmptyAnimatedPadding(tab: libraryTab);
 
@@ -112,21 +109,11 @@ class GenresPage extends StatelessWidget with NamidaRouteWidget {
                 leftWidgets: [
                   NamidaPopupWrapper(
                     childrenDefault: _getTypeChooserChildren,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const NIcon(
-                          Broken.arrange_circle,
-                          size: 14.0,
-                          color: genreTypeColor,
-                        ),
-                        const SizedBox(width: 4.0),
-                        NamidaText(
-                          leftText,
-                          style: NText.medium,
-                          color: genreTypeColor,
-                        ),
-                      ],
+                    childBuilder: (openMenu) => ExpandableBoxChip(
+                      icon: genreType.toIcon(),
+                      label: leftText,
+                      showArrow: true,
+                      onTap: openMenu,
                     ),
                   ),
                 ],

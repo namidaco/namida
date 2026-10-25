@@ -19,22 +19,24 @@ import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
 
 class SortByMenuTracks with SortByMenuBase {
-  const SortByMenuTracks();
+  final MediaType media;
+
+  const SortByMenuTracks({this.media = MediaType.track});
 
   @override
   List<Widget> children(BuildContext context) {
     return [
       _SortAdvancedHeader(
-        onTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(MediaType.track),
+        onTap: () => NamidaOnTaps.inst.onSubPageTracksSortIconTap(media),
       ),
       Obx(
         (context) {
-          final sorting = settings.mediaItemsTrackSorting.valueR[MediaType.track] ?? const SortChain<SortType>([]);
+          final sorting = settings.mediaItemsTrackSorting.valueR[media] ?? const SortChain<SortType>([]);
           final isReversed = sorting.reverse;
           final prefixFilters = SortOptionsCards.prefixFiltersOfTracks(sorting.types());
           return SortOptionsCards(
             isReversed: isReversed,
-            onReverseTap: () => SearchSortController.inst.sortMedia(MediaType.track, reverse: !isReversed),
+            onReverseTap: () => SearchSortController.inst.sortMedia(media, reverse: !isReversed),
             withSortKeyOptions: true,
             prefixFilters: prefixFilters,
           );
@@ -48,8 +50,8 @@ class SortByMenuTracks with SortByMenuBase {
             visualDensity: const VisualDensity(horizontal: -4.0, vertical: -4.0),
             title: e.toText(),
             trailingIcon: e.toIcon(),
-            active: mediaItemsTrackSorting[MediaType.track]?.firstType == e,
-            onTap: () => SearchSortController.inst.sortMedia(MediaType.track, sortBy: e, forceSingleSorting: true),
+            active: mediaItemsTrackSorting[media]?.firstType == e,
+            onTap: () => SearchSortController.inst.sortMedia(media, sortBy: e, forceSingleSorting: true),
           ),
         ),
       ),
