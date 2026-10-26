@@ -928,6 +928,8 @@ class Player {
 
   void refreshCrossfadeTransition() => _audioHandler.refreshCrossfadeTransition();
 
+  int getOwnCrossfadeMS() => _audioHandler.getOwnCrossfadeMS();
+
   Future<void> pauseRaw() async {
     await _audioHandler.onPauseRaw();
   }

@@ -92,6 +92,9 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     };
   }
 
+  @override
+  int get crossfadeMS => state.crossfadeMS;
+
   bool isUnavailable(PartyEntry entry) => _unavailableIds.contains(entry.id);
 
   // ------------------------------------------------------------
@@ -477,7 +480,8 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     if (localIndex != index) {
       // -- gapless/crossfade start the next item before the party timeline gets there
       final durationMS = state.currentEntry?.durationMS ?? 0;
-      final isNaturalAdvance = localIndex == (index + 1) % _playables.length && durationMS > 0 && expected >= durationMS - _naturalAdvanceWindowMS;
+      final partyTransitionMS = durationMS - state.crossfadeMS;
+      final isNaturalAdvance = localIndex == (index + 1) % _playables.length && durationMS > 0 && expected >= partyTransitionMS - _naturalAdvanceWindowMS;
       if (isNaturalAdvance && shouldPlay) return;
       await _player.partySkipTo(index, startPlaying: shouldPlay);
       if (expected > _driftWhilePlayingMS) await _player.partySeek(Duration(milliseconds: expected));
@@ -488,7 +492,8 @@ class PartyPlayerBinder implements PartyStateListener, PartyPlayerGate {
     final isWaitingOnPlayer = _player.isLoadingR || _player.isBufferingR;
     if (!isLocalSeekSettling && !isWaitingOnPlayer) {
       final duration = _player.currentItemDuration.value?.inMilliseconds ?? 0;
-      final nearEnd = duration > 0 && expected >= duration - 500;
+      final localTransitionMS = duration - state.crossfadeMS;
+      final nearEnd = duration > 0 && expected >= localTransitionMS - 500;
       if (!nearEnd) {
         final drift = (_player.nowPlayingPosition.value - expected).abs();
         if (drift > (shouldPlay ? _driftWhilePlayingMS : _driftWhilePausedMS)) {

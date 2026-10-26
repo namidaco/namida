@@ -375,6 +375,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     isListening.value = listening;
     isActive.value = true;
     _playedHistory.clear();
+    for (final key in _ownCrossfadeKeys) {
+      key.addListener(_pushOwnCrossfade);
+    }
     final wsUri = server.replace(scheme: server.scheme == 'https' ? 'wss' : 'ws', path: '/v1/room/$code');
     final connection = PartyConnection(
       roomUri: wsUri,
@@ -423,6 +426,9 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     _sentSummaryTitle = null;
     _sentSummaryArtist = null;
     _pendingPublic = false;
+    for (final key in _ownCrossfadeKeys) {
+      key.removeListener(_pushOwnCrossfade);
+    }
     _host?.dispose();
     _host = null;
     final binder = _binder;
@@ -836,6 +842,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
     }
     if (_state.epoch == 0 && !_isNewRoom && _handOverToMember()) return;
     _synced = true;
+    final crossfadeMS = Player.inst.getOwnCrossfadeMS();
     if (_state.epoch == 0) {
       final repeat = PartyRepeat(mode: settings.player.repeatMode.value, times: Player.inst.numberOfRepeats.value);
       _host = PartyHost.create(
@@ -845,6 +852,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
         roomName: _pendingRoomName,
         listening: isListening.value,
         repeat: repeat,
+        crossfadeMS: crossfadeMS,
         delegate: this,
       );
       for (final e in _relayMembers.entries) {
@@ -852,7 +860,7 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
       }
       if (_seedWithPlayerQueue) _seedQueueFromPlayer();
     } else {
-      _host = PartyHost.takeOver(state: _state, selfN: _myN, connected: Map.of(_relayMembers), delegate: this);
+      _host = PartyHost.takeOver(state: _state, selfN: _myN, connected: Map.of(_relayMembers), crossfadeMS: crossfadeMS, delegate: this);
       if (!isFirstWelcome) {
         snackyy(icon: Broken.crown_1, title: lang.partyListeningParty, message: lang.partyYouAreHostNow, top: false);
       }
@@ -887,6 +895,16 @@ class PartyController implements PartyConnectionListener, PartyHostDelegate, Par
         playing: player.playWhenReady.value,
       ),
     );
+  }
+
+  /// what [Player.getOwnCrossfadeMS] reads.
+  static final _ownCrossfadeKeys = <SettingsKey>[settings.player.enableCrossFade, settings.player.enableGaplessPlayback, settings.player.crossFadeAutoTriggerSeconds];
+
+  void _pushOwnCrossfade() {
+    final host = _host;
+    if (host == null) return;
+    final crossfadeMS = Player.inst.getOwnCrossfadeMS();
+    host.setCrossfade(crossfadeMS);
   }
 
   void _clearHostOnlyState() {

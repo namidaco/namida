@@ -31,6 +31,9 @@ class PartyState {
   PartyAnchor anchor = PartyAnchor.empty;
   PartyRepeat repeat = PartyRepeat.initial;
 
+  /// how long before an entry's end the next one starts, the host's own crossfade. 0 plays entries back to back.
+  int crossfadeMS = 0;
+
   List<PartyEntry> get entries => _entries;
   Map<int, PartyMember> get members => _members;
   Iterable<PartyChatMessage> get chat => _chat;
@@ -128,6 +131,7 @@ class PartyState {
     perms = PartyPermissions.fromBits(data['p'] as int);
     anchor = PartyAnchor.fromList(data['a'] as List);
     repeat = PartyRepeat.fromList(data['r'] as List);
+    crossfadeMS = data['cf'] as int;
     _members
       ..clear()
       ..addEntries(members.map((e) => MapEntry(e.n, e)));
@@ -256,6 +260,9 @@ class PartyState {
         if (entry == null) return;
         entry.durationMS = data['d'] as int;
         l?.onEntryMetaChanged(entry, fallbackChanged: false);
+
+      case PartyMsgType.crossfadeChanged:
+        crossfadeMS = data['cf'] as int;
 
       default:
         throw FormatException('not a state event: ${event.type}');

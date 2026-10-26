@@ -46,6 +46,7 @@ class PartyHost {
     required String roomName,
     required bool listening,
     required PartyRepeat repeat,
+    required int crossfadeMS,
     required PartyHostDelegate delegate,
   }) {
     // -- epochs follow the relay clock, so a room started over always wins over what members still hold
@@ -56,6 +57,7 @@ class PartyHost {
       perms: const PartyPermissions(),
       anchor: PartyAnchor.empty,
       repeat: repeat,
+      crossfadeMS: crossfadeMS,
       chat: const [],
       entries: const [],
       more: false,
@@ -69,6 +71,7 @@ class PartyHost {
     required PartyState state,
     required int selfN,
     required Map<int, String> connected,
+    required int crossfadeMS,
     required PartyHostDelegate delegate,
   }) {
     final members = <PartyMember>[];
@@ -93,6 +96,7 @@ class PartyHost {
       perms: state.perms,
       anchor: state.anchor,
       repeat: state.repeat,
+      crossfadeMS: crossfadeMS,
       chat: state.chat.toList(),
       entries: state.entries.toList(),
       more: false,
@@ -140,6 +144,12 @@ class PartyHost {
     final entry = state.entryById(entryId);
     if (entry == null || !entry.isLocal || entry.fallbackYtId != null) return;
     _emit(PartyMsg.fallback(entryId, ytId, approximate: approximate));
+  }
+
+  void setCrossfade(int crossfadeMS) {
+    if (state.crossfadeMS == crossfadeMS) return;
+    _emit(PartyMsg.crossfadeChanged(crossfadeMS));
+    _scheduleAdvance();
   }
 
   void onCommand(int fromN, PartyMsg cmd) {
@@ -322,7 +332,8 @@ class PartyHost {
     if (!anchor.playing) return;
     final entry = state.currentEntry;
     if (entry == null || entry.durationMS <= 0) return;
-    final remaining = entry.durationMS - anchor.positionAt(_delegate.nowMS());
+    final transitionMS = entry.durationMS - state.crossfadeMS;
+    final remaining = transitionMS - anchor.positionAt(_delegate.nowMS());
     final delay = (remaining / anchor.speed).round() + _advanceGraceMS;
     final entryId = entry.id;
     _advanceTimer = Timer(Duration(milliseconds: delay < 0 ? 0 : delay), () => _autoAdvance(entryId));
@@ -542,6 +553,7 @@ class PartyHost {
       perms: state.perms,
       anchor: state.anchor,
       repeat: state.repeat,
+      crossfadeMS: state.crossfadeMS,
       chat: state.chat,
       entries: entries.sublist(0, firstEnd),
       more: firstEnd < entries.length,

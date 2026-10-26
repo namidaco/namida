@@ -20,6 +20,9 @@ abstract class PartyPlayerGate {
   /// what the local player does when an item ends, only a prediction of what the party timeline does.
   PlayerRepeatMode getPlaybackRepeatMode();
 
+  /// the party's crossfade, followed instead of the user's own so every member starts the next item together.
+  int get crossfadeMS;
+
   bool interceptPlay();
   bool interceptPause({required bool isUserInitiated});
   bool interceptSeek(Duration position);

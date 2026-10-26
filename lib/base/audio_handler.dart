@@ -2572,16 +2572,36 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   final replayGainLinearVolumeMultiplierRx = 1.0.obs;
 
   @override
-  bool get enableCrossFade => settings.player.enableCrossFade.value && !AudioOutputController.inst.isForcedOff(AudioOutputForcedOff.crossfade);
+  bool get enableCrossFade {
+    final partyCrossfadeMS = _partyGate?.crossfadeMS ?? 0;
+    final isEnabled = settings.player.enableCrossFade.value || partyCrossfadeMS > 0;
+    return isEnabled && !AudioOutputController.inst.isForcedOff(AudioOutputForcedOff.crossfade);
+  }
 
   @override
-  bool get defaultGaplessEnabled => settings.player.enableGaplessPlayback.value;
+  bool get defaultGaplessEnabled {
+    final gate = _partyGate;
+    if (gate != null && gate.crossfadeMS > 0) return false;
+    return settings.player.enableGaplessPlayback.value;
+  }
 
   @override
   int get defaultCrossFadeMilliseconds => settings.player.crossFadeDurationMS.value;
 
   @override
-  int get defaultCrossFadeTriggerStartOffsetSeconds => settings.player.crossFadeAutoTriggerSeconds.value;
+  int get defaultCrossFadeTriggerStartOffsetSeconds {
+    final gate = _partyGate;
+    if (gate != null) return gate.crossfadeMS ~/ 1000;
+    return settings.player.crossFadeAutoTriggerSeconds.value;
+  }
+
+  /// ignores the party's crossfade, it's what a host shares.
+  int getOwnCrossfadeMS() {
+    final player = settings.player;
+    final isEnabled = player.enableCrossFade.value && !player.enableGaplessPlayback.value && !AudioOutputController.inst.isForcedOff(AudioOutputForcedOff.crossfade);
+    if (!isEnabled) return 0;
+    return player.crossFadeAutoTriggerSeconds.value * 1000;
+  }
 
   late final _beatMatchedTransition = BeatMatchedCrossfadeTransition<Q>(
     timingOf: RhythmController.inst.timingOf,

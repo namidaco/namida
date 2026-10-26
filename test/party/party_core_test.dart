@@ -19,7 +19,7 @@ class _Room implements PartyHostDelegate {
   List<String>? reactions;
 
   _Room() {
-    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, repeat: PartyRepeat.initial, delegate: this);
+    host = PartyHost.create(state: hostState, selfN: 1, selfName: 'host', roomName: 'room', listening: true, repeat: PartyRepeat.initial, crossfadeMS: 0, delegate: this);
   }
 
   PartyState join(int n, {String? name}) {
@@ -387,6 +387,20 @@ void main() {
     room.host.dispose();
   });
 
+  test('host crossfade moves the transition earlier, late joiners get it in the snapshot', () async {
+    final room = _Room();
+    final member = room.join(2);
+    room.send(1, PartyMsg.add([_yt('a', durationMS: 100000), _yt('b')]));
+    room.host.setCrossfade(99950);
+    expect(member.crossfadeMS, 99950);
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    expect(room.hostState.currentIndex, 1);
+    final late = room.join(3);
+    expect(late.crossfadeMS, 99950);
+    room.expectConverged();
+    room.host.dispose();
+  });
+
   test('repeat modes decide what the timeline does at the end of an entry', () {
     final room = _Room();
     room.join(2);
@@ -461,7 +475,7 @@ void main() {
     final takeover = _Room();
     takeover.members.clear();
     final oldEpoch = guest.epoch;
-    final newHost = PartyHost.takeOver(state: guest, selfN: 2, connected: {2: 'm2', 3: 'm3'}, delegate: takeover);
+    final newHost = PartyHost.takeOver(state: guest, selfN: 2, connected: {2: 'm2', 3: 'm3'}, crossfadeMS: 0, delegate: takeover);
     expect(guest.epoch, greaterThan(oldEpoch));
     expect(guest.members[2]!.role, PartyRole.host);
     expect(guest.members[3]!.role, PartyRole.admin);
@@ -479,6 +493,7 @@ void main() {
       perms: const PartyPermissions(),
       anchor: PartyAnchor.empty,
       repeat: PartyRepeat.initial,
+      crossfadeMS: 0,
       chat: const [],
       entries: const [],
       more: false,

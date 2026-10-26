@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:basic_audio_handler/basic_audio_handler.dart';
 
 /// bump on breaking changes of the data payloads, the relay rejects joins with a different version.
-const kPartyVersion = 3;
+const kPartyVersion = 4;
 
 abstract final class PartyLimits {
   static const maxEntries = 3000;
@@ -305,6 +305,7 @@ enum PartyMsgType {
   reacted,
   fallback,
   durationChanged,
+  crossfadeChanged,
   denied;
 
   static final lookupMap = {for (final e in values) e.name: e};
@@ -385,6 +386,7 @@ class PartyMsg {
     required PartyPermissions perms,
     required PartyAnchor anchor,
     required PartyRepeat repeat,
+    required int crossfadeMS,
     required Iterable<PartyChatMessage> chat,
     required List<PartyEntry> entries,
     required bool more,
@@ -396,6 +398,7 @@ class PartyMsg {
       'p': perms.toBits(),
       'a': anchor.toList(),
       'r': repeat.toList(),
+      'cf': crossfadeMS,
       'c': chat.map((e) => e.toList()).toList(growable: false),
       'e': _entriesToList(entries),
       'm': more,
@@ -420,6 +423,7 @@ class PartyMsg {
   factory PartyMsg.reacted(int n, String emoji) => PartyMsg(.reacted, {'n': n, 'e': emoji});
   factory PartyMsg.fallback(int entryId, String ytId, {required bool approximate}) => PartyMsg(.fallback, {'id': entryId, 'yt': ytId, 'a': approximate});
   factory PartyMsg.durationChanged(int entryId, int durationMS) => PartyMsg(.durationChanged, {'id': entryId, 'd': durationMS});
+  factory PartyMsg.crossfadeChanged(int crossfadeMS) => PartyMsg(.crossfadeChanged, {'cf': crossfadeMS});
   factory PartyMsg.denied(PartyMsgType command, PartyDenyReason reason) => PartyMsg(.denied, {'c': command.name, 'r': reason.index});
 
   static List<List<Object?>> _entriesToList(List<PartyEntry> entries) {

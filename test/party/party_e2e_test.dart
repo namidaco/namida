@@ -59,7 +59,7 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
       ..addAll(welcome.members);
     if (isHost) {
       synced = true;
-      host ??= PartyHost.create(state: state, selfN: myN, selfName: name, roomName: 'room', listening: true, repeat: PartyRepeat.initial, delegate: this);
+      host ??= PartyHost.create(state: state, selfN: myN, selfName: name, roomName: 'room', listening: true, repeat: PartyRepeat.initial, crossfadeMS: 0, delegate: this);
     } else {
       connection.sendData(PartyRoute.toHost, PartyMsg.hello(listening: true).encode());
     }
@@ -102,7 +102,7 @@ class _Peer implements PartyConnectionListener, PartyHostDelegate {
     hostN = n;
     if (isHost && !wasHost) {
       synced = true;
-      host = PartyHost.takeOver(state: state, selfN: myN, connected: Map.of(relayMembers), delegate: this);
+      host = PartyHost.takeOver(state: state, selfN: myN, connected: Map.of(relayMembers), crossfadeMS: 0, delegate: this);
     }
   }
 
