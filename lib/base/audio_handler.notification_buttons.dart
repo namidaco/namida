@@ -4,6 +4,7 @@ part of 'audio_handler.dart';
 mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
   /// android 13+ places play/pause, previous & next itself, custom buttons only follow them.
   static final _isSystemLayout = NamidaFeaturesAvailablity.android13and_plus.resolve();
+  static final _isNowPlayingLayout = NamidaFeaturesVisibility.nowPlayingSeekButtons;
   static const _kMaxLegacyLayoutButtons = 5;
 
   void toggleItemFavourite(Q item);
@@ -13,8 +14,13 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
   List<NotificationButton> _notificationButtons = const [];
 
   void _initNotificationButtons() {
-    _notificationButtons = _resolveNotificationButtons(settings.notificationButtons.value);
-    settings.notificationButtons.addListener(_onNotificationButtonsChanged);
+    _notificationButtons = _resolveNotificationButtons();
+    if (_isNowPlayingLayout) {
+      settings.nowPlayingSeekBackward.addListener(_onNotificationButtonsChanged);
+      settings.nowPlayingSeekForward.addListener(_onNotificationButtonsChanged);
+    } else {
+      settings.notificationButtons.addListener(_onNotificationButtonsChanged);
+    }
     settings.notificationButtonsPlaylist.addListener(_onNotificationPlaylistsChanged);
     settings.notificationButtonsYTPlaylist.addListener(_onNotificationPlaylistsChanged);
     PlaylistController.inst.playlistsMap.addListener(_onNotificationPlaylistsChanged);
@@ -25,7 +31,14 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     numberOfRepeats.addListener(_onNumberOfRepeatsChanged);
   }
 
-  static List<NotificationButton> _resolveNotificationButtons(List<NotificationButton> configured) {
+  static List<NotificationButton> _resolveNotificationButtons() {
+    if (_isNowPlayingLayout) {
+      return NotificationButton.getNowPlayingButtons(
+        isSeekBackward: settings.nowPlayingSeekBackward.value,
+        isSeekForward: settings.nowPlayingSeekForward.value,
+      );
+    }
+    final configured = settings.notificationButtons.value;
     if (!_isSystemLayout) {
       final buttons = configured.ensurePlayPause();
       if (buttons.length <= _kMaxLegacyLayoutButtons) return buttons;
@@ -40,7 +53,7 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
   }
 
   void _onNotificationButtonsChanged() {
-    _notificationButtons = _resolveNotificationButtons(settings.notificationButtons.value);
+    _notificationButtons = _resolveNotificationButtons();
     _refreshNotificationButtons();
   }
 
@@ -100,6 +113,7 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
   }
 
   ({List<MediaControl> controls, List<int> compactIndices}) _buildNotificationControls(Playable? item, bool isFavourite) {
+    if (_isNowPlayingLayout) _syncNowPlayingSeekInterval();
     final controls = <MediaControl>[];
     int playPauseIndex = 0;
     for (final button in _notificationButtons) {
@@ -124,6 +138,19 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     [2, 3, 4],
   ];
 
+  int _nowPlayingSeekSeconds = -1;
+
+  /// the number drawn on the seek buttons, percentage seeking changes it with each item's duration.
+  void _syncNowPlayingSeekInterval() {
+    final isSeekShown = settings.nowPlayingSeekBackward.value || settings.nowPlayingSeekForward.value;
+    if (!isSeekShown) return;
+    final seconds = Player.inst.getSecondsToSeek();
+    if (seconds == _nowPlayingSeekSeconds) return;
+    _nowPlayingSeekSeconds = seconds;
+    final interval = Duration(seconds: seconds);
+    AudioService.setSkipIntervals(rewindInterval: interval, fastForwardInterval: interval);
+  }
+
   /// the collapsed notification shows the 3 controls around play/pause.
   static List<int> _compactIndicesAround(int centerIndex, int length) {
     if (length <= 3) return _kCompactIndicesForShortLength[length];
@@ -140,8 +167,8 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
       NotificationButton.stop => _customControl(button, 'drawable/stop', lang.stop),
       NotificationButton.shuffle => _customControl(button, isQueueShuffled ? 'drawable/shuffle_on' : 'drawable/shuffle', lang.shuffle),
       NotificationButton.repeatMode => _repeatModeControl(),
-      NotificationButton.seekBackward => _seekControl(button, 'backward', lang.seekBackward),
-      NotificationButton.seekForward => _seekControl(button, 'forward', lang.seekForward),
+      NotificationButton.seekBackward => _seekControl(button, 'backward', lang.seekBackward, MediaAction.rewind),
+      NotificationButton.seekForward => _seekControl(button, 'forward', lang.seekForward, MediaAction.fastForward),
       NotificationButton.previousChapter => _chapterControl(button, item, 'drawable/arrow_square_left', lang.previousChapter),
       NotificationButton.nextChapter => _chapterControl(button, item, 'drawable/arrow_square_right', lang.nextChapter),
       NotificationButton.sleepTimer => _sleepTimerControl(),
@@ -211,8 +238,10 @@ mixin _NotificationButtonsMixin<Q extends Playable> on BasicAudioHandler<Q> {
     return 'drawable/repeat_n_$shownCount';
   }
 
-  static MediaControl _seekControl(NotificationButton button, String direction, String label) {
+  /// apple's now playing has no custom buttons, it draws its own skip buttons for [nowPlayingAction].
+  static MediaControl _seekControl(NotificationButton button, String direction, String label, MediaAction nowPlayingAction) {
     final icon = _getSeekIcon(direction);
+    if (_isNowPlayingLayout) return MediaControl(androidIcon: icon, label: label, action: nowPlayingAction);
     return _customControl(button, icon, label);
   }
 

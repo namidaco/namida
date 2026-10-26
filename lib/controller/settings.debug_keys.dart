@@ -326,6 +326,8 @@ extension SettingsControllerDebugKeys on _SettingsController {
     notificationButtons,
     notificationButtonsPlaylist,
     notificationButtonsYTPlaylist,
+    nowPlayingSeekBackward,
+    nowPlayingSeekForward,
     enableSearchCleanup,
     enableBottomNavBar,
     displayAudioInfoMiniplayer,

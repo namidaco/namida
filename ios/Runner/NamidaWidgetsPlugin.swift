@@ -24,7 +24,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
   private var isWidgetsStateRequested = false
   private var hasWidgets: Bool?
 
-  /// an `Activity<NamidaLyricsActivityAttributes>`, typed loosely since stored properties can't be limited to ios 17.
+  /// an `Activity<NamidaLyricsActivityAttributes>`, typed loosely since stored properties can't be limited to ios 16.2.
   private var liveActivity: AnyObject?
   /// updates & ends run one after the other, unordered ones could leave an older line shown.
   private var liveActivityTask: Task<Void, Never>?
@@ -65,7 +65,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
     case "isAvailable":
       // -- a dart (re)start, presses wait for its player again
       isDartAttached = false
-      guard #available(iOS 17.0, *) else {
+      guard #available(iOS 16.2, *) else {
         result(false)
         return
       }
@@ -222,7 +222,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
 
   /// false only when live activities can't exist on this system, a start that isn't possible now is retried with the next update.
   private func updateLiveActivity(title: String, artist: String?, line: String?) -> Bool {
-    guard #available(iOS 17.0, *) else { return false }
+    guard #available(iOS 16.2, *) else { return false }
     guard ActivityAuthorizationInfo().areActivitiesEnabled else { return true }
     let state = NamidaLyricsActivityAttributes.ContentState(title: title, artist: artist, line: line)
     let content = ActivityContent(state: state, staleDate: nil)
@@ -248,7 +248,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
   }
 
   private func endLiveActivity() {
-    guard #available(iOS 17.0, *) else { return }
+    guard #available(iOS 16.2, *) else { return }
     dismissedActivityTitle = nil
     let activity = liveActivity as? Activity<NamidaLyricsActivityAttributes>
     liveActivity = nil
@@ -261,7 +261,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
   /// activities outlive the app, the ones from a killed session would otherwise stay on the lock screen.
   /// listed right away, an activity this session starts meanwhile isn't one of them.
   private func endStaleLiveActivities() {
-    guard #available(iOS 17.0, *) else { return }
+    guard #available(iOS 16.2, *) else { return }
     let staleActivities = Activity<NamidaLyricsActivityAttributes>.activities
     guard !staleActivities.isEmpty else { return }
     enqueueLiveActivityWork {
@@ -273,7 +273,7 @@ final class NamidaWidgetsPlugin: NSObject, FlutterPlugin {
 
   /// the system gives a few seconds before exiting, the main thread waits for the ends to go through.
   private static func endAllLiveActivitiesBeforeExit() {
-    guard #available(iOS 17.0, *) else { return }
+    guard #available(iOS 16.2, *) else { return }
     let activities = Activity<NamidaLyricsActivityAttributes>.activities
     guard !activities.isEmpty else { return }
     let semaphore = DispatchSemaphore(value: 0)

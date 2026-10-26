@@ -151,6 +151,8 @@ Future<bool> _mainAppInitialization() async {
           exit(1);
         }
       }
+    } else if (Platform.isIOS) {
+      NamidaDeviceInfo.iosVersion = await NamidaChannel.inst.getPlatformSdk().catchError((_) => -1);
     }
 
     await [
@@ -358,7 +360,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
       YoutubeController.inst.loadDownloadTasksInfoFileAsync(),
 
       NotificationManager.init(),
-      FlutterVolumeController.updateShowSystemUI(false),
+      if (!NamidaFeaturesVisibility.hidingVolumeHudIsAppWide) FlutterVolumeController.updateShowSystemUI(false),
       NamidaChannel.inst.setCanEnterPip(settings.enablePip.value),
     ].executeAllAndSilentReportErrors();
 
@@ -546,7 +548,16 @@ class Namida extends StatefulWidget {
   @override
   State<Namida> createState() => _NamidaState();
 
+  static bool _isExiting = false;
+
+  /// macos asks before quitting (cmd+q, the dock & menu bar quit, logging out), and again from [disposeAllResourcesAndExit] itself.
+  static Future<AppExitResponse> onExitRequested() async {
+    if (_isExiting) return AppExitResponse.exit;
+    await disposeAllResourcesAndExit();
+  }
+
   static Future<Never> disposeAllResourcesAndExit() async {
+    _isExiting = true;
     await [
       windowManager.hide(),
       TrayController.instance?.dispose(),

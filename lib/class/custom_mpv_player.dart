@@ -70,6 +70,8 @@ class CustomMPVPlayer implements AVPlayer {
       _updateProcessingState();
     });
 
+    _playerPlayingStreamSub = _player.stream.playing.listen((_) => _reportPlaybackEvent());
+
     _playerPositionStreamSub = _player.stream.position.listen((p) {
       if (_processingState != ProcessingState.completed) {
         if (p < Duration.zero) p = Duration.zero;
@@ -153,6 +155,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   StreamSubscription? _playerCompletedStreamSub;
   StreamSubscription? _playerBufferingStreamSub;
+  StreamSubscription? _playerPlayingStreamSub;
   StreamSubscription? _playerPositionStreamSub;
   StreamSubscription? _playerAudioTracksStreamSub;
   StreamSubscription? _playerLogStreamSub;
@@ -218,6 +221,13 @@ class CustomMPVPlayer implements AVPlayer {
 
   void _updateProcessingState() {
     _playerProcessingStateStreamController.add(_processingState);
+    _reportPlaybackEvent();
+  }
+
+  /// media sessions (now playing on apple) only refresh on these, like with just_audio's events.
+  void _reportPlaybackEvent() {
+    final event = PlaybackEvent(processingState: _processingState, updatePosition: position, bufferedPosition: bufferedPosition, duration: duration);
+    _playbackEventStreamController.add(event);
   }
 
   void _updatePosition() {
@@ -360,6 +370,7 @@ class CustomMPVPlayer implements AVPlayer {
     try {
       final videoOptions = _videoOptions;
       _loopingVideoApplied = false;
+      await _applyVideoSelection(videoOptions);
 
       if (videoOptions == null) {
         await _tryOpen(
@@ -524,6 +535,16 @@ class CustomMPVPlayer implements AVPlayer {
   }
 
   static String _edlSeconds(int ms) => (ms / 1000).toStringAsFixed(3);
+
+  /// set before opening, mpv keeps it for every file after. a video played as audio only would otherwise still get decoded.
+  Future<void> _applyVideoSelection(VideoSourceOptions? videoOptions) async {
+    final player = _player.platform as mk.NativePlayer;
+    await player.waitForVideoControllerInitializationIfAttached; // -- attaching selects `auto` itself
+    final vid = _getVideoSelection(videoOptions);
+    await _setMpvProperty('vid', vid);
+  }
+
+  String _getVideoSelection(VideoSourceOptions? videoOptions) => videoOptions == null ? 'no' : 'auto';
 
   /// `auto` adds the track without selecting it.
   String get _videoTrackAddFlag => 'select';
@@ -779,7 +800,8 @@ class CustomMPVPlayer implements AVPlayer {
     final target = position ?? _liveWindowTracker.window?.edge ?? Duration.zero;
     _position = target;
     _sincePositionReport.reset();
-    return _player.seek(target);
+    await _player.seek(target);
+    _reportPlaybackEvent();
   }
 
   @override
@@ -803,6 +825,7 @@ class CustomMPVPlayer implements AVPlayer {
       _playerWidthStreamSub?.cancel(),
       _playerCompletedStreamSub?.cancel(),
       _playerBufferingStreamSub?.cancel(),
+      _playerPlayingStreamSub?.cancel(),
       _playerPositionStreamSub?.cancel(),
       _playerAudioTracksStreamSub?.cancel(),
       _playerLogStreamSub?.cancel(),
@@ -1136,6 +1159,9 @@ class _CustomMPVPlayerIOS extends CustomMPVPlayer {
   @override
   String get _videoTrackAddFlag => _isAppActive ? 'select' : 'auto';
 
+  @override
+  String _getVideoSelection(VideoSourceOptions? videoOptions) => _isAppActive ? super._getVideoSelection(videoOptions) : 'no';
+
   /// the app left or came back while the track was opening, its selection follows where the app is now.
   @override
   Future<void> _onVideoTrackAdded(String addFlag) async {
@@ -1174,18 +1200,19 @@ class _CustomMPVPlayerIOS extends CustomMPVPlayer {
     _isSyncingVideoSuspension = false;
   }
 
-  /// mpv keeps playing the audio alone meanwhile. done even without a video, a video file reached while away would otherwise select its track.
+  /// mpv keeps playing the audio alone meanwhile.
   Future<void> _suspendVideo() async {
     await _setMpvProperty('vid', 'no');
     _isVideoSuspended = true;
   }
 
-  /// never back to `no`, mpv keeps that selection for every file opened after.
+  /// nothing to bring back without video options, selecting the video of a file played as audio only stalls the audio while it reloads.
   Future<void> _resumeVideo() async {
     final videoOptions = _videoOptions;
-    final hasExternalVideoTrack = videoOptions != null && !videoOptions.videoOnly;
-    final vid = hasExternalVideoTrack ? await _fetchExternalVideoTrackId() : 'auto';
-    await _setMpvProperty('vid', vid);
+    if (videoOptions != null) {
+      final vid = videoOptions.videoOnly ? 'auto' : await _fetchExternalVideoTrackId();
+      await _setMpvProperty('vid', vid);
+    }
     _isVideoSuspended = false;
   }
 

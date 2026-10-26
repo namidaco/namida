@@ -294,6 +294,8 @@ class _SettingsController extends _SettingsKeysWriter {
   late final notificationButtons = _keyList('notificationButtons', _kDefaultNotificationButtons, item: NotificationButton.values.asCodec(), isUnique: true, isNonEmpty: true);
   late final notificationButtonsPlaylist = _key<String?>('notificationButtonsPlaylist', null);
   late final notificationButtonsYTPlaylist = _key<String?>('notificationButtonsYTPlaylist', null);
+  late final nowPlayingSeekBackward = _key('nowPlayingSeekBackward', false);
+  late final nowPlayingSeekForward = _key('nowPlayingSeekForward', false);
   late final enableSearchCleanup = _key('enableSearchCleanup', true);
   late final enableBottomNavBar = _key('enableBottomNavBar', true);
   late final displayAudioInfoMiniplayer = _key('displayAudioInfoMiniplayer', false);

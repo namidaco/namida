@@ -258,7 +258,7 @@ class ExtrasSettings extends SettingSubpageProvider {
     [
       SettingToggle(
         settings.hideStatusBarInExpandedMiniplayer,
-        availability: NamidaFeaturesAvailablity.android,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.ios]),
         icon: Broken.external_drive,
         title: () => lang.immersiveMode,
         subtitle: () => lang.immersiveModeSubtitle,
@@ -2140,7 +2140,7 @@ class _LyricsIntegrationsListTile extends StatelessWidget {
       child: ObxO(
         rx: settings.lyricsIntegrations,
         builder: (context, enabled) {
-          final enabledCount = enabled.where((e) => e.isForCurrentPlatform).length;
+          final enabledCount = enabled.where((e) => e.isAvailable()).length;
           return CustomListTile(
             icon: Broken.message_text,
             title: 'status_bar_lyrics'.toUpperCase(),

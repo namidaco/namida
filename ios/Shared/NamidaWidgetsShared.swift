@@ -47,7 +47,7 @@ enum NamidaWidgetsShared {
   }
 }
 
-@available(iOS 17.0, *)
+@available(iOS 16.2, *)
 struct NamidaLyricsActivityAttributes: ActivityAttributes {
   struct ContentState: Codable, Hashable {
     var title: String

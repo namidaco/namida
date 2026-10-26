@@ -4,6 +4,8 @@ import SwiftUI
 import WidgetKit
 
 /// the playing item & its controls, written by the app through `NamidaWidgetsPlugin`.
+/// buttons that run an intent need ios 17, the extension itself goes down to 16.2 for the lyrics live activity.
+@available(iOS 17.0, *)
 struct NowPlayingWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: NamidaWidgetsShared.nowPlayingKind, provider: NowPlayingProvider()) { entry in
@@ -56,6 +58,7 @@ struct NowPlayingEntry: TimelineEntry {
   }
 }
 
+@available(iOS 17.0, *)
 struct NowPlayingWidgetView: View {
   @Environment(\.widgetFamily) private var family
   let entry: NowPlayingEntry
@@ -146,6 +149,7 @@ struct NowPlayingTitles: View {
   }
 }
 
+@available(iOS 17.0, *)
 struct NowPlayingControls: View {
   let entry: NowPlayingEntry
   let showsFavourite: Bool
@@ -165,6 +169,7 @@ struct NowPlayingControls: View {
   }
 }
 
+@available(iOS 17.0, *)
 struct NowPlayingButton: View {
   let action: NamidaMediaIntent.Action
   let systemImage: String

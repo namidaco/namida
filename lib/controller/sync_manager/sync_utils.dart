@@ -82,10 +82,10 @@ class SyncUtils {
     return name ?? 'Unknown';
   }
 
-  static String _getUniqueIDSync() {
+  static String _getUniqueIDSync([String? initialId]) {
     var id = settings.sync.uniqueId.value;
     if (id == null) {
-      id = const Uuid().v4();
+      id = initialId ?? const Uuid().v4();
       settings.sync.uniqueId.save(id);
     }
     return id;
@@ -93,8 +93,14 @@ class SyncUtils {
 
   static Future<String> _fetchDeviceId() async {
     if (Platform.isAndroid) return _getUniqueIDSync(); // -- AndroidDeviceInfo.id is Build.ID, shared by every device on the same firmware
+    if (Platform.isIOS) {
+      // -- identifierForVendor is nil until the first unlock after a reboot, it only seeds the saved id so devices paired before still know this one
+      final savedId = settings.sync.uniqueId.value;
+      if (savedId != null) return savedId;
+      final vendorId = await _extractInfoFromDevice<String?>(ios: (info) => info.identifierForVendor);
+      return _getUniqueIDSync(vendorId);
+    }
     final id = await _extractInfoFromDevice<String?>(
-      ios: (info) => info.identifierForVendor,
       linux: (info) => info.machineId,
       macos: (info) => info.systemGUID,
       windows: (info) => info.deviceId,

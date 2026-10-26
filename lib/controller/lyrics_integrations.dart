@@ -41,7 +41,7 @@ class LyricsIntegrations {
 
   static void _onSettingsChanged({bool isInit = false}) {
     // -- a backup or sync from another platform can bring integrations that don't exist here
-    final enabled = settings.lyricsIntegrations.value.where((e) => e.isForCurrentPlatform).toSet();
+    final enabled = settings.lyricsIntegrations.value.where((e) => e.isAvailable()).toSet();
     final current = _instance;
     if (enabled.isEmpty) {
       current?._dispose();

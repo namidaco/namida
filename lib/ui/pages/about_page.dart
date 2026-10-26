@@ -434,6 +434,8 @@ class _AboutPageState extends State<AboutPage> {
                         await FlutterMailer.send(mailOptions);
                       } on MissingPluginException catch (_) {
                         NamidaUtils.shareFiles(attachments);
+                      } on PlatformException catch (_) {
+                        NamidaUtils.shareFiles(attachments);
                       }
                     },
                   ),

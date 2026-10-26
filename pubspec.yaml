@@ -306,7 +306,7 @@ flutter_native_splash:
   color: "#fff5eb"
   color_dark: "#161212"
   android: true
-  ios: false
+  ios: true
   web: false
   android_12:
     color: "#fff5eb"

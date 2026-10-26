@@ -3,8 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
-
 import 'package:modern_titlebar_buttons/modern_titlebar_buttons.dart' as mtb;
 
 import 'package:namida/class/queue.dart';
@@ -1054,6 +1052,12 @@ enum NotificationButton {
   const NotificationButton({this.isTransport = false});
 
   static final transportButtons = values.where((button) => button.isTransport).toFixedList();
+
+  static List<NotificationButton> getNowPlayingButtons({required bool isSeekBackward, required bool isSeekForward}) {
+    final previousButton = isSeekBackward ? seekBackward : previous;
+    final nextButton = isSeekForward ? seekForward : next;
+    return [previousButton, playPause, nextButton];
+  }
 }
 
 enum ShuffleButtonMode {
@@ -1547,20 +1551,20 @@ enum DiscordPresenceStatus {
 }
 
 enum LyricsIntegration {
-  lyricInfo(platform: TargetPlatform.android),
-  superLyric(platform: TargetPlatform.android, sendsPerLine: true),
-  flymeTicker(platform: TargetPlatform.android, sendsPerLine: true),
-  menuBar(platform: TargetPlatform.macOS, sendsPerLine: true),
-  liveActivity(platform: TargetPlatform.iOS, sendsPerLine: true),
+  lyricInfo(availability: NamidaFeaturesAvailablity.android),
+  superLyric(availability: NamidaFeaturesAvailablity.android, sendsPerLine: true),
+  flymeTicker(availability: NamidaFeaturesAvailablity.android, sendsPerLine: true),
+  menuBar(availability: NamidaFeaturesAvailablity.macos, sendsPerLine: true),
+  liveActivity(availability: NamidaFeaturesAvailablity.ios16_2and_plus, sendsPerLine: true),
   ;
 
-  final TargetPlatform platform;
+  final NamidaFeaturesAvailablity availability;
   final bool sendsPerLine;
-  const LyricsIntegration({required this.platform, this.sendsPerLine = false});
+  const LyricsIntegration({required this.availability, this.sendsPerLine = false});
 
-  bool get isForCurrentPlatform => platform == defaultTargetPlatform;
+  bool isAvailable() => availability.resolve();
 
-  static final valuesForPlatform = values.where((e) => e.isForCurrentPlatform).toFixedList();
+  static final valuesForPlatform = values.where((e) => e.isAvailable()).toFixedList();
 }
 
 enum SoundEffectType {

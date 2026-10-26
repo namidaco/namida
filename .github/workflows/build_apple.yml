@@ -136,12 +136,13 @@ jobs:
           version-name: ${{ inputs.version_name }}
           rust-targets: aarch64-apple-ios
 
-      # -- the widget extension can't take the app down with it: when every compiler error is in widget code, the app is
-      # -- built again without the extension (ios/scripts/remove_widget_extension.rb), any other failure fails the job
+      # -- the extensions can't take the app down with them: when every compiler error is in extension code, the app is
+      # -- built again without the failed extensions (ios/scripts/remove_extensions.rb), any other failure fails the job
       - name: Build iOS App
         env:
           BUILD_LOG: ${{ runner.temp }}/build_ios.log
           WIDGET_SOURCES: '/ios/(NamidaWidgets/|Shared/NamidaWidgetsShared\.swift|Runner/NamidaWidgetsPlugin\.swift)'
+          SHARE_SOURCES: '/ios/NamidaShare/'
         run: |
           set -o pipefail
           if flutter build ios --release --no-codesign 2>&1 | tee "$BUILD_LOG"; then
@@ -149,14 +150,23 @@ jobs:
           fi
           ERROR_LINES=$(grep -E '^[[:space:]]*/[^ :]+:[0-9]+(:[0-9]+)?(: (fatal )?error:.*)?$' "$BUILD_LOG" || true)
           ERROR_FILES=$(sed -E 's/^[[:space:]]*([^:]+):.*/\1/' <<< "$ERROR_LINES" | sort -u)
-          OTHER_ERROR_FILES=$(grep -vE "$WIDGET_SOURCES" <<< "$ERROR_FILES" || true)
+          OTHER_ERROR_FILES=$(grep -vE "$WIDGET_SOURCES|$SHARE_SOURCES" <<< "$ERROR_FILES" || true)
           if [ -z "$ERROR_FILES" ] || [ -n "$OTHER_ERROR_FILES" ]; then
             exit 1
           fi
-          WIDGET_ERROR_FILES=$(sed "s|^$GITHUB_WORKSPACE/||" <<< "$ERROR_FILES" | paste -sd' ' -)
-          echo "::warning title=iOS widgets::the widget extension failed to build ($WIDGET_ERROR_FILES), this ipa ships without widgets, live activities & controls"
-          ruby ios/scripts/remove_widget_extension.rb
-          # -- the failed build may have embedded the extension already
+          FAILED_EXTENSIONS=()
+          WIDGET_ERROR_FILES=$( (grep -E "$WIDGET_SOURCES" <<< "$ERROR_FILES" || true) | sed "s|^$GITHUB_WORKSPACE/||" | paste -sd' ' -)
+          SHARE_ERROR_FILES=$( (grep -E "$SHARE_SOURCES" <<< "$ERROR_FILES" || true) | sed "s|^$GITHUB_WORKSPACE/||" | paste -sd' ' -)
+          if [ -n "$WIDGET_ERROR_FILES" ]; then
+            FAILED_EXTENSIONS+=(NamidaWidgets)
+            echo "::warning title=iOS widgets::the widget extension failed to build ($WIDGET_ERROR_FILES), this ipa ships without widgets, live activities & controls"
+          fi
+          if [ -n "$SHARE_ERROR_FILES" ]; then
+            FAILED_EXTENSIONS+=(NamidaShare)
+            echo "::warning title=iOS share extension::the share extension failed to build ($SHARE_ERROR_FILES), this ipa can't receive links shared from other apps"
+          fi
+          ruby ios/scripts/remove_extensions.rb "${FAILED_EXTENSIONS[@]}"
+          # -- the failed build may have embedded the extensions already
           rm -rf build/ios/Release-iphoneos/Runner.app build/ios/iphoneos/Runner.app
           flutter build ios --release --no-codesign
 
@@ -167,9 +177,13 @@ jobs:
         run: |
           APP="build/ios/iphoneos/Runner.app"
           WIDGETS="$APP/PlugIns/NamidaWidgets.appex"
+          SHARE="$APP/PlugIns/NamidaShare.appex"
           find "$APP/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -exec codesign --force --sign - --timestamp=none {} +
           if [ -d "$WIDGETS" ]; then
             codesign --force --sign - --timestamp=none --entitlements ios/NamidaWidgets/NamidaWidgets.entitlements "$WIDGETS"
+          fi
+          if [ -d "$SHARE" ]; then
+            codesign --force --sign - --timestamp=none "$SHARE"
           fi
           codesign --force --sign - --timestamp=none --entitlements ios/Runner/Runner.entitlements "$APP"
           mkdir -p build_final Payload

@@ -27,6 +27,10 @@ final class NamidaOpenedUrls {
 
   func add(_ urls: [URL]) {
     let items = urls.map { $0.isFileURL ? $0.namidaStandardPath : $0.absoluteString }
+    add(items: items)
+  }
+
+  func add(items: [String]) {
     if isDartListening {
       channel.invokeMethod("onOpenedUrls", arguments: items)
     } else {

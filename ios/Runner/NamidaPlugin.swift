@@ -21,6 +21,10 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate
   func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     let args = call.arguments as? [String: Any]
     switch call.method {
+    case "sdk":
+      let version = ProcessInfo.processInfo.operatingSystemVersion
+      result(version.majorVersion * 10000 + version.minorVersion * 100 + version.patchVersion)
+
     case "consumeOpenedUrls":
       result(openedUrls.consume())
 
@@ -76,11 +80,20 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate
   }
 
   private func addOpenedUrls(_ contexts: Set<UIOpenURLContext>) {
-    for context in contexts where context.url.isFileURL && context.options.openInPlace {
-      // -- opened in place from another app's folder, readable only while access is held, which is the whole session
-      _ = context.url.startAccessingSecurityScopedResource()
+    var urls: [URL] = []
+    for context in contexts {
+      let url = context.url
+      if let sharedTexts = NamidaShareUrl.parse(url) {
+        openedUrls.add(items: sharedTexts)
+        continue
+      }
+      if url.isFileURL && context.options.openInPlace {
+        // -- opened in place from another app's folder, readable only while access is held, which is the whole session
+        _ = url.startAccessingSecurityScopedResource()
+      }
+      urls.append(url)
     }
-    openedUrls.add(contexts.map { $0.url })
+    if !urls.isEmpty { openedUrls.add(urls) }
   }
 
   // MARK: - app icons

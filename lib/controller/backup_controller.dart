@@ -174,7 +174,7 @@ class BackupController {
 
     final backupFilePath = FileParts.joinPath(backupDirPath, "$filenamePrefix - $date$fileSuffix.zip");
     final backupFile = File(backupFilePath);
-    final partialBackupFile = await File('$backupFilePath$_kPartialBackupSuffix').create();
+    final partialBackupFile = File('$backupFilePath$_kPartialBackupSuffix');
     final sourceDir = Directory(AppDirs.USER_DATA);
     final stagingDirPath = FileParts.joinPath(AppDirs.USER_DATA, _kStagingDirName);
     final stagingDir = await Directory(stagingDirPath).create();
@@ -232,12 +232,12 @@ class BackupController {
       }
 
       if (localFilesOnly.isNotEmpty) {
-        tempAllLocal = await FileParts.join(stagingDirPath, "LOCAL_FILES.zip").create();
+        tempAllLocal = FileParts.join(stagingDirPath, "LOCAL_FILES.zip");
         await _zipManager.createZip(sourceDir: sourceDir, files: localFilesOnly, zipFile: tempAllLocal);
       }
 
       if (youtubeFilesOnly.isNotEmpty) {
-        tempAllYoutube = await FileParts.join(stagingDirPath, "YOUTUBE_FILES.zip").create();
+        tempAllYoutube = FileParts.join(stagingDirPath, "YOUTUBE_FILES.zip");
         await _zipManager.createZip(sourceDir: sourceDir, files: youtubeFilesOnly, zipFile: tempAllYoutube);
       }
 

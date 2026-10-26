@@ -51,6 +51,9 @@ class NamidaDeviceInfo {
   static bool get useOldStoragePermission => sdkVersion < 33;
   static int sdkVersion = -1;
 
+  /// ex: 160200 for 16.2.0.
+  static int iosVersion = -1;
+
   static String? _deviceId;
 
   static final deviceInfoCompleter = Completer<BaseDeviceInfo?>();
@@ -201,14 +204,17 @@ class NamidaUtils {
       final shared = await NamidaChannel.inst.shareFiles(paths.toList());
       if (shared) return;
     }
-    await Share.shareXFiles(paths.map((e) => XFile(e)).toList());
+    final sharePositionOrigin = _getSharePositionOrigin();
+    await Share.shareXFiles(paths.map((e) => XFile(e)).toList(), sharePositionOrigin: sharePositionOrigin);
   }
 
   static Future<void> shareUri(String url) async {
-    if (Platform.isWindows || Platform.isLinux) {
+    // -- share_plus has no shareUri on macos
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       await shareText(url);
     } else {
-      await Share.shareUri(Uri.parse(url));
+      final sharePositionOrigin = _getSharePositionOrigin();
+      await Share.shareUri(Uri.parse(url), sharePositionOrigin: sharePositionOrigin);
     }
   }
 
@@ -218,7 +224,18 @@ class NamidaUtils {
       copyToClipboard(content: text, maxLinesMessage: 2);
       return;
     }
-    await Share.share(text);
+    final sharePositionOrigin = _getSharePositionOrigin();
+    await Share.share(text, sharePositionOrigin: sharePositionOrigin);
+  }
+
+  /// ipad & macos share sheets are popovers, they point at the window center since callers don't pass the tapped button.
+  static Rect? _getSharePositionOrigin() {
+    if (!Platform.isIOS && !Platform.isMacOS) return null;
+    final view = WidgetsBinding.instance.platformDispatcher.implicitView;
+    if (view == null) return null;
+    final windowSize = view.physicalSize / view.devicePixelRatio;
+    final windowCenter = windowSize.center(Offset.zero);
+    return Rect.fromCenter(center: windowCenter, width: 1.0, height: 1.0);
   }
 
   static void copyToClipboard({
@@ -867,7 +884,9 @@ class AppPaths {
   static Future<List<String>> getAllExistingLogsAndSettingsAsZip({String? outputDirectory}) async {
     final format = DateFormat('yyyy-MM-dd HH.mm.ss');
     final dateText = format.format(DateTime.now());
-    final tmpDirParentPath = FileParts.joinPath((await pp.getTemporaryDirectory()).path, 'namida_logs_$dateText');
+    final tempDir = await pp.getTemporaryDirectory();
+    final tmpDirParent = await tempDir.createTemp('namida_logs_');
+    final tmpDirParentPath = tmpDirParent.path;
     final tmpDirContentsPath = FileParts.joinPath(tmpDirParentPath, 'contents');
     final tmpDirContents = await Directory(tmpDirContentsPath).create(recursive: true);
     await _copyAllExistingLogAndSettingsTo(tmpDirPath: tmpDirContentsPath);
@@ -878,7 +897,7 @@ class AppPaths {
       sourceDir: tmpDirContents,
       zipFile: zipFile,
     );
-    final leftoverDirectory = outputDirectory == null ? tmpDirContents : Directory(tmpDirParentPath);
+    final leftoverDirectory = outputDirectory == null ? tmpDirContents : tmpDirParent;
     leftoverDirectory.delete(recursive: true);
     return [zipFile.path];
   }
@@ -1640,6 +1659,7 @@ enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
   android12and_below('Android <= 12'), // <= 32
   android11and_plus('Android 11+'), // >=30
   android11and_below('Android <= 11'), // <=30
+  ios16_2and_plus('iOS 16.2+'),
   ;
 
   @override
@@ -1660,6 +1680,7 @@ enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
       NamidaFeaturesAvailablity.android12and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 32,
       NamidaFeaturesAvailablity.android11and_plus => isAndroid && NamidaDeviceInfo.sdkVersion >= 30,
       NamidaFeaturesAvailablity.android11and_below => isAndroid && NamidaDeviceInfo.sdkVersion <= 30,
+      NamidaFeaturesAvailablity.ios16_2and_plus => NamidaFeaturesVisibility._isIOS && NamidaDeviceInfo.iosVersion >= 160200,
     };
   }
 }
@@ -1674,15 +1695,10 @@ class NamidaFeaturesVisibility {
   static final _isMobile = _isAndroid || _isIOS;
   static final _isDesktop = _isWindows || _isLinux || _isMacOS;
 
-  static final wallpaperColors = NamidaFeaturesAvailablity.android12and_plus.resolve();
   static final displayArtworkOnLockscreen = NamidaFeaturesAvailablity.android12and_below.resolve();
   static final notificationButtonsMightDisplaceArtwork = NamidaFeaturesAvailablity.android11and_below.resolve();
-  static final displayAppIcons = _isAndroid;
-  static final showEqualizerBands = _isAndroid;
   static final showSafFolders = _isAndroid;
   static final showAndroidIntegrations = _isAndroid;
-  static final showToggleMediaStore = onAudioQueryAvailable;
-  static final showToggleImmersiveMode = _isAndroid;
   static final showRotateScreenInFullScreen = _isMobile;
   static final deviceOrientationSensorAvailable = _isMobile;
   static final fullScreenChangesScreenSize = _isMobile;
@@ -1690,11 +1706,12 @@ class NamidaFeaturesVisibility {
   static final mediaWaveHaptic = _isMobile;
   static const accessibilitySemantics = true;
 
-  static final methodSetCanEnterPip = _isAndroid;
   static final methodSetMonoAudio = _isAndroid;
   static final methodSetMusicAs = _isAndroid;
   static final methodOpenSystemEqualizer = _isAndroid;
-  static final methodOnNotificationTapAction = _isAndroid;
+
+  /// apple's now playing has only the 2 buttons around play/pause, each one is a track or a seek button.
+  static final nowPlayingSeekButtons = _isIOS || _isMacOS;
 
   static final onAudioQueryAvailable = _isAndroid;
   static final recieveSharingIntents = _isAndroid;
@@ -1705,6 +1722,9 @@ class NamidaFeaturesVisibility {
   static final soundEffectsAvailable = _isAndroid;
   static final showOutputDevicePicker = !_isIOS; // -- ios routes through the system picker only
   static final showExclusiveMode = _isDesktop;
+
+  /// ios hides the hud for the hardware buttons too, so it's hidden only where namida draws its own slider.
+  static final hidingVolumeHudIsAppWide = _isIOS;
 
   static final showVideoControlsOnHover = _isDesktop;
   static final tiltingCardsEffect = _isDesktop;

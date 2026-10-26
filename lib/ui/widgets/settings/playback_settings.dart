@@ -130,12 +130,16 @@ class PlaybackSettings extends SettingSubpageProvider {
         onChanged: (_) => WakelockController.inst.onSettingChanged(),
       ),
       SettingCustom(
-        availability: NamidaFeaturesAvailablity.android,
+        availability: const NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.ios, NamidaFeaturesAvailablity.macos]),
         title: () => lang.notificationButtons,
-        keys: [settings.notificationButtons, settings.notificationButtonsPlaylist, settings.notificationButtonsYTPlaylist],
-        tile: (args) => _NotificationButtonsTile(
-          bgColor: args.bgColor,
-        ),
+        keys: [
+          settings.notificationButtons, settings.notificationButtonsPlaylist, settings.notificationButtonsYTPlaylist, //
+          settings.nowPlayingSeekBackward, settings.nowPlayingSeekForward, //
+        ],
+        tile: (args) {
+          if (NamidaFeaturesVisibility.nowPlayingSeekButtons) return _NowPlayingButtonsTile(bgColor: args.bgColor);
+          return _NotificationButtonsTile(bgColor: args.bgColor);
+        },
       ),
       SettingToggle(
         settings.player.lockscreenArtwork,
@@ -1403,6 +1407,82 @@ class _NotificationButtonsPreview extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: icons,
       ),
+    );
+  }
+}
+
+class _NowPlayingButtonsTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _NowPlayingButtonsTile({required this.bgColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final buttons = NotificationButton.getNowPlayingButtons(
+          isSeekBackward: settings.nowPlayingSeekBackward.valueR,
+          isSeekForward: settings.nowPlayingSeekForward.valueR,
+        );
+        return CustomListTile(
+          bgColor: bgColor,
+          icon: Broken.notification_bing,
+          title: lang.notificationButtons,
+          subtitle: buttons.map((e) => e.toText()).join(', '),
+          trailing: const Icon(
+            Broken.arrow_right_3,
+            size: 18.0,
+          ),
+          onTap: () => NamidaNavigator.inst.navigateDialog(
+            dialog: CustomBlurryDialog(
+              title: lang.notificationButtons,
+              actions: const [
+                DoneButton(),
+              ],
+              child: const _NowPlayingButtonsEditor(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _NowPlayingButtonsEditor extends StatelessWidget {
+  const _NowPlayingButtonsEditor();
+
+  static bool _isLocked(NotificationButton button) => button == NotificationButton.playPause;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+      (context) {
+        final isSeekBackward = settings.nowPlayingSeekBackward.valueR;
+        final isSeekForward = settings.nowPlayingSeekForward.valueR;
+        final buttons = NotificationButton.getNowPlayingButtons(isSeekBackward: isSeekBackward, isSeekForward: isSeekForward);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _NotificationButtonsPreview(
+              buttons: buttons,
+              isLocked: _isLocked,
+            ),
+            const SizedBox(height: 8.0),
+            CustomSwitchListTile(
+              icon: NotificationButton.seekBackward.toIcon(),
+              title: lang.seekBackward,
+              value: isSeekBackward,
+              onChanged: (isTrue) => settings.nowPlayingSeekBackward.save(!isTrue),
+            ),
+            CustomSwitchListTile(
+              icon: NotificationButton.seekForward.toIcon(),
+              title: lang.seekForward,
+              value: isSeekForward,
+              onChanged: (isTrue) => settings.nowPlayingSeekForward.save(!isTrue),
+            ),
+          ],
+        );
+      },
     );
   }
 }

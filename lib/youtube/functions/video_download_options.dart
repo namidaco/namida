@@ -289,13 +289,15 @@ class _YTDownloadFolderPickerState extends State<YTDownloadFolderPicker> {
     _availableDirectoriesNames[''] = 0;
     int rootFiles = 0;
     final subfolders = <String>[];
-    await for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).list()) {
-      if (d is Directory) {
-        subfolders.add(d.path.splitLast(Platform.pathSeparator));
-      } else {
-        rootFiles++;
+    try {
+      await for (final d in Directory(AppDirs.YOUTUBE_DOWNLOADS).list()) {
+        if (d is Directory) {
+          subfolders.add(d.path.splitLast(Platform.pathSeparator));
+        } else {
+          rootFiles++;
+        }
       }
-    }
+    } on PathNotFoundException catch (_) {}
     subfolders.sort();
     for (final subfolder in subfolders) {
       _availableDirectoriesNames[subfolder] = 0;

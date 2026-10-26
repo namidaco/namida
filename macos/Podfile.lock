@@ -1,0 +1,52 @@
+PODS:
+  - fjs (1.0.0):
+    - FlutterMacOS
+  - FlutterMacOS (1.0.0)
+  - irondash_engine_context (0.0.1):
+    - FlutterMacOS
+  - just_audio (0.0.1):
+    - FlutterMacOS
+  - rhttp (0.0.1):
+    - FlutterMacOS
+  - super_native_extensions (0.0.1):
+    - FlutterMacOS
+  - tray_manager (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - fjs (from `Flutter/ephemeral/.symlinks/plugins/fjs/macos`)
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - irondash_engine_context (from `Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos`)
+  - just_audio (from `Flutter/ephemeral/.symlinks/plugins/just_audio/macos`)
+  - rhttp (from `Flutter/ephemeral/.symlinks/plugins/rhttp/macos`)
+  - super_native_extensions (from `Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos`)
+  - tray_manager (from `Flutter/ephemeral/.symlinks/plugins/tray_manager/macos`)
+
+EXTERNAL SOURCES:
+  fjs:
+    :path: Flutter/ephemeral/.symlinks/plugins/fjs/macos
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  irondash_engine_context:
+    :path: Flutter/ephemeral/.symlinks/plugins/irondash_engine_context/macos
+  just_audio:
+    :path: Flutter/ephemeral/.symlinks/plugins/just_audio/macos
+  rhttp:
+    :path: Flutter/ephemeral/.symlinks/plugins/rhttp/macos
+  super_native_extensions:
+    :path: Flutter/ephemeral/.symlinks/plugins/super_native_extensions/macos
+  tray_manager:
+    :path: Flutter/ephemeral/.symlinks/plugins/tray_manager/macos
+
+SPEC CHECKSUMS:
+  fjs: f35b778575fd57e72b15d0753de578eba009c73a
+  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
+  irondash_engine_context: 893c7d96d20ce361d7e996f39d360c4c2f9869ba
+  just_audio: eb8b016ac4493159ab24db4f7215e55303b39a84
+  rhttp: 08d791d6373089de796318f4cfb172cbcf34e78b
+  super_native_extensions: c2795d6d9aedf4a79fae25cb6160b71b50549189
+  tray_manager: a104b5c81b578d83f3c3d0f40a997c8b10810166
+
+PODFILE CHECKSUM: 1e95c36afbfd1cb6423ceca4de7a8e1b256fb6ac
+
+COCOAPODS: 1.17.0

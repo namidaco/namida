@@ -311,6 +311,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     );
 
     if (widget.isFullScreen) {
+      if (NamidaFeaturesVisibility.hidingVolumeHudIsAppWide) FlutterVolumeController.updateShowSystemUI(false);
       Player.inst.onVolumeChangeAddListener(
         _volumeListenerKey,
         (mv) async {
@@ -365,6 +366,7 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     _seekSecondsRx.close();
     _isEndCardsVisible.close();
     Player.inst.onVolumeChangeRemoveListener(_volumeListenerKey);
+    if (widget.isFullScreen && NamidaFeaturesVisibility.hidingVolumeHudIsAppWide) FlutterVolumeController.updateShowSystemUI(true);
     MiniPlayerController.inst.animation.removeListener(_miniplayerAnimationListener);
     settings.youtube.horizontalDrag.removeListener(_horizontalDragModeListener);
     _systemBrightnessStreamSub?.cancel();

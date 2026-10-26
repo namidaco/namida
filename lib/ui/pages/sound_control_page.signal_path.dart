@@ -170,7 +170,7 @@ abstract final class _SignalPathSteps {
       final effectNames = soundEffects.map((e) => e.toText()).joinText(separator: ', ');
       steps.add(_SignalPathStep(icon: Broken.magic_star, title: lang.soundEffects, detail: effectNames, changesAudio: true));
     }
-    final isLoudnessEnhancerAudible = Platform.isAndroid && !isUsbDirect && config.loudnessEnhancerEnabled && config.loudnessEnhancer != 0.0;
+    final isLoudnessEnhancerAudible = !isUsbDirect && config.loudnessEnhancerEnabled && config.loudnessEnhancer != 0.0;
     if (isLoudnessEnhancerAudible) {
       final gainText = _EqualizerFormat.gain(config.loudnessEnhancer);
       steps.add(_SignalPathStep(icon: Broken.volume_high, title: lang.loudnessEnhancer, detail: gainText, changesAudio: true));

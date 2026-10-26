@@ -999,7 +999,7 @@ class Player {
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsForward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
-    final newSeconds = _secondsToSeek(seconds);
+    final newSeconds = getSecondsToSeek(seconds);
     if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
     await _audioHandler.userSeek(Duration(milliseconds: nowPlayingPosition.value + newSeconds * 1000));
@@ -1007,13 +1007,13 @@ class Player {
 
   /// Default value is set to user preference [seekDurationInSeconds]
   Future<void> seekSecondsBackward({int? seconds, void Function(int finalSeconds)? onSecondsReady}) async {
-    final newSeconds = _secondsToSeek(seconds);
+    final newSeconds = getSecondsToSeek(seconds);
     if (newSeconds == 0) return;
     onSecondsReady?.call(newSeconds);
     await _audioHandler.userSeek(Duration(milliseconds: nowPlayingPosition.value - newSeconds * 1000));
   }
 
-  int _secondsToSeek([int? seconds]) {
+  int getSecondsToSeek([int? seconds]) {
     int? newSeconds = seconds;
     if (newSeconds == null) {
       if (settings.player.isSeekDurationPercentage.value) {
@@ -1109,6 +1109,9 @@ class Player {
         showSnackBar: false,
       );
       if (startPosition != null) _audioHandler.requestStartPosition(queue.elementAt(index), startPosition);
+      // -- adding to an empty queue (or one cleared for switching local/youtube) already plays the first item
+      final didStartFromEmptyQueue = _audioHandler.currentQueue.value.length == queue.length;
+      if (didStartFromEmptyQueue) return;
       await next();
       return;
     }

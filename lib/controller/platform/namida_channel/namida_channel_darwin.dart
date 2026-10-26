@@ -37,6 +37,13 @@ abstract class _NamidaChannelDarwin extends NamidaChannel {
 class _NamidaChannelIOS extends _NamidaChannelDarwin {
   _NamidaChannelIOS._init();
 
+  /// the system version the way `__IPHONE_16_2` writes it, ex: 160200.
+  @override
+  Future<int> getPlatformSdk() async {
+    final version = await _kDarwinChannel.invokeMethod<int>('sdk');
+    return version ?? -1;
+  }
+
   @override
   bool get canOpenFileInExplorer => true;
 

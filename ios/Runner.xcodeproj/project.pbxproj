@@ -29,9 +29,20 @@
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		83DCAE2203C30AA5B3F054C3 /* NamidaOpenedUrls.swift in Sources */ = {isa = PBXBuildFile; fileRef = F272C10DFBB360667464F05B /* NamidaOpenedUrls.swift */; };
+		78ABD23D3C0F24042069A72B /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B07F27CA4DF3584254489C8 /* ShareViewController.swift */; };
+		88AE44FE8A64BC88A1E009A5 /* NamidaShareUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A23BBB9D6F2CBE019C6E6E3 /* NamidaShareUrl.swift */; };
+		A3F2198546BBC8CEFE44E918 /* NamidaShareUrl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A23BBB9D6F2CBE019C6E6E3 /* NamidaShareUrl.swift */; };
+		ACB9780221D0672E10FF5A40 /* NamidaShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 6AE21A8287FADE3E8B5FF682 /* NamidaShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		E4A28D9346BDABDD88D6B8F3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C48EF7A2349511428D05628;
+			remoteInfo = NamidaShare;
+		};
 		7B90CA7E8DA80BE4D4D43075 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
@@ -56,6 +67,7 @@
 			dstSubfolderSpec = 13;
 			files = (
 				DD8188C0EE5B97BA315D375C /* NamidaWidgets.appex in Embed Foundation Extensions */,
+				ACB9780221D0672E10FF5A40 /* NamidaShare.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -106,9 +118,21 @@
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F272C10DFBB360667464F05B /* NamidaOpenedUrls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = NamidaOpenedUrls.swift; path = ../darwin/NamidaOpenedUrls.swift; sourceTree = SOURCE_ROOT; };
+		3B07F27CA4DF3584254489C8 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		6A3F3E030612CEC1121074CF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = NamidaShare.xcconfig; sourceTree = "<group>"; };
+		3A23BBB9D6F2CBE019C6E6E3 /* NamidaShareUrl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamidaShareUrl.swift; sourceTree = "<group>"; };
+		6AE21A8287FADE3E8B5FF682 /* NamidaShare.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NamidaShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		E08C5F8BC66288344CC84416 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		571F0E74578E7A947ABDA497 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -127,6 +151,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		08DDFFB3BB7D600A50DCB72D /* NamidaShare */ = {
+			isa = PBXGroup;
+			children = (
+				3B07F27CA4DF3584254489C8 /* ShareViewController.swift */,
+				6A3F3E030612CEC1121074CF /* Info.plist */,
+				D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */,
+			);
+			path = NamidaShare;
+			sourceTree = "<group>";
+		};
 		6BA12FB991D68922E6DFAB1B /* NamidaWidgets */ = {
 			isa = PBXGroup;
 			children = (
@@ -145,6 +179,7 @@
 			isa = PBXGroup;
 			children = (
 				3829E061F3CE1E4C66063510 /* NamidaWidgetsShared.swift */,
+				3A23BBB9D6F2CBE019C6E6E3 /* NamidaShareUrl.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -175,6 +210,7 @@
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
 				6BA12FB991D68922E6DFAB1B /* NamidaWidgets */,
+				08DDFFB3BB7D600A50DCB72D /* NamidaShare */,
 				6A1E9077972A48CB3B329277 /* Shared */,
 				97C146EF1CF9000F007C117D /* Products */,
 				331C8082294A63A400263BE5 /* RunnerTests */,
@@ -186,6 +222,7 @@
 			children = (
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				EE97559B2BD978A73B66D334 /* NamidaWidgets.appex */,
+				6AE21A8287FADE3E8B5FF682 /* NamidaShare.appex */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 			);
 			name = Products;
@@ -217,6 +254,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		7C48EF7A2349511428D05628 /* NamidaShare */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0307FB61C35BE6BA03329305 /* Build configuration list for PBXNativeTarget "NamidaShare" */;
+			buildPhases = (
+				7E8E7A7BAF0B915880F7E5A5 /* Sources */,
+				E08C5F8BC66288344CC84416 /* Frameworks */,
+				99D846AEDC213A06DC96088C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NamidaShare;
+			productName = NamidaShare;
+			productReference = 6AE21A8287FADE3E8B5FF682 /* NamidaShare.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		95D165BD1C74083C6F3651CD /* NamidaWidgets */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C40FD7A5D99B67E0A684E0F3 /* Build configuration list for PBXNativeTarget "NamidaWidgets" */;
@@ -267,6 +321,7 @@
 			);
 			dependencies = (
 				587707BE9ADA09D7BE65F052 /* PBXTargetDependency */,
+				72C8964B8BDFF686CCAC3DB8 /* PBXTargetDependency */,
 			);
 			name = Runner;
 			packageProductDependencies = (
@@ -297,6 +352,9 @@
 					95D165BD1C74083C6F3651CD = {
 						CreatedOnToolsVersion = 16.0;
 					};
+					7C48EF7A2349511428D05628 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = 97C146E91CF9000F007C117D /* Build configuration list for PBXProject "Runner" */;
@@ -318,11 +376,19 @@
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				95D165BD1C74083C6F3651CD /* NamidaWidgets */,
+				7C48EF7A2349511428D05628 /* NamidaShare */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		99D846AEDC213A06DC96088C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F5853B6F20D52785245C6623 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -385,6 +451,15 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7E8E7A7BAF0B915880F7E5A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78ABD23D3C0F24042069A72B /* ShareViewController.swift in Sources */,
+				88AE44FE8A64BC88A1E009A5 /* NamidaShareUrl.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		6F37C38AD5A6CFB2F1211F4F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -419,12 +494,18 @@
 				B3DD858D6C399B228B3024BC /* NamidaWidgetsPlugin.swift in Sources */,
 				4A148F57DF151E77C8399A4F /* NamidaBackgroundWork.swift in Sources */,
 				CABDC9FB13CD8F7116031FE3 /* NamidaWidgetsShared.swift in Sources */,
+				A3F2198546BBC8CEFE44E918 /* NamidaShareUrl.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		72C8964B8BDFF686CCAC3DB8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C48EF7A2349511428D05628 /* NamidaShare */;
+			targetProxy = E4A28D9346BDABDD88D6B8F3 /* PBXContainerItemProxy */;
+		};
 		587707BE9ADA09D7BE65F052 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 95D165BD1C74083C6F3651CD /* NamidaWidgets */;
@@ -457,6 +538,73 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		B30F45340095F597BB8A3E87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				INFOPLIST_FILE = NamidaShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NAMIDA_APP_BUNDLE_ID).share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		EF28C31C84D17DA4515EA881 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				INFOPLIST_FILE = NamidaShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NAMIDA_APP_BUNDLE_ID).share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		A78971774F51C3243DDAA07E /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				INFOPLIST_FILE = NamidaShare/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "$(NAMIDA_APP_BUNDLE_ID).share";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Profile;
+		};
 		BA4412B2822BCE16C41E30F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 1C76E97627F8082EB8966BFE /* NamidaWidgets.xcconfig */;
@@ -466,7 +614,7 @@
 				CODE_SIGN_ENTITLEMENTS = NamidaWidgets/NamidaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -492,7 +640,7 @@
 				CODE_SIGN_ENTITLEMENTS = NamidaWidgets/NamidaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -517,7 +665,7 @@
 				CODE_SIGN_ENTITLEMENTS = NamidaWidgets/NamidaWidgets.entitlements;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -843,6 +991,16 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0307FB61C35BE6BA03329305 /* Build configuration list for PBXNativeTarget "NamidaShare" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B30F45340095F597BB8A3E87 /* Debug */,
+				EF28C31C84D17DA4515EA881 /* Release */,
+				A78971774F51C3243DDAA07E /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C40FD7A5D99B67E0A684E0F3 /* Build configuration list for PBXNativeTarget "NamidaWidgets" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

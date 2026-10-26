@@ -21,6 +21,7 @@ class _WindowManagerDesktop extends NamidaWindowManager {
       backgroundColor: Platform.isWindows ? null : Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
+      windowButtonVisibility: _isWindowButtonVisible(),
     );
 
     await windowManager.waitUntilReadyToShow(windowOptions);
@@ -36,6 +37,9 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     } else {
       windowManager.addListener(_NamidaWindowListener());
     }
+
+    if (Platform.isMacOS) AppLifecycleListener(onExitRequested: Namida.onExitRequested);
+    if (NamidaWindowManager.usesNativeWindowButtons) settings.desktopTitlebar.addListener(_onDesktopTitlebarChanged);
 
     screenRetriever.addListener(
       _CustomScreenListener(
@@ -147,9 +151,18 @@ class _WindowManagerDesktop extends NamidaWindowManager {
     }
     await windowManager.setTitleBarStyle(
       usingCustomWindowTitleBar ? TitleBarStyle.hidden : TitleBarStyle.normal,
-      windowButtonVisibility: NamidaWindowManager.usesNativeWindowButtons || !usingCustomWindowTitleBar,
+      windowButtonVisibility: _isWindowButtonVisible(),
     );
     await ensurePositionRestored(restoreBounds: true);
+  }
+
+  /// the traffic lights sit in the title bar, they hide with it.
+  bool _isWindowButtonVisible() => (NamidaWindowManager.usesNativeWindowButtons && settings.desktopTitlebar.value) || !usingCustomWindowTitleBar;
+
+  void _onDesktopTitlebarChanged() {
+    if (NamidaWindowManager.isMiniLyricsMode.value) return;
+    final windowButtonVisibility = _isWindowButtonVisible();
+    windowManager.setTitleBarStyle(TitleBarStyle.hidden, windowButtonVisibility: windowButtonVisibility);
   }
 
   Future<Rect> _resolveMiniLyricsBounds() async {

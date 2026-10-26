@@ -230,15 +230,19 @@ class _DiscordOAuth {
   static const _kLoginTimeout = Duration(minutes: 5);
   static const _kExpiryMarginMS = 60 * 1000;
 
-  Completer<Uri?>? _redirectCompleter;
+  _DiscordLogInAttempt? _ongoingLogIn;
   _DiscordLogin? _login;
   bool _didLoadLogin = false;
   bool _isAccessTokenRejected = false;
 
+  /// a page left open from an older attempt is ignored, its code belongs to another verifier.
   bool handleRedirect(String link) {
     if (!link.startsWith(_kRedirectUri)) return false;
     final uri = Uri.tryParse(link);
-    _redirectCompleter?.completeIfWasnt(uri);
+    final attempt = _ongoingLogIn;
+    if (uri == null || attempt == null) return true;
+    final isAttemptRedirect = uri.queryParameters['state'] == attempt.state;
+    if (isAttemptRedirect) attempt.redirect.completeIfWasnt(uri);
     return true;
   }
 
@@ -248,7 +252,14 @@ class _DiscordOAuth {
   }
 
   /// false when the user cancelled or denied, throws on real failures.
+  /// a call while another one waits opens the same page again and shares its result.
   Future<bool> logIn() async {
+    final ongoing = _ongoingLogIn;
+    if (ongoing != null) {
+      await NamidaLinkUtils.openLink(ongoing.authorizeUri.toString());
+      return ongoing.result;
+    }
+
     final verifier = _generateUrlSafeRandom(64);
     final verifierBytes = utf8.encode(verifier);
     final challengeDigest = sha256.convert(verifierBytes);
@@ -264,16 +275,23 @@ class _DiscordOAuth {
       'code_challenge_method': 'S256',
     });
 
-    _redirectCompleter?.completeIfWasnt(null);
-    final completer = _redirectCompleter = Completer<Uri?>();
+    final redirect = Completer<Uri?>();
+    final result = _completeLogIn(authorizeUri, redirect, verifier);
+    _ongoingLogIn = _DiscordLogInAttempt(authorizeUri, state, redirect, result);
+    try {
+      return await result;
+    } finally {
+      _ongoingLogIn = null;
+    }
+  }
+
+  Future<bool> _completeLogIn(Uri authorizeUri, Completer<Uri?> redirect, String verifier) async {
     final didOpen = await NamidaLinkUtils.openLink(authorizeUri.toString());
     if (!didOpen) throw Exception('could not open $authorizeUri');
-    final redirect = await completer.future.timeout(_kLoginTimeout, onTimeout: () => null);
-    if (redirect == null) return false;
+    final redirectUri = await redirect.future.timeout(_kLoginTimeout, onTimeout: () => null);
+    if (redirectUri == null) return false;
 
-    final params = redirect.queryParameters;
-    if (params['state'] != state) throw Exception('discord login state mismatch');
-    final code = params['code'];
+    final code = redirectUri.queryParameters['code'];
     if (code == null) return false;
     final tokensJson = await _requestTokens({
       'grant_type': 'authorization_code',
@@ -437,4 +455,13 @@ class _DiscordLogin {
     'expiresAtMS': expiresAtMS,
     'account': ?account?.toJson(),
   };
+}
+
+class _DiscordLogInAttempt {
+  final Uri authorizeUri;
+  final String state;
+  final Completer<Uri?> redirect;
+  final Future<bool> result;
+
+  const _DiscordLogInAttempt(this.authorizeUri, this.state, this.redirect, this.result);
 }

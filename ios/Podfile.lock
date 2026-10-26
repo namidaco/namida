@@ -1,0 +1,59 @@
+PODS:
+  - fjs (2.2.0):
+    - Flutter
+  - Flutter (1.0.0)
+  - irondash_engine_context (0.0.1):
+    - Flutter
+  - just_audio (0.0.1):
+    - Flutter
+  - on_audio_query_ios (0.0.1):
+    - Flutter
+    - SwiftyBeaver
+  - rhttp (0.0.1):
+    - Flutter
+  - super_native_extensions (0.0.1):
+    - Flutter
+  - SwiftyBeaver (2.1.1)
+
+DEPENDENCIES:
+  - fjs (from `.symlinks/plugins/fjs/ios`)
+  - Flutter (from `Flutter`)
+  - irondash_engine_context (from `.symlinks/plugins/irondash_engine_context/ios`)
+  - just_audio (from `.symlinks/plugins/just_audio/ios`)
+  - on_audio_query_ios (from `.symlinks/plugins/on_audio_query_ios/ios`)
+  - rhttp (from `.symlinks/plugins/rhttp/ios`)
+  - super_native_extensions (from `.symlinks/plugins/super_native_extensions/ios`)
+
+SPEC REPOS:
+  trunk:
+    - SwiftyBeaver
+
+EXTERNAL SOURCES:
+  fjs:
+    :path: ".symlinks/plugins/fjs/ios"
+  Flutter:
+    :path: Flutter
+  irondash_engine_context:
+    :path: ".symlinks/plugins/irondash_engine_context/ios"
+  just_audio:
+    :path: ".symlinks/plugins/just_audio/ios"
+  on_audio_query_ios:
+    :path: ".symlinks/plugins/on_audio_query_ios/ios"
+  rhttp:
+    :path: ".symlinks/plugins/rhttp/ios"
+  super_native_extensions:
+    :path: ".symlinks/plugins/super_native_extensions/ios"
+
+SPEC CHECKSUMS:
+  fjs: 08fc0f926a82d3675df293880c68288ff9faa992
+  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+  irondash_engine_context: 8e58ca8e0212ee9d1c7dc6a42121849986c88486
+  just_audio: 6c031bb61297cf218b4462be616638e81c058e97
+  on_audio_query_ios: 28a780e2d0d85d92d500ba6e12c6c8167022b2fa
+  rhttp: 359daed992674fc912552df3106bfbc746bcc929
+  super_native_extensions: b763c02dc3a8fd078389f410bf15149179020cb4
+  SwiftyBeaver: ade157e4f857812e7d7f15f2e3396bb8733f8a1c
+
+PODFILE CHECKSUM: ce2a4dd764e1c7aeed6a7cdc5e61d092b6dc6d32
+
+COCOAPODS: 1.17.0
