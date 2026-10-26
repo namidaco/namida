@@ -786,8 +786,6 @@ class _NormalPlaylistTracksPageState extends State<NormalPlaylistTracksPage>
                   height: height,
                 ),
               ),
-              onReorderStart: (index) => super.enablePullToRefresh = false,
-              onReorderEnd: (index) => super.enablePullToRefresh = true,
               onReorder: searchResults != null || playlist.isReadOnly ? null : (oldIndex, newIndex) => PlaylistController.inst.reorderTrack(playlist, oldIndex, newIndex),
               stickyHeader: TracksSearchWidgetBoxBase(
                 state: this,

@@ -762,8 +762,6 @@ class _PlaylistsPageState extends State<PlaylistsPage> with TickerProviderStateM
                               rx: PlaylistController.inst.getCustomIndicesOrderListRx(),
                               builder: (context, customIndicesOrderList) => NamidaSliverReorderableList(
                                 itemExtent: Dimensions.playlistTileItemExtent,
-                                onReorderStart: (index) => super.enablePullToRefresh = false,
-                                onReorderEnd: (index) => super.enablePullToRefresh = true,
                                 onReorder: (oldIndex, newIndex) async {
                                   final sorting = settings.groupSortingOf(MediaType.playlist);
                                   if (sorting.firstType != GroupSortType.custom) {

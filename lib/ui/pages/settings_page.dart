@@ -161,13 +161,24 @@ class CollapsedSettingTiles extends StatelessWidget {
         CustomCollapsedListTile(
           title: () => lang.extras,
           subtitle: lang.extrasSubtitle,
-          icon: Broken.command_square,
+          leading: DiscordSharingDotWrapper(
+            child: NIcon(
+              Broken.command_square,
+              size: 24.0,
+              color: NColors.defaultIcon(),
+            ),
+          ),
           page: () => const ExtrasSettings(),
         ),
         CustomCollapsedListTile(
           title: () => lang.backupAndRestore,
           subtitle: lang.backupAndRestoreSubtitle,
-          icon: Broken.refresh_circle,
+          leading: SyncStatusIconWrapper(
+            icon: Broken.refresh_circle,
+            iconSize: 24.0,
+            color: NColors.defaultIcon(),
+            showDisconnectedDot: false,
+          ),
           page: () => const BackupAndRestore(),
           trailing: const ParsingJsonPercentage(size: 32.0),
         ),
@@ -192,6 +203,7 @@ class CustomCollapsedListTile extends StatelessWidget {
   final Widget Function()? page;
   final NamidaRouteWidget Function()? rawPage;
   final IconData? icon;
+  final Widget? leading;
   final Widget? trailing;
 
   const CustomCollapsedListTile({
@@ -202,6 +214,7 @@ class CustomCollapsedListTile extends StatelessWidget {
     required this.page,
     this.rawPage,
     this.icon,
+    this.leading,
     this.trailing,
   });
 
@@ -213,6 +226,7 @@ class CustomCollapsedListTile extends StatelessWidget {
       title: title(),
       subtitle: subtitle,
       icon: icon,
+      leading: leading,
       dense: false,
       trailingRaw: Row(
         mainAxisSize: MainAxisSize.min,
@@ -293,7 +307,7 @@ class _QuickSuggestionsForSettings extends StatelessWidget {
                   icon: null,
                   leading: (color) => SyncStatusIconWrapper(
                     iconSize: 20.0,
-                    color: color,
+                    color: NColors.fixed(color),
                   ),
                   title: lang.sync,
                   subtitle: '',

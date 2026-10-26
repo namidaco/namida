@@ -1629,7 +1629,7 @@ abstract class NamidaFeaturesAvailablityBase {
   const NamidaFeaturesAvailablityBase();
 
   bool resolve();
-  String get text;
+  String toText();
 }
 
 class NamidaFeaturesAvailablityGroup extends NamidaFeaturesAvailablityBase {
@@ -1640,7 +1640,7 @@ class NamidaFeaturesAvailablityGroup extends NamidaFeaturesAvailablityBase {
   static const mobile = NamidaFeaturesAvailablityGroup(items: [NamidaFeaturesAvailablity.android, NamidaFeaturesAvailablity.ios]);
 
   @override
-  String get text => items.join(' | ');
+  String toText() => items.map((e) => e.toText()).join(' | ');
 
   @override
   bool resolve() {
@@ -1662,9 +1662,11 @@ enum NamidaFeaturesAvailablity implements NamidaFeaturesAvailablityBase {
   ios16_2and_plus('iOS 16.2+'),
   ;
 
+  final String _displayName;
+  const NamidaFeaturesAvailablity(this._displayName);
+
   @override
-  final String text;
-  const NamidaFeaturesAvailablity(this.text);
+  String toText() => _displayName;
 
   @override
   bool resolve() {

@@ -66,7 +66,7 @@ class SettingsSearchPage extends StatelessWidget {
                         final subtitleParts = [
                           if (parentTitles.isNotEmpty) parentTitles.join(' › '),
                           if (item.titles.length > subtitleIndex) item.titles[subtitleIndex],
-                          if (isNotAvailable) '${lang.notAvailableForYourDevice} (${availability?.text})',
+                          if (isNotAvailable) '${lang.notAvailableForYourDevice} (${availability?.toText()})',
                         ];
                         final subtitle = subtitleParts.isNotEmpty ? subtitleParts.join('\n') : null;
                         final trailing = isNotAvailable

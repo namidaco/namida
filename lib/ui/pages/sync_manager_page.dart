@@ -985,7 +985,7 @@ class _SyncItemTitle extends StatelessWidget {
 class SyncStatusIconWrapper extends StatelessWidget {
   final IconData icon;
   final double? iconSize;
-  final Color? color;
+  final NColors? color;
   final bool showDisconnectedDot;
 
   const SyncStatusIconWrapper({
@@ -1000,7 +1000,7 @@ class SyncStatusIconWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = this.color ?? NColorsData.of(context).secondary;
+    final color = this.color ?? NColors.secondary;
     return ObxO(
       rx: SyncDiscovery.serverRunning,
       builder: (context, serverRunning) => ObxO(
@@ -1013,11 +1013,11 @@ class SyncStatusIconWrapper extends StatelessWidget {
                     baseIcon: icon,
                     secondaryIcon: Broken.radar_1,
                     iconSize: iconSize,
-                    baseIconColor: NColors.fixed(color),
-                    secondaryIconColor: NColors.fixed(color),
+                    baseIconColor: color,
+                    secondaryIconColor: color,
                     secondaryIconSize: 13.0,
                   )
-                : Icon(
+                : NIcon(
                     icon,
                     size: iconSize,
                     color: color,
@@ -1763,7 +1763,7 @@ class _SyncDiagnosticsDialogState extends State<_SyncDiagnosticsDialog> {
 // by claude
 /// fills with the progress of every batch being sent or received, hidden while idle.
 class _SyncActivityRing extends StatelessWidget {
-  final Color color;
+  final NColors color;
 
   const _SyncActivityRing({required this.color});
 
@@ -1791,12 +1791,15 @@ class _SyncActivityRing extends StatelessWidget {
           final fraction = _averageFraction(batches);
           if (fraction == null) return const SizedBox();
           return NBuilder(
-            builder: (context, colors) => CircularProgressIndicator(
-              value: fraction,
-              strokeWidth: 1.5,
-              color: color.withOpacityExt(0.67),
-              backgroundColor: colors.onSurface.withOpacityExt(0.1),
-            ),
+            builder: (context, colors) {
+              final ringColor = color.resolve(colors);
+              return CircularProgressIndicator(
+                value: fraction,
+                strokeWidth: 1.5,
+                color: ringColor.withOpacityExt(0.67),
+                backgroundColor: colors.onSurface.withOpacityExt(0.1),
+              );
+            },
           );
         },
       ),

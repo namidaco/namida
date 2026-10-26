@@ -1,10 +1,12 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SliverReorderableListState;
 
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
+import 'package:namida/packages/scroll_physics_modified.dart';
+import 'package:namida/ui/widgets/custom_reorderable_list.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 
 typedef PullToRefreshCallback = FutureOr<void> Function();
@@ -82,7 +84,7 @@ class _PullToRefreshState extends State<PullToRefresh> with TickerProviderStateM
 mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements TickerProvider {
   static bool isPulling = false;
 
-  bool enablePullToRefresh = true;
+  bool get enablePullToRefresh => true;
 
   final turnsTween = Tween<double>(begin: 0.0, end: 1.0);
   late final animation = AnimationController(vsync: this, duration: Duration.zero);
@@ -111,6 +113,10 @@ mixin PullToRefreshMixin<T extends StatefulWidget> on State<T> implements Ticker
   void onPointerMove(ScrollController sc, PointerMoveEvent event) {
     if (!enablePullToRefresh) return;
     if (FadeDismissible.isDismissing) return;
+    if (isScrollbarThumbDragging || SliverReorderableListState.isDragging) {
+      if (_isDraggingVertically == true) onVerticalDragFinish();
+      return;
+    }
     final dy = event.localDelta.dy;
     if (_isDraggingVertically == null) {
       final dxabs = event.localDelta.dx.abs();

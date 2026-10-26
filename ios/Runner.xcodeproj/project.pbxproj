@@ -542,7 +542,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
 			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = NO;
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaShare/Info.plist;
@@ -565,7 +565,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
 			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = NO;
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaShare/Info.plist;
@@ -587,7 +587,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = D9A63B7E2B03E12F0B7FBF34 /* NamidaShare.xcconfig */;
 			buildSettings = {
-				APPLICATION_EXTENSION_API_ONLY = NO;
+				APPLICATION_EXTENSION_API_ONLY = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
 				INFOPLIST_FILE = NamidaShare/Info.plist;

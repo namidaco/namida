@@ -1993,7 +1993,7 @@ class DiscordSharingDotWrapper extends StatelessWidget {
           if (isSharing)
             Positioned(
               bottom: 0.0,
-              right: 0.0,
+              left: 0.0,
               child: NDecoratedBox(
                 decoration: (colors) => BoxDecoration(
                   shape: BoxShape.circle,

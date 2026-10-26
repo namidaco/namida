@@ -605,6 +605,8 @@ class SliverReorderableList extends StatefulWidget {
 /// refer to their [SliverReorderableList] with the static
 /// [SliverReorderableList.of] method.
 class SliverReorderableListState extends State<SliverReorderableList> with TickerProviderStateMixin {
+  static bool isDragging = false;
+
   // Map of index -> child state used manage where the dragging item will need
   // to be inserted.
   final Map<int, _ReorderableItemState> _items = <int, _ReorderableItemState>{};
@@ -737,6 +739,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
 
     final _ReorderableItemState item = _items[_dragIndex!]!;
     item.dragging = true;
+    isDragging = true;
     widget.onReorderStart?.call(_dragIndex!);
     item.rebuild();
 
@@ -826,6 +829,7 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
 
   void _dragReset() {
     if (_dragInfo != null) {
+      isDragging = false;
       if (_dragIndex != null && _items.containsKey(_dragIndex)) {
         final _ReorderableItemState dragItem = _items[_dragIndex!]!;
         dragItem.dragging = false;

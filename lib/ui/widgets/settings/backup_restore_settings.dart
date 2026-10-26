@@ -879,7 +879,10 @@ class _SyncTile extends StatelessWidget {
       bgColor: bgColor,
       title: lang.sync,
       subtitle: lang.syncAppDataBetweenYourDevices,
-      icon: Broken.cloud_change,
+      leading: SyncStatusIconWrapper(
+        iconSize: 24.0,
+        color: NColors.defaultIcon(),
+      ),
       onTap: const NamidaSyncManagerPage().navigate,
     );
   }
