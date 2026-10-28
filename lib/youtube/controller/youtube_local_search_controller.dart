@@ -319,20 +319,17 @@ class YTLocalSearchController with PortsProvider<YTLocalSearchIsolateParams> {
         }
       }
 
-      final files = Directory(statsDir).listSyncSafe();
-      for (var f in files) {
-        if (f is File) {
-          if (f.path.endsWith('.tmp')) continue;
-          try {
-            final response = f.readAsJsonSync(ensureExists: false);
-            if (response is List) {
-              for (var map in response) {
-                final info = YoutubeVideoHistory.fromJson(map).toStreamInfo();
-                onAddEntry(_LookupEntry.inMemory(info));
-              }
+      final files = Directory(statsDir).listFilesWithoutAtomicTempsSync();
+      for (final f in files) {
+        try {
+          final response = f.readAsJsonSync(ensureExists: false);
+          if (response is List) {
+            for (var map in response) {
+              final info = YoutubeVideoHistory.fromJson(map).toStreamInfo();
+              onAddEntry(_LookupEntry.inMemory(info));
             }
-          } catch (_) {}
-        }
+          }
+        } catch (_) {}
       }
 
       for (final item in faultyTitlesBackupList.entries) {

@@ -23,20 +23,17 @@ class _YoutubeInfoUtils {
 
   static Map<String, YoutubeVideoHistory> _parseBackupHistoryInfoIsolate(String dirPath) {
     final map = <String, YoutubeVideoHistory>{};
-    final files = Directory(dirPath).listSyncSafe();
-    for (var f in files) {
-      if (f is File) {
-        if (f.path.endsWith('.tmp')) continue;
-        try {
-          final response = f.readAsJsonSync(ensureExists: false);
-          if (response is List) {
-            for (var r in response) {
-              final yvh = YoutubeVideoHistory.fromJson(r);
-              map[yvh.id] = yvh;
-            }
+    final files = Directory(dirPath).listFilesWithoutAtomicTempsSync();
+    for (final f in files) {
+      try {
+        final response = f.readAsJsonSync(ensureExists: false);
+        if (response is List) {
+          for (var r in response) {
+            final yvh = YoutubeVideoHistory.fromJson(r);
+            map[yvh.id] = yvh;
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
     }
     map.remove('');
     return map;

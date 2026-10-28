@@ -1041,15 +1041,8 @@ class _AboutAsset {
       // -- myinstants sits behind cloudflare, which refuses requests without a user agent
       final bytes = (await Rhttp.getBytes(url, headers: const HttpHeaders.rawMap({'User-Agent': 'Namida'}))).body;
       if (bytes.isEmpty) return null;
-      // -- renamed once complete, a half written file would be served forever otherwise
-      final temp = File('${file.path}.part');
-      try {
-        await temp.writeAsBytes(bytes);
-      } catch (_) {
-        await temp.parent.create(recursive: true);
-        await temp.writeAsBytes(bytes);
-      }
-      return await temp.rename(file.path);
+      // -- atomic, a half written file would be served forever otherwise
+      return await file.writeAsBytesAtomic(bytes);
     } catch (_) {
       return null;
     } finally {

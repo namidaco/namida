@@ -64,8 +64,8 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
     for (final f in files) {
       if (f is File) {
         try {
-          final response = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfVideo = int.parse(f.path.getFilenameWOExt);
+          final response = f.readAsJsonSync(ensureExists: false) as List?;
           final canRepairDates = dayOfVideo > 0;
 
           final listVideos = <YoutubeID>[];
@@ -89,7 +89,7 @@ class YoutubeHistoryController with HistoryManager<YoutubeID, String> {
           if (!isNewestFirst) listVideos.sortByReverse((e) => e.dateAddedMS);
           if (didRepairDates) {
             final listVideosJson = listVideos.map((e) => e.toJson()).toFixedList();
-            f.writeAsJsonSync(listVideosJson);
+            f.writeAsJsonAtomicSync(listVideosJson);
           }
           daysRepair?.checkDay(dayOfVideo, listVideos);
 

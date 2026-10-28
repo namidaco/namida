@@ -532,7 +532,7 @@ class CurrentColor {
       pcolors.addAll(await _colorGenerationTasks.add(() async => await _extractPaletteGenerator(imagePath, track: track)));
     } catch (_) {}
     final nc = NamidaColor.create(palette: pcolors);
-    await paletteFile.writeAsJson(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
+    await paletteFile.writeAsJsonAtomic(nc.toJson()); // writing the file bothways, to prevent reduntant re-extraction.
     // Indexer.inst.updateColorPalettesSizeInStorage(newPalettePath: paletteFile.path);
     _printie("Color Extracted From Image (${pcolors.length})");
     return pcolors.isEmpty ? null : nc;
@@ -557,7 +557,7 @@ class CurrentColor {
     final key = track.cacheKeyForImage(_defaultPaletteDirectory.path);
     final paletteFile = FileParts.join(AppDirs.PALETTES, "$key.palette");
     if (newNC != null) {
-      await paletteFile.writeAsJson(newNC.toJson());
+      await paletteFile.writeAsJsonAtomic(newNC.toJson());
       _updateInColorMap(key, newNC);
     } else if (imagePath != null) {
       final nc = await extractPaletteFromImage(imagePath, track: track, forceReExtract: true);
@@ -576,7 +576,7 @@ class CurrentColor {
     final paletteKey = networkArtworkInfo.toPaletteKey();
     final paletteFile = _getPaletteFile(paletteKey, paletteSaveDirectory: null);
     if (newNC != null) {
-      await paletteFile.writeAsJson(newNC.toJson());
+      await paletteFile.writeAsJsonAtomic(newNC.toJson());
       _updateInColorMap(filenameKeyInMaps, newNC);
     } else {
       if (!await File(imagePath).exists()) {

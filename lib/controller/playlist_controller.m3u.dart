@@ -501,7 +501,7 @@ class _M3UJsonMapFile {
     _isSaving = true;
     do {
       _hasNewerEntries = false;
-      await _file.writeAsJson(_entries);
+      await _file.writeAsJsonAtomic(_entries);
     } while (_hasNewerEntries);
     _isSaving = false;
   }

@@ -207,7 +207,7 @@ class ScreenshotsDriver {
     }
 
     final doneFile = File(FileParts.joinPath(_rootDir, 'out', 'done.json'));
-    await doneFile.writeAsJson({'shots': shots, 'errors': errors});
+    await doneFile.writeAsJsonAtomic({'shots': shots, 'errors': errors});
     await Namida.disposeAllResourcesAndExit();
   }
 
@@ -444,11 +444,11 @@ class ScreenshotsDriver {
   Future<void> _saveCaptureRegions(String outPathWithoutExtension, _CaptureRegions regions) async {
     if (regions.tiles.isNotEmpty) {
       final tilesJson = regions.tiles.map((tile) => tile.toJson(labelKey: 'title')).toList();
-      await File('$outPathWithoutExtension.tiles.json').writeAsJson({'tiles': tilesJson});
+      await File('$outPathWithoutExtension.tiles.json').writeAsJsonAtomic({'tiles': tilesJson});
     }
     if (regions.texts.isNotEmpty) {
       final textsJson = regions.texts.map((text) => text.toJson(labelKey: 'text')).toList();
-      await File('$outPathWithoutExtension.texts.json').writeAsJson({'texts': textsJson});
+      await File('$outPathWithoutExtension.texts.json').writeAsJsonAtomic({'texts': textsJson});
     }
   }
 

@@ -360,7 +360,7 @@ class _DiscordOAuth {
     _login = login;
     _didLoadLogin = true;
     _isAccessTokenRejected = false;
-    await File(AppPaths.DISCORD_AUTH).writeAsJson(login.toJson());
+    await File(AppPaths.DISCORD_AUTH).writeAsJsonAtomic(login.toJson());
   }
 
   Future<void> _clearLogin() async {

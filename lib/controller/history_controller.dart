@@ -116,8 +116,8 @@ class HistoryController with HistoryManager<TrackWithDate, Track> {
     for (final f in files) {
       if (f is File) {
         try {
-          final responseList = f.readAsJsonSync(ensureExists: false) as List?;
           final dayOfTrack = int.parse(f.path.getFilenameWOExt);
+          final responseList = f.readAsJsonSync(ensureExists: false) as List?;
           final listTracks = <TrackWithDate>[];
           TrackWithDate? previous;
           bool isNewestFirst = true;

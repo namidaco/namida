@@ -1233,7 +1233,7 @@ class _LogsRedactor {
 
   Future<File?> writeRedactedJson(Map<String, dynamic> json, File destination) async {
     final homeDirectoryRegex = _homeDirectoryRegex;
-    if (homeDirectoryRegex == null) return destination.writeAsJson(json);
+    if (homeDirectoryRegex == null) return destination.writeAsJsonAtomic(json);
 
     final text = _indentedJsonEncoder.convert(json);
     final redactedText = text.replaceAll(homeDirectoryRegex, _redactedHomeDirectory);

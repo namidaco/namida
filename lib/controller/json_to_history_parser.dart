@@ -2099,15 +2099,7 @@ class JsonToHistoryParser {
         updatedIds.add(id);
       }
       final bucketVideos = videosMapInStorage.values.toFixedList();
-      final tempFile = File('${file.path}.tmp');
-      final writtenFile = tempFile.writeAsJsonSync(bucketVideos);
-      try {
-        writtenFile?.renameSync(file.path);
-      } catch (_) {
-        // -- windows: rename fails while the bucket is locked
-        file.writeAsJsonSync(bucketVideos);
-        tempFile.deleteIfExistsSync();
-      }
+      file.writeAsJsonAtomicSync(bucketVideos);
       progressPort?.send(updatedIds.length);
     }
   }

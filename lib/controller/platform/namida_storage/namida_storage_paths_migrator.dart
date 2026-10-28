@@ -35,7 +35,6 @@ class _StoragePathsMigrator {
 
   static const _kTextExtensions = {'json', 'm3u', 'm3u8'};
   static const _kDatabaseExtension = 'db';
-  static const _kTempFileSuffix = '.tmp';
   static const _kMarkMovedFunctionName = 'namida_mark_moved_paths';
 
   /// moved values carry it between the two passes, it can't be part of a real value.
@@ -89,9 +88,8 @@ class _StoragePathsMigrator {
     final text = file.readAsStringSync();
     final rewritten = rewriteText(text);
     if (rewritten == null) return false;
-    final tempFile = File('${file.path}$_kTempFileSuffix');
-    tempFile.writeAsStringSync(rewritten, flush: true);
-    tempFile.renameSync(file.path);
+    final writtenFile = file.writeAsStringAtomicSync(rewritten, flush: true);
+    if (writtenFile == null) throw FileSystemException('write failed', file.path);
     return true;
   }
 

@@ -399,9 +399,7 @@ class QueueController {
         }
         final bytes = f.readAsBytesSync();
         final resolvedBytes = resolveQueueFileBytes(bytes, (tr) => resolvedTracks[tr.path]);
-        final tempFile = File('$targetPath$_kTempFileSuffix');
-        tempFile.writeAsBytesSync(resolvedBytes, flush: true);
-        tempFile.renameSync(targetPath);
+        File(targetPath).writeAsBytesAtomicSync(resolvedBytes, flush: true);
       } catch (_) {}
     }
   }
@@ -569,14 +567,8 @@ class QueueController {
 
   Future<void> _saveQueueToStorage(Queue queue) async {
     final bytes = _QueueSerializer.encode(queue.tracks, meta: queue.metaToJson());
-    await _writeAtomic(FileParts.joinPath(AppDirs.QUEUES, '${queue.date}.json'), bytes);
-  }
-
-  static const _kTempFileSuffix = '.tmp';
-
-  static Future<void> _writeAtomic(String path, Uint8List bytes) async {
-    final tempFile = await File('$path$_kTempFileSuffix').writeAsBytes(bytes, flush: true);
-    await tempFile.rename(path);
+    final file = FileParts.join(AppDirs.QUEUES, '${queue.date}.json');
+    await file.writeAsBytesAtomic(bytes, flush: true);
   }
 
   final _queueFnLimiter = FunctionExecuteLimiter(
@@ -588,7 +580,7 @@ class QueueController {
     return _queueFnLimiter.executeFuture(() async {
       try {
         final bytes = _QueueSerializer.encode(items, originalIndices: originalIndices);
-        await _writeAtomic(AppPaths.LATEST_QUEUE, bytes);
+        await File(AppPaths.LATEST_QUEUE).writeAsBytesAtomic(bytes, flush: true);
       } catch (e) {
         printy(e, isError: true);
       }

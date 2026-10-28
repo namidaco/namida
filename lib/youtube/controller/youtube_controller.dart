@@ -1899,7 +1899,7 @@ class YoutubeController {
             'streams': streams.toMap()..remove('info'),
           };
           final infoFile = FileParts.join(directoryPath, "${filenameWrapper.filename}.json");
-          await infoFile.writeAsJson(info);
+          await infoFile.writeAsJsonAtomic(info);
 
           useCachedVersionsIfAvailable = true;
           final audioExisting = await AudioCacheController.inst.getCachedAudioForId(config.id.videoId);

@@ -216,7 +216,7 @@ class _NamidaStorageIOS extends NamidaStorage {
     final documents = await _documentsDirectoryFuture;
     final containerRoot = documents.parent.path;
     final originFile = FileParts.join(directoryPath, _kStorageOriginFilename);
-    return originFile.writeAsJson({'containerRoot': containerRoot});
+    return originFile.writeAsJsonAtomic({'containerRoot': containerRoot});
   }
 
   /// only the container the backup was made in moves, paths into other apps' containers (folders picked there) stay.
@@ -451,17 +451,9 @@ class _StoragePathsState {
     if (retryFiles.isNotEmpty) 'retryFiles': retryFiles,
   };
 
-  /// written aside then renamed, a kill midway keeps the previous state whole.
   Future<bool> writeAtomic(File file) async {
-    final tempFile = File('${file.path}.tmp');
-    final writtenFile = await tempFile.writeAsJson(toJson(), flush: true);
-    if (writtenFile == null) return false;
-    try {
-      await writtenFile.rename(file.path);
-      return true;
-    } catch (_) {
-      return false;
-    }
+    final writtenFile = await file.writeAsJsonAtomic(toJson(), flush: true);
+    return writtenFile != null;
   }
 }
 

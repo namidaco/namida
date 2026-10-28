@@ -168,7 +168,7 @@ class YoutubeSubscriptionsController {
   Future<void> _saveGroupsFile() async {
     await _didLoadCompleter.future;
     final file = File(AppPaths.YT_SUBSCRIPTIONS_GROUPS_ALL);
-    await file.writeAsJson(_allGroups.value);
+    await file.writeAsJsonAtomic(_allGroups.value);
   }
 
   Future<void> _loadSubscriptionsFileAsync() async {
@@ -196,7 +196,7 @@ class YoutubeSubscriptionsController {
   Future<void> saveFile() async {
     await _didLoadCompleter.future;
     final file = File(AppPaths.YT_SUBSCRIPTIONS);
-    await file.writeAsJson(_availableChannels.map((key, value) => MapEntry(key, value.toJson())));
+    await file.writeAsJsonAtomic(_availableChannels.map((key, value) => MapEntry(key, value.toJson())));
   }
 
   Iterable<YoutubeSubscription> buildSyncEntries() => _availableChannels.value.values;

@@ -194,7 +194,7 @@ class ServerListensReporter {
     if (!hasPending && !_isFileWithPending) return;
     final file = File(AppPaths.SERVERS_PENDING_LISTENS);
     if (hasPending) {
-      await file.writeAsJson(pending);
+      await file.writeAsJsonAtomic(pending);
     } else {
       await file.tryDeleting();
     }

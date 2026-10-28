@@ -200,7 +200,7 @@ class BackupController {
           // -- without this device's sync identity, as a main zip entry that restore extracts in place
           final stagedSyncSettingsPath = FileParts.joinPath(stagingDirPath, p.getFilename);
           final syncBackupJson = settings.sync.buildBackupJson();
-          stagedSyncSettings = await File(stagedSyncSettingsPath).writeAsJson(syncBackupJson);
+          stagedSyncSettings = await File(stagedSyncSettingsPath).writeAsJsonAtomic(syncBackupJson);
           continue;
         }
 
@@ -458,7 +458,7 @@ class BackupController {
     final restored = await syncSettingsFile.readAsJson();
     if (restored is! Map<String, dynamic>) return;
     settings.sync.keepIdentityIn(restored);
-    await syncSettingsFile.writeAsJson(restored);
+    await syncSettingsFile.writeAsJsonAtomic(restored);
   }
 
   /// extracts the zips that the main backup zip placed in [AppDirs.USER_DATA].

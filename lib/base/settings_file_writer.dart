@@ -37,7 +37,7 @@ mixin SettingsFileWriter {
 
   Future<void> _writeToStorageRaw() async {
     final path = filePath;
-    final writtenFile = await File(path).writeAsJson(buildJson());
+    final writtenFile = await File(path).writeAsJsonAtomic(buildJson());
     if (writtenFile == null) {
       printy("Setting file write failed: ${path.getFilenameWOExt}", isError: true);
     } else {

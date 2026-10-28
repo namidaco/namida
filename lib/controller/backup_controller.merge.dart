@@ -289,11 +289,10 @@ class _BackupMerger {
   static int _moveFilesDirsSync(List<({String backup, String live})> dirsPaths) {
     int movedCount = 0;
     for (final dirPaths in dirsPaths) {
-      final files = Directory(dirPaths.backup).listSyncSafe();
+      final files = Directory(dirPaths.backup).listFilesWithoutAtomicTempsSync();
       if (files.isEmpty) continue;
       Directory(dirPaths.live).createSync(recursive: true);
       for (final f in files) {
-        if (f is! File) continue;
         final livePath = FileParts.joinPath(dirPaths.live, f.path.getFilename);
         try {
           f.renameSync(livePath);

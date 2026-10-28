@@ -58,7 +58,7 @@ class _FilteredFilesMemory {
       return;
     }
     final json = {for (final e in _files.entries) e.key: e.value.toJson()};
-    await file.writeAsJson(json);
+    await file.writeAsJsonAtomic(json);
   }
 }
 

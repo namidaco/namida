@@ -316,15 +316,13 @@ class YoutubePlaylistController extends PlaylistManager<YoutubeID, String, SortE
 
   static Map<String, YoutubePlaylist> _readPlaylistFilesCompute(_ReadPlaylistFilesParams params) {
     final entries = <MapEntry<String, YoutubePlaylist>>[];
-    final files = Directory(params.path).listSyncSafe();
+    final files = Directory(params.path).listFilesWithoutAtomicTempsSync();
     for (final f in files) {
-      if (f is File) {
-        try {
-          final response = f.readAsJsonSync(ensureExists: false);
-          final pl = YoutubePlaylist.fromJson(response, YoutubeID.fromJson, YTSortType.sortListFromJsonList);
-          entries.add(MapEntry(pl.name, pl));
-        } catch (_) {}
-      }
+      try {
+        final response = f.readAsJsonSync(ensureExists: false);
+        final pl = YoutubePlaylist.fromJson(response, YoutubeID.fromJson, YTSortType.sortListFromJsonList);
+        entries.add(MapEntry(pl.name, pl));
+      } catch (_) {}
     }
 
     _performSortYTPlaylists(entries, sortBy: params.sortBy, reverse: params.reverse, customIndicesOrder: params.customIndicesOrder);

@@ -247,13 +247,12 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     if (_willPlayWhenReady) onPlayRaw();
   }
 
-  static const _kTotalListenTimeTempSuffix = '.tmp';
   bool _canWriteTotalListenTime = true;
 
   @override
   Future<Map<String, int>> prepareTotalListenTime() async {
     final file = File(AppPaths.TOTAL_LISTEN_TIME);
-    final tempFile = File('${file.path}$_kTotalListenTimeTempSuffix');
+    final tempFile = File('${file.path}${DEFileUtils.kAtomicTempSuffix}');
     final fromFile = await _readTotalListenTime(tempFile) ?? await _readTotalListenTime(file);
     if (fromFile == null) await _keepCorruptedTotalListenTimeAside(file);
     final totals = fromFile ?? <String, int>{};
@@ -2495,8 +2494,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   Future<void> _writeTotalListenTime(Map<String, int> totalTimeInSeconds) async {
     if (!_canWriteTotalListenTime) return;
     final path = AppPaths.TOTAL_LISTEN_TIME;
-    final tempFile = await File('$path$_kTotalListenTimeTempSuffix').writeAsJson(totalTimeInSeconds, flush: true);
-    await tempFile?.rename(path);
+    await File(path).writeAsJsonAtomic(totalTimeInSeconds, flush: true);
   }
 
   @override

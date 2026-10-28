@@ -1176,15 +1176,13 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
 
   static Map<String, LocalPlaylist> _readPlaylistFilesCompute(String path) {
     final map = <String, LocalPlaylist>{};
-    final files = Directory(path).listSyncSafe();
+    final files = Directory(path).listFilesWithoutAtomicTempsSync();
     for (final f in files) {
-      if (f is File) {
-        try {
-          final response = f.readAsJsonSync(ensureExists: false);
-          final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, SortType.sortListFromJsonList);
-          map[pl.name] = pl;
-        } catch (_) {}
-      }
+      try {
+        final response = f.readAsJsonSync(ensureExists: false);
+        final pl = LocalPlaylist.fromJson(response, TrackWithDate.fromJson, SortType.sortListFromJsonList);
+        map[pl.name] = pl;
+      } catch (_) {}
     }
 
     return map;

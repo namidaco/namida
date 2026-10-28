@@ -257,24 +257,21 @@ class NamidaYTGenerator extends NamidaGeneratorBase<YoutubeID, String> with Port
       db.close();
     }
 
-    final files = Directory(statsDir).listSyncSafe();
-    for (var f in files) {
-      if (f is File) {
-        if (f.path.endsWith('.tmp')) continue;
-        try {
-          final response = f.readAsJsonSync(ensureExists: false);
-          if (response is List) {
-            for (var r in response) {
-              final id = r['id'] as String? ?? '';
-              if (releaseDateMap[id] == null) {
-                allIds.add(id);
-                allIdsAdded[id] = true;
-                // releaseDateMap[id] = null;
-              }
+    final files = Directory(statsDir).listFilesWithoutAtomicTempsSync();
+    for (final f in files) {
+      try {
+        final response = f.readAsJsonSync(ensureExists: false);
+        if (response is List) {
+          for (var r in response) {
+            final id = r['id'] as String? ?? '';
+            if (releaseDateMap[id] == null) {
+              allIds.add(id);
+              allIdsAdded[id] = true;
+              // releaseDateMap[id] = null;
             }
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
     }
 
     // -- filling from playlists
