@@ -410,12 +410,12 @@ class _IndexerMissingTracksSubpageState extends State<IndexerMissingTracksSubpag
                                                     crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       NamidaText(
-                                                        path,
+                                                        path.toDisplayPath(),
                                                         style: NText.medium,
                                                       ),
                                                       if (suggestion != null)
                                                         NamidaText(
-                                                          " --> $suggestion",
+                                                          " --> ${suggestion.toDisplayPath()}",
                                                           style: NText.small,
                                                         ),
                                                     ],

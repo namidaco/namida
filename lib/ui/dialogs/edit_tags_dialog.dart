@@ -603,7 +603,7 @@ Future<void> _editSingleTrackTagsDialog(PhysicalMedia track, Color? colorScheme,
                       height: 12.0,
                     ),
                     NamidaText(
-                      track.path,
+                      track.path.toDisplayPath(),
                       style: NText.small,
                     ),
                     const SizedBox(

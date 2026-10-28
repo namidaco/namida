@@ -1194,7 +1194,7 @@ class _PlaylistsSelection {
             CustomListTile(
               icon: Broken.folder,
               title: lang.convertToM3UPlaylist,
-              subtitle: defaultDirectoryPath,
+              subtitle: defaultDirectoryPath.toDisplayPath(),
               trailingRaw: NamidaTooltip(
                 message: () => lang.defaultLabel,
                 child: const Icon(
@@ -1226,13 +1226,13 @@ class _PlaylistsSelection {
   Future<void> _exportTo(List<String> names, String directoryPath) async {
     if (!await requestManageStoragePermission()) return;
     final exportedCount = await PlaylistController.inst.exportPlaylistsToM3UFiles(names, directoryPath);
-    snackyy(message: '${lang.savedIn}: $directoryPath (${exportedCount.displayPlaylistKeyword})');
+    snackyy(message: '${lang.savedIn}: ${directoryPath.toDisplayPath()} (${exportedCount.displayPlaylistKeyword})');
   }
 
   Future<void> _convertToM3U(List<String> names) async {
     if (!await requestManageStoragePermission()) return;
     final convertedCount = await PlaylistController.inst.convertPlaylistsToM3U(names);
-    snackyy(message: '${lang.savedIn}: ${AppDirs.M3UPlaylists} (${convertedCount.displayPlaylistKeyword})');
+    snackyy(message: '${lang.savedIn}: ${AppDirs.M3UPlaylists.toDisplayPath()} (${convertedCount.displayPlaylistKeyword})');
   }
 
   void promptDelete() {
@@ -1462,7 +1462,7 @@ class _PlaylistGridCard extends StatelessWidget {
     Widget? sourceBadge;
     if (m3uPath != null) {
       sourceBadge = _PlaylistSourceBadge(
-        tooltip: () => "${lang.m3uPlaylist}\n${m3uPath.formatPath()}",
+        tooltip: () => "${lang.m3uPlaylist}\n${m3uPath.toShortDisplayPath()}",
         iconSize: iconSize,
         textAreaHeight: textAreaHeight,
         child: Icon(

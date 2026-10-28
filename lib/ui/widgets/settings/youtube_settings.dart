@@ -795,7 +795,7 @@ class _DownloadLocationTile extends StatelessWidget {
         bgColor: bgColor,
         title: lang.defaultDownloadLocation,
         icon: Broken.folder_favorite,
-        subtitle: downloadLocation,
+        subtitle: downloadLocation.toDisplayPath(),
         onTap: _pickDirectory,
         trailingRaw: openInFileExplorerButton,
       ),

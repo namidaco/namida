@@ -367,7 +367,7 @@ class Lyrics {
       if (deviceFile == null) {
         snackyy(
           title: lang.lyricsSaveLocationNotWritable,
-          message: failed.path,
+          message: failed.path.toDisplayPath(),
           isError: true,
         );
       }

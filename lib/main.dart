@@ -1076,7 +1076,7 @@ class NamidaReceiveIntentManager {
         } else if (unresolved.isNotEmpty) {
           showErrorPlayingFileSnackbar(error: _fileNotFoundError(unresolved));
         } else if (textFilesWithoutLinks.isNotEmpty) {
-          final pathsText = textFilesWithoutLinks.join(', ');
+          final pathsText = textFilesWithoutLinks.map((e) => e.toDisplayPath()).join(', ');
           showErrorPlayingFileSnackbar(error: 'No links found: $pathsText');
         }
       }
@@ -1087,7 +1087,8 @@ class NamidaReceiveIntentManager {
     final buffer = StringBuffer('File not found or not accessible');
     if (paths.isNotEmpty) {
       buffer.write(': ');
-      buffer.writeAll(paths, ', ');
+      final displayPaths = paths.map((e) => e.toDisplayPath());
+      buffer.writeAll(displayPaths, ', ');
     }
     return buffer.toString();
   }

@@ -929,7 +929,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
         child: Column(
           children: [
             NamidaText(
-              '${lang.enableM3uSync}?\n\n${lang.enableM3uSyncNote1}\n\n${lang.enableM3uSyncNote2(playlistsBackupPath: AppDirs.M3UBackup)}\n\n${lang.warning.toUpperCase()}: ${lang.enableM3uSyncSubtitle}',
+              '${lang.enableM3uSync}?\n\n${lang.enableM3uSyncNote1}\n\n${lang.enableM3uSyncNote2(playlistsBackupPath: AppDirs.M3UBackup.toDisplayPath())}\n\n${lang.warning.toUpperCase()}: ${lang.enableM3uSyncSubtitle}',
               style: NText.medium,
             ),
             const SizedBox(height: 12.0),

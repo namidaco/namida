@@ -637,7 +637,7 @@ class _IssueReporter {
 
     snackyy(
       icon: Broken.clipboard_text,
-      message: '${lang.savedIn}: $zipPath',
+      message: '${lang.savedIn}: ${zipPath.toDisplayPath()}',
       displayDuration: SnackDisplayDuration.tutorial,
     );
 

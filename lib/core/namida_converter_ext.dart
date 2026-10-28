@@ -496,7 +496,7 @@ extension QueueNameGetter on Queue {
       switch (source) {
         final QueueSource s => switch (s.s) {
           QueueSourceEnum.playlist || QueueSourceEnum.favourites || QueueSourceEnum.history || QueueSourceEnum.mostPlayed => s.title?.translatePlaylistName(),
-          QueueSourceEnum.folder || QueueSourceEnum.folderMusic || QueueSourceEnum.folderVideos => s.title?.formatPath(),
+          QueueSourceEnum.folder || QueueSourceEnum.folderMusic || QueueSourceEnum.folderVideos => s.title?.toShortDisplayPath(),
           QueueSourceEnum.queuePage => null, // has date as title
           _ => s.title,
         },

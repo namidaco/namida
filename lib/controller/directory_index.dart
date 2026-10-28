@@ -39,7 +39,7 @@ final class DirectoryIndexLocal extends DirectoryIndex {
 
   @override
   String toSourceInfo() {
-    return source;
+    return source.toDisplayPath();
   }
 }
 

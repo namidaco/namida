@@ -378,7 +378,7 @@ Future<void> showGeneralPopupDialog(
 
     final savePath = await PlaylistController.inst.convertPlaylistToM3U(pl, directoryPath: directoryPath);
     snackyy(
-      message: "${lang.savedIn}: $savePath",
+      message: "${lang.savedIn}: ${savePath.toDisplayPath()}",
       leftBarIndicatorColor: colorDelightened.value,
       altDesign: true,
       top: false,
@@ -450,7 +450,7 @@ Future<void> showGeneralPopupDialog(
     if (m3uPath.isNotEmpty) {
       await PlaylistController.inst.exportPlaylistToM3UFile(finalPlaylist, m3uPath);
       snackyy(
-        message: "${lang.savedIn}: $m3uPath",
+        message: "${lang.savedIn}: ${m3uPath.toDisplayPath()}",
         leftBarIndicatorColor: colorDelightened.value,
         altDesign: true,
         top: false,
@@ -502,7 +502,7 @@ Future<void> showGeneralPopupDialog(
         ...highMatchesFiles.map(
           (e) => SmallListTile(
             borderRadius: 12.0,
-            title: showFullPath ? e : e.getFilename,
+            title: showFullPath ? e.toDisplayPath() : e.getFilename,
             subtitle: File(e).fileSizeFormatted(),
             onTap: () => updatePathDialog(e),
             color: colorDelightened.value, // not worth refreshing
@@ -1085,7 +1085,7 @@ Future<void> showGeneralPopupDialog(
                               if (isSingle) ...[
                                 SmallListTile(
                                   title: lang.update,
-                                  subtitle: tracks.first.path,
+                                  subtitle: tracks.first.path.toDisplayPath(),
                                   color: colorDelightened,
                                   compact: true,
                                   icon: Broken.document_upload,
@@ -2091,14 +2091,14 @@ class _ConvertToM3UDirectoryDialog extends StatelessWidget {
           CustomListTile(
             icon: Broken.folder,
             title: lang.defaultLabel,
-            subtitle: AppDirs.M3UPlaylists,
+            subtitle: AppDirs.M3UPlaylists.toDisplayPath(),
             onTap: () => onDirectoryTap(null),
           ),
           if (tracksDirectoryPath != null)
             CustomListTile(
               icon: Broken.music_library_2,
               title: lang.tracks,
-              subtitle: tracksDirectoryPath,
+              subtitle: tracksDirectoryPath.toDisplayPath(),
               onTap: () => onDirectoryTap(tracksDirectoryPath),
             ),
           CustomListTile(

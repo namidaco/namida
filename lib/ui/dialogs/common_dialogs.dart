@@ -293,7 +293,7 @@ class NamidaDialogs {
                       dense: true,
                       icon: Broken.broom,
                       title: "${lang.delete}: ${lang.m3uPlaylist}",
-                      subtitle: m3uPath,
+                      subtitle: m3uPath.toDisplayPath(),
                       active: deletem3u,
                       onTap: deleteM3uFileOnly ? null : alsoDeleteM3uRx.toggle,
                     ),

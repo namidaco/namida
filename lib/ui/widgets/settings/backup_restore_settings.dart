@@ -856,14 +856,17 @@ class _DefaultBackupLocationTile extends StatelessWidget {
         : null;
     return ObxO(
       rx: settings.defaultBackupLocation,
-      builder: (context, defaultBackupLocation) => CustomListTile(
-        bgColor: bgColor,
-        title: lang.defaultBackupLocation,
-        icon: Broken.direct_inbox,
-        subtitle: defaultBackupLocation ?? AppDirs.BACKUPS,
-        onTap: _pickLocation,
-        trailingRaw: openInFileExplorerButton,
-      ),
+      builder: (context, defaultBackupLocation) {
+        final backupLocation = defaultBackupLocation ?? AppDirs.BACKUPS;
+        return CustomListTile(
+          bgColor: bgColor,
+          title: lang.defaultBackupLocation,
+          icon: Broken.direct_inbox,
+          subtitle: backupLocation.toDisplayPath(),
+          onTap: _pickLocation,
+          trailingRaw: openInFileExplorerButton,
+        );
+      },
     );
   }
 }

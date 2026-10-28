@@ -52,6 +52,9 @@ abstract class NamidaStorage {
   /// a folder the user removed from the library, its access goes unless something else still points into it.
   Future<void> releaseLibraryDirectory(String path) async {}
 
+  /// a local path the way the ui shows it, the same path unless a platform names its folders differently than the path does.
+  String displayPath(String path) => path;
+
   @visibleForTesting
   static String? debugRewriteMovedPaths(String text, Map<String, String> moves) {
     final migrator = _StoragePathsMigrator.create(moves);

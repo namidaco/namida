@@ -987,7 +987,7 @@ class _NamidaFileBrowserState<T extends FileSystemEntity> extends State<_NamidaF
                               margin: const EdgeInsets.symmetric(horizontal: 4.0),
                               padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
                               child: NamidaText(
-                                e,
+                                e.toDisplayPath(),
                                 style: const NText(.small, weight: FontWeight.w600),
                               ),
                             ),

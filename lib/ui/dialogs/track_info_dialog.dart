@@ -178,6 +178,7 @@ Future<void> showTrackInfoDialog(
       TrackInfoListTile(
         title: lang.path,
         value: track.path,
+        displayValue: track.path.toDisplayPath(),
         icon: Broken.location,
       ),
   ];
@@ -577,6 +578,9 @@ Future<void> showTrackInfoDialog(
 class TrackInfoListTile extends StatelessWidget {
   final String title;
   final String value;
+
+  /// shown instead of [value], which stays the copied text.
+  final String? displayValue;
   final List<String>? cards;
   final IconData icon;
   final IconData? valueIcon;
@@ -587,6 +591,7 @@ class TrackInfoListTile extends StatelessWidget {
     super.key,
     required this.title,
     required this.value,
+    this.displayValue,
     this.cards,
     required this.icon,
     this.valueIcon,
@@ -598,6 +603,7 @@ class TrackInfoListTile extends StatelessWidget {
     NamidaUtils.copyToClipboard(
       title: title,
       content: value,
+      message: displayValue,
       leftBarIndicatorColor: context.theme.colorScheme.primary,
       altDesign: true,
     );
@@ -610,6 +616,7 @@ class TrackInfoListTile extends StatelessWidget {
     const iconSize = 17.0;
     const textToIconPaddingCorrector = EdgeInsets.only(top: 1.0);
     final valueIcon = this.valueIcon;
+    final shownValue = displayValue ?? value;
     final valueIconWidget = valueIcon == null
         ? null
         : Padding(
@@ -653,9 +660,9 @@ class TrackInfoListTile extends StatelessWidget {
                 child:
                     child ??
                     (hasLinks
-                        ? NamidaSelectableAutoLinkText(text: value == '' ? '?' : value)
+                        ? NamidaSelectableAutoLinkText(text: shownValue == '' ? '?' : shownValue)
                         : NamidaText(
-                            value == '' ? '?' : value,
+                            shownValue == '' ? '?' : shownValue,
                             style: const NText(.medium, size: .s13p5),
                             color: _valueColor,
                           )),

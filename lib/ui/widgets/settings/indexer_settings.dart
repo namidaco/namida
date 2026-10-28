@@ -2355,7 +2355,7 @@ class _LocalFilesSmallChip extends StatelessWidget {
               itemBuilder: (context, i) {
                 final p = pathsList[i];
                 return TapDetector(
-                  onTap: () => NamidaUtils.copyToClipboard(content: p),
+                  onTap: () => NamidaUtils.copyToClipboard(content: p, message: p.toDisplayPath()),
                   child: Row(
                     mainAxisSize: .min,
                     children: [
@@ -2366,7 +2366,7 @@ class _LocalFilesSmallChip extends StatelessWidget {
                       const SizedBox(width: 8.0),
                       Flexible(
                         child: NamidaText(
-                          p,
+                          p.toDisplayPath(),
                           style: NText.small,
                         ),
                       ),

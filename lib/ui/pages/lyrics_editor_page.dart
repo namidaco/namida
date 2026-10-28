@@ -654,7 +654,7 @@ class _LyricsEditorPageState extends State<LyricsEditorPage> with SingleTickerPr
     }
     snackyy(
       title: lang.save,
-      message: '${lang.savedIn}: ${file.path}',
+      message: '${lang.savedIn}: ${file.path.toDisplayPath()}',
       icon: Broken.document_download,
       top: false,
     );

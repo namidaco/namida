@@ -108,11 +108,12 @@ abstract class TagsExtractor {
     bool hasAccess = await storage.safHasAccess(path);
     if (!hasAccess) {
       final directoryPath = path.getDirectoryPath;
-      if (_safDeniedVolumes.contains(directoryPath)) return 'Permission for "$directoryPath" was denied';
-      hasAccess = await storage.safRequestAccess(path, note: 'Please select grand access to "$directoryPath" to allow editing files inside it');
+      final directoryDisplayPath = directoryPath.toDisplayPath();
+      if (_safDeniedVolumes.contains(directoryPath)) return 'Permission for "$directoryDisplayPath" was denied';
+      hasAccess = await storage.safRequestAccess(path, note: 'Please select grand access to "$directoryDisplayPath" to allow editing files inside it');
       if (!hasAccess) {
         _safDeniedVolumes.add(directoryPath);
-        return 'Storage access was not granted, cannot edit "$path"';
+        return 'Storage access was not granted, cannot edit "${path.toDisplayPath()}"';
       }
     }
 

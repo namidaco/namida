@@ -622,6 +622,7 @@ class _VideoInfoDialogState extends State<VideoInfoDialog> {
                                     TrackInfoListTile(
                                       title: lang.path,
                                       value: saveLocation,
+                                      displayValue: saveLocation.toDisplayPath(),
                                       icon: Broken.location,
                                     ),
                                   TrackInfoListTile(

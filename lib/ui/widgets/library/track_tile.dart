@@ -355,7 +355,7 @@ class TrackTile extends StatelessWidget {
         Widget threeLinesColumn;
         if (trackOrTwd.track.toTrackExtOrNull() == null) {
           threeLinesColumn = NamidaText(
-            trackOrTwd.track.path,
+            trackOrTwd.track.path.toShortDisplayPath(),
             style: NText.small,
             color: NColors.fixed(textColor?.withOpacityExt(0.67)),
           );
@@ -835,7 +835,7 @@ class TrackTileManager {
     TrackTileItem.extension: (track, _) => track.extension,
     TrackTileItem.fileName: (track, _) => track.filename,
     TrackTileItem.folder: (track, _) => track.folderName,
-    TrackTileItem.path: (track, _) => track.path.formatPath(),
+    TrackTileItem.path: (track, _) => track.path.toShortDisplayPath(),
     TrackTileItem.channels: (track, _) => track.channels.channelToLabel,
     TrackTileItem.comment: (track, _) => track.comment,
     TrackTileItem.composer: (track, _) => track.composer,

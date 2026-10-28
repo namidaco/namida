@@ -1529,7 +1529,7 @@ class _LyricsSaveLocationTile extends StatelessWidget {
             ...LyricsSaveLocation.values.map(
               (e) => _LyricsSaveLocationOption(
                 location: e,
-                subtitle: e == LyricsSaveLocation.customFolder ? saveFolder : '',
+                subtitle: e == LyricsSaveLocation.customFolder ? saveFolder.toDisplayPath() : '',
                 onTap: () => _onLocationTap(e),
               ),
             ),
@@ -1663,7 +1663,7 @@ class _LyricsFoldersTile extends StatelessWidget {
               (e) => CustomListTile(
                 extraDense: true,
                 icon: Broken.folder,
-                title: e,
+                title: e.toDisplayPath(),
                 subtitle: e == saveFolder ? lang.lyricsSaveLocation : null,
                 trailingRaw: NamidaTextButton(
                   minHeight: NamidaTextButton.kDefaultMinHeight * 0.8,

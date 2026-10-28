@@ -96,6 +96,8 @@ class _FolderTileState extends State<FolderTile> {
             if (folderTitle == 'emulated') {
               folderTitle = 'Internal Storage';
             }
+          } else if (Platform.isIOS) {
+            folderTitle = widget.folder.path.toDisplayPath().getFilename;
           }
         }
       } catch (_) {}

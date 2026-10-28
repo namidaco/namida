@@ -61,6 +61,7 @@ IOS_ASSETS = ROOT / 'ios/Runner/Assets.xcassets'
 IOS_SIZE = 1024
 # -- the art fills this much of the ios square, the rest is the background color
 IOS_ART_RATIO = 0.86
+IOS_DARK_APPEARANCE = {'appearance': 'luminosity', 'value': 'dark'}
 
 MACOS_ICONSET = ROOT / 'macos/Runner/Assets.xcassets/AppIcon.appiconset'
 # -- macos big sur grid: the shape is 824 of 1024
@@ -290,15 +291,20 @@ def ios_icon(name: str, art: Image.Image, base_color: tuple[int, int, int]) -> I
     return canvas.convert('RGB')
 
 
-def write_ios_iconset(iconset_name: str, name: str, art: Image.Image, base_color: tuple[int, int, int]) -> None:
+def write_ios_iconset(iconset_name: str, name: str, art: Image.Image, base_color: tuple[int, int, int], has_dark_variant: bool) -> None:
     folder = IOS_ASSETS / f'{iconset_name}.appiconset'
     folder.mkdir(parents=True, exist_ok=True)
     for old in folder.glob('*.png'):
         old.unlink()
     icon = ios_icon(name, art, base_color)
     icon.save(folder / 'icon.png', optimize=True)
+    image = {'filename': 'icon.png', 'idiom': 'universal', 'platform': 'ios', 'size': '1024x1024'}
+    images = [image]
+    if has_dark_variant:
+        # -- the same art fits dark mode. alternates skip it, each slot adds its own renditions to Assets.car
+        images.append({**image, 'appearances': [IOS_DARK_APPEARANCE]})
     contents = {
-        'images': [{'filename': 'icon.png', 'idiom': 'universal', 'platform': 'ios', 'size': '1024x1024'}],
+        'images': images,
         'info': {'author': 'xcode', 'version': 1},
     }
     write_contents_json(folder, contents)
@@ -435,7 +441,7 @@ def main() -> None:
             write_android_icon(name, art, base_color)
             write_windows_icon(name, art, base_color)
         iconset_name = 'AppIcon' if is_default else name
-        write_ios_iconset(iconset_name, name, art, base_color)
+        write_ios_iconset(iconset_name, name, art, base_color, has_dark_variant=is_default)
         print(f'{name}: android, windows, ios {iconset_name}')
     default_art = cropped_art(ROOT / icons[DEFAULT_ICON])
     write_macos_iconset(default_art)

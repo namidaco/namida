@@ -145,7 +145,7 @@ class Folder {
   }
 
   String formattedPath() {
-    if (!isNetwork) return path.formatPath();
+    if (!isNetwork) return path.toShortDisplayPath();
     final sourceInfo = _parseNetworkServer().toSourceInfo();
     final serverFolderStart = path.indexOf(_kNetworkFolderSeparator) + 1;
     if (serverFolderStart == 0) return sourceInfo;
@@ -160,7 +160,7 @@ class Folder {
       return '$parentPath/';
     }
     final nameStart = path.lastIndexOf(folderNameRaw);
-    return nameStart <= 0 ? '' : path.substring(0, nameStart).formatPath();
+    return nameStart <= 0 ? '' : path.substring(0, nameStart).toShortDisplayPath();
   }
 
   String? getExtraInfoOrFetch(void Function() onFetched) {

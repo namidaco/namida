@@ -491,7 +491,7 @@ class _YTPlaylistDownloadPageState extends State<YTPlaylistDownloadPage> {
                             children: [
                               Flexible(
                                 child: NamidaText(
-                                  downloadsDirPath,
+                                  downloadsDirPath.toDisplayPath(),
                                   style: NText.small,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,

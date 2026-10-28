@@ -1949,7 +1949,7 @@ class CreatePlaylistButton extends StatelessWidget {
                   if (pl != null && m3uPath != null) {
                     await PlaylistController.inst.exportPlaylistToM3UFile(pl, m3uPath);
                     snackyy(
-                      message: "${lang.savedIn}: $m3uPath",
+                      message: "${lang.savedIn}: ${m3uPath.toDisplayPath()}",
                       leftBarIndicatorColor: CurrentColor.inst.color,
                       altDesign: true,
                       top: false,
@@ -1968,7 +1968,7 @@ class CreatePlaylistButton extends StatelessWidget {
                 (context) => CustomSwitchListTile(
                   icon: Broken.direct_send,
                   title: lang.convertToM3UPlaylist,
-                  subtitle: m3uDirectoryRx.valueR,
+                  subtitle: m3uDirectoryRx.valueR.toDisplayPath(),
                   value: exportAsM3uRx.valueR,
                   onChanged: (_) => exportAsM3uRx.toggle(),
                   trailingBeforeSwitch: NamidaIconButton(

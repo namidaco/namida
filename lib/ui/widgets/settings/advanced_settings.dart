@@ -1115,7 +1115,7 @@ class UpdateDirectoryPathListTile extends StatelessWidget {
         delightenColors: true,
       ),
       title: lang.updateDirectoryPath,
-      subtitle: oldPath,
+      subtitle: oldPath?.toDisplayPath(),
       onTap: () {
         final oldDirController = TextEditingController(text: oldPath);
         final newDirController = TextEditingController();
@@ -1341,7 +1341,7 @@ class _CompressImagesListTile extends StatelessWidget {
                           child: ListTileWithCheckMark(
                             icon: Broken.folder,
                             title: dirPath.last,
-                            subtitle: e,
+                            subtitle: e.toDisplayPath(),
                             active: dirsToCompress.contains(e),
                             onTap: () => dirsToCompress.addOrRemove(e),
                           ),

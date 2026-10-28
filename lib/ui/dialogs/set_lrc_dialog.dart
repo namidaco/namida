@@ -201,13 +201,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
             },
           ),
         ],
-        bodyText: '${lang.delete}: "${l.file?.path}"?',
+        bodyText: '${lang.delete}: "${l.file?.path.toDisplayPath()}"?',
       ),
     );
   }
 
   void showIgnoreLyricsDialog() {
-    final cachedPaths = availableLyrics.value.where((l) => l.isInCache).map((l) => '"${l.file?.path}"').join('\n');
+    final cachedPaths = availableLyrics.value.where((l) => l.isInCache).map((l) => '"${l.file?.path.toDisplayPath()}"').join('\n');
     NamidaNavigator.inst.navigateDialog(
       colorScheme: colorScheme,
       dialogBuilder: (theme) => CustomBlurryDialog(

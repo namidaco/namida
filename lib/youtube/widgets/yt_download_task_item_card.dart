@@ -174,7 +174,7 @@ class _YTDownloadTaskItemCardState extends State<YTDownloadTaskItemCard> {
     }
 
     return [
-      if (file != null) getRow(icon: Broken.location, texts: [file.parent.path]),
+      if (file != null) getRow(icon: Broken.location, texts: [file.parent.path.toDisplayPath()]),
       if (file != null && await file.exists()) ...[
         const SizedBox(height: 6.0),
         getRow(

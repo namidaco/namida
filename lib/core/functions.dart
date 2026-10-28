@@ -965,7 +965,7 @@ class NamidaOnTaps {
     } else {
       final parentPath = File(path).parent.path;
       title = lang.copiedArtwork;
-      subtitle = '${lang.savedIn}: $parentPath';
+      subtitle = '${lang.savedIn}: ${parentPath.toDisplayPath()}';
       snackColor = themeColor ?? CurrentColor.inst.color;
       if (NamidaChannel.inst.canOpenFileInExplorer) {
         button = SnackbarButton(

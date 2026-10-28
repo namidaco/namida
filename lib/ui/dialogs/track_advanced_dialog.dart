@@ -182,7 +182,7 @@ void showTrackAdvancedDialog({
               ),
               const SizedBox(height: 12.0),
               NamidaText(
-                path,
+                path.toDisplayPath(),
                 style: NText.small,
               ),
               const SizedBox(height: 12.0),
@@ -259,7 +259,7 @@ void showTrackAdvancedDialog({
                   final err = erroredPaths[pathKey];
                   final errText = err.toString();
                   return TapDetector(
-                    onTap: () => NamidaUtils.copyToClipboard(content: pathKey),
+                    onTap: () => NamidaUtils.copyToClipboard(content: pathKey, message: pathKey.toDisplayPath()),
                     child: Row(
                       mainAxisSize: .min,
                       children: [
@@ -274,7 +274,7 @@ void showTrackAdvancedDialog({
                             crossAxisAlignment: .start,
                             children: [
                               NamidaText(
-                                pathKey,
+                                pathKey.toDisplayPath(),
                                 style: NText.small,
                               ),
                               NamidaText(

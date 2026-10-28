@@ -59,7 +59,7 @@ class BackupController {
     } catch (e) {
       snackyy(
         title: "${lang.error}: ${operationName ?? lang.backupAndRestore}",
-        message: '$e: "$path"',
+        message: '$e: "${path.toDisplayPath()}"',
         isError: true,
       );
     }
