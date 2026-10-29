@@ -1550,6 +1550,13 @@ enum DiscordPresenceStatus {
   unreachable,
 }
 
+enum PipContent {
+  video,
+  lyrics,
+  artwork,
+  ;
+}
+
 enum LyricsIntegration {
   lyricInfo(availability: NamidaFeaturesAvailablity.android),
   superLyric(availability: NamidaFeaturesAvailablity.android, sendsPerLine: true),

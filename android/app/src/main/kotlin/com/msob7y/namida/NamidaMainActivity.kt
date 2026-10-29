@@ -39,6 +39,7 @@ class NamidaMainActivity : FlutterActivity() {
   companion object {
     var currentLifecycle: Lifecycle? = null
     var currentApplicationContext : Context? = null
+    private var pipAspectRatio: Rational? = null
   }
 
 
@@ -232,19 +233,13 @@ class NamidaMainActivity : FlutterActivity() {
           result.success(true)
         }
 
-        "setCanEnterPip" -> {
-          val canEnter = call.argument<Boolean?>("canEnter")
-          if (canEnter != null) canEnterPip = canEnter
+        "setPipAspectRatio" -> {
+          val width = call.argument<Int?>("width")
+          val height = call.argument<Int?>("height")
+          val ratio = if (width != null && height != null) Rational(width, height) else null
+          pipAspectRatio = ratio
+          if (ratio != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPip()) updatePipAspectRatio(ratio)
           result.success(null)
-        }
-
-        "updatePipRatio" -> {
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isInPip()) {
-            updatePipRatio(call.argument<Int?>("width"), call.argument<Int?>("height"))
-            result.success(true)
-          } else {
-            result.success(false)
-          }
         }
 
         "setMusicAs" -> {
@@ -564,14 +559,11 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun onUserLeaveHint() {
     channel.invokeMethod("onUserLeaveHint", null)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    val ratio = pipAspectRatio
+    if (ratio != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
       try {
-        if (canEnterPip &&
-          com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() &&
-          com.ryanheise.just_audio.MainMethodCallHandler.hasVideo() &&
-          !isInPip()
-        ) {
-          enterPip()
+        if (com.ryanheise.just_audio.MainMethodCallHandler.willPlayWhenReady() && !isInPip()) {
+          enterPip(ratio)
         }
       } catch (_: Exception) {
         // -- non initialized handler
@@ -638,7 +630,6 @@ class NamidaMainActivity : FlutterActivity() {
 
   // ------- PIP -------
 
-  private var canEnterPip: Boolean = false
   private var pipEventChannel: BetterEventChannel? = null
   private var pipBuilder: PictureInPictureParams.Builder? = null
 
@@ -657,22 +648,19 @@ class NamidaMainActivity : FlutterActivity() {
   }
 
   @RequiresApi(api = Build.VERSION_CODES.O)
-  private fun enterPip() {
-    val rational =
-      com.ryanheise.just_audio.MainMethodCallHandler.getVideoRational() ?: Rational(1, 1)
+  private fun enterPip(ratio: Rational) {
     val pipB = pipBuilder
     if (pipB != null) {
-      pipB.setAspectRatio(rational)
+      pipB.setAspectRatio(ratio)
       activity.enterPictureInPictureMode(pipB.build())
     }
   }
 
   @RequiresApi(api = Build.VERSION_CODES.O)
-  private fun updatePipRatio(width: Int?, height: Int?) {
-    if (width == null || height == null) return
+  private fun updatePipAspectRatio(ratio: Rational) {
     val pipB = pipBuilder
     if (pipB == null) return
-    pipB.setAspectRatio(Rational(width, height))
+    pipB.setAspectRatio(ratio)
     activity.setPictureInPictureParams(pipB.build())
   }
 

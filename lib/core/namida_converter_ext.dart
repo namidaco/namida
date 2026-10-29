@@ -3382,6 +3382,22 @@ extension DiscordPresenceStatusL10n on DiscordPresenceStatus {
   };
 }
 
+extension PipContentL10n on PipContent {
+  String toText() => switch (this) {
+    PipContent.video => lang.video,
+    PipContent.lyrics => lang.lyrics,
+    PipContent.artwork => lang.artwork,
+  };
+}
+
+extension PipContentUtils on PipContent {
+  IconData toIcon() => switch (this) {
+    PipContent.video => Broken.video,
+    PipContent.lyrics => Broken.message_text,
+    PipContent.artwork => Broken.gallery,
+  };
+}
+
 extension LyricsIntegrationL10n on LyricsIntegration {
   String toText() => switch (this) {
     LyricsIntegration.lyricInfo => 'ColorOS & HyperLyric',

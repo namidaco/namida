@@ -24,27 +24,18 @@ class _NamidaChannelAndroid extends NamidaChannel {
   @override
   bool get supportsAppIcons => true;
   @override
-  Future<bool?> isAppIconEnabled(NamidaAppIcons type) async {
-    final res = await _channel.invokeMethod('isAppIconEnabled', {'key': type.name});
-    if (res is bool) {
-      return res;
-    }
-    return null;
+  Future<String?> _getEnabledAppIconKey() {
+    return _channel.invokeMethod<String>('getEnabledAppIcon');
   }
 
   @override
-  Future<void> changeAppIcon(NamidaAppIcons type) async {
+  Future<void> _changeAppIcon(NamidaAppIcons type) async {
     await _channel.invokeMethod('changeAppIcon', {'key': type.name});
   }
 
   @override
-  Future<void> updatePipRatio({int? width, int? height}) async {
-    await _channel.invokeMethod('updatePipRatio', {'width': width, 'height': height});
-  }
-
-  @override
-  Future<void> setCanEnterPip(bool canEnter) async {
-    await _channel.invokeMethod('setCanEnterPip', {"canEnter": canEnter});
+  Future<void> setPipAspectRatio({required int? width, required int? height}) async {
+    await _channel.invokeMethod('setPipAspectRatio', {'width': width, 'height': height});
   }
 
   @override

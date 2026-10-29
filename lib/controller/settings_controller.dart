@@ -399,7 +399,7 @@ class _SettingsController extends _SettingsKeysWriter {
   late final downloadAddToLocalPlaylist = _key('downloadAddToLocalPlaylist', false);
   late final downloadAudioOnly = _key('downloadAudioOnly', isKuru ? true : false);
   late final downloadOverrideOldFiles = _key('downloadOverrideOldFiles', false);
-  late final enablePip = _key('enablePip', true, sync: false);
+  late final pipContents = _keySet<PipContent>('pipContents', const {PipContent.video}, item: PipContent.values.asCodec(), sync: false);
   late final pickColorsFromDeviceWallpaper = _key('pickColorsFromDeviceWallpaper', false, sync: false);
   late final onNotificationTapAction = _keyEnum('onNotificationTapAction', NotificationTapAction.openApp, NotificationTapAction.values);
   late final performanceMode = _keyEnum('performanceMode', isDesktop ? PerformanceMode.goodLooking : PerformanceMode.balanced, PerformanceMode.values, sync: false);
@@ -599,6 +599,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   @override
   void _migrateKeys() {
+    _migrateKey('enablePip', 'pipContents', (json) => json == false ? const <String>[] : null);
     for (final name in const ['albumSort', 'artistSort', 'genreSort', 'playlistSort']) {
       final listName = '${name}s';
       _migrateKey(name, listName, (json) => json is String && _raw[listName] == null ? [json] : null);

@@ -23,6 +23,7 @@ import 'package:namida/controller/lyrics_search_utils/lrc_search_details.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_base.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/pip_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/tagger_controller.dart';
@@ -57,9 +58,10 @@ class Lyrics {
   final currentLyricsText = LrcText.empty.obs;
   final currentLyricsLRC = Rxn<Lrc>();
   final lyricsCanBeAvailable = true.obs;
+  final isResolvingLyrics = false.obs;
 
   bool get _lyricsViewsEnabled => settings.enableLyrics.value || settings.enableSimpleLyricsLine.value;
-  bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive;
+  bool get _lyricsEnabled => _lyricsViewsEnabled || LyricsIntegrations.isActive || PipController.inst.isLyricsEnabled();
   EmbeddedLyricsPriority get _embeddedLyricsPriority => settings.embeddedLyricsPriority.value;
   LyricsSource get _lyricsSource => settings.lyricsSource.value;
 
@@ -103,6 +105,7 @@ class Lyrics {
   void resetLyrics({bool hide = true}) {
     currentLyricsText.value = LrcText.empty;
     currentLyricsLRC.value = null;
+    isResolvingLyrics.value = false;
     WakelockController.inst.updateLRCStatus(false);
     for (final view in LyricsLRCParsedViewState.mountedViews) {
       view.clearLists(hide: hide);
@@ -173,6 +176,7 @@ class Lyrics {
     } catch (_) {}
 
     lyricsCanBeAvailable.value = true;
+    isResolvingLyrics.value = true;
 
     final resolved = await _resolveLyrics(item, checkInterrupted);
     if (resolved == null || checkInterrupted()) return;
@@ -186,6 +190,7 @@ class Lyrics {
     } else if (!resolved.canBeAvailable) {
       lyricsCanBeAvailable.value = false;
     }
+    isResolvingLyrics.value = false;
     _updateWidgets(lrc, txt);
   }
 

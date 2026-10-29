@@ -24,7 +24,7 @@ import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/party/party_player_gate.dart';
-import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
+import 'package:namida/controller/pip_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/sync_manager/sync_manager.dart';
@@ -155,6 +155,7 @@ class Player {
   bool get isBufferingR => _audioHandler.currentState.valueR == ProcessingState.buffering;
   bool get isLoadingR => _audioHandler.currentState.valueR == ProcessingState.loading;
   RxBaseCore<bool> get isFetchingInfo => _audioHandler.isFetchingInfo;
+  RxBaseCore<bool> get isLoadingCurrentItem => _audioHandler.isLoadingCurrentItem;
   bool get shouldShowLoadingIndicatorR {
     if (isBufferingR || isLoadingR) return true;
     final state = _audioHandler.currentState.valueR;
@@ -283,11 +284,11 @@ class Player {
     void videoInfoListener() {
       final info = _audioHandler.videoPlayerInfo.value;
       VideoController.inst.onVideoInfoChanged(info);
+      PipController.inst.onVideoInfoChanged();
       if (info == null || info.width == -1 || info.height == -1) {
         WakelockController.inst.updateVideoStatus(false);
       } else {
         WakelockController.inst.updateVideoStatus(true);
-        NamidaChannel.inst.updatePipRatio(width: info.width, height: info.height);
         VideoController.inst.fillCurrentVideoInfoFromPlayer(info);
       }
     }

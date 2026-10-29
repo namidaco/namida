@@ -24,30 +24,29 @@ abstract class NamidaChannel {
 
   final isInPip = false.obs;
 
-  Future<NamidaAppIcons?> getEnabledAppIcon() async {
-    if (!supportsAppIcons) return null;
-    NamidaAppIcons? newEnabledIcon;
-    for (final e in NamidaAppIcons.values) {
-      final enabled = await NamidaChannel.inst.isAppIconEnabled(e) ?? false;
-      if (enabled) {
-        newEnabledIcon = e;
-        break;
-      }
-    }
-    return newEnabledIcon;
+  /// null until [refreshEnabledAppIcon] runs, and on platforms without app icons.
+  final enabledAppIcon = Rxn<NamidaAppIcons>();
+
+  Future<void> refreshEnabledAppIcon() async {
+    if (!supportsAppIcons) return;
+    final key = await _getEnabledAppIconKey();
+    enabledAppIcon.value = NamidaAppIcons.values.getEnum(key);
+  }
+
+  Future<void> changeAppIcon(NamidaAppIcons type) async {
+    await _changeAppIcon(type);
+    await refreshEnabledAppIcon();
   }
 
   bool get canOpenFileInExplorer;
   Future<void>? openFileInExplorer(String filePath, {bool isDirectory = false});
 
   bool get supportsAppIcons => false;
-  Future<bool?> isAppIconEnabled(NamidaAppIcons type) async => false;
+  Future<String?> _getEnabledAppIconKey() async => null;
+  Future<void> _changeAppIcon(NamidaAppIcons type) async {}
 
-  Future<void> changeAppIcon(NamidaAppIcons type) async {}
-
-  Future<void> updatePipRatio({int? width, int? height}) async {}
-
-  Future<void> setCanEnterPip(bool canEnter) async {}
+  /// null disables entering pip.
+  Future<void> setPipAspectRatio({required int? width, required int? height}) async {}
 
   /// an in-app snackbar where the system has no toasts.
   Future<void> showToast({required String message, required SnackDisplayDuration duration}) async {

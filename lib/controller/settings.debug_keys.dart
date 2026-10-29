@@ -410,7 +410,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     downloadAddToLocalPlaylist,
     downloadAudioOnly,
     downloadOverrideOldFiles,
-    enablePip,
+    pipContents,
     pickColorsFromDeviceWallpaper,
     onNotificationTapAction,
     performanceMode,

@@ -13,6 +13,7 @@ import 'package:namida/controller/lyrics_controller.dart';
 import 'package:namida/controller/miniplayer_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
+import 'package:namida/controller/pip_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/romanizer/romanizer.dart';
@@ -104,12 +105,13 @@ class ExtrasSettings extends SettingSubpageProvider {
         enabledWhen: () => !Dimensions.inst.showNavigationAtSide,
         onChanged: (isEnabled) => MiniPlayerController.inst.updateBottomNavBarRelatedDimensions(isEnabled),
       ),
-      SettingToggle(
-        settings.enablePip,
-        availability: NamidaFeaturesAvailablity.android,
-        icon: Broken.screenmirroring,
+      SettingCustom(
         title: () => lang.enablePictureInPicture,
-        onChanged: (isEnabled) => NamidaChannel.inst.setCanEnterPip(isEnabled),
+        availability: NamidaFeaturesAvailablity.android,
+        keys: [settings.pipContents],
+        tile: (args) => _PipContentsTile(
+          bgColor: args.bgColor,
+        ),
       ),
       SettingChoice(
         settings.floatingActionButton,
@@ -2103,6 +2105,58 @@ class _IntegrationsFlagsOptions extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PipContentsTile extends StatelessWidget {
+  final Color? bgColor;
+
+  const _PipContentsTile({required this.bgColor});
+
+  static void _toggle(PipContent content) {
+    settings.pipContents.update((value) {
+      if (!value.remove(content)) value.add(content);
+    });
+    final isLyricsEnabled = PipController.inst.isLyricsEnabled();
+    if (content == PipContent.lyrics && isLyricsEnabled) ExtrasSettings._refreshCurrentLyrics();
+  }
+
+  static List<NamidaPopupItem> _items() {
+    final enabled = settings.pipContents.value;
+    return PipContent.values
+        .map(
+          (e) => NamidaPopupItem(
+            selected: enabled.contains(e),
+            icon: e.toIcon(),
+            title: e.toText(),
+            onTap: () => _toggle(e),
+          ),
+        )
+        .toFixedList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NamidaPopupWrapper(
+      childrenDefault: _items,
+      refreshListenable: settings.pipContents,
+      child: ObxO(
+        rx: settings.pipContents,
+        builder: (context, enabled) {
+          final enabledText = PipContent.values.where(enabled.contains).map((e) => e.toText()).join(', ');
+          return CustomListTile(
+            bgColor: bgColor,
+            icon: Broken.screenmirroring,
+            title: lang.enablePictureInPicture,
+            subtitle: enabledText,
+            trailing: NamidaText(
+              '${enabled.length}/${PipContent.values.length}',
+              style: NText.medium,
+            ),
+          );
+        },
       ),
     );
   }

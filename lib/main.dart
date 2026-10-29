@@ -41,6 +41,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/notification_controller.dart';
 import 'package:namida/controller/now_playing_broadcaster.dart';
 import 'package:namida/controller/party/party_controller.dart';
+import 'package:namida/controller/pip_controller.dart';
 import 'package:namida/controller/platform/app_single_instance/app_single_instance.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -88,8 +89,9 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/mini_lyrics_window.dart';
-import 'package:namida/ui/widgets/video_widget.dart';
+import 'package:namida/ui/widgets/pip_view.dart';
 import 'package:namida/youtube/class/youtube_id.dart';
 import 'package:namida/youtube/controller/youtube_account_controller.dart';
 import 'package:namida/youtube/controller/youtube_controller.dart';
@@ -346,6 +348,7 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
     NamidaChannel.inst.logPreviousAbnormalExits().catchError(logger.report);
 
     YoutubeAccountController.initialize();
+    PipController.inst.init();
 
     await [
       YoutubeInfoController.utils.fillBackupInfoMap(), // for history videos info.
@@ -361,7 +364,6 @@ Future<void> _secondaryAppInitialization(bool shouldShowOnBoarding) async {
 
       NotificationManager.init(),
       if (!NamidaFeaturesVisibility.hidingVolumeHudIsAppWide) FlutterVolumeController.updateShowSystemUI(false),
-      NamidaChannel.inst.setCanEnterPip(settings.enablePip.value),
     ].executeAllAndSilentReportErrors();
 
     QueueController.inst.prepareAllQueuesFile().catchError(logger.report);
@@ -871,15 +873,7 @@ class _NamidaState extends State<Namida> {
                     ),
                   ),
 
-                if (showPipOnly)
-                  const NamidaVideoControls(
-                    key: Key('pip_widget_child'),
-                    isFullScreen: true,
-                    showControls: false,
-                    forceEnableSponsorBlock: false,
-                    onMinimizeTap: null,
-                    isLocal: true,
-                  ),
+                if (showPipOnly) const NamidaPipView(),
               ],
             ),
           ),

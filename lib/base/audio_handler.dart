@@ -908,6 +908,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
   );
   bool? _pausedTemporarily;
 
+  final isLoadingCurrentItem = false.obs;
+  int _latestItemLoadId = 0;
+
   Future<void> _freePlayerTemporarily() async {
     // -- can cause issues, disabled currently.
     // return super.freePlayer();
@@ -927,6 +930,8 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
 
   @override
   Future<void> onItemPlay(Q item, int index, Function skipItem, ItemPreparedPlayerInfo<Q>? preparedItemInfo) {
+    final itemLoadId = ++_latestItemLoadId;
+    isLoadingCurrentItem.value = true;
     final requestedStartPosition = _takeRequestedStartPosition(item);
     _currentItemDuration.value = null;
     cancelPlayErrorSkipTimer();
@@ -943,7 +948,7 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
     beginEarlyCrossFadeOutIfRequired();
     RhythmController.inst.onItemPlaying();
     if (settings.enablePartyModeColorSwap.value) CurrentColor.inst.switchColorPalettes(item: item);
-    return _fnLimiter.executeFuture(
+    final loading = _fnLimiter.executeFuture(
       () async {
         return await item.execute(
           selectable: (finalItem) async {
@@ -981,6 +986,9 @@ class NamidaAudioVideoHandler<Q extends Playable> extends BasicAudioHandler<Q> w
         }
       },
     );
+    return loading.whenComplete(() {
+      if (itemLoadId == _latestItemLoadId) isLoadingCurrentItem.value = false;
+    });
   }
 
   Timer? _playErrorSkipTimer;
