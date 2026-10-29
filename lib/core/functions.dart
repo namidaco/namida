@@ -973,6 +973,12 @@ class NamidaOnTaps {
           icon: Broken.export_1,
           function: () => NamidaChannel.inst.openFileInExplorer(path),
         );
+      } else {
+        button = SnackbarButton(
+          text: lang.share,
+          icon: Broken.share,
+          function: () => NamidaUtils.shareFiles([path]),
+        );
       }
     }
     snackyy(

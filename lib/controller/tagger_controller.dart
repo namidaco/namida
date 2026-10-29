@@ -7,6 +7,7 @@ import 'package:namida/class/taglib_res.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/video.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/constants.dart';
@@ -235,6 +236,8 @@ class NamidaTaggerController {
     if (onUpdatingTracksStart != null) onUpdatingTracksStart();
 
     if (tracksMap.isNotEmpty) {
+      final editedPaths = tracksMap.keys.map((e) => e.path).toFixedList();
+      NamidaChannel.inst.scanMediaFilesTry(editedPaths);
       await Indexer.inst.updateTrackMetadata(
         tracksMap: tracksMap,
         artworkWasEdited: imageFile != null,
@@ -270,6 +273,8 @@ class NamidaTaggerController {
     await _extractor.disposeForWrite();
 
     if (tracksMap.isNotEmpty) {
+      final editedPaths = tracksMap.keys.map((e) => e.path).toFixedList();
+      NamidaChannel.inst.scanMediaFilesTry(editedPaths);
       await Indexer.inst.updateTrackMetadata(
         tracksMap: tracksMap,
         artworkWasEdited: false,

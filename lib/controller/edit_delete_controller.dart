@@ -9,6 +9,7 @@ import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/lyrics_search_utils/lrc_search_utils_selectable.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/tags_extractor/tags_extractor.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
@@ -126,11 +127,13 @@ class EditDeleteController {
       final newImgFilePath = FileParts.joinPath(saveDirPath, filename);
       if (fileToCopy != null) {
         await fileToCopy.copy(newImgFilePath);
+        NamidaChannel.inst.scanMediaFilesTry([newImgFilePath]);
         return newImgFilePath;
       } else if (bytesToCopy != null) {
         final f = File(newImgFilePath);
         await f.create(recursive: true);
         await f.writeAsBytes(bytesToCopy);
+        NamidaChannel.inst.scanMediaFilesTry([newImgFilePath]);
         return newImgFilePath;
       }
     }
@@ -147,6 +150,7 @@ class EditDeleteController {
     final newPath = FileParts.joinPath(saveDirPath, "${imageFile.path.getFilenameWOExt}.png");
     try {
       await imageFile.copy(newPath);
+      NamidaChannel.inst.scanMediaFilesTry([newPath]);
       return newPath;
     } catch (e) {
       printy(e, isError: true);

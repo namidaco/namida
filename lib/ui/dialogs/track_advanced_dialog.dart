@@ -303,6 +303,8 @@ void showTrackAdvancedDialog({
         await doForAllFiles((file, newPath) => file.copy(newPath));
         await Indexer.inst.convertPathsToTracksAndAddToLists(successPaths.values);
       }
+      final successNewPaths = successPaths.values.toFixedList();
+      NamidaChannel.inst.scanMediaFilesTry(successNewPaths);
     } finally {
       rxToEdit.value = false;
 

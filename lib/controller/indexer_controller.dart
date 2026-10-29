@@ -768,6 +768,7 @@ class Indexer<T extends Track> {
     }
     final tracksToRemoveCopy = tracksToRemove.toFixedList();
     int networkTracksRemoved = 0;
+    final physicalPathsToScan = <String>[];
     for (final trS in tracksToRemoveCopy) {
       final tr = trS.track;
       recentlyDeletedFileWrite?.writeln(tr.path);
@@ -781,8 +782,9 @@ class Indexer<T extends Track> {
       allTracksMappedByPath.remove(tr.path);
       unawaited(_tracksDBManager.delete(tr.path));
       TrackTileManager.rebuildTrackInfo(tr);
-      if (tr.isPhysical) this.scanMediaStore(tr.path);
+      if (tr.isPhysical) physicalPathsToScan.add(tr.path);
     }
+    NamidaChannel.inst.scanMediaFilesTry(physicalPathsToScan);
 
     this.networkTracksCount.value -= networkTracksRemoved;
     this.tracksInfoList.refresh();
@@ -2209,14 +2211,6 @@ class Indexer<T extends Track> {
 
     printy("Paths Found: ${allPaths.length}");
     return result;
-  }
-
-  Future<void> scanMediaStore(String path) async {
-    if (NamidaFeaturesVisibility.onAudioQueryAvailable) {
-      try {
-        await _audioQuery.scanMedia(path);
-      } catch (_) {}
-    }
   }
 
   Future<List<TrackExtended>> _fetchMediaStoreTracks() async {

@@ -155,6 +155,14 @@ class _NamidaChannelAndroid extends NamidaChannel {
   }
 
   @override
+  Future<void> scanMediaFilesTry(List<String> paths) async {
+    if (paths.isEmpty) return;
+    try {
+      await _channel.invokeMethod('scanMediaFiles', {'paths': paths});
+    } catch (_) {}
+  }
+
+  @override
   Future<bool> openHomeWidgetSettings() async {
     final res = await _channel.invokeMethod<bool?>('openHomeWidgetSettings');
     return res ?? false;

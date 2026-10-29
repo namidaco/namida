@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.media.MediaScannerConnection
 import android.media.RingtoneManager
 import android.media.audiofx.AudioEffect
 import android.net.wifi.WifiManager
@@ -279,6 +280,13 @@ class NamidaMainActivity : FlutterActivity() {
         "shareFiles" -> {
           val paths = call.argument<List<String>>("paths") ?: emptyList()
           result.success(shareFilesExternally(paths))
+        }
+
+        "scanMediaFiles" -> {
+          val paths = call.argument<List<String>>("paths") ?: emptyList()
+          val pathsArray = paths.toTypedArray()
+          MediaScannerConnection.scanFile(applicationContext, pathsArray, null, null)
+          result.success(null)
         }
 
         "openHomeWidgetSettings" -> {

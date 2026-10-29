@@ -9,10 +9,10 @@ import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/thumbnail_manager.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/extensions.dart';
-import 'package:namida/core/namida_converter_ext.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
 import 'package:namida/youtube/controller/youtube_info_controller.dart';
@@ -365,6 +365,7 @@ class NamidaFFMPEG {
     final totalFiles = imagesToCompress.length;
     int currentProgress = 0;
     int currentFailed = 0;
+    final newOutputPaths = <String>[];
 
     for (final image in imagesToCompress) {
       final didUpdate = await _compressImage(
@@ -374,7 +375,11 @@ class NamidaFFMPEG {
         percentage: compressionPerc,
         keepOriginalFileStats: keepOriginalFileStats,
       );
-      if (!didUpdate) currentFailed++;
+      if (!didUpdate) {
+        currentFailed++;
+      } else if (image.outputPath != image.path) {
+        newOutputPaths.add(image.outputPath);
+      }
       currentProgress++;
       currentOperations[OperationType.imageCompress]!.value = OperationProgress(
         totalFiles: totalFiles,
@@ -384,6 +389,7 @@ class NamidaFFMPEG {
       );
     }
     currentOperations[OperationType.imageCompress]!.value.currentFilePath = null;
+    NamidaChannel.inst.scanMediaFilesTry(newOutputPaths);
 
     if (hasAppDirs) {
       Indexer.clearMemoryImageCache();
@@ -480,7 +486,11 @@ class NamidaFFMPEG {
     }
     currentOperations[OperationType.ytdlpThumbnailFix]!.value.currentFilePath = null;
 
-    if (tracksWithNewArtwork.isNotEmpty) await Indexer.inst.updateTrackMetadata(tracksMap: tracksWithNewArtwork);
+    if (tracksWithNewArtwork.isNotEmpty) {
+      final editedPaths = tracksWithNewArtwork.keys.map((e) => e.path).toFixedList();
+      NamidaChannel.inst.scanMediaFilesTry(editedPaths);
+      await Indexer.inst.updateTrackMetadata(tracksMap: tracksWithNewArtwork);
+    }
   }
 
   /// * Extracts thumbnail from a given video, usually this tries to get embed thumbnail,

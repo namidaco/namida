@@ -18,6 +18,7 @@ import 'package:namida/controller/json_to_history_parser.dart';
 import 'package:namida/controller/listen_time_controller.dart';
 import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/platform/namida_storage/namida_storage.dart';
 import 'package:namida/controller/platform/zip_manager/zip_manager.dart';
 import 'package:namida/controller/player_controller.dart';
@@ -152,7 +153,7 @@ class BackupController {
         AppDirs.YT_HISTORY_PLAYLIST,
       ];
       await createBackupFile(itemsToBackup, fileSuffix: " - auto");
-      _trimExtraBackupFiles.thready(backupDirectoryPath);
+      _trimExtraBackupFiles.thready(backupDirectoryPath).then(NamidaChannel.inst.scanMediaFilesTry);
     }
   }
 
@@ -264,7 +265,9 @@ class BackupController {
     await stagingDir.delete(recursive: true).ignoreError();
 
     isCreatingBackup.value = false;
-    return succeeded ? backupFile : null;
+    if (!succeeded) return null;
+    NamidaChannel.inst.scanMediaFilesTry([backupFilePath]);
+    return backupFile;
   }
 
   Future<void> _ensureDbCheckpointed(File file) async {
@@ -326,7 +329,7 @@ class BackupController {
     return false;
   }
 
-  static void _trimExtraBackupFiles(String dirPath) {
+  static List<String> _trimExtraBackupFiles(String dirPath) {
     final dir = Directory(dirPath);
     final possibleFiles = dir.listSyncSafe();
 
@@ -342,11 +345,13 @@ class BackupController {
       }
     }
 
+    final deletedPaths = <String>[];
     final remainingBackups = <File>[];
     for (final s in statsLookup.entries) {
       if (s.value.size == 0) {
         try {
           File(s.key).deleteSync();
+          deletedPaths.add(s.key);
         } catch (_) {}
       } else {
         remainingBackups.add(File(s.key));
@@ -360,9 +365,11 @@ class BackupController {
       for (final item in remainingBackups.take(extra)) {
         try {
           item.deleteSync();
+          deletedPaths.add(item.path);
         } catch (_) {}
       }
     }
+    return deletedPaths;
   }
 
   Future<void> restoreBackupOnTap(bool auto) async {

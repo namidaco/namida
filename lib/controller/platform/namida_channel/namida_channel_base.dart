@@ -95,6 +95,8 @@ abstract class NamidaChannel {
 
   Future<bool> shareFiles(List<String> paths) async => false;
 
+  Future<void> scanMediaFilesTry(List<String> paths) async {}
+
   /// files and links the system opened namida with, ex: "open in" or an oauth redirect. file urls arrive as paths.
   /// android & desktop get them through intents and launch args instead.
   Future<void> listenOpenedUrls(void Function(List<String> items) onItems) async {}

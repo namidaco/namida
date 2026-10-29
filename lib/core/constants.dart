@@ -899,6 +899,7 @@ class AppPaths {
     );
     final leftoverDirectory = outputDirectory == null ? tmpDirContents : tmpDirParent;
     leftoverDirectory.delete(recursive: true);
+    if (outputDirectory != null) NamidaChannel.inst.scanMediaFilesTry([zipFile.path]);
     return [zipFile.path];
   }
 

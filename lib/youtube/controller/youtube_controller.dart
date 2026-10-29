@@ -173,8 +173,11 @@ class YoutubeController {
     await _saveDownloadTaskConfig(groupName, config);
 
     final directoryPath = _getGroupDirectoryPath(groupName);
+    final oldPath = FileParts.joinPath(directoryPath, oldFilename);
+    final newPath = FileParts.joinPath(directoryPath, newFilename);
     try {
-      await File(FileParts.joinPath(directoryPath, oldFilename)).rename(FileParts.joinPath(directoryPath, newFilename));
+      await File(oldPath).rename(newPath);
+      NamidaChannel.inst.scanMediaFilesTry([oldPath, newPath]);
     } catch (_) {}
   }
 
@@ -922,6 +925,8 @@ class YoutubeController {
       final itemsToCancel = allInGroupName
           ? youtubeDownloadTasksMap.value[groupName]!.values.toFixedList()
           : List<YoutubeItemDownloadConfig>.from(itemsConfig); // copy bcz we can remove if from original list
+      final deletedOutputPaths = <String>[];
+      final outputDeletions = <Future<Object?>>[];
       for (final c in itemsToCancel) {
         _downloadManager.stopDownload(file: _downloadClientsMap[groupName]?[c.filename]);
         _downloadClientsMap[groupName]?.remove(c.filename);
@@ -941,8 +946,13 @@ class YoutubeController {
             if (isDone) _deleteCacheTaskFiles(c);
           } else {
             final outputFilePath = FileParts.joinPath(_getGroupDirectoryPath(groupName), c.filename.filename);
-            File(outputFilePath).tryDeleting();
-            if (c.splitByChapters == true) Directory(_getChaptersDirectoryPath(outputFilePath)).delete(recursive: true).ignoreError();
+            outputDeletions.add(File(outputFilePath).tryDeleting());
+            deletedOutputPaths.add(outputFilePath);
+            if (c.splitByChapters == true) {
+              final chaptersDirectoryPath = _getChaptersDirectoryPath(outputFilePath);
+              outputDeletions.add(Directory(chaptersDirectoryPath).delete(recursive: true).ignoreError());
+              deletedOutputPaths.add(chaptersDirectoryPath);
+            }
           }
         }
         if (isDone) {
@@ -951,6 +961,7 @@ class YoutubeController {
           _deleteTempFiles(_getTempDirectoryPath(groupName, c), c);
         }
       }
+      if (outputDeletions.isNotEmpty) Future.wait(outputDeletions).then((_) => NamidaChannel.inst.scanMediaFilesTry(deletedOutputPaths));
       if (keepInListIfRemoved) {
         YTOnGoingFinishedDownloads.inst.onTasksStatusChanged(groupName, itemsToCancel);
       } else {
@@ -1280,8 +1291,9 @@ class YoutubeController {
         final tracksFutures = <Future<Track?>>[];
         for (final file in outputFiles) {
           if (addToLocalLibrary) tracksFutures.add(Indexer.inst.convertPathToTracksAndAddToListsSingle(file.path));
-          Indexer.inst.scanMediaStore(file.path);
         }
+        final outputPaths = outputFiles.map((e) => e.path).toFixedList();
+        NamidaChannel.inst.scanMediaFilesTry(outputPaths);
         final localPlaylistName = config.localPlaylistName;
         if (localPlaylistName != null && tracksFutures.isNotEmpty) {
           _addDownloadedTracksToLocalPlaylist(localPlaylistName, groupName, config.originalIndex, tracksFutures);
@@ -1618,6 +1630,7 @@ class YoutubeController {
     }
 
     await outputFile.tryDeleting();
+    NamidaChannel.inst.scanMediaFilesTry([outputFile.path]);
     return parts;
   }
 

@@ -22,6 +22,7 @@ import 'package:namida/controller/generators_controller.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
 import 'package:namida/controller/search_sort_controller.dart';
@@ -339,6 +340,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
       headerLines: headerLines,
       relative: true,
     ));
+    NamidaChannel.inst.scanMediaFilesTry([path]);
     if (!asCopy) _m3uHeadersBaselines.set(path, headerValues);
   }
 
@@ -1045,6 +1047,7 @@ class PlaylistController extends PlaylistManager<TrackWithDate, Track, SortEntry
     for (final m3uPath in m3uPaths) {
       await File(m3uPath).deleteIfExists();
     }
+    NamidaChannel.inst.scanMediaFilesTry(m3uPaths);
   }
 
   @override
