@@ -29,7 +29,8 @@
     "track",
     "album",
     "artist",
-    "folder"
+    "folderMusic",
+    "folderVideo"
   ],
   "albumIdentifiers": [
     "albumName"

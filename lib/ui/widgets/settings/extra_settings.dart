@@ -135,7 +135,7 @@ class ExtrasSettings extends SettingSubpageProvider {
     [
       SettingCustom(
         title: () => lang.filterTracksBy,
-        keys: [settings.trackSearchFilterDefault, settings.trackSearchFilterPresets],
+        keys: [settings.trackSearchFilterDefault, settings.trackSearchFilterPresets, settings.trackSearchListensBoost],
         onReset: SearchSortController.inst.onTrackSearchFilterChanged,
         tile: (args) => _FilterTracksByTile(
           bgColor: args.bgColor,

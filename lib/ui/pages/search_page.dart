@@ -708,14 +708,12 @@ class _SearchResultsView extends StatelessWidget {
     required List<Track> Function(String item) getTracks,
   }) {
     return _HorizontalSection<String>(
+      type: type,
       titleKey: sectionKeys[type],
       rx: rx,
       title: title,
       icon: type.toIcon(),
-      trailing: NamidaButton(
-        colors: .mid,
-        icon: Broken.category,
-        text: lang.viewAll,
+      trailing: _ViewAllButton(
         onTap: () => ArtistSearchResultsPage(artists: rx, type: type).navigate(),
       ),
       height: 100.0,
@@ -740,6 +738,7 @@ class _SearchResultsView extends StatelessWidget {
     required Widget Function(String item) cardBuilder,
   }) {
     return _HorizontalSection<String>(
+      type: type,
       titleKey: sectionKeys[type],
       rx: rx,
       title: title,
@@ -767,14 +766,12 @@ class _SearchResultsView extends StatelessWidget {
             slivers: [
               // == Albums ==
               _HorizontalSection<AlbumIdentifierWrapper>(
+                type: MediaType.album,
                 titleKey: sectionKeys[MediaType.album],
                 rx: searchController.albumSearchTemp,
                 title: lang.albums,
                 icon: MediaType.album.toIcon(),
-                trailing: NamidaButton(
-                  colors: .mid,
-                  icon: Broken.category,
-                  text: lang.viewAll,
+                trailing: _ViewAllButton(
                   onTap: const AlbumSearchResultsPage().navigate,
                 ),
                 height: 142.0,
@@ -868,6 +865,7 @@ class _SearchResultsView extends StatelessWidget {
 
               // == Playlists ==
               _HorizontalSection<String>(
+                type: MediaType.playlist,
                 titleKey: sectionKeys[MediaType.playlist],
                 rx: searchController.playlistSearchTemp,
                 title: lang.playlists,
@@ -895,6 +893,7 @@ class _SearchResultsView extends StatelessWidget {
 
               // == Folders ==
               _HorizontalSection<String>(
+                type: MediaType.folderMusic,
                 titleKey: sectionKeys[MediaType.folderMusic],
                 rx: searchController.folderTracksSearchTemp,
                 title: MediaType.folderMusic.toText(),
@@ -913,6 +912,7 @@ class _SearchResultsView extends StatelessWidget {
 
               // == Video Folders ==
               _HorizontalSection<String>(
+                type: MediaType.folderVideo,
                 titleKey: sectionKeys[MediaType.folderVideo],
                 rx: searchController.folderVideosSearchTemp,
                 title: MediaType.folderVideo.toText(),
@@ -931,6 +931,7 @@ class _SearchResultsView extends StatelessWidget {
 
               // == Moods ==
               _HorizontalSection<String>(
+                type: MediaType.mood,
                 titleKey: sectionKeys[MediaType.mood],
                 rx: searchController.moodSearchTemp,
                 title: lang.moods,
@@ -947,6 +948,7 @@ class _SearchResultsView extends StatelessWidget {
 
               // == Tags ==
               _HorizontalSection<String>(
+                type: MediaType.tag,
                 titleKey: sectionKeys[MediaType.tag],
                 rx: searchController.tagSearchTemp,
                 title: lang.tags,
@@ -981,6 +983,7 @@ class _SearchResultsView extends StatelessWidget {
 }
 
 class _HorizontalSection<T extends Object> extends StatelessWidget {
+  final MediaType type;
   final GlobalKey? titleKey;
   final RxBaseCore<List<T>> rx;
   final String title;
@@ -991,6 +994,7 @@ class _HorizontalSection<T extends Object> extends StatelessWidget {
   final Widget Function(T item) itemBuilder;
 
   const _HorizontalSection({
+    required this.type,
     required this.titleKey,
     required this.rx,
     required this.title,
@@ -1001,34 +1005,251 @@ class _HorizontalSection<T extends Object> extends StatelessWidget {
     required this.itemBuilder,
   });
 
+  static const _kListVerticalPadding = 12.0;
+
   @override
   Widget build(BuildContext context) {
-    return ObxO(
-      rx: rx,
-      builder: (context, list) => SliverToBoxAdapter(
-        child: list.isEmpty
-            ? null
-            : Column(
-                children: [
-                  SearchPageTitleRow(
-                    key: titleKey,
-                    title: '$title • ${list.length}',
-                    icon: icon,
-                    trailing: trailing,
-                  ),
-                  SizedBox(
-                    height: height + 24.0,
-                    child: SuperSmoothListView.builder(
-                      clipBehavior: Clip.none,
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-                      scrollDirection: Axis.horizontal,
-                      itemExtent: itemExtent,
-                      itemCount: list.length,
-                      itemBuilder: (context, i) => itemBuilder(list[i]),
-                    ),
-                  ),
-                ],
+    final searchController = SearchSortController.inst;
+    final expandCardHeight = (height * 0.6).withMinimum(32.0);
+    final expandCardVerticalInset = (height - expandCardHeight) / 2;
+    return Obx(
+      (context) {
+        final list = rx.valueR;
+        if (list.isEmpty) return const SliverToBoxAdapter();
+        final isWeak = searchController.isTempSectionWeakR(type);
+        final isExpanded = searchController.isTempSectionExpandedR(type);
+        final relevantCount = searchController.tempRelevantCountOf(type);
+        final hasExpandCard = !isWeak && relevantCount < list.length;
+        final shownCount = isWeak || isExpanded ? list.length : relevantCount;
+        final itemCount = hasExpandCard ? shownCount + 1 : shownCount;
+        final expandCard = _SectionExpandCard(
+          type: type,
+          isExpanded: isExpanded,
+          hiddenCount: list.length - relevantCount,
+          verticalInset: expandCardVerticalInset,
+        );
+        final body = SizedBox(
+          height: height + _kListVerticalPadding * 2,
+          child: SuperSmoothListView.builder(
+            clipBehavior: Clip.none,
+            padding: const EdgeInsets.symmetric(vertical: _kListVerticalPadding, horizontal: 8.0),
+            scrollDirection: Axis.horizontal,
+            itemExtent: itemExtent,
+            itemCount: itemCount,
+            itemBuilder: (context, i) => i < shownCount ? itemBuilder(list[i]) : expandCard,
+          ),
+        );
+        return SliverToBoxAdapter(
+          child: _SectionContent(
+            key: ValueKey(isWeak),
+            type: type,
+            titleKey: titleKey,
+            title: '$title • ${list.length}',
+            icon: icon,
+            trailing: trailing,
+            isWeak: isWeak,
+            isCollapsed: isWeak && !isExpanded,
+            body: body,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SectionContent extends StatefulWidget {
+  final MediaType type;
+  final GlobalKey? titleKey;
+  final String title;
+  final IconData icon;
+  final Widget? trailing;
+  final bool isWeak;
+  final bool isCollapsed;
+  final Widget body;
+
+  const _SectionContent({
+    super.key,
+    required this.type,
+    required this.titleKey,
+    required this.title,
+    required this.icon,
+    required this.trailing,
+    required this.isWeak,
+    required this.isCollapsed,
+    required this.body,
+  });
+
+  @override
+  State<_SectionContent> createState() => _SectionContentState();
+}
+
+class _SectionContentState extends State<_SectionContent> with SingleTickerProviderStateMixin {
+  static const _kDimmedColor = NColors(.textLarge, opacity: 0.5);
+  static const _kCollapsedBodyHeight = 4.0;
+
+  late bool _isBodyBuilt = !widget.isCollapsed;
+
+  late final _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+    reverseDuration: const Duration(milliseconds: 220),
+    value: widget.isCollapsed ? 0.0 : 1.0,
+  );
+  late final _sizeAnimation = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeOutCubic,
+    reverseCurve: Curves.easeInCubic,
+  );
+  late final _fadeAnimation = CurvedAnimation(
+    parent: _controller,
+    curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    reverseCurve: const Interval(0.5, 1.0, curve: Curves.easeIn),
+  );
+  late final _arrowTurns = Tween(begin: 0.0, end: 0.5).animate(_sizeAnimation);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addStatusListener(_onStatusChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant _SectionContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final isCollapsed = widget.isCollapsed;
+    if (isCollapsed == oldWidget.isCollapsed) return;
+    if (isCollapsed) {
+      _controller.reverse();
+    } else {
+      _isBodyBuilt = true;
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _sizeAnimation.dispose();
+    _fadeAnimation.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onStatusChanged(AnimationStatus status) {
+    final isBodyBuilt = status != AnimationStatus.dismissed;
+    if (isBodyBuilt == _isBodyBuilt) return;
+    setState(() => _isBodyBuilt = isBodyBuilt);
+  }
+
+  void _onHeaderTap() => SearchSortController.inst.toggleTempSectionExpanded(widget.type);
+
+  @override
+  Widget build(BuildContext context) {
+    final isWeak = widget.isWeak;
+    final headerColor = widget.isCollapsed ? _kDimmedColor : null;
+    final toggleArrow = isWeak
+        ? Padding(
+            padding: const EdgeInsetsDirectional.only(start: 4.0),
+            child: RotationTransition(
+              turns: _arrowTurns,
+              child: NIcon(
+                Broken.arrow_down_2,
+                size: 16.0,
+                color: headerColor,
               ),
+            ),
+          )
+        : null;
+    final body = _isBodyBuilt
+        ? NamidaSizeReveal(
+            animation: _sizeAnimation,
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: widget.body,
+            ),
+          )
+        : null;
+    return Column(
+      children: [
+        SearchPageTitleRow(
+          key: widget.titleKey,
+          title: widget.title,
+          icon: widget.icon,
+          color: headerColor,
+          onTap: isWeak ? _onHeaderTap : null,
+          titleTrailing: toggleArrow,
+          trailing: widget.trailing,
+        ),
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _kCollapsedBodyHeight),
+          child: body,
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionExpandCard extends StatelessWidget {
+  final MediaType type;
+  final bool isExpanded;
+  final int hiddenCount;
+  final double verticalInset;
+
+  const _SectionExpandCard({
+    required this.type,
+    required this.isExpanded,
+    required this.hiddenCount,
+    required this.verticalInset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = isExpanded ? Broken.arrow_left_2 : Broken.arrow_right_3;
+    final text = isExpanded ? lang.showLess : '+$hiddenCount';
+    final iconWidget = NIcon(
+      icon,
+      size: 14.0,
+    );
+    return NamidaInkWell(
+      margin: EdgeInsets.symmetric(horizontal: 12.0, vertical: verticalInset),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      borderRadius: 12.0,
+      bgColor: const NColors(.secondary, opacity: 0.06),
+      onTap: () => SearchSortController.inst.toggleTempSectionExpanded(type),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: .min,
+          spacing: 4.0,
+          children: [
+            if (isExpanded) iconWidget,
+            NamidaText(
+              text,
+              style: const NText(.medium, size: .s13),
+            ),
+            if (!isExpanded) iconWidget,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ViewAllButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ViewAllButton({
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 4.0),
+      child: NamidaButton(
+        colors: .mid,
+        icon: Broken.category,
+        text: lang.viewAll,
+        onTap: onTap,
       ),
     );
   }
@@ -1051,7 +1272,7 @@ class _TracksSectionTitle extends StatelessWidget {
         if (tracksCount == 0) return const SliverToBoxAdapter();
         final isTracksSearchActive = settings.activeTrSearch.valueR[TrackTypeSearch.tr] ?? true;
         return SliverPadding(
-          padding: const EdgeInsets.only(bottom: 8.0),
+          padding: const EdgeInsets.only(top: 4.0, bottom: 8.0),
           sliver: SliverToBoxAdapter(
             child: SearchPageTitleRow(
               key: titleKey,

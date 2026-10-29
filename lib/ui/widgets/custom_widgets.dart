@@ -1708,7 +1708,7 @@ class _NamidaExpansionTileState extends State<NamidaExpansionTile> with SingleTi
       children: [
         header,
         if (_isBodyBuilt)
-          _ExpansionSizeReveal(
+          NamidaSizeReveal(
             animation: _sizeAnimation,
             child: FadeTransition(
               opacity: _fadeAnimation,
@@ -1820,11 +1820,11 @@ class _ExpansionTint extends AnimatedWidget {
 }
 
 // -- unlike [SizeTransition], no clip once fully expanded, it would cut children shadows/glows.
-class _ExpansionSizeReveal extends AnimatedWidget {
+class NamidaSizeReveal extends AnimatedWidget {
   final Animation<double> animation;
   final Widget child;
 
-  const _ExpansionSizeReveal({required this.animation, required this.child}) : super(listenable: animation);
+  const NamidaSizeReveal({super.key, required this.animation, required this.child}) : super(listenable: animation);
 
   @override
   Widget build(BuildContext context) {
@@ -4100,6 +4100,9 @@ class SearchPageTitleRow extends StatelessWidget {
   final Widget? trailing;
   final Widget? subtitleWidget;
   final Widget? leading;
+  final Widget? titleTrailing;
+  final NColors? color;
+  final VoidCallback? onTap;
 
   const SearchPageTitleRow({
     super.key,
@@ -4109,25 +4112,45 @@ class SearchPageTitleRow extends StatelessWidget {
     this.trailing,
     this.subtitleWidget,
     this.leading,
+    this.titleTrailing,
+    this.color,
+    this.onTap,
   });
+
+  static const _kPadding = EdgeInsets.only(left: 16.0, right: 8.0, top: 4.0, bottom: 4.0);
+  static const _kTappableMargin = EdgeInsets.symmetric(horizontal: 8.0);
+  static const _kTappablePadding = EdgeInsets.only(left: 8.0, top: 4.0, bottom: 4.0);
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
-        const SizedBox(width: 16.0),
         Expanded(
           child: Row(
             children: [
-              leading ?? Icon(icon),
+              leading ??
+                  NIcon(
+                    icon,
+                    color: color,
+                  ),
               const SizedBox(width: 8.0),
               Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    NamidaText(
-                      title,
-                      style: const NText(.large, size: .s15p5),
+                    Row(
+                      mainAxisSize: .min,
+                      spacing: 4.0,
+                      children: [
+                        Flexible(
+                          child: NamidaText(
+                            title,
+                            style: const NText(.large, size: .s15p5),
+                            color: color,
+                          ),
+                        ),
+                        ?titleTrailing,
+                      ],
                     ),
                     ?subtitleWidget,
                     if (subtitle != '')
@@ -4142,8 +4165,25 @@ class SearchPageTitleRow extends StatelessWidget {
           ),
         ),
         ?trailing,
-        const SizedBox(width: 8.0),
       ],
+    );
+    final content = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: NamidaButton.kDefaultMinHeight),
+      child: row,
+    );
+    final onTap = this.onTap;
+    if (onTap == null) {
+      return Padding(
+        padding: _kPadding,
+        child: content,
+      );
+    }
+    return NamidaInkWell(
+      margin: _kTappableMargin,
+      padding: _kTappablePadding,
+      borderRadius: 12.0,
+      onTap: onTap,
+      child: content,
     );
   }
 }

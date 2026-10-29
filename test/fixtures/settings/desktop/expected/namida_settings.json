@@ -30,7 +30,8 @@
   "activeGenreType": "genre",
   "activeSearchMediaTypes": [
     "track",
-    "folder",
+    "folderMusic",
+    "folderVideo",
     "artist",
     "album"
   ],

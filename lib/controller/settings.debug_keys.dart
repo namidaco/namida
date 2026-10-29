@@ -260,6 +260,7 @@ extension SettingsControllerDebugKeys on _SettingsController {
     indexMinFileSizeInB,
     trackSearchFilterDefault,
     trackSearchFilterPresets,
+    trackSearchListensBoost,
     playlistSearchFilter,
     directoriesToScan,
     directoriesToExclude,

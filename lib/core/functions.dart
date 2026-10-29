@@ -362,10 +362,12 @@ class NamidaOnTaps {
 
   void onTrackSearchFilterTap() {
     final originalFilters = settings.trackSearchFilter.value;
+    final originalListensBoost = settings.trackSearchListensBoost.value;
 
     void refreshIfChanged() {
-      final didChange = settings.trackSearchFilter.value.didChangeFrom(originalFilters);
-      if (didChange) SearchSortController.inst.onTrackSearchFilterChanged();
+      final didChangeFilters = settings.trackSearchFilter.value.didChangeFrom(originalFilters);
+      final didChangeListensBoost = settings.trackSearchListensBoost.value != originalListensBoost;
+      if (didChangeFilters || didChangeListensBoost) SearchSortController.inst.onTrackSearchFilterChanged();
     }
 
     NamidaNavigator.inst.navigateDialog(
@@ -377,7 +379,10 @@ class NamidaOnTaps {
           IconButton(
             icon: const Icon(Broken.refresh),
             tooltip: lang.restoreDefaults,
-            onPressed: () => settings.updateTrackSearchFilter(settings.trackSearchFilterDefault.fallback),
+            onPressed: () => settings.transaction(() {
+              settings.updateTrackSearchFilter(settings.trackSearchFilterDefault.fallback);
+              settings.trackSearchListensBoost.reset();
+            }),
           ),
           DoneButton(
             additional: refreshIfChanged,
@@ -403,6 +408,10 @@ class NamidaOnTaps {
                   ),
                 ),
               ),
+              const NamidaContainerDivider(
+                margin: EdgeInsets.symmetric(vertical: 4.0),
+              ),
+              const _TrackSearchListensBoostTile(),
             ],
           ),
         ),
@@ -2610,6 +2619,29 @@ class _TrackSearchFilterTile extends StatelessWidget {
           subtitle: filter.canAffectPerformance ? lang.performanceNote : '',
           onTap: _onTap,
           active: filters.contains(filter),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrackSearchListensBoostTile extends StatelessWidget {
+  const _TrackSearchListensBoostTile();
+
+  static const _kMaxBoost = 8;
+
+  @override
+  Widget build(BuildContext context) {
+    return ObxO(
+      rx: settings.trackSearchListensBoost,
+      builder: (context, boost) => CustomListTile(
+        icon: Broken.ranking,
+        title: lang.listensCountBoost,
+        trailing: NamidaWheelSlider(
+          max: _kMaxBoost,
+          initValue: boost,
+          onValueChanged: settings.trackSearchListensBoost.save,
+          text: '${boost}x',
         ),
       ),
     );

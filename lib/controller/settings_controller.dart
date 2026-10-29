@@ -215,6 +215,7 @@ class _SettingsController extends _SettingsKeysWriter {
     NamedPresetsCodec.trackSearchFilter.decode,
     NamedPresetsCodec.trackSearchFilter.encode,
   );
+  late final trackSearchListensBoost = _key('trackSearchListensBoost', 2);
 
   /// the active preset's filters, or [trackSearchFilterDefault].
   RxBaseCore<List<TrackSearchFilter>> get trackSearchFilter => _activeTrackSearchFilter.filters;
@@ -463,7 +464,7 @@ class _SettingsController extends _SettingsKeysWriter {
 
   late final activeSearchMediaTypes = _keyList(
     'activeSearchMediaTypes',
-    isKuru ? const [MediaType.track, MediaType.album, MediaType.artist, MediaType.folder] : const [MediaType.track, MediaType.album, MediaType.artist],
+    isKuru ? const [MediaType.track, MediaType.album, MediaType.artist, MediaType.folderMusic, MediaType.folderVideo] : const [MediaType.track, MediaType.album, MediaType.artist],
     item: MediaType.values.asCodec(),
   );
 
@@ -645,6 +646,8 @@ class _SettingsController extends _SettingsKeysWriter {
       ];
     }
 
+    _migrateLegacyFolderSearch(_raw['activeSearchMediaTypes']);
+
     // -- `true` was the old default, only an explicit `false` is kept
     _migrateKey('prioritizeEmbeddedLyrics', 'embeddedLyricsPriority', (json) => json == false && _raw['embeddedLyricsPriority'] == null ? EmbeddedLyricsPriority.off.name : null);
 
@@ -670,6 +673,16 @@ class _SettingsController extends _SettingsKeysWriter {
       'sorts': sortsJson,
       if (isReversed) 'reverse': isReversed,
     };
+  }
+
+  /// [MediaType.folder] used to search both music and video folders.
+  static void _migrateLegacyFolderSearch(dynamic activeSearchMediaTypesJson) {
+    if (activeSearchMediaTypesJson is! List) return;
+    final folderIndex = activeSearchMediaTypesJson.indexOf(MediaType.folder.name);
+    if (folderIndex == -1) return;
+    activeSearchMediaTypesJson.removeAt(folderIndex);
+    final splitFolderTypes = [MediaType.folderMusic.name, MediaType.folderVideo.name].where((name) => !activeSearchMediaTypesJson.contains(name)).toFixedList();
+    activeSearchMediaTypesJson.insertAll(folderIndex, splitFolderTypes);
   }
 
   /// playlists defaulted to [GroupSortType.dateModified], which only albums and artists sort by.
