@@ -1376,22 +1376,19 @@ class _AppIconWidgetRow extends StatefulWidget {
 }
 
 class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
-  NamidaAppIcons? _enabledIcon;
-
   @override
   void initState() {
     super.initState();
-    _refreshStatus();
+    NamidaChannel.inst.enabledAppIcon.addListener(_onEnabledIconChanged);
   }
 
-  Future<void> _refreshStatus() async {
-    final newEnabledIcon = await NamidaChannel.inst.getEnabledAppIcon();
-    if (mounted && _enabledIcon != newEnabledIcon) {
-      setState(() {
-        _enabledIcon = newEnabledIcon;
-      });
-    }
+  @override
+  void dispose() {
+    NamidaChannel.inst.enabledAppIcon.removeListener(_onEnabledIconChanged);
+    super.dispose();
   }
+
+  void _onEnabledIconChanged() => refreshState(() {});
 
   Future<void> _onAddTap() {
     const submitUrl = 'https://discord.com/channels/1156253663803740271/1423484977693327430/1423671224520671362';
@@ -1400,7 +1397,7 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
 
   @override
   Widget build(BuildContext context) {
-    final enabledIcon = _enabledIcon;
+    final enabledIcon = NamidaChannel.inst.enabledAppIcon.value;
     final enabledIconAuthorInfo = enabledIcon?.authorInfos.firstOrNull;
     final iconsRow = Row(
       mainAxisSize: MainAxisSize.min,
@@ -1447,7 +1444,6 @@ class _AppIconWidgetRowState extends State<_AppIconWidgetRow> {
                                 ),
                           onTap: () async {
                             await NamidaChannel.inst.changeAppIcon(e);
-                            await _refreshStatus();
                             if (e.isJelly) NamidaJellys.promptEnable('Let jellyfishes invade namida too?');
                           },
                           child: iconChild,

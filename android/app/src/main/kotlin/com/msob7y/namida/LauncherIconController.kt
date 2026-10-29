@@ -50,25 +50,26 @@ object LauncherIconController {
 // SPLASH_AUTO_GENERATED START
 enum class LauncherIcon(
     val key: String,
+    val dartKey: String,
     val foreground: Int
 ) {
-  DEFAULT("DefaultIcon", R.mipmap.ic_launcher),
-  CUTSIE("CutsieIcon", R.mipmap.ic_launcher_cutsie),
-  JELLYDA("JellydaIcon", R.mipmap.ic_launcher_jellyda),
-  EDDY("EddyIcon", R.mipmap.ic_launcher_eddy),
-  NAMICHIN("NamichinIcon", R.mipmap.ic_launcher_namichin),
-  SPACE("SpaceIcon", R.mipmap.ic_launcher_space),
-  RETRO("RetroIcon", R.mipmap.ic_launcher_retro),
-  OOKAMI("OokamiIcon", R.mipmap.ic_launcher_ookami),
-  ORIGINAL("OriginalIcon", R.mipmap.ic_launcher_original),
-  ENHANCED("EnhancedIcon", R.mipmap.ic_launcher_enhanced),
-  HOLLOW("HollowIcon", R.mipmap.ic_launcher_hollow),
-  PASTEL("PastelIcon", R.mipmap.ic_launcher_pastel),
-  MONET("MonetIcon", R.mipmap.ic_launcher_monet),
-  GLOWY("GlowyIcon", R.mipmap.ic_launcher_glowy),
-  SPOOKY("SpookyIcon", R.mipmap.ic_launcher_spooky),
-  NAMIWEEN("NamiweenIcon", R.mipmap.ic_launcher_namiween),
-  TIRED("TiredIcon", R.mipmap.ic_launcher_tired);
+  DEFAULT("DefaultIcon", "namida", R.mipmap.ic_launcher),
+  CUTSIE("CutsieIcon", "cutsie", R.mipmap.ic_launcher_cutsie),
+  JELLYDA("JellydaIcon", "jellyda", R.mipmap.ic_launcher_jellyda),
+  NAMIWEEN("NamiweenIcon", "namiween", R.mipmap.ic_launcher_namiween),
+  EDDY("EddyIcon", "eddy", R.mipmap.ic_launcher_eddy),
+  NAMICHIN("NamichinIcon", "namichin", R.mipmap.ic_launcher_namichin),
+  SPACE("SpaceIcon", "space", R.mipmap.ic_launcher_space),
+  RETRO("RetroIcon", "retro", R.mipmap.ic_launcher_retro),
+  OOKAMI("OokamiIcon", "ookami", R.mipmap.ic_launcher_ookami),
+  ORIGINAL("OriginalIcon", "original", R.mipmap.ic_launcher_original),
+  ENHANCED("EnhancedIcon", "enhanced", R.mipmap.ic_launcher_enhanced),
+  HOLLOW("HollowIcon", "hollow", R.mipmap.ic_launcher_hollow),
+  PASTEL("PastelIcon", "pastel", R.mipmap.ic_launcher_pastel),
+  MONET("MonetIcon", "monet", R.mipmap.ic_launcher_monet),
+  GLOWY("GlowyIcon", "glowy", R.mipmap.ic_launcher_glowy),
+  SPOOKY("SpookyIcon", "spooky", R.mipmap.ic_launcher_spooky),
+  TIRED("TiredIcon", "tired", R.mipmap.ic_launcher_tired);
 
     private var componentName: ComponentName? = null
 

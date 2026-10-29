@@ -40,7 +40,7 @@ import 'package:namida/packages/scroll_physics_modified.dart';
 import 'package:namida/packages/three_arched_circle.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/youtube/class/download_task_base.dart';
@@ -1939,17 +1939,9 @@ class _YTPlayerInnerPage extends StatelessWidget {
           return Stack(
             key: keys.bodyStack,
             children: [
-              if (NamidaJellys.enabled)
-                const Positioned.fill(
-                  child: NamidaJellyBackground(
-                    count: 4,
-                    opacity: 0.25,
-                    minHeight: 100.0,
-                    maxHeight: 280.0,
-                    reactToPlayback: true,
-                    seed: 17,
-                  ),
-                ),
+              const Positioned.fill(
+                child: NamidaMascotBackground.youtubePlayer(),
+              ),
               // -- swapping physics mid-gesture is what hands the drag over to the sheet, the slivers
               // -- themselves are reused as-is.
               ObxO(

@@ -3,6 +3,7 @@
 
 IDI_APP_ICON_CUTSIE ICON "resources\\app_icon_cutsie.ico"
 IDI_APP_ICON_JELLYDA ICON "resources\\app_icon_jellyda.ico"
+IDI_APP_ICON_NAMIWEEN ICON "resources\\app_icon_namiween.ico"
 IDI_APP_ICON_EDDY ICON "resources\\app_icon_eddy.ico"
 IDI_APP_ICON_NAMICHIN ICON "resources\\app_icon_namichin.ico"
 IDI_APP_ICON_SPACE ICON "resources\\app_icon_space.ico"
@@ -15,5 +16,4 @@ IDI_APP_ICON_PASTEL ICON "resources\\app_icon_pastel.ico"
 IDI_APP_ICON_MONET ICON "resources\\app_icon_monet.ico"
 IDI_APP_ICON_GLOWY ICON "resources\\app_icon_glowy.ico"
 IDI_APP_ICON_SPOOKY ICON "resources\\app_icon_spooky.ico"
-IDI_APP_ICON_NAMIWEEN ICON "resources\\app_icon_namiween.ico"
 IDI_APP_ICON_TIRED ICON "resources\\app_icon_tired.ico"

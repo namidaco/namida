@@ -80,9 +80,8 @@ void FlutterWindow::HandleNamidaCall(
     }
   }
   const std::string& method = call.method_name();
-  if (method == "isAppIconEnabled" && key) {
-    const bool is_enabled = app_icon_switcher_->IsEnabled(*key);
-    result->Success(flutter::EncodableValue(is_enabled));
+  if (method == "getEnabledAppIcon") {
+    result->Success(flutter::EncodableValue(app_icon_switcher_->EnabledKey()));
   } else if (method == "changeAppIcon" && key) {
     app_icon_switcher_->Change(*key);
     result->Success();

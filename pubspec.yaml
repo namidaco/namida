@@ -325,6 +325,8 @@ flutter:
     - assets/logos/
     - assets/jellyda/
     - assets/jellyda/layers/
+    - assets/namiween/
+    - assets/namiween/layers/
     - assets/
   fonts:
     - family: broken

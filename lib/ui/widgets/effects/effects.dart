@@ -126,6 +126,30 @@ class NamidaEffectsLayer extends StatelessWidget {
   }
 }
 
+/// A theme drawn on its own, outside the effect settings.
+class NamidaThemedField extends StatelessWidget {
+  final _EffectPreset _preset;
+  final double opacity;
+  final ValueListenable<double> fade;
+
+  const NamidaThemedField.halloween({
+    super.key,
+    required this.opacity,
+    this.fade = kAlwaysCompleteAnimation,
+  }) : _preset = const _EffectPreset(_kHalloween);
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: _EffectFieldView(
+        preset: _preset,
+        opacity: opacity,
+        fade: fade,
+      ),
+    );
+  }
+}
+
 List<Color> _vividColorsOf(List<Color> palette, List<Color> fallback) {
   const maxColors = 4;
   const minHueDistance = 28.0;

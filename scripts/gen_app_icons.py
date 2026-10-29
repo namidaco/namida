@@ -37,9 +37,10 @@ SILHOUETTE_BACKGROUNDS = {
     'retro': (18, 14, 22),
     'space': (181, 29, 2),
 }
-# -- the bigger image each round asset was cut from, and the box it was cut at
+# -- the bigger image each round asset was cut from, and the box that takes the circle's size of the other icons
 FULL_BLEED_SOURCES = {
     'jellyda': ('assets/jellyda/jellyda_v2.webp', (517, 106, 1262, 851)),
+    'namiween': ('assets/disposables/namiween_original/namiween.jpg', (225, 125, 1085, 985)),
 }
 FULL_SQUARE_ICONS = {'cutsie'}
 TOP_LEFT_LIGHTNESS_FACTOR = 1.1

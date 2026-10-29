@@ -19,7 +19,7 @@ import 'package:namida/ui/pages/party_page.dart';
 import 'package:namida/ui/pages/sync_manager_page.dart';
 import 'package:namida/ui/widgets/circular_percentages.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/settings/advanced_settings.dart';
 import 'package:namida/ui/widgets/settings/backup_restore_settings.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
@@ -41,7 +41,7 @@ class SettingsPage extends StatelessWidget with NamidaRouteWidget {
         children: [
           const _SettingsBackgroundGradient(),
           const Positioned.fill(
-            child: NamidaJellyBackground.forSettingsPage,
+            child: NamidaMascotBackground.settings(),
           ),
           ObxO(
             rx: settings.useSettingCollapsedTiles,
@@ -97,7 +97,7 @@ class SettingsSubPage extends StatelessWidget with NamidaRouteWidget {
         children: [
           const _SettingsBackgroundGradient(),
           const Positioned.fill(
-            child: NamidaJellyBackground.forSettingsPage,
+            child: NamidaMascotBackground.settings(),
           ),
           SmoothSingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: horizontalMargin),

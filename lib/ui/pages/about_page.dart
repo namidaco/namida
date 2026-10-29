@@ -15,6 +15,7 @@ import 'package:namida/class/eggs_data.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/version_wrapper.dart';
+import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/base.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -29,6 +30,7 @@ import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
+import 'package:namida/core/themes.dart';
 import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/main.dart';
@@ -36,6 +38,7 @@ import 'package:namida/ui/dialogs/shortcuts_dialog.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/eggs/eggs.dart';
 import 'package:namida/ui/widgets/jellyfish.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/namida_markdown.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
 import 'package:namida/ui/widgets/settings_card.dart';
@@ -104,18 +107,34 @@ class _AboutPageState extends State<AboutPage> {
     );
 
     final double horizontalMargin = Dimensions.inst.getSettingsHorizontalMargin(context);
-    final jellyBanner = NamidaJellys.enabled
-        ? _EnabledAppIconBuilder(
-            builder: (enabledIcon) => enabledIcon.isJelly
-                ? _UnderwaterAmbience(
-                    child: _JellydaBanner(
-                      scrollOffset: _scrollOffset,
-                      height: context.height * 0.42,
-                    ),
-                  )
-                : const SizedBox(),
-          )
-        : null;
+    final mascot = NamidaMascots.active;
+    final enabledIcon = NamidaChannel.inst.enabledAppIcon.value ?? NamidaChannel.defaultAppIconForPlatform;
+    final isJellyIcon = mascot == NamidaMascot.jellys && enabledIcon.isJelly;
+    final bannerHeight = context.height * 0.42;
+    final artBanner = switch (mascot) {
+      NamidaMascot.jellys =>
+        isJellyIcon
+            ? _UnderwaterAmbience(
+                child: _AboutArtBanner(
+                  scrollOffset: _scrollOffset,
+                  height: bannerHeight,
+                  art: const JellyFullArt(
+                    alignment: Alignment.topCenter,
+                    opacity: 0.65,
+                    handOpacity: 0.0,
+                  ),
+                ),
+              )
+            : null,
+      NamidaMascot.namiween => _AboutArtBanner(
+        scrollOffset: _scrollOffset,
+        height: bannerHeight,
+        art: const NamiweenScene(
+          opacity: 0.65,
+        ),
+      ),
+      null => null,
+    };
     final aboutPage = ObxO(
       rx: VersionController.inst.latestVersion,
       builder: (context, latestVersion) => SuperSmoothListView(
@@ -172,15 +191,11 @@ class _AboutPageState extends State<AboutPage> {
                           color: Color.fromRGBO(25, 25, 25, 0.1),
                         ),
                         child: _KuruKuruActivator(
-                          child: _EnabledAppIconBuilder(
-                            builder: (enabledIcon) {
-                              return GestureDetector(
-                                onLongPress: NamidaJellys.enabled && enabledIcon.isJelly ? JellyFullArt.show : null,
-                                child: Image.asset(
-                                  enabledIcon.assetPath,
-                                ),
-                              );
-                            },
+                          child: GestureDetector(
+                            onLongPress: isJellyIcon ? JellyFullArt.show : null,
+                            child: Image.asset(
+                              enabledIcon.assetPath,
+                            ),
                           ),
                         ),
                       ),
@@ -455,29 +470,34 @@ class _AboutPageState extends State<AboutPage> {
         ],
       ),
     );
+    final themedAboutPage = _AppIconTheme(
+      icon: enabledIcon,
+      child: aboutPage,
+    );
     return BackgroundWrapper(
-      child: !NamidaJellys.enabled
-          ? aboutPage
+      child: mascot == null
+          ? themedAboutPage
           : Stack(
               children: [
-                ?jellyBanner,
-                const Positioned.fill(
-                  child: IgnorePointer(
-                    child: JellyField(
-                      count: 4,
-                      opacity: 0.3,
-                      minHeight: 90.0,
-                      maxHeight: 240.0,
-                      seed: 3,
+                ?artBanner,
+                if (mascot == NamidaMascot.jellys)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: JellyField(
+                        count: 4,
+                        opacity: 0.3,
+                        minHeight: 90.0,
+                        maxHeight: 240.0,
+                        seed: 3,
+                      ),
                     ),
                   ),
-                ),
                 NotificationListener<ScrollUpdateNotification>(
                   onNotification: (notification) {
-                    if (jellyBanner != null && notification.depth == 0) _scrollOffset.value = notification.metrics.pixels;
+                    if (artBanner != null && notification.depth == 0) _scrollOffset.value = notification.metrics.pixels;
                     return false;
                   },
-                  child: aboutPage,
+                  child: themedAboutPage,
                 ),
               ],
             ),
@@ -673,18 +693,39 @@ enum _IssueTemplate {
   };
 }
 
-class _EnabledAppIconBuilder extends StatelessWidget {
-  final Widget Function(NamidaAppIcons enabledIcon) builder;
-  const _EnabledAppIconBuilder({required this.builder});
+/// Themes [child] after the colors of an app icon, so a page matches the icon the user picked.
+class _AppIconTheme extends StatefulWidget {
+  final NamidaAppIcons icon;
+  final Widget child;
+
+  const _AppIconTheme({required this.icon, required this.child});
+
+  @override
+  State<_AppIconTheme> createState() => _AppIconThemeState();
+}
+
+class _AppIconThemeState extends State<_AppIconTheme> {
+  late Color? _color = CurrentColor.inst.getAppIconDelightnedColorSync(widget.icon);
+
+  @override
+  void initState() {
+    super.initState();
+    if (_color == null) _loadColor();
+  }
+
+  Future<void> _loadColor() async {
+    final color = await CurrentColor.inst.getAppIconDelightnedColor(widget.icon);
+    if (color != null && mounted) setState(() => _color = color);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: NamidaChannel.inst.getEnabledAppIcon(),
-      builder: (context, snapshot) {
-        final enabledIcon = snapshot.data ?? NamidaChannel.defaultAppIconForPlatform;
-        return builder(enabledIcon);
-      },
+    final color = _color;
+    final isDarkMode = context.isDarkMode;
+    final theme = color == null ? context.theme : AppThemes.inst.getAppTheme(color, !isDarkMode);
+    return NTheme(
+      data: theme,
+      child: widget.child,
     );
   }
 }
@@ -1052,13 +1093,14 @@ class _AboutAsset {
 }
 
 // by claude
-class _JellydaBanner extends StatelessWidget {
+class _AboutArtBanner extends StatelessWidget {
   static const _parallaxFactor = 0.35;
 
   final ValueListenable<double> scrollOffset;
   final double height;
+  final Widget art;
 
-  const _JellydaBanner({required this.scrollOffset, required this.height});
+  const _AboutArtBanner({required this.scrollOffset, required this.height, required this.art});
 
   @override
   Widget build(BuildContext context) {
@@ -1077,11 +1119,7 @@ class _JellydaBanner extends StatelessWidget {
             height: height + maxParallax,
             child: ValueListenableBuilder<double>(
               valueListenable: scrollOffset,
-              child: const JellyFullArt(
-                alignment: Alignment.topCenter,
-                opacity: 0.65,
-                handOpacity: 0.0,
-              ),
+              child: art,
               builder: (context, offset, child) => Transform.translate(
                 offset: Offset(0, -(offset * _parallaxFactor).clamp(0.0, maxParallax)),
                 child: child,

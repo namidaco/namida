@@ -56,12 +56,12 @@ class _NamidaChannelIOS extends _NamidaChannelDarwin {
   bool get supportsAppIcons => true;
 
   @override
-  Future<bool?> isAppIconEnabled(NamidaAppIcons type) {
-    return _kDarwinChannel.invokeMethod<bool>('isAppIconEnabled', {'key': type.name});
+  Future<String?> _getEnabledAppIconKey() {
+    return _kDarwinChannel.invokeMethod<String>('getEnabledAppIcon');
   }
 
   @override
-  Future<void> changeAppIcon(NamidaAppIcons type) {
+  Future<void> _changeAppIcon(NamidaAppIcons type) {
     return _kDarwinChannel.invokeMethod('changeAppIcon', {'key': type.name});
   }
 

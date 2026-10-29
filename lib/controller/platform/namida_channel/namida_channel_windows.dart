@@ -22,12 +22,12 @@ class _NamidaChannelWindows extends NamidaChannel {
   bool get supportsAppIcons => true;
 
   @override
-  Future<bool?> isAppIconEnabled(NamidaAppIcons type) {
-    return _channel.invokeMethod<bool>('isAppIconEnabled', {'key': type.name});
+  Future<String?> _getEnabledAppIconKey() {
+    return _channel.invokeMethod<String>('getEnabledAppIcon');
   }
 
   @override
-  Future<void> changeAppIcon(NamidaAppIcons type) {
+  Future<void> _changeAppIcon(NamidaAppIcons type) {
     return _channel.invokeMethod('changeAppIcon', {'key': type.name});
   }
 }

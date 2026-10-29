@@ -162,30 +162,8 @@ abstract class _SpriteAtlas {
 
   static void _paintBat(Canvas canvas, {required bool wingsUp}) {
     final paint = Paint()..color = _white;
-    final tipY = wingsUp ? 34.0 : 84.0;
-    final lift = wingsUp ? -1.0 : 1.0;
-    final shoulderY = wingsUp ? 60.0 : 62.0;
-    final leadingEdgeY = wingsUp ? 14.0 : 38.0;
-    const body = Rect.fromLTRB(54.5, 52, 73.5, 84);
-    for (final side in const [-1.0, 1.0]) {
-      double x(double fromCenter) => 64 + side * fromCenter;
-      final wing = Path()
-        ..moveTo(x(5), shoulderY)
-        ..quadraticBezierTo(x(30), leadingEdgeY, x(59), tipY)
-        ..quadraticBezierTo(x(47), tipY + 8 + 6 * lift, x(44), tipY + 24 + 4 * lift)
-        ..quadraticBezierTo(x(35), tipY + 10 + 6 * lift, x(27), tipY + 28 + 4 * lift)
-        ..quadraticBezierTo(x(19), tipY + 14 + 8 * lift, x(8), shoulderY + 20)
-        ..close();
-      canvas.drawPath(wing, paint);
-      final ear = Path()
-        ..moveTo(x(2), 46)
-        ..lineTo(x(9), 30)
-        ..lineTo(x(11), 48)
-        ..close();
-      canvas.drawPath(ear, paint);
-    }
-    canvas.drawOval(body, paint);
-    canvas.drawCircle(const Offset(64, 50), 10, paint);
+    final wingsLift = wingsUp ? 1.0 : 0.0;
+    canvas.drawPath(NamidaBatShape.pathAt(wingsLift), paint);
   }
 
   static void _paintGhost(Canvas canvas) {
@@ -618,6 +596,41 @@ abstract class _SpriteAtlas {
     canvas.drawPath(fin, fill);
     canvas.drawCircle(const Offset(104, 28), 3.4, hole);
     canvas.restore();
+  }
+}
+
+/// The bat sprite's outline, for art that animates its own bats.
+abstract class NamidaBatShape {
+  /// The outline spans a square this wide, facing the viewer.
+  static const cellSize = 128.0;
+
+  /// [wingsLift] goes from `0.0` with the wings down to `1.0` with them raised.
+  static Path pathAt(double wingsLift) {
+    final tipY = ui.lerpDouble(84.0, 34.0, wingsLift)!;
+    final lift = ui.lerpDouble(1.0, -1.0, wingsLift)!;
+    final shoulderY = ui.lerpDouble(62.0, 60.0, wingsLift)!;
+    final leadingEdgeY = ui.lerpDouble(38.0, 14.0, wingsLift)!;
+    var bat = Path()
+      ..addOval(const Rect.fromLTRB(54.5, 52, 73.5, 84))
+      ..addOval(Rect.fromCircle(center: const Offset(64, 50), radius: 10));
+    for (final side in const [-1.0, 1.0]) {
+      double x(double fromCenter) => 64 + side * fromCenter;
+      final wing = Path()
+        ..moveTo(x(5), shoulderY)
+        ..quadraticBezierTo(x(30), leadingEdgeY, x(59), tipY)
+        ..quadraticBezierTo(x(47), tipY + 8 + 6 * lift, x(44), tipY + 24 + 4 * lift)
+        ..quadraticBezierTo(x(35), tipY + 10 + 6 * lift, x(27), tipY + 28 + 4 * lift)
+        ..quadraticBezierTo(x(19), tipY + 14 + 8 * lift, x(8), shoulderY + 20)
+        ..close();
+      final ear = Path()
+        ..moveTo(x(2), 46)
+        ..lineTo(x(9), 30)
+        ..lineTo(x(11), 48)
+        ..close();
+      bat = Path.combine(PathOperation.union, bat, wing);
+      bat = Path.combine(PathOperation.union, bat, ear);
+    }
+    return bat;
   }
 }
 

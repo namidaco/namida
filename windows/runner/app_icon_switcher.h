@@ -18,7 +18,7 @@ class AppIconSwitcher {
   // -- also reapplies to the shortcuts when an update recreated them
   void ApplySaved();
 
-  bool IsEnabled(const std::string& key) const;
+  std::string EnabledKey() const;
   void Change(const std::string& key);
 
  private:

@@ -321,6 +321,7 @@ class NamidaMainActivity : FlutterActivity() {
             "namida" -> LauncherIcon.DEFAULT
             "cutsie" -> LauncherIcon.CUTSIE
             "jellyda" -> LauncherIcon.JELLYDA
+            "namiween" -> LauncherIcon.NAMIWEEN
             "eddy" -> LauncherIcon.EDDY
             "namichin" -> LauncherIcon.NAMICHIN
             "space" -> LauncherIcon.SPACE
@@ -333,7 +334,6 @@ class NamidaMainActivity : FlutterActivity() {
             "monet" -> LauncherIcon.MONET
             "glowy" -> LauncherIcon.GLOWY
             "spooky" -> LauncherIcon.SPOOKY
-            "namiween" -> LauncherIcon.NAMIWEEN
             "tired" -> LauncherIcon.TIRED
             else -> null
           }
@@ -345,35 +345,9 @@ class NamidaMainActivity : FlutterActivity() {
               result.error("INVALID_ICON", "No matching icon for key: $key", null)
           }
         }
-        "isAppIconEnabled" -> {
-          val key = call.argument<String>("key")
-          val nativeIcon = when (key) {
-            "namida" -> LauncherIcon.DEFAULT
-            "cutsie" -> LauncherIcon.CUTSIE
-            "jellyda" -> LauncherIcon.JELLYDA
-            "eddy" -> LauncherIcon.EDDY
-            "namichin" -> LauncherIcon.NAMICHIN
-            "space" -> LauncherIcon.SPACE
-            "retro" -> LauncherIcon.RETRO
-            "ookami" -> LauncherIcon.OOKAMI
-            "original" -> LauncherIcon.ORIGINAL
-            "enhanced" -> LauncherIcon.ENHANCED
-            "hollow" -> LauncherIcon.HOLLOW
-            "pastel" -> LauncherIcon.PASTEL
-            "monet" -> LauncherIcon.MONET
-            "glowy" -> LauncherIcon.GLOWY
-            "spooky" -> LauncherIcon.SPOOKY
-            "namiween" -> LauncherIcon.NAMIWEEN
-            "tired" -> LauncherIcon.TIRED
-            else -> null
-          }
-
-          if (nativeIcon != null) {
-              val enabled = LauncherIconController.isEnabled(nativeIcon)
-              result.success(enabled)
-          } else {
-              result.error("INVALID_ICON", "No matching icon for key: $key", null)
-          }
+        "getEnabledAppIcon" -> {
+          val enabledIcon = LauncherIcon.values().firstOrNull { LauncherIconController.isEnabled(it) }
+          result.success(enabledIcon?.dartKey)
         }
         // SPLASH_AUTO_GENERATED END
 

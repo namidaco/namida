@@ -54,13 +54,13 @@ import 'package:namida/ui/pages/sound_control_page.dart';
 import 'package:namida/ui/pages/wide_screen_player_page.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/seekbar_bookmarks.dart';
 import 'package:namida/ui/widgets/seekbar_chapters.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/live_progress.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/seek_magnet.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
@@ -1068,7 +1068,7 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
             final isThemeAnimated = settings.animatedTheme.valueR;
             final isPartyModeEnabled = settings.enablePartyModeInMiniplayer.valueR;
             final hideStatusBarInExpanded = settings.hideStatusBarInExpandedMiniplayer.valueR;
-            final hasJellys = NamidaJellys.enabledRx.valueR;
+            final hasMascot = NamidaMascots.activeRx.valueR != null;
 
             return MiniplayerRaw(
               child: Stack(
@@ -1101,18 +1101,12 @@ class _NamidaMiniPlayerBaseState<E, S> extends State<NamidaMiniPlayerBase<E, S>>
                                 child: Stack(
                                   alignment: Alignment.bottomLeft,
                                   children: [
-                                    if (hasJellys)
+                                    if (hasMascot)
                                       Positioned.fill(
                                         child: ClipRRect(
                                           clipper: _PanelShapeClipper(geometry),
-                                          child: NamidaJellyBackground(
-                                            count: 4,
-                                            opacity: 0.3,
+                                          child: NamidaMascotBackground.panel(
                                             fade: NamidaMiniPlayerBase.clampedAnimationCP,
-                                            minHeight: 70.0,
-                                            maxHeight: 210.0,
-                                            reactToPlayback: true,
-                                            seed: 7,
                                           ),
                                         ),
                                       ),

@@ -28,10 +28,8 @@ final class NamidaPlugin: NSObject, FlutterPlugin, FlutterSceneLifeCycleDelegate
     case "consumeOpenedUrls":
       result(openedUrls.consume())
 
-    case "isAppIconEnabled":
-      let key = args?["key"] as? String
-      let current = UIApplication.shared.alternateIconName
-      result(key == Self.primaryIconKey ? current == nil : current == key)
+    case "getEnabledAppIcon":
+      result(UIApplication.shared.alternateIconName ?? Self.primaryIconKey)
 
     case "changeAppIcon":
       changeAppIcon(key: args?["key"] as? String, result: result)

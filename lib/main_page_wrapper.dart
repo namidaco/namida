@@ -35,8 +35,8 @@ import 'package:namida/ui/pages/settings_page.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/effects/effects.dart';
 import 'package:namida/ui/widgets/inner_drawer.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/selected_tracks_preview.dart';
 import 'package:namida/ui/widgets/settings/customization_settings.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
@@ -59,19 +59,19 @@ class _MainPageWrapperState extends State<MainPageWrapper> with TickerProviderSt
     MiniPlayerController.inst.updateScreenValuesInitial();
     MiniPlayerController.inst.initializeSAnim(this);
     Player.inst.currentItem.addListener(_currentItemListener);
-    if (kAllowJellysInvasion) _jellysTeaserTimer = Timer(_jellysTeaserDelay, NamidaJellys.promptEnableOnce);
+    _mascotOfferTimer = Timer(_mascotOfferDelay, NamidaMascots.offerOnce);
     _seasonAnnounceTimer = Timer(_seasonAnnounceDelay, NamidaEffects.announceSeason);
   }
 
-  static const _jellysTeaserDelay = Duration(seconds: 5);
-  Timer? _jellysTeaserTimer;
+  static const _mascotOfferDelay = Duration(seconds: 5);
+  Timer? _mascotOfferTimer;
 
   static const _seasonAnnounceDelay = Duration(seconds: 8);
   Timer? _seasonAnnounceTimer;
 
   @override
   void dispose() {
-    _jellysTeaserTimer?.cancel();
+    _mascotOfferTimer?.cancel();
     _seasonAnnounceTimer?.cancel();
     Player.inst.currentItem.removeListener(_currentItemListener);
     super.dispose();

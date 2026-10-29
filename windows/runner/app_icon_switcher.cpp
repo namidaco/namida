@@ -17,6 +17,7 @@ namespace {
 
 constexpr char kRegistryPath[] = "Software\\Namida";
 constexpr char kIconValue[] = "AppIcon";
+constexpr char kDefaultIconKey[] = "namida";
 constexpr char kShortcutsStampValue[] = "AppIconShortcutsStamp";
 
 int ResourceIdForKey(const std::string& key) {
@@ -28,16 +29,20 @@ int ResourceIdForKey(const std::string& key) {
   return IDI_APP_ICON;
 }
 
-int ReadSavedResourceId() {
+std::string ReadSavedKey() {
   char key[64];
   DWORD size = sizeof(key);
   const LSTATUS status =
       RegGetValueA(HKEY_CURRENT_USER, kRegistryPath, kIconValue, RRF_RT_REG_SZ,
                    nullptr, key, &size);
   if (status != ERROR_SUCCESS) {
-    return IDI_APP_ICON;
+    return std::string();
   }
-  return ResourceIdForKey(key);
+  return std::string(key);
+}
+
+int ReadSavedResourceId() {
+  return ResourceIdForKey(ReadSavedKey());
 }
 
 void WriteSavedKey(const std::string& key) {
@@ -208,8 +213,12 @@ void AppIconSwitcher::ApplySaved() {
   }
 }
 
-bool AppIconSwitcher::IsEnabled(const std::string& key) const {
-  return ResourceIdForKey(key) == ReadSavedResourceId();
+std::string AppIconSwitcher::EnabledKey() const {
+  const std::string key = ReadSavedKey();
+  if (ResourceIdForKey(key) == IDI_APP_ICON) {
+    return kDefaultIconKey;
+  }
+  return key;
 }
 
 void AppIconSwitcher::Change(const std::string& key) {

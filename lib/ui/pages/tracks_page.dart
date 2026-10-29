@@ -24,9 +24,9 @@ import 'package:namida/ui/dialogs/queue_insertion_dialogs.dart';
 import 'package:namida/ui/widgets/creative_animations.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
 import 'package:namida/ui/widgets/library_tab_variant_chip.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/settings/indexer_settings.dart';
 import 'package:namida/ui/widgets/sort_by_button.dart';
 import 'package:namida/ui/widgets/stats.dart';
@@ -204,8 +204,8 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                 rx: SearchSortController.inst.trackSearchList,
                 builder: (context, trackSearchList) => trackSearchList.isEmpty
                     ? Center(
-                        child: NamidaJellys.enabled
-                            ? _JellyTracksEmptyState(
+                        child: NamidaMascots.active != null
+                            ? _MascotTracksEmptyState(
                                 onAddFolder: () => _onAddFolderTap(context),
                               )
                             : kEnableFancyAnimations
@@ -254,7 +254,7 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
                         scrollStep: Dimensions.inst.trackTileItemExtent,
                         thumbLabel: _createThumbLabel,
                         header: listHeader,
-                        footer: NamidaJellys.enabled ? const JellyListEnd() : null,
+                        footer: NamidaMascots.active != null ? const NamidaMascotListEnd() : null,
                         itemBuilder: (context, i) {
                           final track = trackSearchList[i];
                           return AnimatingTile(
@@ -287,10 +287,10 @@ class _TracksPageState extends State<TracksPage> with TickerProviderStateMixin, 
   }
 }
 
-class _JellyTracksEmptyState extends StatelessWidget {
+class _MascotTracksEmptyState extends StatelessWidget {
   final VoidCallback onAddFolder;
 
-  const _JellyTracksEmptyState({required this.onAddFolder});
+  const _MascotTracksEmptyState({required this.onAddFolder});
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +307,7 @@ class _JellyTracksEmptyState extends StatelessWidget {
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const FloatingJelly(
+            const NamidaMascotFigure(
               height: 170.0,
               opacity: 0.9,
             ),

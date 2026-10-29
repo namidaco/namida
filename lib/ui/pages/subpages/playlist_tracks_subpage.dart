@@ -40,9 +40,9 @@ import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/artwork.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/expandable_box.dart';
-import 'package:namida/ui/widgets/jellyfish.dart';
 import 'package:namida/ui/widgets/library/multi_artwork_container.dart';
 import 'package:namida/ui/widgets/library/track_tile.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 import 'package:namida/ui/widgets/network_artwork.dart';
 
 class HistoryTracksPage extends StatefulWidget with NamidaRouteWidget {
@@ -563,12 +563,12 @@ class _EmptyPlaylistSubpageState extends State<EmptyPlaylistSubpage> {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: isExpanded ? context.height * 0.1 : context.height * 0.3,
-              child: NamidaJellys.enabled
+              child: NamidaMascots.active != null
                   ? ClipRect(
                       child: Obx(
                         (context) => Align(
                           alignment: Alignment.bottomCenter,
-                          child: FloatingJelly(
+                          child: NamidaMascotFigure(
                             height: context.height * 0.26,
                             tint: CurrentColor.inst.color,
                             opacity: 0.85,

@@ -4,19 +4,19 @@
 
 #define IDI_APP_ICON_CUTSIE 102
 #define IDI_APP_ICON_JELLYDA 103
-#define IDI_APP_ICON_EDDY 104
-#define IDI_APP_ICON_NAMICHIN 105
-#define IDI_APP_ICON_SPACE 106
-#define IDI_APP_ICON_RETRO 107
-#define IDI_APP_ICON_OOKAMI 108
-#define IDI_APP_ICON_ORIGINAL 109
-#define IDI_APP_ICON_ENHANCED 110
-#define IDI_APP_ICON_HOLLOW 111
-#define IDI_APP_ICON_PASTEL 112
-#define IDI_APP_ICON_MONET 113
-#define IDI_APP_ICON_GLOWY 114
-#define IDI_APP_ICON_SPOOKY 115
-#define IDI_APP_ICON_NAMIWEEN 116
+#define IDI_APP_ICON_NAMIWEEN 104
+#define IDI_APP_ICON_EDDY 105
+#define IDI_APP_ICON_NAMICHIN 106
+#define IDI_APP_ICON_SPACE 107
+#define IDI_APP_ICON_RETRO 108
+#define IDI_APP_ICON_OOKAMI 109
+#define IDI_APP_ICON_ORIGINAL 110
+#define IDI_APP_ICON_ENHANCED 111
+#define IDI_APP_ICON_HOLLOW 112
+#define IDI_APP_ICON_PASTEL 113
+#define IDI_APP_ICON_MONET 114
+#define IDI_APP_ICON_GLOWY 115
+#define IDI_APP_ICON_SPOOKY 116
 #define IDI_APP_ICON_TIRED 117
 
 #ifndef RC_INVOKED
@@ -28,6 +28,7 @@ struct AppIconResource {
 inline constexpr AppIconResource kAppIconResources[] = {
     {"cutsie", IDI_APP_ICON_CUTSIE},
     {"jellyda", IDI_APP_ICON_JELLYDA},
+    {"namiween", IDI_APP_ICON_NAMIWEEN},
     {"eddy", IDI_APP_ICON_EDDY},
     {"namichin", IDI_APP_ICON_NAMICHIN},
     {"space", IDI_APP_ICON_SPACE},
@@ -40,7 +41,6 @@ inline constexpr AppIconResource kAppIconResources[] = {
     {"monet", IDI_APP_ICON_MONET},
     {"glowy", IDI_APP_ICON_GLOWY},
     {"spooky", IDI_APP_ICON_SPOOKY},
-    {"namiween", IDI_APP_ICON_NAMIWEEN},
     {"tired", IDI_APP_ICON_TIRED},
 };
 #endif  // RC_INVOKED

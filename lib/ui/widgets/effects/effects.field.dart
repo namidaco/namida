@@ -574,9 +574,13 @@ class _EffectFieldView extends StatefulWidget {
   final _EffectPreset preset;
   final double opacity;
 
+  /// multiplies [opacity] while painting, the field stops ticking while it's ~0.
+  final ValueListenable<double> fade;
+
   const _EffectFieldView({
     required this.preset,
     required this.opacity,
+    this.fade = kAlwaysCompleteAnimation,
   });
 
   @override
@@ -603,22 +607,66 @@ class _EffectFieldViewState extends State<_EffectFieldView> {
     _field = null;
   }
 
+  static bool _isVisible(double fade) => fade > 0.01;
+
   @override
   Widget build(BuildContext context) {
     if (namidaAnimationsPaused(context)) {
       _detach();
       return const SizedBox();
     }
-    final preset = widget.preset;
-    final scenery = preset.scenery;
-    final opacity = widget.opacity;
-    final field = _field ??= _EffectField.attach(preset.emitters, pace: NamidaEffects._pace);
+    final fade = widget.fade;
+    if (fade == kAlwaysCompleteAnimation) {
+      return _EffectFieldContent(
+        field: _attach(),
+        scenery: widget.preset.scenery,
+        opacity: widget.opacity,
+        fade: fade,
+      );
+    }
+    return ValueConditionBuilder(
+      listenable: fade,
+      condition: _isVisible,
+      builder: (context, isVisible, _) {
+        if (!isVisible) {
+          _detach();
+          return const SizedBox();
+        }
+        return _EffectFieldContent(
+          field: _attach(),
+          scenery: widget.preset.scenery,
+          opacity: widget.opacity,
+          fade: fade,
+        );
+      },
+    );
+  }
+
+  _EffectField _attach() => _field ??= _EffectField.attach(widget.preset.emitters, pace: NamidaEffects._pace);
+}
+
+class _EffectFieldContent extends StatelessWidget {
+  final _EffectField field;
+  final _Scenery scenery;
+  final double opacity;
+  final ValueListenable<double> fade;
+
+  const _EffectFieldContent({
+    required this.field,
+    required this.scenery,
+    required this.opacity,
+    required this.fade,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     if (scenery != _Scenery.aurora) {
       return _EffectFieldCanvas(
         field: field,
         scenery: scenery,
         sceneryColors: const [],
         opacity: opacity,
+        fade: fade,
       );
     }
     return Obx(
@@ -630,6 +678,7 @@ class _EffectFieldViewState extends State<_EffectFieldView> {
           scenery: scenery,
           sceneryColors: sceneryColors,
           opacity: opacity,
+          fade: fade,
         );
       },
     );
@@ -641,12 +690,14 @@ class _EffectFieldCanvas extends StatelessWidget {
   final _Scenery scenery;
   final List<Color> sceneryColors;
   final double opacity;
+  final ValueListenable<double> fade;
 
   const _EffectFieldCanvas({
     required this.field,
     required this.scenery,
     required this.sceneryColors,
     required this.opacity,
+    required this.fade,
   });
 
   @override
@@ -664,6 +715,7 @@ class _EffectFieldCanvas extends StatelessWidget {
           ink: ink.intValue & 0xFFFFFF,
           isDark: isDark,
           opacity: opacity,
+          fade: fade,
         ),
       ),
     );
@@ -677,6 +729,7 @@ class _EffectFieldPainter extends CustomPainter {
   final int ink;
   final bool isDark;
   final double opacity;
+  final ValueListenable<double> fade;
 
   _EffectFieldPainter({
     required this.field,
@@ -685,10 +738,12 @@ class _EffectFieldPainter extends CustomPainter {
     required this.ink,
     required this.isDark,
     required this.opacity,
-  }) : super(repaint: field);
+    required this.fade,
+  }) : super(repaint: fade == kAlwaysCompleteAnimation ? field : Listenable.merge([field, fade]));
 
   @override
   void paint(Canvas canvas, Size size) {
+    final opacity = this.opacity * fade.value;
     brush.paint(canvas, size, time: field.time, isDark: isDark, opacity: opacity);
     field.paint(canvas, size, tint: tint, ink: ink, isDark: isDark, opacity: opacity);
   }
@@ -701,6 +756,7 @@ class _EffectFieldPainter extends CustomPainter {
         oldDelegate.tint != tint ||
         oldDelegate.ink != ink ||
         oldDelegate.isDark != isDark ||
-        oldDelegate.opacity != opacity;
+        oldDelegate.opacity != opacity ||
+        oldDelegate.fade != fade;
   }
 }

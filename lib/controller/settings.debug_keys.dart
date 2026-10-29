@@ -35,6 +35,7 @@ extension ExtraSettingsDebugKeys on _ExtraSettings {
     jellysInvasion,
     jellysPalette,
     effectsSeasonAnnounced,
+    namiweenOfferedYear,
     artistAlbumsExpanded,
     artistSinglesExpanded,
     artistEpsExpanded,

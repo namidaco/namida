@@ -43,6 +43,7 @@ class _ExtraSettings extends _SettingsKeysWriter {
   late final jellysInvasion = _key<bool?>('jellysInvasion', null);
   late final jellysPalette = _key<bool?>('jellysPalette', null);
   late final effectsSeasonAnnounced = _key<String?>('effectsSeasonAnnounced', null);
+  late final namiweenOfferedYear = _key<int?>('namiweenOfferedYear', null);
   late final artistAlbumsExpanded = _key<bool?>('artistAlbumsExpanded', null);
   late final artistSinglesExpanded = _key<bool?>('artistSinglesExpanded', null);
   late final artistEpsExpanded = _key<bool?>('artistEpsExpanded', null);

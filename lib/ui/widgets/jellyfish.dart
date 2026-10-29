@@ -4,11 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
-import 'package:namida/class/color_m.dart';
-import 'package:namida/controller/current_color.dart';
-import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
@@ -20,6 +16,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/animated_widgets.dart';
 import 'package:namida/ui/widgets/floating_image.dart';
+import 'package:namida/ui/widgets/mascots/mascots.dart';
 
 /// How hard the currently playing track is hitting right now, `0.0` when nothing plays.
 double _playbackPulse() {
@@ -506,57 +503,6 @@ void _paintJellySwarm(
       paint,
     );
     canvas.restore();
-  }
-}
-
-/// A [JellyField] tinted with the current track color, ready to drop behind any page.
-///
-/// Renders nothing unless the user let the jellyfishes in.
-class NamidaJellyBackground extends StatelessWidget {
-  final int count;
-  final double opacity;
-  final double minHeight;
-  final double maxHeight;
-  final bool reactToPlayback;
-  final ValueListenable<double> fade;
-  final int seed;
-
-  const NamidaJellyBackground({
-    super.key,
-    this.count = 5,
-    this.opacity = 0.4,
-    this.minHeight = 80.0,
-    this.maxHeight = 220.0,
-    this.reactToPlayback = false,
-    this.fade = kAlwaysCompleteAnimation,
-    this.seed = 0,
-  });
-
-  static const NamidaJellyBackground forSettingsPage = NamidaJellyBackground(
-    count: 6,
-    opacity: 0.32,
-    minHeight: 90.0,
-    maxHeight: 260.0,
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return ObxO(
-      rx: NamidaJellys.enabledRx,
-      builder: (context, invaded) => invaded
-          ? IgnorePointer(
-              child: JellyField(
-                count: count,
-                opacity: opacity,
-                minHeight: minHeight,
-                maxHeight: maxHeight,
-                reactToPlayback: reactToPlayback,
-                fade: fade,
-                seed: seed,
-              ),
-            )
-          : const SizedBox(),
-    );
   }
 }
 
@@ -1332,21 +1278,10 @@ abstract class NamidaJellys {
       if (paletteFollows) settings.extra.jellysPalette.save(enabled);
     });
     enabledRx.value = enabled;
-    _refreshColors(enabled);
   }
 
   static void setPaletteHijack(bool enabled) {
     settings.extra.jellysPalette.save(enabled);
-    _refreshColors(enabled);
-  }
-
-  static void _refreshColors(bool paletteEnabled) {
-    if (paletteEnabled) {
-      settings.forceMiniplayerTrackColor.save(false);
-      CurrentColor.inst.updatePlayerColorFromColor(namida.isDarkMode ? paletteDark : paletteLight, false);
-    } else {
-      CurrentColor.inst.refreshColorsOfCurrentItem();
-    }
   }
 
   /// The flag is buried, so the invasion is offered wherever a jelly already showed up.
@@ -1375,52 +1310,20 @@ abstract class NamidaJellys {
   }
 
   /// Sampled off the artworks, abyss blue through to bell-glow cyan.
-  static const palette = <Color>[
-    Color(0xFF2157AD),
-    Color(0xFF2B3FA8),
-    Color(0xFF1668B4),
-    Color(0xFF0E77A8),
-    Color(0xFF127E9B),
-    Color(0xFF1A9AC0),
-    Color(0xFF229CB6),
-    Color(0xFF6FA9D8),
-  ];
-
-  static const paletteLight = Color(0xFF3D6EA8);
-  static const paletteDark = Color(0xFF0E2A4D);
-
-  /// Same key always gets the same jelly color, so a track keeps its color across sessions.
-  static Color colorFor(String? key) {
-    if (key == null || key.isEmpty) return paletteLight;
-    return palette[_hash(key) % palette.length];
-  }
-
-  /// A full color set built around this key's jelly color, for wherever a palette is expected.
-  static NamidaColor namidaColorFor(String? key, {double? opacity}) {
-    if (key == null || key.isEmpty) {
-      final color = opacity == null ? paletteLight : paletteLight.withOpacityExt(opacity);
-      return NamidaColor.single(color);
-    }
-    final index = _hash(key) % palette.length;
-    final color = palette[index];
-    return NamidaColor.create(
-      used: opacity == null ? color : color.withOpacityExt(opacity),
-      palette: [
-        color,
-        palette[(index + 3) % palette.length],
-        palette[(index + 5) % palette.length],
-      ],
-    );
-  }
-
-  /// FNV-1a, [String.hashCode] is not guaranteed stable between runs.
-  static int _hash(String key) {
-    var hash = 0x811C9DC5;
-    for (int i = 0; i < key.length; i++) {
-      hash = ((hash ^ key.codeUnitAt(i)) * 0x01000193) & 0x7FFFFFFF;
-    }
-    return hash;
-  }
+  static const palette = NamidaMascotPalette(
+    colors: [
+      Color(0xFF2157AD),
+      Color(0xFF2B3FA8),
+      Color(0xFF1668B4),
+      Color(0xFF0E77A8),
+      Color(0xFF127E9B),
+      Color(0xFF1A9AC0),
+      Color(0xFF229CB6),
+      Color(0xFF6FA9D8),
+    ],
+    light: Color(0xFF3D6EA8),
+    dark: Color(0xFF0E2A4D),
+  );
 
   // -- luminance weights, so the recolor keeps the artwork's own shading
   static const _lumR = 0.2126, _lumG = 0.7152, _lumB = 0.0722;
@@ -1479,7 +1382,7 @@ abstract class NamidaJellys {
     if (layersReady) return Future.value();
     return _layersLoading ??= Future.wait(
       NamidaJellyLayer.values.where((e) => !_layerImages.containsKey(e)).map((layer) async {
-        final image = await _decodeAsset(layer.assetPath, (_sceneDecodeWidth * layer.rect.width).round());
+        final image = await NamidaMascots.decodeAsset(layer.assetPath, (_sceneDecodeWidth * layer.rect.width).round());
         if (image != null) _layerImages[layer] = image;
       }),
     ).whenComplete(() => _layersLoading = null);
@@ -1514,25 +1417,8 @@ abstract class NamidaJellys {
   }
 
   static Future<void> _decodeArt(NamidaJelly jelly) async {
-    final image = await _decodeAsset(jelly.assetPath, jelly.decodeWidth);
+    final image = await NamidaMascots.decodeAsset(jelly.assetPath, jelly.decodeWidth);
     if (image != null) _images[jelly] = image;
-  }
-
-  /// `null` if the asset is missing or refuses to decode.
-  ///
-  /// A failed art is dropped on its own rather than taking the whole load down with it,
-  /// otherwise a single bad asset leaves the jellies gone for the session with nothing
-  /// but an unhandled async error to show for it.
-  static Future<ui.Image?> _decodeAsset(String assetPath, int targetWidth) async {
-    try {
-      final data = await rootBundle.load(assetPath);
-      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: targetWidth);
-      final frame = await codec.getNextFrame();
-      return frame.image;
-    } catch (e, st) {
-      logger.error('failed decoding jelly asset $assetPath', e: e, st: st);
-      return null;
-    }
   }
 }
 

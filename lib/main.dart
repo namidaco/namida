@@ -311,7 +311,9 @@ Future<bool> _mainAppInitialization() async {
       NamidaFFMPEG.configure(),
       ytInfoInitSyncItemsCompleter.future,
       NamidaDeviceInfo.packageInfoCompleter.future,
+      NamidaChannel.inst.refreshEnabledAppIcon(),
     ].executeAllAndSilentReportErrors();
+    NamidaMascots.initialize();
 
     // -- best to initialize last, so that tracks are prepared (for info/colors) and rhttp is initialized (for network), etc.
     // -- lyrics integrations require the player, and must be active before the latest queue loads lyrics

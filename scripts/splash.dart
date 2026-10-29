@@ -179,20 +179,9 @@ $iconsMatches
               result.error("INVALID_ICON", "No matching icon for key: \$key", null)
           }
         }''';
-  final kotlinCode2 =
-      '''"isAppIconEnabled" -> {
-          val key = call.argument<String>("key")
-          val nativeIcon = when (key) {
-$iconsMatches
-            else -> null
-          }
-
-          if (nativeIcon != null) {
-              val enabled = LauncherIconController.isEnabled(nativeIcon)
-              result.success(enabled)
-          } else {
-              result.error("INVALID_ICON", "No matching icon for key: \$key", null)
-          }
+  const kotlinCode2 = '''"getEnabledAppIcon" -> {
+          val enabledIcon = LauncherIcon.values().firstOrNull { LauncherIconController.isEnabled(it) }
+          result.success(enabledIcon?.dartKey)
         }''';
   _replaceAllInFile(
     _FilePaths.main_activity_kt,
@@ -205,7 +194,7 @@ $iconsMatches
   final iconsConstructor = _appIcons
       .mapIndexed((e, i) {
         final trailing = i == _appIcons.length - 1 ? ';' : ',';
-        return '  ${e.kotlinName}("${e.manifestName}", R.mipmap.${e.mipmapName})$trailing';
+        return '  ${e.kotlinName}("${e.manifestName}", "${e.dartName}", R.mipmap.${e.mipmapName})$trailing';
       })
       .join('\n');
 
@@ -216,6 +205,7 @@ $iconsMatches
       '''$prefixComment
 enum class LauncherIcon(
     val key: String,
+    val dartKey: String,
     val foreground: Int
 ) {
 $iconsConstructor
@@ -302,6 +292,14 @@ final _appIcons = [
     ],
   ),
   _IconDetails.create(
+    'namiween',
+    ext: _ImgExtension.webp,
+    authorInfos: [
+      const _AuthorInfo('Tsuune', 'tsuuneki', _AuthorPlatform.discord, null),
+      const _AuthorInfo('Tsuune', 'TsunekiHouse', _AuthorPlatform.telegram, null),
+    ],
+  ),
+  _IconDetails.create(
     'eddy',
     ext: _ImgExtension.webp,
     authorInfos: [
@@ -379,13 +377,6 @@ final _appIcons = [
     ext: _ImgExtension.webp,
     authorInfos: [
       const _AuthorInfo('Miguquis', null, _AuthorPlatform.discord, _AuthorAIModel.gemini),
-    ],
-  ),
-  _IconDetails.create(
-    'namiween',
-    ext: _ImgExtension.webp,
-    authorInfos: [
-      const _AuthorInfo('𐔌 . ⋮ Reggie .ᐟ ֹ ₊ ꒱', null, _AuthorPlatform.discord, _AuthorAIModel.unknown),
     ],
   ),
   _IconDetails.create(
