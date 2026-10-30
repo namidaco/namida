@@ -92,13 +92,19 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     }
   }
 
-  Future<void> _onPossibleMemebershipChange(Future<void> Function() fn) async {
+  Future<bool> _onPossibleMemebershipChange(Future<void> Function() fn, {void Function()? onAlreadyClaimed}) async {
     final oldMS = YoutubeAccountController.membership.userMembershipTypeGlobal.value;
     try {
       await fn();
       _showMembershipChangeSnack(oldMS);
+      return true;
     } catch (e, st) {
-      _showError('membership change failed', exception: e, stackTrace: st);
+      if (e is SubscriptionAlreadyClaimedException && onAlreadyClaimed != null) {
+        onAlreadyClaimed();
+      } else {
+        _showError('membership change failed', exception: e, stackTrace: st);
+      }
+      return false;
     }
   }
 
@@ -107,7 +113,31 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
     final email = _emailController.text;
     final validated = _formKey.currentState?.validate();
     if (validated ?? (code.isNotEmpty && email.isNotEmpty)) {
-      return _onPossibleMemebershipChange(() => fn(code, email));
+      await _onPossibleMemebershipChange(
+        () => fn(code, email),
+        onAlreadyClaimed: () => _showCouponResetDialog(code, email),
+      );
+    }
+  }
+
+  void _showCouponResetDialog(String code, String email) {
+    NamidaNavigator.inst.navigateDialog(
+      dialog: _CouponResetDialog(
+        requestReset: () => _requestCouponReset(code, email),
+        confirmReset: (resetCode) => _onPossibleMemebershipChange(
+          () => YoutubeAccountController.membership.confirmSupabaseMove(code, email, resetCode),
+        ),
+      ),
+    );
+  }
+
+  Future<bool> _requestCouponReset(String code, String email) async {
+    try {
+      await YoutubeAccountController.membership.requestSupabaseMove(code, email);
+      return true;
+    } catch (e, st) {
+      _showError('coupon reset failed', exception: e, stackTrace: st);
+      return false;
     }
   }
 
@@ -168,7 +198,7 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
   }
 
   Future<void> _refreshPatreon() async {
-    return _onPossibleMemebershipChange(
+    await _onPossibleMemebershipChange(
       () => YoutubeAccountController.membership.checkPatreon(
         showError: true,
       ),
@@ -181,8 +211,9 @@ class _YoutubeManageSubscriptionPageState extends State<YoutubeManageSubscriptio
       final uuid = info.uuid;
       final email = info.email;
       if (uuid != null && email != null) {
-        return _onPossibleMemebershipChange(
+        await _onPossibleMemebershipChange(
           () => YoutubeAccountController.membership.checkSupabase(uuid, email),
+          onAlreadyClaimed: () => _showCouponResetDialog(uuid, email),
         );
       }
     }
@@ -854,6 +885,106 @@ class _BenefitsList extends StatelessWidget {
         hPadding: 12.0,
         vPadding: 8.0,
         builder: (_) => featuresColumn,
+      ),
+    );
+  }
+}
+
+// by claude
+class _CouponResetDialog extends StatefulWidget {
+  final Future<bool> Function() requestReset;
+  final Future<bool> Function(String resetCode) confirmReset;
+
+  const _CouponResetDialog({
+    required this.requestReset,
+    required this.confirmReset,
+  });
+
+  @override
+  State<_CouponResetDialog> createState() => _CouponResetDialogState();
+}
+
+class _CouponResetDialogState extends State<_CouponResetDialog> {
+  late final _resetCodeController = TextEditingController();
+  late final _didSendCode = false.obs;
+  late final _isLoading = false.obs;
+
+  @override
+  void dispose() {
+    _resetCodeController.dispose();
+    _didSendCode.close();
+    _isLoading.close();
+    super.dispose();
+  }
+
+  Future<void> _onResetTap() async {
+    _isLoading.value = true;
+    final didSend = await widget.requestReset();
+    if (!mounted) return;
+    _isLoading.value = false;
+    _didSendCode.value = didSend;
+  }
+
+  Future<void> _onConfirmTap() async {
+    final resetCode = _resetCodeController.text.trim();
+    if (resetCode.isEmpty) return;
+    _isLoading.value = true;
+    final didReset = await widget.confirmReset(resetCode);
+    if (!mounted) return;
+    _isLoading.value = false;
+    if (didReset) NamidaNavigator.inst.closeDialog();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomBlurryDialog(
+      normalTitleStyle: true,
+      isWarning: true,
+      actions: [
+        const CancelButton(),
+        ObxO(
+          rx: _didSendCode,
+          builder: (context, didSendCode) => ObxO(
+            rx: _isLoading,
+            builder: (context, isLoading) => NamidaButton(
+              enabled: !isLoading,
+              isLoading: isLoading,
+              colorScheme: didSendCode ? null : Colors.red,
+              text: didSendCode ? lang.confirm : lang.reset.toUpperCase(),
+              onTap: didSendCode ? _onConfirmTap : _onResetTap,
+            ),
+          ),
+        ),
+      ],
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            NamidaText(
+              '${lang.reset}: ${lang.coupon}?',
+              style: NText.medium,
+            ),
+            ObxO(
+              rx: _didSendCode,
+              builder: (context, didSendCode) => didSendCode
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 12.0),
+                      child: CustomTagTextField(
+                        controller: _resetCodeController,
+                        hintText: lang.membershipCode,
+                        labelText: lang.membershipCodeSentToEmail,
+                        isNumeric: true,
+                        maxLength: 6,
+                        autofocus: true,
+                        onFieldSubmitted: (_) => _onConfirmTap(),
+                      ),
+                    )
+                  : const SizedBox(),
+            ),
+          ],
+        ),
       ),
     );
   }
