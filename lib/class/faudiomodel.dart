@@ -6,6 +6,7 @@ import 'package:namida/class/media_chapter.dart';
 import 'package:namida/class/media_info.dart';
 import 'package:namida/class/replay_gain_data.dart';
 import 'package:namida/class/split_config.dart';
+import 'package:namida/class/tag_rating.dart';
 import 'package:namida/class/taglib_res.dart';
 import 'package:namida/core/extensions.dart';
 
@@ -239,11 +240,9 @@ class FTags {
 
   static double? ratingToPercentage(String? rating) {
     if (rating == null) return null;
-    final value = num.tryParse(rating);
-    if (value is double && value <= 1.0) return value;
-    if (value == null || value == 0) return null;
-    if (value <= 5) return value / 5.0; // 0-5
-    return value / 100.0; // 0-100
+    final percent = TagRating.percentFromText(rating);
+    if (percent == null) return null;
+    return percent / 100;
   }
 
   // static int ratingPercentageToUnsignedInt(double ratingPercentage) {
@@ -371,7 +370,6 @@ class FTags {
       TagLibField.language: ?_createList(language),
       TagLibField.lyricist: ?_createList(lyricist),
       TagLibField.remixer: ?_createList(remixer),
-      TagLibField.rating: ?_createList(ratingPercentage?.toString()),
       TagLibField.mood: ?_createList(mood),
       TagLibField.tags: ?_createList(tags),
       TagLibField.country: ?_createList(country),

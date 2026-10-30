@@ -442,6 +442,7 @@ class _TagLibIsolateRequestWriteTags extends _TagLibIsolateRequestBase<String?> 
     return TagLibRes.writeSync(
       path,
       newPropertiesMap: newTags.toTagLibMap(),
+      ratingPercentage: newTags.ratingPercentage,
       artwork: newTags.artwork,
       chapters: newTags.chapters,
     );

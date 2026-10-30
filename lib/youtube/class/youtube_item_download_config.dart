@@ -283,7 +283,7 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
     List<MediaChapter>? chapters,
   }) {
     final ffmpegTags = this.ffmpegTags;
-    double? doubleFromString(String? value) => value == null ? null : double.tryParse(ffmpegTags[FFMPEGTagField.rating.tagKey] ?? '');
+    final rating = ffmpegTags[FFMPEGTagField.rating.tagKey];
     return FTags(
       path: path,
       artwork: FArtwork(file: thumbnailFile),
@@ -306,13 +306,13 @@ extension YoutubeItemDownloadConfigUtils on YoutubeItemDownloadConfig {
       language: ffmpegTags[FFMPEGTagField.language.tagKey],
       lyricist: ffmpegTags[FFMPEGTagField.lyricist.tagKey],
       mood: ffmpegTags[FFMPEGTagField.mood.tagKey],
-      rating: ffmpegTags[FFMPEGTagField.rating.tagKey],
+      rating: rating,
       remixer: ffmpegTags[FFMPEGTagField.remixer.tagKey],
       tags: ffmpegTags[FFMPEGTagField.tags.tagKey],
       country: ffmpegTags[FFMPEGTagField.country.tagKey],
       recordLabel: ffmpegTags[FFMPEGTagField.recordLabel.tagKey],
       releaseType: ffmpegTags[FFMPEGTagField.releaseType.tagKey],
-      ratingPercentage: doubleFromString(ffmpegTags[FFMPEGTagField.rating.tagKey]),
+      ratingPercentage: FTags.ratingToPercentage(rating),
       djmixer: null,
       mixer: null,
       tempo: null,

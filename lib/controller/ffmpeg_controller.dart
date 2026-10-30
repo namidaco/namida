@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:namida/class/faudiomodel.dart';
 import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/media_info.dart';
+import 'package:namida/class/tag_rating.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/indexer_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -863,7 +864,7 @@ enum FFMPEGTagField {
       // -- TESTED NOT WORKING. disabling to prevent unwanted fields corruption etc.
       FFMPEGTagField.mood => null,
       FFMPEGTagField.tags => null,
-      FFMPEGTagField.rating => newTags.ratingPercentage?.toString(),
+      FFMPEGTagField.rating => _ratingToText(newTags.ratingPercentage),
       // ----------
       FFMPEGTagField.titleSort => newTags.sortInfo?.title,
       FFMPEGTagField.artistSort => newTags.sortInfo?.artist,
@@ -871,6 +872,12 @@ enum FFMPEGTagField {
       FFMPEGTagField.albumArtistSort => newTags.sortInfo?.albumArtist,
       FFMPEGTagField.composerSort => newTags.sortInfo?.composer,
     };
+  }
+
+  static String? _ratingToText(double? ratingPercentage) {
+    if (ratingPercentage == null) return null;
+    final percent = TagRating.percentOf(ratingPercentage);
+    return TagRating.toDefaultFieldText(percent);
   }
 
   static Map<String, String?> createTagsMapfromFTag(FTags newTags) {
