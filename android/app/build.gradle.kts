@@ -124,6 +124,11 @@ android {
             setProguardFiles(listOf(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"))
         }
     }
+
+    // -- badged launcher icons for the snapshot clone, debug has its own by source set name
+    if (project.hasProperty("namidaSnapshot")) {
+        sourceSets.getByName("release").res.srcDir("src/snapshot/res")
+    }
 }
 
 flutter {

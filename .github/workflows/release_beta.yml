@@ -280,7 +280,9 @@ jobs:
 
       - name: Patch package ID for clone
         if: matrix.is_clone
-        run: find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+        run: |
+          find ./ -type f -exec sed -i -e 's/com.msob7y.namida/com.msob7y.namida.snapshot/g' {} \;
+          echo "ORG_GRADLE_PROJECT_namidaSnapshot=true" >> $GITHUB_ENV
 
       - name: Build APKs
         run: |

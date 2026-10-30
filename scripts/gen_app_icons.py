@@ -7,6 +7,8 @@ cut from a bigger image fill the whole shape from that image instead (on android
 android: each alternate icon becomes an adaptive icon. Its background is a slight gradient made from the edge color.
 Its art is cut into a circle as the foreground (full square icons fill the whole shape instead), and silhouettes stay
 whole. Themed icons use the default monochrome glyph. The default icon keeps its own hand made layers.
+Debug builds and the snapshot clone get every icon again with a vector pill badge on top of the foreground, in their own
+source sets so the release apk stays untouched.
 
 ios: ios masks its own rounded square and refuses transparency, so each icon is laid on its background color.
 
@@ -25,6 +27,10 @@ import json
 import re
 from pathlib import Path
 
+from fontTools.pens.boundsPen import BoundsPen
+from fontTools.pens.svgPathPen import SVGPathPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.ttLib import TTFont
 from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,9 +53,21 @@ TOP_LEFT_LIGHTNESS_FACTOR = 1.1
 BOTTOM_RIGHT_LIGHTNESS_FACTOR = 0.8
 CIRCLE_MASK_SUPERSAMPLE = 4
 
-ANDROID_RES = ROOT / 'android/app/src/main/res'
-ANDROID_ADAPTIVE_DIR = ANDROID_RES / 'mipmap-anydpi-v26'
+ANDROID_SRC = ROOT / 'android/app/src'
+ANDROID_RES = ANDROID_SRC / 'main/res'
+ANDROID_ADAPTIVE_FOLDER = 'mipmap-anydpi-v26'
+ANDROID_ADAPTIVE_DIR = ANDROID_RES / ANDROID_ADAPTIVE_FOLDER
 ANDROID_BACKGROUND_DIR = ANDROID_RES / 'drawable'
+# -- source set: badge text. debug is picked up by name, gradle adds snapshot for the clone
+ANDROID_BADGES = {'debug': 'DEV', 'snapshot': 'BETA'}
+ANDROID_BADGE_NAME = 'ic_launcher_badge'
+ANDROID_BADGE_FONT = ROOT / 'assets/fonts/LexendDeca/LexendDeca-ExtraBold.ttf'
+ANDROID_BADGE_COLOR = (240, 226, 204)
+ANDROID_BADGE_TEXT_COLOR = (74, 52, 36)
+ANDROID_BADGE_CENTER_Y_DP = 78.5
+ANDROID_BADGE_HEIGHT_DP = 11.5
+ANDROID_BADGE_FONT_DP = 7.5
+ANDROID_BADGE_PADDING_DP = 5
 ANDROID_DENSITIES = {'mdpi': 1, 'hdpi': 1.5, 'xhdpi': 2, 'xxhdpi': 3, 'xxxhdpi': 4}
 ANDROID_LAYER_DP = 108
 # -- launchers show only this center part
@@ -234,13 +252,106 @@ def android_hex_color(rgb: tuple[int, int, int]) -> str:
     return '#FF{:02X}{:02X}{:02X}'.format(*rgb)
 
 
-def android_adaptive_xml(name: str) -> str:
+def android_adaptive_name(name: str) -> str:
+    return 'ic_launcher' if name == DEFAULT_ICON else f'ic_launcher_{name}'
+
+
+def android_layer_refs(name: str) -> tuple[str, str]:
+    if name == DEFAULT_ICON:
+        return '@mipmap/ic_launcher_background', '@mipmap/ic_launcher_foreground'
+    return f'@drawable/{android_background_name(name)}', f'@mipmap/{android_foreground_name(name)}'
+
+
+def android_adaptive_xml(background_ref: str, foreground: str) -> str:
     return f'''<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-  <background android:drawable="@drawable/{android_background_name(name)}"/>
-  <foreground android:drawable="@mipmap/{android_foreground_name(name)}"/>
+  <background android:drawable="{background_ref}"/>
+  {foreground}
   <monochrome android:drawable="@mipmap/ic_launcher_monochrome"/>
 </adaptive-icon>
+'''
+
+
+def android_foreground_xml(foreground_ref: str) -> str:
+    return f'<foreground android:drawable="{foreground_ref}"/>'
+
+
+def android_badged_foreground_xml(foreground_ref: str) -> str:
+    return f'''<foreground>
+    <layer-list>
+      <item android:drawable="{foreground_ref}"/>
+      <item android:drawable="@drawable/{ANDROID_BADGE_NAME}"/>
+    </layer-list>
+  </foreground>'''
+
+
+def android_dp_number(value: float) -> str:
+    fixed = f'{value:.2f}'
+    return fixed.rstrip('0').rstrip('.')
+
+
+@functools.cache
+def android_badge_font() -> TTFont:
+    return TTFont(ANDROID_BADGE_FONT)
+
+
+def android_badge_text_path(text: str) -> tuple[str, float]:
+    """the text glyphs as path data centered in the pill, and the pill width."""
+    font = android_badge_font()
+    glyph_set = font.getGlyphSet()
+    cmap = font.getBestCmap()
+    advances = font['hmtx']
+    scale = ANDROID_BADGE_FONT_DP / font['head'].unitsPerEm
+    glyph_names = [cmap[ord(char)] for char in text]
+    offsets = []
+    x = 0
+    for glyph_name in glyph_names:
+        offsets.append(x)
+        x += advances[glyph_name][0]
+
+    bounds_pen = BoundsPen(glyph_set)
+    for glyph_name, offset in zip(glyph_names, offsets):
+        glyph_pen = TransformPen(bounds_pen, (1, 0, 0, 1, offset, 0))
+        glyph_set[glyph_name].draw(glyph_pen)
+    x_min, _, x_max, _ = bounds_pen.bounds
+    ink_width = (x_max - x_min) * scale
+
+    left = ANDROID_LAYER_DP / 2 - ink_width / 2 - x_min * scale
+    cap_height = font['OS/2'].sCapHeight * scale
+    baseline = ANDROID_BADGE_CENTER_Y_DP + cap_height / 2
+    path_pen = SVGPathPen(glyph_set, ntos=android_dp_number)
+    for glyph_name, offset in zip(glyph_names, offsets):
+        glyph_left = left + offset * scale
+        glyph_pen = TransformPen(path_pen, (scale, 0, 0, -scale, glyph_left, baseline))
+        glyph_set[glyph_name].draw(glyph_pen)
+    text_path = path_pen.getCommands()
+    pill_width = ink_width + ANDROID_BADGE_PADDING_DP * 2
+    return text_path, pill_width
+
+
+def android_pill_path(width: float) -> str:
+    radius = ANDROID_BADGE_HEIGHT_DP / 2
+    n = android_dp_number
+    left = ANDROID_LAYER_DP / 2 - width / 2 + radius
+    right = ANDROID_LAYER_DP / 2 + width / 2 - radius
+    top = ANDROID_BADGE_CENTER_Y_DP - radius
+    bottom = ANDROID_BADGE_CENTER_Y_DP + radius
+    arc = f'A{n(radius)},{n(radius)} 0 0 1'
+    return f'M{n(left)},{n(top)}H{n(right)}{arc} {n(right)},{n(bottom)}H{n(left)}{arc} {n(left)},{n(top)}Z'
+
+
+def android_badge_xml(text: str) -> str:
+    text_path, pill_width = android_badge_text_path(text)
+    pill_path = android_pill_path(pill_width)
+    return f'''<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="{ANDROID_LAYER_DP}dp"
+  android:height="{ANDROID_LAYER_DP}dp"
+  android:viewportWidth="{ANDROID_LAYER_DP}"
+  android:viewportHeight="{ANDROID_LAYER_DP}">
+  <path android:fillColor="{android_hex_color(ANDROID_BADGE_COLOR)}" android:pathData="{pill_path}"/>
+  <path android:fillColor="{android_hex_color(ANDROID_BADGE_TEXT_COLOR)}" android:pathData="{text_path}"/>
+</vector>
 '''
 
 
@@ -267,13 +378,36 @@ def write_android_icon(name: str, art: Image.Image, base_color: tuple[int, int, 
     top_left, bottom_right = gradient_colors(base_color)
     background_path = ANDROID_BACKGROUND_DIR / f'{android_background_name(name)}.xml'
     background_path.write_text(android_background_xml(top_left, bottom_right), encoding='utf-8', newline='\n')
-    adaptive_path = ANDROID_ADAPTIVE_DIR / f'ic_launcher_{name}.xml'
-    adaptive_path.write_text(android_adaptive_xml(name), encoding='utf-8', newline='\n')
+    background_ref, foreground_ref = android_layer_refs(name)
+    adaptive_path = ANDROID_ADAPTIVE_DIR / f'{android_adaptive_name(name)}.xml'
+    foreground_xml = android_foreground_xml(foreground_ref)
+    adaptive_xml = android_adaptive_xml(background_ref, foreground_xml)
+    adaptive_path.write_text(adaptive_xml, encoding='utf-8', newline='\n')
     for density, factor in ANDROID_DENSITIES.items():
         layer_px = round(ANDROID_LAYER_DP * factor)
         layer = android_foreground(name, art, layer_px)
         foreground_path = ANDROID_RES / f'mipmap-{density}' / f'{android_foreground_name(name)}.webp'
         layer.save(foreground_path, quality=ANDROID_WEBP_QUALITY, method=6)
+
+
+def write_android_badged_icons(names: list[str]) -> None:
+    for source_set, text in ANDROID_BADGES.items():
+        res = ANDROID_SRC / source_set / 'res'
+        adaptive_dir = res / ANDROID_ADAPTIVE_FOLDER
+        drawable_dir = res / 'drawable'
+        adaptive_dir.mkdir(parents=True, exist_ok=True)
+        drawable_dir.mkdir(parents=True, exist_ok=True)
+        for old in adaptive_dir.glob('ic_launcher*.xml'):
+            old.unlink()
+        badge_path = drawable_dir / f'{ANDROID_BADGE_NAME}.xml'
+        badge_xml = android_badge_xml(text)
+        badge_path.write_text(badge_xml, encoding='utf-8', newline='\n')
+        for name in names:
+            background_ref, foreground_ref = android_layer_refs(name)
+            foreground_xml = android_badged_foreground_xml(foreground_ref)
+            adaptive_xml = android_adaptive_xml(background_ref, foreground_xml)
+            adaptive_path = adaptive_dir / f'{android_adaptive_name(name)}.xml'
+            adaptive_path.write_text(adaptive_xml, encoding='utf-8', newline='\n')
 
 
 # ---------------- ios ----------------
@@ -444,6 +578,10 @@ def main() -> None:
         iconset_name = 'AppIcon' if is_default else name
         write_ios_iconset(iconset_name, name, art, base_color, has_dark_variant=is_default)
         print(f'{name}: android, windows, ios {iconset_name}')
+    names = list(icons)
+    write_android_badged_icons(names)
+    badged_text = ', '.join(ANDROID_BADGES)
+    print(f'android badged: {badged_text}')
     default_art = cropped_art(ROOT / icons[DEFAULT_ICON])
     write_macos_iconset(default_art)
     print('macos AppIcon')
