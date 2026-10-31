@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:audio_service/audio_service.dart';
 import 'package:crypto/crypto.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:namida/class/progress_span.dart';
 import 'package:namida/controller/directory_index.dart';

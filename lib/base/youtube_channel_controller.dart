@@ -91,7 +91,8 @@ abstract class YoutubeChannelController<T extends StatefulWidget> extends State<
     final channelID = this.channelID;
     if (channelID != null) {
       final tabResultCache = await YoutubeInfoController.channel.fetchChannelTabCache(channelId: channelID, tab: ChannelTab.videos);
-      if (tabResultCache != null) {
+      final isVideosOnly = tabResultCache?.items.every((e) => e is StreamInfoItem) == true; // -- older youtipie cached the home tab for channels without a videos tab
+      if (tabResultCache != null && isVideosOnly) {
         refreshState(
           () {
             channelVideoTab = tabResultCache;

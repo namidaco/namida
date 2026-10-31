@@ -256,7 +256,7 @@ class _DiscordOAuth {
   Future<bool> logIn() async {
     final ongoing = _ongoingLogIn;
     if (ongoing != null) {
-      await NamidaLinkUtils.openLink(ongoing.authorizeUri.toString());
+      await _openAuthorizePage(ongoing.authorizeUri);
       return ongoing.result;
     }
 
@@ -285,8 +285,13 @@ class _DiscordOAuth {
     }
   }
 
+  /// the browser keeps the user's discord session, an in-app one starts logged out and stays open over the app after the redirect.
+  static Future<bool> _openAuthorizePage(Uri authorizeUri) {
+    return NamidaLinkUtils.openLink(authorizeUri.toString(), preferredMode: LaunchMode.externalApplication);
+  }
+
   Future<bool> _completeLogIn(Uri authorizeUri, Completer<Uri?> redirect, String verifier) async {
-    final didOpen = await NamidaLinkUtils.openLink(authorizeUri.toString());
+    final didOpen = await _openAuthorizePage(authorizeUri);
     if (!didOpen) throw Exception('could not open $authorizeUri');
     final redirectUri = await redirect.future.timeout(_kLoginTimeout, onTimeout: () => null);
     if (redirectUri == null) return false;

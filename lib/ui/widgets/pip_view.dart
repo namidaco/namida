@@ -75,7 +75,7 @@ class _PipLyrics extends StatelessWidget {
     final style = NText.medium
         .of(context)
         .copyWith(
-          fontSize: 16.0,
+          fontSize: 20.0,
           fontWeight: FontWeight.w600,
           color: Colors.white,
           shadows: _kTextShadows,

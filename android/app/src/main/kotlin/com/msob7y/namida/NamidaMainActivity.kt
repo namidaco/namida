@@ -45,7 +45,6 @@ class NamidaMainActivity : FlutterActivity() {
 
   private val CHANNELNAME = "namida"
   private val CHANNELNAME_STORAGE = "namida/storage"
-  private val EVENTCHANNELNAME = "namida_events"
   private lateinit var channel: MethodChannel
   private lateinit var channelStorage: MethodChannel
   private lateinit var context: Context
@@ -507,8 +506,6 @@ class NamidaMainActivity : FlutterActivity() {
         else -> result.notImplemented()
       }
     }
-
-    pipEventChannel = BetterEventChannel(messenger, EVENTCHANNELNAME)
   }
 
   private fun showToast(text: String?, duration: Int) {
@@ -593,7 +590,6 @@ class NamidaMainActivity : FlutterActivity() {
 
   override fun onDestroy() {
     channel.invokeMethod("onDestroy", null)
-    pipEventChannel?.endOfStream()
     super.onDestroy()
   }
 
@@ -604,7 +600,6 @@ class NamidaMainActivity : FlutterActivity() {
 
   // ------- PIP -------
 
-  private var pipEventChannel: BetterEventChannel? = null
   private var pipBuilder: PictureInPictureParams.Builder? = null
 
   public fun isInPip(): Boolean {
@@ -618,7 +613,8 @@ class NamidaMainActivity : FlutterActivity() {
     isInPictureInPictureMode: Boolean,
     newConfig: Configuration
   ) {
-    pipEventChannel?.success(isInPictureInPictureMode)
+    channel.invokeMethod("onPipModeChanged", isInPictureInPictureMode)
+    super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
   }
 
   @RequiresApi(api = Build.VERSION_CODES.O)

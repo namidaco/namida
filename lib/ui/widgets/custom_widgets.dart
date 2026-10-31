@@ -25,6 +25,7 @@ import 'package:super_sliver_list/super_sliver_list.dart';
 import 'package:namida/base/audio_handler.dart';
 import 'package:namida/base/pull_to_refresh.dart';
 import 'package:namida/class/faudiomodel.dart';
+import 'package:namida/class/file_parts.dart';
 import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/class/version_wrapper.dart';
@@ -36,6 +37,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/controller/version_controller.dart';
@@ -4106,6 +4108,7 @@ class SearchPageTitleRow extends StatelessWidget {
   final Widget? titleTrailing;
   final NColors? color;
   final VoidCallback? onTap;
+  final double verticalPadding;
 
   const SearchPageTitleRow({
     super.key,
@@ -4118,11 +4121,10 @@ class SearchPageTitleRow extends StatelessWidget {
     this.titleTrailing,
     this.color,
     this.onTap,
+    this.verticalPadding = 0.0,
   });
 
-  static const _kPadding = EdgeInsets.only(left: 16.0, right: 8.0, top: 4.0, bottom: 4.0);
   static const _kTappableMargin = EdgeInsets.symmetric(horizontal: 8.0);
-  static const _kTappablePadding = EdgeInsets.only(left: 8.0, top: 4.0, bottom: 4.0);
 
   @override
   Widget build(BuildContext context) {
@@ -4177,13 +4179,13 @@ class SearchPageTitleRow extends StatelessWidget {
     final onTap = this.onTap;
     if (onTap == null) {
       return Padding(
-        padding: _kPadding,
+        padding: EdgeInsets.only(left: 16.0, right: 8.0, top: verticalPadding, bottom: verticalPadding),
         child: content,
       );
     }
     return NamidaInkWell(
       margin: _kTappableMargin,
-      padding: _kTappablePadding,
+      padding: EdgeInsets.only(left: 8.0, top: verticalPadding, bottom: verticalPadding),
       borderRadius: 12.0,
       onTap: onTap,
       child: content,
@@ -6470,12 +6472,14 @@ class NamidaScrollbar extends StatelessWidget {
 class NamidaScrollbarWithController extends StatefulWidget {
   /// used as is and never disposed, a new one is created otherwise.
   final ScrollController? controller;
+  final LibraryTab? libraryTab;
   final bool showOnStart;
   final double scrollStep;
   final Widget Function(ScrollController sc) child;
   const NamidaScrollbarWithController({
     super.key,
     this.controller,
+    this.libraryTab,
     this.showOnStart = false,
     this.scrollStep = 0.0,
     required this.child,
@@ -6494,11 +6498,15 @@ class _NamidaScrollbarWithControllerState extends State<NamidaScrollbarWithContr
     final controller = widget.controller;
     _ownsController = controller == null;
     _sc = controller ?? NamidaScrollController.create();
+    final libraryTab = widget.libraryTab;
+    if (libraryTab != null) ScrollSearchController.inst.registerPageScrollController(libraryTab, _sc);
     super.initState();
   }
 
   @override
   void dispose() {
+    final libraryTab = widget.libraryTab;
+    if (libraryTab != null) ScrollSearchController.inst.unregisterPageScrollController(libraryTab, _sc);
     if (_ownsController) _sc.dispose();
     super.dispose();
   }
@@ -8533,6 +8541,13 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
     NamidaOnTaps.inst.showSavedImageInSnack(savePath, widget.themeColor?.call());
   }
 
+  void _share() async {
+    final resolved = _resolvedImages[_currentIndex.value];
+    if (resolved == null) return;
+    final path = await resolved.getSharablePath();
+    await NamidaUtils.shareFiles([path]);
+  }
+
   void _saveCollage(Future<String?> Function(BuildContext context) onSaveCollage) async {
     final savePath = await onSaveCollage(context);
     NamidaOnTaps.inst.showSavedImageInSnack(savePath, widget.themeColor?.call());
@@ -8674,6 +8689,11 @@ class _NamidaArtworkFullscreenState extends State<NamidaArtworkFullscreen> {
                             onPressed: _save,
                           ),
                         ),
+                        NamidaIconButton(
+                          tooltip: () => lang.share,
+                          icon: Broken.share,
+                          onPressed: _share,
+                        ),
                       ],
                     ),
                   ),
@@ -8778,6 +8798,15 @@ class _ResolvedFullscreenImage {
 
   _ResolvedFullscreenImage.file(File this.file) : bytes = null, provider = FileImage(file);
   _ResolvedFullscreenImage.bytes(Uint8List this.bytes) : file = null, provider = MemoryImage(bytes);
+
+  Future<String> getSharablePath() async {
+    final file = this.file;
+    if (file != null) return file.path;
+    final bytesFilePath = FileParts.joinPath(AppDirs.APP_CACHE, 'namida_shared_image.png');
+    final bytesFile = File(bytesFilePath);
+    await bytesFile.writeAsBytes(bytes!);
+    return bytesFile.path;
+  }
 }
 
 class ObxPrefer<T> extends StatelessWidget {

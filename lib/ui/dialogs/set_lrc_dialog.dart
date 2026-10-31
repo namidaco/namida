@@ -36,6 +36,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
   final fetchingFromInternet = Rxn<bool>();
   final availableLyrics = <LyricsModel>[].obs;
   final fetchedLyrics = <LyricsModel>[].obs;
+  final failedProvidersRx = <LyricsProvider>[].obs;
   final trackDurationMSRx = Rxn<int>();
   bool requiresUpdatingLyrics = false;
 
@@ -512,15 +513,17 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
     final id = ++searchId;
     fetchingFromInternet.value = true;
     fetchedLyrics.clear();
-    final lyrics = await Lyrics.inst.searchLRCLyricsFromInternet(
+    final res = await Lyrics.inst.searchLRCLyricsFromInternet(
       lrcUtils: lrcUtils,
       customQuery: query ?? searchController.text,
       allProviders: true,
       onPartial: fetchedLyrics.addAll,
     );
     if (id != searchId) return;
+    final lyrics = res.lyrics;
     sortFetchedLyrics(lyrics, trackDurationMSRx.value);
     fetchedLyrics.value = lyrics;
+    failedProvidersRx.value = res.failedProviders;
     fetchingFromInternet.value = false;
   }
 
@@ -554,6 +557,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
       fetchingFromInternet.close();
       availableLyrics.close();
       fetchedLyrics.close();
+      failedProvidersRx.close();
       selectedLyrics.close();
       expandedLyrics.close();
       inUseRx.close();
@@ -695,6 +699,7 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                   }
                   final availableLyricsValue = availableLyrics.valueR;
                   final fetchedLyricsValue = fetchedLyrics.valueR;
+                  final failedProviders = failedProvidersRx.valueR;
                   final hasEmbedded = availableLyricsValue.any((l) => l.isEmbedded);
 
                   Widget listItemBuilder(BuildContext context, LyricsModel l) {
@@ -890,6 +895,13 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                           margin: EdgeInsets.symmetric(vertical: 4.0),
                         ),
                       ),
+                      if (failedProviders.isNotEmpty)
+                        SliverToBoxAdapter(
+                          child: _LyricsSearchFailedTile(
+                            failedProviders: failedProviders,
+                            onRetry: onSearchTrigger,
+                          ),
+                        ),
                       if (fetchedLyricsValue.isEmpty && fetchingFromInternet.valueR != null)
                         SliverToBoxAdapter(
                           child: Padding(
@@ -897,8 +909,10 @@ void showLRCSetDialog(Playable item, Color colorScheme) async {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const NoResultsWidget(),
-                                const SizedBox(height: 8.0),
+                                if (failedProviders.isEmpty) ...[
+                                  const NoResultsWidget(),
+                                  const SizedBox(height: 8.0),
+                                ],
                                 NamidaInkWell(
                                   borderRadius: 6.0,
                                   bgColor: NColors.card,
@@ -1158,6 +1172,31 @@ class _IgnoredLyricsTile extends StatelessWidget {
       subtitle: lang.cache,
       value: true,
       onChanged: (isTrue) => onUnignore(),
+    );
+  }
+}
+
+class _LyricsSearchFailedTile extends StatelessWidget {
+  final List<LyricsProvider> failedProviders;
+  final VoidCallback onRetry;
+
+  const _LyricsSearchFailedTile({
+    required this.failedProviders,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final providersText = failedProviders.map((e) => e.toText()).join(', ');
+    return CustomListTile(
+      icon: Broken.danger,
+      title: lang.failed,
+      subtitle: providersText,
+      trailing: const Icon(
+        Broken.refresh,
+        size: 20.0,
+      ),
+      onTap: onRetry,
     );
   }
 }

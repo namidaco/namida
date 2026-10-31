@@ -14,6 +14,7 @@ import 'package:namida/core/translations/language.dart';
 import 'package:namida/core/utils.dart';
 import 'package:namida/ui/widgets/custom_widgets.dart';
 import 'package:namida/ui/widgets/settings/extra_settings.dart';
+import 'package:namida/youtube/controller/youtube_history_controller.dart';
 
 enum YTVideosSorting {
   date,
@@ -21,6 +22,17 @@ enum YTVideosSorting {
   duration,
   title,
   viewsPerDay,
+  channelTitle(isMultiChannelOnly: true),
+  mostPlayed,
+  latestPlayed,
+  firstListen,
+  shuffle,
+  ;
+
+  final bool isMultiChannelOnly;
+  const YTVideosSorting({this.isMultiChannelOnly = false});
+
+  static final singleChannelValues = values.where((e) => !e.isMultiChannelOnly).toFixedList();
 }
 
 /// How the server already orders [YoutubeStreamsManager.streamsList], before any local sorting.
@@ -50,6 +62,8 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   /// Server sorting refetches the list from scratch, which only makes sense when the displayed
   /// list is actually the one owned by [listWrapper].
   bool get canSortStreamsServerSide => true;
+
+  bool get canSortStreamsByChannel => false;
 
   /// The whole list gets replaced once a server sort is fetched, consumers can display a loading state.
   void onServerSortLoadingChange(bool isLoading) {}
@@ -173,8 +187,9 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
   List<NamidaPopupItem> _sortMenuLocalItems() {
     final currentSort = sorting.value;
     final sortingByTop = this.sortingByTop.value;
+    final sorts = canSortStreamsByChannel ? YTVideosSorting.values : YTVideosSorting.singleChannelValues;
     return [
-      ...YTVideosSorting.values.map(
+      ...sorts.map(
         (e) {
           final details = sortToTextAndIcon(e);
           final active = currentSort == e;
@@ -282,10 +297,12 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
       }
     }
 
-    return source.sortedByPrecomputed(_sortKeyOf(sort), reverse: sortingByTop);
+    final sortKey = _sortKeyOf(sort);
+    if (sortKey == null) return source.toFixedList()..shuffle();
+    return source.sortedByPrecomputed(sortKey, reverse: sortingByTop);
   }
 
-  Comparable Function(StreamInfoItem e) _sortKeyOf(YTVideosSorting sort) {
+  Comparable Function(StreamInfoItem e)? _sortKeyOf(YTVideosSorting sort) {
     switch (sort) {
       case YTVideosSorting.date:
         return (e) => e.publishedAt.date?.millisecondsSinceEpoch ?? 0;
@@ -304,6 +321,19 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
           final ageMS = nowMS - dateMS;
           return ageMS <= Duration.millisecondsPerDay ? views.toDouble() : views * Duration.millisecondsPerDay / ageMS;
         };
+      case YTVideosSorting.channelTitle:
+        return (e) => e.channel?.title?.toLowerCase() ?? '';
+      case YTVideosSorting.mostPlayed:
+        final listens = YoutubeHistoryController.inst.topTracksMapListens.value;
+        return (e) => listens[e.id]?.length ?? 0;
+      case YTVideosSorting.latestPlayed:
+        final listens = YoutubeHistoryController.inst.topTracksMapListens.value;
+        return (e) => listens[e.id]?.lastOrNull ?? 0;
+      case YTVideosSorting.firstListen:
+        final listens = YoutubeHistoryController.inst.topTracksMapListens.value;
+        return (e) => listens[e.id]?.firstOrNull ?? 0;
+      case YTVideosSorting.shuffle:
+        return null;
     }
   }
 
@@ -319,6 +349,16 @@ mixin YoutubeStreamsManager<W extends YoutiPieListWrapper<YoutubeFeed>> {
         return (lang.title, Broken.text);
       case YTVideosSorting.viewsPerDay:
         return ('${lang.views.capitalizeFirst()}/${lang.day.toLowerCase()}', Broken.trend_up);
+      case YTVideosSorting.channelTitle:
+        return (lang.channel, Broken.user);
+      case YTVideosSorting.mostPlayed:
+        return (lang.mostPlayed, Broken.award);
+      case YTVideosSorting.latestPlayed:
+        return (lang.recentListens, Broken.clock);
+      case YTVideosSorting.firstListen:
+        return (lang.firstListen, Broken.calendar_search);
+      case YTVideosSorting.shuffle:
+        return (lang.random, Broken.shuffle);
     }
   }
 

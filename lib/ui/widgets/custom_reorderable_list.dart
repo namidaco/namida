@@ -792,28 +792,35 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
   }
 
   void _dragEnd(_DragInfo item) {
-    if (_insertIndex == item.index) {
-      _finalDropPosition = _itemOffsetAt(_insertIndex!);
-    } else if (_reverse) {
-      if (_insertIndex! >= _items.length) {
-        // Drop at the starting position of the last element and offset its own extent
-        _finalDropPosition = _itemOffsetAt(_items.length - 1) - _extentOffset(item.itemExtent, _scrollDirection);
-      } else {
-        // Drop at the end of the current element occupying the insert position
-        _finalDropPosition = _itemOffsetAt(_insertIndex!) + _extentOffset(_itemExtentAt(_insertIndex!), _scrollDirection);
-      }
-    } else {
-      if (_insertIndex! == 0) {
-        // Drop at the starting position of the first element and offset its own extent
-        _finalDropPosition = _itemOffsetAt(0) - _extentOffset(item.itemExtent, _scrollDirection);
-      } else {
-        // Drop at the end of the previous element occupying the insert position
-        final int atIndex = _insertIndex! - 1;
-        _finalDropPosition = _itemOffsetAt(atIndex) + _extentOffset(_itemExtentAt(atIndex), _scrollDirection);
-      }
-    }
+    _finalDropPosition = _dropPositionOf(item);
     _overlayEntry?.markNeedsBuild();
     widget.onReorderEnd?.call(_insertIndex!);
+  }
+
+  /// null when the item it lands next to isn't built (scrolled away), the proxy then settles where it was released.
+  Offset? _dropPositionOf(_DragInfo item) {
+    final insertIndex = _insertIndex!;
+    if (insertIndex == item.index) return _itemStartAt(insertIndex);
+
+    if (_reverse) {
+      if (insertIndex >= _items.length) {
+        // Drop at the starting position of the last element and offset its own extent
+        final lastItemStart = _itemStartAt(_items.length - 1);
+        if (lastItemStart == null) return null;
+        return lastItemStart - _extentOffset(item.itemExtent, _scrollDirection);
+      }
+      // Drop at the end of the current element occupying the insert position
+      return _itemEndAt(insertIndex);
+    }
+
+    if (insertIndex == 0) {
+      // Drop at the starting position of the first element and offset its own extent
+      final firstItemStart = _itemStartAt(0);
+      if (firstItemStart == null) return null;
+      return firstItemStart - _extentOffset(item.itemExtent, _scrollDirection);
+    }
+    // Drop at the end of the previous element occupying the insert position
+    return _itemEndAt(insertIndex - 1);
   }
 
   void _dropCompleted() {
@@ -942,12 +949,15 @@ class SliverReorderableListState extends State<SliverReorderableList> with Ticke
     return MatrixUtils.transformRect(dragInfo.layoutBox.getTransformTo(null), origin & dragInfo.itemSize);
   }
 
-  Offset _itemOffsetAt(int index) {
-    return _items[index]!.targetGeometry(_dragInfo!.layoutBox).topLeft;
+  Offset? _itemStartAt(int index) {
+    return _items[index]?.targetGeometry(_dragInfo!.layoutBox).topLeft;
   }
 
-  double _itemExtentAt(int index) {
-    return _sizeExtent(_items[index]!.targetGeometry(_dragInfo!.layoutBox).size, _scrollDirection);
+  Offset? _itemEndAt(int index) {
+    final geometry = _items[index]?.targetGeometry(_dragInfo!.layoutBox);
+    if (geometry == null) return null;
+    final itemExtent = _sizeExtent(geometry.size, _scrollDirection);
+    return geometry.topLeft + _extentOffset(itemExtent, _scrollDirection);
   }
 
   Widget _itemBuilder(BuildContext context, int index) {

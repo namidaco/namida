@@ -458,7 +458,7 @@ class LyricsLocations {
 /// Finds lyrics files by listing a directory once, the listing is reused as long as the directory wasn't modified.
 /// Most directories have none, which makes every lookup after the first a single stat.
 class _LrcSidecarFinder {
-  static const syncedExtensions = ['lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass'];
+  static const syncedExtensions = ['lrc', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', 'wlrc'];
   static const plainExtensions = ['txt'];
   static const allExtensions = [...syncedExtensions, ...plainExtensions];
   static const _allExtensionsSet = {...allExtensions};

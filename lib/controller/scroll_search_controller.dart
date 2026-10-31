@@ -82,6 +82,13 @@ class ScrollSearchController {
     }
   }
 
+  // -- pages with their own controller, so re-pressing their tab scrolls them to top too
+  final _pageScrollControllers = <LibraryTab, List<ScrollController>>{};
+
+  void registerPageScrollController(LibraryTab tab, ScrollController controller) => (_pageScrollControllers[tab] ??= []).add(controller);
+
+  void unregisterPageScrollController(LibraryTab tab, ScrollController controller) => _pageScrollControllers[tab]?.remove(controller);
+
   void animatePageController(LibraryTab tab, {bool jumpToTopIfSamePage = true, bool restoreScrollPosition = true}) async {
     if (tab == LibraryTab.search) {
       toggleSearch();
@@ -92,7 +99,8 @@ class ScrollSearchController {
     hideSearchMenu();
 
     if (NamidaNavigator.inst.currentRoute?.isSameRouteAs(w) == true) {
-      final tabScrollController = tab.scrollController;
+      final pageTab = tab == LibraryTab.youtube ? settings.extra.ytInitialHomePage.value.libraryTab : tab;
+      final tabScrollController = _pageScrollControllers[pageTab]?.lastOrNull ?? tab.scrollController;
       if (tabScrollController.hasClients) {
         MiniPlayerController.inst.snapToMini();
         if (jumpToTopIfSamePage) tabScrollController.animateToEff(0.0, duration: const Duration(milliseconds: 400), curve: Curves.easeInOutQuart);

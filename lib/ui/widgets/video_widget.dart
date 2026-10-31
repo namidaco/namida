@@ -330,18 +330,31 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
 
     settings.youtube.horizontalDrag.addListener(_horizontalDragModeListener);
 
-    if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
+    _controlsAppBrightness = widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness && !NamidaChannel.inst.isInPip.value;
+    if (_controlsAppBrightness) {
       ScreenBrightness.instance.system.then((value) => _currentBrigthnessDim.value = 1.0 + value);
       _systemBrightnessStreamSub = ScreenBrightness.instance.onSystemScreenBrightnessChanged.listen(
         (event) {
           if (event > 0) {
             _currentBrigthnessDim.value = 1.0 + event;
-            _setScreenBrightness(event);
+            if (!NamidaChannel.inst.isInPip.value) _setScreenBrightness(event);
           }
         },
       );
+      NamidaChannel.inst.isInPip.addListener(_onPipChanged);
     }
     if (widget.isFullScreen && _deviceOrientationCommunicatorStreamSub == null) _setupDeviceOrientationListener();
+  }
+
+  // -- the pip view is its own fullscreen instance
+  late final bool _controlsAppBrightness;
+
+  void _onPipChanged() {
+    if (NamidaChannel.inst.isInPip.value) {
+      ScreenBrightness.instance.resetApplicationScreenBrightness();
+    } else {
+      _setScreenBrightness(_currentBrigthnessDim.value - 1.0);
+    }
   }
 
   void _setScreenBrightness(double value) async {
@@ -370,7 +383,8 @@ class NamidaVideoControlsState extends State<NamidaVideoControls> with TickerPro
     MiniPlayerController.inst.animation.removeListener(_miniplayerAnimationListener);
     settings.youtube.horizontalDrag.removeListener(_horizontalDragModeListener);
     _systemBrightnessStreamSub?.cancel();
-    if (widget.isFullScreen && NamidaFeaturesVisibility.changeApplicationBrightness) {
+    if (_controlsAppBrightness) {
+      NamidaChannel.inst.isInPip.removeListener(_onPipChanged);
       ScreenBrightness.instance.resetApplicationScreenBrightness();
     }
     _deviceOrientationCommunicatorStreamSub?.cancel();

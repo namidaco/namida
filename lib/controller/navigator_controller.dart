@@ -184,7 +184,7 @@ class NamidaNavigator {
   }
 
   Future<void> toggleFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
-    if (_isInFullScreen) {
+    if (_isInFullScreen.value) {
       return await exitFullScreen();
     } else {
       return await enterFullScreen(widget, setOrientations: setOrientations, onWillPop: onWillPop);
@@ -288,11 +288,12 @@ class NamidaNavigator {
     }
   }
 
-  bool get isInFullScreen => _isInFullScreen;
-  bool _isInFullScreen = false;
+  bool get isInFullScreen => _isInFullScreen.value;
+  RxBaseCore<bool> get isInFullScreenRx => _isInFullScreen;
+  final _isInFullScreen = false.obs;
   Future<void> enterFullScreen(Widget widget, {bool setOrientations = true, Future<void> Function()? onWillPop}) async {
-    if (_isInFullScreen == true) return;
-    _isInFullScreen = true;
+    if (_isInFullScreen.value == true) return;
+    _isInFullScreen.value = true;
 
     WakelockController.inst.updateFullscreenStatus(true);
 
@@ -320,8 +321,8 @@ class NamidaNavigator {
   }
 
   Future<void> exitFullScreen() async {
-    if (_isInFullScreen == false) return;
-    _isInFullScreen = false;
+    if (_isInFullScreen.value == false) return;
+    _isInFullScreen.value = false;
 
     if (NamidaFeaturesVisibility.fullScreenChangesScreenSize) MiniPlayerController.inst.updateScreenValuesInitial(); // -- updates were dropped while in fullscreen
 

@@ -42,6 +42,7 @@ class _YoutubeUserPlaylistsPageState extends State<YoutubeUserPlaylistsPage> {
     final horizontalHistory = YoutubeUserHistoryPageHorizontal(pageKey: horizontalHistoryKey);
     return YoutubeMainPageFetcherAccBase<YoutiPieUserPlaylistsResult, PlaylistInfoItemUser>(
       operation: YoutiPieOperation.fetchUserPlaylists,
+      libraryTab: LibraryTab.ytPlaylists,
       transparentShimmer: true,
       topPadding: 12.0,
       pageHeader: Column(

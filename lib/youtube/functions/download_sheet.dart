@@ -213,15 +213,24 @@ Future<void> showDownloadVideoBottomSheet({
     }
   }
 
+  void onStreamsFetched(VideoStreamsResult? streams) async {
+    if (streams == null || streams.audioStreams.isEmpty) {
+      // -- offline or removed video, old streams still match the cached files
+      final cachedStreams = await YoutubeInfoController.video.fetchVideoStreamsCache(videoId);
+      if (cachedStreams != null && cachedStreams.audioStreams.isNotEmpty) streams = cachedStreams;
+    }
+    onStreamsObtained(streams);
+  }
+
   final streamsInCache = await YoutubeInfoController.video.fetchVideoStreamsCache(videoId, infoOnly: false);
   if (streamsInCache != null) {
     if (streamsInCache.hasExpired() || streamsInCache.audioStreams.isEmpty) {
-      YoutubeInfoController.video.fetchVideoStreams(videoId).catchError((_) => null).then(onStreamsObtained);
+      YoutubeInfoController.video.fetchVideoStreams(videoId).catchError((_) => null).then(onStreamsFetched);
     } else {
       onStreamsObtained(streamsInCache);
     }
   } else {
-    YoutubeInfoController.video.fetchVideoStreams(videoId).catchError((_) => null).then(onStreamsObtained);
+    YoutubeInfoController.video.fetchVideoStreams(videoId).catchError((_) => null).then(onStreamsFetched);
   }
 
   Widget getQualityChipBase({

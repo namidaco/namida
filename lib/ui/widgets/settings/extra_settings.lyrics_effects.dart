@@ -96,6 +96,7 @@ class _LyricsEffectsViewTile extends StatelessWidget {
           titleText: view.toText(),
           subtitleText: currentPreset?.toText() ?? 'Custom',
           childrenPadding: const EdgeInsetsDirectional.only(end: 12.0, bottom: 8.0),
+          showRail: false,
           children: [
             _LyricsEffectsCardsGrid(
               perRow: _LyricsEffectsPreset.values.length,

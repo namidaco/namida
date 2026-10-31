@@ -101,12 +101,28 @@ void main() {
       'empty.txt': <int>[],
     };
     writeAll(source, contents);
+    Directory(p.join(source.path, 'empty_dir')).createSync();
     final zipFile = File(p.join(work.path, 'out.zip'));
     final destination = workDir('extracted');
     final zipManager = ZipManager.platform();
     await zipManager.createZipFromDirectory(sourceDir: source, zipFile: zipFile);
     await zipManager.extractZip(zipFile: zipFile, destinationDir: destination);
     expectAll(destination, contents);
+    expect(Directory(p.join(destination.path, 'empty_dir')).existsSync(), true);
+  });
+
+  test('files deleted before zipping are skipped instead of failing the zip', () async {
+    final source = workDir('source');
+    final contents = {'kept.json': bytesOf(22)};
+    final files = writeAll(source, contents);
+    final deletedFile = File(p.join(source.path, 'latest_queue.json'));
+    final zipFile = File(p.join(work.path, 'out.zip'));
+    final destination = workDir('extracted');
+    final zipManager = ZipManager.platform();
+    await zipManager.createZip(sourceDir: source, files: [...files, deletedFile], zipFile: zipFile);
+    await zipManager.extractZip(zipFile: zipFile, destinationDir: destination);
+    expectAll(destination, contents);
+    expect(File(p.join(destination.path, 'latest_queue.json')).existsSync(), false);
   });
 
   test('entries escaping the destination are skipped', () async {

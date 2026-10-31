@@ -25,6 +25,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/player_controller.dart';
 import 'package:namida/controller/playlist_controller.dart';
 import 'package:namida/controller/queue_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/stats_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
@@ -94,6 +95,7 @@ class HomePageRefresher {
 
 abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulWidget> extends State<S> with TickerProviderStateMixin, PullToRefreshMixin {
   bool get isStatsTypeYT;
+  LibraryTab get libraryTab;
 
   HistoryManager<T, E> get historyManager;
   NamidaGeneratorBase<T, E> get generator;
@@ -159,6 +161,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
     _scrollController = NamidaScrollController.create();
     _lostMemoriesScrollController = NamidaScrollController.create();
     _topRecentsScrollController = NamidaScrollController.create();
+    ScrollSearchController.inst.registerPageScrollController(libraryTab, _scrollController);
     HomePageRefresher._requests.addListener(_refreshAll);
     _fillLists();
   }
@@ -167,6 +170,7 @@ abstract class _HomePageStateBase<T extends ItemWithDate, E, S extends StatefulW
   void dispose() {
     HomePageRefresher._requests.removeListener(_refreshAll);
     _emptyAll();
+    ScrollSearchController.inst.unregisterPageScrollController(libraryTab, _scrollController);
     _scrollController.dispose();
     _lostMemoriesScrollController.dispose();
     _topRecentsScrollController.dispose();
@@ -683,6 +687,9 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
   bool get isStatsTypeYT => false;
 
   @override
+  LibraryTab get libraryTab => LibraryTab.home;
+
+  @override
   HistoryManager<TrackWithDate, Track> get historyManager => HistoryController.inst;
 
   @override
@@ -1064,6 +1071,9 @@ class _TracksHomePageState extends _HomePageStateBase<TrackWithDate, Track, Home
 class _YoutubeHomePageState extends _HomePageStateBase<YoutubeID, String, YTHomePageLocal> {
   @override
   bool get isStatsTypeYT => true;
+
+  @override
+  LibraryTab get libraryTab => LibraryTab.ytHome;
 
   @override
   HistoryManager<YoutubeID, String> get historyManager => YoutubeHistoryController.inst;

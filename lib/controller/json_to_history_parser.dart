@@ -1524,7 +1524,7 @@ class JsonToHistoryParser {
     if (addHistory) HistoryController.inst.setIdleStatus(true);
 
     try {
-      final res = await Isolate.run(() => parser(params));
+      final res = await parser.thready(params);
       if (res == null) return null;
 
       if (addHistory) HistoryController.inst.historyMap.value = res.localHistory;

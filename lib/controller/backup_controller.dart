@@ -221,13 +221,16 @@ class BackupController {
     }
 
     try {
+      final failedDirsErrors = <String>[];
       for (final d in dirsOnly) {
         final prefix = d.path.startsWith(AppDirs.YOUTUBE_MAIN_DIRECTORY) ? 'YOUTUBE_' : '';
-        final dirZipFile = FileParts.join(stagingDirPath, "${prefix}TEMPDIR_${d.path.getFilename}.zip");
+        final dirName = d.path.getFilename;
+        final dirZipFile = FileParts.join(stagingDirPath, "${prefix}TEMPDIR_$dirName.zip");
         try {
           await _zipManager.createZipFromDirectory(sourceDir: d, zipFile: dirZipFile);
           compressedDirectories.add(dirZipFile);
-        } catch (_) {
+        } catch (e) {
+          failedDirsErrors.add('$dirName: $e');
           await dirZipFile.tryDeleting();
         }
       }
@@ -254,7 +257,12 @@ class BackupController {
       await partialBackupFile.rename(backupFilePath);
 
       succeeded = true;
-      snackyy(title: lang.createdBackupSuccessfully, message: lang.createdBackupSuccessfullySub);
+      if (failedDirsErrors.isEmpty) {
+        snackyy(title: lang.createdBackupSuccessfully, message: lang.createdBackupSuccessfullySub);
+      } else {
+        final failedDirsText = failedDirsErrors.join('\n');
+        snackyy(title: "${lang.error}: ${lang.createBackup}", message: failedDirsText, isError: true);
+      }
     } catch (e) {
       printy(e, isError: true);
       snackyy(title: lang.error, message: e.toString());

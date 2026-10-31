@@ -75,6 +75,7 @@ class _YoutubeMusicHomePageState extends State<YoutubeMusicHomePage> {
       ),
       onChipTap: _onChipTap,
       onFormOptionTap: null,
+      libraryTab: LibraryTab.ytMusic,
     );
   }
 }
@@ -177,6 +178,7 @@ class _MusicBrowseView extends StatelessWidget {
   final Widget Function(Rxn<YoutiPieMusicBrowseResult> resultRx, Widget refreshIconWidget)? headerBuilder;
   final void Function(YoutiPieMusicChip chip) onChipTap;
   final void Function(YoutiPieMusicFormOption option)? onFormOptionTap;
+  final LibraryTab? libraryTab;
 
   const _MusicBrowseView({
     super.key,
@@ -185,6 +187,7 @@ class _MusicBrowseView extends StatelessWidget {
     required this.headerBuilder,
     required this.onChipTap,
     required this.onFormOptionTap,
+    this.libraryTab,
   });
 
   @override
@@ -206,6 +209,7 @@ class _MusicBrowseView extends StatelessWidget {
       cacheReader: YoutiPie.cacheBuilder.forMusicBrowse(endpoint: endpoint),
       networkFetcher: (details) => YoutubeInfoController.music.browse(endpoint, details: details),
       fetchTimeMapKey: ValueKey(endpoint),
+      libraryTab: libraryTab,
       dummyCard: const _MusicShelfDummy(),
       itemExtent: null,
       itemBuilder: (shelf, index, result) => null,

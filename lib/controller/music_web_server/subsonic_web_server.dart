@@ -403,7 +403,7 @@ class _SubsonicWebServer extends MusicWebServer {
     const subBatchSize = 10;
     for (var i = 0; i < albums.length; i += subBatchSize) {
       final batch = albums.skip(i).take(subBatchSize);
-      final futures = batch.map((album) => api.api.getAlbum(album.id));
+      final futures = batch.map((album) => _getAlbumRetryingOnce(api, album.id));
       final results = await Future.wait(futures);
 
       for (final albumDetail in results) {
@@ -422,6 +422,15 @@ class _SubsonicWebServer extends MusicWebServer {
           );
         }
       }
+    }
+  }
+
+  /// ios closes sockets while the app is in background, a missing album would count its tracks as removed.
+  static Future<SubsonicResponse<AlbumModel>> _getAlbumRetryingOnce(SubsonicApi api, String albumId) async {
+    try {
+      return await api.api.getAlbum(albumId);
+    } on DioException {
+      return api.api.getAlbum(albumId);
     }
   }
 

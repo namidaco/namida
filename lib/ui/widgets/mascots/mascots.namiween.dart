@@ -36,6 +36,16 @@ class NamiweenScene extends StatefulWidget {
   final Alignment alignment;
   final double opacity;
 
+  static void show() {
+    NamidaNavigator.inst.navigateDialog(
+      blackBg: true,
+      scale: 1.0,
+      dialog: const NamiweenScene(
+        alignment: Alignment.center,
+      ),
+    );
+  }
+
   const NamiweenScene({
     super.key,
     this.alignment = Alignment.topCenter,

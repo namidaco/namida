@@ -6,6 +6,7 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/track.dart';
 import 'package:namida/controller/party/party_controller.dart';
 import 'package:namida/controller/player_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/core/dimensions.dart';
 import 'package:namida/core/enums.dart';
@@ -123,7 +124,10 @@ class _QueueListBaseState extends State<_QueueListBase> {
   @override
   void initState() {
     super.initState();
-    if (widget.headerBuilder != null) _search = QueueSearch(onResultsChanged: _onSearchResultsChanged, onResultSelected: _onSearchResultSelected);
+    if (widget.headerBuilder != null) {
+      _search = QueueSearch(onResultsChanged: _onSearchResultsChanged, onResultSelected: _onSearchResultSelected);
+      ScrollSearchController.inst.registerPageScrollController(LibraryTab.currentQueue, _queueFollower.scrollController);
+    }
     Player.inst.currentIndex.addListener(_onCurrentItemMoved);
     Player.inst.currentQueue.addListener(_onCurrentItemMoved);
     WidgetsBinding.instance.addPostFrameCallback(_jumpToCurrentItem);
@@ -133,6 +137,7 @@ class _QueueListBaseState extends State<_QueueListBase> {
   void dispose() {
     Player.inst.currentIndex.removeListener(_onCurrentItemMoved);
     Player.inst.currentQueue.removeListener(_onCurrentItemMoved);
+    ScrollSearchController.inst.unregisterPageScrollController(LibraryTab.currentQueue, _queueFollower.scrollController);
     _queueFollower.dispose();
     _search?.dispose();
     super.dispose();

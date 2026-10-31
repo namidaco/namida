@@ -236,6 +236,7 @@ class _YoutubePlaylistsViewState extends State<YoutubePlaylistsView> {
     final searchBoxManager = _searchBoxManager;
 
     return NamidaScrollbarWithController(
+      libraryTab: widget.isInsideAddSheet ? null : LibraryTab.ytPlaylists,
       child: (sc) => SmoothCustomScrollView(
         controller: sc,
         slivers: [

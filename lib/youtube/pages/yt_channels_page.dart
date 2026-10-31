@@ -23,6 +23,7 @@ import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/file_browser.dart';
 import 'package:namida/controller/history_controller.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
@@ -101,6 +102,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
 
     _uploadsScrollController = NamidaScrollController.create();
     _horizontalListController = NamidaScrollController.create();
+    ScrollSearchController.inst.registerPageScrollController(LibraryTab.ytChannels, _uploadsScrollController);
     final allGroups = YoutubeSubscriptionsController.inst.allGroups.value;
     final activeGroup = _activeGroup(allGroups);
     final subCh = _filteredChannelIDs(activeGroup).lastOrNull;
@@ -118,6 +120,7 @@ class _YoutubeChannelsPageState extends YoutubeChannelController<YoutubeChannels
     if (_didFetchChannels) YoutubeSubscriptionsController.inst.sortByLastFetched();
     _allChannelsFetchRun++;
     _horizontalListController.dispose();
+    ScrollSearchController.inst.unregisterPageScrollController(LibraryTab.ytChannels, _uploadsScrollController);
     _uploadsScrollController.dispose();
     _allChannelsStreamsProgress.close();
     _allChannelsStreamsLoading.close();
@@ -909,6 +912,7 @@ class _YoutubeChannelVideosPage extends StatelessWidget {
         ),
         builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieUserChannelsAllVideosResult, YoutubeFeed>(
           operation: YoutiPieOperation.fetchChannelTab,
+          libraryTab: LibraryTab.ytChannels,
           transparentShimmer: true,
           topPadding: 0.0,
           title: lang.channels,
@@ -951,6 +955,7 @@ class _YoutubeChannelVideosPage extends StatelessWidget {
         ),
         builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieChannelTabResult, YoutubeFeed>(
           operation: YoutiPieOperation.fetchChannelTab,
+          libraryTab: LibraryTab.ytChannels,
           fetchTimeMapKey: ValueKey(channelId),
           transparentShimmer: true,
           topPadding: 0.0,

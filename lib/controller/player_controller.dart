@@ -272,6 +272,8 @@ class Player {
           androidNotificationChannelName: 'Namida',
           androidNotificationChannelDescription: 'Namida Media Notification',
           androidNotificationIcon: 'drawable/ic_stat_musicnote',
+          artDownscaleWidth: 1024,
+          artDownscaleHeight: 1024,
           androidNotificationOngoing: false,
           androidStopForegroundOnPause: false,
         ),

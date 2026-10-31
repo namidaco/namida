@@ -1223,18 +1223,19 @@ enum YTHomeSource {
 }
 
 enum YTHomePages {
-  home([YTHomeSource.local, YTHomeSource.youtube]),
-  music([YTHomeSource.youtubeMusic], showsSource: false),
-  notifications([YTHomeSource.youtube]),
-  channels([YTHomeSource.local, YTHomeSource.youtube]),
-  playlists([YTHomeSource.local, YTHomeSource.youtube]),
-  downloads([YTHomeSource.local], showsSource: false),
+  home([YTHomeSource.local, YTHomeSource.youtube], libraryTab: LibraryTab.ytHome),
+  music([YTHomeSource.youtubeMusic], libraryTab: LibraryTab.ytMusic, showsSource: false),
+  notifications([YTHomeSource.youtube], libraryTab: LibraryTab.ytNotifications),
+  channels([YTHomeSource.local, YTHomeSource.youtube], libraryTab: LibraryTab.ytChannels),
+  playlists([YTHomeSource.local, YTHomeSource.youtube], libraryTab: LibraryTab.ytPlaylists),
+  downloads([YTHomeSource.local], libraryTab: LibraryTab.ytDownloads, showsSource: false),
   ;
 
   final List<YTHomeSource> sources;
+  final LibraryTab libraryTab;
   final bool showsSource;
 
-  const YTHomePages(this.sources, {this.showsSource = true});
+  const YTHomePages(this.sources, {required this.libraryTab, this.showsSource = true});
 
   bool get hasSourceChoice => sources.length > 1;
 }

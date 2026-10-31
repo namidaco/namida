@@ -16,7 +16,7 @@ class _ZipManagerGeneric extends ZipManager {
           encoder.create(zipFile.path);
           for (var file in files) {
             final entryName = path.relative(file.path, from: entriesRootPath);
-            encoder.addFileSync(file, entryName);
+            _addFileSkippingDeleted(encoder, file, entryName);
           }
         } finally {
           encoder.closeSync();
@@ -31,16 +31,33 @@ class _ZipManagerGeneric extends ZipManager {
     required File zipFile,
   }) {
     return Isolate.run(
-      () async {
+      () {
         final encoder = ZipFileEncoder();
         try {
           encoder.create(zipFile.path);
-          await encoder.addDirectory(sourceDir, includeDirName: false);
+          final sourceDirPath = sourceDir.path;
+          for (final entity in sourceDir.listSync(recursive: true)) {
+            final relativePath = path.relative(entity.path, from: sourceDirPath);
+            if (entity is File) {
+              _addFileSkippingDeleted(encoder, entity, relativePath);
+            } else if (entity is Directory) {
+              final relativeUri = path.toUri(relativePath);
+              final entryName = path.posix.fromUri(relativeUri);
+              final directoryEntry = ArchiveFile.directory(entryName);
+              encoder.addArchiveFile(directoryEntry);
+            }
+          }
         } finally {
           encoder.closeSync();
         }
       },
     );
+  }
+
+  static void _addFileSkippingDeleted(ZipFileEncoder encoder, File file, String entryName) {
+    try {
+      encoder.addFileSync(file, entryName);
+    } on PathNotFoundException catch (_) {}
   }
 
   @override

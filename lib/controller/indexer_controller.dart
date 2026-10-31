@@ -22,6 +22,7 @@ import 'package:namida/controller/current_color.dart';
 import 'package:namida/controller/directory_index.dart';
 import 'package:namida/controller/folders_controller.dart';
 import 'package:namida/controller/history_controller.dart';
+import 'package:namida/controller/logs_controller.dart';
 import 'package:namida/controller/music_web_server/music_web_server_base.dart';
 import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/platform/namida_channel/namida_channel.dart';
@@ -300,27 +301,30 @@ class Indexer<T extends Track> {
 
     IndexerFilesDiff? differenceStats;
 
-    if (forceReIndex || tracksInfoList.isEmpty) {
-      await _fetchAllSongsAndWriteToFile(
-        filesDiff: null,
-        forceReIndex: true,
-        useMediaStore: useMediaStore,
-      );
-    } else {
-      currentFiles ??= await getAudioFilesForRefresh();
-      final difference = await getPathsDifference(currentFiles);
-      differenceStats = allowDeletion ? difference : difference.withoutDeletedPaths();
+    try {
+      if (forceReIndex || tracksInfoList.isEmpty) {
+        await _fetchAllSongsAndWriteToFile(
+          filesDiff: null,
+          forceReIndex: true,
+          useMediaStore: useMediaStore,
+        );
+      } else {
+        currentFiles ??= await getAudioFilesForRefresh();
+        final difference = await getPathsDifference(currentFiles);
+        differenceStats = allowDeletion ? difference : difference.withoutDeletedPaths();
 
-      await _fetchAllSongsAndWriteToFile(
-        filesDiff: differenceStats,
-        forceReIndex: false,
-        useMediaStore: useMediaStore,
-      );
+        await _fetchAllSongsAndWriteToFile(
+          filesDiff: differenceStats,
+          forceReIndex: false,
+          useMediaStore: useMediaStore,
+        );
+      }
+
+      await _afterIndexing();
+      await _tracksDBManager.checkpoint().ignoreError();
+    } finally {
+      isIndexing.value = false;
     }
-
-    await _afterIndexing();
-    await _tracksDBManager.checkpoint().ignoreError();
-    isIndexing.value = false;
 
     final isEmpty = tracksInfoList.value.isEmpty;
     if (showFinishedSnackbar || isEmpty) {
@@ -1345,21 +1349,30 @@ class Indexer<T extends Track> {
       final tracksCount = await fetchInfo.tracksCount;
       int tracksCounted = 0;
 
-      await server.fetchAllMusicAndProcess(
-        serverTracksInLibrary,
-        (trExt) {
-          _addTrackToLists(trExt, null);
-          serverTracksInLibrary.remove(trExt.path); // still exists
-          if (tracksCounted < tracksCount) {
-            tracksCounted++;
-            _indexingDoneCount.value++;
-          }
-        },
-        forceReIndex: forceReIndex,
-      );
+      bool didFetchAll = true;
+      try {
+        await server.fetchAllMusicAndProcess(
+          serverTracksInLibrary,
+          (trExt) {
+            _addTrackToLists(trExt, null);
+            serverTracksInLibrary.remove(trExt.path); // still exists
+            if (tracksCounted < tracksCount) {
+              tracksCounted++;
+              _indexingDoneCount.value++;
+            }
+          },
+          forceReIndex: forceReIndex,
+        );
+      } catch (e, st) {
+        didFetchAll = false;
+        logger.error('failed to fetch server tracks: $dbKey', e: e, st: st);
+      }
 
       final tracksUncounted = tracksCount - tracksCounted;
       _indexingDoneCount.value += tracksUncounted;
+
+      // -- unseen tracks & imported playlists stay as they are, a partial fetch can't tell what was removed
+      if (!didFetchAll) continue;
 
       if (importServerPlaylists) {
         final dbKeyCleaned = DirectoryIndexServer.parseWithoutLibraryIdAndCleanTry(dbKey);

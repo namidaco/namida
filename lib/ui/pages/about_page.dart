@@ -135,6 +135,11 @@ class _AboutPageState extends State<AboutPage> {
       ),
       null => null,
     };
+    final showFullScene = switch (mascot) {
+      NamidaMascot.jellys => isJellyIcon ? JellyFullArt.show : null,
+      NamidaMascot.namiween => NamiweenScene.show,
+      null => null,
+    };
     final aboutPage = ObxO(
       rx: VersionController.inst.latestVersion,
       builder: (context, latestVersion) => SuperSmoothListView(
@@ -192,7 +197,7 @@ class _AboutPageState extends State<AboutPage> {
                         ),
                         child: _KuruKuruActivator(
                           child: GestureDetector(
-                            onLongPress: isJellyIcon ? JellyFullArt.show : null,
+                            onLongPress: showFullScene,
                             child: Image.asset(
                               enabledIcon.assetPath,
                             ),

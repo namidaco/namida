@@ -211,10 +211,13 @@ Future<void> showGeneralPopupDialog(
                   ),
               if (subtitle != '') ...[
                 const SizedBox(height: 2.0),
-                NamidaText(
-                  subtitle,
-                  style: const NText(.small, size: .s12),
-                  maxLines: 1,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: NamidaText(
+                    subtitle,
+                    style: const NText(.small, size: .s12),
+                    maxLines: 1,
+                  ),
                 ),
               ],
             ],
@@ -1613,7 +1616,7 @@ Future<void> showGeneralPopupDialog(
                                                 Broken.grammerly,
                                                 () => lang.setRating,
                                                 setTrackStatsDialog,
-                                                subtitle: stats.rating <= 0 ? '' : ' ${stats.rating}%',
+                                                subtitle: stats.rating <= 0 ? '' : ' ${stats.rating}%', // nbsp to avoid splitting to new line anyway
                                               ),
                                             ),
                                     ),

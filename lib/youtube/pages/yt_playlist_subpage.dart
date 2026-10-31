@@ -489,6 +489,9 @@ class _YTHostedPlaylistSubpageState extends State<YTHostedPlaylistSubpage> with 
   @override
   bool canRefreshList(_) => true;
 
+  @override
+  bool get canSortStreamsByChannel => true;
+
   late final ScrollController _controller;
   final _isLoadingMoreItems = false.obs;
 

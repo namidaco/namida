@@ -810,15 +810,14 @@ class _EqualizerPreampRow extends StatelessWidget {
                   onChanged(equalizer.copyWith(autoPreamp: !equalizer.autoPreamp, preamp: preamp));
                 },
               ),
-              const SizedBox(width: 6.0),
-              AnimatedEnabled(
-                enabled: limiterSupported,
-                child: _EqualizerToggleChip(
+              if (limiterSupported) ...[
+                const SizedBox(width: 6.0),
+                _EqualizerToggleChip(
                   title: lang.limiter,
-                  active: equalizer.limiter && limiterSupported,
+                  active: equalizer.limiter,
                   onTap: () => onChanged(equalizer.copyWith(limiter: !equalizer.limiter)),
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -1372,6 +1371,7 @@ class _EqualizerBandEditor extends StatelessWidget {
           if (index < 0) return const SizedBox();
           final band = equalizer.bands[index];
           final supportedTypes = _EqualizerCapabilities.getBandTypes();
+          final shownTypes = EqualizerBandType.values.where((type) => type == band.type || supportedTypes.contains(type)).toFixedList();
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -1400,26 +1400,30 @@ class _EqualizerBandEditor extends StatelessWidget {
                   const SizedBox(width: 8.0),
                 ],
               ),
-              const SizedBox(height: 8.0),
-              Wrap(
-                spacing: 6.0,
-                runSpacing: 6.0,
-                alignment: WrapAlignment.center,
-                children: [
-                  for (final type in EqualizerBandType.values)
-                    AnimatedEnabled(
-                      enabled: supportedTypes.contains(type),
-                      child: Tooltip(
-                        message: supportedTypes.contains(type) ? '' : lang.notAvailableForYourDevice,
-                        child: _EqualizerToggleChip(
-                          title: type.toText(),
-                          active: band.type == type,
-                          onTap: () => onChanged(band.copyWith(type: type)),
+              if (shownTypes.length > 1) ...[
+                const SizedBox(height: 8.0),
+                Wrap(
+                  spacing: 6.0,
+                  runSpacing: 6.0,
+                  alignment: WrapAlignment.center,
+                  children: shownTypes.map(
+                    (type) {
+                      final isSupported = supportedTypes.contains(type);
+                      return Tooltip(
+                        message: isSupported ? '' : lang.notAvailableForYourDevice,
+                        child: AnimatedEnabled(
+                          enabled: isSupported,
+                          child: _EqualizerToggleChip(
+                            title: type.toText(),
+                            active: band.type == type,
+                            onTap: () => onChanged(band.copyWith(type: type)),
+                          ),
                         ),
-                      ),
-                    ),
-                ],
-              ),
+                      );
+                    },
+                  ).toFixedList(),
+                ),
+              ],
               const SizedBox(height: 12.0),
               _SliderTextWidget(
                 icon: Broken.sound,

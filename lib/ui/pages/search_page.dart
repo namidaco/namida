@@ -348,6 +348,7 @@ class _SearchHeaderButton extends StatelessWidget {
 const _kFilterChipMargin = EdgeInsets.symmetric(horizontal: 2.0, vertical: 8.0);
 const _kFilterChipPadding = EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0);
 const _kFilterChipBorderWidth = 1.5;
+const _kTitleRowVerticalPadding = 4.0;
 
 extension _FilterChipColors on Color {
   Color filterChipBg(bool isActive) => withOpacityExt(isActive ? 0.18 : 0.0);
@@ -615,6 +616,7 @@ class _RecentSearchesView extends StatelessWidget {
               SearchPageTitleRow(
                 title: lang.recentSearches,
                 icon: Broken.clock,
+                verticalPadding: _kTitleRowVerticalPadding,
                 trailing: NamidaButton(
                   colors: .mid,
                   icon: Broken.broom,
@@ -1174,6 +1176,7 @@ class _SectionContentState extends State<_SectionContent> with SingleTickerProvi
           key: widget.titleKey,
           title: widget.title,
           icon: widget.icon,
+          verticalPadding: _kTitleRowVerticalPadding,
           color: headerColor,
           onTap: isWeak ? _onHeaderTap : null,
           titleTrailing: toggleArrow,
@@ -1278,6 +1281,7 @@ class _TracksSectionTitle extends StatelessWidget {
               key: titleKey,
               title: '${isTracksSearchActive ? lang.tracks : lang.videos} • $tracksCount',
               icon: Broken.music_circle,
+              verticalPadding: _kTitleRowVerticalPadding,
               leading: ObxO(
                 rx: isTracksFromSmartSearch,
                 builder: (context, isFromSmartSearch) => Icon(

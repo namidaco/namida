@@ -57,7 +57,9 @@ dependencies:
   package_info_plus: ^10.1.0
   device_info_plus: ^13.1.0
   intl: ^0.20.2
-  flutter_archive: ^6.3.1
+  flutter_archive:
+    git:
+      url: https://github.com/MSOB7YY/flutter_archive
   archive: ^4.1.0
   url_launcher: ^6.3.0
   flutter_inappwebview:

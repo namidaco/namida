@@ -43,6 +43,7 @@ class YoutubeHomeFeedPage extends StatelessWidget {
               final isMixesVisible = visibleMixes[YTVisibleMixesPlaces.homeFeed] ?? true;
               return YoutubeMainPageFetcherAccBase<YoutiPieFeedResult, YoutubeFeed>(
                 operation: YoutiPieOperation.fetchFeed,
+                libraryTab: LibraryTab.ytHome,
                 showRefreshInsteadOfRefreshing: true,
                 transparentShimmer: false,
                 title: lang.home,

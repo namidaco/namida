@@ -125,10 +125,11 @@ class NamidaMascotBackground extends StatelessWidget {
             seed: spot.jellySeed,
           ),
         ),
-        NamidaMascot.namiween => NamidaThemedField.halloween(
-          opacity: spot.halloweenOpacity,
-          fade: fade,
-        ),
+        NamidaMascot.namiween => const SizedBox(),
+        // NamidaMascot.namiween => NamidaThemedField.halloween(
+        //   opacity: spot.halloweenOpacity,
+        //   fade: fade,
+        // ),
         null => const SizedBox(),
       },
     );

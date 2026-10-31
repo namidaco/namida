@@ -15,8 +15,10 @@ import 'package:namida/class/route.dart';
 import 'package:namida/class/search_box_manager.dart';
 import 'package:namida/controller/connectivity.dart';
 import 'package:namida/controller/navigator_controller.dart';
+import 'package:namida/controller/scroll_search_controller.dart';
 import 'package:namida/core/constants.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
@@ -58,6 +60,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
   final RenderObjectWidget? Function(W list, YoutubeMainPageFetcherItemBuilder<T, W> itemBuilder, Widget dummyCard)? sliverListBuilder;
   final bool showRefreshInsteadOfRefreshing;
   final ValueKey? fetchTimeMapKey;
+  final LibraryTab? libraryTab;
 
   /// Provides search capability, a search box is shown when this is provided.
   /// [sliverListBuilder] must be null.
@@ -94,6 +97,7 @@ class YoutubeMainPageFetcherAccBase<W extends YoutiPieListWrapper<T>, T extends 
     this.sliverListBuilder,
     this.showRefreshInsteadOfRefreshing = false,
     this.fetchTimeMapKey,
+    this.libraryTab,
     this.searchTextResolver,
     this.searchHintText,
     this.pageHeader,
@@ -227,6 +231,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     widget.onInitState?.call(_currentFeed);
     YoutubeAccountController.current.addOnAccountChanged(_onAccChanged);
     if (widget.onListUpdated != null) _currentFeed.addListener(_onListUpdated);
+    final libraryTab = widget.libraryTab;
+    if (libraryTab != null) ScrollSearchController.inst.registerPageScrollController(libraryTab, _controller);
     Timer(Duration.zero, _onInit); // delayed to prevent setState error when snackbar is shown
   }
 
@@ -235,6 +241,8 @@ class _YoutubePageState<W extends YoutiPieListWrapper<T>, T extends MapSerializa
     widget.onDispose?.call(_currentFeed);
     if (widget.onListUpdated != null) _currentFeed.removeListener(_onListUpdated);
     YoutubeAccountController.current.removeOnAccountChanged(_onAccChanged);
+    final libraryTab = widget.libraryTab;
+    if (libraryTab != null) ScrollSearchController.inst.unregisterPageScrollController(libraryTab, _controller);
 
     _controller.dispose();
     _isLoadingCurrentFeed.close();

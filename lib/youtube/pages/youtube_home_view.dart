@@ -31,7 +31,7 @@ class YouTubeHomeView extends StatefulWidget with NamidaRouteWidget {
 
   static void openSection(YTHomePages section) {
     settings.extra.ytInitialHomePage.save(section);
-    ScrollSearchController.inst.animatePageController(LibraryTab.youtube);
+    ScrollSearchController.inst.animatePageController(LibraryTab.youtube, jumpToTopIfSamePage: false);
   }
 
   @override

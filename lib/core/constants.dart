@@ -1515,7 +1515,7 @@ class NamidaFileExtensionsWrapper {
   };
 
   static const _lrcExtensions = {
-    'lrc', 'xml', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', //
+    'lrc', 'xml', 'ttml', 'srt', 'vtt', 'sbv', 'ssa', 'ass', 'wlrc', //
   };
 
   static const audio = NamidaFileExtensionsWrapper._(_audioExtensions);

@@ -65,6 +65,7 @@ class _YoutubeNotificationsPageState extends State<YoutubeNotificationsPage> {
       builder: (properties) => YoutubeMainPageFetcherAccBase<YoutiPieNotificationResult, StreamInfoItemNotification>(
         key: _pageKey,
         operation: YoutiPieOperation.fetchNotifications,
+        libraryTab: LibraryTab.ytNotifications,
         transparentShimmer: true,
         title: lang.notifications,
         headerTrailing: Row(

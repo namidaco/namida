@@ -9,6 +9,7 @@ import 'package:namida/controller/navigator_controller.dart';
 import 'package:namida/controller/settings_controller.dart';
 import 'package:namida/controller/time_ago_controller.dart';
 import 'package:namida/core/dimensions.dart';
+import 'package:namida/core/enums.dart';
 import 'package:namida/core/extensions.dart';
 import 'package:namida/core/icon_fonts/broken_icons.dart';
 import 'package:namida/core/ntheme.dart';
@@ -346,6 +347,7 @@ class _YTDownloadsPageState extends State<YTDownloadsPage> {
                   ),
                   Expanded(
                     child: NamidaScrollbarWithController(
+                      libraryTab: LibraryTab.ytDownloads,
                       child: (sc) => Obx(
                         (context) {
                           final keys = YoutubeController.inst.youtubeDownloadTasksMap.keys.toFixedList();

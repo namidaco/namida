@@ -165,7 +165,7 @@ class CustomMPVPlayer implements AVPlayer {
   late final _liveWindowTracker = _MPVLiveWindowTracker(_player);
   final _playbackEventStreamController = StreamController<PlaybackEvent>();
   final _playerProcessingStateStreamController = StreamController<ProcessingState>();
-  final _playerPositionStreamController = StreamController<Duration>();
+  final _playerPositionStreamController = StreamController<Duration>.broadcast();
 
   final _audioTracksStreamController = StreamController<List<AudioTrack>>();
   final _textTracksStreamController = StreamController<List<TextTrack>?>();
@@ -795,6 +795,7 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Future<void> seek(Duration? position) async {
+    if (_disposed) return;
     if (_kSkipSeekWhenLoopNotApplied && !_loopingVideoApplied && _videoOptions?.loop == true) return;
     if (position != null) _liveWindowTracker.onSeek();
     final target = position ?? _liveWindowTracker.window?.edge ?? Duration.zero;
@@ -1079,51 +1080,59 @@ class CustomMPVPlayer implements AVPlayer {
 
   @override
   Future<bool> addMediaNext<T>(ItemPrepareConfig<T, UriSource> config) async {
-    final pl = _player;
-    final currentIndex = pl.state.playlist.index;
-    final insertIndex = currentIndex + 1;
-
     final media = mk.Media(
       config.source.uri.toString(),
       start: config.initialPosition,
     );
+    await mk.NativePlayer.lock.synchronized(() => _addMediaNextLocked(media));
+    return true;
+  }
+
+  /// playlist indices are read & used inside media_kit's lock, any playlist change in between would shift them.
+  Future<void> _addMediaNextLocked(mk.Media media) async {
+    final pl = _player.platform as mk.NativePlayer;
+    final currentIndex = pl.state.playlist.index;
+    final insertIndex = currentIndex + 1;
 
     // -- no `insert`, so we add and move
-    await pl.add(media);
+    await pl.add(media, synchronized: false);
     _queuedNextMedia = media;
     final addedIndex = pl.state.playlist.medias.length - 1;
     if (addedIndex != insertIndex) {
-      await pl.move(addedIndex, insertIndex);
+      await pl.move(addedIndex, insertIndex, synchronized: false);
     }
 
     // -- removing tail
     final length = pl.state.playlist.medias.length;
     if (length > insertIndex + 1) {
       for (int i = length - 1; i > insertIndex; i--) {
-        await pl.remove(i);
+        await pl.remove(i, synchronized: false);
       }
     }
 
     // -- removing head after tail
     if (insertIndex > 1) {
       for (int i = insertIndex - 2; i >= 0; i--) {
-        await pl.remove(i);
+        await pl.remove(i, synchronized: false);
       }
     }
-    return true;
   }
 
   @override
   Future<void> removeAllMediaNext() async {
     _queuedNextMedia = null;
-    final pl = _player;
+    await mk.NativePlayer.lock.synchronized(_removeAllMediaNextLocked);
+  }
+
+  Future<void> _removeAllMediaNextLocked() async {
+    final pl = _player.platform as mk.NativePlayer;
     final length = pl.state.playlist.medias.length;
 
     // -- only remove items strictly after the currently playing one,
     // -- otherwise we'd nuke playback if the player has already advanced to the queued next item.
     final removeFrom = pl.state.playlist.index + 1;
     for (int i = length - 1; i >= removeFrom; i--) {
-      await pl.remove(i);
+      await pl.remove(i, synchronized: false);
     }
   }
 }

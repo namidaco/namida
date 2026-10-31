@@ -67,8 +67,8 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
 
   @override
   String datasDisplayText() {
-    late final dataFormatted = clockOnly ? data?.clockFormatted : data?.dateAndClockFormattedOriginal;
-    late final data2Formatted = clockOnly ? data2?.clockFormatted : data2?.dateAndClockFormattedOriginal;
+    late final dataFormatted = _displayTextOf(data);
+    late final data2Formatted = _displayTextOf(data2);
     return switch (filter) {
           SmartPlaylistRuleFilterDateTime.isSame => '= ${dataFormatted ?? '?'}',
           SmartPlaylistRuleFilterDateTime.isNotSame => '≠ ${dataFormatted ?? '?'}',
@@ -82,6 +82,13 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
           SmartPlaylistRuleFilterDateTime.isNotWithinLast => '⟳ > ${relativeDuration?.amount ?? '?'} ${relativeDuration?.unit.toText() ?? ''}',
         } ??
         '';
+  }
+
+  String? _displayTextOf(DateTime? date) {
+    if (date == null) return null;
+    if (clockOnly) return date.clockFormatted;
+    if (_isWholeDay(date)) return date.dateFormattedOriginal;
+    return date.dateAndClockFormattedOriginal;
   }
 
   @override
@@ -107,7 +114,7 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
     if (data == null) return null;
     final dateFormat = clockOnly
         ? DateFormat('HH:mm:ss')
-        : data.hour == 0 && data.minute == 0 && data.second == 0
+        : _isWholeDay(data)
         ? DateFormat('yyyy-MM-dd')
         : DateFormat('yyyy-MM-dd HH:mm:ss');
     return dateFormat.format(data);
@@ -117,7 +124,10 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   String? data2ToText(DateTime? data2) => data2 == null ? null : dataToText(data2);
 
   @override
-  String? toHintText() => clockOnly ? 'HH:mm:ss' : 'YYYY-MM-DD HH:mm:ss';
+  String? toHintText() => clockOnly ? 'HH:mm:ss' : 'YYYY-MM-DD [HH:mm:ss]';
+
+  /// midnight means no clock was given.
+  static bool _isWholeDay(DateTime date) => date.hour == 0 && date.minute == 0 && date.second == 0 && date.millisecond == 0 && date.microsecond == 0;
 
   bool _matchesTimestamp(int? msse, _SmartPlaylistResolveContext context) => _dateFn(msse, context);
 
@@ -143,35 +153,57 @@ final class SmartPlaylistRuleDateTime extends SmartPlaylistRuleBase<DateTime, Da
   late final _dataValue = _valueOf(data);
   late final _data2Value = _valueOf(data2);
 
-  late final (int?, int?) _sortedValues = _dataValue == null || _data2Value == null
-      ? (_dataValue, _data2Value)
-      : _dataValue < _data2Value
-      ? (_dataValue, _data2Value)
-      : (_data2Value, _dataValue);
+  int? _exclusiveEndOf(DateTime? date) {
+    if (date == null) return null;
+    if (_comparesClockOnly) {
+      final coveredSeconds = date.second == 0 ? Duration.secondsPerMinute : 1;
+      return _secondsOfDay(date) + coveredSeconds;
+    }
+    if (_isWholeDay(date)) {
+      final nextDay = DateTime(date.year, date.month, date.day + 1);
+      return nextDay.microsecondsSinceEpoch;
+    }
+    return date.microsecondsSinceEpoch + Duration.microsecondsPerSecond;
+  }
 
-  late final _startValue = _sortedValues.$1;
-  late final _endValue = _sortedValues.$2;
+  late final _dataEndValue = _exclusiveEndOf(data);
+  late final _data2EndValue = _exclusiveEndOf(data2);
+
+  late final (int?, int?) _rangeValues = _dataValue == null || _data2Value == null
+      ? (_dataValue, _data2EndValue)
+      : _dataValue < _data2Value
+      ? (_dataValue, _data2EndValue)
+      : (_data2Value, _dataEndValue);
+
+  late final _startValue = _rangeValues.$1;
+  late final _endValue = _rangeValues.$2;
 
   late final _crossesMidnight = _comparesClockOnly && _dataValue != null && _data2Value != null && _data2Value < _dataValue;
+
+  bool _isWithinData(int value) {
+    final dataValue = _dataValue;
+    final dataEndValue = _dataEndValue;
+    return dataValue != null && dataEndValue != null && value >= dataValue && value < dataEndValue;
+  }
 
   /// in dates world, one usually means an inclusive date.
   /// ex: in between 2015-2016, so both exact dates should be included as well.
   /// usually useful for types like: `isBefore`, `isAfter`, `isInBetween`.
   /// but not for types like: `isOutside`.
   late final bool Function(int? value, _SmartPlaylistResolveContext context) _valueFnRaw = switch (filter) {
-    SmartPlaylistRuleFilterDateTime.isSame => (value, _) => value != null && value == _dataValue,
-    SmartPlaylistRuleFilterDateTime.isNotSame => (value, _) => value != null && _dataValue != null && value != _dataValue,
-    SmartPlaylistRuleFilterDateTime.isBefore => (value, _) => value != null && _dataValue != null && value <= _dataValue,
+    SmartPlaylistRuleFilterDateTime.isSame => (value, _) => value != null && _isWithinData(value),
+    SmartPlaylistRuleFilterDateTime.isNotSame => (value, _) => value != null && _dataValue != null && !_isWithinData(value),
+    SmartPlaylistRuleFilterDateTime.isBefore => (value, _) => value != null && _dataEndValue != null && value < _dataEndValue,
     SmartPlaylistRuleFilterDateTime.isAfter => (value, _) => value != null && _dataValue != null && value >= _dataValue,
     SmartPlaylistRuleFilterDateTime.isInBetween => (value, context) {
       if (value == null) return false;
-      if (_crossesMidnight) return value >= _dataValue! || value <= _data2Value!;
-      return _startValue != null && value >= _startValue && value <= _endValueOf(context);
+      if (_crossesMidnight) return value >= _dataValue! || value < _data2EndValue!;
+      return _startValue != null && value >= _startValue && value < _endValueOf(context);
     },
     SmartPlaylistRuleFilterDateTime.isOutside => (value, context) {
       if (value == null) return false;
-      if (_crossesMidnight) return value < _dataValue! && value > _data2Value!;
-      return (_startValue != null && value < _startValue) || value > _endValueOf(context);
+      if (_crossesMidnight) return value < _dataValue! && value >= _data2EndValue!;
+      return (_startValue != null && value < _startValue) || value >= _endValueOf(context);
     },
     SmartPlaylistRuleFilterDateTime.isWithinLast => (value, context) {
       if (value == null) return false; // -- never listened, definetly not here
