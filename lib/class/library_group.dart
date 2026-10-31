@@ -528,7 +528,7 @@ class LibraryGroupChanges {
       map[key] = <E>[track];
       _mediasWithNewKeys.add(type);
     } else {
-      if (identical(list.last, track)) return;
+      if (identical(list.lastOrNull, track)) return;
       list.add(track);
     }
     (_modifiedKeys[type] ??= <Object?>{}).add(key);

@@ -226,6 +226,21 @@ void main() {
     expect(group.mainMapArtists.value['Y'], [added.asTrack()]);
   });
 
+  test('a new track joins a parent folder that had only subfolders', () {
+    final group = filled([trackOf(pathOf('parent${sep}sub${sep}t1.mp3'))]);
+    final added = trackOf(pathOf('parent${sep}new.mp3'));
+    final addedTrack = added.asTrack();
+    final parentFolder = addedTrack.folder;
+    group.mainMapFoldersTracksAndVideos.value[parentFolder] = <Track>[];
+    group.mainMapFoldersTracks.value[parentFolder] = <Track>[];
+    final changes = group.updateTracksSync({added: null}, albumIdentifiers);
+
+    expect(changes.hasNewKeys(MediaType.folder), false);
+    expect(changes.hasNewKeys(MediaType.folderMusic), false);
+    expect(group.mainMapFoldersTracksAndVideos.value[parentFolder], [addedTrack]);
+    expect(group.mainMapFoldersTracks.value[parentFolder], [addedTrack]);
+  });
+
   test('an untouched edit changes nothing', () {
     final t1 = trackOf(pathOf('m1${sep}t1.mp3'), album: 'A; B', artist: 'X & Y');
     final group = filled([t1]);
