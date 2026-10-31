@@ -72,20 +72,49 @@ jobs:
 
       - name: Package dmg & zip
         env:
-          NAME: Namida-macos-universal-${{ steps.setup.outputs.version-name }}
+          VERSION_NAME: ${{ steps.setup.outputs.version-name }}
         run: |
           APP="build/macos/Build/Products/Release/Namida.app"
-          DMG="build_final/$NAME.dmg"
-          mkdir -p build_final dmg_stage
-          cp -R "$APP" dmg_stage/
-          ln -s /Applications dmg_stage/Applications
-          # -- hdiutil fails now and then with "Resource busy" on the runners
-          for attempt in 1 2 3; do
-            hdiutil create -volname Namida -srcfolder dmg_stage -ov -format ULMO "$DMG" && break
-            if [ "$attempt" = 3 ]; then exit 1; fi
-            sleep 10
+          mkdir -p build_final
+
+          thin_app() {
+            local app="$1" arch="$2" binary archs mode
+            while IFS= read -r -d '' binary; do
+              archs=$(lipo -archs "$binary" 2>/dev/null) || continue
+              [ "$archs" = "$arch" ] && continue
+              if ! grep -qw "$arch" <<< "$archs"; then
+                echo "::error title=macOS $arch::$binary has no $arch slice ($archs)"
+                return 1
+              fi
+              mode=$(stat -f %Lp "$binary")
+              lipo "$binary" -thin "$arch" -output "$binary"
+              chmod "$mode" "$binary"
+            done < <(find "$app" -type f -print0)
+            find "$app/Contents/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -exec codesign --force --sign - --timestamp=none {} +
+            codesign --force --sign - --timestamp=none --entitlements macos/Runner/Release.entitlements "$app"
+            codesign --verify --deep --strict "$app"
+          }
+
+          package_app() {
+            local app="$1" name="Namida-macos-$2-$VERSION_NAME" stage="dmg_stage_$2"
+            mkdir -p "$stage"
+            ditto "$app" "$stage/Namida.app"
+            ln -s /Applications "$stage/Applications"
+            # -- hdiutil fails now and then with "Resource busy" on the runners
+            for attempt in 1 2 3; do
+              hdiutil create -volname Namida -srcfolder "$stage" -ov -format ULMO "build_final/$name.dmg" && break
+              if [ "$attempt" = 3 ]; then exit 1; fi
+              sleep 10
+            done
+            ditto -c -k --keepParent "$app" "build_final/$name.zip"
+          }
+
+          package_app "$APP" universal
+          for arch in arm64 x86_64; do
+            ditto "$APP" "thin_$arch/Namida.app"
+            thin_app "thin_$arch/Namida.app" "$arch"
+            package_app "thin_$arch/Namida.app" "$arch"
           done
-          ditto -c -k --keepParent "$APP" "build_final/$NAME.zip"
           ls -la build_final
 
       - uses: actions/upload-artifact@v6

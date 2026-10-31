@@ -112,10 +112,10 @@ android {
             applicationIdSuffix = ".debug"
         }
 
-        // named("profile") {
-        //     signingConfig = signingConfigs.getByName("profile")
-        //     applicationIdSuffix = ".profile"
-        // }
+        named("profile") {
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".profile"
+        }
 
         named("release") {
             signingConfig = signingConfigs.getByName("release")
